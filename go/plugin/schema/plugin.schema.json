@@ -39,6 +39,15 @@
         "label": {
           "type": "string"
         },
+        "method": {
+          "description": "Method is how verb subresource calls it: PUT (the default, as virtctl does), POST, or PATCH (a merge patch, as kubectl scale does).",
+          "enum": [
+            "PUT",
+            "POST",
+            "PATCH"
+          ],
+          "type": "string"
+        },
         "on": {
           "description": "On is the resource the action applies to.",
           "type": "string"
@@ -50,6 +59,15 @@
           },
           "type": "array"
         },
+        "propagationPolicy": {
+          "description": "PropagationPolicy is verb delete's: what happens to the object's dependents.",
+          "enum": [
+            "Foreground",
+            "Background",
+            "Orphan"
+          ],
+          "type": "string"
+        },
         "rbac": {
           "allOf": [
             {
@@ -60,6 +78,7 @@
         },
         "subresource": {
           "description": "Subresource is the subresource of verb subresource (start, scale…).",
+          "pattern": "^[a-z][a-z0-9-]*$",
           "type": "string"
         },
         "verb": {
@@ -146,7 +165,7 @@
           "type": "string"
         },
         "value": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -167,7 +186,7 @@
       "properties": {
         "aggregate": {
           "additionalProperties": {
-            "description": "An expression (docs/plugins.md#expressions).",
+            "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
             "type": [
               "string",
               "number",
@@ -202,7 +221,7 @@
         },
         "select": {
           "additionalProperties": {
-            "description": "An expression (docs/plugins.md#expressions).",
+            "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
             "type": [
               "string",
               "number",
@@ -432,6 +451,10 @@
           "maximum": 5000,
           "minimum": 0,
           "type": "integer"
+        },
+        "metadataOnly": {
+          "description": "MetadataOnly reads each object's metadata alone (PartialObjectMetadata): a Secret's values, or a large spec, never leave the API server.",
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -516,6 +539,19 @@
           ],
           "description": "List narrows and pages the list call."
         },
+        "optional": {
+          "description": "Optional is a resource the plugin does without (a decorative relation): forbidden or not served, it reads as empty with no error.",
+          "type": "boolean"
+        },
+        "ref": {
+          "description": "Ref is the object a row of this resource opens, with source only: an expression giving a map of group, version, resource, kind, namespace and name ($.source).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
         "resource": {
           "description": "Resource is the plural resource name (sleepinfos).",
           "type": "string"
@@ -573,7 +609,7 @@
           ]
         },
         "subtitle": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -582,7 +618,7 @@
           ]
         },
         "title": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -694,7 +730,7 @@
       "description": "Status is a row's colored status.",
       "properties": {
         "text": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -716,7 +752,7 @@
       "description": "Title is an expression, or {count, one, other}: \"%d\" in one and other is the count.",
       "oneOf": [
         {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -729,7 +765,7 @@
           "description": "Title is an expression, or {count, one, other}: \"%d\" in one and other is the count.",
           "properties": {
             "count": {
-              "description": "An expression (docs/plugins.md#expressions).",
+              "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
               "type": [
                 "string",
                 "number",
@@ -748,12 +784,42 @@
         }
       ]
     },
+    "Tool": {
+      "additionalProperties": false,
+      "description": "Tool is a button of the plugin screen run by Go (a check no expression can make).",
+      "properties": {
+        "hint": {
+          "description": "Hint says what the tool does, under its button.",
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "run": {
+          "description": "Run is native:<id>, the Go function that runs the tool.",
+          "pattern": "^native:[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "texts": {
+          "description": "Texts are the English words the Go function shows in its result, translated through i18n like the labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "label",
+        "run"
+      ],
+      "type": "object"
+    },
     "Trailing": {
       "additionalProperties": false,
       "description": "Trailing is the text at a row's end.",
       "properties": {
         "text": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -828,7 +894,7 @@
     "fields": {
       "additionalProperties": {
         "additionalProperties": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -911,6 +977,16 @@
       "description": "Screen is native:<route> to open a native screen from the hub tile; empty is the generic plugin screen.",
       "pattern": "^native:[A-Za-z0-9_-]+$",
       "type": "string"
+    },
+    "tools": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Tool"
+      },
+      "description": "Tools are buttons of the plugin screen, by id, each run by a Go function over what the plugin read.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+      },
+      "type": "object"
     },
     "website": {
       "description": "Website is the project's home page.",

@@ -2,6 +2,7 @@ package name.levis.ichor.ui.overview
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.QueryStats
@@ -41,6 +42,8 @@ class OverviewNavigation(
     val onSettings: () -> Unit,
     /** The search across clusters. */
     val onSearch: () -> Unit,
+    /** The cluster's own Git repository, from its root. */
+    val onRepository: () -> Unit,
 ) {
     fun open(action: OverviewAction): () -> Unit = when (action) {
         OverviewAction.HEALTH -> onHealth
@@ -53,6 +56,7 @@ class OverviewNavigation(
         OverviewAction.ETCD -> onEtcd
         OverviewAction.SEARCH -> onSearch
         OverviewAction.SETTINGS -> onSettings
+        OverviewAction.REPOSITORY -> onRepository
     }
 }
 
@@ -67,6 +71,7 @@ fun overviewActionIcon(action: OverviewAction): ImageVector = when (action) {
     OverviewAction.ETCD -> Icons.Outlined.Storage
     OverviewAction.SEARCH -> Icons.Outlined.Search
     OverviewAction.SETTINGS -> Icons.Outlined.Settings
+    OverviewAction.REPOSITORY -> Icons.Outlined.FolderCopy
 }
 
 @Composable
@@ -81,6 +86,7 @@ fun overviewActionLabel(action: OverviewAction): String = when (action) {
     OverviewAction.ETCD -> "etcd"
     OverviewAction.SEARCH -> stringResource(R.string.overview_action_search)
     OverviewAction.SETTINGS -> stringResource(R.string.overview_action_settings)
+    OverviewAction.REPOSITORY -> stringResource(R.string.repo_title)
 }
 
 /** How the overview's actions look, in its bar and its editor. */
@@ -99,6 +105,8 @@ fun OverviewActions(
     workloads: Boolean,
     gitOps: Boolean,
     onCustomize: () -> Unit,
+    /** A repository is saved for the cluster (the demo has one built in). */
+    repository: Boolean = false,
 ) {
     // Cluster-wide screens: only disabled when no reachable node's Talos has them.
     val features = rememberClusterFeatures(reachable)
@@ -106,6 +114,7 @@ fun OverviewActions(
         OverviewAction.EVENTS -> clusterSupport(features, TalosFeature.EVENTS).supported
         OverviewAction.KUBESPAN -> clusterSupport(features, TalosFeature.KUBESPAN).supported
         OverviewAction.ETCD -> clusterSupport(features, TalosFeature.ETCD).supported
+        OverviewAction.REPOSITORY -> repository
         else -> true
     }
     // Only offered when the config's role can run it. Workloads, the PromQL panels and the alerts reach the

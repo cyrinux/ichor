@@ -199,7 +199,7 @@ func TestReadDataServicesVelero(t *testing.T) {
 		t.Fatalf("velero: %+v", res.Velero)
 	}
 
-	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil || res.Dragonfly != nil {
+	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil {
 		t.Errorf("only Velero is installed: %+v", res)
 	}
 }

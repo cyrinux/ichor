@@ -49,21 +49,14 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     switch kind {
     case .longhorn: head = String(localized: "\(summary.total) volumes")
     case .cnpg: head = String(localized: "\(summary.total) Postgres clusters")
-    case .dragonfly: head = String(localized: "\(summary.total) Dragonfly instances")
-    case .mariadb: head = String(localized: "\(summary.total) MariaDB clusters")
-    case .percona: head = String(localized: "\(summary.total) Percona clusters")
     case .certManager: head = String(localized: "\(summary.total) certificates")
     case .velero: head = String(localized: "\(summary.total) Velero schedules")
-    case .externalDns: head = String(localized: "\(summary.total) hostnames")
-    case .sealedSecrets: head = String(localized: "\(summary.total) SealedSecrets")
-    case .ceph: head = String(localized: "\(summary.total) Ceph clusters")
     case .snapshots, .backupJobs: head = String(localized: "\(summary.total) backup items")
     case .castai:
         let castai = services.castai
         let saving = castai.flatMap { $0.compared > 0 && $0.cpuDeltaMilli != 0 ? String(localized: "\(formatMilliCores($0.cpuDeltaMilli, signed: true)) CPU") : nil }
         let stuck = castai.flatMap { $0.stuck.isEmpty ? nil : String(localized: "stuck nodes: \(String($0.stuck.count))") }
         return [String(localized: "\(summary.total) workloads right-sized"), saving, attention, stuck].compactMap { $0 }.joined(separator: " · ")
-    case .kubeGreen: head = String(localized: "\(summary.total) sleep schedules")
     case .garage:
         // One Garage cluster: its own state says more than "1 cluster".
         if let single = services.garage?.instances.first, services.garage?.instances.count == 1 {
@@ -103,8 +96,15 @@ struct DataServicesSection: View {
     let hints: String
     let apps: [String: InventoryApp]
     let downNodes: Set<String>
+    /// The active CRD plugins of Data services, each a line after the native systems.
+    var plugins: [PluginDetectItem] = []
+    /// The families listed: storage alone on the Kubernetes home, whose tools file the others;
+    /// every one on a Talos cluster, which has no tools card yet.
+    var families: Set<ServiceFamily> = Set(ServiceFamily.allCases)
 
-    private var hinted: [DataServiceKind] { DataServiceKind.allCases.filter { hints.split(separator: ",").map(String.init).contains($0.catalogID) } }
+    private var hinted: [DataServiceKind] {
+        DataServiceKind.allCases.filter { families.contains($0.family) && hints.split(separator: ",").map(String.init).contains($0.catalogID) }
+    }
 
     var body: some View {
         switch state {
@@ -125,14 +125,21 @@ struct DataServicesSection: View {
                     }
                 }
             }
-        case .loaded(let services, _, _):
-            if !services.detected.isEmpty {
+        case .loaded(let all, _, _):
+            let services = all.only(families)
+            if !services.detected.isEmpty || !plugins.isEmpty {
                 Section {
                     NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes)) { header(services) }
-                    // One row per system, opening the screen on its tab.
-                    ForEach(services.detected) { kind in
-                        NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes, kind: kind)) {
-                            line(kind, text: dataServiceSummary(kind, services), health: services.summary(kind)?.health)
+                    // One row per system or plugin, worst first, opening the screen on its tab
+                    // (or the native screen a plugin names).
+                    ForEach(services.cardLines(plugins: plugins)) { cardLine in
+                        switch cardLine {
+                        case .native(let kind, let health):
+                            NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes, kind: kind)) {
+                                line(kind, text: dataServiceSummary(kind, services), health: health)
+                            }
+                        case .plugin(let item):
+                            PluginTileLink(item: item, hints: hints, downNodes: downNodes) { pluginLine(item) }
                         }
                     }
                 }
@@ -144,14 +151,14 @@ struct DataServicesSection: View {
     /// it); the likely cause stays on the Data services screen, the nodes say which one is down.
     private func header(_ services: DataServices) -> some View {
         SectionHeader(title: String(localized: "Data services"),
-                      subtitle: String(localized: "\(services.detected.count) systems"), pill: pill(services))
+                      subtitle: String(localized: "\(services.detected.count + plugins.count) systems"), pill: pill(services))
             .font(.headline)
             .padding(.vertical, 4)
     }
 
     @ViewBuilder private func pill(_ services: DataServices) -> some View {
-        let worst = services.worst
-        let attention = services.detected.compactMap { services.summary($0)?.attention }.reduce(0, +)
+        let worst = ServiceHealth.worst([services.worst] + plugins.compactMap { $0.summary?.serviceHealth })
+        let attention = services.attention(plugins: plugins)
         if attention > 0 {
             StatusPill(label: String(localized: "\(attention) need a look"), color: worst.color)
         } else if worst.needsAttention {
@@ -172,6 +179,21 @@ struct DataServicesSection: View {
     }
 }
 
+/// A plugin's line: its icon, name and summary ("2 sleep schedules · 1 asleep"), its health.
+private func pluginLine(_ item: PluginDetectItem) -> some View {
+    HStack(spacing: 12) {
+        PluginIcon(item: item, size: 28)
+        VStack(alignment: .leading, spacing: 1) {
+            Text(verbatim: item.name).font(.subheadline)
+            if let line = item.summary?.line, !line.isEmpty {
+                Text(verbatim: line).font(.caption).foregroundStyle(.secondary).lineLimit(2).monospacedDigit()
+            }
+        }
+        Spacer()
+        if let summary = item.summary { HealthDot(health: summary.serviceHealth) }
+    }
+}
+
 /// The app's own icon when the inventory has it, else a generic symbol.
 struct KindIcon: View {
     let kind: DataServiceKind
@@ -182,7 +204,7 @@ struct KindIcon: View {
         if let app {
             AppIconView(app: app, size: size)
         } else {
-            Image(systemName: symbol)
+            Image(systemName: kind.symbol)
                 .font(.system(size: size * 0.5))
                 .foregroundStyle(.secondary)
                 .frame(width: size, height: size)
@@ -190,22 +212,19 @@ struct KindIcon: View {
         }
     }
 
-    private var symbol: String {
-        switch kind {
+}
+
+extension DataServiceKind {
+    /// The generic symbol of a system without its app's icon.
+    var symbol: String {
+        switch self {
         case .longhorn: "externaldrive"
         case .garage: "cloud"
         case .cnpg: "cylinder.split.1x2"
-        case .dragonfly: "memorychip"
-        case .mariadb: "tablecells"
-        case .percona: "point.3.connected.trianglepath.dotted"
         case .certManager: "checkmark.seal"
         case .velero: "clock.arrow.circlepath"
-        case .externalDns: "globe"
-        case .sealedSecrets: "lock"
-        case .ceph: "internaldrive"
         case .snapshots, .backupJobs: "clock.arrow.circlepath"
         case .castai: "slider.horizontal.3"
-        case .kubeGreen: "moon.zzz"
         }
     }
 }

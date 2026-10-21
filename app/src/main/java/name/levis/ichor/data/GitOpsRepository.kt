@@ -8,6 +8,9 @@ import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoFreezeOptions
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.ClusterRepo
+import name.levis.ichor.model.DEMO_CLUSTER_REPO
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxDiff
@@ -15,11 +18,24 @@ import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.GitHost
 import name.levis.ichor.model.GitHostCheck
 import name.levis.ichor.model.GitFile
+import name.levis.ichor.model.GitOpsEditCheck
 import name.levis.ichor.model.GitOpsSource
 import name.levis.ichor.model.GitOpsSourceFind
 import name.levis.ichor.model.GitProposal
 import name.levis.ichor.model.GitProposalDefaults
 import name.levis.ichor.model.GitProposalResult
+import name.levis.ichor.model.GitRepoInfo
+import name.levis.ichor.model.DEMO_PROPOSALS
+import name.levis.ichor.model.GitProposalRecord
+import name.levis.ichor.model.GitRepoSearch
+import name.levis.ichor.model.GitRequestState
+import name.levis.ichor.model.RevisionRuns
+import name.levis.ichor.model.TalosConfigPatch
+import name.levis.ichor.model.TalosRepoCompare
+import name.levis.ichor.model.TalosWriteBackPlan
+import name.levis.ichor.model.TalosRepoFiles
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.KubeDiffResource
@@ -30,6 +46,10 @@ import name.levis.ichor.model.QuickEditTargets
 import name.levis.ichor.model.decodeQuickEditResult
 import name.levis.ichor.model.decodeQuickEditTargets
 import name.levis.ichor.model.quickEditJson
+import name.levis.ichor.model.decodeGitRepoInfo
+import name.levis.ichor.model.repoSource
+import name.levis.ichor.model.SopsInfo
+import name.levis.ichor.model.SopsWarning
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.gitHostJsonLacksToken
 import name.levis.ichor.model.gitProposalJson
@@ -37,12 +57,18 @@ import name.levis.ichor.model.proposeBlock
 import name.levis.ichor.R
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichorgo.ArgoSyncListener
 import name.levis.ichorgo.FluxReconcileListener
 import name.levis.ichorgo.Ichorgo
 
 /** Argo CD and Flux through their custom resources, on the Kubernetes API of the active cluster. */
-class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) : GoRepository(go) {
+class GitOpsRepository(
+    go: GoCall,
+    private val gitHosts: GitHostStore? = null,
+    private val clusterRepos: ClusterRepoStore? = null,
+    private val proposals: ProposalsStore? = null,
+) : GoRepository(go) {
     /**
      * Who [host]'s token signs in as and the scopes it lacks, asked of the forge (the demo
      * context answers without network). [token] checks a typed one before it is saved, else the
@@ -197,6 +223,26 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
         }
     }
 
+    /**
+     * The lines of [src]'s whole repository that hold [query] (case-insensitive): from the Flux
+     * artifact (no token), else from a snapshot of the repository at [src]'s revision,
+     * downloaded once per commit (up to 48 MiB) with the Git host's saved token. Throws
+     * [GitHostMissing] without a token.
+     */
+    suspend fun repoSearch(src: GitSource, query: String): GitRepoSearch = when (src.readPath) {
+        SourceReadPath.FLUX -> {
+            val ref = checkNotNull(src.fluxSource)
+            go.kube { cfg, ctx, server ->
+                decodeGitRepoSearch(Ichorgo.fluxSourceSearch(cfg, ctx, server, ref.kind, ref.namespace, ref.name, query, 0L))
+            }
+        }
+        SourceReadPath.FORGE -> {
+            val host = forgeHost(src)
+            withContext(Dispatchers.IO) { decodeGitRepoSearch(Ichorgo.gitRepoSearch(host, src.repoURL, src.ref, query, 0L)) }
+        }
+        SourceReadPath.NONE -> throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
+    }
+
     /** What stops proposing a change to [src]'s files (no Git host, no token), null when nothing does. */
     suspend fun proposeBlockOf(src: GitSource): ProposeBlock? {
         val blocked = proposeBlock(src, lacksToken = false)
@@ -209,6 +255,35 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
     /** The review of an edit: [before] → [after] of the file [name], as a one-file [FluxDiff]. */
     suspend fun textDiff(before: String, after: String, name: String): FluxDiff = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.textDiff(before, after, name))
+    }
+
+    /**
+     * [content] at [path] of [src] (read at [ref]) checked before it is proposed: the nearest
+     * kustomization built before and after on the repository's snapshot, or [fluxSpec]'s path
+     * (a Flux app's), and the rendered objects that change. Downloads the snapshot once per commit.
+     */
+    suspend fun editCheck(src: GitSource, ref: String, path: String, content: String, fluxSpec: String = ""): GitOpsEditCheck {
+        val host = forgeHost(src)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(GitOpsEditCheck.serializer(), Ichorgo.gitOpsEditCheck(host, src.repoURL, ref, path, content, fluxSpec))
+        }
+    }
+
+    /**
+     * Whether [content], proposed at [path] of [src] on [ref], would commit a clear-text secret
+     * where the repository's `.sops.yaml` (read there; none is no rules) encrypts.
+     */
+    suspend fun sopsEditWarning(src: GitSource, ref: String, path: String, content: String): SopsWarning {
+        val rules = cancellableCatching { forgeFile(src, ref, ".sops.yaml").content }.getOrNull()
+            ?: cancellableCatching { forgeFile(src, ref, ".sops.yml").content }.getOrNull().orEmpty()
+        return withContext(Dispatchers.Default) {
+            TalosJson.decodeFromString(SopsWarning.serializer(), Ichorgo.sopsEditWarning(rules, path, content))
+        }
+    }
+
+    /** [content]'s SOPS metadata (who it is encrypted for, its clear keys), never its values. Local. */
+    suspend fun sopsInspect(content: String): SopsInfo = withContext(Dispatchers.Default) {
+        TalosJson.decodeFromString(SopsInfo.serializer(), Ichorgo.sopsInspect(content))
     }
 
     /** What [content] offers to quick edits: its workloads' containers and replicas, a kustomization's images. No network. */
@@ -239,10 +314,133 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
         return go.kube { cfg, ctx, _ -> decodeGitProposalResult(Ichorgo.gitForgePropose(cfg, ctx, host, options)) }
     }
 
+    /** The active cluster's proposals for tool's kind namespace/name ("" for the repository); the demo's samples. */
+    fun proposalsFor(tool: String, kind: String, namespace: String, name: String): List<GitProposalRecord> {
+        val active = go.configs.config.value?.activeSummary ?: return emptyList()
+        val all = if (active.isDemo) DEMO_PROPOSALS else proposals?.proposals?.value?.get(active.fingerprint).orEmpty()
+        return all.filter { it.isFor(tool, kind, namespace, name) }
+    }
+
+    /** The active cluster's proposals, as they change. */
+    val proposalsFlow get() = proposals?.proposals
+
+    /** Keeps the pull request [result] opened for [record]'s target on the active cluster (not in the demo). */
+    fun rememberProposal(record: GitProposalRecord) {
+        val active = go.configs.config.value?.activeSummary ?: return
+        if (!active.isDemo) proposals?.add(active.fingerprint, record)
+    }
+
+    /** Forgets [record] on the active cluster. */
+    fun forgetProposal(record: GitProposalRecord) {
+        val active = go.configs.config.value?.activeSummary ?: return
+        proposals?.remove(active.fingerprint, record)
+    }
+
+    /** The state of [record]'s request on its forge, with its host's token. */
+    suspend fun requestState(record: GitProposalRecord): GitRequestState {
+        val host = forgeHost(record.host)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(GitRequestState.serializer(), Ichorgo.gitForgeRequest(host, record.repoURL, record.number.toLong()))
+        }
+    }
+
+    /**
+     * Whether [record]'s app runs the merged [state]: its merge commit, else its head (a squash
+     * merge's commit is a new one). Null for the repository, which no app follows here.
+     */
+    suspend fun revisionRuns(record: GitProposalRecord, state: GitRequestState): RevisionRuns? {
+        if (record.tool.isEmpty()) return null
+        suspend fun runs(sha: String) = go.kube { cfg, ctx, server ->
+            TalosJson.decodeFromString(
+                RevisionRuns.serializer(),
+                Ichorgo.gitOpsRevisionRuns(cfg, ctx, server, record.tool, record.kind, record.namespace, record.name, sha),
+            )
+        }
+        val first = state.mergeSha.ifEmpty { state.headSha }.ifEmpty { return null }
+        val merged = runs(first)
+        if (merged.runs || state.headSha.isEmpty() || state.headSha == first) return merged
+        return runs(state.headSha).takeIf { it.runs } ?: merged
+    }
+
+    /** The repository saved for the active cluster; the demo cluster's built-in one; null without one. */
+    fun activeClusterRepo(): ClusterRepo? {
+        val active = go.configs.config.value?.activeSummary ?: return null
+        if (active.isDemo) return DEMO_CLUSTER_REPO
+        return clusterRepos?.repos?.value?.get(active.fingerprint)
+    }
+
+    /**
+     * What the forge tells of [repo] with its host's saved token: the default branch, the head
+     * of the branch read, whether the token can push. Throws [GitHostMissing] without a token.
+     */
+    suspend fun repoInfo(repo: ClusterRepo): GitRepoInfo {
+        val host = forgeHost(repo.host)
+        return withContext(Dispatchers.IO) { decodeGitRepoInfo(Ichorgo.gitForgeRepo(host, repo.repoURL, repo.branch)) }
+    }
+
+    /** The active cluster's repository as a source of the source browser, at its branch head. */
+    suspend fun clusterRepoSource(): GitSource {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        return repoSource(repo, repoInfo(repo))
+    }
+
+    /**
+     * The files of the active cluster's repository (under its Talos directory) that configure
+     * the node [hostname] of [role], at its branch head. Throws without a repository or token.
+     */
+    suspend fun talosRepoFiles(hostname: String, role: String): TalosRepoFiles {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        val host = forgeHost(repo.host)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(TalosRepoFiles.serializer(), Ichorgo.talosRepoFiles(host, repo.repoURL, repo.branch, repo.talosDir, hostname, role))
+        }
+    }
+
+    /**
+     * Applies the repository files [paths] (in that order) at commit [sha] onto [node]'s live
+     * config and says what differs (os:admin; only a dry run reaches the node).
+     */
+    suspend fun talosRepoCompare(node: String, hostname: String, sha: String, paths: List<String>): TalosRepoCompare {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        val host = forgeHost(repo.host)
+        val pathsJson = TalosJson.encodeToString(ListSerializer(String.serializer()), paths)
+        return go.talos { cfg, ctx ->
+            TalosJson.decodeFromString(TalosRepoCompare.serializer(), Ichorgo.talosRepoCompare(cfg, ctx, host, repo.repoURL, sha, node, hostname, pathsJson))
+        }
+    }
+
+    /** The patch that turns [base] into [draft] (both redacted configs), its values and whether one is a secret's. Local. */
+    suspend fun talosConfigPatchFrom(base: String, draft: String): TalosConfigPatch = withContext(Dispatchers.Default) {
+        TalosJson.decodeFromString(TalosConfigPatch.serializer(), Ichorgo.talosConfigPatchFrom(base, draft))
+    }
+
+    /**
+     * Where [patch] goes in the active cluster's repository for the node [hostname] of [role]:
+     * its file (or a new one), with the values a shared patch sets left out.
+     */
+    suspend fun talosWriteBackPlan(hostname: String, role: String, patch: String): TalosWriteBackPlan {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        val host = forgeHost(repo.host)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(
+                TalosWriteBackPlan.serializer(),
+                Ichorgo.talosRepoWriteBackPlan(host, repo.repoURL, repo.branch, repo.talosDir, hostname, role, patch),
+            )
+        }
+    }
+
+    /** The prefilled pull request for a change of [path] in the cluster repository [repoURL], naming the active cluster. No network. */
+    suspend fun repoProposalDefaults(repoURL: String, path: String): GitProposalDefaults {
+        val cluster = go.configs.config.value?.activeSummary?.name.orEmpty()
+        return withContext(Dispatchers.Default) { decodeGitProposalDefaults(Ichorgo.gitForgeRepoProposalDefaults(repoURL, path, cluster)) }
+    }
+
     /** The forge argument for [src]'s host, with its saved token; [GitHostMissing] without one. */
-    private suspend fun forgeHost(src: GitSource): String {
+    private suspend fun forgeHost(src: GitSource): String = forgeHost(src.host)
+
+    /** The forge argument for [host], with its saved token; [GitHostMissing] without one. */
+    private suspend fun forgeHost(host: String): String {
         val store = checkNotNull(gitHosts) { "No Git host store" }
-        val host = src.host
         val entry = store.hostFor(host)
         val json = store.hostJson(entry)
         if (gitHostJsonLacksToken(json)) throw GitHostMissing(host)
@@ -306,6 +504,9 @@ internal fun decodeGitOpsSource(json: String): GitOpsSource = TalosJson.decodeFr
 
 /** The answer of `GitForgeTree` and `FluxSourceTree`. */
 internal fun decodeGitTree(json: String): GitTree = TalosJson.decodeFromString(GitTree.serializer(), json)
+
+/** The answer of `GitRepoSearch` and `FluxSourceSearch`. */
+internal fun decodeGitRepoSearch(json: String): GitRepoSearch = TalosJson.decodeFromString(GitRepoSearch.serializer(), json)
 
 /** The answer of `GitForgeFile` and `FluxSourceFile`. */
 internal fun decodeGitFile(json: String): GitFile = TalosJson.decodeFromString(GitFile.serializer(), json)

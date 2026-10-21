@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,12 +27,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +45,7 @@ import name.levis.ichor.model.ArgoSource
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.gitops.rememberGitWebUrl
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -129,12 +132,13 @@ private fun AutoSyncRow(app: ArgoApp, busy: Boolean, onAutoSync: (Boolean) -> Un
 @Composable
 private fun LinkedInfoRow(label: String, value: String, url: String) {
     val uri = LocalUriHandler.current
+    val web = rememberGitWebUrl()
     if (url.isEmpty()) {
         InfoRow(label, value, mono = true)
         return
     }
     Row(
-        Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.argo_open_link)) { runCatching { uri.openUri(url) } }.padding(vertical = 3.dp),
+        Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.argo_open_link)) { runCatching { uri.openUri(web(url)) } }.padding(vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(0.4f))
@@ -162,12 +166,13 @@ fun RevisionRow(label: String, revision: String, url: String) = LinkedInfoRow(la
 @Composable
 fun RevisionText(revision: String, url: String, style: TextStyle, color: Color, modifier: Modifier = Modifier) {
     val uri = LocalUriHandler.current
+    val web = rememberGitWebUrl()
     if (url.isEmpty()) {
         Text(shortRevision(revision), style = style, fontFamily = FontFamily.Monospace, color = color, modifier = modifier)
         return
     }
     Row(
-        modifier.clickable(onClickLabel = stringResource(R.string.argo_open_commit)) { runCatching { uri.openUri(url) } },
+        modifier.clickable(onClickLabel = stringResource(R.string.argo_open_commit)) { runCatching { uri.openUri(web(url)) } },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(shortRevision(revision), style = style, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)
@@ -189,7 +194,7 @@ fun ArgoDiffButton(app: ArgoApp, onDiff: () -> Unit) {
 
 /** One warning banner per condition: SyncError, ComparisonError, OrphanedResourceWarning... */
 @Composable
-fun ConditionBanners(conditions: List<ArgoCondition>) {
+fun ConditionBanners(conditions: List<ArgoCondition>, onDiff: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         conditions.forEach { c ->
@@ -201,6 +206,10 @@ fun ConditionBanners(conditions: List<ArgoCondition>) {
                     Column {
                         Text(c.type, style = MaterialTheme.typography.labelLarge)
                         Text(c.message, style = MaterialTheme.typography.bodySmall)
+                        // A sync or comparison error: the diff names the objects, each with its file in Git.
+                        if (onDiff != null && c.type.endsWith("Error")) {
+                            TextButton(onClick = onDiff, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                        }
                     }
                 }
             }

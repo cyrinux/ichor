@@ -80,6 +80,9 @@ struct DiffResourceRow: View {
     var openSource: (() -> Void)?
     /// That search runs.
     var searching = false
+    /// "Keep live values in Git": the manifest's editor with the values changed by hand written;
+    /// nil hides the action.
+    var keepLive: (() -> Void)?
 
     private var hasDetail: Bool { !resource.diff.isEmpty || !resource.error.isEmpty || resource.change.hint != nil }
 
@@ -88,14 +91,32 @@ struct DiffResourceRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 DisclosureGroup(isExpanded: $expanded) { detail } label: { header }
                 sourceAction
+                keepAction
             }
-        } else if openSource != nil {
+        } else if openSource != nil || keepLive != nil {
             VStack(alignment: .leading, spacing: 6) {
                 header
                 sourceAction
+                keepAction
             }
         } else {
             header
+        }
+    }
+
+    /// The values changed in the cluster by hand ("spec.replicas 2 → 5"), then the action.
+    @ViewBuilder private var keepAction: some View {
+        if let keepLive, !searching {
+            let values = resource.liveChanges.map { "\($0.label) \($0.wanted) → \($0.live)" }.joined(separator: ", ")
+            Text("Changed in the cluster: \(values)")
+                .font(.caption2.monospaced())
+                .foregroundStyle(.secondary)
+                .lineLimit(3)
+            Button(action: keepLive) {
+                Label("Keep live values in Git", systemImage: "square.and.arrow.down")
+            }
+            .font(.caption)
+            .buttonStyle(.borderless)
         }
     }
 

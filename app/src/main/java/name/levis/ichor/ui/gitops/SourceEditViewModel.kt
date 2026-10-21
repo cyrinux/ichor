@@ -15,13 +15,18 @@ import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.model.DEFAULT_PROPOSAL_BASE
 import name.levis.ichor.model.FluxDiff
+import name.levis.ichor.model.GitOpsEditCheck
+import name.levis.ichor.model.SopsWarning
+import name.levis.ichor.model.fluxCheckSpec
 import name.levis.ichor.model.GitProposal
 import name.levis.ichor.model.GitProposalDefaults
+import name.levis.ichor.model.GitProposalRecord
 import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ManifestType
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.model.isStaleFileError
 import name.levis.ichor.model.manifestType
@@ -61,7 +66,7 @@ data class ProposeForm(
  * the proposal's lock), the [draft] typed, then the [review] diff, the [form] of the pull
  * request (kept when its sheet closes: [formOpen]) and its [result]. A quick edit leaves its
  * [quick] draft and title (the request's default while the draft is still that one), or a
- * [notice] when it did not apply to the file read here.
+ * [notice] when it did not apply to the file read here (or, kept live values, which it left).
  */
 data class SourceEdit(
     val source: GitSource,
@@ -73,6 +78,10 @@ data class SourceEdit(
     val manifest: ManifestType?,
     val defaults: GitProposalDefaults,
     val review: UiState<FluxDiff>? = null,
+    /** The build check run with the review: the kustomization built with the draft. */
+    val check: UiState<GitOpsEditCheck>? = null,
+    /** Whether the draft commits a clear-text secret where .sops.yaml encrypts; Continue waits for it. */
+    val sops: UiState<SopsWarning>? = null,
     val form: ProposeForm? = null,
     val formOpen: Boolean = false,
     val result: GitProposalResult? = null,
@@ -105,6 +114,8 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
     private var path: String = ""
     private var quick: QuickEdit? = null
     private var job: Job? = null
+    private var checkJob: Job? = null
+    private var sopsJob: Job? = null
     private var helpLoad: Job? = null
 
     /** Reads [path] of [target] once per [key]; a [quick] edit is applied to it and reviewed at once. */
@@ -125,7 +136,10 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         _state.value = SourceEditState()
         job = viewModelScope.launch {
             _state.value = try {
-                open(t)
+                open(t).also { opened ->
+                    // A quick edit opens on its review: its build is checked as for Review.
+                    if ((opened.edit as? UiState.Loaded)?.data?.review != null) viewModelScope.launch { check() }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GitHostMissing) {
@@ -140,9 +154,16 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         val src = gitOps.sourceOf(t)
         gitOps.proposeBlockOf(src)?.let { return SourceEditState(UiState.Loading, it) }
         val readRef = proposalBaseRef(src.tracked) ?: src.ref
-        val file = gitOps.forgeFile(src, readRef, path)
+        // A node file the write-back creates: proposed as a new file (no sha).
+        val creating = quick.let { it?.op == QuickEdit.OP_TALOS && it.create }
+        val file = if (creating) GitFile(path = path) else gitOps.forgeFile(src, readRef, path)
         if (file.truncated) throw LocalizedException(UiText.Res(R.string.gitops_source_truncated))
-        val defaults = cancellableCatching { gitOps.proposalDefaults(t.tool, t.kind, t.namespace, t.name, path) }.getOrDefault(GitProposalDefaults())
+        val defaults = cancellableCatching {
+            when (t) {
+                is SourceTarget.App -> gitOps.proposalDefaults(t.tool, t.kind, t.namespace, t.name, path)
+                SourceTarget.Repo -> gitOps.repoProposalDefaults(src.repoURL, path)
+            }
+        }.getOrDefault(GitProposalDefaults())
         val edit = SourceEdit(
             source = src,
             path = path,
@@ -168,7 +189,9 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         if (!result.changed) return edit.copy(notice = UiText.Res(R.string.gitops_quick_unchanged))
         val review = cancellableCatching { gitOps.textDiff(edit.original, result.content, edit.path) }
             .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
-        return edit.copy(draft = result.content, review = review, quick = QuickDraft(result.content, quickEditTitle(quick)))
+        // Live values the file does not set (an overlay or a patch does) are named on the review.
+        val skipped = result.skipped.takeIf { it.isNotEmpty() }?.let { UiText.Res(R.string.gitops_keep_skipped, it.joinToString("; ")) }
+        return edit.copy(draft = result.content, review = review, quick = QuickDraft(result.content, quickEditTitle(quick)), notice = skipped)
     }
 
     private fun updateEdit(transform: (SourceEdit) -> SourceEdit) = _state.update { s ->
@@ -190,11 +213,46 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
                 .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
             updateEdit { it.copy(review = result) }
         }
+        check()
+    }
+
+    /**
+     * Builds the draft's kustomization on the repository snapshot (the review starts it):
+     * whether it still builds and which rendered objects change. A Flux app's source is built
+     * from its path as kustomize-controller does.
+     */
+    fun check() {
+        val edit = current ?: return
+        checkSops(edit)
+        checkJob?.cancel()
+        if (!edit.changed) return updateEdit { it.copy(check = null) }
+        updateEdit { it.copy(check = UiState.Loading) }
+        val flux = (target as? SourceTarget.App)?.takeIf { it.tool == SOURCE_TOOL_FLUX && it.kind == "Kustomization" }?.let { fluxCheckSpec(edit.source.path) }.orEmpty()
+        checkJob = viewModelScope.launch {
+            val result = cancellableCatching { gitOps.editCheck(edit.source, edit.readRef, edit.path, edit.draft, flux) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            // The draft may have changed meanwhile: the check is of the one reviewed.
+            if (current?.draft == edit.draft) updateEdit { it.copy(check = result) }
+        }
+    }
+
+    /** Reads .sops.yaml at the branch: a fast call of its own, so the warning never waits for the build. */
+    private fun checkSops(edit: SourceEdit) {
+        sopsJob?.cancel()
+        if (!edit.changed) return updateEdit { it.copy(sops = null) }
+        updateEdit { it.copy(sops = UiState.Loading) }
+        sopsJob = viewModelScope.launch {
+            val result = cancellableCatching { gitOps.sopsEditWarning(edit.source, edit.readRef, edit.path, edit.draft) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            if (current?.draft == edit.draft) updateEdit { it.copy(sops = result) }
+        }
     }
 
     fun backToEditor() {
         job?.cancel()
-        updateEdit { it.copy(review = null, formOpen = false) }
+        checkJob?.cancel()
+        sopsJob?.cancel()
+        updateEdit { it.copy(review = null, check = null, sops = null, formOpen = false) }
     }
 
     /** Opens the pull request sheet: as it was left, else prefilled. */
@@ -250,7 +308,10 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
                 )
             }
             outcome.fold(
-                onSuccess = { result -> updateEdit { it.copy(formOpen = false, review = null, result = result, original = it.draft) } },
+                onSuccess = { result ->
+                    target?.let { t -> gitOps.rememberProposal(proposalRecord(t, edit, form.title, result)) }
+                    updateEdit { it.copy(formOpen = false, review = null, result = result, original = it.draft) }
+                },
                 onFailure = { e ->
                     updateEdit { it.copy(form = it.form?.copy(sending = false, error = e.uiText(), stale = isStaleFileError(e.message))) }
                 },
@@ -272,7 +333,9 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         val edit = current ?: return
         if (edit.reloading) return
         val base = edit.form?.base?.trim().orEmpty().ifEmpty { edit.readRef }
-        updateEdit { it.copy(reloading = true) }
+        checkJob?.cancel()
+        sopsJob?.cancel()
+        updateEdit { it.copy(reloading = true, check = null, sops = null) }
         viewModelScope.launch {
             val outcome = cancellableCatching { gitOps.forgeFile(edit.source, base, edit.path) }
             outcome.fold(
@@ -327,4 +390,24 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
             _help.update { if (it?.path == help.path && it.mode == help.mode) it.copy(state = result) else it }
         }
     }
+}
+
+/** The record kept of the pull request [result] opened for [target]'s file [edit]. */
+internal fun proposalRecord(target: SourceTarget, edit: SourceEdit, title: String, result: GitProposalResult): GitProposalRecord {
+    val app = target as? SourceTarget.App
+    return GitProposalRecord(
+        tool = target.tool,
+        kind = app?.kind.orEmpty(),
+        namespace = app?.namespace.orEmpty(),
+        name = app?.name.orEmpty(),
+        repoURL = edit.source.repoURL,
+        path = edit.path,
+        title = title,
+        url = result.url,
+        number = result.number,
+        branch = result.branch,
+        commit = result.commit,
+        forge = result.forge,
+        createdAt = System.currentTimeMillis(),
+    )
 }

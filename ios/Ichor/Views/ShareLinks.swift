@@ -54,7 +54,8 @@ extension ShareTarget {
         case .argoApp: .argoApp(namespace: namespace, name: name)
         case .fluxApp: .fluxApp(kind: kind, namespace: namespace, name: name)
         case .workloads, .workload, .pod, .cronJob: kubeFocus.map { Route.kubernetes($0) }
-        case .data: .dataServices(hints: "", downNodes: [], kind: dataServiceKind)
+        // A plugin finding's alert: the plugin's screen.
+        case .data: pluginID.map { Route.plugin(id: $0) } ?? .dataServices(hints: "", downNodes: [], kind: dataServiceKind, solo: dataServiceKind?.opensAlone == true)
         case .checkup: .checkup
         case .alerts: .alerts
         }

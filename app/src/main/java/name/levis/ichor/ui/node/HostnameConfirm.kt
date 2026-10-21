@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.confirmationCode
 import name.levis.ichor.model.confirmationMatches
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -40,7 +41,8 @@ fun HostnameConfirmDialog(
     enabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    var typed by remember { mutableStateOf("") }
+    // Per hostname: a dialog reused for another object starts empty.
+    var typed by remember(hostname) { mutableStateOf("") }
     // [enabled] false: something forbids the action whatever is typed (e.g. a blocker).
     val matches = enabled && confirmationMatches(typed, hostname)
     val colors = LocalStatusColors.current
@@ -51,7 +53,7 @@ fun HostnameConfirmDialog(
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 content()
-                Text(stringResource(R.string.power_type_to_confirm, hostname), style = MaterialTheme.typography.bodyMedium)
+                TypedConfirmPrompt(hostname)
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },
@@ -72,4 +74,12 @@ fun HostnameConfirmDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
+}
+
+/** "Type … to confirm": the whole [name], or only its end when it is long (see [confirmationCode]). */
+@Composable
+fun TypedConfirmPrompt(name: String) {
+    val code = confirmationCode(name)
+    val prompt = if (code == name.trim()) stringResource(R.string.power_type_to_confirm, code) else stringResource(R.string.power_type_end_to_confirm, code, name.trim())
+    Text(prompt, style = MaterialTheme.typography.bodyMedium)
 }

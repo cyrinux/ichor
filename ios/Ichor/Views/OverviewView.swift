@@ -26,6 +26,12 @@ struct OverviewView: View {
     /// role may use the Kubernetes API (nil hides the section); hints are their catalog ids.
     @State private var dataServices: LoadState<DataServices>?
     @State private var dataHints = ""
+    /// The active CRD plugins of Data services (kube-green...), asked with the same hints; their
+    /// lines join the card. Empty until they answer, or when they cannot be asked.
+    @State private var dataPlugins: [PluginDetectItem] = []
+    /// The installed plugins (no cluster call, see PluginCatalogCache): those of Data services
+    /// (Rook, MariaDB...) hint the card too.
+    @State private var pluginCatalog = PluginCatalog()
     /// Argo CD: only asked when the inventory shows it and the role may use the Kubernetes API.
     @State private var argo: LoadState<ArgoStatus>?
     /// Flux: likewise, only when the inventory shows it.
@@ -277,6 +283,7 @@ struct OverviewView: View {
             discovered = []
             inventory = .loading
             dataServices = nil
+            dataPlugins = []
             argo = nil
             flux = nil
             alerts = nil
@@ -293,6 +300,7 @@ struct OverviewView: View {
             discovered = []
             inventory = .loading
             dataServices = nil
+            dataPlugins = []
             argo = nil
             flux = nil
             alerts = nil
@@ -358,6 +366,10 @@ struct OverviewView: View {
                         Label { Text(verbatim: CapacityText.capacityTitle) } icon: { Image(systemName: "gauge.with.dots.needle.33percent") }
                     }
                 }
+                // The cluster's own Git repository, once one is saved (the demo has one).
+                ClusterRepoToolLink {
+                    Label { Text("Repository") } icon: { Image(systemName: "folder.badge.gearshape") }
+                }
             } header: {
                 if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
             }
@@ -365,7 +377,7 @@ struct OverviewView: View {
             AppsCard(state: inventory, hostnames: hostnames, argo: argoStatus, path: $path)
         case .dataServices:
             if let dataServices {
-                DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames)
+                DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames, plugins: dataPlugins)
             }
         case .argoCD:
             if let argo {
@@ -762,20 +774,29 @@ struct OverviewView: View {
         flux = (flux ?? .loading).refreshed(with: loaded)
     }
 
-    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or Dragonfly, and roles
-    /// that may use the Kubernetes API: others make no Kubernetes call. A failed refresh keeps what was
-    /// shown (with its error noted).
+    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or another data service
+    /// (a Data services plugin's app among them), and roles that may use the Kubernetes API: others make
+    /// no Kubernetes call. A failed refresh keeps what was shown (with its error noted).
     private func loadDataServices(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
-        let hints = dataServiceHints(apps)
+        var catalog = PluginCatalog()
+        if model.allows(.workloads) { catalog = await PluginCatalogCache.load(with: client) }
+        guard id == loadID else { return }
+        pluginCatalog = catalog
+        let hints = dataServiceHints(apps, plugins: catalog)
         guard model.allows(.workloads), !hints.isEmpty else {
             dataServices = nil
+            dataPlugins = []
             return
         }
         dataHints = hints
         if dataServices == nil { dataServices = .loading }
+        async let detected = LoadState<PluginDetect>.from { try await client.pluginDetect(hints: hints) }
         let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: hints) }
+        let plugins = await detected
         guard id == loadID else { return }
         dataServices = (dataServices ?? .loading).refreshed(with: loaded)
+        // A failed ask keeps the lines shown.
+        if case .loaded(let detect, _, _) = plugins { dataPlugins = detect.dataServicePlugins }
     }
 
     /// Only for roles that may use the Kubernetes API, and clusters with an Alertmanager (searched
@@ -807,7 +828,7 @@ struct OverviewView: View {
         guard case .loaded(let apps, _, _) = inventory else { return known }
         let kubernetes = model.allows(.workloads)
         var absent: Set<OverviewCard> = known
-        if !kubernetes || dataServiceHints(apps).isEmpty { absent.insert(.dataServices) }
+        if !kubernetes || dataServiceHints(apps, plugins: pluginCatalog).isEmpty { absent.insert(.dataServices) }
         if !kubernetes || !argoCDHinted(apps) { absent.insert(.argoCD) }
         if !kubernetes || !fluxHinted(apps) { absent.insert(.flux) }
         return absent

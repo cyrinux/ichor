@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"encoding/json"
 	"slices"
 	"strings"
 	"time"
@@ -9,10 +10,8 @@ import (
 // demoDataServices are the storage and database operators of the built-in demo cluster, in
 // every state the app shows: a degraded and a faulted volume, a Garage cluster with a node
 // down next to a healthy single-node one, Postgres clusters with failed and stale backups,
-// a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one,
 // an expired certificate and one failing to renew,
-// Velero schedules with a failed and a partially failed backup and a storage location down, a
-// nearly full Ceph cluster with an OSD down.
+// Velero schedules with a failed and a partially failed backup and a storage location down.
 func demoDataServices(now time.Time) dataServices {
 	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -117,64 +116,6 @@ func demoDataServices(now time.Time) dataServices {
 			LastSuccessAt: ms(3 * 24 * time.Hour), RecoverableAt: ms(17 * 24 * time.Hour)},
 	}}
 
-	dragonfly := &dragonflyStatus{Version: "v1alpha1", Instances: []dragonflyInstance{
-		{Namespace: "demo", Name: "session-cache", Phase: "Ready", Health: healthWarning, Reasons: []string{dragonflyReasonPods},
-			Replicas: 2, ReadyPods: 1, Master: "session-cache-0", Pods: []dragonflyPod{
-				{Name: "session-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "master", Ready: true},
-				{Name: "session-cache-1", Phase: "Pending", Role: "replica"},
-			}},
-		{Namespace: "demo", Name: "queue-cache", Phase: "Ready", Health: healthOK, Reasons: []string{},
-			Replicas: 2, ReadyPods: 2, Master: "queue-cache-1", Pods: []dragonflyPod{
-				{Name: "queue-cache-1", Node: "demo-worker-2", Phase: "Running", Role: "master", Ready: true},
-				{Name: "queue-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "replica", Ready: true},
-			}},
-	}}
-
-	mariadb := &mariadbStatus{Version: "v1alpha1", Clusters: []mariadbCluster{
-		{Namespace: "demo", Name: "shop-db", Topology: "replication", Health: healthWarning, Reasons: []string{mariadbReasonBackupFailed},
-			Replicas: 2, ReadyPods: 2, Primary: "shop-db-0", Pods: []mariadbPod{
-				{Name: "shop-db-0", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
-				{Name: "shop-db-1", Node: "demo-worker-3", Phase: "Running", Role: "replica", Ready: true},
-			}, LastBackupAt: ms(3 * 24 * time.Hour), LastBackupFailedAt: ms(20 * time.Hour), BackupSchedule: "0 3 * * *"},
-		{Namespace: "demo", Name: "forum-db", Topology: "galera", Health: healthOK, Reasons: []string{},
-			Replicas: 3, ReadyPods: 3, Primary: "forum-db-1", Pods: []mariadbPod{
-				{Name: "forum-db-1", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
-				{Name: "forum-db-0", Node: "demo-worker-1", Phase: "Running", Role: "member", Ready: true},
-				{Name: "forum-db-2", Node: "demo-worker-3", Phase: "Running", Role: "member", Ready: true},
-			}, LastBackupAt: ms(9 * time.Hour), BackupSchedule: "0 */12 * * *"},
-		{Namespace: "demo", Name: "legacy-db", Topology: "standalone", Health: healthIdle, Reasons: []string{}, Suspended: true,
-			Replicas: 1, ReadyPods: 1, Primary: "legacy-db-0", Pods: []mariadbPod{
-				{Name: "legacy-db-0", Node: "demo-worker-1", Phase: "Running", Role: "primary", Ready: true},
-			}},
-	}}
-
-	pxcPods := func(name string, ready ...bool) []perconaPod {
-		out := []perconaPod{}
-		for i, r := range ready {
-			pod := perconaPod{Name: name + "-pxc-" + string(rune('0'+i)), Phase: "Pending"}
-			if r {
-				pod.Node, pod.Phase, pod.Ready = "demo-worker-"+string(rune('1'+i)), "Running", true
-			}
-
-			out = append(out, pod)
-		}
-
-		return out
-	}
-
-	daily := []perconaSchedule{{Name: "daily-backup", Schedule: "0 2 * * *", Keep: 7, StorageName: "s3-garage"}}
-
-	percona := &perconaStatus{Version: "v1", Clusters: []perconaCluster{
-		{Namespace: "demo", Name: "shop-mysql", State: "initializing", CRVersion: "1.18.0", Health: healthWarning,
-			Reasons: []string{perconaReasonMembers, perconaReasonBackupStale}, PXCSize: 3, PXCReady: 2, Pods: pxcPods("shop-mysql", true, true, false),
-			Proxy: "haproxy", ProxySize: 2, ProxyReady: 2, LastBackupAt: ms(4 * 24 * time.Hour), BackupSchedules: daily},
-		{Namespace: "demo", Name: "crm-mysql", State: "ready", CRVersion: "1.18.0", Health: healthOK, Reasons: []string{},
-			PXCSize: 3, PXCReady: 3, Pods: pxcPods("crm-mysql", true, true, true),
-			Proxy: "proxysql", ProxySize: 2, ProxyReady: 2, LastBackupAt: ms(10 * time.Hour), BackupSchedules: daily},
-		{Namespace: "demo", Name: "legacy-mysql", State: "paused", CRVersion: "1.17.0", Paused: true, Health: healthIdle, Reasons: []string{},
-			PXCSize: 1, Pods: []perconaPod{}, LastBackupAt: ms(30 * 24 * time.Hour), BackupSchedules: []perconaSchedule{}},
-	}}
-
 	in := func(d time.Duration) int64 { return now.Add(d).UnixMilli() }
 
 	const day = 24 * time.Hour
@@ -234,85 +175,21 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}
 
-	tib := 1024 * gib
-	ceph := &cephStatus{Version: "v1",
-		Clusters: []cephCluster{
-			{Namespace: "rook-ceph", Name: "rook-ceph", Phase: "Ready", Message: "Cluster created successfully", CephHealth: "HEALTH_WARN",
-				Health: healthWarning, Reasons: []string{cephReasonHealthWarn, cephReasonNearFull, cephReasonOSDs},
-				Checks: []cephCheck{
-					{Name: "OSD_DOWN", Severity: "HEALTH_WARN", Message: "1 osds down"},
-					{Name: "OSD_NEARFULL", Severity: "HEALTH_WARN", Message: "1 nearfull osd(s)"},
-					{Name: "PG_DEGRADED", Severity: "HEALTH_WARN", Message: "Degraded data redundancy: 2114/6342 objects degraded (33.333%), 97 pgs degraded"},
-				},
-				BytesTotal: 3 * tib, BytesUsed: 2662 * gib, OSDsUp: 2, OSDsTotal: 3, MonsReady: 3, MonsTotal: 3,
-				NotReadyNodes: []string{"demo-worker-3"}, Version: "19.2.3-0"},
-		},
-		Pools: []cephPool{
-			{Namespace: "rook-ceph", Name: "ceph-objectstore", Kind: "objectStore", Phase: "Progressing", Health: healthWarning},
-			{Namespace: "rook-ceph", Name: "ceph-blockpool", Kind: "blockPool", Phase: "Ready", Health: healthOK},
-			{Namespace: "rook-ceph", Name: "ceph-filesystem", Kind: "filesystem", Phase: "Ready", Health: healthOK},
-		},
-		OSDs: []cephOSD{
-			{Namespace: "rook-ceph", ID: "0", Pod: "rook-ceph-osd-0-6d8f9c7b5-x2k4p", Node: "demo-worker-1", Phase: "Running", Ready: true},
-			{Namespace: "rook-ceph", ID: "1", Pod: "rook-ceph-osd-1-7c9b8d6f4-q8m2d", Node: "demo-worker-2", Phase: "Running", Ready: true},
-			{Namespace: "rook-ceph", ID: "2", Pod: "rook-ceph-osd-2-5f7d6c8b9-r4t7n", Node: "demo-worker-3", Phase: "Running"},
-		},
-	}
-
 	snapshots := demoVolumeSnapshots(now)
-	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, ExternalDNS: demoExternalDNS(now), KubeGreen: demoKubeGreen(now), Ceph: ceph, CastAI: demoCastAI(now)}
-}
-
-// demoKubeGreen is the demo cluster's sleep schedules, built through the real mapping so
-// the statuses stay consistent with the clock: staging sleeps on weekday nights (asleep
-// now when the demo runs at night), preview every night, and sandbox has no wake-up time.
-func demoKubeGreen(now time.Time) *kubeGreenStatus {
-	obj := func(ns, name, weekdays, sleepAt, wakeUpAt, timeZone, operation string, lastSchedule time.Time) sleepInfoObject {
-		var o sleepInfoObject
-		o.Metadata.Namespace, o.Metadata.Name = ns, name
-		o.Spec.Weekdays, o.Spec.SleepTime, o.Spec.WakeUpTime, o.Spec.TimeZone = weekdays, sleepAt, wakeUpAt, timeZone
-		o.Status.Operation = operation
-		if !lastSchedule.IsZero() {
-			o.Status.LastScheduleTime = lastSchedule.Format(time.RFC3339)
-		}
-
-		return o
-	}
-
-	// What a healthy controller's status says: the last expected run of either cron, and
-	// which one it was.
-	lastRun := func(sleepAt, wakeUpAt, weekdays, timeZone string) (string, time.Time) {
-		loc, _ := time.LoadLocation(orDefault(timeZone, "UTC"))
-		inZone := now.In(loc)
-		sleep, _ := kubeGreenCron(sleepAt, weekdays)
-		wake, _ := kubeGreenCron(wakeUpAt, weekdays)
-		prevSleep, prevWake := kubeGreenPrevRun(sleep, true, inZone), kubeGreenPrevRun(wake, true, inZone)
-		if prevWake.After(prevSleep) {
-			return "WAKE_UP", prevWake
-		}
-
-		return "SLEEP", prevSleep
-	}
-
-	stagingOp, stagingAt := lastRun("20:00", "07:00", "1-5", "Europe/Rome")
-	previewOp, previewAt := lastRun("22:30", "06:00", "*", "")
-	sandboxOp, sandboxAt := lastRun("19:00", "", "1-5", "")
-
-	out := mapKubeGreen([]sleepInfoObject{
-		obj("staging", "nights", "1-5", "20:00", "07:00", "Europe/Rome", stagingOp, stagingAt),
-		obj("preview", "every-night", "*", "22:30", "06:00", "", previewOp, previewAt),
-		obj("sandbox", "until-changed", "1-5", "19:00", "", "", sandboxOp, sandboxAt),
-	}, now)
-	out.Version = "v0.7.1"
-
-	return out
+	return dataServices{Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, CertManager: certManager, Velero: velero, CastAI: demoCastAI(now)}
 }
 
 // demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is
-// asleep whenever the demo runs (a sleep at 00:00, waking at 23:59 Rome), the others are not, so
-// the asleep line and the CronJob warning always have something to show.
+// asleep whenever the demo runs (a sleep at 00:00, waking at 23:59 Rome), so the asleep line and
+// the CronJob warning always have something to show; the other namespaces hold the kube-green
+// plugin's samples (demo-shop, demo-lab, demo-preview), so that the plugin tab's rows open the
+// schedule editor on the schedules they show.
 func demoKubeGreenNamespace(namespace string, now time.Time) kubeGreenNamespace {
 	if namespace != "staging" {
+		if objs := demoKubeGreenSamples(namespace); len(objs) > 0 {
+			return mapKubeGreenNamespace(objs, now)
+		}
+
 		return kubeGreenNamespace{Installed: true, SleepInfos: []kubeGreenSleepInfo{}}
 	}
 
@@ -330,6 +207,31 @@ func demoKubeGreenNamespace(namespace string, now time.Time) kubeGreenNamespace 
 	}
 
 	return mapKubeGreenNamespace([]sleepInfoObject{o}, now)
+}
+
+// demoKubeGreenSamples are the SleepInfo samples of the kube-green plugin in namespace, their
+// relative times resolved as the plugin's demo resolves them; none without the plugin.
+func demoKubeGreenSamples(namespace string) []sleepInfoObject {
+	c, err := findPlugin("kube-green")
+	if err != nil || namespace == "" {
+		return nil
+	}
+
+	var out []sleepInfoObject
+
+	for _, obj := range demoPluginInput(c, namespace, "").Objects["sleepinfo"] {
+		raw, err := json.Marshal(obj)
+		if err != nil {
+			continue
+		}
+
+		var o sleepInfoObject
+		if json.Unmarshal(raw, &o) == nil {
+			out = append(out, o)
+		}
+	}
+
+	return out
 }
 
 // demoCastAI is the demo cluster's CAST AI recommendations: the Workload Autoscaler right-sizing
@@ -469,61 +371,6 @@ func demoGarageBlockReport() garageBlockReport {
 			{ID: "9c2f61a0d4e8b7c3", Hostname: "garage-2xv9p", Error: "Network error: Not connected: 9c2f61a0d4e8b7c3", Blocks: []garageBlock{}},
 		},
 	}
-}
-
-// demoExternalDNS is the demo cluster's ExternalDNS: one controller (cloudflare, sync,
-// owner id homelab, example.com only) and six records across the four source kinds, among
-// them a DNSEndpoint whose newer generation is not observed yet, an Ingress without an
-// address to point at and a name outside every domain filter.
-func demoExternalDNS(now time.Time) *externalDNSStatus {
-	controller := externalDNSController{
-		Namespace: "external-dns", Name: "external-dns", Ready: true, Replicas: 1, ReadyReplicas: 1,
-		Provider: "cloudflare", Policy: "sync", Registry: "txt", OwnerID: "homelab",
-		DomainFilters: []string{"example.com"}, Sources: []string{"ingress", "service", "gateway-httproute", "crd"},
-		IntervalSeconds: 60, Health: healthOK, Reasons: []string{},
-	}
-
-	record := func(dnsName string, targets []string, ttl int, kind, namespace, name, group, version, resource, controller string, reasons ...string) externalDNSRecord {
-		health := healthOK
-		if len(reasons) > 0 {
-			health = healthWarning
-		}
-
-		return externalDNSRecord{
-			DNSName: dnsName, RecordType: extDNSRecordType(targets), Targets: targets, TTL: ttl,
-			SourceKind: kind, SourceNamespace: namespace, SourceName: name,
-			SourceGroup: group, SourceVersion: version, SourceResource: resource,
-			Controller: controller, Health: health, Reasons: reasons,
-		}
-	}
-
-	out := &externalDNSStatus{Version: "v1alpha1", Controllers: []externalDNSController{controller}, Records: []externalDNSRecord{
-		record("app.example.com", []string{"203.0.113.10"}, 300, "Ingress", "demo", "app", "networking.k8s.io", "v1", "ingresses", "external-dns"),
-		record("shop.example.com", []string{"203.0.113.20"}, 60, "Service", "demo", "shop", "", "v1", "services", "external-dns"),
-		record("api.example.com", []string{"203.0.113.30"}, 300, "HTTPRoute", "demo", "api", groupGatewayAPI, "v1", "httproutes", "external-dns"),
-		record("db.example.com", []string{"203.0.113.40"}, 300, "DNSEndpoint", "demo", "db", groupExternalDNS, "v1alpha1", "dnsendpoints", "external-dns", extDNSReasonStale),
-		record("status.example.com", nil, 0, "Ingress", "demo", "status", "networking.k8s.io", "v1", "ingresses", "external-dns", extDNSReasonNoTarget),
-		record("*.example.org", []string{"203.0.113.50"}, 300, "Ingress", "demo", "legacy", "networking.k8s.io", "v1", "ingresses", "", extDNSReasonUnmanaged),
-	}}
-	out.RecordCount = len(out.Records)
-
-	return out
-}
-
-// demoSealedSecrets exposes names and status only, just like the live reader.
-func demoSealedSecrets(now time.Time) *sealedSecretsStatus {
-	out := &sealedSecretsStatus{Version: sealedSecretsVersion, Health: healthCritical, Reasons: []string{}, SecretCount: 3,
-		Controller: &sealedSecretsController{Namespace: "kube-system", Name: "sealed-secrets-controller", Ready: true, Replicas: 1, ReadyReplicas: 1, Health: healthOK, Reasons: []string{}},
-		Keys: []sealingKey{
-			{Namespace: "kube-system", Name: "sealed-secrets-key-new", State: "active", CreatedAt: now.Add(-7 * 24 * time.Hour).UnixMilli(), Age: int64(7 * 24 * time.Hour / time.Millisecond)},
-			{Namespace: "kube-system", Name: "sealed-secrets-key-old", State: "active", CreatedAt: now.Add(-21 * 24 * time.Hour).UnixMilli(), Age: int64(21 * 24 * time.Hour / time.Millisecond)},
-			{Namespace: "kube-system", Name: "sealed-secrets-key-rotated", State: sealedKeyCompromised, CreatedAt: now.Add(-30 * 24 * time.Hour).UnixMilli(), Age: int64(30 * 24 * time.Hour / time.Millisecond)},
-		}, Items: []sealedSecret{
-			{Namespace: "shop", Name: "legacy-cert", Keys: []string{"tls.crt", "tls.key"}, KeyCount: 2, Type: "kubernetes.io/tls", Scope: "strict", Reason: "UnsealFailed", Message: "failed to decrypt: no key could decrypt secret", LastTransitionTime: now.Add(-time.Hour).UnixMilli(), ObservedGeneration: 1, Stale: true, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthCritical, Reasons: []string{sealedReasonNotSynced, sealedReasonStale}},
-			{Namespace: "shop", Name: "api-token", Keys: []string{"token"}, KeyCount: 1, Type: "Opaque", Scope: "namespace-wide", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
-			{Namespace: "shop", Name: "database-credentials", Keys: []string{"database", "password", "username"}, KeyCount: 3, Type: "Opaque", Immutable: true, Scope: "strict", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
-		}}
-	return out
 }
 
 // addDemoLonghornSnapshots: postgres-data well covered, uploads with a failed last backup,

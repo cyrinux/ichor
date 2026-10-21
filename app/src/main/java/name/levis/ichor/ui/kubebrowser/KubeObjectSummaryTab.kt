@@ -51,7 +51,8 @@ private const val METADATA_PREVIEW = 6
 
 /**
  * The summary tab of an object, as cards: its health and the spec fields read first, then its
- * conditions, who owns or manages it ([onOwner] opens one), its events and metadata.
+ * conditions, who owns or manages it ([onOwner] opens one; [onGitOpsDiff], the diff of the
+ * Argo CD or Flux app applying it), its events and metadata.
  */
 @Composable
 fun ObjectSummaryContent(
@@ -61,6 +62,7 @@ fun ObjectSummaryContent(
     modifier: Modifier = Modifier,
     /** A section after the owners (the images' vulnerability scan), null for none. */
     extra: (@Composable () -> Unit)? = null,
+    onGitOpsDiff: ((ObjectOwner) -> Unit)? = null,
 ) {
     when (state) {
         UiState.Loading -> Box(modifier) { LoadingBox(style = SkeletonStyle.TEXT) }
@@ -81,7 +83,12 @@ fun ObjectSummaryContent(
                 }
                 if (s.owners.isNotEmpty()) {
                     SectionCard(stringResource(R.string.kb_summary_owners)) {
-                        s.owners.forEach { OwnerRow(it, onOwner) }
+                        s.owners.forEach { o ->
+                            OwnerRow(o, onOwner)
+                            if (onGitOpsDiff != null && o.hasGitOpsDiff) {
+                                TextButton(onClick = { onGitOpsDiff(o) }) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                            }
+                        }
                     }
                 }
                 extra?.invoke()

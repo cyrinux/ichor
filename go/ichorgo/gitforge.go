@@ -74,6 +74,8 @@ type gitForgeEntry struct {
 	Path string `json:"path"`
 	Type string `json:"type"` // file or dir
 	Size int64  `json:"size"`
+	// SOPS: a file SOPS encrypts, by its name (*.sops.yaml, *.enc.yaml).
+	SOPS bool `json:"sops,omitempty"`
 }
 
 type gitForgeTree struct {
@@ -105,7 +107,11 @@ type gitForge interface {
 	check(ctx context.Context) (gitForgeCheck, error)
 	tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error)
 	file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error)
+	gitRepoReader
+	gitArchiver
+	gitCommitResolver
 	gitProposer
+	gitRequestReader
 }
 
 // GitForgeCheck tells whether hostJSON's token works: {"login","host","scopesOK","missing"}.
@@ -167,6 +173,7 @@ func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 	}
 
 	sortGitForgeEntries(entries)
+	markSOPSEntries(entries)
 
 	return gitForgeJSON(gitForgeTree{Ref: ref, Entries: nonNil(entries)})
 }
@@ -313,7 +320,7 @@ func parseGitForgeHost(hostJSON string) (gitForgeHost, error) {
 	switch h.Kind {
 	case gitForgeGitHub, gitForgeGitLab, gitForgeGitea:
 	default:
-		return gitForgeHost{}, fmt.Errorf("unknown Git host kind %q: pick GitHub, GitLab or Gitea in Settings", h.Kind)
+		return gitForgeHost{}, fmt.Errorf("unknown Git host kind %q: pick GitHub, GitLab or Gitea/Forgejo in Settings", h.Kind)
 	}
 
 	return h, nil
@@ -355,7 +362,7 @@ func gitForgeKindOf(host string) (string, error) {
 		return gitForgeGitea, nil
 	}
 
-	return "", fmt.Errorf("unknown Git host %s: pick GitHub, GitLab or Gitea in Settings", host)
+	return "", fmt.Errorf("unknown Git host %s: pick GitHub, GitLab or Gitea/Forgejo in Settings", host)
 }
 
 // gitForgeRepo splits a repository URL (https, ssh or scp-like, with or without .git) into
@@ -495,6 +502,11 @@ func (e gitForgeStatusError) Error() string { return e.err.Error() }
 func (e gitForgeStatusError) Unwrap() error { return e.err }
 
 func (c gitForgeClient) send(ctx context.Context, method, target string, body []byte, privateToken bool) (*http.Response, error) {
+	return c.sendVia(ctx, gitForgeHTTP, method, target, body, privateToken)
+}
+
+// sendVia is send through client (an archive download takes longer than an API call).
+func (c gitForgeClient) sendVia(ctx context.Context, client *http.Client, method, target string, body []byte, privateToken bool) (*http.Response, error) {
 	var reader io.Reader
 	if body != nil {
 		reader = bytes.NewReader(body)
@@ -520,7 +532,7 @@ func (c gitForgeClient) send(ctx context.Context, method, target string, body []
 		}
 	}
 
-	return gitForgeHTTP.Do(req)
+	return client.Do(req)
 }
 
 // status words a non-2xx answer: never with the token in it.

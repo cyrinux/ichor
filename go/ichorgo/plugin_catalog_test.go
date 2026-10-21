@@ -90,13 +90,14 @@ func TestPluginCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, _ := toJSON(pluginCatalogOf([]*plugin.Compiled{c}))
+	got, _ := toJSON(pluginCatalogOf([]*plugin.Compiled{c}, nil))
 
 	want := `{"items":[{"id":"kube-green","name":"kube-green","icon":"kube-green","website":"https://kube-green.dev",` +
 		`"category":"data-services","screen":"","version":"ichor.dev/plugin/v1alpha1",` +
-		`"resources":[{"group":"kube-green.com","version":"v1alpha1","resource":"sleepinfos","kind":"SleepInfo"},` +
-		`{"group":"","version":"v1","resource":"secrets","kind":"Secret"}],` +
-		`"actions":[{"id":"wakeNow","label":"Wake up now","verb":"mergePatch"}]}]}`
+		`"resources":[{"group":"kube-green.com","version":"v1alpha1","resource":"sleepinfos","kind":"SleepInfo","reveal":false},` +
+		`{"group":"","version":"v1","resource":"secrets","kind":"Secret","reveal":false}],` +
+		`"actions":[{"id":"wakeNow","label":"Wake up now","verb":"mergePatch","rbac":["patch"],"rbacResource":"sleepinfos","confirm":"plain"}],` +
+		`"catalogId":"kube-green","user":false}]}`
 	if got != want {
 		t.Fatalf("catalog\n got %s\nwant %s", got, want)
 	}

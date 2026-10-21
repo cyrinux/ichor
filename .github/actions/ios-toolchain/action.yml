@@ -1,8 +1,8 @@
 name: iOS toolchain
 description: >
   Go with its module and build caches, the Swift package checkouts and XcodeGen. The Go cache
-  is keyed on the sources (go.sum and OS prefixes as fallbacks) and only written by the test
-  job on main, through its own save step, so both iOS jobs read the same cache.
+  is keyed on go.sum (see android-toolchain); both caches are only written by the test job on
+  main, through its own save steps, so both iOS jobs read the same entries.
 
 outputs:
   go-cache-key:
@@ -11,12 +11,18 @@ outputs:
   go-cache-hit:
     description: Whether the Go cache hit its primary key (nothing to save then).
     value: ${{ steps.go.outputs.cache-hit }}
+  spm-cache-key:
+    description: Primary key of the Swift package checkouts, for actions/cache/save.
+    value: ${{ steps.spm.outputs.cache-primary-key }}
+  spm-cache-hit:
+    description: Whether the Swift package cache hit its primary key (nothing to save then).
+    value: ${{ steps.spm.outputs.cache-hit }}
 
 runs:
   using: composite
   steps:
-    # setup-go's own cache is keyed on go.sum alone, so its build cache goes stale as the
-    # sources change; the restore below keys on the sources instead.
+    # setup-go's own cache is off: the restore below shares the key and the save-on-main
+    # policy of the Android toolchain instead.
     - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go/go.mod
@@ -28,14 +34,14 @@ runs:
         path: |
           ~/go/pkg/mod
           ~/Library/Caches/go-build
-        key: go-${{ runner.os }}-${{ hashFiles('go/go.sum') }}-${{ hashFiles('go/**/*.go') }}
-        restore-keys: |
-          go-${{ runner.os }}-${{ hashFiles('go/go.sum') }}-
-          go-${{ runner.os }}-
+        key: go-${{ runner.os }}-${{ hashFiles('go/go.sum') }}
+        restore-keys: go-${{ runner.os }}-
 
     # Swift package checkouts (SwiftTerm, YubiKit), cloned by -resolvePackageDependencies
-    # into the derived data path of scripts/ios-build.sh.
-    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    # into the derived data path of scripts/ios-build.sh. Restore only: actions/cache would
+    # also save a 640 MB entry for every pull request.
+    - id: spm
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ios/build/SourcePackages
         key: spm-${{ runner.os }}-${{ hashFiles('ios/project.yml') }}

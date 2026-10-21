@@ -168,7 +168,7 @@ func TestReadDataServicesCertManager(t *testing.T) {
 		t.Fatalf("cert-manager: %+v", cm)
 	}
 
-	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil || res.Dragonfly != nil {
+	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil {
 		t.Errorf("only cert-manager is installed: %+v", res)
 	}
 }

@@ -80,6 +80,8 @@ data class GitEntry(
     /** file or dir. */
     val type: String = "",
     val size: Long = 0,
+    /** A file SOPS encrypts, by its name. */
+    val sops: Boolean = false,
 ) {
     val isDir: Boolean get() = type == "dir"
     val name: String get() = path.substringAfterLast('/')

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -131,6 +132,78 @@ func TestRenderDataServicesDemo(t *testing.T) {
 	}
 }
 
+// The systems that moved to a built-in plugin stay in the report: one section per plugin,
+// its findings worst first, an info finding counted but not listed.
+func TestDataServicesReportThePluginsFindings(t *testing.T) {
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := collectDataServices(context.Background(), kubeTarget{cfg, "", ""}, []string{adminRole})
+	if s == nil || s.Plugins == nil || len(s.Plugins.Findings) == 0 {
+		t.Fatalf("demo plugins %+v", s)
+	}
+
+	var b strings.Builder
+	renderDataServices(&b, s)
+	out := b.String()
+
+	for _, want := range []string{
+		"  Rook Ceph (plugin): ", "    demo-lab/archive [critical]: Ceph reports errors\n",
+		"  kube-green (plugin): ", "    demo-lab/weekend [warning]: no wake-up time\n",
+		"  External Secrets (plugin): ", "  Sealed Secrets (plugin): ", "    demo-shop/legacy-cert [critical]: failed to unseal",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("report lacks %q:\n%s", want, out)
+		}
+	}
+
+	// The unmanaged SealedSecret is an info finding: counted, not listed.
+	if strings.Contains(out, "shared-config") {
+		t.Errorf("an info finding is listed:\n%s", out)
+	}
+}
+
+func TestPluginReportSections(t *testing.T) {
+	report := &pluginFindingsReport{
+		Plugins: 2,
+		Findings: []pluginFindingItem{
+			{Severity: sevCritical, pluginFinding: pluginFinding{Plugin: "a", PluginName: "Alpha", Title: "shop/one", Detail: "down"}},
+			{Severity: "info", pluginFinding: pluginFinding{Plugin: "a", PluginName: "Alpha", Title: "shop/two"}},
+		},
+		Truncated: 3,
+		Errors:    []pluginFindingsError{{Plugin: "b", PluginName: "Beta", Resource: "widgets.example.com", Message: "forbidden"}},
+	}
+
+	var b strings.Builder
+	for _, sec := range pluginReportSections(report) {
+		renderDataServiceSection(&b, sec)
+	}
+
+	want := "  Alpha (plugin): 2 findings, 1 critical\n    shop/one [critical]: down\n" +
+		"  Beta (plugin) could not be read: widgets.example.com: forbidden\n"
+	if got := b.String(); !strings.HasPrefix(got, "  Alpha (plugin): 2 findings, 1 critical") || !strings.Contains(got, "shop/one [critical]: down") ||
+		!strings.Contains(got, "Beta (plugin) could not be read: widgets.example.com: forbidden") || !strings.Contains(got, "3 more findings left out") {
+		t.Errorf("sections:\n%s\nwant like:\n%s", got, want)
+	}
+
+	if pluginReportSections(nil) != nil || activePluginFindings(pluginFindingsReport{}) != nil {
+		t.Error("no plugin, no section")
+	}
+}
+
+// A cluster whose only system is a plugin still gets the section, read live.
+func TestCollectDataServicesReadsThePlugins(t *testing.T) {
+	kubeGreenBuiltin(t, kubeGreenParityClocks[0])
+	kubeGreenParityAPI(t, http.StatusForbidden)
+
+	s := collectDataServices(context.Background(), kubeTarget{"cfg", "ctx", ""}, []string{adminRole})
+	if s == nil || s.Note != "" || s.Plugins == nil || s.Plugins.Plugins != 1 || len(s.Plugins.Findings) == 0 {
+		t.Fatalf("got %+v", s)
+	}
+}
+
 func TestRenderDataServicesCapsTheList(t *testing.T) {
 	volumes := make([]longhornVolume, 16)
 	for i := range volumes {
@@ -151,29 +224,36 @@ func TestRenderDataServicesCapsTheList(t *testing.T) {
 }
 
 func TestRenderDataServicesKeepsTheNodesOfALongLine(t *testing.T) {
-	ceph := &cephStatus{Clusters: []cephCluster{{
-		Namespace: "rook-ceph", Name: "rook-ceph", CephHealth: "HEALTH_WARN", Health: healthWarning,
-		Checks: []cephCheck{{Name: "PG_DEGRADED", Message: strings.Repeat("degraded data redundancy ", 20)}}, NotReadyNodes: []string{"worker-2"},
-	}}}
+	volumes := []longhornVolume{{
+		Name: "pvc-7f3a", Health: healthWarning, State: "attached", Robustness: "degraded",
+		ScheduleError: strings.Repeat("replica scheduling failed ", 20), ReplicaNodes: []string{"worker-2"},
+	}}
 
 	var b strings.Builder
-	renderDataServices(&b, &dataServicesState{dataServices: dataServices{Ceph: ceph}})
+	renderDataServices(&b, &dataServicesState{dataServices: dataServices{Longhorn: &longhornStatus{Volumes: volumes}}})
+
+	found := false
 
 	for _, line := range strings.Split(b.String(), "\n") {
-		if strings.Contains(line, "rook-ceph/rook-ceph") && (!strings.HasSuffix(line, "…; nodes worker-2") || len(line) > diagnosisMaxLineLen+8) {
-			t.Errorf("line %q", line)
+		if strings.Contains(line, "pvc-7f3a [warning]") {
+			found = true
+
+			if !strings.HasSuffix(line, "…; nodes worker-2") || len(line) > diagnosisMaxLineLen+8 {
+				t.Errorf("line %q", line)
+			}
 		}
+	}
+
+	if !found {
+		t.Errorf("no volume line:\n%s", b.String())
 	}
 }
 
 func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 	ds := dataServices{
-		SealedSecrets: &sealedSecretsStatus{Health: healthCritical, Reasons: []string{"noKeys"}},
-		Garage:        &garageStatus{Keys: []garageOpKey{{Namespace: "storage", Name: "app-key", Health: healthCritical, Reasons: []string{"notReady"}}}},
+		Garage: &garageStatus{Keys: []garageOpKey{{Namespace: "storage", Name: "app-key", Health: healthCritical, Reasons: []string{"notReady"}}}},
 		Velero: &veleroStatus{Adhoc: []veleroAdhoc{{Namespace: "velero", Health: healthWarning,
 			veleroBackup: veleroBackup{Name: "before-upgrade", Phase: "Failed", FailureReason: "timed out"}}}},
-		ExternalDNS: &externalDNSStatus{Records: []externalDNSRecord{{DNSName: "app.example.org", RecordType: "A", Health: healthWarning,
-			Reasons: []string{"noController"}, SourceKind: "Ingress", SourceNamespace: "web", SourceName: "app"}}},
 		CastAI: &castAIStatus{Recommendations: []castAIRecommendation{{Namespace: "web", Name: "api", Health: healthCritical, Message: "apply failed"}}},
 	}
 
@@ -182,10 +262,8 @@ func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 	out := b.String()
 
 	for _, want := range []string{
-		"    controller [critical]: noKeys\n",
 		"    GarageKey storage/app-key [critical]: notReady\n",
 		"    backup velero/before-upgrade [warning]: Failed; timed out\n",
-		"    A app.example.org [warning]: noController; Ingress web/app\n",
 		"  CAST AI: 1 recommendations, 1 critical\n    web/api [critical]: apply failed\n",
 	} {
 		if !strings.Contains(out, want) {

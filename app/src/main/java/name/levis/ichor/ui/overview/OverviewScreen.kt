@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.gitops.hasClusterRepo
 import name.levis.ichor.ui.share.rememberClusterPins
 import name.levis.ichor.ui.share.ClusterPins
 import name.levis.ichor.model.needsAttention
@@ -51,6 +52,7 @@ import kotlinx.coroutines.flow.first
 import name.levis.ichor.util.StartupTrace
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -98,6 +100,7 @@ import name.levis.ichor.model.hasLastKnown
 import name.levis.ichor.model.lacksPublicIps
 import name.levis.ichor.model.health
 import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.DataFreshness
@@ -115,6 +118,9 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.apps.AppsViewModel
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.PluginCatalog
+import name.levis.ichor.model.PluginDetectItem
+import name.levis.ichor.ui.plugins.PluginDetectViewModel
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.model.ARGO_CD_CATALOG_ID
@@ -178,7 +184,10 @@ fun OverviewScreen(
     onWorkloads: () -> Unit,
     onMetrics: () -> Unit,
     onAlerts: () -> Unit,
-    onDataServices: (DataServiceKind?) -> Unit,
+    /** Data services on one system (null: the first); alone (solo) for a system the Kubernetes home files elsewhere. */
+    onDataServices: (DataServiceKind?, Boolean) -> Unit,
+    /** A CRD plugin's tile (see [name.levis.ichor.ui.plugins.pluginRoute]). */
+    onPlugin: (PluginDetectItem) -> Unit,
     onArgoCD: () -> Unit,
     onFlux: () -> Unit,
     onHealth: () -> Unit,
@@ -218,6 +227,10 @@ fun OverviewScreen(
     onHelm: () -> Unit,
     onStorage: () -> Unit,
     onServices: () -> Unit,
+    /** The cluster's own Git repository (its Cluster repository setting), from its root. */
+    onRepository: () -> Unit,
+    /** Settings → Git hosts. */
+    onGitHosts: () -> Unit,
     /** Crossplane's packages, definitions and resources (from the Kubernetes home). */
     onCrossplane: () -> Unit,
     /** The Tailscale operator's connectors and proxies (from the Kubernetes home). */
@@ -247,6 +260,7 @@ fun OverviewScreen(
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
+    pluginsVm: PluginDetectViewModel = viewModel(key = "overview-plugins", factory = factory { PluginDetectViewModel(app.pluginRepository) }),
 ) {
     SideEffect { StartupTrace.markOnce("overviewScreen first composition") }
     // A cluster added from a kubeconfig has no Talos overview: its Kubernetes home instead,
@@ -269,6 +283,7 @@ fun OverviewScreen(
                 onArgoCD = onArgoCD,
                 onFlux = onFlux,
                 onDataServices = onDataServices,
+                onPlugin = onPlugin,
                 onSettings = onSettings,
                 onFunding = onFunding,
                 onAddCluster = onAddCluster,
@@ -282,6 +297,8 @@ fun OverviewScreen(
                 onTailscale = onTailscale,
                 onClusterLifecycle = onClusterLifecycle,
                 onLoadBalancing = onLoadBalancing,
+                onRepository = onRepository,
+                onGitHosts = onGitHosts,
                 onJobs = onJobs,
                 onEvents = onKubeEvents,
                 onDrain = onDrain,
@@ -323,15 +340,23 @@ fun OverviewScreen(
     }
     val apps by appsVm.state.collectAsStateWithLifecycle()
 
-    // Longhorn, Garage, CloudNativePG: only asked (through Kubernetes) when the inventory shows
-    // one of them and the role may use the Kubernetes API; other clusters pay nothing.
-    val dataHints = (apps as? UiState.Loaded)?.data?.dataServiceHints().orEmpty()
+    // The installed plugins (no cluster call, kept once read): those of Data services hint too.
+    val pluginCatalog by produceState(PluginCatalog(), config?.activeContext, invalidations) {
+        value = cancellableCatching { app.pluginRepository.catalog() }.getOrDefault(PluginCatalog())
+    }
+    // Longhorn, Garage, CloudNativePG, a Data services plugin (Rook...): only asked (through Kubernetes)
+    // when the inventory shows one of them and the role may use the Kubernetes API; other clusters pay nothing.
+    val dataHints = (apps as? UiState.Loaded)?.data?.dataServiceHints(pluginCatalog).orEmpty()
         .takeIf { config?.activeSummary?.allows(Feature.WORKLOADS) == true }.orEmpty()
     LaunchedEffect(config?.activeContext, generation, invalidations, dataHints) {
         // Another cluster without hints: forgotten, so coming back loads again instead of showing the old result.
         if (dataHints.isNotEmpty()) dataVm.load(listOf(config?.activeContext, generation, invalidations, dataHints), dataHints) else dataVm.forget()
+        // The CRD plugins (kube-green...) with them: their tiles join the card.
+        if (dataHints.isNotEmpty()) pluginsVm.load(listOf(config?.activeContext, generation, invalidations), dataHints) else pluginsVm.forget()
     }
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
+    val plugins by pluginsVm.state.collectAsStateWithLifecycle()
+    val dataPlugins = (plugins as? UiState.Loaded)?.data?.dataServicePlugins.orEmpty()
     // Argo CD likewise, when the inventory shows it.
     val argoHinted = config?.activeSummary?.allows(Feature.WORKLOADS) == true &&
         (apps as? UiState.Loaded)?.data?.hasArgoCD == true
@@ -506,12 +531,14 @@ fun OverviewScreen(
                                 onEtcd = onEtcd,
                                 onSettings = onSettings,
                                 onSearch = onSearch,
+                                onRepository = onRepository,
                             ),
                             reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
                             health = config?.activeSummary?.allows(Feature.HEALTH) == true,
                             workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
                             gitOps = argoHinted || fluxHinted,
                             onCustomize = { customizing = true },
+                            repository = hasClusterRepo(),
                         )
                     },
                 )
@@ -527,6 +554,7 @@ fun OverviewScreen(
                     onClustersCleared = onClustersCleared,
                     onEndpoints = { editingEndpoints = it.name },
                     onActivity = { onActivity(it.name) },
+                    onGitHosts = onGitHosts,
                 )
             }
             config?.let { stored ->
@@ -588,6 +616,7 @@ fun OverviewScreen(
                         timeVm.refresh()
                         appsVm.refresh()
                         if (dataHints.isNotEmpty()) dataVm.refresh()
+                        if (dataHints.isNotEmpty()) pluginsVm.refresh()
                         if (alertsAllowed) alertsVm.refresh()
                         scope.launch { discoveryVm.discover() }
                     },
@@ -620,7 +649,9 @@ fun OverviewScreen(
                         onApps = onApps,
                         dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
                         dataHints = dataHints,
-                        onDataServices = onDataServices,
+                        onDataServices = { onDataServices(it, false) },
+                        dataPlugins = dataPlugins,
+                        onPlugin = onPlugin,
                         argo = argo.takeIf { argoHinted },
                         onArgoCD = onArgoCD,
                         flux = flux.takeIf { fluxHinted },
@@ -676,6 +707,8 @@ private fun NodeList(
     dataServices: UiState<DataServices>?,
     dataHints: String,
     onDataServices: (DataServiceKind?) -> Unit,
+    dataPlugins: List<PluginDetectItem>,
+    onPlugin: (PluginDetectItem) -> Unit,
     argo: UiState<ArgoStatus>?,
     onArgoCD: () -> Unit,
     flux: UiState<FluxStatus>?,
@@ -819,7 +852,7 @@ private fun NodeList(
                     val inventory = (apps as? UiState.Loaded)?.data
                     val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
                     val hinted = remember(dataHints) { DataServiceKind.entries.filter { it.catalogId in dataHints.split(',') } }
-                    Box(Modifier.longPressToCustomize(onCustomize)) { DataServicesCard(dataServices, hinted, appsById, onDataServices) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { DataServicesCard(dataServices, hinted, appsById, onDataServices, dataPlugins, onPlugin) }
                 }
                 OverviewCard.ARGO_CD -> if (argo != null) item(key = card.name) {
                     val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }

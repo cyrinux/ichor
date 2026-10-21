@@ -28,6 +28,16 @@ final class KubeStorageTests: XCTestCase {
         XCTAssertEqual(s.claims[1].pods, [])
     }
 
+    func testAPluginsClaimOpensThePlugin() throws {
+        let json = #"{"namespace":"web","name":"uploads","phase":"Bound","managedBy":"rook","managedName":"Rook Ceph","level":"ok"}"#
+        let claim = try JSONDecoder().decode(StorageClaim.self, from: Data(json.utf8))
+        XCTAssertNil(claim.managedKind)
+        XCTAssertEqual(claim.managedPlugin, "rook")
+        XCTAssertEqual(claim.managedName, "Rook Ceph")
+        // A native data service's claim opens that screen, not a plugin.
+        XCTAssertNil(try storage().claims[0].managedPlugin)
+    }
+
     func testSearchesNameClassVolumeAndPods() throws {
         let claims = try storage().claims
         XCTAssertEqual(filterStorageClaims(claims, query: "PG-1").map(\.name), ["data-pg-1"])

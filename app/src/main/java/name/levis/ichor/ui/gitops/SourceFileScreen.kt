@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -56,10 +57,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.activeIsKube
+import name.levis.ichor.ui.machineconfig.TalosPatchCard
+import name.levis.ichor.ui.machineconfig.TalosPatchNodeSheet
 import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.model.QuickEditTargets
+import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SourceReadPath
+import name.levis.ichor.model.collapseSopsValues
 import name.levis.ichor.model.forgeFileUrl
 import name.levis.ichor.model.isYamlPath
 import name.levis.ichor.model.shortRevision
@@ -96,10 +103,13 @@ fun SourceFileScreen(
     onEdit: (() -> Unit)? = null,
     onQuickEdit: ((QuickEdit) -> Unit)? = null,
     line: Int? = null,
+    /** A Talos patch file tried on the node picked: the machine config screen opens with it. */
+    onTryPatch: ((node: NodeOverview, patch: PatchPrefill) -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    val web = rememberGitWebUrl()
     val talos = context.applicationContext as TalosApp
-    val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository) })
+    val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository, talos.talosRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val quickSheet by vm.quick.sheet.collectAsStateWithLifecycle()
     val applied by vm.quick.applied.collectAsStateWithLifecycle()
@@ -111,7 +121,10 @@ fun SourceFileScreen(
     }
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
-    LaunchedEffect(config?.activeContext, generation) { vm.load(target, path, config?.activeContext to generation) }
+    LaunchedEffect(config?.activeContext, generation) {
+        vm.load(target, path, config?.activeContext to generation, talosCluster = config?.activeIsKube == false && onTryPatch != null)
+    }
+    var pickingNode by rememberSaveable { mutableStateOf(false) }
     // Back from Settings with a token: read again.
     val missingHost by rememberUpdatedState(state.missingHost)
     val noToken by rememberUpdatedState(state.editBlock is ProposeBlock.NoToken)
@@ -128,6 +141,15 @@ fun SourceFileScreen(
             QuickSheetKind.IMAGE -> QuickEditImageSheet(sheet, quick, onApply = vm.quick::applyEdit, onDismiss = vm.quick::close)
             QuickSheetKind.REPLICAS -> QuickEditReplicasSheet(sheet, quick, onApply = vm.quick::applyEdit, onDismiss = vm.quick::close)
         }
+    }
+
+    val patchInfo = state.talosPatch
+    if (pickingNode && patchInfo != null && view != null && onTryPatch != null) {
+        TalosPatchNodeSheet(talos.talosRepository, patchInfo, onPick = { node ->
+            pickingNode = false
+            val sha = if (view.source.readPath == SourceReadPath.FLUX) view.file.sha.ifEmpty { view.source.ref } else view.source.ref
+            onTryPatch(node, PatchPrefill(view.file.content, if (sha.isEmpty()) path else "$path @ ${shortRevision(sha)}"))
+        }, onDismiss = { pickingNode = false })
     }
 
     Scaffold(
@@ -149,7 +171,8 @@ fun SourceFileScreen(
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (quick != null) QuickEditMenu(quick, onOpen = { vm.quick.open(it) })
-                    if (view != null && !view.file.truncated && onEdit != null) {
+                    // An encrypted file is edited with sops on a computer: Open in browser stays.
+                    if (view != null && !view.file.truncated && onEdit != null && state.sops == null) {
                         TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.gitops_edit), onClick = onEdit, enabled = state.editBlock == null)
                     }
                     if (view != null && !view.file.truncated) {
@@ -159,7 +182,7 @@ fun SourceFileScreen(
                             Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
                         })
                     }
-                    val url = view?.let { forgeFileUrl(it.source.webURL, it.source.ref, path) }.orEmpty()
+                    val url = view?.let { forgeFileUrl(web(it.source.webURL), it.source.ref, path) }.orEmpty()
                     if (url.isNotEmpty()) {
                         TooltipIconButton(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.gitops_source_open_browser), onClick = { openUrl(context, url) })
                     }
@@ -174,15 +197,21 @@ fun SourceFileScreen(
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> if (s.data.file.truncated) {
-                val url = forgeFileUrl(s.data.source.webURL, s.data.source.ref, path)
+                val url = forgeFileUrl(web(s.data.source.webURL), s.data.source.ref, path)
                 EmptyState(Icons.AutoMirrored.Outlined.InsertDriveFile, stringResource(R.string.gitops_source_truncated), modifier) {
                     if (url.isNotEmpty()) OpenInBrowserButton { openUrl(context, url) }
                 }
             } else {
                 Column(modifier) {
                     val block = state.editBlock
-                    if (onEdit != null && block != null) EditBlockNote(block, onAddToken)
-                    SourceLines(s.data.file.content, yaml = isYamlPath(path), line = line, modifier = Modifier.weight(1f))
+                    val sops = state.sops
+                    if (sops != null) SopsCard(sops, Modifier.padding(bottom = 8.dp))
+                    if (onEdit != null && block != null && sops == null) EditBlockNote(block, onAddToken)
+                    if (patchInfo != null && onTryPatch != null) {
+                        TalosPatchCard(patchInfo, onTry = { pickingNode = true }, modifier = Modifier.padding(bottom = 8.dp))
+                    }
+                    val content = if (sops != null) collapseSopsValues(s.data.file.content) else s.data.file.content
+                    SourceLines(content, yaml = isYamlPath(path), line = line, modifier = Modifier.weight(1f))
                 }
             }
         }

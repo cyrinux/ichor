@@ -5,6 +5,7 @@ struct MonitoringSection: View {
     @Environment(AppModel.self) private var model
     @State private var enabled = BackgroundMonitor.alertsEnabled
     @State private var dataWatched = BackgroundMonitor.dataServicesWatched
+    @State private var importedPlugins = BackgroundMonitor.importedPluginAlerts
     @State private var gitopsWatched = BackgroundMonitor.gitopsWatched
     @State private var checkupWatched = BackgroundMonitor.checkupWatched
     @State private var alertmanagerWatched = BackgroundMonitor.alertmanagerWatched
@@ -28,6 +29,19 @@ struct MonitoringSection: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Watch data services")
                     Text("Also alerts on Longhorn volumes that fault or degrade, a degraded Garage cluster and Postgres clusters that go down or whose backups fail. Each check uses the Kubernetes API (os:admin) and runs the Garage CLI in one of its pods.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            // Imported plugins: their findings notify only once this is on.
+            Toggle(isOn: Binding(get: { importedPlugins }, set: { on in
+                BackgroundMonitor.importedPluginAlerts = on
+                importedPlugins = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Alerts from imported plugins")
+                    Text("Plugins you imported notify too, like the built-in ones. Off: only built-in plugins send alerts.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

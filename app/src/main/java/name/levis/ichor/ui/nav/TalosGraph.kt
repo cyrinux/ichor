@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.NodeFilter
@@ -129,6 +130,8 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             navArgument("after") { type = NavType.StringType; defaultValue = "" },
             navArgument("snippet") { type = NavType.StringType; defaultValue = "" },
             navArgument("snippetParams") { type = NavType.StringType; defaultValue = "" },
+            navArgument("patch") { type = NavType.StringType; defaultValue = "" },
+            navArgument("patchFrom") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
         val args = entry.arguments
@@ -137,7 +140,17 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             DriftFix(it, args?.getString("before").orEmpty(), args?.getString("after").orEmpty())
         }
         val snippet = SnippetPrefill.decode(args?.getString("snippet").orEmpty(), args?.getString("snippetParams").orEmpty())
-        MachineConfigScreen(node = addr, hostname = args?.getString("host") ?: addr, onBack = { nav.popBackStack() }, fix = fix, snippet = snippet)
+        val patch = args?.getString("patch").orEmpty().takeIf { it.isNotEmpty() }?.let { PatchPrefill(it, args?.getString("patchFrom").orEmpty()) }
+        MachineConfigScreen(
+            node = addr,
+            hostname = args?.getString("host") ?: addr,
+            onBack = { nav.popBackStack() },
+            fix = fix,
+            snippet = snippet,
+            patch = patch,
+            onRepoFile = { path, line -> nav.navigate(Routes.repoFile(path, line, noTry = true)) },
+            onRepoEdit = { path, quick -> nav.navigate(Routes.repoEdit(path, quick)) },
+        )
     }
     composable(Routes.NETWORK, arguments = nodeArguments()) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()

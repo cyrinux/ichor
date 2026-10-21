@@ -4,9 +4,9 @@ on:
   # Website-only changes (pages.yml's paths) build nothing here.
   push:
     branches: [main]
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-plugins.py", ".github/workflows/pages.yml"]
   pull_request:
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-plugins.py", ".github/workflows/pages.yml"]
   # Tags: release.yml calls this, then publishes the release once with all files.
   # Artifacts are only uploaded then (github.ref is the caller's tag); pushes and PRs
   # just build.
@@ -23,6 +23,9 @@ jobs:
   test:
     name: Core tests and simulator build
     runs-on: macos-26
+    permissions:
+      contents: read
+      actions: write # cache-prune deletes the cache entries this job replaces
     concurrency:
       group: ${{ github.workflow }}-test-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -41,8 +44,9 @@ jobs:
       # simulator: built, not embedded in the IPA yet.
       - run: scripts/ios-build.sh watch
 
-      # The Go cache is written here only, on main: pull requests read it, so the cache does
-      # not fill with one entry per push.
+      # The Go and Swift package caches are written here only, on main: pull requests read
+      # them, so the cache does not fill with one entry per push. The entry each replaces is
+      # deleted right after.
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
         with:
@@ -50,6 +54,24 @@ jobs:
             ~/go/pkg/mod
             ~/Library/Caches/go-build
           key: ${{ steps.toolchain.outputs.go-cache-key }}
+
+      - uses: ./.github/actions/cache-prune
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
+        with:
+          prefix: go-${{ runner.os }}-
+          keep: ${{ steps.toolchain.outputs.go-cache-key }}
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.spm-cache-hit != 'true'
+        with:
+          path: ios/build/SourcePackages
+          key: ${{ steps.toolchain.outputs.spm-cache-key }}
+
+      - uses: ./.github/actions/cache-prune
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.spm-cache-hit != 'true'
+        with:
+          prefix: spm-${{ runner.os }}-
+          keep: ${{ steps.toolchain.outputs.spm-cache-key }}
 
   ipa:
     name: Unsigned IPA

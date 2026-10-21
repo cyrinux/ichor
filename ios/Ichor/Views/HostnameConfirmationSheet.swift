@@ -58,7 +58,7 @@ struct HostnameConfirmationSheet: View {
                         }
                     }
                 }
-                Section("Type \(hostname) to confirm") {
+                Section(typedConfirmationPrompt(hostname)) {
                     TextField("Hostname", text: $typed, prompt: Text(verbatim: hostname))
                         .font(.body.monospaced())
                         .autocorrectionDisabled()
@@ -82,4 +82,11 @@ struct HostnameConfirmationSheet: View {
             }
         }
     }
+}
+
+/// "Type … to confirm": the whole `name`, or only its end when it is long (see `typedConfirmationCode`).
+func typedConfirmationPrompt(_ name: String) -> String {
+    let code = typedConfirmationCode(name)
+    let whole = name.trimmingCharacters(in: .whitespaces)
+    return code == whole ? String(localized: "Type \(code) to confirm") : String(localized: "Type \(code), the end of \(whole), to confirm")
 }

@@ -51,6 +51,8 @@ struct SourceEditView: View {
     @State private var quickContent: String?
     /// Why the quick edit was not applied: the editor stays, with the file as read.
     @State private var quickFailure: String?
+    /// The live values a keep edit left, because the file does not set them; named on the review.
+    @State private var quickSkipped: String?
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -95,7 +97,8 @@ struct SourceEditView: View {
             .navigationDestination(isPresented: $reviewing) {
                 if let base {
                     SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
-                                     defaultTitle: quickTitle, onReload: reload(at:), onDone: { dismiss() })
+                                     defaultTitle: quickTitle, notice: quickTitle == nil ? nil : quickSkipped,
+                                     onReload: reload(at:), onDone: { dismiss() })
                 }
             }
             .sheet(item: $help) { request in
@@ -168,6 +171,9 @@ struct SourceEditView: View {
             }
             quickContent = result.content
             draft = result.content
+            if !result.skipped.isEmpty {
+                quickSkipped = String(localized: "Not kept, set elsewhere: \(result.skipped.joined(separator: "; "))")
+            }
             reviewing = true
         } catch {
             quickFailure = error.localizedDescription
@@ -186,7 +192,9 @@ struct SourceEditView: View {
         guard let client = model.client else { return }
         state = .loading
         do {
-            let file = try await client.forgeFile(source, path: path, ref: ref, hosts: hosts, demo: demo)
+            // A node file the write-back creates: proposed as a new file (no sha).
+            let creating = quickEdit?.op == .talos && quickEdit?.create == true
+            let file = creating ? GitFile(path: path) : try await client.forgeFile(source, path: path, ref: ref, hosts: hosts, demo: demo)
             missingHost = nil
             guard !file.truncated else {
                 state = .failed(String(localized: "This file is larger than 1 MiB: open it in the browser to read it."))
@@ -215,16 +223,39 @@ private struct SourceEditReview: View {
     let target: String
     /// The quick edit's pull request title, nil for the Go core's.
     let defaultTitle: String?
+    /// What the quick edit left out, shown above the diff.
+    var notice: String?
     let onReload: (String) -> Void
     let onDone: () -> Void
 
+    @Environment(AppModel.self) private var model
+    @Environment(GitHostStore.self) private var hosts
     @State private var state: LoadState<FluxDiff> = .loading
+    /// The build check run with the review: the kustomization built with the edit.
+    @State private var check: LoadState<GitOpsEditCheck> = .loading
     @State private var proposing = false
+    /// A clear-text secret where .sops.yaml encrypts: asked once more before the pull request.
+    @State private var confirmingSops = false
+    /// The .sops.yaml read at the branch: a quick call of its own, Continue waits for it.
+    @State private var sopsCheck: LoadState<SopsWarning>?
+
+    private var sopsWarning: SopsWarning? {
+        if case .loaded(let w, _, _) = sopsCheck, w.warn { return w }
+        return nil
+    }
+
+    private var sopsPending: Bool {
+        if case .loading = sopsCheck { return true }
+        return false
+    }
 
     var body: some View {
         LoadStateView(state: state, retry: load) { diff in
             let file = diff.resources.first
             List {
+                if let notice {
+                    Section { Text(verbatim: notice).font(.caption).foregroundStyle(.secondary) }
+                }
                 if let file, file.change == .changed {
                     Section {
                         DiffLinesView(lines: file.lines)
@@ -241,6 +272,10 @@ private struct SourceEditReview: View {
                         }
                         .font(.caption.monospacedDigit().weight(.semibold))
                     }
+                    if let sopsWarning {
+                        Section { SopsWarningText(warning: sopsWarning) }
+                    }
+                    EditCheckSection(state: check) { Task { await runCheck() } }
                 } else {
                     Section {
                         Label("Nothing changed yet.", systemImage: "checkmark.circle")
@@ -263,11 +298,28 @@ private struct SourceEditReview: View {
     }
 
     private var continueBar: some View {
-        Button { proposing = true } label: {
-            Text("Continue").frame(maxWidth: .infinity)
+        VStack(spacing: 6) {
+            // The pull request can still be opened: the person decides.
+            if case .loaded(let c, _, _) = check, c.fails {
+                Label("Build fails", systemImage: "xmark.octagon").font(.footnote).foregroundStyle(.statusBad)
+            }
+            Button {
+                if sopsWarning != nil { confirmingSops = true } else { proposing = true }
+            } label: {
+                Text("Continue").frame(maxWidth: .infinity)
+            }
+            .disabled(sopsPending)
+            .confirmationDialog("Commit a clear-text secret?", isPresented: $confirmingSops, titleVisibility: .visible) {
+                Button("Continue", role: .destructive) { proposing = true }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                if let w = sopsWarning {
+                    Text("\(sopsWhat(w)) would be committed in clear text at a path the rule \(w.rule?.pathRegex ?? "") encrypts. Encrypt it with sops on a computer first, unless you mean it.")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
         .padding()
         .background(.bar)
     }
@@ -278,5 +330,33 @@ private struct SourceEditReview: View {
         let path = path
         state = .loading
         state = await .from { try await TalosClient.textDiff(before: before, after: after, name: path) }
+        async let sops: Void = runSops()
+        await runCheck()
+        await sops
+    }
+
+    /// Reads .sops.yaml at the branch: whether the edit commits a clear-text secret where it encrypts.
+    private func runSops() async {
+        guard edited != base.file.content, let client = model.client else {
+            sopsCheck = nil
+            return
+        }
+        sopsCheck = .loading
+        sopsCheck = await .from {
+            try await client.sopsEditWarning(source, ref: base.ref, path: path, content: edited,
+                                             hosts: hosts, demo: model.activeSummary?.demo == true)
+        }
+    }
+
+    /// Builds the edit's kustomization on the repository snapshot: whether it still builds and
+    /// which rendered objects change. A Flux app's source is built from its path.
+    private func runCheck() async {
+        guard edited != base.file.content else { return }
+        let flux = app.tool == "flux" && app.kind == "Kustomization" ? GitOpsEditCheck.fluxSpec(path: source.path) : ""
+        check = .loading
+        check = await .from {
+            try await TalosClient.editCheck(source, ref: base.ref, path: path, content: edited, fluxSpec: flux,
+                                       hosts: hosts, demo: model.activeSummary?.demo == true)
+        }
     }
 }

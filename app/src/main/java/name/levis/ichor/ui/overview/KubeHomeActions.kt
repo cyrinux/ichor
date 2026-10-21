@@ -3,6 +3,7 @@ package name.levis.ichor.ui.overview
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.MonitorHeart
@@ -41,6 +42,7 @@ private fun kubeHomeActionIcon(action: KubeHomeAction): ImageVector = when (acti
     KubeHomeAction.CROSSPLANE -> Icons.Outlined.Extension
     KubeHomeAction.TAILSCALE -> Icons.Outlined.VpnLock
     KubeHomeAction.CLUSTER_LIFECYCLE -> Icons.Outlined.AccountTree
+    KubeHomeAction.REPOSITORY -> Icons.Outlined.FolderCopy
 }
 
 @Composable
@@ -60,6 +62,7 @@ fun kubeHomeActionLabel(action: KubeHomeAction): String = when (action) {
     KubeHomeAction.CROSSPLANE -> stringResource(R.string.crossplane_title)
     KubeHomeAction.TAILSCALE -> stringResource(R.string.tailscale_title)
     KubeHomeAction.CLUSTER_LIFECYCLE -> stringResource(R.string.cluster_lifecycle_title)
+    KubeHomeAction.REPOSITORY -> stringResource(R.string.repo_title)
 }
 
 /** How the Kubernetes home's actions look, in its bar and its editor. */
@@ -73,7 +76,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.METRICS -> onMetrics
     KubeHomeAction.ALERTS -> onAlerts
     KubeHomeAction.HELM -> onHelm
-    KubeHomeAction.DATA_SERVICES -> { { onDataServices(null) } }
+    KubeHomeAction.DATA_SERVICES -> { { onDataServices(null, false) } }
     KubeHomeAction.CHECKUP -> onCheckup
     KubeHomeAction.API_HEALTH -> onApiHealth
     KubeHomeAction.NETWORK_POLICIES -> onNetworkPolicies
@@ -82,21 +85,24 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.CROSSPLANE -> onCrossplane
     KubeHomeAction.TAILSCALE -> onTailscale
     KubeHomeAction.CLUSTER_LIFECYCLE -> onClusterLifecycle
+    KubeHomeAction.REPOSITORY -> onRepository
 }
 
 /**
  * The Kubernetes home's app-bar actions as arranged in [bar]: its icons, then the rest behind a
  * menu, so the cluster name keeps room on a phone. The menu also leads to arranging them.
- * GitOps is only offered once the cluster answered it runs Argo CD ([argo]) or Flux ([flux]).
+ * GitOps is only offered once the cluster answered it runs Argo CD ([argo]) or Flux ([flux]);
+ * the repository is enabled once one is saved ([repository]).
  */
 @Composable
-fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, crossplane: Boolean = false, tailscale: Boolean = false, clusterLifecycle: Boolean = false, onCustomize: () -> Unit) {
+fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, crossplane: Boolean = false, tailscale: Boolean = false, clusterLifecycle: Boolean = false, repository: Boolean = false, onCustomize: () -> Unit) {
     ActionBarActions(
         bar = bar,
         look = kubeHomeActionLook,
         onClick = { nav.open(it, flux = !argo)() },
         customizeLabel = stringResource(R.string.kube_home_edit_title),
         onCustomize = onCustomize,
+        enabled = { it != KubeHomeAction.REPOSITORY || repository },
         offered = { (it != KubeHomeAction.GITOPS || argo || flux) && (it != KubeHomeAction.CROSSPLANE || crossplane) &&
             (it != KubeHomeAction.TAILSCALE || tailscale) && (it != KubeHomeAction.CLUSTER_LIFECYCLE || clusterLifecycle)
         },

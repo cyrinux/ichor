@@ -8,6 +8,7 @@ public enum SettingsPage: String, CaseIterable, Hashable, Sendable {
     case alerts
     case ai
     case gitHosts
+    case plugins
     case kubernetes
     case clusters
     case support
@@ -22,6 +23,7 @@ public enum SettingsPage: String, CaseIterable, Hashable, Sendable {
         case .alerts: "bell.badge"
         case .ai: "sparkles"
         case .gitHosts: "arrow.triangle.branch"
+        case .plugins: "puzzlepiece.extension"
         case .kubernetes: "terminal"
         case .clusters: "externaldrive"
         case .support: "questionmark.circle"

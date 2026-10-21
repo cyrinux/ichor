@@ -43,13 +43,16 @@ import name.levis.ichor.ui.uiText
 /** The `GitOpsSource` tool name of a diff's tool. */
 val DiffTool.sourceTool: String get() = if (this == DiffTool.ARGO) SOURCE_TOOL_ARGO else SOURCE_TOOL_FLUX
 
-/** What "Open source file" ends with. */
+/**
+ * What "Open source file" (or, with [keep] set, "Keep in Git": the object whose live values
+ * go to its manifest) ends with.
+ */
 sealed interface SourceFindOutcome {
-    /** One manifest: open the file [path] of source [index] at [line]. */
-    data class Open(val index: Int, val path: String, val line: Int) : SourceFindOutcome
+    /** One manifest: open the file [path] of source [index] at [line] (its document [documentIndex]). */
+    data class Open(val index: Int, val path: String, val line: Int, val documentIndex: Int = 0, val keep: KubeDiffResource? = null) : SourceFindOutcome
 
     /** Several manifests declare it: the user picks one. */
-    data class Choose(val index: Int, val matches: List<ManifestMatch>) : SourceFindOutcome
+    data class Choose(val index: Int, val matches: List<ManifestMatch>, val keep: KubeDiffResource? = null) : SourceFindOutcome
 
     /** Nothing to open: [text] says why; [addToken]: no token is saved for the Git host. */
     data class Message(val text: UiText, val addToken: Boolean = false) : SourceFindOutcome
@@ -57,13 +60,15 @@ sealed interface SourceFindOutcome {
 
 /**
  * What the search of [resource] in source [index] gives: the file to open, a choice, or why there
- * is none (the core's note when it has one, e.g. a Helm-rendered app).
+ * is none (the core's note when it has one, e.g. a Helm-rendered app). [keep]: the search is
+ * for "Keep in Git".
  */
-fun sourceFindOutcome(index: Int, result: GitOpsSourceFind, resource: KubeDiffResource): SourceFindOutcome {
+fun sourceFindOutcome(index: Int, result: GitOpsSourceFind, resource: KubeDiffResource, keep: Boolean = false): SourceFindOutcome {
     val matches = result.matches.filter { it.path.isNotEmpty() }
+    val kept = resource.takeIf { keep }
     return when {
-        matches.size == 1 -> SourceFindOutcome.Open(index, matches.single().path, matches.single().line)
-        matches.size > 1 -> SourceFindOutcome.Choose(index, matches)
+        matches.size == 1 -> matches.single().let { SourceFindOutcome.Open(index, it.path, it.line, it.documentIndex, kept) }
+        matches.size > 1 -> SourceFindOutcome.Choose(index, matches, kept)
         result.note.isNotBlank() -> SourceFindOutcome.Message(UiText.Raw(result.note))
         else -> SourceFindOutcome.Message(UiText.Res(R.string.gitops_find_none, resource.kind, resource.name))
     }
@@ -110,7 +115,8 @@ class DiffSourceViewModel(
         }
     }
 
-    fun find(resource: KubeDiffResource) {
+    /** Looks [resource] up in the source; [keep]: for "Keep in Git" rather than to open the file. */
+    fun find(resource: KubeDiffResource, keep: Boolean = false) {
         val index = _sourceIndex.value ?: return
         val src = source ?: return
         if (_searching.value != null) return
@@ -118,7 +124,7 @@ class DiffSourceViewModel(
         findJob = viewModelScope.launch {
             try {
                 val result = gitOps.findSource(tool, kind, namespace, name, index, src, resource)
-                _outcome.value = sourceFindOutcome(index, result, resource)
+                _outcome.value = sourceFindOutcome(index, result, resource, keep)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GitHostMissing) {

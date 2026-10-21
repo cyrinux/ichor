@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Commit
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
@@ -22,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -56,6 +58,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.configRole
+import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ConfigApplyMode
@@ -97,6 +101,12 @@ fun MachineConfigScreen(
     fix: DriftFix? = null,
     /** A snippet from another screen: the screen opens a draft and the picker on it, prefilled. */
     snippet: SnippetPrefill? = null,
+    /** A repository's Talos patch file: the screen opens a draft with it applied, then the review. */
+    patch: PatchPrefill? = null,
+    /** A file of the cluster repository, at a line (the Git comparison's files). */
+    onRepoFile: (path: String, line: Int) -> Unit = { _, _ -> },
+    /** The editor of a file of the cluster repository, a quick edit applied (the write-back's review). */
+    onRepoEdit: (path: String, quick: String) -> Unit = { _, _ -> },
     vm: MachineConfigViewModel = viewModel(
         key = "machineconfig-$node",
         factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
@@ -112,6 +122,13 @@ fun MachineConfigScreen(
         if (fix != null && !fixApplied && state is UiState.Loaded) {
             fixApplied = true
             vm.applyDriftFix(fix)
+        }
+    }
+    var patchApplied by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state is UiState.Loaded) {
+        if (patch != null && !patchApplied && state is UiState.Loaded) {
+            patchApplied = true
+            vm.applyPatch(patch)
         }
     }
     val snippets by vm.snippets.collectAsStateWithLifecycle()
@@ -140,6 +157,11 @@ fun MachineConfigScreen(
     var confirmingTry by rememberSaveable { mutableStateOf<Int?>(null) }
     var confirmingApply by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
     var confirmingMulti by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
+    var comparingGit by rememberSaveable { mutableStateOf(false) }
+    // The change written back to the repository: the config it starts from and the one it gives.
+    var proposing by remember { mutableStateOf<Pair<String, String>?>(null) }
+    val hasRepo = remember { app.gitOpsRepository.activeClusterRepo() != null }
+    val proposeEdit = editor.draft?.takeIf { hasRepo }?.let { draft -> { proposing = editor.base to draft } }
 
     SecureWhile(revealed)
 
@@ -213,6 +235,16 @@ fun MachineConfigScreen(
                             ),
                         )
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
+                        // The repository file the draft comes from, while it is reviewed and tried.
+                        if (patch != null && (editor.editing || run != null || applying != null)) {
+                            Text(
+                                patch.from,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
@@ -233,6 +265,13 @@ fun MachineConfigScreen(
                             },
                         )
                         TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.machine_config_edit), enabled = loaded != null, onClick = vm::startEditing)
+                        TooltipIconButton(Icons.Outlined.Commit, stringResource(R.string.talos_git_action), enabled = loaded != null, onClick = {
+                            if (app.gitOpsRepository.activeClusterRepo() != null) {
+                                comparingGit = true
+                            } else {
+                                scope.launch { snackbar.showSnackbar(context.getString(R.string.repo_none), withDismissAction = true) }
+                            }
+                        })
                     }
                     if (browsing && editor.editing) {
                         TooltipIconButton(Icons.Outlined.AutoAwesome, stringResource(R.string.machine_config_snippets), enabled = !editor.busy, onClick = {
@@ -266,8 +305,8 @@ fun MachineConfigScreen(
                 onApply = { confirmingMulti = it },
                 modifier = body,
             )
-            run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body)
-            applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body)
+            run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body, onProposeInGit = proposeEdit)
+            applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body, onProposeInGit = proposeEdit)
             review != null -> ConfigReviewContent(
                 review,
                 onRetry = vm::review,
@@ -341,6 +380,44 @@ fun MachineConfigScreen(
                 }
             }
         }
+    }
+
+    if (comparingGit) {
+        GitCompareSheet(
+            app.gitOpsRepository,
+            node = node,
+            hostname = hostname,
+            role = remember(loaded) { loaded?.let(::configRole).orEmpty() },
+            onOpenFile = { path, line ->
+                comparingGit = false
+                onRepoFile(path, line)
+            },
+            onEditDraft = { draft ->
+                comparingGit = false
+                vm.editFrom(draft)
+            },
+            // The node's live values into Git: from Git's version to the node's.
+            onProposeLive = { gitVersion ->
+                comparingGit = false
+                loaded?.let { proposing = gitVersion to it }
+            },
+            onDismiss = { comparingGit = false },
+        )
+    }
+
+    proposing?.let { (base, draft) ->
+        ProposeInGitSheet(
+            app.gitOpsRepository,
+            base = base,
+            draft = draft,
+            hostname = hostname,
+            role = remember(loaded) { loaded?.let(::configRole).orEmpty() },
+            onReview = { path, quick ->
+                proposing = null
+                onRepoEdit(path, quick)
+            },
+            onDismiss = { proposing = null },
+        )
     }
 
     if (pickingSnippet) {

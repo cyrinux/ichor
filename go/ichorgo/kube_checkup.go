@@ -26,6 +26,7 @@ const (
 	checkCrossplane    = "crossplane"
 	checkTailscale     = "tailscale"
 	checkClusterAPI    = "clusterapi"
+	checkPlugins       = "plugins"
 )
 
 // A section's status beyond the health values: the cluster does not run what it checks, or
@@ -62,7 +63,7 @@ var checkupSteps = []string{
 	checkupStepAPI, checkupStepPods, checkupStepNodes, checkupStepPVCs, checkupStepVersion,
 	checkWorkloads, checkEvents, checkStorage, checkUpgrade, checkWebhooks, checkPolicies,
 	checkCapacity, checkLoadBalancers, checkTerminating, checkCertificates, checkSecrets, checkHelm, checkMonitoring,
-	checkCrossplane, checkTailscale, checkClusterAPI,
+	checkCrossplane, checkTailscale, checkClusterAPI, checkPlugins,
 }
 
 // checkupReport is what the cluster hides behind green nodes: one section per kind of
@@ -104,6 +105,8 @@ type checkupFinding struct {
 	Limit     float64 `json:"limit,omitempty"`
 	Count     int     `json:"count,omitempty"`
 	Since     int64   `json:"since,omitempty"` // unix ms
+	// The fields of a plugin's finding (kind "plugin"), absent for the others.
+	pluginFinding
 }
 
 // KubeCheckup looks for the trouble no other screen shows, through the Kubernetes API
@@ -114,9 +117,10 @@ type checkupFinding struct {
 // the scrape targets down and rules failing in the first Prometheus discovered, and
 // Crossplane resources that cannot sync, a Tailscale operator, Connector or ProxyGroup that is
 // not ready, and (on a management cluster) a workload cluster that failed, a Machine stuck or
-// failed and a Sidero server off or not accepted, as JSON (see checkupReport).
+// failed and a Sidero server off or not accepted, and the findings of the plugins the cluster
+// runs (worded by each plugin in locale, "" is English), as JSON (see checkupReport).
 // It only reads. kubeServer: see KubePods.
-func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err error) {
+func KubeCheckup(configYAML, contextName, kubeServer, locale string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -124,7 +128,7 @@ func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err er
 	if isDemoContext(configYAML, contextName) {
 		playDemoReadProgress(checkupProgressOp, contextName, checkupStepAPI, checkupStepPods, checkStorage)
 
-		return toJSON(demoCheckup(time.Now()))
+		return toJSON(demoCheckup(time.Now(), locale))
 	}
 
 	progress := startReadProgress(checkupProgressOp, contextName, checkupSteps...)
@@ -134,7 +138,7 @@ func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err er
 	defer cancel()
 
 	report, err := withKubeContext(ctx, kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (checkupReport, error) {
-		return readCheckup(ctx, k, time.Now())
+		return readCheckup(ctx, k, time.Now(), locale)
 	})
 	if err != nil {
 		return "", err
@@ -157,7 +161,8 @@ type checkupInput struct {
 
 // readCheckup reads the shared lists, then every section in parallel. It fails only when
 // the API server answers nothing (its API groups); a section that fails carries its error.
-func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupReport, error) {
+// locale words the plugins' findings.
+func readCheckup(ctx context.Context, k *kubeClient, now time.Time, locale string) (checkupReport, error) {
 	progress := readProgressFrom(ctx)
 
 	endAPI := progress.track(checkupStepAPI)
@@ -199,7 +204,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	wg.Wait()
 
 	report := checkupReport{KubeVersion: version}
-	sections := make([]checkupSection, 17)
+	sections := make([]checkupSection, 18)
 
 	// section runs one section reader as its progress step; the step fails when a section it
 	// fills could not be read at all.
@@ -227,6 +232,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	section(checkCrossplane, func() { sections[14] = checkupCrossplane(ctx, k, in) }, 14)
 	section(checkTailscale, func() { sections[15] = checkupTailscale(ctx, k, in) }, 15)
 	section(checkClusterAPI, func() { sections[16] = checkupClusterAPI(ctx, k, in) }, 16)
+	section(checkPlugins, func() { sections[17] = checkupPlugins(ctx, k, in, locale) }, 17)
 	wg.Wait()
 
 	report.Sections = sections

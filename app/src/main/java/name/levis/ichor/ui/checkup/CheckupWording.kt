@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Anchor
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Lan
@@ -55,6 +56,7 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     CheckupSectionId.CROSSPLANE -> SectionLook(Icons.Outlined.Cloud, R.string.checkup_section_crossplane, R.string.checkup_section_crossplane_hint)
     CheckupSectionId.TAILSCALE -> SectionLook(Icons.Outlined.VpnLock, R.string.checkup_section_tailscale, R.string.checkup_section_tailscale_hint)
     CheckupSectionId.CLUSTER_API -> SectionLook(Icons.Outlined.AccountTree, R.string.cluster_lifecycle_title, R.string.checkup_section_clusterapi_hint)
+    CheckupSectionId.PLUGINS -> SectionLook(Icons.Outlined.Extension, R.string.checkup_section_plugins, R.string.checkup_section_plugins_hint)
     else -> null
 }
 
@@ -169,22 +171,27 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.SIDERO_SERVER_UNACCEPTED ->
             if (f.name.isEmpty()) stringResource(R.string.checkup_sideroServerUnaccepted_more, f.count.toString())
             else stringResource(R.string.checkup_sideroServerUnaccepted)
-        CheckupKind.SEALED_SECRET_NOT_SYNCED -> stringResource(R.string.checkup_sealedSecretNotSynced)
-        CheckupKind.SEALING_KEY_MISSING -> stringResource(R.string.checkup_sealingKeyMissing, f.extra.ifEmpty { f.namespace })
-        CheckupKind.SEALING_KEY_COMPROMISED -> stringResource(R.string.checkup_sealingKeyCompromised, f.name)
+        CheckupKind.SOPS_DECRYPTION_FAILED -> when {
+            f.reason == FLUX_RECONCILIATION_FAILED -> stringResource(R.string.checkup_sopsDecryptionNotConfigured)
+            f.extra.isEmpty() -> stringResource(R.string.checkup_sopsDecryptionFailedNoKey)
+            else -> stringResource(R.string.checkup_sopsDecryptionFailed, f.extra)
+        }
         CheckupKind.ROUTE_CERT_EXPIRED -> stringResource(R.string.checkup_routeCertExpired, f.reason.ifEmpty { "-" })
         CheckupKind.ROUTE_CERT_EXPIRING -> stringResource(R.string.checkup_routeCertExpiring, f.count.toString(), f.reason.ifEmpty { "-" })
         CheckupKind.ROUTE_CERT_HOST_MISMATCH -> stringResource(R.string.checkup_routeCertHostMismatch, f.reason.ifEmpty { "-" })
+        // The plugin's own words, already translated by Go.
+        CheckupKind.PLUGIN -> f.title.ifEmpty { f.id.ifEmpty { f.kind } }
         else -> f.kind
     }
 }
 
 /**
  * What to do about it; 0 for a kind without advice (an event) or one this version does not know.
- * [reason]: the finding's, which narrows the advice of some kinds (the cause of a failed pull).
+ * [reason]: the finding's, which narrows the advice of some kinds (the cause of a failed pull);
+ * [extra] too (a SOPS failure with or without a key Secret).
  */
 @StringRes
-fun checkupFix(kind: String, reason: String = ""): Int = when (kind) {
+fun checkupFix(kind: String, reason: String = "", extra: String = ""): Int = when (kind) {
     CheckupKind.POD_CRASH_LOOP -> R.string.checkup_podCrashLoop_fix
     CheckupKind.POD_IMAGE_PULL -> pullCheckupFix(reason) ?: R.string.checkup_podImagePull_fix
     CheckupKind.POD_UNSCHEDULABLE -> R.string.checkup_podUnschedulable_fix
@@ -248,14 +255,19 @@ fun checkupFix(kind: String, reason: String = ""): Int = when (kind) {
     CheckupKind.CAPI_WORKERS_SHORT -> R.string.checkup_capiWorkersShort_fix
     CheckupKind.SIDERO_SERVER_OFF -> R.string.checkup_sideroServerOff_fix
     CheckupKind.SIDERO_SERVER_UNACCEPTED -> R.string.checkup_sideroServerUnaccepted_fix
-    CheckupKind.SEALED_SECRET_NOT_SYNCED -> R.string.checkup_sealedSecretNotSynced_fix
-    CheckupKind.SEALING_KEY_MISSING -> R.string.checkup_sealingKeyMissing_fix
-    CheckupKind.SEALING_KEY_COMPROMISED -> R.string.checkup_sealingKeyCompromised_fix
+    CheckupKind.SOPS_DECRYPTION_FAILED -> when {
+        reason == FLUX_RECONCILIATION_FAILED -> R.string.checkup_sopsDecryptionNotConfigured_fix
+        extra.isEmpty() -> R.string.checkup_sopsDecryptionFailedNoKey_fix
+        else -> R.string.checkup_sopsDecryptionFailed_fix
+    }
     CheckupKind.ROUTE_CERT_EXPIRED -> R.string.checkup_routeCertExpired_fix
     CheckupKind.ROUTE_CERT_EXPIRING -> R.string.checkup_routeCertExpiring_fix
     CheckupKind.ROUTE_CERT_HOST_MISMATCH -> R.string.checkup_routeCertHostMismatch_fix
     else -> 0
 }
+
+/** Flux's Ready reason for an encrypted Secret in a Kustomization without spec.decryption. */
+private const val FLUX_RECONCILIATION_FAILED = "ReconciliationFailed"
 
 /** The Tailscale operator's reason for a Connector or ProxyGroup naming a ProxyClass that does not exist. */
 private const val TAILSCALE_PROXY_CLASS_MISSING = "ProxyClassMissing"
@@ -269,10 +281,13 @@ private val REASON_KINDS = setOf(
     CheckupKind.CROSSPLANE_NOT_READY, CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED,
     CheckupKind.TAILSCALE_CONNECTOR_NOT_READY, CheckupKind.TAILSCALE_PROXY_GROUP_DOWN, CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY,
     CheckupKind.CAPI_CLUSTER_FAILED, CheckupKind.CAPI_CLUSTER_PROVISIONING, CheckupKind.CAPI_MACHINE_FAILED, CheckupKind.CAPI_MACHINE_STUCK,
-    CheckupKind.SEALED_SECRET_NOT_SYNCED,
+    CheckupKind.SOPS_DECRYPTION_FAILED,
 )
 
-/** Kubernetes' own words about the finding, "" when it has none. */
-val CheckupFinding.detail: String get() = listOf(reason.takeIf { kind in REASON_KINDS }.orEmpty(), message)
-    .filter { it.isNotEmpty() }
-    .joinToString(": ")
+/** Kubernetes' own words about the finding (a plugin's: its detail), "" when it has none. */
+val CheckupFinding.detail: String
+    get() = if (kind == CheckupKind.PLUGIN) {
+        pluginDetail
+    } else {
+        listOf(reason.takeIf { kind in REASON_KINDS }.orEmpty(), message).filter { it.isNotEmpty() }.joinToString(": ")
+    }

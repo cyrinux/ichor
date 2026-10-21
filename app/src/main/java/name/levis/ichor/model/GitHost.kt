@@ -16,7 +16,7 @@ enum class GitHostKind(val wire: String, val label: String?) {
     AUTO("auto", null),
     GITHUB("github", "GitHub"),
     GITLAB("gitlab", "GitLab"),
-    GITEA("gitea", "Gitea"),
+    GITEA("gitea", "Gitea/Forgejo"),
     ;
 
     companion object {
@@ -94,6 +94,28 @@ fun gitHostName(host: String): String =
     if (host.startsWith("[")) host.substringBefore("]") + "]" else host.substringBeforeLast(':')
 
 /**
+ * [url], a repository, commit or file page built from a source's address, on the web address
+ * of the listed Git host whose alias names its host: Argo CD or Flux often reach the server by
+ * an in-cluster or SSH name a browser cannot open. A commit link gets GitLab's `/-/commit/`
+ * when the host is GitLab. Unchanged when it is not an https link, already on a listed host,
+ * or no alias names it.
+ */
+fun gitHostWebUrl(url: String, hosts: List<GitHost>): String {
+    if (!url.startsWith("https://")) return url
+    val rest = url.removePrefix("https://")
+    val end = rest.indexOf('/').let { if (it < 0) rest.length else it }
+    val name = gitHostName(normalizeGitHost(rest.substring(0, end)))
+    if (name.isEmpty() || hosts.any { gitHostName(normalizeGitHost(it.host)) == name }) return url
+    val host = hosts.firstOrNull { it.matches(name) } ?: return url
+    val base = normalizeGitHost(host.host)
+    var path = rest.substring(end)
+    if (host.kind == GitHostKind.GITLAB || host.kind == GitHostKind.AUTO && base.contains("gitlab")) {
+        path = path.replace(PLAIN_COMMIT, "/-/commit/$1")
+    }
+    return "https://$base$path"
+}
+
+/**
  * The aliases typed in the Git host sheet: split on commas, spaces and new lines, each
  * normalised like a host, without blanks, [host] itself or duplicates, at most
  * [MAX_GIT_HOST_ALIASES].
@@ -127,6 +149,9 @@ fun gitHostJson(host: GitHost, token: String, demo: Boolean): String =
             put("token", token.trim())
         }.toString()
     }
+
+/** A commit page as most forges name it: GitLab's is under `/-/`. */
+private val PLAIN_COMMIT = Regex("(?<!/-)/commit/([0-9a-f]{7,64})$")
 
 private val SCHEME = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
 

@@ -45,21 +45,14 @@ func byHealthThenKey[T any](f func(T) (health, key string)) func(a, b T) int {
 // dataServices is the health of the storage and database operators a cluster runs. A nil
 // section is a system that is not installed.
 type dataServices struct {
-	SealedSecrets *sealedSecretsStatus `json:"sealedSecrets,omitempty"`
-	Snapshots     *volumeSnapshots     `json:"snapshots,omitempty"`
-	BackupJobs    *backupJobStatus     `json:"backupJobs,omitempty"`
-	Longhorn      *longhornStatus      `json:"longhorn,omitempty"`
-	Garage        *garageStatus        `json:"garage,omitempty"`
-	CNPG          *cnpgStatus          `json:"cnpg,omitempty"`
-	Dragonfly     *dragonflyStatus     `json:"dragonfly,omitempty"`
-	MariaDB       *mariadbStatus       `json:"mariadb,omitempty"`
-	Percona       *perconaStatus       `json:"percona,omitempty"`
-	CertManager   *certManagerStatus   `json:"certManager,omitempty"`
-	Velero        *veleroStatus        `json:"velero,omitempty"`
-	ExternalDNS   *externalDNSStatus   `json:"externalDns,omitempty"`
-	KubeGreen     *kubeGreenStatus     `json:"kubeGreen,omitempty"`
-	Ceph          *cephStatus          `json:"ceph,omitempty"`
-	CastAI        *castAIStatus        `json:"castai,omitempty"`
+	Snapshots   *volumeSnapshots   `json:"snapshots,omitempty"`
+	BackupJobs  *backupJobStatus   `json:"backupJobs,omitempty"`
+	Longhorn    *longhornStatus    `json:"longhorn,omitempty"`
+	Garage      *garageStatus      `json:"garage,omitempty"`
+	CNPG        *cnpgStatus        `json:"cnpg,omitempty"`
+	CertManager *certManagerStatus `json:"certManager,omitempty"`
+	Velero      *veleroStatus      `json:"velero,omitempty"`
+	CastAI      *castAIStatus      `json:"castai,omitempty"`
 }
 
 // KubeDataServices reports the health of the storage and database operators the cluster

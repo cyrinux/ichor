@@ -60,7 +60,9 @@ tour** shows it again.
   policies), follow a pod's log and
   port-forward to it on the phone (127.0.0.1 only); see what gives LoadBalancer Services their
   address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
-  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig.
+  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig. On a Talos
+  cluster the Kubernetes screen's ⋯ menu also leads to Data services and, when the cluster runs
+  them, to the cert-manager and CAST AI lists (any of them can be moved to the bar).
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. A sync,
@@ -99,7 +101,8 @@ tour** shows it again.
   the phone, encrypted (Android Keystore, iOS Keychain), is never shown again, and is only sent
   to its own host over https. When Argo CD or Flux reach the same server by another name (an SSH
   or in-cluster address such as `gitea-http.gitea.svc:3000`), list it under **Also reached as**:
-  those repositories then use the host's token, and requests still go only to the saved host.
+  those repositories then use the host's token, requests still go only to the saved host, and
+  their repository, commit and file links open on the saved host instead of the internal name.
 - **Source:** an Argo CD or Flux app's detail lists its Git sources; each opens the folder the
   app deploys from, at the revision the cluster runs, with read-only files (YAML highlighted on
   Android). Flux apps need no token (the files come from the source-controller's artifact);
@@ -111,12 +114,90 @@ tour** shows it again.
   the diff, and **Open pull request** commits it on a new branch and opens a pull or merge
   request (GitHub, GitLab, Gitea). The tracked branch is never pushed to: Argo CD or Flux
   applies the change once someone merges it. A file changed upstream in the meantime is
-  refused, with Reload to start from the new version.
+  refused, with Reload to start from the new version. Review also checks the build on the
+  phone, `kustomize build` before the push: the edited file is laid over the repository at
+  that commit (downloaded once, as for Find in repository), the nearest kustomization (a Flux
+  app's path, with its settings) is built before and after, and the review lists the rendered
+  objects that change, each with its diff, Secret values masked, or **Build fails** with the
+  error and the file and line it names. A file in no kustomization is checked as YAML; a Helm
+  chart is not rendered on the phone, and a remote base is not fetched, which the check says.
+  The pull request can be opened either way. The phone remembers each request it
+  opened (50 per cluster, only on this device): **Proposals** on the Argo CD or Flux app (and
+  at the cluster repository's root) shows whether each is open, merged or closed on the forge
+  and, once merged, whether the app runs that commit; a merged one not running yet offers
+  **Reconcile now**, which syncs or reconciles with the usual follow.
 - **Quick edits:** on a source file, **Quick edit** changes a container's image tag (with the
   running tag as a suggestion) or the replicas, through a kustomization `images:` or `replicas:`
   entry when the file has one. Only that line changes, comments and quoting included, and the
   edit goes straight to the review and pull request. For routine bumps, Flux image automation or
   Argo CD Image Updater can open these changes for you.
+- **Keep live changes in Git:** when an object was changed by hand in the cluster (`kubectl
+  scale`, `set image`, `edit`), its card on the Argo CD or Flux diff lists the values that
+  differ and offers **Keep live values in Git**: the manifest is found as for Open source file,
+  the live values are written only where that file sets the value Git would apply (one set by
+  an overlay, a patch or a substitution is named and left), then reviewed and proposed as a
+  pull request. Never for a Secret. An object's page links to the diff of the Argo CD app or
+  Flux Kustomization applying it (**Compare with Git**), as do an Argo CD app's sync and
+  comparison errors and each resource its last sync failed on.
+- **Cluster repository:** the repository that holds a cluster's own configuration (its Talos
+  patches, its Kubernetes tree, its `.sops.yaml`) is a setting of that cluster: **Cluster
+  repository** in its menu of the cluster list stores the address, a branch (blank for the
+  default one) and the Talos and Kubernetes directories, and **Check** asks the forge for the
+  default branch and whether the token can push. Only those four fields are stored (and backed
+  up); the token is the Git host's, from Settings → Git hosts, and is only used to read the
+  repository and open pull requests on it. **Repository** on the cluster home then lists the
+  repository from its root at the branch head (`main @ 1a2b3c4`); any text file opens
+  read-only, and Edit, Review and **Open pull request** work as for an app's source: edits are
+  pull or merge requests on a new branch, never commits to the branch itself. Nothing is
+  cloned: each directory and file is one call to the forge's API. The demo cluster has a sample
+  repository built in.
+- **Try a Talos patch from Git:** on a Talos cluster, a Talos patch file opened in the cluster
+  repository or an app's source (machine/cluster sections, or config documents such as
+  `HostnameConfig`) shows **Try on a node…**: pick the node (the one the patch sets the hostname
+  of comes first) and its machine config opens with the patch applied, on the usual review,
+  try (it reverts by itself unless kept), apply, staged and reboot. A patch that only sets
+  values can be taken to other nodes from the review; one that sets a hostname, with lists (Talos replaces some
+  wholesale and appends to others, which the diff shows), `$patch` directives, JSON patch
+  operations or a new document is tried node by node. A whole machine config, a patch setting a
+  secret or holding a talenv `${...}` cannot be tried and says why. The file in Git is not
+  changed: merge it on the forge once the try was kept.
+- **SOPS files:** encrypted files are shown, never edited or decrypted on the phone. A
+  `*.sops.yaml` or `*.enc.yaml` file has a lock in the listing; its viewer reads the SOPS
+  metadata only: the keys it is encrypted for (age, PGP, cloud KMS), when it was last
+  encrypted, how many values are, and any value its own rules say should be encrypted but is in
+  clear (a half-encrypted file). The ciphertext shows as `ENC[…]`, and Edit and Quick edit give
+  way to editing it with sops on a computer. When an edit would put a Kubernetes Secret or a
+  Talos secret in clear text at a path the repository's `.sops.yaml` (the one at its root, read
+  at the branch the request goes to) encrypts, the review says which rule and keys, and asks
+  once more before the pull request.
+- **Find in repository:** the search in a source browser (an Argo CD or Flux app's source, or
+  the cluster repository) lists every line of the whole repository that holds the text, by
+  file, and opens the file at that line. It downloads the repository once per commit as one
+  archive (up to 48 MiB; a bigger one is refused, browse it file by file) and keeps it on the
+  phone, encrypted, for the next searches (the last 5 commits, 200 MiB at most). A Flux source
+  is searched in its artifact, with no token. Files over 1 MiB and binaries are skipped, a SOPS
+  file is searched by its keys only, and Git LFS files and submodules are not in an archive.
+- **Talos nodes: Git compared with the node:** **Compare with Git** on a node's machine config
+  lists the files of the cluster repository (under its Talos directory) that configure that
+  node, with the rule that matched each: its own patch (the file that sets its hostname, or is
+  named after it), the shared patches, talhelper's `talconfig.yaml` and the patches it lists in
+  its order (global, then the role's, then the node's, inline ones included), and the secrets
+  files, greyed (never read into a comparison). **Compare** applies the files checked onto the
+  node's live config with Talos's own patcher, as `talosctl gen config --config-patch` or
+  `talhelper genconfig` would: **Same as Git**, or the diff (secrets redacted) with whether
+  applying it needs a reboot, the node checking it with a dry run (os:admin). **Edit from this
+  diff** opens the editor with Git's version as the draft, to review, try or apply it. A patch
+  holding a `${...}` substitution or setting a secret is skipped with the reason; talconfig's
+  node fields (installDisk, ipAddress…) are not compared, only its patches.
+- **A kept change is proposed back to the node's file:** after a tried change is kept, or a
+  change applied, **Propose in Git** lists the values it changed and writes them into the node's
+  file of the cluster repository as the smallest patch: a changed value in place (its comments
+  and quoting kept), a new one under its parent, a changed list as a whole. A value one of the
+  shared patches sets is left out with that file named; a node without a file of its own gets
+  `<Talos directory>/nodes/<hostname>.yaml`. The usual review and **Open pull request** follow.
+  From the Git comparison, **Propose the node's values in Git** does the same for what the node
+  runs and Git does not have. Secrets are never written; a talhelper node without a patch file
+  of its own, or a file with `${...}` substitutions, is edited by hand.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
   some pods could not be deleted) or failed. Optionally
@@ -166,8 +247,10 @@ tour** shows it again.
   without an address (and why), empty MetalLB or Cilium pools, MetalLB pools nothing advertises,
   a refused MetalLB configuration and BGP sessions down, namespaces, pods and claims stuck in Terminating,
   certificate requests nobody approved, web address certificates (not cert-manager's) expired,
-  expiring or naming other hosts, External Secrets that do not sync, Helm releases
-  failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers. Every finding says what to change. Read-only; the critical ones can also
+  expiring or naming other hosts, External Secrets that do not sync, Flux Kustomizations whose
+  SOPS decryption fails, Helm releases
+  failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers, and
+  the findings each plugin the cluster runs declares, under the plugin's name. Every finding says what to change. Read-only; the critical ones can also
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
   [Cluster checkup](#cluster-checkup).
@@ -192,25 +275,45 @@ tour** shows it again.
 - **Tablets and foldables (Android):** on a tablet or an unfolded foldable, the nodes list and
   the Argo CD apps open their node or app side by side with the list.
 - **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.
-- **Background:** alerts and a home-screen widget.
+- **Background:** alerts and a home-screen widget. The findings of the plugins the cluster runs
+  (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify
+  like the data services' problems, in the app's language, and clear when they go away
+  ([docs/plugins.md](docs/plugins.md#findings)).
 - **Widgets:** the home-screen widget, and on Wear OS a tile and a complication with the health
   of the cluster on screen on the phone (ready count in its colour, "N down", etcd alarms; the
   check's age once it is over an hour old). The phone sends them its last background check
   over the Wear OS Data Layer: counts and the cluster's name only (masked in screenshot mode), no
   talosconfig or kubeconfig on the watch. Google Play build only: the open-source APKs carry no
   Google library, so they send nothing to a watch.
-- **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
-  CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
-  Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
-  health and what needs a look; kube-green's sleep schedules say which namespaces sleep on a
-  schedule, when they wake up, and whether they are asleep right now, and a schedule can be moved
-  from the phone (days, sleep and wake-up times, time zone). ExternalDNS shows the
-  hostnames it manages, where each comes from, and the controller's settings; it can resolve
-  every hostname from the phone and compare it with the record's targets, so a name that points
-  elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
-  sealing keys and whether each SealedSecret unsealed, by name only. When the garage-operator
+- **Data services:** the storage, database and backup operators the cluster runs (Longhorn, Garage,
+  CloudNativePG, Dragonfly, MariaDB, Percona, Velero, Rook Ceph, CSI VolumeSnapshots, backup
+  CronJobs) on one tabbed screen, each with its health and what needs a look. The other
+  integrations open from their family of the Kubernetes home, with a dot when one needs a look:
+  ExternalDNS under Networking, cert-manager, Sealed Secrets and External Secrets under Security,
+  CAST AI under Workloads (on a Talos cluster they stay tabs of Data services). ExternalDNS shows the
+  hostnames it manages, where each comes from, and the controller's settings; its screen's
+  "Check names" button resolves every hostname from the phone and compares it with the record's
+  targets, so a name that points elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
+  sealing keys and whether each SealedSecret unsealed, by name only. External Secrets shows
+  whether each ExternalSecret syncs, from which store, how often and when it last refreshed,
+  flags one that stopped refreshing, and whether its SecretStore or ClusterSecretStore can reach
+  its backend; its target Secret is a link, by name only. When the garage-operator
   manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
-  next to the live Garage state.
+  next to the live Garage state. Integrations are declarative plugins; see
+  [docs/plugins.md](docs/plugins.md). On Android and iOS, each plugin the cluster runs gets its tile
+  in the Data services card and its own tab, drawn from the tree the Go core renders; a plugin
+  of another kind (workloads, networking, policies…) is a tool in that family of the Kubernetes
+  home. kube-green is one: Workloads → kube-green says which namespaces sleep on a schedule, when
+  they wake up, and whether they are asleep right now, and a schedule can be moved from the phone
+  (days, sleep and wake-up times, time zone). Plugin actions run from their buttons.
+- **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
+  imported. Import a plugin file (one `/ichor-crd-plugin` or `just probe plugin-lint` checked,
+  for an operator Ichor does not know) by pasting it, picking it in Files, or from an https URL
+  (1 MiB at most). It is validated first, with the line of each problem; then a consent sheet
+  shows what it reads (a Secret whose values it shows in clear is flagged in red) and what it can
+  change, with which verbs, before you enable it. It renders like a built-in, with your own
+  Kubernetes access, through the resources it declares only; switch it off or remove it there.
+  The file stays on the phone, encrypted. Format: [docs/plugins.md](docs/plugins.md#user-plugins).
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
@@ -276,6 +379,8 @@ reads those roles and explains up front when a feature needs more.
 | **Edit a kube-green schedule** | `Kubeconfig`, then the Kubernetes API (merge patch of sleepinfos.kube-green.com: `patch` in its namespace; the button is off with the reason without it) | **`os:admin`** |
 | **Data services: ExternalDNS hostnames and controllers** | `Kubeconfig`, then the Kubernetes API (deployments, ingresses, services, optional dnsendpoints.externaldns.k8s.io and httproutes/gateways) | **`os:admin`** |
 | **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
+| **Data services: External Secrets sync status and stores** | `Kubeconfig`, then the Kubernetes API (`list` on externalsecrets.external-secrets.io; optional secretstores, clustersecretstores and secrets with the `reconcile.external-secrets.io/managed=true` label, values masked) | **`os:admin`** |
+| **Refresh an ExternalSecret** | `Kubeconfig`, then the Kubernetes API (`get` and `patch` on externalsecrets.external-secrets.io in its namespace: merge patch of the `external-secrets.io/force-sync` annotation; the button is off with the reason without `patch`, and on a `CreatedOnce` secret) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
@@ -426,7 +531,7 @@ time) and warns before scaling a workload or resuming a CronJob, since kube-gree
 replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster
 without kube-green shows nothing new.
 
-**Data services → kube-green → a schedule → Edit schedule** moves it: the days, the sleep and
+**Kubernetes → Workloads → kube-green → a schedule → Edit schedule** moves it: the days, the sleep and
 wake-up times ("HH:mm", cron syntax kept) and the time zone the times are in, written with them
 so a time is never saved without its zone. "No wake-up" (sleep until changed by hand) is an
 explicit switch, off by default. Values are checked on the phone before anything is sent; an
@@ -529,6 +634,10 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   while it scales) and a server waiting to be accepted (five named, then a count) are warnings.
   Each fix line names the `clusterctl` or `kubectl` command; "Open Cluster lifecycle" leads to
   the screen.
+- **Plugins:** the findings of every plugin the cluster runs, under the plugin's name and worded
+  by the plugin; tapping one opens the plugin's screen. A plugin the account may not read is
+  named in the card's error; External Secrets stays in the secrets card. See
+  [docs/plugins.md](docs/plugins.md#findings).
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.
@@ -1097,7 +1206,7 @@ a fresh install. Backups move between Android and iOS.
 
 - **What it holds:** the talosconfig (every cluster's credentials), the cluster on screen,
   theme, language, screenshot mode, monitoring and its storage thresholds, "Allow screenshots",
-  each cluster's name, color, VPN-only setting, Wake-on-LAN targets and pins, your Git hosts,
+  each cluster's name, color, VPN-only setting, Wake-on-LAN targets, pins and repository, your Git hosts,
   the AI diagnosis settings, and whether an app lock was on. API keys and Git tokens only
   when you turn on **Include API keys and Git tokens** while backing up (off by default:
   anyone with the file and its passphrase can use them).
@@ -1551,7 +1660,8 @@ Wake-on-LAN, privacy label and manifest, export compliance, review notes) is in
 
 The Nix store, Gradle user home, Go module and build caches and the Swift package checkouts
 are restored from the Actions cache (`.github/actions/*-toolchain`); only the check and test
-jobs write them, on `main`.
+jobs write them, on `main`, and they delete the Nix and Go entries they replace, to stay under
+GitHub's 10 GB per repository (`gh cache list` shows the entries and their sizes).
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
 `ichor-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;

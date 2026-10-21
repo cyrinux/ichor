@@ -229,8 +229,15 @@ enum Route: Hashable {
     case networkTest
     /// Longhorn, Garage and CloudNativePG health (os:admin); hints: catalog ids from the
     /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause; kind: the
-    /// system to open on (nil: the first).
-    case dataServices(hints: String, downNodes: Set<String>, kind: DataServiceKind? = nil)
+    /// system to open on (nil: the first); solo: that system alone, for one the Kubernetes home
+    /// files in another family.
+    case dataServices(hints: String, downNodes: Set<String>, kind: DataServiceKind? = nil, solo: Bool = false)
+    /// The Data services screen on a CRD plugin's tab (a plugin tile); hints and downNodes as
+    /// for dataServices.
+    case dataServicesPlugin(hints: String, downNodes: Set<String>, plugin: String)
+    /// A CRD plugin of another category than Data services, on a screen of its own (a tile of
+    /// the Kubernetes home).
+    case plugin(id: String)
     /// Argo CD Applications (os:admin); downNodes as for dataServices; selected: the app shown
     /// beside the list on an iPad (a link to an app).
     case argoCD(downNodes: Set<String>, selected: ArgoAppRoute? = nil)
@@ -364,7 +371,9 @@ struct MainNavigation: View {
                     case .workloads: KubernetesView()
                     case .kubernetes(let focus): KubernetesView(focus: focus)
                     case .networkTest: KubernetesView(networkTest: true)
-                    case .dataServices(let hints, let downNodes, let kind): DataServicesView(hints: hints, downNodes: downNodes, selected: kind)
+                    case .dataServices(let hints, let downNodes, let kind, let solo): DataServicesView(hints: hints, downNodes: downNodes, selected: kind, solo: solo)
+                    case .dataServicesPlugin(let hints, let downNodes, let plugin): DataServicesView(hints: hints, downNodes: downNodes, plugin: plugin)
+                    case .plugin(let id): PluginView(pluginID: id)
                     case .argoCD(let downNodes, let selected): ArgoCDView(downNodes: downNodes, selected: selected)
                     case .argoWindows: ArgoWindowsView()
                     case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])

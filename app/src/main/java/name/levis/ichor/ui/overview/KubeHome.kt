@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.gitops.hasClusterRepo
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +42,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.ServiceFamily
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.KubeHomeCard
@@ -48,6 +50,9 @@ import name.levis.ichor.model.KubeHomeLayout
 import name.levis.ichor.model.KubeNodeInfo
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.NodeFilter
+import name.levis.ichor.model.PluginDetect
+import name.levis.ichor.model.PluginDetectItem
+import name.levis.ichor.ui.plugins.PluginDetectViewModel
 import name.levis.ichor.model.detected
 import name.levis.ichor.model.notReadyNames
 import name.levis.ichor.monitor.freezeReminderHook
@@ -106,8 +111,10 @@ class KubeHomeNavigation(
     val onArgoRollouts: () -> Unit,
     val onArgoCD: () -> Unit,
     val onFlux: () -> Unit,
-    /** The Data services screen, on one system's tab (null: the first). */
-    val onDataServices: (DataServiceKind?) -> Unit,
+    /** The Data services screen, on one system's tab (null: the first), or that system alone (solo). */
+    val onDataServices: (DataServiceKind?, Boolean) -> Unit,
+    /** A CRD plugin's tile: its native screen, its Data services tab or its own screen. */
+    val onPlugin: (PluginDetectItem) -> Unit,
     val onSettings: () -> Unit,
     val onFunding: () -> Unit,
     val onAddCluster: () -> Unit,
@@ -127,6 +134,10 @@ class KubeHomeNavigation(
     val onClusterLifecycle: () -> Unit,
     /** The load balancer controllers, their pools and peers, and why a Service has no address. */
     val onLoadBalancing: () -> Unit,
+    /** The cluster's own Git repository, from its root. */
+    val onRepository: () -> Unit,
+    /** Settings → Git hosts. */
+    val onGitHosts: () -> Unit,
     /** The Jobs, failures first. */
     val onJobs: () -> Unit,
     /** The cluster's events, live. */
@@ -166,6 +177,7 @@ fun KubeHomeScreen(
     lifecycleVm: name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel = viewModel(key = "overview-cluster-lifecycle", factory = factory { name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel(app.kubeBrowser) }),
     rolloutsVm: name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel = viewModel(key = "overview-argo-rollouts", factory = factory { name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel(app.argoRolloutsRepository) }),
     alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
+    pluginsVm: PluginDetectViewModel = viewModel(key = "overview-plugins", factory = factory { PluginDetectViewModel(app.pluginRepository) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
@@ -206,6 +218,7 @@ fun KubeHomeScreen(
         lifecycleVm.refresh(reset = true)
         rolloutsVm.refresh(reset = true)
         alertsVm.load(gitopsKey)
+        pluginsVm.load(gitopsKey, hints = "")
     }
     val argo by argoVm.state.collectAsStateWithLifecycle()
     val flux by fluxVm.state.collectAsStateWithLifecycle()
@@ -217,7 +230,10 @@ fun KubeHomeScreen(
     val alerts by alertsVm.state.collectAsStateWithLifecycle()
     val argoShown = argo.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val fluxShown = flux.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
-    val dataShown = dataServices.takeIf { (it as? UiState.Loaded)?.data?.detected?.isNotEmpty() == true }
+    val plugins = (pluginsVm.state.collectAsStateWithLifecycle().value as? UiState.Loaded)?.data ?: PluginDetect()
+    val dataPlugins = plugins.dataServicePlugins
+    // The card lists storage, databases and backups; the other systems are tools in their family.
+    val dataShown = dataServices.takeIf { (it as? UiState.Loaded)?.data?.detected(ServiceFamily.DATA)?.isNotEmpty() == true || dataPlugins.isNotEmpty() && it is UiState.Loaded }
     val crossplaneShown = crossplane.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val tailscaleShown = tailscale.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val lifecycleShown = lifecycle.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
@@ -258,7 +274,7 @@ fun KubeHomeScreen(
                     }
                 },
                 actions = {
-                    KubeHomeActions(bar, nav, argo = argoShown != null, flux = fluxShown != null, crossplane = crossplaneShown != null, tailscale = tailscaleShown != null, clusterLifecycle = lifecycleShown != null, onCustomize = { customizing = true })
+                    KubeHomeActions(bar, nav, argo = argoShown != null, flux = fluxShown != null, crossplane = crossplaneShown != null, tailscale = tailscaleShown != null, clusterLifecycle = lifecycleShown != null, repository = hasClusterRepo(), onCustomize = { customizing = true })
                 },
             )
         },
@@ -272,6 +288,7 @@ fun KubeHomeScreen(
                 onAddCluster = nav.onAddCluster,
                 onClustersCleared = nav.onClustersCleared,
                 onActivity = { nav.onActivity(it.name) },
+                onGitHosts = nav.onGitHosts,
             )
         }
         val refresh = {
@@ -280,6 +297,7 @@ fun KubeHomeScreen(
             fluxVm.refresh()
             dataVm.refresh()
             alertsVm.refresh()
+            pluginsVm.refresh()
         }
         val banner = kubeSignInBanner(signIn, (state as? UiState.Failed)?.message ?: (state as? UiState.Loaded)?.error)
         config?.activeContext?.let { name ->
@@ -315,6 +333,8 @@ fun KubeHomeScreen(
                     argo = argoShown,
                     flux = fluxShown,
                     dataServices = dataShown,
+                    toolServices = (dataServices as? UiState.Loaded)?.data,
+                    plugins = plugins,
                     crossplane = crossplaneShown != null,
                     tailscale = tailscaleShown != null,
                     clusterLifecycle = lifecycleShown != null,
@@ -343,6 +363,9 @@ private fun KubeHomeList(
     argo: UiState<ArgoStatus>?,
     flux: UiState<FluxStatus>?,
     dataServices: UiState<DataServices>?,
+    /** The systems read with Data services, for those the tools card files in another family. */
+    toolServices: DataServices?,
+    plugins: PluginDetect,
     crossplane: Boolean,
     tailscale: Boolean,
     clusterLifecycle: Boolean,
@@ -382,11 +405,11 @@ private fun KubeHomeList(
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, onNode, nav.onAllNodes) }
                 }
                 KubeHomeCard.TOOLS -> item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins.homeTiles, dataServices = toolServices) }
                 }
                 KubeHomeCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {
-                        DataServicesCard(dataServices, hinted = emptyList(), apps = emptyMap(), onOpen = nav.onDataServices)
+                        DataServicesCard(dataServices, hinted = emptyList(), apps = emptyMap(), onOpen = { nav.onDataServices(it, false) }, plugins = plugins.dataServicePlugins, onPlugin = nav.onPlugin, families = setOf(ServiceFamily.DATA))
                     }
                 }
                 KubeHomeCard.ARGO_CD -> if (argo != null) item(key = card.name) {

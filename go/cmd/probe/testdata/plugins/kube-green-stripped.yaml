@@ -1,0 +1,58 @@
+# A stripped-down kube-green plugin, as a CRD-to-plugin converter's first draft could be: it
+# validates, and plugin-lint -crd kube-green.com_sleepinfos.yaml warns that it shows neither
+# the Wake Up At nor the Last Schedule printer column, has no empty text and no i18n.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: kube-green-draft
+name: kube-green
+
+detect:
+  - group: kube-green.com
+    resource: sleepinfos
+
+resources:
+  sleepinfo:
+    group: kube-green.com
+    version: v1alpha1
+    resource: sleepinfos
+    kind: SleepInfo
+    scope: Namespaced
+
+fields:
+  sleepinfo:
+    weekdays: $.spec.weekdays | default("")
+    sleepAt: $.spec.sleepAt | default("")
+    asleep: $.status.operation == "SLEEP"
+
+health:
+  sleepinfo:
+    - when: fields.asleep
+      health: idle
+      reason: asleep
+      message: "asleep"
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(sleepinfo)
+    health: worst(sleepinfo.health)
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d sleep schedule", other: "%d sleep schedules" }
+    health: dataServices.summary.health
+  list:
+    from: sleepinfo
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Weekdays", value: fields.weekdays }
+            - { label: "Sleeps at", value: fields.sleepAt }
+
+samples:
+  sleepinfo:
+    - metadata: { name: weekend, namespace: demo-lab }
+      spec: { weekdays: "6,0", sleepAt: "00:00" }
+      status: { operation: SLEEP }

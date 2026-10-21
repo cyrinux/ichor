@@ -106,6 +106,37 @@ class DataServicesTest {
     }
 
     @Test
+    fun hintsIncludeTheDataServicesPlugins() {
+        fun app(id: String) = InventoryApp(id = id, name = id)
+        val catalog = PluginCatalog(
+            listOf(
+                PluginCatalogItem(id = "rook-ceph", category = PLUGIN_CATEGORY_DATA_SERVICES, catalogId = "rook"),
+                PluginCatalogItem(id = "mariadb", category = PLUGIN_CATEGORY_DATA_SERVICES, catalogId = "mariadb"),
+                PluginCatalogItem(id = "external-dns", category = "networking", catalogId = "external-dns"),
+                PluginCatalogItem(id = "no-pods", category = PLUGIN_CATEGORY_DATA_SERVICES),
+            ),
+        )
+        assertEquals(listOf("rook", "mariadb"), catalog.dataServiceCatalogIds)
+        // A cluster whose only data service is a plugin: hinted, so the overview reads Data services.
+        assertEquals("rook", Inventory(apps = listOf(app("rook"), app("nginx"))).dataServiceHints(catalog))
+        assertEquals("mariadb", Inventory(apps = listOf(app("mariadb"))).dataServiceHints(catalog))
+        assertEquals("longhorn,rook", Inventory(apps = listOf(app("rook"), app("longhorn"))).dataServiceHints(catalog))
+        // Without the catalog (not read yet), only the native systems count.
+        assertEquals("", Inventory(apps = listOf(app("rook"))).dataServiceHints())
+        // A plugin of another category, or no data service at all: none.
+        assertEquals("", Inventory(apps = listOf(app("external-dns"), app("nginx"))).dataServiceHints(catalog))
+    }
+
+    @Test
+    fun pluginCatalogDecodesTheCatalogId() {
+        val catalog = TalosJson.decodeFromString(
+            PluginCatalog.serializer(),
+            """{"items":[{"id":"rook-ceph","category":"data-services","catalogId":"rook"},{"id":"kube-green","category":"data-services"}]}""",
+        )
+        assertEquals(listOf("rook"), catalog.dataServiceCatalogIds)
+    }
+
+    @Test
     fun likelyCausePointsToTheNodeThatIsDown() {
         // node-3 is not ready for Longhorn: the faulted volume, the Garage cluster missing a node
         // tagged node-3 and the Postgres cluster with an instance there all point to it.
@@ -135,5 +166,24 @@ class DataServicesTest {
         assertEquals(listOf("down-db"), clusters.filtered(problemsOnly = true, query = "").map { it.name })
         assertEquals(listOf("ok-db"), clusters.filtered(problemsOnly = false, query = "ok").map { it.name })
         assertFalse(clusters.filtered(problemsOnly = false, query = "").isEmpty())
+    }
+
+    @Test
+    fun filesEachSystemUnderItsFamily() {
+        assertEquals(ServiceFamily.DATA, DataServiceKind.LONGHORN.family)
+        assertEquals(ServiceFamily.DATA, DataServiceKind.BACKUP_JOBS.family)
+        assertEquals(ServiceFamily.SECURITY, DataServiceKind.CERT_MANAGER.family)
+        assertEquals(ServiceFamily.WORKLOADS, DataServiceKind.CASTAI.family)
+        // Six native systems stay in Data services (storage, databases and backups); Rook Ceph, Dragonfly, MariaDB and Percona are plugins.
+        assertEquals(6, DataServiceKind.entries.count { it.family == ServiceFamily.DATA })
+    }
+
+    @Test
+    fun detectedByFamilyKeepsTheDisplayOrder() {
+        val mixed = services.copy(certManager = CertManagerStatus(), castai = CastAIStatus())
+        assertEquals(listOf(DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG), mixed.detected(ServiceFamily.DATA))
+        assertEquals(listOf(DataServiceKind.CERT_MANAGER), mixed.detected(ServiceFamily.SECURITY))
+        assertEquals(listOf(DataServiceKind.CASTAI), mixed.detected(setOf(ServiceFamily.NETWORKING, ServiceFamily.WORKLOADS)))
+        assertEquals(mixed.detected, mixed.detected(AllServiceFamilies))
     }
 }

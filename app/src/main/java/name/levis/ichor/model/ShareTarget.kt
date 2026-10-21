@@ -71,8 +71,19 @@ data class ShareTarget(
 
         /** The data services screen on the tab of [catalogId] (see [DataServiceKind.catalogId]); "" for the first. */
         fun dataServices(catalogId: String = "") = ShareTarget(target = DATA, kind = catalogId)
+
+        /** The prefix of a plugin's id in a data services link's kind (no plugin target in Go's links). */
+        const val PLUGIN_KIND_PREFIX = "plugin-"
+
+        /** Where CRD plugin [pluginId]'s tile leads (a plugin finding's alert), as iOS reads it too. */
+        fun plugin(pluginId: String) = dataServices(PLUGIN_KIND_PREFIX + pluginId)
     }
 }
+
+/** The CRD plugin a data services link names ([ShareTarget.plugin]), null for a data service's tab. */
+val ShareTarget.linkedPlugin: String?
+    get() = kind.takeIf { target == ShareTarget.DATA && it.startsWith(ShareTarget.PLUGIN_KIND_PREFIX) }
+        ?.removePrefix(ShareTarget.PLUGIN_KIND_PREFIX)?.takeIf { it.isNotEmpty() }
 
 /** The tab of the node screen the link opens (0 when it names none). */
 val ShareTarget.nodeTab: Int get() = ShareTarget.NODE_TABS.indexOf(tab).coerceAtLeast(0)

@@ -1,7 +1,10 @@
 package name.levis.ichor.monitor
 
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.CheckupSectionId
+import name.levis.ichor.model.pluginAlertObject
 import name.levis.ichor.model.CheckupSeverity
 import name.levis.ichor.model.CheckupStatus
 import name.levis.ichor.model.NodeHealth
@@ -71,22 +74,6 @@ class CheckupAlertsTest {
     }
 
     @Test
-    fun findingsTheDataServicesAlertOnAreShownButNotAlertedTwice() {
-        val sealed = TalosJson.decodeFromString(
-            CheckupReport.serializer(),
-            """
-                {"status":"critical","sections":[{"id":"secrets","status":"critical","checked":3,"findings":[
-                  {"kind":"sealedSecretNotSynced","severity":"critical","namespace":"shop","name":"legacy-cert"},
-                  {"kind":"sealingKeyMissing","severity":"critical","name":"sealed-secrets-key","extra":"kube-system"},
-                  {"kind":"externalSecretFailed","severity":"critical","namespace":"shop","name":"db"}]}]}
-            """.trimIndent(),
-        )
-        // Still counted and shown on the checkup screen.
-        assertEquals(3, sealed.count(CheckupSeverity.CRITICAL))
-        assertEquals(mapOf("secrets|externalSecretFailed|shop/db" to DATA_CRITICAL), sealed.alertIssues())
-    }
-
-    @Test
     fun anUnreadSectionKeepsWhatWasKnown() {
         val known = mapOf("storage|volumeFull|shop/data" to DATA_CRITICAL, "workloads|podCrashLoop|shop/gone" to DATA_CRITICAL)
         val issues = checkupIssuesWithGaps(report, known)
@@ -124,5 +111,79 @@ class CheckupAlertsTest {
         val off = evaluate(cleared.next, snap(emptyMap(), watched = false), now)
         assertTrue(off.alerts.isEmpty())
         assertTrue(off.next.checkupIssues.isEmpty())
+    }
+
+    // The plugins section (go/ichorgo/kube_checkup_plugins.go, docs/plugins.md "Findings").
+    private val plugins = TalosJson.decodeFromString(
+        CheckupReport.serializer(),
+        """
+            {"status":"warning","sections":[{"id":"plugins","status":"warning","checked":4,"findings":[
+              {"kind":"plugin","severity":"warning","namespace":"demo-lab","name":"weekend",
+               "key":"plugin:kube-green:schedule-warning:demo-lab/weekend",
+               "plugin":"kube-green","pluginName":"kube-green","pluginIcon":"kube-green",
+               "id":"schedule-warning","title":"demo-lab/weekend","detail":"no wake-up time",
+               "ref":{"group":"kube-green.com","version":"v1alpha1","resource":"sleepinfos","namespace":"demo-lab","name":"weekend"},
+               "opens":"list"},
+              {"kind":"plugin","severity":"critical","namespace":"demo-lab","name":"weekend",
+               "key":"plugin:kube-green:no-target:demo-lab/weekend","plugin":"kube-green","pluginName":"kube-green",
+               "id":"no-target","title":"demo-lab/weekend"},
+              {"kind":"plugin","severity":"info","key":"plugin:kube-green:asleep:demo-lab/nightly","plugin":"kube-green",
+               "id":"asleep","title":"demo-lab/nightly"}]}]}
+        """.trimIndent(),
+    )
+
+    @Test
+    fun anImportedPluginsFindingAlertsOnlyWhenTheUserSaidSo() {
+        val imported = TalosJson.decodeFromString(
+            CheckupReport.serializer(),
+            """
+                {"status":"critical","sections":[{"id":"plugins","status":"critical","checked":1,"findings":[
+                  {"kind":"plugin","severity":"critical","namespace":"demo-lab","name":"gear","user":true,
+                   "key":"plugin:demo-widgets:widget-broken:demo-lab/gear","plugin":"demo-widgets","id":"widget-broken","title":"demo-lab/gear"}]}]}
+            """.trimIndent(),
+        )
+        assertTrue(imported.sections.single().findings.single().user)
+        assertEquals(emptyMap<String, String>(), imported.alertIssues())
+        assertEquals(
+            mapOf("plugins|plugin|demo-widgets:widget-broken:demo-lab/gear" to DATA_CRITICAL),
+            imported.alertIssues(importedPluginsWatched = true),
+        )
+    }
+
+    @Test
+    fun aPluginFindingDecodesWithItsPluginsWords() {
+        val f = plugins.sections.single().findings.first()
+        assertEquals(CheckupKind.PLUGIN, f.kind)
+        assertEquals(CheckupSectionId.PLUGINS, plugins.sections.single().id)
+        assertEquals("kube-green", f.plugin)
+        assertEquals("kube-green", f.pluginName)
+        assertEquals("kube-green", f.pluginIcon)
+        assertEquals("schedule-warning", f.id)
+        assertEquals("demo-lab/weekend", f.title)
+        assertEquals("no wake-up time", f.pluginDetail)
+        assertEquals("sleepinfos", f.ref?.resource)
+        assertEquals("list", f.opens)
+        assertEquals("demo-lab/weekend", f.subject)
+    }
+
+    @Test
+    fun aPluginFindingAlertsUnderItsStableKeyUnlessThePluginTrackIsWatched() {
+        val sleep = "plugins|plugin|kube-green:schedule-warning:demo-lab/weekend"
+        val target = "plugins|plugin|kube-green:no-target:demo-lab/weekend"
+        // Two findings of one object keep apart; the note is never alerted.
+        assertEquals(mapOf(sleep to DATA_WARNING, target to DATA_CRITICAL), plugins.alertIssues())
+        assertEquals("demo-lab/weekend", pluginAlertObject("kube-green:schedule-warning:demo-lab/weekend"))
+
+        // The plugin findings track reads them itself: the checkup leaves them to it, known ones included.
+        assertTrue(plugins.alertIssues(pluginsWatched = true).isEmpty())
+        val unread = plugins.copy(sections = listOf(plugins.sections.single().copy(error = "kube-green: sleepinfos: forbidden", findings = emptyList())))
+        assertEquals(mapOf(sleep to DATA_WARNING), checkupIssuesWithGaps(unread, mapOf(sleep to DATA_WARNING)))
+        assertTrue(checkupIssuesWithGaps(unread, mapOf(sleep to DATA_WARNING), pluginsWatched = true).isEmpty())
+
+        // Its alert: the key's subject, the section and kind in the detail.
+        val alert = evaluate(snap(emptyMap()), snap(mapOf(target to DATA_CRITICAL)), now).alerts.single()
+        assertEquals("checkup:$target", alert.key)
+        assertEquals("kube-green:no-target:demo-lab/weekend", alert.subject)
+        assertEquals("plugins|plugin|critical", alert.detail)
     }
 }

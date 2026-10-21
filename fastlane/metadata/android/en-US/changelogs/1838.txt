@@ -1,0 +1,5 @@
+• Percona XtraDB becomes a built-in plugin and its native reader, tab and model are gone
+• MariaDB becomes a built-in plugin and its native reader, tab and model are gone
+• Dragonfly becomes a built-in plugin and its native reader, tab and model are gone
+• ExternalDNS becomes a built-in plugin with native sources, and its Data services reader is gone
+• A native plugin resource's rows can open another object, and plugins can declare native tools

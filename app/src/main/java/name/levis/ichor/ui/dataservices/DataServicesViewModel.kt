@@ -3,10 +3,12 @@ package name.levis.ichor.ui.dataservices
 import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.DATA_SERVICES
 import name.levis.ichor.data.INVENTORY
+import name.levis.ichor.data.PLUGIN_CATALOG
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.ui.LoadingViewModel
@@ -28,9 +30,6 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
     /** Longhorn volume and node actions; their progress shows in a fresh reading. */
     val longhorn = LonghornActions(viewModelScope, dataServices, onChanged = { refresh() })
 
-    /** kube-green schedule changes; the next sleep and wake-up show in a fresh reading. */
-    val kubeGreen = KubeGreenActions(viewModelScope, dataServices, onChanged = { refresh() })
-
     /** Certificate details and forced renewals; an issuance shows in a fresh reading. */
     val certificates = CertificateActions(viewModelScope, dataServices, onChanged = { refresh() })
 
@@ -41,7 +40,6 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
     val velero = VeleroActions(viewModelScope, dataServices, onChanged = { refresh() })
 
     /** The DNS check of the ExternalDNS records; the verdicts stay until the next check. */
-    val externalDns = ExternalDnsActions(viewModelScope, dataServices)
 
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
@@ -60,6 +58,7 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
         source = null
     }
 
-    /** The hints of the inventory the overview already loaded, if any. */
-    fun inventoryHints(): String = dataServices.cached<Inventory>(INVENTORY)?.value?.dataServiceHints().orEmpty()
+    /** The hints of the inventory (and plugin catalog) the overview already loaded, if any. */
+    fun inventoryHints(): String = dataServices.cached<Inventory>(INVENTORY)?.value
+        ?.dataServiceHints(dataServices.cached<PluginCatalog>(PLUGIN_CATALOG)?.value ?: PluginCatalog()).orEmpty()
 }

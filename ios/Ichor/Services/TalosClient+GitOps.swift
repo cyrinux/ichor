@@ -52,6 +52,25 @@ extension TalosClient {
         }
     }
 
+    /// The lines of source's whole repository that hold query (case-insensitive): from the Flux
+    /// artifact (no token), else from a snapshot of the repository at the source's revision,
+    /// downloaded once per commit (up to 48 MiB) with the Git host's token (GitHostMissing
+    /// without one).
+    func repoSearch(_ source: GitSource, query: String, hosts: GitHostStore, demo: Bool) async throws -> GitRepoSearch {
+        switch source.read {
+        case .flux(let ref):
+            return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+                IchorgoFluxSourceSearch(config, context, kubeServer, ref.kind, ref.namespace, ref.name, query, 0, $0)
+            }
+        case .forge(let host, let ref):
+            let json = try await Self.forgeHost(host, hosts: hosts, demo: demo)
+            let repo = source.repoURL
+            return try await Self.json { IchorgoGitRepoSearch(json, repo, ref, query, 0, $0) }
+        case .unreadable:
+            throw TalosError(message: String(localized: "This source is not a Git repository the app can read."))
+        }
+    }
+
     /// The files of app's source number sourceIndex (in GitOpsSource.sources) that declare the
     /// resource resKind resNamespace/resName, with the line of its metadata.name: from the
     /// Flux artifact (no token), else through the Git host with its token (GitHostMissing
@@ -94,6 +113,36 @@ extension TalosClient {
         }
     }
 
+    /// content at path of source (read at ref) checked before it is proposed: the nearest
+    /// kustomization built before and after on the repository's snapshot, or fluxSpec's path
+    /// (a Flux app's), and the rendered objects that change. Downloads the snapshot once per commit.
+    static func editCheck(_ source: GitSource, ref: String, path: String, content: String, fluxSpec: String,
+                   hosts: GitHostStore, demo: Bool) async throws -> GitOpsEditCheck {
+        let json = try await proposalHost(source, hosts: hosts, demo: demo)
+        let repo = source.repoURL
+        return try await Self.json { IchorgoGitOpsEditCheck(json, repo, ref, path, content, fluxSpec, $0) }
+    }
+
+    /// Whether content, proposed at path of source on ref, would commit a clear-text secret where
+    /// the repository's .sops.yaml (read there; none is no rules) encrypts.
+    func sopsEditWarning(_ source: GitSource, ref: String, path: String, content: String,
+                         hosts: GitHostStore, demo: Bool) async throws -> SopsWarning {
+        var rules = ""
+        for name in [".sops.yaml", ".sops.yml"] {
+            if let file = try? await forgeFile(source, path: name, ref: ref, hosts: hosts, demo: demo) {
+                rules = file.content
+                break
+            }
+        }
+        let sopsYAML = rules
+        return try await Self.json { IchorgoSopsEditWarning(sopsYAML, path, content, $0) }
+    }
+
+    /// content's SOPS metadata (who it is encrypted for, its clear keys), never its values (pure).
+    static func sopsInspect(_ content: String) async throws -> SopsInfo {
+        try await json { IchorgoSopsInspect(content, $0) }
+    }
+
     /// The unified diff of a file from before to after (one "file" resource), for the review.
     static func textDiff(before: String, after: String, name: String) async throws -> FluxDiff {
         try await json { IchorgoTextDiff(before, after, name, $0) }
@@ -113,6 +162,80 @@ extension TalosClient {
     /// The prefilled pull request for a change of path deployed by app, on cluster ("" for none).
     static func proposalDefaults(app: GitOpsAppRef, path: String, cluster: String) async throws -> GitProposalDefaults {
         try await json { IchorgoGitOpsProposalDefaults(app.tool, app.kind, app.namespace, app.name, path, cluster, $0) }
+    }
+
+    /// What the forge tells of repo with its host's saved token: the default branch, the head
+    /// of the branch read, whether the token can push. Throws GitHostMissing without a token.
+    static func repoInfo(_ repo: ClusterRepo, hosts: GitHostStore, demo: Bool) async throws -> GitRepoInfo {
+        let json = try await forgeHost(repo.host, hosts: hosts, demo: demo)
+        let url = repo.repoURL
+        let branch = repo.branch
+        return try await Self.json { IchorgoGitForgeRepo(json, url, branch, $0) }
+    }
+
+    /// The files of repo (under its Talos directory) that configure the node hostname of role,
+    /// at its branch head. Throws GitHostMissing without a token.
+    static func talosRepoFiles(_ repo: ClusterRepo, hostname: String, role: String, hosts: GitHostStore, demo: Bool) async throws -> TalosRepoFiles {
+        let json = try await forgeHost(repo.host, hosts: hosts, demo: demo)
+        let url = repo.repoURL, branch = repo.branch, dir = repo.talosDir
+        return try await Self.json { IchorgoTalosRepoFiles(json, url, branch, dir, hostname, role, $0) }
+    }
+
+    /// The state of record's request on its forge, with its host's token (GitHostMissing without).
+    static func requestState(_ record: GitProposalRecord, hosts: GitHostStore, demo: Bool) async throws -> GitRequestState {
+        let json = try await forgeHost(record.host, hosts: hosts, demo: demo)
+        let url = record.repoURL, number = record.number
+        return try await Self.json { IchorgoGitForgeRequest(json, url, number, $0) }
+    }
+
+    /// Whether record's app runs the merged state: its merge commit, else its head (a squash
+    /// merge's commit is a new one). nil for the repository, which no app follows here.
+    func revisionRuns(_ record: GitProposalRecord, state: GitRequestState) async throws -> RevisionRuns? {
+        guard !record.tool.isEmpty else { return nil }
+        func runs(_ sha: String) async throws -> RevisionRuns {
+            try await Self.json { [config = kubeConfig, context = kubeContext, server = kubeAPIServer] in
+                IchorgoGitOpsRevisionRuns(config, context, server, record.tool, record.kind, record.namespace, record.name, sha, $0)
+            }
+        }
+        let first = state.mergeSha.isEmpty ? state.headSha : state.mergeSha
+        guard !first.isEmpty else { return nil }
+        let merged = try await runs(first)
+        if merged.runs || state.headSha.isEmpty || state.headSha == first { return merged }
+        let head = try await runs(state.headSha)
+        return head.runs ? head : merged
+    }
+
+    /// The patch that turns base into draft (both redacted configs), its values and whether one
+    /// is a secret's. Local.
+    static func talosConfigPatchFrom(base: String, draft: String) async throws -> TalosConfigPatch {
+        try await json { IchorgoTalosConfigPatchFrom(base, draft, $0) }
+    }
+
+    /// Where patch goes in repo for the node hostname of role: its file (or a new one), with the
+    /// values a shared patch sets left out. Throws GitHostMissing without a token.
+    static func talosWriteBackPlan(_ repo: ClusterRepo, hostname: String, role: String, patch: String,
+                                   hosts: GitHostStore, demo: Bool) async throws -> TalosWriteBackPlan {
+        let json = try await forgeHost(repo.host, hosts: hosts, demo: demo)
+        let url = repo.repoURL, branch = repo.branch, dir = repo.talosDir
+        return try await Self.json { IchorgoTalosRepoWriteBackPlan(json, url, branch, dir, hostname, role, patch, $0) }
+    }
+
+    /// Applies repo's files paths (in that order) at commit sha onto node's live config and says
+    /// what differs (os:admin; only a dry run reaches the node).
+    func talosRepoCompare(_ repo: ClusterRepo, node: String, hostname: String, sha: String, paths: [String],
+                          hosts: GitHostStore, demo: Bool) async throws -> TalosRepoCompare {
+        let json = try await Self.forgeHost(repo.host, hosts: hosts, demo: demo)
+        let pathsJSON = (try? TalosJSON.encode(paths)) ?? "[]"
+        let url = repo.repoURL
+        return try await Self.json { [config, context] in
+            IchorgoTalosRepoCompare(config, context, json, url, sha, node, hostname, pathsJSON, $0)
+        }
+    }
+
+    /// The prefilled pull request for a change of path in the cluster repository repoURL, on
+    /// cluster ("" for none).
+    static func repoProposalDefaults(repoURL: String, path: String, cluster: String) async throws -> GitProposalDefaults {
+        try await json { IchorgoGitForgeRepoProposalDefaults(repoURL, path, cluster, $0) }
     }
 
     /// The host argument of the forge a change of source is proposed through.

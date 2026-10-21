@@ -46,6 +46,15 @@ final class ClusterNameTests: XCTestCase {
         XCTAssertEqual(parseCloudContext("arn:aws-us-gov:eks:us-gov-west-1:123456789012:cluster/c")?.cluster, "c")
     }
 
+    func testEksDiscoveryNameIsParsed() {
+        let many = parseCloudContext("dev-eks-eu-west-1.eu-west-1.488739384012.eks")
+        XCTAssertEqual(many, CloudContext(provider: CloudContext.eks, location: "eu-west-1", owner: "488739384012", cluster: "dev-eks-eu-west-1"))
+        let one = parseCloudContext("orbit_prod.us-gov-west-1.eks")
+        XCTAssertEqual(one, CloudContext(provider: CloudContext.eks, location: "us-gov-west-1", owner: "", cluster: "orbit_prod"))
+        XCTAssertNil(parseCloudContext("prod.lab.eks"))
+        XCTAssertNil(parseCloudContext("prod.eu-west-1.123.eks"))
+    }
+
     func testGkeContextIsParsed() {
         let cloud = parseCloudContext(gke.name)
         XCTAssertEqual(cloud?.provider, CloudContext.gke)

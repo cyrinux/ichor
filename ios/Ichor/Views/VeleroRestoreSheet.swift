@@ -158,7 +158,7 @@ struct VeleroRestoreSheet: View {
                 }
             }
         }
-        Section("Type \(target.name) to confirm") {
+        Section(typedConfirmationPrompt(target.name)) {
             TextField("Backup name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
             Button(role: .destructive) { Task { await launch() } } label: { Text("Restore") }
                 .disabled(preview?.canRestore != true || nothingPicked || !typedConfirmationMatches(typed, token: target.name) || denial != nil)

@@ -3,7 +3,6 @@ package name.levis.ichor.ui.dataservices
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,17 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.model.CnpgCluster
 import name.levis.ichor.model.CnpgPod
@@ -41,13 +38,15 @@ import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.CnpgStatus
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.pendingInstances
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.color
-import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.expandable
+import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * Every CloudNativePG cluster, built for dozens: a summary, the ones that need a look by
@@ -81,7 +80,7 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
     var expanded by rememberSaveable { mutableStateOf(setOf<String>()) }
     val rows = remember(status, problemsOnly, query) { status.clusters.filtered(problemsOnly, query) }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         item(key = "summary") {
             val total = status.clusters.size
@@ -107,7 +106,6 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 selected = problemsOnly,
                 onSelect = { problemsOnly = it },
             )
-            HorizontalDivider()
         }
         if (rows.isEmpty()) item(key = "empty") {
             EmptyText(
@@ -118,7 +116,7 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 },
             )
         }
-        items(rows, key = { it.label }) { c ->
+        cardRows(rows, key = { it.label }) { c ->
             ClusterRow(
                 c,
                 open = c.label in expanded,
@@ -130,7 +128,6 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 lifecycleBusy = c.label in lifecycleBusy,
                 onLifecycle = { lifecycleTarget = c to it },
             )
-            HorizontalDivider()
         }
     }
 }

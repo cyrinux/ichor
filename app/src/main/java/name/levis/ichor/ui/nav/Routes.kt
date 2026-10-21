@@ -7,6 +7,7 @@ import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.sensitive
 import name.levis.ichor.ui.overview.NodeAction
@@ -109,10 +110,16 @@ internal object Routes {
 
     /** Empty [namespace] for all of them; [pod] narrows to one of [namespace]. */
     fun flows(namespace: String?, pod: String?) = "flows?ns=${Uri.encode(namespace.orEmpty())}&pod=${Uri.encode(pod.orEmpty())}"
-    const val DATA_SERVICES = "data-services?kind={kind}"
+    const val DATA_SERVICES = "data-services?kind={kind}&solo={solo}"
 
-    /** [kind] opens on that system's tab; null on the first. */
-    fun dataServices(kind: DataServiceKind? = null) = "data-services?kind=${kind?.name.orEmpty()}"
+    /** [kind] opens on that system's tab; null on the first. [solo]: that system alone, no tab row. */
+    fun dataServices(kind: DataServiceKind? = null, solo: Boolean = false) = "data-services?kind=${kind?.name.orEmpty()}&solo=$solo"
+
+    /** The `kind` of a plugin's tab: "plugin:<id>". */
+    const val DATA_SERVICES_PLUGIN_PREFIX = "plugin:"
+
+    /** Data services on the tab of the CRD plugin [pluginId]. */
+    fun dataServicesPlugin(pluginId: String) = "data-services?kind=${Uri.encode(DATA_SERVICES_PLUGIN_PREFIX + pluginId)}"
     const val ARGO_CD = "argocd"
     const val ARGO_APP = "argocd-app?ns={ns}&name={name}&sync={sync}"
     const val ARGO_WINDOWS = "argocd-windows"
@@ -120,17 +127,19 @@ internal object Routes {
     /** [sync]: open its sync sheet (from an alert's button). */
     fun argoApp(namespace: String, name: String, sync: Boolean = false) =
         "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&sync=$sync"
-    const val ARGO_DIFF = "argocd-diff?ns={ns}&name={name}"
-    fun argoDiff(namespace: String, name: String) = "argocd-diff?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    /** [focus]: the object ("kind/namespace/name") the diff scrolls to and unfolds, "" for none. */
+    const val ARGO_DIFF = "argocd-diff?ns={ns}&name={name}&focus={focus}"
+    fun argoDiff(namespace: String, name: String, focus: String = "") =
+        "argocd-diff?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&focus=${Uri.encode(focus)}"
     const val FLUX = "flux"
     const val FLUX_APP = "flux-app?kind={kind}&ns={ns}&name={name}&reconcile={reconcile}"
 
     /** [reconcile]: open its reconcile confirmation (from an alert's button). */
     fun fluxApp(kind: String, namespace: String, name: String, reconcile: Boolean = false) =
         "flux-app?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&reconcile=$reconcile"
-    const val FLUX_DIFF = "flux-diff?kind={kind}&ns={ns}&name={name}"
-    fun fluxDiff(kind: String, namespace: String, name: String) =
-        "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    const val FLUX_DIFF = "flux-diff?kind={kind}&ns={ns}&name={name}&focus={focus}"
+    fun fluxDiff(kind: String, namespace: String, name: String, focus: String = "") =
+        "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&focus=${Uri.encode(focus)}"
     /** The files of source [idx] of an Argo CD or Flux app ([tool] "argocd" or "flux"), at [dir] ("" for the source's path). */
     const val GITOPS_SOURCE = "gitops-source?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&dir={dir}"
     fun gitOpsSource(tool: String, kind: String, namespace: String, name: String, idx: Int, dir: String = "") =
@@ -151,11 +160,25 @@ internal object Routes {
     const val GITOPS_EDIT = "gitops-edit?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}&quick={quick}"
     fun gitOpsEdit(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String, quick: String = "") =
         "gitops-edit?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}&quick=${Uri.encode(quick)}"
+
+    /** The active cluster's repository (its Cluster repository setting), at [dir] ("" for the root). */
+    const val REPO_SOURCE = "repo-source?dir={dir}"
+    fun repoSource(dir: String = "") = "repo-source?dir=${Uri.encode(dir)}"
+
+    /** One file of the active cluster's repository, at the branch head; [line] as in [GITOPS_FILE]. */
+    const val REPO_FILE = "repo-file?path={path}&line={line}&noTry={noTry}"
+
+    /** [noTry]: opened from a node's machine config (Compare with Git), so no Try on a node there. */
+    fun repoFile(path: String, line: Int = 0, noTry: Boolean = false) = "repo-file?path=${Uri.encode(path)}&line=$line&noTry=$noTry"
+
+    /** The editor of the file [path] of the active cluster's repository; [quick] as in [GITOPS_EDIT]. */
+    const val REPO_EDIT = "repo-edit?path={path}&quick={quick}"
+    fun repoEdit(path: String, quick: String = "") = "repo-edit?path=${Uri.encode(path)}&quick=${Uri.encode(quick)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"
     const val VM_CONSOLE = "vm-console?ctx={ctx}&ns={ns}&vm={vm}"
-    const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}&fix={fix}&before={before}&after={after}&snippet={snippet}&snippetParams={snippetParams}"
+    const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}&fix={fix}&before={before}&after={after}&snippet={snippet}&snippetParams={snippetParams}&patch={patch}&patchFrom={patchFrom}"
     const val NETWORK = "network?addr={addr}&host={host}"
     const val HARDWARE = "hardware?addr={addr}&host={host}"
     const val IMAGES = "images?addr={addr}&host={host}"
@@ -206,12 +229,14 @@ internal object Routes {
 
     /**
      * [fix]: a drift difference the screen opens a draft for; [snippet]: a snippet it opens a
-     * draft and the picker on (see MachineConfigScreen).
+     * draft and the picker on; [patch]: a repository's Talos patch file it opens a draft with
+     * (see MachineConfigScreen).
      */
-    fun machineConfig(addr: String, host: String, fix: DriftFix? = null, snippet: SnippetPrefill? = null) =
+    fun machineConfig(addr: String, host: String, fix: DriftFix? = null, snippet: SnippetPrefill? = null, patch: PatchPrefill? = null) =
         "machineconfig?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}" +
             fix?.let { "&fix=${Uri.encode(it.key)}&before=${Uri.encode(it.before)}&after=${Uri.encode(it.after)}" }.orEmpty() +
-            snippet?.let { "&snippet=${Uri.encode(it.id)}&snippetParams=${Uri.encode(it.encodedParams())}" }.orEmpty()
+            snippet?.let { "&snippet=${Uri.encode(it.id)}&snippetParams=${Uri.encode(it.encodedParams())}" }.orEmpty() +
+            patch?.let { "&patch=${Uri.encode(it.content)}&patchFrom=${Uri.encode(it.from)}" }.orEmpty()
 
     /** [context]: the cluster (talosconfig context) of the node; blank for the one on screen. */
     fun debug(addr: String, host: String, context: String = "") =

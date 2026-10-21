@@ -4,9 +4,9 @@ on:
   # Website-only changes (pages.yml's paths) build nothing here.
   push:
     branches: [main]
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-plugins.py", ".github/workflows/pages.yml"]
   pull_request:
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-plugins.py", ".github/workflows/pages.yml"]
   # Tags: release.yml calls this, then publishes the release once with all files.
   # Artifacts are only uploaded then (github.ref is the caller's tag); pushes and PRs
   # just build.
@@ -33,6 +33,9 @@ jobs:
   check:
     name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write # cache-prune deletes the cache entries this job replaces
     concurrency:
       group: ${{ github.workflow }}-check-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -50,7 +53,7 @@ jobs:
       - run: ./build.sh check
 
       # The Go cache is written here only, on main: pull requests read it, so the cache does
-      # not fill with one entry per push.
+      # not fill with one entry per push. The entry it replaces is deleted right after.
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
         with:
@@ -58,6 +61,12 @@ jobs:
             ~/go/pkg/mod
             ~/.cache/go-build
           key: ${{ steps.toolchain.outputs.go-cache-key }}
+
+      - uses: ./.github/actions/cache-prune
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
+        with:
+          prefix: go-${{ runner.os }}-
+          keep: ${{ steps.toolchain.outputs.go-cache-key }}
 
   debug:
     name: Debug APK
@@ -191,3 +200,35 @@ jobs:
           path: |
             app/build/outputs/bundle/play/*.aab
             app/build/outputs/mapping/play/mapping.txt
+
+  # setup-gradle saves a Gradle home entry per job (gradle-home-v2|<os>|<job>[…]) that names the
+  # extracted entries it restores (gradle-dependencies-v2-*, gradle-transforms-v2-*, …), and
+  # never deletes any. Once every job of a main run has saved, this keeps the newest home of
+  # each job and the extracted entries this run restored or wrote (last accessed after the run
+  # started); the rest only a previous run used.
+  gradle-cache-prune:
+    name: Gradle cache prune
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [check, debug, release, play]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        # A failed delete only leaves the entry for LRU eviction: never fail the run on it.
+        run: |
+          started="$(gh api "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT" --jq .run_started_at)"
+          gh api --paginate "repos/$GH_REPO/actions/caches?ref=refs/heads/main&key=gradle-&per_page=100" \
+            --jq '.actions_caches[]' |
+            jq -rs --arg started "$started" '
+              (map(select(.key | startswith("gradle-home-")))
+                | group_by(.key | sub("\\].*"; "]"))
+                | map(sort_by(.created_at) | .[:-1][])),
+              map(select((.key | startswith("gradle-home-") | not) and .last_accessed_at < $started))
+              | .[] | "\(.id) \(.key)"' |
+            while read -r id key; do
+              echo "deleting $key"
+              gh cache delete "$id" || echo "::warning::could not delete cache $key"
+            done

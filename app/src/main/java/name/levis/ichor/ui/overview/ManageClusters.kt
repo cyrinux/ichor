@@ -16,6 +16,7 @@ import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.isKube
+import name.levis.ichor.ui.gitops.ClusterRepoSheet
 import name.levis.ichor.ui.importconfig.ServiceAccountHelpDialog
 import name.levis.ichor.ui.kubeauth.KubeAccessDialog
 import name.levis.ichor.ui.kubeauth.SignInAccountDialog
@@ -24,7 +25,7 @@ import name.levis.ichor.ui.userMessage
 
 /**
  * The cluster sheet as both homes (Talos overview, Kubernetes home) open it: pick, rename,
- * color, VPN only, background watch, sign-in or Kubernetes access, activity, remove, add. [onEndpoints] edits a Talos
+ * color, VPN only, background watch, sign-in or Kubernetes access, activity, cluster repository, remove, add. [onEndpoints] edits a Talos
  * cluster's endpoints, when offered.
  */
 @Composable
@@ -37,6 +38,8 @@ fun ManageClustersSheet(
     onClustersCleared: () -> Unit,
     onEndpoints: ((ContextSummary) -> Unit)? = null,
     onActivity: ((ContextSummary) -> Unit)? = null,
+    /** Settings → Git hosts, from the repository sheet of a cluster whose host has no token. */
+    onGitHosts: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -45,6 +48,7 @@ fun ManageClustersSheet(
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var account by remember { mutableStateOf<ContextSummary?>(null) }
+    var repository by remember { mutableStateOf<ContextSummary?>(null) }
     var signingIn by remember { mutableStateOf<String?>(null) }
     // Removals still writing the stored config: their rows show a spinner until they are gone.
     var removingNames by remember { mutableStateOf(emptySet<String>()) }
@@ -99,7 +103,24 @@ fun ManageClustersSheet(
         removingNames = removingNames,
         unwatched = unwatched,
         onWatch = app::setWatched,
+        onRepository = { repository = it },
     )
+
+    repository?.let { cluster ->
+        ClusterRepoSheet(
+            app = app,
+            fingerprint = cluster.fingerprint,
+            label = labels.of(cluster),
+            onDismiss = { repository = null },
+            onGitHosts = onGitHosts?.let { open ->
+                {
+                    repository = null
+                    onClose()
+                    open()
+                }
+            },
+        )
+    }
 
     account?.let { cluster ->
         if (cluster.isKube && cluster.signIn.isEmpty()) {

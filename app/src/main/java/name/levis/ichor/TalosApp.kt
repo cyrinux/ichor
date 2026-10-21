@@ -11,11 +11,14 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.KubePermissions
 import name.levis.ichor.data.BackupManager
+import name.levis.ichor.data.ClusterRepoStore
+import name.levis.ichor.data.ProposalsStore
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.CiliumRepository
 import name.levis.ichor.data.AutoscalingRepository
 import name.levis.ichor.data.PolicyRepository
+import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.data.VirtualMachineRepository
 import name.levis.ichor.data.ArgoRolloutsRepository
 import name.levis.ichor.data.NetPerfHistory
@@ -163,7 +166,13 @@ class TalosApp : Application() {
     private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache, idle = maskSwitcher::awaitIdle) }
     val talosRepository by lazy { TalosRepository(goCall) }
     val kubeRepository by lazy { KubeRepository(goCall) }
-    val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore) }
+    val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore, clusterRepos, proposals) }
+
+    /** The pull requests opened from the phone, per cluster; no token in them. */
+    val proposals by lazy { ProposalsStore(getSharedPreferences(ProposalsStore.FILE, Context.MODE_PRIVATE)) }
+
+    /** The Git repository saved for each cluster (its Talos and Kubernetes config); no token in it. */
+    val clusterRepos by lazy { ClusterRepoStore(getSharedPreferences(ClusterRepoStore.FILE, Context.MODE_PRIVATE)) }
 
     /** Git host tokens (Settings → Git hosts): one Keystore key and file per host. */
     val gitHostStore by lazy {
@@ -189,6 +198,7 @@ class TalosApp : Application() {
         )
     }
     val dataServicesRepository by lazy { DataServicesRepository(goCall) }
+    val pluginRepository by lazy { PluginRepository(goCall) }
     val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
@@ -406,7 +416,7 @@ class TalosApp : Application() {
     val backupManager by lazy {
         BackupManager(
             configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, kubeAccess, kubeAuthStore, wakeOnLan, monitorStore,
-            pinStore, gitHostStore, aiPreferences,
+            pinStore, gitHostStore, aiPreferences, clusterRepos,
             lockMode = { BackupLockMode.of(appLock.enabled.value, appLock.securityKeys.value != null) },
             setPrivacyMask = ::setPrivacyMask,
             notificationsAllowed = { canPostNotifications(this) },
@@ -714,6 +724,8 @@ class TalosApp : Application() {
                     // Rewrites a sealed file (a Keystore call): off the main thread, its store is locked.
                     launch(Dispatchers.IO) { publicIps.sync(it.summary) }
                     vpnOnly.sync(it.summary)
+                    clusterRepos.sync(it.summary)
+                    proposals.sync(it.summary)
                     unwatchedClusters.sync(it.summary)
                     widgetClusters.sync(it.summary)
                     // A removed cluster's snoozes go with it (its snapshot at the next check).

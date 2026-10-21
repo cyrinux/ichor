@@ -114,6 +114,6 @@ private fun HostRow(host: GitHost, login: String?, onOpen: () -> Unit, onRemove:
     }
 }
 
-/** GitHub, GitLab and Gitea are names, not translated; Auto is. */
+/** GitHub, GitLab and Gitea/Forgejo are names, not translated; Auto is. */
 @Composable
 internal fun gitHostKindLabel(kind: GitHostKind): String = kind.label ?: stringResource(R.string.git_host_kind_auto)

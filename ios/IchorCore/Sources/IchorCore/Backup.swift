@@ -136,15 +136,19 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     /// A Talos cluster's Kubernetes access: the fingerprint of the kubeconfig cluster its
     /// Kubernetes calls go through (nil: the admin kubeconfig Talos issues).
     public var kubeAccess: String?
+    /// The cluster's own Git repository (its Cluster repository setting); never a token.
+    public var repository: ClusterRepo?
 
     public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
-                wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil) {
+                wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil,
+                repository: ClusterRepo? = nil) {
         self.name = name
         self.color = color
         self.vpnOnly = vpnOnly
         self.wakeOnLan = wakeOnLan
         self.kubeServer = kubeServer
         self.kubeAccess = kubeAccess
+        self.repository = repository
     }
 }
 
@@ -214,7 +218,8 @@ public func backupPassphraseProblem(_ passphrase: String, again: String) -> Back
 /// `wakeOnLan` is keyed by `wolKey`.
 public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int],
                            kubeServers: [String: String], vpnOnly: Set<String> = [],
-                           wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:]) -> [String: BackupCluster] {
+                           wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:],
+                           repos: [String: ClusterRepo] = [:]) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
         var wol: [String: BackupWolTarget] = [:]
@@ -223,7 +228,8 @@ public func backupClusters(fingerprints: [String], names: [String: String], colo
         }
         out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
                                 vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
-                                kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 })
+                                kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 },
+                                repository: repos[fp])
     }
     return out
 }
@@ -239,6 +245,8 @@ public struct RestoredClusters: Equatable, Sendable {
     public var wakeOnLan: [String: WolTarget] = [:]
     /// Talos fingerprint → kubeconfig cluster fingerprint, both in the restored config.
     public var kubeAccess: [String: String] = [:]
+    /// Normalized; one without an address is dropped.
+    public var repos: [String: ClusterRepo] = [:]
 }
 
 public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints: [String]) -> RestoredClusters {
@@ -249,7 +257,9 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
     var vpnOnly: Set<String> = []
     var wakeOnLan: [String: WolTarget] = [:]
     var kubeAccess: [String: String] = [:]
+    var repos: [String: ClusterRepo] = [:]
     for (fp, cluster) in clusters ?? [:] where known.contains(fp) {
+        if let repo = cluster.repository.flatMap(normalizeClusterRepo) { repos[fp] = repo }
         if let target = cluster.kubeAccess, target != fp, known.contains(target) { kubeAccess[fp] = target }
         if cluster.vpnOnly == true { vpnOnly.insert(fp) }
         for (node, wol) in cluster.wakeOnLan ?? [:] {
@@ -268,7 +278,7 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
         }
     }
     return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly,
-                            wakeOnLan: wakeOnLan, kubeAccess: kubeAccess)
+                            wakeOnLan: wakeOnLan, kubeAccess: kubeAccess, repos: repos)
 }
 
 /// The sign-ins of a restored payload for the clusters it restored (`fingerprints`), empty

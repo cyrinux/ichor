@@ -39,14 +39,18 @@ enum GitOpsDiffTarget: Hashable {
 /// written.
 struct FluxDiffView: View {
     let target: GitOpsDiffTarget
+    /// The object ("kind/namespace/name", from its page or a failed sync) scrolled to, unfolded.
+    let focus: String
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(target: FluxRef) {
+    init(target: FluxRef, focus: String = "") {
         self.target = .flux(target)
+        self.focus = focus
     }
 
-    init(argo namespace: String, name: String) {
+    init(argo namespace: String, name: String, focus: String = "") {
         self.target = .argo(namespace: namespace, name: name)
+        self.focus = focus
     }
 
     @Environment(AppModel.self) private var model
@@ -60,10 +64,14 @@ struct FluxDiffView: View {
     @State private var opened: SourceFileTarget?
     /// Several files declare the object: the user picks one.
     @State private var choosing: SourceFileChoice?
+    /// The manifest opened in the editor with an object's live values written ("Keep in Git").
+    @State private var keeping: SourceKeepTarget?
     @State private var message: String?
     /// Per object id: what the user folded or unfolded survives a refresh.
     @State private var expanded: [String: Bool] = [:]
     @State private var showUnchanged = false
+    /// The focus was scrolled to once: a refresh leaves the scroll alone.
+    @State private var scrolledToFocus = false
 
     /// Unfolded at first: the first objects that would change, so one change shows at a glance.
     private static let unfoldedAtFirst = 3
@@ -75,11 +83,19 @@ struct FluxDiffView: View {
             .navigationDestination(item: $opened) { file in
                 SourceFileView(source: file.source, path: file.path, app: file.app, line: file.line)
             }
+            .navigationDestination(item: $keeping) { file in
+                SourceEditView(source: file.source, path: file.path, app: file.app, quickEdit: file.edit)
+            }
             .confirmationDialog(String(localized: "Defined in several files"), isPresented: $choosing.isPresent(),
                                 titleVisibility: .visible, presenting: choosing) { choice in
                 ForEach(choice.matches) { match in
                     Button(String(localized: "Defined in \(match.path), line \(String(match.line))")) {
-                        opened = SourceFileTarget(source: choice.source, path: match.path, app: target.app, line: match.line)
+                        if let kept = choice.keep {
+                            keeping = SourceKeepTarget(source: choice.source, path: match.path, app: target.app,
+                                                       edit: .keep(documentIndex: match.documentIndex, resource: kept))
+                        } else {
+                            opened = SourceFileTarget(source: choice.source, path: match.path, app: target.app, line: match.line)
+                        }
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -100,75 +116,92 @@ struct FluxDiffView: View {
     private func content(_ diff: FluxDiff) -> some View {
         let changed = diff.changed
         let unchanged = diff.unchanged
-        return List {
-            Section {
-                if !diff.revision.isEmpty {
-                    LabeledContent("Built from") { Text(verbatim: target.short(diff.revision)).font(.callout.monospaced()) }
-                }
-                if !diff.applied.isEmpty {
-                    LabeledContent("Last applied") {
-                        Text(verbatim: target.short(diff.applied))
-                            .font(.callout.monospaced())
-                            .foregroundStyle(diff.newRevision ? Color.statusWarn : Color.secondary)
-                    }
-                }
-                if diff.inSync {
-                    Label("Nothing would change: the cluster matches the source.", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.statusOK)
-                }
-                if !diff.counts.isEmpty {
-                    ChipFlow {
-                        ForEach(diff.counts, id: \.change) { DiffChangeBadge(change: $0.change, count: $0.count) }
-                    }
-                }
-                ForEach(diff.warnings, id: \.self) { warning in
-                    Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                        .font(.callout)
-                        .foregroundStyle(.statusWarn)
-                }
-            }
-            if !changed.isEmpty {
+        let focused = focus.isEmpty ? nil : changed.first(where: { $0.focusKey == focus })
+        return ScrollViewReader { proxy in
+            List {
                 Section {
-                    ForEach(Array(changed.enumerated()), id: \.element.id) { index, resource in
-                        DiffResourceRow(resource: resource, expanded: binding(for: resource, at: index),
-                                        openSource: openSource(for: resource), searching: searching == resource.id)
+                    if !diff.revision.isEmpty {
+                        LabeledContent("Built from") { Text(verbatim: target.short(diff.revision)).font(.callout.monospaced()) }
                     }
-                }
-            }
-            if !unchanged.isEmpty {
-                Section {
-                    DisclosureGroup(isExpanded: $showUnchanged) {
-                        ForEach(unchanged) { r in
-                            LabeledContent {
-                                Text(verbatim: r.namespace.isEmpty ? r.name : "\(r.namespace)/\(r.name)")
-                                    .font(.callout.monospaced())
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                            } label: {
-                                Text(verbatim: r.kind).foregroundStyle(.secondary)
-                            }
+                    if !diff.applied.isEmpty {
+                        LabeledContent("Last applied") {
+                            Text(verbatim: target.short(diff.applied))
+                                .font(.callout.monospaced())
+                                .foregroundStyle(diff.newRevision ? Color.statusWarn : Color.secondary)
                         }
-                    } label: {
-                        Text("\(unchanged.count) unchanged objects")
+                    }
+                    if diff.inSync {
+                        Label("Nothing would change: the cluster matches the source.", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.statusOK)
+                    }
+                    // Opened for one object that has nothing to change: say so, rather than leave it to be looked for.
+                    if !focus.isEmpty, focused == nil {
+                        let parts = focus.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+                        Label("\(parts.first ?? "") \(parts.last ?? "") matches what Git would apply: nothing to keep.",
+                              systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.statusOK)
+                    }
+                    if !diff.counts.isEmpty {
+                        ChipFlow {
+                            ForEach(diff.counts, id: \.change) { DiffChangeBadge(change: $0.change, count: $0.count) }
+                        }
+                    }
+                    ForEach(diff.warnings, id: \.self) { warning in
+                        Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
+                            .font(.callout)
+                            .foregroundStyle(.statusWarn)
+                    }
+                }
+                if !changed.isEmpty {
+                    Section {
+                        ForEach(Array(changed.enumerated()), id: \.element.id) { index, resource in
+                            DiffResourceRow(resource: resource, expanded: binding(for: resource, at: index),
+                                            openSource: openSource(for: resource), searching: searching == resource.id,
+                                            keepLive: keepLive(for: resource))
+                                .id(resource.id)
+                        }
+                    }
+                }
+                if !unchanged.isEmpty {
+                    Section {
+                        DisclosureGroup(isExpanded: $showUnchanged) {
+                            ForEach(unchanged) { r in
+                                LabeledContent {
+                                    Text(verbatim: r.namespace.isEmpty ? r.name : "\(r.namespace)/\(r.name)")
+                                        .font(.callout.monospaced())
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                } label: {
+                                    Text(verbatim: r.kind).foregroundStyle(.secondary)
+                                }
+                            }
+                        } label: {
+                            Text("\(unchanged.count) unchanged objects")
+                        }
+                    }
+                }
+                Section {
+                    EmptyView()
+                } footer: {
+                    if target.isArgo {
+                        Text("What Argo CD itself compared last: the live state and the state after a sync, read from Argo CD’s cache through a port-forward. Nothing ran in the cluster, nothing was changed. Secret values are hidden.")
+                    } else {
+                        Text("Built in the cluster as Flux builds it, then sent to the API server as a server-side apply dry run: nothing was changed. Secret values are hidden.")
                     }
                 }
             }
-            Section {
-                EmptyView()
-            } footer: {
-                if target.isArgo {
-                    Text("What Argo CD itself compared last: the live state and the state after a sync, read from Argo CD’s cache through a port-forward. Nothing ran in the cluster, nothing was changed. Secret values are hidden.")
-                } else {
-                    Text("Built in the cluster as Flux builds it, then sent to the API server as a server-side apply dry run: nothing was changed. Secret values are hidden.")
-                }
+            .refreshable { await load() }
+            .themedBackground()
+            .task(id: focused?.id) {
+                guard let focused, !scrolledToFocus else { return }
+                scrolledToFocus = true
+                proxy.scrollTo(focused.id, anchor: .top)
             }
         }
-        .refreshable { await load() }
-        .themedBackground()
     }
 
     private func binding(for resource: KubeDiffResource, at index: Int) -> Binding<Bool> {
-        let initial = index < Self.unfoldedAtFirst && resource.change.isChange
+        let initial = resource.focusKey == focus || index < Self.unfoldedAtFirst && resource.change.isChange
         return Binding(
             get: { expanded[resource.id] ?? initial },
             set: { expanded[resource.id] = $0 }
@@ -182,7 +215,15 @@ struct FluxDiffView: View {
         return { Task { await findSource(of: resource, in: browsable.source, index: browsable.index) } }
     }
 
-    private func findSource(of resource: KubeDiffResource, in source: GitSource, index: Int) async {
+    /// "Keep live values in Git", when the object has values changed by hand and the app a
+    /// browsable Git source to find its manifest in.
+    private func keepLive(for resource: KubeDiffResource) -> (() -> Void)? {
+        guard let browsable = gitSources?.firstBrowsable, !resource.liveChanges.isEmpty else { return nil }
+        return { Task { await findSource(of: resource, in: browsable.source, index: browsable.index, keep: true) } }
+    }
+
+    /// keep: the search is for "Keep in Git" (the editor opens) rather than to open the file.
+    private func findSource(of resource: KubeDiffResource, in source: GitSource, index: Int, keep: Bool = false) async {
         guard let client = model.client, searching == nil else { return }
         searching = resource.id
         defer { searching = nil }
@@ -192,10 +233,13 @@ struct FluxDiffView: View {
                                                     resNamespace: resource.namespace, resName: resource.name,
                                                     hosts: hosts, demo: demo)
             switch found.outcome {
+            case .open(let match) where keep:
+                keeping = SourceKeepTarget(source: source, path: match.path, app: app,
+                                           edit: .keep(documentIndex: match.documentIndex, resource: resource))
             case .open(let match):
                 opened = SourceFileTarget(source: source, path: match.path, app: app, line: match.line)
             case .choose(let matches):
-                choosing = SourceFileChoice(source: source, matches: matches)
+                choosing = SourceFileChoice(source: source, matches: matches, keep: keep ? resource : nil)
             case .none(let note):
                 message = note.isEmpty ? String(localized: "No file of the source declares \(resource.kind) \(resource.name).") : note
             }
@@ -238,8 +282,18 @@ struct SourceFileTarget: Hashable {
     let line: Int
 }
 
-/// The files declaring an object, when there are several.
+/// A manifest opened in the editor with an object's live values written by edit.
+struct SourceKeepTarget: Hashable {
+    let source: GitSource
+    let path: String
+    let app: GitOpsAppRef
+    let edit: QuickEdit
+}
+
+/// The files declaring an object, when there are several; keep: the object whose live values
+/// go to the one picked.
 struct SourceFileChoice: Hashable {
     let source: GitSource
     let matches: [ManifestMatch]
+    var keep: KubeDiffResource?
 }

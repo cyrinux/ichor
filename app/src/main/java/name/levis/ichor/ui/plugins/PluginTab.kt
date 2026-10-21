@@ -1,0 +1,325 @@
+package name.levis.ichor.ui.plugins
+
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.DataServicesRepository
+import name.levis.ichor.data.PLUGIN_CATALOG
+import name.levis.ichor.data.PLUGINS_DETECT
+import name.levis.ichor.data.PluginRepository
+import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.pluginDataKey
+import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.PluginCard
+import name.levis.ichor.model.PluginCatalog
+import name.levis.ichor.model.PluginDetect
+import name.levis.ichor.model.PluginRef
+import name.levis.ichor.model.PluginRow
+import name.levis.ichor.model.PluginTree
+import name.levis.ichor.model.groupsByNamespace
+import name.levis.ichor.model.pluginRowKeys
+import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.cancellableCatching
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.ErrorBox
+import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
+import name.levis.ichor.ui.components.groupInOrder
+import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.dataservices.KUBE_GREEN_PLUGIN
+import name.levis.ichor.ui.dataservices.KubeGreenActions
+import name.levis.ichor.ui.dataservices.KubeGreenScheduleToasts
+import name.levis.ichor.ui.dataservices.WarnBanner
+import name.levis.ichor.ui.dataservices.kubeGreenRowExtra
+import name.levis.ichor.ui.factory
+import java.util.Locale
+
+/** The labels' language Go translates the tree into. */
+fun pluginLocale(): String = Locale.getDefault().language
+
+/**
+ * When a plugin tab reads again: [scope] (the cluster and its config generation) starts over,
+ * [bump] (refreshes, invalidations, a change made from the tab) reads in place.
+ */
+data class PluginReload(val scope: Any?, val bump: Any?)
+
+/** A plugin's tree and the catalog that names the kinds its rows open. */
+data class PluginView(val tree: PluginTree, val catalog: PluginCatalog = PluginCatalog())
+
+/** Which plugins the cluster runs, with their summary tiles; loaded on demand, never polled. */
+class PluginDetectViewModel(private val plugins: PluginRepository) : LoadingViewModel<PluginDetect>() {
+    private var hints = ""
+    private var source: Any? = null
+
+    override fun cached(): TalosRepository.Timed<PluginDetect>? = plugins.cached("$PLUGINS_DETECT|$hints")
+    override val restores get() = plugins.restores
+    override suspend fun fetch() = plugins.detect(hints)
+
+    /** Loads once per [key] (context, config generation, invalidations); [refresh] forces it. */
+    fun load(key: Any, hints: String) {
+        if (key == source && hints == this.hints) return
+        source = key
+        this.hints = hints
+        refresh(reset = true)
+    }
+
+    /** Nothing to load: the next [load] loads again, even with a key seen before. */
+    fun forget() {
+        source = null
+    }
+}
+
+/** One plugin's render tree over every namespace, in the phone's language, and its actions. */
+class PluginTabViewModel(
+    private val plugins: PluginRepository,
+    private val pluginId: String,
+    dataServices: DataServicesRepository,
+) : LoadingViewModel<PluginView>() {
+    private var source: Any? = null
+
+    /** The buttons' actions: the tree is read again once one went through. */
+    val actions = PluginActions(viewModelScope, plugins, pluginId, onChanged = { refresh() })
+
+    /** kube-green's native schedule editor, under its SleepInfo rows; null for any other plugin. */
+    val kubeGreen: KubeGreenActions? =
+        KubeGreenActions(viewModelScope, dataServices, onChanged = { refresh() }).takeIf { pluginId == KUBE_GREEN_PLUGIN }
+
+    /** The plugin's tool buttons' runs (docs/plugins.md "Tools"). */
+    val tools = PluginToolRuns(viewModelScope, plugins, pluginId)
+
+    override fun cached(): TalosRepository.Timed<PluginView>? =
+        plugins.cached<PluginTree>(pluginDataKey(pluginId, "", pluginLocale()))?.let { t ->
+            TalosRepository.Timed(PluginView(t.value, plugins.cached<PluginCatalog>(PLUGIN_CATALOG)?.value ?: PluginCatalog()), t.at)
+        }
+
+    override val restores get() = plugins.restores
+
+    override suspend fun fetch(): PluginView {
+        // A tool's result was about what the screen showed: a new read starts without it.
+        tools.clear()
+        val tree = plugins.data(pluginId, "", pluginLocale())
+        // Only the kinds of the objects its rows open: the rows show without it.
+        val catalog = cancellableCatching { plugins.catalog() }.getOrDefault(PluginCatalog())
+        return PluginView(tree, catalog)
+    }
+
+    private var bump: Any? = null
+
+    /**
+     * Reads for [reload]: from scratch when its scope (the cluster, the config) changed, so
+     * another cluster's rows never show; in place, keeping the rows, when only its bump did
+     * (a refresh, an invalidation, a schedule saved), or after a failure.
+     */
+    fun load(reload: PluginReload) {
+        when {
+            source == null || reload.scope != source -> {
+                source = reload.scope
+                bump = reload.bump
+                refresh(reset = true)
+            }
+            reload.bump != bump || state.value is UiState.Failed -> {
+                bump = reload.bump
+                refresh()
+            }
+        }
+    }
+}
+
+@Composable
+private fun pluginTabViewModel(pluginId: String): PluginTabViewModel {
+    val app = LocalContext.current.applicationContext as TalosApp
+    return viewModel(key = "plugin-$pluginId", factory = factory { PluginTabViewModel(app.pluginRepository, pluginId, app.dataServicesRepository) })
+}
+
+/**
+ * A plugin's tab in a hub (Data services): its summary, its cards as grouped cards (by
+ * namespace when the rows span several), unreadable parts as a warning banner. Reads again when
+ * [reload] changes. [rowExtra] gives a native control to add under a row's details, null for none.
+ */
+@Composable
+fun PluginTab(
+    pluginId: String,
+    reload: PluginReload,
+    onObject: (KubeObjectRef) -> Unit,
+    rowExtra: (PluginRow) -> (@Composable () -> Unit)? = { null },
+) {
+    val vm = pluginTabViewModel(pluginId)
+    val state by vm.state.collectAsStateWithLifecycle()
+    LaunchedEffect(reload) { vm.load(reload) }
+    PluginActionToasts(vm.actions.results)
+    val runner = rememberActionRunner(vm.actions)
+    when (val s = state) {
+        UiState.Loading -> LoadingBox(Modifier.fillMaxSize())
+        is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, Modifier.fillMaxSize())
+        is UiState.Loaded -> PluginBody(s.data, onObject, rowExtra, runner, vm.tools)
+    }
+}
+
+/** A plugin as a screen of its own (a plugin of another category than Data services, from the home). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
+    val vm = pluginTabViewModel(pluginId)
+    val state by vm.state.collectAsStateWithLifecycle()
+    val app = LocalContext.current.applicationContext as TalosApp
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val generation by app.configRepository.generation.collectAsStateWithLifecycle()
+    val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
+    val reload = PluginReload(config?.activeContext to generation, invalidations)
+    LaunchedEffect(reload) { vm.load(reload) }
+    PluginActionToasts(vm.actions.results)
+    vm.kubeGreen?.let { KubeGreenScheduleToasts(it.results) }
+    val runner = rememberActionRunner(vm.actions)
+    val title = (state as? UiState.Loaded)?.data?.tree?.plugin?.name?.takeIf { it.isNotEmpty() } ?: stringResource(R.string.plugin_screen_title)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(title) },
+                navigationIcon = { BackButton(onBack) },
+                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
+            )
+        },
+    ) { padding ->
+        val rest = Modifier.pageContent(padding).fillMaxSize()
+        when (val s = state) {
+            UiState.Loading -> LoadingBox(rest)
+            is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, rest)
+            is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
+                PluginBody(s.data, onObject, rowExtra = { row -> vm.kubeGreen?.let { kubeGreenRowExtra(row, it) } }, runner, vm.tools)
+            }
+        }
+    }
+}
+
+/** The buttons' runner over [actions], new only when the actions in flight change. */
+@Composable
+private fun rememberActionRunner(actions: PluginActions): PluginActionRunner {
+    val busy by actions.busy.collectAsStateWithLifecycle()
+    return remember(actions, busy) { PluginActionRunner(busy, actions::run) }
+}
+
+@Composable
+private fun PluginBody(
+    view: PluginView,
+    onObject: (KubeObjectRef) -> Unit,
+    rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
+    runner: PluginActionRunner,
+    tools: PluginToolRuns,
+) {
+    val tree = view.tree
+    val toolRun by tools.run.collectAsStateWithLifecycle()
+    val toolCards = remember(toolRun?.result) { toolCardLayouts(toolRun?.result) }
+    var expanded by rememberSaveable(tree.plugin.id) { mutableStateOf(setOf<String>()) }
+    val open: (PluginRef) -> Unit = { ref -> onObject(ref.objectRef(view.catalog.kindOf(tree.plugin.id, ref))) }
+    val toggle: (String) -> Unit = { k -> expanded = if (k in expanded) expanded - k else expanded + k }
+    // Worked out once per tree, not on every recomposition.
+    val cards = remember(tree) { tree.cards.filter { it.rows.isNotEmpty() || it.empty.isNotEmpty() }.map(::layoutOf) }
+    val errorLines = remember(tree) { tree.errors.map { e -> listOf(e.subject, e.message).filter { it.isNotEmpty() }.joinToString(": ") } }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
+        item(key = "summary") { PluginSummaryHeader(tree.summary, Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) }
+        if (errorLines.isNotEmpty()) item(key = "errors") {
+            WarnBanner(
+                (listOf(stringResource(R.string.plugin_errors_title)) + errorLines).joinToString("\n"),
+                Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+        if (!tree.active) {
+            item(key = "inactive") { EmptyText(stringResource(R.string.plugin_not_detected)) }
+            return@LazyColumn
+        }
+        if (tree.tools.isNotEmpty()) {
+            pluginTools(tree.tools, toolRun, toolCards, tools::start, expanded, toggle, open, runner)
+            item(key = "tools-end") { Spacer(Modifier.height(12.dp)) }
+        }
+        if (cards.isEmpty()) item(key = "empty") { EmptyText(stringResource(R.string.plugin_empty)) }
+        cards.forEachIndexed { index, layout ->
+            if (index > 0) item(key = "gap:${layout.card.id}") { Spacer(Modifier.height(12.dp)) }
+            pluginCard(layout, expanded, toggle, open, rowExtra, runner)
+        }
+    }
+}
+
+/**
+ * A card ready to draw: its rows (with their index, for stable keys) in one group, or one group
+ * per namespace (its title) when they are objects of several namespaces.
+ */
+internal class CardLayout(
+    val card: PluginCard,
+    val grouped: Boolean,
+    val groups: List<Pair<String, List<IndexedValue<PluginRow>>>>,
+    /** Per row index: its list key, by its object (see [pluginRowKeys]). */
+    val keys: List<String>,
+)
+
+internal fun layoutOf(card: PluginCard): CardLayout {
+    val grouped = card.groupsByNamespace()
+    val rows = card.rows.withIndex().toList()
+    val groups = if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows)
+    return CardLayout(card, grouped, groups, pluginRowKeys(card.rows))
+}
+
+/** A card's rows as one grouped card, or one per namespace when they span several. */
+internal fun LazyListScope.pluginCard(
+    layout: CardLayout,
+    expanded: Set<String>,
+    onToggle: (String) -> Unit,
+    onObject: (PluginRef) -> Unit,
+    rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
+    runner: PluginActionRunner,
+) {
+    val card = layout.card
+    if (card.rows.isEmpty()) {
+        item(key = "empty:${card.id}") { EmptyText(card.empty) }
+        return
+    }
+    // Keys per plugin card: several cards can list the same namespaces.
+    layout.groups.forEach { (namespace, group) ->
+        if (layout.grouped) cardGroupTitle("group:${card.id}:$namespace", namespace)
+        // Keyed by the row's object: its state (an open action dialog) follows it across a reload.
+        cardRows(group, key = { "row:${card.id}:${layout.keys[it.index]}" }) { (index, row) ->
+            // By its list key: two rows of one object (a name's A and AAAA records) open apart.
+            val key = "${card.id}|${layout.keys[index]}"
+            PluginRowContent(
+                row,
+                open = key in expanded,
+                onToggle = { onToggle(key) },
+                onObject = onObject,
+                // The namespace is the card's title when grouped.
+                showSubtitle = !layout.grouped || row.subtitle != row.ref?.namespace,
+                extra = rowExtra(row),
+                actions = runner,
+            )
+        }
+    }
+}

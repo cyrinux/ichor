@@ -195,6 +195,46 @@ func (s cronSchedule) next(from time.Time) time.Time {
 	return time.Time{}
 }
 
+// prev is the last run strictly before from, in from's location; zero when the schedule did
+// not run in the last cronSearchYears years. It walks back as next walks forward.
+func (s cronSchedule) prev(from time.Time) time.Time {
+	loc := from.Location()
+
+	t := from.Truncate(time.Minute)
+	if !t.Before(from) {
+		t = t.Add(-time.Minute)
+	}
+
+	limit := t.AddDate(-cronSearchYears, 0, 0)
+
+	for t.After(limit) {
+		switch {
+		case s.month&(1<<uint(t.Month())) == 0:
+			t = before(time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc), t)
+		case !s.dayMatches(t):
+			t = before(time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc), t)
+		case s.hour&(1<<uint(t.Hour())) == 0:
+			t = before(time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, loc), t)
+		case s.minute&(1<<uint(t.Minute())) == 0:
+			t = t.Add(-time.Minute)
+		default:
+			return t
+		}
+	}
+
+	return time.Time{}
+}
+
+// before is the minute before start, the start of a period t is in; t's own previous minute
+// when a clock set back made start the later of two equal wall times.
+func before(start, t time.Time) time.Time {
+	if start.After(t) {
+		return t.Add(-time.Minute)
+	}
+
+	return start.Add(-time.Minute)
+}
+
 func (s cronSchedule) dayMatches(t time.Time) bool {
 	dom := s.dom&(1<<uint(t.Day())) != 0
 	dow := s.dow&(1<<uint(t.Weekday())) != 0

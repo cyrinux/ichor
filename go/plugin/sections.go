@@ -8,8 +8,8 @@ import (
 	"github.com/cyrinux/ichor/go/plugin/expr"
 )
 
-// section renders one primitive of a row's detail; conditions and relations with nothing
-// to show are left out (ok false).
+// section renders one primitive of a row's detail; conditions, relations, badges and text
+// with nothing to show are left out (ok false).
 func (r *renderer) section(where string, s Section, el element) (TreeSection, bool) {
 	out := TreeSection{Type: s.Type}
 
@@ -17,7 +17,12 @@ func (r *renderer) section(where string, s Section, el element) (TreeSection, bo
 	case "keyValues":
 		out.Items = r.keyValues(where, s.Items, el.env)
 	case "badges":
-		out.Items = r.badgeItems(where, s.Items, el.env)
+		badges := r.badgeItems(where, s.Items, el.env)
+		if len(badges) == 0 {
+			return out, false
+		}
+
+		out.Items = badges
 	case "gauge":
 		r.gauge(where, s, el.env, &out)
 	case "conditions":
@@ -37,7 +42,12 @@ func (r *renderer) section(where string, s Section, el element) (TreeSection, bo
 	case "table":
 		return r.table(where, s), true
 	case "text":
-		out.Text = r.template(where+".text", s.Text, el.env)
+		// A quoted text the template gives (cond ? "words" : ""), as a row's status text.
+		out.Text = r.tr(r.template(where+".text", s.Text, el.env))
+		if out.Text == "" {
+			return out, false
+		}
+
 		out.Tone = r.tone(where+".tone", s.Tone, el.env, "")
 		out.Mono = s.Mono
 	case "actions":
@@ -201,7 +211,7 @@ func (r *renderer) source(from string) (res, ds string) {
 }
 
 // actionItems are the buttons: enabled by enabledWhen, with the reason when not. Whether the
-// account may run them is the action step's (KubePluginAction).
+// account may run them is set afterwards (Tree.SetAllowed).
 func (r *renderer) actionItems(items []Item, env expr.Env) []TreeAction {
 	out := make([]TreeAction, 0, len(items))
 
@@ -245,8 +255,12 @@ func (r *renderer) findings() []TreeFind {
 				continue
 			}
 
+			// name and namespace are the object's own, also when its ref opens another one.
+			meta, _ := o.raw["metadata"].(map[string]any)
+			name, _ := meta["name"].(string)
+			namespace, _ := meta["namespace"].(string)
+			env.Vars = map[string]expr.Value{"name": name, "namespace": namespace, "message": o.message, "reason": o.reason}
 			ref := r.refOf(o.raw)
-			env.Vars = map[string]expr.Value{"name": ref.Name, "namespace": ref.Namespace, "message": o.message, "reason": o.reason}
 
 			out = append(out, TreeFind{
 				ID: f.ID, Severity: f.Severity, Ref: ref, Opens: f.Opens,

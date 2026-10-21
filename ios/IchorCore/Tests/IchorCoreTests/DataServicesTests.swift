@@ -96,6 +96,28 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(dataServiceHints(other), "")
     }
 
+    func testHintsIncludeTheDataServicesPlugins() throws {
+        let catalog = try TalosJSON.decode(PluginCatalog.self, from: #"""
+        {"items":[{"id":"rook-ceph","category":"data-services","catalogId":"rook"},
+        {"id":"mariadb","category":"data-services","catalogId":"mariadb"},
+        {"id":"external-dns","category":"networking","catalogId":"external-dns"},
+        {"id":"no-pods","category":"data-services"}]}
+        """#)
+        XCTAssertEqual(catalog.dataServiceCatalogIDs, ["rook", "mariadb"])
+        func inventory(_ ids: [String]) throws -> ClusterInventory {
+            let apps = ids.map { #"{"id":"\#($0)","name":"\#($0)"}"# }.joined(separator: ",")
+            return try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[\#(apps)]}"#)
+        }
+        // A cluster whose only data service is a plugin: hinted, so the overview reads Data services.
+        XCTAssertEqual(dataServiceHints(try inventory(["rook", "nginx"]), plugins: catalog), "rook")
+        XCTAssertEqual(dataServiceHints(try inventory(["mariadb"]), plugins: catalog), "mariadb")
+        XCTAssertEqual(dataServiceHints(try inventory(["rook", "longhorn"]), plugins: catalog), "longhorn,rook")
+        // Without the catalog (not read yet), only the native systems count.
+        XCTAssertEqual(dataServiceHints(try inventory(["rook"])), "")
+        // A plugin of another category, or no data service at all: none.
+        XCTAssertEqual(dataServiceHints(try inventory(["external-dns", "nginx"]), plugins: catalog), "")
+    }
+
     func testLikelyCausePointsToTheNodeThatIsDown() throws {
         let s = try services
         // node-3 is not ready for Longhorn: the faulted volume, the Garage cluster missing a node
@@ -200,5 +222,28 @@ final class DataServicesTests: XCTestCase {
         let clusters = try XCTUnwrap(s.cnpg?.clusters)
         XCTAssertEqual(filterClusters(clusters, problemsOnly: true, query: "").map(\.name), ["down-db"])
         XCTAssertEqual(filterClusters(clusters, problemsOnly: false, query: "ok").map(\.name), ["ok-db"])
+    }
+
+    func testFilesEachSystemUnderItsFamily() {
+        XCTAssertEqual(DataServiceKind.longhorn.family, .data)
+        XCTAssertEqual(DataServiceKind.backupJobs.family, .data)
+        XCTAssertEqual(DataServiceKind.certManager.family, .security)
+        XCTAssertEqual(DataServiceKind.castai.family, .workloads)
+        // Six native systems stay in Data services (storage, databases and backups); Rook Ceph, Dragonfly, MariaDB and Percona are plugins.
+        XCTAssertEqual(DataServiceKind.allCases.filter { $0.family == .data }.count, 6)
+        XCTAssertTrue(DataServiceKind.certManager.opensAlone)
+        XCTAssertFalse(DataServiceKind.velero.opensAlone)
+    }
+
+    func testHubTabsByClusterKind() throws {
+        let mixed = try TalosJSON.decode(DataServices.self, from: #"{"longhorn":{},"certManager":{},"velero":{},"castai":{}}"#)
+        XCTAssertEqual(mixed.detected(.data), [.longhorn, .velero])
+        XCTAssertEqual(mixed.detected([.security, .workloads]), [.certManager, .castai])
+        XCTAssertEqual(mixed.only([.data]).detected, [.longhorn, .velero])
+        // A Kubernetes cluster's hub keeps storage and backups; a Talos cluster's keeps every system.
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: nil), [.native(.longhorn), .native(.velero)])
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: false, solo: nil).count, 4)
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .certManager), [.native(.certManager)])
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .garage), [])
     }
 }

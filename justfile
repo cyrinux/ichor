@@ -140,6 +140,13 @@ i18n-check:
 site *args:
     python3 scripts/site-i18n.py {{ args }}
 
+# The plugin reference page (docs/plugins/index.html, git-ignored) from docs/plugins.md, as CI
+# writes it before publishing; the Markdown package goes in a venv under .cache/.
+site-plugins:
+    test -x .cache/site-venv/bin/python || python3 -m venv .cache/site-venv
+    .cache/site-venv/bin/python -c "import markdown" 2>/dev/null || .cache/site-venv/bin/pip install --quiet markdown==3.8.2
+    .cache/site-venv/bin/python scripts/site-plugins.py
+
 # Refresh the bundled app-inventory icons from go/ichorgo/appcatalog.json (needs network
 # and ImageMagick). `just app-icons --check` only validates the catalog and the bundle.
 app-icons *args:
@@ -151,8 +158,19 @@ test:
 
 # Run the Go core against a real cluster, e.g. `just probe overview`,
 # `just probe logs 10.0.0.2 kubelet`, `just probe -config talosconfig-phone etcd`.
+# Plugin files (plugin-validate, plugin-lint, plugin-render) are relative to where just runs.
 probe *args:
-    cd go && go run ./cmd/probe {{ args }}
+    cd go && ICHOR_PROBE_CWD={{ quote(invocation_directory()) }} go run ./cmd/probe {{ args }}
+
+# Validate every plugin file of a directory (default: the built-in plugins), as ./build.sh
+# check does; exits 1 naming FILE:LINE when one is broken. See docs/plugins.md.
+plugin-check dir="go/plugin/builtin":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    files=("$(cd "{{ dir }}" && pwd)"/*.yaml)
+    (( ${#files[@]} )) || { echo "no plugin file in {{ dir }}" >&2; exit 1; }
+    cd go && go run ./cmd/probe plugin-validate "${files[@]}"
 
 # Generate the release signing key. Back it up: an app signed with another key
 # cannot update the installed one.

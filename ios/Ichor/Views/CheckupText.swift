@@ -170,6 +170,9 @@ enum CheckupText {
     static var checkupTailscaleProxyClassMissing: String { String(localized: "Names a ProxyClass that does not exist") }
     static var checkupSectionClusterAPI: String { String(localized: "Cluster lifecycle") }
     static var checkupSectionClusterAPIHint: String { String(localized: "Workload clusters, machines and bare-metal servers that are stuck, failed or off") }
+    static var checkupSectionPlugins: String { String(localized: "Plugins") }
+    static var checkupSectionPluginsHint: String { String(localized: "What the plugins of the apps the cluster runs report, in their own words") }
+    static func checkupPluginNamed(_ a: String) -> String { String(localized: "Plugin \(a)") }
     static var checkupOpenClusterLifecycle: String { String(localized: "Open Cluster lifecycle") }
     static var checkupCapiClusterFailed: String { String(localized: "Cluster failed") }
     static func checkupCapiClusterProvisioning(_ a: String) -> String { String(localized: "Not provisioned after \(a)") }
@@ -179,12 +182,12 @@ enum CheckupText {
     static var checkupSideroServerOff: String { String(localized: "In use but powered off") }
     static var checkupSideroServerUnaccepted: String { String(localized: "Waiting to be accepted") }
     static func checkupSideroServerUnacceptedMore(_ a: String) -> String { String(localized: "\(a) more servers waiting to be accepted") }
-    static var checkupSealedSecretNotSynced: String { String(localized: "Could not be unsealed") }
-    static func checkupSealingKeyMissing(_ a: String) -> String { String(localized: "No sealing key in \(a): nothing can be unsealed") }
-    static func checkupSealingKeyCompromised(_ a: String) -> String { String(localized: "Key \(a) marked compromised") }
-    static var checkupSealedSecretNotSyncedFix: String { String(localized: "The controller could not decrypt it into a Secret: it was sealed for another cluster, name or namespace, or with a key the controller no longer has. Seal it again with kubeseal against this cluster’s certificate.") }
-    static var checkupSealingKeyMissingFix: String { String(localized: "The controller has no key to decrypt with. Restore the key backup (a Secret labelled sealedsecrets.bitnami.com/sealed-secrets-key) into its namespace, then restart the controller.") }
-    static var checkupSealingKeyCompromisedFix: String { String(localized: "The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key.") }
+    static func checkupSopsDecryptionFailed(_ a: String) -> String { String(localized: "Cannot decrypt its SOPS secrets with key \(a)") }
+    static var checkupSopsDecryptionNotConfigured: String { String(localized: "Holds SOPS-encrypted files but has no decryption configured") }
+    static var checkupSopsDecryptionFailedNoKey: String { String(localized: "Cannot decrypt its SOPS secrets") }
+    static var checkupSopsDecryptionFailedNoKeyFix: String { String(localized: "Nothing in this Kustomization is applied until it decrypts. Without a secretRef, kustomize-controller decrypts through a cloud KMS or Vault: check that its identity (or spec.decryption.serviceAccountName) may use the key the files were encrypted with.") }
+    static var checkupSopsDecryptionNotConfiguredFix: String { String(localized: "Nothing in this Kustomization is applied while it holds encrypted Secrets. Add spec.decryption with provider sops and a secretRef to the Secret holding the age or PGP key, or a cloud KMS the controller can use.") }
+    static var checkupSopsDecryptionFailedFix: String { String(localized: "Nothing in this Kustomization is applied until it decrypts. Check that the Secret named in spec.decryption.secretRef holds the age or PGP key the files were encrypted with.") }
     static func checkupRouteCertExpired(_ a: String) -> String { String(localized: "Certificate expired at \(a)") }
     static func checkupRouteCertExpiring(_ a: String, _ b: String) -> String { String(localized: "Certificate expires in \(a) days at \(b)") }
     static func checkupRouteCertHostMismatch(_ a: String) -> String { String(localized: "Certificate does not name \(a)") }

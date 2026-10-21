@@ -26,6 +26,7 @@ import name.levis.ichor.model.ConfigApplyState
 import name.levis.ichor.model.ConfigEdit
 import name.levis.ichor.model.ConfigSnippet
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetEdits
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSyntaxError
@@ -35,6 +36,7 @@ import name.levis.ichor.model.after
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.uiStateOf
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.userMessage
@@ -181,6 +183,19 @@ class MachineConfigViewModel(
         _editor.update { it.copy(base = loaded, draft = loaded, review = null, run = null, edits = emptyList(), replayable = true) }
     }
 
+    /**
+     * Starts a draft that is [draft] (Git's version of this node's config, redacted): the review
+     * then shows what applying it changes. Refused while the secrets are shown.
+     */
+    fun editFrom(draft: String) {
+        if (_revealed.value) {
+            _messages.tryEmit(UiText.Res(R.string.talos_git_hide_secrets))
+            return
+        }
+        startEditing()
+        setDraft(draft)
+    }
+
     /** Drops the draft; the node was not changed. */
     fun discard() {
         describing?.cancel()
@@ -243,6 +258,49 @@ class MachineConfigViewModel(
         if (!_editor.value.editing) startEditing()
         if (!_editor.value.editing) return
         applyEdits(then = ::review) { draft -> talos.driftFixEdits(draft, fix) }
+    }
+
+    /**
+     * Opens a draft that is [patch] (a repository's Talos patch file) applied to this node's
+     * config, then the review. A patch that only sets values comes in as field edits, which the
+     * review can take to other nodes too; any other is applied by Talos's own patcher, for this
+     * node only, and the message says why. Refused while the secrets are shown.
+     */
+    fun applyPatch(patch: PatchPrefill) {
+        if (_revealed.value) {
+            _messages.tryEmit(UiText.Res(R.string.talos_git_hide_secrets))
+            return
+        }
+        if (!_editor.value.editing) startEditing()
+        val draft = _editor.value.draft ?: return
+        if (_editor.value.busy) return
+        _editor.update { it.copy(busy = true) }
+        applying = viewModelScope.launch {
+            val edits = cancellableCatching { talos.talosPatchEdits(draft, patch.content) }.getOrNull()
+            if (edits?.fixable == true) {
+                _editor.update { it.copy(busy = false) }
+                applyEdits(then = ::review) { edits }
+                return@launch
+            }
+            try {
+                val result = talos.talosPatchDraft(node, patch.content)
+                if (_editor.value.draft != draft) return@launch // discarded meanwhile
+                if (result.same) {
+                    _messages.tryEmit(UiText.Res(R.string.talos_patch_same))
+                    return@launch
+                }
+                edits?.reason?.takeIf { it.isNotEmpty() }?.let { _messages.tryEmit(UiText.Res(R.string.talos_patch_one_node, it)) }
+                _editor.update { it.copy(busy = false) }
+                setDraft(result.draft)
+                review()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _messages.tryEmit(e.uiText())
+            } finally {
+                _editor.update { it.copy(busy = false) }
+            }
+        }
     }
 
     /**

@@ -85,6 +85,8 @@ build_inside() {
     [[ -z "$unformatted" ]] || { echo "gofmt needed:" >&2; echo "$unformatted" >&2; exit 1; }
     go vet ./...
     staticcheck ./...
+    # = just plugin-check (just is not in the dev shell): every built-in plugin validates.
+    go run ./cmd/probe plugin-validate plugin/builtin/*.yaml
   fi
   if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 ]]; then
     echo "ICHOR_SKIP_TESTS=1: skipping go test"

@@ -2,6 +2,7 @@ package name.levis.ichor.ui.nav
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -44,6 +45,8 @@ import name.levis.ichor.ui.autoscaling.AutoscalingScreen
 import name.levis.ichor.ui.vms.VirtualMachinesScreen
 import name.levis.ichor.ui.argorollouts.ArgoRolloutsScreen
 import name.levis.ichor.ui.policies.PoliciesScreen
+import name.levis.ichor.ui.plugins.pluginRouteFor
+import kotlinx.coroutines.launch
 
 /** The Kubernetes screens: nodes, workloads, events, apps, metrics, the checkup, flows, data services, pod shells. */
 internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
@@ -160,6 +163,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
                 onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
                 onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+                onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
                 pullLinks = podPullLinks(nav, app),
             )
         }
@@ -193,6 +197,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.CHECKUP) {
+        val scope = rememberCoroutineScope()
         CheckupScreen(
             onBack = { nav.popBackStack() },
             onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) },
@@ -202,6 +207,10 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onOpenPolicies = { nav.navigate(Routes.POLICIES) },
             onOpenTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
             onOpenClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+            // Its tab in Data services or its own screen, as its tile leads (a cached detection).
+            onOpenPlugin = { id ->
+                scope.launch { nav.navigate(pluginRouteFor(app.pluginRepository, id) ?: KubeBrowserRoutes.plugin(id)) }
+            },
         )
     }
     composable(Routes.KUBE_CAPACITY) {
@@ -222,11 +231,17 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     }
     composable(
         Routes.DATA_SERVICES,
-        arguments = listOf(navArgument("kind") { type = NavType.StringType; defaultValue = "" }),
+        arguments = listOf(
+            navArgument("kind") { type = NavType.StringType; defaultValue = "" },
+            navArgument("solo") { type = NavType.BoolType; defaultValue = false },
+        ),
     ) { entry ->
-        val kind = entry.arguments?.getString("kind")?.let { k -> DataServiceKind.entries.firstOrNull { it.name == k } }
+        val arg = entry.arguments?.getString("kind").orEmpty()
+        val kind = DataServiceKind.entries.firstOrNull { it.name == arg }
         name.levis.ichor.ui.dataservices.DataServicesScreen(
             initial = kind,
+            initialPlugin = arg.takeIf { it.startsWith(Routes.DATA_SERVICES_PLUGIN_PREFIX) }?.removePrefix(Routes.DATA_SERVICES_PLUGIN_PREFIX),
+            solo = entry.arguments?.getBoolean("solo") == true && kind != null,
             onBack = { nav.popBackStack() },
             onObject = kubeLinks.onObject,
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },

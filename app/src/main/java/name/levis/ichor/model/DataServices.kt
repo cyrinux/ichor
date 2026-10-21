@@ -11,15 +11,8 @@ data class DataServices(
     val longhorn: LonghornStatus? = null,
     val garage: GarageStatus? = null,
     val cnpg: CnpgStatus? = null,
-    val dragonfly: DragonflyStatus? = null,
-    val mariadb: MariaDbStatus? = null,
-    val percona: PerconaStatus? = null,
     val certManager: CertManagerStatus? = null,
     val velero: VeleroStatus? = null,
-    val externalDns: ExternalDnsStatus? = null,
-    val sealedSecrets: SealedSecretsStatus? = null,
-    val kubeGreen: KubeGreenStatus? = null,
-    val ceph: CephStatus? = null,
     val castai: CastAIStatus? = null,
     val snapshots: VolumeSnapshots? = null,
     val backupJobs: BackupJobStatus? = null,
@@ -49,18 +42,11 @@ enum class DataServiceKind(val catalogId: String) {
     LONGHORN("longhorn"),
     GARAGE("garage"),
     CNPG("cloudnative-pg"),
-    DRAGONFLY("dragonfly"),
-    MARIADB("mariadb"),
-    PERCONA("percona-xtradb"),
     CERT_MANAGER("cert-manager"),
     VELERO("velero"),
-    EXTERNAL_DNS("external-dns"),
-    SEALED_SECRETS("sealed-secrets"),
-    CEPH("rook"),
     CASTAI("castai"),
     SNAPSHOTS("kubernetes-csi"),
     BACKUP_JOBS("backup-cronjobs"),
-    KUBE_GREEN("kube-green"),
 }
 
 /** Product names: never translated. */
@@ -69,18 +55,11 @@ val DataServiceKind.title: String
         DataServiceKind.LONGHORN -> "Longhorn"
         DataServiceKind.GARAGE -> "Garage"
         DataServiceKind.CNPG -> "CloudNativePG"
-        DataServiceKind.DRAGONFLY -> "Dragonfly"
-        DataServiceKind.MARIADB -> "MariaDB"
-        DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
-        DataServiceKind.EXTERNAL_DNS -> "ExternalDNS"
-        DataServiceKind.SEALED_SECRETS -> "Sealed Secrets"
-        DataServiceKind.CEPH -> "Rook Ceph"
         DataServiceKind.SNAPSHOTS -> "CSI VolumeSnapshots"
         DataServiceKind.BACKUP_JOBS -> "Backup CronJobs"
         DataServiceKind.CASTAI -> "CAST AI"
-        DataServiceKind.KUBE_GREEN -> "kube-green"
     }
 
 /** The system a data alert's "system|label" key names (monitor dataIssuesOf). */
@@ -89,28 +68,27 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.LONGHORN -> "longhorn"
         DataServiceKind.GARAGE -> "garage"
         DataServiceKind.CNPG -> "cnpg"
-        DataServiceKind.DRAGONFLY -> "dragonfly"
-        DataServiceKind.MARIADB -> "mariadb"
-        DataServiceKind.PERCONA -> "percona"
         DataServiceKind.CERT_MANAGER -> "certmanager"
         DataServiceKind.VELERO -> "velero"
-        DataServiceKind.EXTERNAL_DNS -> "externaldns"
-        DataServiceKind.SEALED_SECRETS -> "sealedsecrets"
-        DataServiceKind.CEPH -> "ceph"
         DataServiceKind.SNAPSHOTS -> "snapshots"
         DataServiceKind.BACKUP_JOBS -> "backupjobs"
         DataServiceKind.CASTAI -> "castai"
-        DataServiceKind.KUBE_GREEN -> "kubegreen"
     }
 
-/** The kind behind a data alert's system name; CloudNativePG for one an older snapshot wrote. */
-fun dataServiceKindOf(alertSystem: String): DataServiceKind =
-    DataServiceKind.entries.firstOrNull { it.alertSystem == alertSystem } ?: DataServiceKind.CNPG
+/**
+ * The kind behind a data alert's system name; null for one this app no longer has (an older
+ * snapshot's "kubegreen", now a plugin), which the caller shows by its key.
+ */
+fun dataServiceKindOf(alertSystem: String): DataServiceKind? =
+    DataServiceKind.entries.firstOrNull { it.alertSystem == alertSystem }
 
-/** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
-fun Inventory.dataServiceHints(): String {
+/**
+ * The catalog ids among the inventory's apps, for KubeDataServices and the Data services plugins:
+ * the native systems', then those of [plugins]' Data services plugins (rook, mariadb...); "" when none runs.
+ */
+fun Inventory.dataServiceHints(plugins: PluginCatalog = PluginCatalog()): String {
     val ids = apps.map { it.id }.toSet()
-    return DataServiceKind.entries.map { it.catalogId }.filter { it in ids }.joinToString(",")
+    return (DataServiceKind.entries.map { it.catalogId } + plugins.dataServiceCatalogIds).distinct().filter { it in ids }.joinToString(",")
 }
 
 /** The installed systems, in display order. */
@@ -119,19 +97,36 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.LONGHORN.takeIf { longhorn != null },
         DataServiceKind.GARAGE.takeIf { garage != null },
         DataServiceKind.CNPG.takeIf { cnpg != null },
-        DataServiceKind.DRAGONFLY.takeIf { dragonfly != null },
-        DataServiceKind.MARIADB.takeIf { mariadb != null },
-        DataServiceKind.PERCONA.takeIf { percona != null },
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
         DataServiceKind.VELERO.takeIf { velero != null },
-        DataServiceKind.EXTERNAL_DNS.takeIf { externalDns != null },
-        DataServiceKind.SEALED_SECRETS.takeIf { sealedSecrets != null },
-        DataServiceKind.CEPH.takeIf { ceph != null },
         DataServiceKind.CASTAI.takeIf { castai != null },
         DataServiceKind.SNAPSHOTS.takeIf { snapshots != null },
         DataServiceKind.BACKUP_JOBS.takeIf { backupJobs != null },
-        DataServiceKind.KUBE_GREEN.takeIf { kubeGreen != null },
     )
+
+/** Where a system opens from on a Kubernetes cluster: the Data services hub, or a family of the home's tools. */
+enum class ServiceFamily { DATA, NETWORKING, SECURITY, WORKLOADS }
+
+/** Storage, databases and backups stay in Data services; the others join the family a plugin of their kind would. */
+val DataServiceKind.family: ServiceFamily
+    get() = when (this) {
+        DataServiceKind.CERT_MANAGER -> ServiceFamily.SECURITY
+        DataServiceKind.CASTAI -> ServiceFamily.WORKLOADS
+        DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG, DataServiceKind.VELERO,
+        DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> ServiceFamily.DATA
+    }
+
+/** A link to a system filed outside Data services (an alert, a share link) opens it alone, as its tool does. */
+val DataServiceKind.opensAlone: Boolean get() = family != ServiceFamily.DATA
+
+/** The installed systems of [families], in display order. */
+fun DataServices.detected(families: Set<ServiceFamily>): List<DataServiceKind> = detected.filter { it.family in families }
+
+/** The installed systems of [family], in display order. */
+fun DataServices.detected(family: ServiceFamily): List<DataServiceKind> = detected(setOf(family))
+
+/** Every family: a Talos cluster, which has no tools card yet, reaches them all from Data services. */
+val AllServiceFamilies: Set<ServiceFamily> = ServiceFamily.entries.toSet()
 
 /**
  * One system at a glance: [total] items (volumes, Garage clusters, Postgres clusters), how many
@@ -143,18 +138,11 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.LONGHORN -> longhorn?.summary()
     DataServiceKind.GARAGE -> garage?.summary()
     DataServiceKind.CNPG -> cnpg?.summary()
-    DataServiceKind.DRAGONFLY -> dragonfly?.summary()
-    DataServiceKind.MARIADB -> mariadb?.summary()
-    DataServiceKind.PERCONA -> percona?.summary()
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
-    DataServiceKind.EXTERNAL_DNS -> externalDns?.summary()
-    DataServiceKind.SEALED_SECRETS -> sealedSecrets?.summary()
-    DataServiceKind.CEPH -> ceph?.summary()
     DataServiceKind.SNAPSHOTS -> snapshots?.summary()
     DataServiceKind.BACKUP_JOBS -> backupJobs?.summary()
     DataServiceKind.CASTAI -> castai?.summary()
-    DataServiceKind.KUBE_GREEN -> kubeGreen?.summary()
 }
 
 /**
@@ -169,25 +157,6 @@ fun CastAIStatus.summary(): ServiceSummary {
     return ServiceSummary(recommendations.size, healths.count { it.needsAttention }, health, error)
 }
 
-/** Ceph clusters are the items; a pool that is not ready needs a look as much as a cluster. */
-fun CephStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = clusters.map { it.serviceHealth } + pools.map { it.serviceHealth }
-    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
-
-fun MariaDbStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = clusters.map { it.serviceHealth }
-    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
-
-fun PerconaStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = clusters.map { it.serviceHealth }
-    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
-
 fun CertManagerStatus.summary(): ServiceSummary {
     if (error.isNotEmpty() && certificates.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
     // An issuer that is not ready needs a look as much as a certificate.
@@ -200,32 +169,6 @@ fun VeleroStatus.summary(): ServiceSummary {
     if (error.isNotEmpty() && schedules.isEmpty() && locations.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
     val healths = schedules.map { it.serviceHealth } + locations.map { it.serviceHealth } + adhoc.map { it.serviceHealth }
     return ServiceSummary(schedules.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
-
-/**
- * The records are the items; a controller with no ready replica (or a dry-run one) needs a
- * look as much as a record without a target or outside every domain filter.
- */
-fun ExternalDnsStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && controllers.isEmpty() && records.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = controllers.map { it.serviceHealth } + records.map { it.serviceHealth }
-    return ServiceSummary(recordCount, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
-
-/**
- * The SealedSecrets are the items; a controller that is not running and a missing, compromised or
- * stale sealing key (the section's own reasons) each need a look too.
- */
-fun SealedSecretsStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && items.isEmpty() && keys.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = items.map { it.serviceHealth } + listOfNotNull(serviceHealth.takeIf { reasonList.isNotEmpty() })
-    return ServiceSummary(secretCount, items.count { it.serviceHealth.needsAttention } + reasonList.size, ServiceHealth.worst(healths), error)
-}
-
-fun DragonflyStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && instances.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = instances.map { it.serviceHealth }
-    return ServiceSummary(instances.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun LonghornStatus.summary(): ServiceSummary {
@@ -276,16 +219,6 @@ fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyC
     cnpg?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
         count(c.instancePods.filter { !it.ready }.map { it.node })
     }
-    dragonfly?.instances.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { d ->
-        count(d.pods.filter { !it.ready }.map { it.node })
-    }
-    mariadb?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { m ->
-        count(m.pods.filter { !it.ready }.map { it.node })
-    }
-    percona?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
-        count(c.pods.filter { !it.ready }.map { it.node })
-    }
-    ceph?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { count(it.notReadyNodes) }
 
     return hits.map { (node, n) -> LikelyCause(node, n) }.sortedWith(compareByDescending<LikelyCause> { it.problems }.thenBy { it.node })
 }

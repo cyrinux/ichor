@@ -81,12 +81,13 @@ func TestStorageJoinsClaimsVolumesClassesPodsAndFill(t *testing.T) {
 	}
 
 	// A CloudNativePG claim on Longhorn opens the database, not the volume.
-	if pg.ManagedBy != "cloudnative-pg" || strings.Join(pg.Pods, ",") != "pg-1" {
-		t.Errorf("pg managed by %q, pods %v", pg.ManagedBy, pg.Pods)
+	if pg.ManagedBy != "cloudnative-pg" || pg.ManagedName != "" || strings.Join(pg.Pods, ",") != "pg-1" {
+		t.Errorf("pg managed by %q (%q), pods %v", pg.ManagedBy, pg.ManagedName, pg.Pods)
 	}
 
+	// Rook Ceph is a plugin: its name comes along, for the apps to open its screen.
 	up := claimNamed(t, s, "uploads")
-	if up.ManagedBy != "rook" || strings.Join(up.Pods, ",") != "web-a,web-b" || up.Measured || up.Capacity != 20<<30 || up.Level != storageOK {
+	if up.ManagedBy != "rook" || up.ManagedName != "Rook Ceph" || strings.Join(up.Pods, ",") != "web-a,web-b" || up.Measured || up.Capacity != 20<<30 || up.Level != storageOK {
 		t.Errorf("uploads %+v", up)
 	}
 

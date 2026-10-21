@@ -19,6 +19,8 @@ enum class AlertKind {
     SENSOR_PROBLEM, SENSOR_OK,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
+    /** A CRD plugin's finding ([Alert.key] its key, [Alert.detail]: a [PluginIssue]), or no longer. */
+    PLUGIN_PROBLEM, PLUGIN_OK,
 }
 
 /**
@@ -97,6 +99,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val am = if (blind) prev.amTrack else evaluateTrack(prev?.amTrack, cur.amTrack, comparable, ::amSeverity, ::amAlert, alerts)
     val storage = if (blind) prev.storageTrack else evaluateTrack(prev?.storageTrack, cur.storageTrack, comparable, ::storageSeverity, ::storageAlert, alerts)
     val sensor = if (blind) prev.sensorTrack else evaluateTrack(prev?.sensorTrack, cur.sensorTrack, comparable, ::sensorSeverity, ::sensorAlert, alerts)
+    val plugin = if (blind) prev.pluginTrack else evaluateTrack(prev?.pluginTrack, cur.pluginTrack, comparable, ::pluginSeverity, ::pluginAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -127,6 +130,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             sensorChecked = sensor.checked,
             sensorIssues = sensor.issues,
             sensorPending = sensor.pending,
+            pluginWatched = plugin.watched,
+            pluginChecked = plugin.checked,
+            pluginIssues = plugin.issues,
+            pluginPending = plugin.pending,
             // Stepped after the run's history record (see [withStorageTrends]); kept until then.
             storageTrends = prev?.takeIf { comparable && storage.watched }?.storageTrends.orEmpty(),
         ),
@@ -142,6 +149,7 @@ private val ClusterSnapshot.checkupTrack: Track get() = Track(checkupWatched, ch
 private val ClusterSnapshot.amTrack: Track get() = Track(amWatched, amChecked, amIssues, amPending)
 private val ClusterSnapshot.storageTrack: Track get() = Track(storageWatched, storageChecked, storageIssues, storagePending)
 private val ClusterSnapshot.sensorTrack: Track get() = Track(sensorWatched, sensorChecked, sensorIssues, sensorPending)
+private val ClusterSnapshot.pluginTrack: Track get() = Track(pluginWatched, pluginChecked, pluginIssues, pluginPending)
 
 /**
  * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
@@ -232,6 +240,15 @@ private fun sensorAlert(key: String, value: String, problem: Boolean): Alert = A
     kind = if (problem) AlertKind.SENSOR_PROBLEM else AlertKind.SENSOR_OK,
     problem = problem,
     subject = SensorDetail.parse(value).hostname,
+    detail = value,
+)
+
+/** [key] the finding's ("plugin:…", already an alert key), [value] a [PluginIssue]: its title is the subject. */
+private fun pluginAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = key,
+    kind = if (problem) AlertKind.PLUGIN_PROBLEM else AlertKind.PLUGIN_OK,
+    problem = problem,
+    subject = PluginIssue.parse(value).title,
     detail = value,
 )
 

@@ -3,6 +3,7 @@ package name.levis.ichor.ui.gitops
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,10 +16,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -76,16 +79,20 @@ fun SourceBrowserScreen(
     onBack: () -> Unit,
     onFile: (String) -> Unit,
     onAddToken: (() -> Unit)?,
+    /** A Find in repository hit: the file at that line. */
+    onHit: (String, Int) -> Unit = { path, _ -> onFile(path) },
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: SourceBrowserViewModel = viewModel(factory = factory { SourceBrowserViewModel(talos.gitOpsRepository) })
     val source by vm.source.collectAsStateWithLifecycle()
     val listing by vm.listing.collectAsStateWithLifecycle()
     val trail by vm.trail.collectAsStateWithLifecycle()
+    val search by vm.search.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
     LaunchedEffect(config?.activeContext, generation) { vm.load(target, startDir, config?.activeContext to generation) }
-    BackHandler(enabled = trail.isNotEmpty()) { vm.back() }
+    BackHandler(enabled = trail.isNotEmpty() && !search.open) { vm.back() }
+    BackHandler(enabled = search.open) { vm.closeSearch() }
     // Back from Settings with a token: read again.
     val missingHost by rememberUpdatedState(listing.missingHost)
     LifecycleResumeEffect(Unit) {
@@ -98,28 +105,56 @@ fun SourceBrowserScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(R.string.gitops_source_title), maxLines = 1)
-                        Text(target.name, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        val app = target as? SourceTarget.App
+                        Text(stringResource(if (app != null) R.string.gitops_source_title else R.string.repo_title), maxLines = 1)
+                        val subtitle = app?.name ?: (source as? UiState.Loaded)?.data?.let { repoLabel(it) }.orEmpty()
+                        Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
                 },
-                navigationIcon = { BackButton { if (trail.isNotEmpty()) vm.back() else onBack() } },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh) },
+                navigationIcon = {
+                    BackButton {
+                        when {
+                            search.open -> vm.closeSearch()
+                            trail.isNotEmpty() -> vm.back()
+                            else -> onBack()
+                        }
+                    }
+                },
+                actions = {
+                    val searchable = (source as? UiState.Loaded)?.data?.readPath?.let { it != SourceReadPath.NONE } == true
+                    if (searchable && !search.open) {
+                        TooltipIconButton(Icons.Outlined.Search, stringResource(R.string.source_search), onClick = vm::openSearch)
+                    }
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh)
+                },
             )
         },
     ) { padding ->
         val modifier = Modifier.pageContent(padding)
         when (val s = source) {
             UiState.Loading -> LoadingBox(modifier)
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
+            is UiState.Failed -> listing.missingHost?.let { GitHostMissingBox(it, "", onAddToken, modifier) }
+                ?: ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> Column(modifier.fillMaxSize()) {
                 val src = s.data
                 SourceHeader(src, (listing.tree as? UiState.Loaded)?.data)
                 if (src.readPath == SourceReadPath.NONE) {
                     NotBrowsable(src)
+                } else if (search.open) {
+                    HorizontalDivider()
+                    SourceSearchPane(search, onSearch = vm::search, onClose = vm::closeSearch, onHit = onHit)
                 } else {
                     Breadcrumb(listing.dir, vm::open)
                     HorizontalDivider()
-                    Listing(src, listing, onDir = vm::open, onFile = onFile, onAddToken = onAddToken, onRetry = vm::refresh)
+                    Listing(
+                        src, listing, onDir = vm::open, onFile = onFile, onAddToken = onAddToken, onRetry = vm::refresh,
+                        // The cluster repository's root lists the pull requests opened from the phone on it.
+                        header = if (target == SourceTarget.Repo && listing.dir.isEmpty()) {
+                            { ProposalsCard(talos.gitOpsRepository, "", "", "", "", refresh = src.revision) }
+                        } else {
+                            null
+                        },
+                    )
                 }
             }
         }
@@ -130,9 +165,10 @@ fun SourceBrowserScreen(
 @Composable
 private fun SourceHeader(src: GitSource, tree: GitTree?) {
     val context = LocalContext.current
+    val web = rememberGitWebUrl()
     val sha = src.revision.ifEmpty { tree?.sha.orEmpty() }
     val open = if (src.webURL.isNotEmpty()) {
-        Modifier.clickable(onClickLabel = stringResource(R.string.gitops_source_open_browser)) { openUrl(context, src.webURL) }
+        Modifier.clickable(onClickLabel = stringResource(R.string.gitops_source_open_browser)) { openUrl(context, web(src.webURL)) }
     } else {
         Modifier
     }
@@ -167,6 +203,7 @@ private fun Listing(
     onFile: (String) -> Unit,
     onAddToken: (() -> Unit)?,
     onRetry: () -> Unit,
+    header: (@Composable () -> Unit)? = null,
 ) {
     val host = listing.missingHost
     if (host != null) {
@@ -180,6 +217,7 @@ private fun Listing(
             EmptyState(Icons.Outlined.FolderOpen, stringResource(R.string.gitops_source_empty))
         } else {
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 4.dp)) {
+                header?.let { h -> item(key = "header") { Box(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { h() } } }
                 items(t.data.entries, key = { it.path }) { entry ->
                     EntryRow(entry) { if (entry.isDir) onDir(entry.path) else onFile(entry.path) }
                 }
@@ -209,6 +247,14 @@ private fun EntryRow(entry: GitEntry, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f).padding(start = 12.dp),
         )
+        if (entry.sops) {
+            Icon(
+                Icons.Outlined.Lock,
+                contentDescription = stringResource(R.string.sops_encrypted),
+                tint = muted,
+                modifier = Modifier.padding(start = 8.dp).size(16.dp),
+            )
+        }
         if (!entry.isDir) MutedText(formatBytes(entry.size), modifier = Modifier.padding(start = 8.dp))
     }
 }
@@ -217,12 +263,13 @@ private fun EntryRow(entry: GitEntry, onClick: () -> Unit) {
 @Composable
 private fun NotBrowsable(src: GitSource) {
     val context = LocalContext.current
+    val web = rememberGitWebUrl()
     val text = if (src.isChart) {
         stringResource(R.string.gitops_source_chart, src.chart.ifEmpty { src.repoURL }, src.tracked)
     } else {
         stringResource(R.string.gitops_source_not_browsable)
     }
     EmptyState(Icons.Outlined.FolderOpen, text) {
-        if (src.webURL.isNotEmpty()) OpenInBrowserButton { openUrl(context, src.webURL) }
+        if (src.webURL.isNotEmpty()) OpenInBrowserButton { openUrl(context, web(src.webURL)) }
     }
 }

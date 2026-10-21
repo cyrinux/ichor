@@ -43,9 +43,10 @@ type externalSecretObject struct {
 }
 
 // checkupSecrets is the secrets section: the secrets the cluster fails to deliver, from
-// External Secrets and from Sealed Secrets, each reader keeping its own call path.
+// External Secrets, from Sealed Secrets and from Flux's SOPS decryption, each reader keeping
+// its own call path.
 func checkupSecrets(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
-	return sectionFromParts(checkSecrets, checkupExternalSecrets(ctx, k, in), checkupSealedSecrets(ctx, k, in))
+	return sectionFromParts(checkSecrets, checkupExternalSecrets(ctx, k, in), checkupSopsDecryption(ctx, k, in))
 }
 
 // checkupExternalSecrets finds the ExternalSecrets that do not sync and the stores that

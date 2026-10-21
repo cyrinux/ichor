@@ -57,6 +57,15 @@ object AppLocale {
     }
 
     /**
+     * The language the app shows ("fr"), for what Go translates outside any screen (the
+     * background monitor's plugin findings): the user's choice, else the system's.
+     */
+    fun language(context: Context): String {
+        val chosen = systemChoice(context) ?: UiPreferences.storedLanguage(context)
+        return if (chosen == SYSTEM) Locale.getDefault().language else Locale.forLanguageTag(chosen).language
+    }
+
+    /**
      * Below API 33, a context whose resources use the stored language (activities in
      * attachBaseContext, notifications, the widget). On API 33+ the system already does it.
      */

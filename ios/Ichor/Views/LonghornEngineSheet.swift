@@ -48,7 +48,7 @@ struct LonghornEngineSheet: View {
                         }
                     }
                 }
-                Section("Type \(volume.name) to confirm") {
+                Section(typedConfirmationPrompt(volume.name)) {
                     TextField("Volume name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
                     Button { onConfirm(selected) } label: { Text("Upgrade engine") }
                         .disabled(preview?.accepts(selected) != true || !typedConfirmationMatches(typed, token: volume.name) || denial != nil)

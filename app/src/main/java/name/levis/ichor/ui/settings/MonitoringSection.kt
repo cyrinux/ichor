@@ -57,6 +57,7 @@ fun MonitoringSection(app: TalosApp) {
     val store = app.monitorStore
     val enabled by store.alertsEnabled.collectAsStateWithLifecycle()
     val dataWatched by store.dataServicesWatched.collectAsStateWithLifecycle()
+    val importedPlugins by store.importedPluginAlerts.collectAsStateWithLifecycle()
     val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
     val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
     val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
@@ -112,6 +113,19 @@ fun MonitoringSection(app: TalosApp) {
                 Switch(
                     checked = dataWatched,
                     onCheckedChange = { store.setDataServicesWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // Imported plugins: their findings notify only once this is on.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_imported_plugins), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_imported_plugins_desc))
+                }
+                Switch(
+                    checked = importedPlugins,
+                    onCheckedChange = { store.setImportedPluginAlerts(it) },
                     enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
                 )

@@ -368,6 +368,7 @@
   "Open in wallet": "Apri nel wallet",
   "QR code of the Ethereum donation address": "Codice QR dell'indirizzo per le donazioni in Ethereum",
   "Source on GitHub": "Codice sorgente su GitHub",
+  "Plugin reference": "Riferimento dei plugin",
   "Privacy policy": "Informativa sulla privacy",
   "Open-source build: <a href=\"https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D\" translate=\"no\">Obtainium</a> · <a href=\"https://github.com/cyrinux/ichor/releases/latest\">APK</a>": "Build open source: <a href=\"https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D\" translate=\"no\">Obtainium</a> · <a href=\"https://github.com/cyrinux/ichor/releases/latest\">APK</a>",
   "Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of Sidero Labs, Inc.": "Apache-2.0. Non affiliato a Sidero Labs; Talos è un marchio di Sidero Labs, Inc.",

@@ -37,6 +37,7 @@ extension CheckupSectionID {
         case .crossplane: CheckupText.checkupSectionCrossplane
         case .tailscale: CheckupText.checkupSectionTailscale
         case .clusterapi: CheckupText.checkupSectionClusterAPI
+        case .plugins: CheckupText.checkupSectionPlugins
         }
     }
 
@@ -60,6 +61,7 @@ extension CheckupSectionID {
         case .crossplane: CheckupText.checkupSectionCrossplaneHint
         case .tailscale: CheckupText.checkupSectionTailscaleHint
         case .clusterapi: CheckupText.checkupSectionClusterAPIHint
+        case .plugins: CheckupText.checkupSectionPluginsHint
         }
     }
 
@@ -82,6 +84,7 @@ extension CheckupSectionID {
         case .crossplane: "cloud"
         case .tailscale: "network.badge.shield.half.filled"
         case .clusterapi: "server.rack"
+        case .plugins: "puzzlepiece.extension"
         }
     }
 }
@@ -197,12 +200,14 @@ extension CheckupFinding {
         case .sideroServerOff: return CheckupText.checkupSideroServerOff
         case .sideroServerUnaccepted:
             return f.name.isEmpty ? CheckupText.checkupSideroServerUnacceptedMore("\(f.count)") : CheckupText.checkupSideroServerUnaccepted
-        case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSynced
-        case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissing(f.extra.isEmpty ? f.namespace : f.extra)
-        case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromised(f.name)
+        case .sopsDecryptionFailed where f.reason == "ReconciliationFailed": return CheckupText.checkupSopsDecryptionNotConfigured
+        case .sopsDecryptionFailed:
+            return f.extra.isEmpty ? CheckupText.checkupSopsDecryptionFailedNoKey : CheckupText.checkupSopsDecryptionFailed(f.extra)
         case .routeCertExpired: return CheckupText.checkupRouteCertExpired(f.reason.isEmpty ? "-" : f.reason)
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiring("\(f.count)", f.reason.isEmpty ? "-" : f.reason)
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatch(f.reason.isEmpty ? "-" : f.reason)
+        // In the plugin's words, already translated by Go.
+        case .plugin: return f.plugin?.headline ?? kindName
         }
     }
 
@@ -289,12 +294,14 @@ extension CheckupFinding {
         case .capiWorkersShort: return CheckupText.checkupCapiWorkersShortFix
         case .sideroServerOff: return CheckupText.checkupSideroServerOffFix
         case .sideroServerUnaccepted: return CheckupText.checkupSideroServerUnacceptedFix
-        case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSyncedFix
-        case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissingFix
-        case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromisedFix
+        case .sopsDecryptionFailed where reason == "ReconciliationFailed": return CheckupText.checkupSopsDecryptionNotConfiguredFix
+        case .sopsDecryptionFailed:
+            return extra.isEmpty ? CheckupText.checkupSopsDecryptionFailedNoKeyFix : CheckupText.checkupSopsDecryptionFailedFix
         case .routeCertExpired: return CheckupText.checkupRouteCertExpiredFix
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiringFix
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatchFix
+        // The plugin's screen says more: the row opens it.
+        case .plugin: return nil
         }
     }
 }

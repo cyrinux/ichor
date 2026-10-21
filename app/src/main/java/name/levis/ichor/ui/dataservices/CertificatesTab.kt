@@ -1,17 +1,14 @@
 package name.levis.ichor.ui.dataservices
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,11 +30,13 @@ import name.levis.ichor.model.CertManagerStatus
 import name.levis.ichor.model.CertReason
 import name.levis.ichor.model.Certificate
 import name.levis.ichor.model.certificatesForRows
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyState
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.ResourceRow
-import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.util.timeAgo
 
 /**
@@ -72,19 +71,15 @@ fun CertificatesTab(status: CertManagerStatus, actions: CertificateActions) {
         )
     }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.certificates.isEmpty()) item { EmptyState(Icons.Outlined.VerifiedUser, stringResource(R.string.certmanager_empty)) }
-        items(certificatesForRows(status.certificates, System.currentTimeMillis()), key = { it.label }) { cert ->
+        cardRows(certificatesForRows(status.certificates, System.currentTimeMillis()), key = { it.label }) { cert ->
             CertificateRow(cert, busy = cert.label in busy, onOpen = { actions.openDetails(cert) }, onRenew = { renewing = cert })
-            HorizontalDivider()
         }
         if (status.issuers.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.certmanager_issuers), Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
-            items(status.issuers, key = { "issuer|${it.label}" }) { issuer ->
-                IssuerRow(issuer)
-                HorizontalDivider()
-            }
+            cardGroupTitle("issuers-title", R.string.certmanager_issuers)
+            cardRows(status.issuers, key = { "issuer|${it.label}" }) { IssuerRow(it) }
         }
     }
 }

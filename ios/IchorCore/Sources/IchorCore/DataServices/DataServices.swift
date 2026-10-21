@@ -8,35 +8,21 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let longhorn: LonghornStatus?
     public let garage: GarageStatus?
     public let cnpg: CnpgStatus?
-    public let dragonfly: DragonflyStatus?
-    public let mariadb: MariaDbStatus?
-    public let percona: PerconaStatus?
     public let certManager: CertManagerStatus?
     public let velero: VeleroStatus?
-    public let externalDns: ExternalDnsStatus?
-    public let sealedSecrets: SealedSecretsStatus?
-    public let kubeGreen: KubeGreenStatus?
-    public let ceph: CephStatus?
     public let snapshots: VolumeSnapshots?
     public let backupJobs: BackupJobStatus?
     public let castai: CastAIStatus?
 
-    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
-                mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
-                velero: VeleroStatus? = nil, externalDns: ExternalDnsStatus? = nil, sealedSecrets: SealedSecretsStatus? = nil, kubeGreen: KubeGreenStatus? = nil, ceph: CephStatus? = nil,
+    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil,
+                certManager: CertManagerStatus? = nil,
+                velero: VeleroStatus? = nil,
                 castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
-        self.dragonfly = dragonfly
-        self.mariadb = mariadb
-        self.percona = percona
         self.certManager = certManager
         self.velero = velero
-        self.externalDns = externalDns
-        self.sealedSecrets = sealedSecrets
-        self.kubeGreen = kubeGreen
-        self.ceph = ceph
         self.snapshots = snapshots
         self.backupJobs = backupJobs
         self.castai = castai
@@ -49,8 +35,7 @@ public struct ServicePod: Decodable, Equatable, Identifiable, Sendable {
     /// "" while Pending: not scheduled anywhere.
     public let node: String
     public let phase: String
-    /// The operator's role label (master/replica, primary/replica, member for Galera), "" when
-    /// unknown or the operator has none (Percona).
+    /// The operator's role label (primary/replica), "" when unknown.
     public let role: String
     public let ready: Bool
 
@@ -98,18 +83,11 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case longhorn = "longhorn"
     case garage = "garage"
     case cnpg = "cloudnative-pg"
-    case dragonfly = "dragonfly"
-    case mariadb = "mariadb"
-    case percona = "percona-xtradb"
     case certManager = "cert-manager"
     case velero = "velero"
-    case externalDns = "external-dns"
-    case sealedSecrets = "sealed-secrets"
-    case ceph = "rook"
     case snapshots = "kubernetes-csi"
     case backupJobs = "backup-cronjobs"
     case castai = "castai"
-    case kubeGreen = "kube-green"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -120,18 +98,11 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .longhorn: "Longhorn"
         case .garage: "Garage"
         case .cnpg: "CloudNativePG"
-        case .dragonfly: "Dragonfly"
-        case .mariadb: "MariaDB"
-        case .percona: "Percona XtraDB Cluster"
         case .certManager: "cert-manager"
         case .velero: "Velero"
-        case .externalDns: "ExternalDNS"
-        case .sealedSecrets: "Sealed Secrets"
-        case .ceph: "Rook Ceph"
         case .snapshots: "CSI VolumeSnapshots"
         case .backupJobs: "Backup CronJobs"
         case .castai: "CAST AI"
-        case .kubeGreen: "kube-green"
         }
     }
 
@@ -139,16 +110,37 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     public var tabTitle: String {
         switch self {
         case .cnpg: "CNPG"
-        case .percona: "Percona"
         default: title
         }
     }
 }
 
-/// The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs.
-public func dataServiceHints(_ inventory: ClusterInventory) -> String {
+/// Where a system opens from on a Kubernetes cluster: the Data services hub, or a family of the home's tools.
+public enum ServiceFamily: Sendable, CaseIterable, Hashable {
+    case data, networking, security, workloads
+}
+
+public extension DataServiceKind {
+    /// Storage, databases and backups stay in Data services; the others join the family a plugin of their kind would.
+    var family: ServiceFamily {
+        switch self {
+        case .certManager: .security
+        case .castai: .workloads
+        case .longhorn, .garage, .cnpg, .velero, .snapshots, .backupJobs: .data
+        }
+    }
+
+    /// A link to a system filed outside Data services (an alert, a share link) opens it alone, as its tool does.
+    var opensAlone: Bool { family != .data }
+}
+
+/// The catalog ids among the inventory's apps, for KubeDataServices and the Data services plugins:
+/// the native systems', then those of `plugins`' Data services plugins (rook, mariadb...); "" when none runs.
+public func dataServiceHints(_ inventory: ClusterInventory, plugins: PluginCatalog = PluginCatalog()) -> String {
     let ids = Set(inventory.apps.map(\.id))
-    return DataServiceKind.allCases.map(\.catalogID).filter(ids.contains).joined(separator: ",")
+    var seen: Set<String> = []
+    let candidates = DataServiceKind.allCases.map(\.catalogID) + plugins.dataServiceCatalogIDs
+    return candidates.filter { ids.contains($0) && seen.insert($0).inserted }.joined(separator: ",")
 }
 
 /// One system at a glance: items, how many need attention, the worst health, the error if unreadable.
@@ -182,11 +174,27 @@ public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
-         dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
-         certManager != nil ? .certManager : nil, velero != nil ? .velero : nil, externalDns != nil ? .externalDns : nil,
-         sealedSecrets != nil ? .sealedSecrets : nil,
-         ceph != nil ? .ceph : nil, castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil, backupJobs != nil ? .backupJobs : nil,
-         kubeGreen != nil ? .kubeGreen : nil].compactMap { $0 }
+         certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
+         castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
+         backupJobs != nil ? .backupJobs : nil].compactMap { $0 }
+    }
+
+    /// The installed systems of `families`, in display order.
+    func detected(_ families: Set<ServiceFamily>) -> [DataServiceKind] {
+        detected.filter { families.contains($0.family) }
+    }
+
+    /// The installed systems of `family`, in display order.
+    func detected(_ family: ServiceFamily) -> [DataServiceKind] { detected([family]) }
+
+    /// The sections of `families` only, the others read as not installed: the Kubernetes home's
+    /// Data services card lists storage alone, its tools card files the rest.
+    func only(_ families: Set<ServiceFamily>) -> DataServices {
+        func keep<T>(_ kind: DataServiceKind, _ value: T?) -> T? { families.contains(kind.family) ? value : nil }
+        return DataServices(longhorn: keep(.longhorn, longhorn), garage: keep(.garage, garage), cnpg: keep(.cnpg, cnpg),
+                            certManager: keep(.certManager, certManager), velero: keep(.velero, velero),
+                            castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
+                            backupJobs: keep(.backupJobs, backupJobs))
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -208,18 +216,6 @@ public extension DataServices {
             if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
             let healths = p.clusters.map(\.health)
             return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
-        case .dragonfly:
-            guard let d = dragonfly else { return nil }
-            if !d.error.isEmpty && d.instances.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: d.error) }
-            let healths = d.instances.map(\.health)
-            return ServiceSummary(total: d.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: d.error)
-        case .mariadb:
-            return mariadb?.summary
-        case .percona:
-            guard let p = percona else { return nil }
-            if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
-            let healths = p.clusters.map(\.health)
-            return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
         case .certManager:
             guard let cm = certManager else { return nil }
             if !cm.error.isEmpty && cm.certificates.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: cm.error) }
@@ -232,32 +228,10 @@ public extension DataServices {
             if !v.error.isEmpty && v.schedules.isEmpty && v.locations.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: v.error) }
             let healths = v.schedules.map(\.health) + v.locations.map(\.health) + v.adhoc.map(\.health)
             return ServiceSummary(total: v.schedules.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: v.error)
-        case .externalDns:
-            // The records are the items; a controller with no ready replica (or a dry-run one)
-            // needs a look as much as a record without a target or outside every domain filter.
-            guard let e = externalDns else { return nil }
-            if !e.error.isEmpty && e.controllers.isEmpty && e.records.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: e.error) }
-            let healths = e.controllers.map(\.health) + e.records.map(\.health)
-            return ServiceSummary(total: e.recordCount, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: e.error)
-        case .sealedSecrets:
-            // The SealedSecrets are the items; a controller that is not running and a missing,
-            // compromised or stale sealing key (the section's own reasons) each need a look too.
-            guard let s = sealedSecrets else { return nil }
-            if !s.error.isEmpty && s.items.isEmpty && s.keys.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: s.error) }
-            let healths = s.items.map(\.health) + (s.reasons.isEmpty ? [] : [s.health])
-            return ServiceSummary(total: s.secretCount, attention: s.items.filter(\.health.needsAttention).count + s.reasons.count, health: .worst(healths), error: s.error)
-        case .ceph:
-            guard let c = ceph else { return nil }
-            if !c.error.isEmpty && c.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: c.error) }
-            // Clusters are the items; a pool that is not ready needs a look as much as a cluster.
-            let healths = c.clusters.map(\.health) + c.pools.map(\.health)
-            return ServiceSummary(total: c.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: c.error)
         case .snapshots: return snapshots?.summary
         case .backupJobs: return backupJobs?.summary
         case .castai:
             return castai?.summary
-        case .kubeGreen:
-            return kubeGreen?.summary
         }
     }
 
@@ -280,16 +254,6 @@ public extension DataServices {
         for cluster in cnpg?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.instancePods.filter { !$0.ready }.map(\.node))
         }
-        for instance in dragonfly?.instances ?? [] where instance.health.needsAttention {
-            count(instance.pods.filter { !$0.ready }.map(\.node))
-        }
-        for cluster in mariadb?.clusters ?? [] where cluster.health.needsAttention {
-            count(cluster.pods.filter { !$0.ready }.map(\.node))
-        }
-        for cluster in percona?.clusters ?? [] where cluster.health.needsAttention {
-            count(cluster.pods.filter { !$0.ready }.map(\.node))
-        }
-        for cluster in ceph?.clusters ?? [] where cluster.health.needsAttention { count(cluster.notReadyNodes) }
         return hits.map { LikelyCause(node: $0.key, problems: $0.value) }
             .sorted { $0.problems != $1.problems ? $0.problems > $1.problems : $0.node < $1.node }
     }

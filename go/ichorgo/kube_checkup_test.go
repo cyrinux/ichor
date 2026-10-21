@@ -54,7 +54,7 @@ func TestParseQuantity(t *testing.T) {
 func checkCheckupProgress(t *testing.T, p readProgressOut) {
 	t.Helper()
 
-	if p.Running || p.Total != 21 || p.Done != 21 || len(p.Steps) != 21 {
+	if p.Running || p.Total != 22 || p.Done != 22 || len(p.Steps) != 22 {
 		t.Fatalf("progress = %+v", p)
 	}
 
@@ -161,7 +161,7 @@ func TestReadCheckup(t *testing.T) {
 
 	progress := startReadProgress("test-checkup", "", checkupSteps...)
 
-	r, err := readCheckup(withReadProgress(context.Background(), progress), k, checkupNow)
+	r, err := readCheckup(withReadProgress(context.Background(), progress), k, checkupNow, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,6 +187,7 @@ func TestReadCheckup(t *testing.T) {
 		checkCrossplane:    {},
 		checkTailscale:     {},
 		checkClusterAPI:    {},
+		checkPlugins:       {},
 	}
 
 	if len(r.Sections) != len(want) {
@@ -259,14 +260,14 @@ func TestReadCheckupEmptyCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := readCheckup(context.Background(), k, checkupNow)
+	r, err := readCheckup(context.Background(), k, checkupNow, "")
 	if err != nil || r.Status != healthOK {
 		t.Fatalf("%+v %v", r, err)
 	}
 
 	for _, s := range r.Sections {
 		want := healthOK
-		if s.ID == checkLoadBalancers || s.ID == checkPolicies || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring || s.ID == checkCrossplane || s.ID == checkTailscale || s.ID == checkClusterAPI {
+		if s.ID == checkLoadBalancers || s.ID == checkPolicies || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring || s.ID == checkCrossplane || s.ID == checkTailscale || s.ID == checkClusterAPI || s.ID == checkPlugins {
 			want = checkAbsent
 		}
 
@@ -289,7 +290,7 @@ func TestReadCheckupSectionErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := readCheckup(context.Background(), k, checkupNow)
+	r, err := readCheckup(context.Background(), k, checkupNow, "")
 	if err != nil || r.Status != healthOK {
 		t.Fatalf("%+v %v", r, err)
 	}
@@ -441,7 +442,7 @@ func TestKubeEventsValidatesAndDemo(t *testing.T) {
 
 // The demo shows every section, with findings the apps can word.
 func TestKubeCheckupDemo(t *testing.T) {
-	out, err := KubeCheckup(demoConfigForTest(t), "", "")
+	out, err := KubeCheckup(demoConfigForTest(t), "", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -451,7 +452,7 @@ func TestKubeCheckupDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if r.Status != healthCritical || len(r.Sections) != 17 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
+	if r.Status != healthCritical || len(r.Sections) != 18 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
 		t.Fatalf("%+v", r)
 	}
 

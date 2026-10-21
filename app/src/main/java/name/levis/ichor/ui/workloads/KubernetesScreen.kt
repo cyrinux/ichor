@@ -30,17 +30,20 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.realFingerprint
+import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.KubeNamespaces
 import name.levis.ichor.model.KubeScope
 import name.levis.ichor.model.KubernetesAction
 import name.levis.ichor.model.defaultScope
+import name.levis.ichor.model.detected
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel
 import name.levis.ichor.ui.crossplane.CrossplaneViewModel
+import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.flows.CiliumViewModel
 import name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel
 import name.levis.ichor.ui.tailscale.TailscaleViewModel
@@ -96,6 +99,8 @@ fun KubernetesScreen(
     onTailscale: () -> Unit,
     onArgoRollouts: () -> Unit,
     onClusterLifecycle: () -> Unit,
+    /** Data services on one system (null: the hub), alone (solo) for one the Kubernetes home files elsewhere. */
+    onDataServices: (DataServiceKind?, Boolean) -> Unit,
     focus: KubeFocus = KubeFocus(0),
     /** Where a pod's pull problem leads; null on a cluster without Talos nodes. */
     pullLinks: PodPullLinks? = null,
@@ -135,6 +140,11 @@ fun KubernetesScreen(
     val hasTailscale = (tailscaleState as? UiState.Loaded)?.data?.installed == true
     val hasRollouts = (rolloutsState as? UiState.Loaded)?.data?.installed == true
     val hasLifecycle = (lifecycleState as? UiState.Loaded)?.data?.installed == true
+    // Which systems Data services reads, to offer those filed outside it; never blocks the tabs.
+    val dataServices: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
+    LaunchedEffect(Unit) { dataServices.load(Unit, dataServices.inventoryHints()) }
+    val dataState by dataServices.state.collectAsStateWithLifecycle()
+    val detected = (dataState as? UiState.Loaded)?.data?.detected.orEmpty()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
@@ -159,7 +169,7 @@ fun KubernetesScreen(
                 if (server != servers[fingerprint].orEmpty()) {
                     app.setKubeServer(fingerprint, server)
                     // Both reload through the new address; a load in flight through the old one is cancelled.
-                    (listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces) + operators).forEach { it.refresh(reset = true) }
+                    (listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces, dataServices) + operators).forEach { it.refresh(reset = true) }
                 }
             },
             onDismiss = { editing = false },
@@ -200,6 +210,9 @@ fun KubernetesScreen(
                                 KubernetesAction.TAILSCALE -> onTailscale()
                                 KubernetesAction.ARGO_ROLLOUTS -> onArgoRollouts()
                                 KubernetesAction.CLUSTER_LIFECYCLE -> onClusterLifecycle()
+                                KubernetesAction.DATA_SERVICES -> onDataServices(null, false)
+                                KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
+                                    onDataServices(action.dataServiceKind, true)
                             }
                         },
                         customizeLabel = stringResource(R.string.bar_edit_title),
@@ -214,6 +227,9 @@ fun KubernetesScreen(
                                 KubernetesAction.TAILSCALE -> hasTailscale
                                 KubernetesAction.ARGO_ROLLOUTS -> hasRollouts
                                 KubernetesAction.CLUSTER_LIFECYCLE -> hasLifecycle
+                                // Unknown until read, or unreadable: no entry rather than one that fails.
+                                KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
+                                    action.dataServiceKind in detected
                                 else -> true
                             }
                         },

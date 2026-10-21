@@ -7,6 +7,29 @@
         "hostnames": ["api.example.com"],
         "rules": [{"matches": [{"path": {"type": "PathPrefix", "value": "/"}, "method": "GET"}, {"method": "POST"}], "backendRefs": [{"name": "api"}]}]
       }
+    },
+    {
+      "metadata": {"name": "web", "namespace": "demo"},
+      "spec": {
+        "parentRefs": [{"name": "edge", "namespace": "gateway-system"}],
+        "hostnames": ["Web.apps.example.com", "other.example.net"],
+        "rules": [{"backendRefs": [{"name": "web"}]}]
+      }
+    },
+    {
+      "metadata": {"name": "catchall", "namespace": "demo"},
+      "spec": {
+        "parentRefs": [{"name": "edge", "namespace": "gateway-system", "sectionName": "https"}],
+        "rules": [{"backendRefs": [{"name": "fallback"}]}]
+      }
+    },
+    {
+      "metadata": {"name": "waiting", "namespace": "demo"},
+      "spec": {
+        "parentRefs": [{"name": "pending", "namespace": "gateway-system"}],
+        "hostnames": ["pending.example.com"],
+        "rules": [{"backendRefs": [{"name": "waiting"}]}]
+      }
     }
   ]
 }

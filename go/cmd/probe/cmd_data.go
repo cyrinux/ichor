@@ -103,6 +103,60 @@ var dataCommands = []command{
 	{name: "git-tree", args: "HOSTJSON REPO REF DIR", run: func(env) (string, error) {
 		return ichorgo.GitForgeTree(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
+	{name: "git-repo", args: "HOSTJSON REPO [BRANCH]", run: func(env) (string, error) {
+		return ichorgo.GitForgeRepo(flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "git-snapshot", args: "HOSTJSON REPO REF", run: func(env) (string, error) {
+		return ichorgo.GitRepoSnapshotPrepare(flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "git-search", args: "HOSTJSON REPO REF QUERY", run: func(env) (string, error) {
+		return ichorgo.GitRepoSearch(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), 0)
+	}},
+	{name: "talos-repo-files", args: "HOSTJSON REPO REF DIR HOSTNAME ROLE", run: func(env) (string, error) {
+		return ichorgo.TalosRepoFiles(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
+	}},
+	// Reads NODE's config with its secrets (os:admin); only a dry run reaches the node.
+	{name: "talos-repo-compare", args: "HOSTJSON REPO REF NODE HOSTNAME PATHSJSON", run: func(e env) (string, error) {
+		return ichorgo.TalosRepoCompare(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
+	}},
+	{name: "sops-inspect", args: "FILE", run: func(env) (string, error) {
+		// FILE's SOPS metadata (recipients, encrypted and clear keys), never its values. Local.
+		content, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.SopsInspect(string(content))
+	}},
+	{name: "sops-rule", args: "SOPSYAML PATH", run: func(env) (string, error) {
+		// The creation rule of the .sops.yaml file SOPSYAML that covers PATH. Local.
+		rules, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.SopsRuleFor(string(rules), flag.Arg(2))
+	}},
+	{name: "gitops-check", args: "HOSTJSON REPO REF PATH FILE [FLUXSPECJSON]", run: func(env) (string, error) {
+		// The edit of PATH to FILE's content checked on the repository's snapshot. Local.
+		content, err := os.ReadFile(flag.Arg(5))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.GitOpsEditCheck(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), string(content), flag.Arg(6))
+	}},
+	{name: "git-request", args: "HOSTJSON REPO NUMBER", run: func(env) (string, error) {
+		n, err := strconv.Atoi(flag.Arg(3))
+		if err != nil {
+			return "", fmt.Errorf("NUMBER: %w", err)
+		}
+
+		return ichorgo.GitForgeRequest(flag.Arg(1), flag.Arg(2), n)
+	}},
+	{name: "gitops-revision-runs", args: "TOOL KIND NAMESPACE NAME SHA", run: func(e env) (string, error) {
+		return ichorgo.GitOpsRevisionRuns(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5))
+	}},
 	{name: "git-file", args: "HOSTJSON REPO REF PATH", run: func(env) (string, error) {
 		return ichorgo.GitForgeFile(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
@@ -123,21 +177,6 @@ var dataCommands = []command{
 			return "", err
 		}
 		if section, ok := report["sealedSecrets"]; ok {
-			return string(section), nil
-		}
-		return "null", nil
-	}},
-	{name: "external-dns", run: func(e env) (out string, err error) {
-		// external-dns: the ExternalDNS section of Data services (read-only).
-		raw, err := ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, "external-dns")
-		if err != nil {
-			return "", err
-		}
-		var report map[string]json.RawMessage
-		if err := json.Unmarshal([]byte(raw), &report); err != nil {
-			return "", err
-		}
-		if section, ok := report["externalDns"]; ok {
 			return string(section), nil
 		}
 		return "null", nil
@@ -322,6 +361,42 @@ var dataCommands = []command{
 		}
 
 		return ichorgo.TextDiff(string(before), string(after), flag.Arg(3))
+	}},
+	{name: "talos-patch-from", args: "BASE_FILE DRAFT_FILE", noConfig: true, run: func(e env) (string, error) {
+		// talos-patch-from BASE_FILE DRAFT_FILE: the patch that turns a redacted config into an edited one.
+		base, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		draft, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosConfigPatchFrom(string(base), string(draft))
+	}},
+	{name: "talos-writeback-plan", args: "HOSTJSON REPO REF DIR HOSTNAME ROLE PATCH_FILE", run: func(env) (string, error) {
+		patch, err := os.ReadFile(flag.Arg(7))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosRepoWriteBackPlan(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6), string(patch))
+	}},
+	{name: "talos-writeback", args: "FILE PATCH_FILE [OPTIONSJSON]", noConfig: true, run: func(e env) (string, error) {
+		// talos-writeback FILE PATCH_FILE [OPTIONSJSON]: a node's file with the patch written into it.
+		content, err := os.ReadFile(flag.Arg(1))
+		if err != nil && !os.IsNotExist(err) {
+			return "", err
+		}
+
+		patch, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosRepoWriteBack(string(content), string(patch), flag.Arg(3))
 	}},
 	{name: "gitops-quickedit", args: "FILE EDITJSON", noConfig: true, run: func(e env) (string, error) {
 		// gitops-quickedit FILE EDITJSON: the file rewritten by a quick edit (image, replicas, path).

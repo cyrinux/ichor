@@ -112,6 +112,14 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: dataServicesKey) }
     }
 
+    static let importedPluginsKey = "monitor.importedPlugins"
+    /// Opt-in: imported plugins' findings notify too. Off, only the built-in plugins' do: a plugin
+    /// pasted in must not page anyone by itself.
+    static var importedPluginAlerts: Bool {
+        get { UserDefaults.standard.bool(forKey: importedPluginsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: importedPluginsKey) }
+    }
+
     static let gitopsKey = "monitor.gitops"
     /// Opt-in: also check Argo CD and Flux apps through the Kubernetes API.
     static var gitopsWatched: Bool {
@@ -436,6 +444,10 @@ enum BackgroundMonitor {
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
         // resources and runs the Garage CLI in a pod.
         let watchData = dataServicesWatched && job.kubeAllowed
+        // With them, the CRD plugins' findings (KubePluginFindings): one bounded call for every
+        // plugin the cluster runs.
+        let watchPlugins = watchData
+        let knownPlugins = knownPluginIssues(previous, context: context.name)
         // Same gate for Argo CD and Flux apps, read through their custom resources.
         let watchGitOps = gitopsWatched && job.kubeAllowed
         let known = knownGitOpsIssues(previous, context: context.name)
@@ -461,7 +473,13 @@ enum BackgroundMonitor {
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
-        async let checkupRead = ifWatched(watchCheckup, within: left) { await readCheckup(client, known: knownCheckup) }
+        async let checkupRead = ifWatched(watchCheckup, within: left) {
+            await readCheckup(client, known: knownCheckup, gitopsWatched: watchGitOps, pluginsWatched: watchPlugins,
+                              importedWatched: importedPluginAlerts)
+        }
+        async let pluginRead = ifWatched(watchPlugins, within: left) {
+            await readPlugins(client, known: knownPlugins, checkupWatched: watchCheckup, importedWatched: importedPluginAlerts)
+        }
         async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
             await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
         }
@@ -482,6 +500,7 @@ enum BackgroundMonitor {
         let storage = await storageRead
         let storageIssues = storage?.issues
         let sensorIssues = await sensorRead
+        let pluginIssues = await pluginRead
         let now = Date()
         if let kubeNodes {
             var kubeExtras = historyExtras(kubeNodes)
@@ -491,7 +510,8 @@ enum BackgroundMonitor {
                                         gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
                                         checkupWatched: watchCheckup, checkupIssues: checkupIssues,
                                         alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
-                                        storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn),
+                                        storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
+                                        pluginWatched: watchPlugins, pluginIssues: pluginIssues),
                          kubeExtras)
         }
         guard let overview else { return .unreachable }
@@ -503,7 +523,8 @@ enum BackgroundMonitor {
                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues,
                                 alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
                                 storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
-                                sensorWatched: watchSensors, sensorIssues: sensorIssues),
+                                sensorWatched: watchSensors, sensorIssues: sensorIssues,
+                                pluginWatched: watchPlugins, pluginIssues: pluginIssues),
                      extras)
     }
 
@@ -564,10 +585,22 @@ enum BackgroundMonitor {
     }
 
     /// The checkup's findings worth an alert; nil when it could not be read. A section that could
-    /// not be read keeps what the last snapshot knew of it.
-    private static func readCheckup(_ client: TalosClient, known: [String: String]) async -> [String: String]? {
+    /// not be read keeps what the last snapshot knew of it. With GitOps watched, what that alert
+    /// already raises is left to it; with the plugins watched, their findings to their own alert.
+    private static func readCheckup(_ client: TalosClient, known: [String: String], gitopsWatched: Bool,
+                                    pluginsWatched: Bool, importedWatched: Bool) async -> [String: String]? {
         guard let report = try? await client.checkup() else { return nil }
-        return checkupIssuesWithGaps(report, known: known)
+        return checkupIssuesWithGaps(report, known: known, gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched,
+                                     importedPluginsWatched: importedWatched)
+    }
+
+    /// The CRD plugins' findings worth an alert, in the app's language; nil when the call failed.
+    /// A plugin that could not be read keeps what the last snapshot knew of it. With the checkup
+    /// watched, the findings it reports from a section of its own are left to it.
+    private static func readPlugins(_ client: TalosClient, known: [String: String], checkupWatched: Bool,
+                                    importedWatched: Bool) async -> [String: String]? {
+        guard let report = try? await client.pluginFindings() else { return nil }
+        return pluginIssuesWithGaps(report, known: known, checkupWatched: checkupWatched, importedWatched: importedWatched)
     }
 
     /// The Alertmanager's alerts worth a notification; nil when it could not be read (or none was
@@ -667,6 +700,10 @@ enum BackgroundMonitor {
             // "<node>|…": named from the issue kept, the current one or, once resolved, the last.
             guard let value = snapshot.storageIssues[subject] ?? previous?.storageIssues[subject] else { return (alert.title, alert.text) }
             return localizedStorage(alert, issue: StorageIssue(value: value), warn: snapshot.storageWarn)
+        case "plugin":
+            // The finding's key: worded by the plugin, already in the app's language (Go's locale).
+            guard let value = snapshot.pluginIssues[alert.key] ?? previous?.pluginIssues[alert.key] else { return (alert.title, alert.text) }
+            return localizedPlugin(alert, issue: PluginIssue(value: value))
         case "sensor":
             // "<node>|hot" or "<node>|throttled": named from the issue kept, the current one or, once resolved, the last.
             guard let value = snapshot.sensorIssues[subject] ?? previous?.sensorIssues[subject] else { return (alert.title, alert.text) }
@@ -704,6 +741,14 @@ enum BackgroundMonitor {
         }
         let severity = gitopsSeverity(value) == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
         return (title, "\(subject.label) · \(severity)")
+    }
+
+    /// A plugin finding: "<plugin>: <title>", its detail and severity; once gone, its title.
+    private static func localizedPlugin(_ alert: Alert, issue: PluginIssue) -> (title: String, text: String) {
+        guard alert.problem else { return (String(localized: "\(issue.title) is healthy again"), issue.pluginName) }
+        let severity = issue.severity == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
+        let text = [issue.detail, severity].filter { !$0.isEmpty }.joined(separator: " · ")
+        return ("\(issue.pluginName): \(issue.title)", text)
     }
 
     /// A volume's fill, or a disk failing SMART, on a node named by its hostname.
@@ -775,7 +820,7 @@ enum BackgroundMonitor {
 
     /// The alert kinds, one notification category each ("alert.node"…), so iOS can group and
     /// summarize them per kind.
-    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager", "storage", "cluster"]
+    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager", "storage", "cluster", "plugin"]
 
     /// The category of an alert: its kind's with its `actions` (see alertCategory), "….private"
     /// with details hidden; "private" for a kind this version does not know. Alertmanager alerts

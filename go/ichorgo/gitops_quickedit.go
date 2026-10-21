@@ -24,29 +24,39 @@ import (
 //	{"op":"replicas","documentIndex":0,"replicas":3}
 //	{"op":"replicas","documentIndex":0,"kustomizeReplica":"app","replicas":3}
 //	{"op":"path","documentIndex":0,"path":"spec.values.image.tag","value":"1.2.3"}
+//	{"op":"keep","documentIndex":0,"kind":"Deployment","name":"app","changes":[…]}
+//
+// keep writes live values of a diff (diffLiveChange) where the file holds the wanted ones.
 //
 // kind and name, when set, say which object documentIndex meant: when the file moved since
 // the targets were read, the one document of that kind and name is edited instead.
 type quickEdit struct {
-	Op               string          `json:"op"`
-	DocumentIndex    int             `json:"documentIndex"`
-	Kind             string          `json:"kind"`
-	Name             string          `json:"name"`
-	Container        string          `json:"container"`
-	KustomizeImage   string          `json:"kustomizeImage"`
-	KustomizeReplica string          `json:"kustomizeReplica"`
-	Image            string          `json:"image"`
-	Replicas         *int            `json:"replicas"`
-	Path             string          `json:"path"`
-	Value            json.RawMessage `json:"value"`
+	Op               string           `json:"op"`
+	DocumentIndex    int              `json:"documentIndex"`
+	Kind             string           `json:"kind"`
+	Name             string           `json:"name"`
+	Container        string           `json:"container"`
+	KustomizeImage   string           `json:"kustomizeImage"`
+	KustomizeReplica string           `json:"kustomizeReplica"`
+	Image            string           `json:"image"`
+	Replicas         *int             `json:"replicas"`
+	Path             string           `json:"path"`
+	Value            json.RawMessage  `json:"value"`
+	Changes          []diffLiveChange `json:"changes"`
+	// The "talos" op: a machine config patch written into a node's file (talos_writeback_plan.go).
+	Patch    string   `json:"patch"`
+	Hostname string   `json:"hostname"`
+	Create   bool     `json:"create"`
+	Skipped  []string `json:"skipped"`
 }
 
 // quickEditResult is GitOpsQuickEdit's answer; line is 1-based (the first changed line,
-// or the value's line when nothing changed).
+// or the value's line when nothing changed). skipped: for keep, the values not written and why.
 type quickEditResult struct {
-	Content string `json:"content"`
-	Changed bool   `json:"changed"`
-	Line    int    `json:"line"`
+	Content string   `json:"content"`
+	Changed bool     `json:"changed"`
+	Line    int      `json:"line"`
+	Skipped []string `json:"skipped,omitempty"`
 }
 
 type quickEditTargets struct {

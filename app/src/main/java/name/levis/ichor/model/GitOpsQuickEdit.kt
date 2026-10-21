@@ -1,6 +1,8 @@
 package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -69,7 +71,8 @@ data class QuickEditTargets(
  * A quick edit of a file, `GitOpsQuickEdit`'s editJSON: [OP_IMAGE] sets [image] on [container]
  * of document [documentIndex] (or, with [kustomizeImage], the tag of that entry of a
  * kustomization's `images:`); [OP_REPLICAS] sets [replicas] on document [documentIndex] (or,
- * with [kustomizeReplica], on that entry of its `replicas:`).
+ * with [kustomizeReplica], on that entry of its `replicas:`); [OP_KEEP] writes the [changes]
+ * made live to the object [targetKind]/[targetName] where the file holds the wanted values.
  */
 @Serializable
 data class QuickEdit(
@@ -88,10 +91,33 @@ data class QuickEdit(
      */
     val targetKind: String = "",
     val targetName: String = "",
+    /** The live values [OP_KEEP] writes. */
+    val changes: List<DiffLiveChange> = emptyList(),
+    /** [OP_TALOS]: the machine config patch written into a node's file, the node, a new file, the values left to shared patches. */
+    val patch: String = "",
+    val hostname: String = "",
+    val create: Boolean = false,
+    val skipped: List<String> = emptyList(),
+    /** [OP_TALOS]: the first changed path, for the title (not sent to the core). */
+    val firstPath: String = "",
 ) {
     companion object {
         const val OP_IMAGE = "image"
         const val OP_REPLICAS = "replicas"
+        const val OP_KEEP = "keep"
+        const val OP_TALOS = "talos"
+
+        /** A kept machine config change of [hostname] written into its file: [plan] says where and what. */
+        fun talos(hostname: String, plan: TalosWriteBackPlan, firstPath: String) = QuickEdit(
+            OP_TALOS, name = hostname, patch = plan.patch, hostname = hostname, create = plan.create,
+            skipped = plan.skipped.map { "${it.path}: ${it.why}" }, firstPath = firstPath,
+        )
+
+        /** The live values of [resource] (document [documentIndex] of its manifest) kept in Git. */
+        fun keep(documentIndex: Int, resource: KubeDiffResource) = QuickEdit(
+            OP_KEEP, documentIndex, name = resource.name, targetKind = resource.kind, targetName = resource.name,
+            changes = resource.liveChanges,
+        )
 
         /** [container] of the workload [kind]/[workload] (document [documentIndex]) at [image]. */
         fun image(documentIndex: Int, container: String, image: String, kind: String = "", workload: String = "") =
@@ -111,9 +137,12 @@ data class QuickEdit(
     }
 }
 
-/** `GitOpsQuickEdit`'s answer: the rewritten [content], whether it [changed], the 1-based [line] edited. */
+/**
+ * `GitOpsQuickEdit`'s answer: the rewritten [content], whether it [changed], the 1-based [line]
+ * edited; for [QuickEdit.OP_KEEP], the values [skipped] (not set in this file) and why.
+ */
 @Serializable
-data class QuickEditResult(val content: String = "", val changed: Boolean = false, val line: Int = 0)
+data class QuickEditResult(val content: String = "", val changed: Boolean = false, val line: Int = 0, val skipped: List<String> = emptyList())
 
 private val QuickJson = Json {
     ignoreUnknownKeys = true
@@ -133,6 +162,13 @@ fun quickEditJson(edit: QuickEdit): String = buildJsonObject {
         if (edit.targetName.isNotEmpty()) put("name", edit.targetName)
     }
     when {
+        edit.op == QuickEdit.OP_TALOS -> {
+            put("patch", edit.patch)
+            put("hostname", edit.hostname)
+            put("create", edit.create)
+            put("skipped", QuickJson.encodeToJsonElement(ListSerializer(String.serializer()), edit.skipped))
+        }
+        edit.op == QuickEdit.OP_KEEP -> put("changes", QuickJson.encodeToJsonElement(ListSerializer(DiffLiveChange.serializer()), edit.changes))
         edit.op == QuickEdit.OP_REPLICAS -> {
             if (edit.kustomizeReplica.isNotEmpty()) put("kustomizeReplica", edit.kustomizeReplica)
             put("replicas", edit.replicas)
@@ -155,7 +191,10 @@ fun encodeQuickEdit(edit: QuickEdit): String = QuickJson.encodeToString(QuickEdi
 fun decodeQuickEdit(json: String?): QuickEdit? {
     if (json.isNullOrBlank()) return null
     return runCatching { QuickJson.decodeFromString(QuickEdit.serializer(), json) }.getOrNull()
-        ?.takeIf { it.op == QuickEdit.OP_IMAGE || it.op == QuickEdit.OP_REPLICAS }
+        ?.takeIf {
+            it.op == QuickEdit.OP_IMAGE || it.op == QuickEdit.OP_REPLICAS || it.op == QuickEdit.OP_KEEP && it.changes.isNotEmpty() ||
+                it.op == QuickEdit.OP_TALOS && it.patch.isNotBlank()
+        }
 }
 
 fun decodeQuickEditTargets(json: String): QuickEditTargets = QuickJson.decodeFromString(QuickEditTargets.serializer(), json)
@@ -167,6 +206,8 @@ fun decodeQuickEditResult(json: String): QuickEditResult = QuickJson.decodeFromS
  * the app): "Bump podinfo to 6.7.0", "Scale podinfo to 3".
  */
 fun quickEditTitle(edit: QuickEdit): String = when (edit.op) {
+    QuickEdit.OP_TALOS -> "Keep ${edit.hostname}'s config change in Git: ${edit.firstPath}".trimEnd(' ', ':')
+    QuickEdit.OP_KEEP -> "Keep live changes of ${edit.targetKind.ifEmpty { "object" }} ${edit.name}".trimEnd()
     QuickEdit.OP_REPLICAS -> "Scale ${edit.name.ifEmpty { "workload" }} to ${edit.replicas}"
     else -> {
         val what = edit.container.ifEmpty { edit.name }.ifEmpty { imageRepository(edit.image).substringAfterLast('/') }

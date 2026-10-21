@@ -174,7 +174,13 @@ struct ProposeSheet: View {
             message = defaultTitle
         }
         let cluster = model.activeSummary?.name ?? ""
-        guard let defaults = try? await TalosClient.proposalDefaults(app: app, path: path, cluster: cluster) else { return }
+        let loaded: GitProposalDefaults?
+        if app.isRepository {
+            loaded = try? await TalosClient.repoProposalDefaults(repoURL: source.repoURL, path: path, cluster: cluster)
+        } else {
+            loaded = try? await TalosClient.proposalDefaults(app: app, path: path, cluster: cluster)
+        }
+        guard let defaults = loaded else { return }
         if title.isEmpty { title = defaults.title }
         if message.isEmpty { message = defaults.message }
         if details.isEmpty { details = defaults.body }
@@ -192,7 +198,12 @@ struct ProposeSheet: View {
             let proposal = GitProposal(repoURL: source.repoURL, baseRef: baseRef, path: path, content: content, fileSha: sha,
                                        message: message, branch: branch.trimmingCharacters(in: .whitespacesAndNewlines),
                                        title: title, body: details, draft: draft)
-            result = try await client.propose(proposal, on: source, hosts: hosts, demo: demo)
+            let opened = try await client.propose(proposal, on: source, hosts: hosts, demo: demo)
+            result = opened
+            // Kept on the phone: the app page tells when it is merged and deployed.
+            model.rememberProposal(GitProposalRecord(tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name,
+                                                     repoURL: source.repoURL, path: path, title: title, url: opened.url,
+                                                     number: opened.number, branch: opened.branch, commit: opened.commit, forge: opened.forge))
             announce(String(localized: "Pull request opened"))
         } catch {
             failure = error.localizedDescription
@@ -230,7 +241,13 @@ private struct ProposalResultView: View {
                 } icon: {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK)
                 }
-                Text("\(app.toolLabel) applies it once it is merged, at its next reconcile.")
+                Group {
+                    if app.isRepository {
+                        Text("Nothing changes on the cluster until it is merged and applied.")
+                    } else {
+                        Text("\(app.toolLabel) applies it once it is merged, at its next reconcile.")
+                    }
+                }
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

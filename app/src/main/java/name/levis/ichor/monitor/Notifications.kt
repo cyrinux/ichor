@@ -15,7 +15,9 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import name.levis.ichor.MainActivity
 import name.levis.ichor.R
+import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.dataServiceKindOf
+import name.levis.ichor.model.pluginAlertObject
 import name.levis.ichor.model.formatSlope
 import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
@@ -172,6 +174,26 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertTitle(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertTitle(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertTitle(context, alert)
+    AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertTitle(context, alert)
+}
+
+/** "kube-green: demo-lab/weekend", or "… is healthy again": the plugin's name and its finding's own title. */
+private fun pluginAlertTitle(context: Context, alert: Alert): String {
+    val issue = PluginIssue.parse(alert.detail)
+    val what = listOf(issue.pluginName, alert.subject).filter { it.isNotEmpty() }.joinToString(": ")
+    return if (alert.problem) what else context.getString(R.string.monitor_data_ok, what)
+}
+
+/** "no wake-up time · warning": the finding's own detail (Go translated it, else the plugin's name) and how bad; the plugin's name once cleared. */
+private fun pluginAlertText(context: Context, alert: Alert): String {
+    val issue = PluginIssue.parse(alert.detail)
+    val plugin = issue.pluginName.ifEmpty { issue.plugin }
+    if (!alert.problem) return plugin
+    val severity = when (issue.severity) {
+        DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)
+        else -> context.getString(R.string.data_services_health_warning)
+    }
+    return context.getString(R.string.monitor_data_text, issue.detail.ifEmpty { plugin }, severity)
 }
 
 /** "worker-1 runs hot (88.0 °C)", "worker-1 is throttled", or the cleared forms, from a [SensorDetail]. */
@@ -265,6 +287,10 @@ private fun amAlertText(context: Context, alert: Alert): String {
 
 /** "Volumes: shop/data-postgres-0", from a checkup alert's "section|kind|severity" detail and its subject. */
 private fun checkupAlertTitle(context: Context, alert: Alert): String {
+    // A plugin finding ("plugin:finding:object"): "kube-green: demo-lab/weekend".
+    if (alert.detail.split('|').getOrNull(1) == CheckupKind.PLUGIN) {
+        return listOf(alert.subject.substringBefore(':'), pluginAlertObject(alert.subject)).filter { it.isNotEmpty() }.joinToString(": ")
+    }
     val section = sectionLook(alert.detail.substringBefore('|'))?.let { context.getString(it.title) }
     return listOfNotNull(section, alert.subject).joinToString(": ")
 }
@@ -320,7 +346,8 @@ private fun gitopsAlertText(context: Context, alert: Alert): String {
 private fun dataAlertText(context: Context, alert: Alert): String {
     if (alert.problem && alert.detail.substringBefore('|') == "snapshots") return context.getString(R.string.snapshot_stale).replaceFirstChar { it.titlecase() }
     if (alert.problem && alert.detail.substringBefore('|') == "backupjobs") return context.resources.getQuantityString(R.plurals.backup_failures_in_row, 3, 3).replaceFirstChar { it.titlecase() }
-    val system = dataServiceKindOf(alert.detail.substringBefore('|')).title
+    val key = alert.detail.substringBefore('|')
+    val system = dataServiceKindOf(key)?.title ?: key
     if (!alert.problem) return system
     val severity = when (alert.detail.substringAfter('|')) {
         DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)
@@ -345,4 +372,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertText(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertText(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertText(context, alert)
+    AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertText(context, alert)
 }

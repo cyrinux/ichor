@@ -122,6 +122,9 @@ struct ConfigTryView: View {
         case .kept:
             Image(systemName: "checkmark.seal.fill").font(.system(size: 56)).foregroundStyle(.statusOK)
             Text("The change is now permanent.").font(.headline).multilineTextAlignment(.center)
+            if let request {
+                ProposeInGitButton(base: request.base, draft: request.draft, hostname: hostname)
+            }
         case .reverted:
             Image(systemName: "arrow.uturn.backward.circle.fill").font(.system(size: 56)).foregroundStyle(.secondary)
             Text("The node is back on its previous config.").font(.headline).multilineTextAlignment(.center)

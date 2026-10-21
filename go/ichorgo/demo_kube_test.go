@@ -170,7 +170,7 @@ func TestDemoKubeReadsAnswerFromTheDemoInventory(t *testing.T) {
 		"cron jobs":     func() (string, error) { return KubeCronJobs(yaml, "", "") },
 		"helm":          func() (string, error) { return KubeHelmReleases(yaml, "", "", "") },
 		"api health":    func() (string, error) { return KubeAPIHealth(yaml, "", "") },
-		"checkup":       func() (string, error) { return KubeCheckup(yaml, "", "") },
+		"checkup":       func() (string, error) { return KubeCheckup(yaml, "", "", "") },
 		"drain plan":    func() (string, error) { return KubeDrainPlan(yaml, "", "", "demo-worker-1") },
 	}
 

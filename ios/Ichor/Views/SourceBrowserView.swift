@@ -26,6 +26,10 @@ struct SourceBrowserView: View {
     @State private var loadedDir: String?
     /// The Git host has no token saved.
     @State private var missingHost: String?
+    /// Find in repository: the text typed, and the answer for the text submitted (nil: the listing).
+    @State private var query = ""
+    @State private var searched: LoadState<GitRepoSearch>?
+    @State private var searchedText = ""
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -34,18 +38,26 @@ struct SourceBrowserView: View {
             if let missingHost {
                 GitHostMissingView(host: missingHost, page: source.webURL)
                     .themedBackground()
+            } else if let searched {
+                searchResults(searched)
             } else {
                 LoadStateView(state: state, retry: load) { tree in content(tree) }
             }
         }
+        .modifier(SourceSearchable(enabled: source.read != .unreadable, query: $query) {
+            Task { await search() }
+        })
+        .onChange(of: query) { _, text in
+            if text.isEmpty { searched = nil }
+        }
         .task(id: dir) { await load() }
         // A token added in Settings (the shortcut below): read again on the way back.
         .onChange(of: hosts.hosts) { _, _ in Task { await load() } }
-        .navigationTitle("Source")
+        .navigationTitle(app.isRepository ? String(localized: "Repository") : String(localized: "Source"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if let url = webURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: dir, dir: true)) {
+                if let url = hosts.browserURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: dir, dir: true)) {
                     Link(destination: url) { Label("Open in browser", systemImage: "safari") }
                 }
             }
@@ -58,6 +70,10 @@ struct SourceBrowserView: View {
             Section {
                 SourceHeader(source: source, sha: tree.sha)
                 breadcrumb
+            }
+            // The cluster repository's root lists the pull requests opened from the phone on it.
+            if app.isRepository && dir.isEmpty {
+                ProposalsSection(app: .repository, refresh: tree.sha)
             }
             Section {
                 if entries.isEmpty {
@@ -77,6 +93,10 @@ struct SourceBrowserView: View {
                                     Image(systemName: "doc.text").foregroundStyle(.secondary)
                                 }
                                 Spacer(minLength: 8)
+                                if entry.sops {
+                                    Image(systemName: "lock.fill").font(.caption).foregroundStyle(.secondary)
+                                        .accessibilityLabel(Text("Encrypted with SOPS"))
+                                }
                                 Text(verbatim: formatBytes(entry.size)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                             }
                         }
@@ -111,6 +131,68 @@ struct SourceBrowserView: View {
         }
     }
 
+    @ViewBuilder
+    private func searchResults(_ state: LoadState<GitRepoSearch>) -> some View {
+        switch state {
+        case .loading:
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Searching… The first search of a commit downloads the repository (up to 48 MiB).")
+                    .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .themedBackground()
+        case .failed(let message):
+            ContentUnavailableView {
+                Label("Search failed", systemImage: "exclamationmark.magnifyingglass")
+            } description: {
+                Text(verbatim: message)
+            } actions: {
+                Button("Retry") { Task { await search() } }
+            }
+            .themedBackground()
+        case .loaded(let result, _, _):
+            if result.hits.isEmpty {
+                ContentUnavailableView.search(text: searchedText).themedBackground()
+            } else {
+                List {
+                    Section {
+                        ForEach(result.byFile, id: \.path) { group in
+                            ForEach(group.hits) { hit in
+                                NavigationLink { SourceFileView(source: source, path: hit.path, app: app, line: hit.line) } label: {
+                                    SourceHitRow(hit: hit)
+                                }
+                            }
+                        }
+                    } footer: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Matches: \(result.hits.count) · files searched: \(result.searched)")
+                            if result.truncated { Text("More lines match: refine the search.") }
+                        }
+                    }
+                }
+                .themedBackground()
+            }
+        }
+    }
+
+    /// Finds the text typed across the whole repository.
+    private func search() async {
+        let text = query.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty, let client = model.client else { return }
+        searchedText = text
+        searched = .loading
+        do {
+            let result = try await client.repoSearch(source, query: text, hosts: hosts, demo: demo)
+            guard searchedText == text else { return }
+            searched = .loaded(result, at: Date())
+        } catch {
+            guard searchedText == text else { return }
+            searched = .failed(error.localizedDescription)
+        }
+    }
+
     private func load() async {
         guard let client = model.client else { return }
         let wanted = dir
@@ -131,15 +213,49 @@ struct SourceBrowserView: View {
     }
 }
 
+/// One Find in repository hit: its file and line, then the line's text.
+private struct SourceHitRow: View {
+    let hit: GitSearchHit
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: "\(hit.path):\(hit.line)")
+                .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+            Text(verbatim: hit.text).font(.callout.monospaced()).lineLimit(2)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// .searchable for the sources whose whole repository can be read, nothing for the others.
+private struct SourceSearchable: ViewModifier {
+    let enabled: Bool
+    @Binding var query: String
+    let submit: () -> Void
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Find in repository"))
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .onSubmit(of: .search, submit)
+        } else {
+            content
+        }
+    }
+}
+
 /// The repository (its page when it has one), what the app follows and the commit read.
 struct SourceHeader: View {
     let source: GitSource
     /// The commit the host read, "" when it did not say (the source's revision then).
     let sha: String
+    @Environment(GitHostStore.self) private var hosts
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if let url = webURL(source.webURL) {
+            if let url = hosts.browserURL(source.webURL) {
                 Link(destination: url) {
                     Label { Text(verbatim: source.repoURL).lineLimit(2).truncationMode(.middle) } icon: {
                         Image(systemName: "arrow.up.forward.square")
@@ -166,6 +282,7 @@ struct GitHostMissingView: View {
     let host: String
     /// The repository's page, "" without one.
     let page: String
+    @Environment(GitHostStore.self) private var hosts
 
     var body: some View {
         ContentUnavailableView {
@@ -175,7 +292,7 @@ struct GitHostMissingView: View {
         } actions: {
             NavigationLink { SettingsPageView(page: .gitHosts) } label: { Text("Add a token") }
                 .buttonStyle(.borderedProminent)
-            if let url = webURL(page) {
+            if let url = hosts.browserURL(page) {
                 Link(destination: url) { Text("Open in browser") }
             }
         }

@@ -65,6 +65,14 @@ data class ObjectOwner(
 ) {
     val isHelmRelease: Boolean get() = via == VIA_HELM
 
+    /**
+     * An Argo CD Application (its namespace known) or a Flux Kustomization that applies the
+     * object: its diff can show what the object changed by hand, to keep in Git.
+     */
+    val hasGitOpsDiff: Boolean
+        get() = name.isNotEmpty() && namespace.isNotEmpty() &&
+            (via == VIA_ARGO && kind == "Application" || via == VIA_FLUX && kind == "Kustomization")
+
     /** Discovery knew its kind: its own summary can open. */
     val openable: Boolean get() = resource.isNotEmpty() && version.isNotEmpty() && name.isNotEmpty()
 

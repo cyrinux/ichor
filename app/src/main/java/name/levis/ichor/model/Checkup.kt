@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_checkup*.go and kube_events.go.
@@ -23,6 +24,8 @@ object CheckupSectionId {
     const val CROSSPLANE = "crossplane"
     const val TAILSCALE = "tailscale"
     const val CLUSTER_API = "clusterapi"
+    /** The findings the CRD plugins the cluster runs declare (docs/plugins.md "Findings"); last. */
+    const val PLUGINS = "plugins"
 }
 
 /** What a finding is about ([CheckupFinding.kind]); CheckupWording words each one. */
@@ -115,18 +118,19 @@ object CheckupKind {
     const val SIDERO_SERVER_OFF = "sideroServerOff"
     /** A Sidero server not accepted (extra: its hostname); name "" with count: that many more. */
     const val SIDERO_SERVER_UNACCEPTED = "sideroServerUnaccepted"
-    /** A SealedSecret the controller could not decrypt (reason, message: its Synced condition's). */
-    const val SEALED_SECRET_NOT_SYNCED = "sealedSecretNotSynced"
-    /** The Sealed Secrets controller has no key: nothing unseals (extra: its namespace). */
-    const val SEALING_KEY_MISSING = "sealingKeyMissing"
-    /** A sealing key the controller keeps out of use (namespace, name: the key's Secret). */
-    const val SEALING_KEY_COMPROMISED = "sealingKeyCompromised"
+    /** A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef, "" when not configured; reason, message: its Ready condition's). */
+    const val SOPS_DECRYPTION_FAILED = "sopsDecryptionFailed"
     /** A certificate a route's host serves (read by TLS handshake) that expired (namespace, name: its Secret; extra: the route; reason: the host). */
     const val ROUTE_CERT_EXPIRED = "routeCertExpired"
     /** One expiring within 14 days (count: days left). */
     const val ROUTE_CERT_EXPIRING = "routeCertExpiring"
     /** One that does not name the host (message: the names it covers). */
     const val ROUTE_CERT_HOST_MISMATCH = "routeCertHostMismatch"
+    /**
+     * A finding a CRD plugin declares: its words come from the plugin, already translated
+     * ([CheckupFinding.title], [CheckupFinding.pluginDetail]); namespace and name are its object's.
+     */
+    const val PLUGIN = "plugin"
 }
 
 /** A section's or the whole checkup's state, worst first. */
@@ -172,6 +176,19 @@ data class CheckupFinding(
     val count: Int = 0,
     /** Unix ms, 0 when unknown. */
     val since: Long = 0,
+    // A plugin finding ([CheckupKind.PLUGIN]) only, see [PluginFindingItem].
+    val key: String = "",
+    val plugin: String = "",
+    val pluginName: String = "",
+    val pluginIcon: String = "",
+    val id: String = "",
+    val title: String = "",
+    /** The plugin's own detail ("detail" in the JSON; the other kinds' detail is reason and message). */
+    @SerialName("detail") val pluginDetail: String = "",
+    val ref: PluginRef? = null,
+    val opens: String = "",
+    /** The plugin was imported, not built in (see [PluginFindingItem.user]). */
+    val user: Boolean = false,
 )
 
 /** A node as Kubernetes sees it: requests against allocatable (cores, bytes), taints and labels. */
@@ -251,25 +268,52 @@ fun CheckupReport.count(level: CheckupSeverity): Int = sections.sumOf { s -> s.f
 val CheckupRelease.inTrouble: Boolean get() = status == "failed" || status.startsWith("pending-")
 
 /**
- * Checkup finding kinds whose problem the data services alert already raises (monitor
- * dataIssuesOf): shown on the checkup screen, never notified a second time. A SealedSecret that
- * failed to unseal and no active sealing key alert from the Sealed Secrets section.
+ * Checkup finding kinds whose problem the GitOps alert already raises when it is on (monitor
+ * gitopsIssuesWithGaps): a Kustomization that cannot decrypt its SOPS files is Ready=False, a
+ * Flux app the GitOps track notifies about.
  */
-val DATA_SERVICE_ALERTED_KINDS = setOf(CheckupKind.SEALED_SECRET_NOT_SYNCED, CheckupKind.SEALING_KEY_MISSING)
+val GITOPS_ALERTED_KINDS = setOf(CheckupKind.SOPS_DECRYPTION_FAILED)
 
 /**
  * The findings worth a background alert, keyed "section|kind|subject" and valued by severity
  * ("critical" or "warning"): everything but the notes and the events, which only describe, and
- * the kinds the data services already alert on ([DATA_SERVICE_ALERTED_KINDS]).
+ * when the GitOps apps are watched too ([gitopsWatched]), the kinds that track already alerts on
+ * ([GITOPS_ALERTED_KINDS]). A plugin finding's subject is [pluginAlertSubject]; with
+ * [pluginsWatched] (the plugin findings track reads them on its own, with their words and a
+ * link to the plugin) the plugin findings are left to it. An imported plugin's finding alerts
+ * only with [importedPluginsWatched].
  */
-fun CheckupReport.alertIssues(): Map<String, String> = buildMap {
+fun CheckupReport.alertIssues(
+    gitopsWatched: Boolean = false,
+    pluginsWatched: Boolean = false,
+    importedPluginsWatched: Boolean = false,
+): Map<String, String> = buildMap {
+    val skipped = buildSet {
+        if (gitopsWatched) addAll(GITOPS_ALERTED_KINDS)
+        if (pluginsWatched) add(CheckupKind.PLUGIN)
+    }
     sections.forEach { section ->
         if (section.id == CheckupSectionId.EVENTS) return@forEach
         section.findings.forEach { f ->
-            if (f.level != CheckupSeverity.INFO && f.kind !in DATA_SERVICE_ALERTED_KINDS) put("${section.id}|${f.kind}|${f.subject}", f.severity)
+            if (f.level == CheckupSeverity.INFO || f.kind in skipped || (f.user && !importedPluginsWatched)) return@forEach
+            val subject = if (f.kind == CheckupKind.PLUGIN) f.pluginAlertSubject else f.subject
+            put("${section.id}|${f.kind}|$subject", f.severity)
         }
     }
 }
+
+/**
+ * A plugin finding's alert subject: its stable key without the "plugin:" prefix,
+ * "<plugin>:<finding>:<namespace>/<name>", so that two findings of one object keep apart.
+ */
+val CheckupFinding.pluginAlertSubject: String
+    get() = key.removePrefix(PLUGIN_KEY_PREFIX).ifEmpty { "$plugin:$id:$subject" }
+
+/** The prefix of a plugin finding's key (Go pluginFindingKey). */
+const val PLUGIN_KEY_PREFIX = "plugin:"
+
+/** The object of a plugin alert subject ("<plugin>:<finding>:<object>"), "" without one. */
+fun pluginAlertObject(subject: String): String = subject.split(':', limit = 3).getOrElse(2) { "" }
 
 /** A Kubernetes event of an object, as `kubectl describe` ends with. */
 @Serializable

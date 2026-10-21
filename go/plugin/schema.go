@@ -45,6 +45,8 @@ type Plugin struct {
 	Actions map[string]Action `yaml:"actions,omitempty" json:"actions,omitempty" schema:"keys=^[a-zA-Z][a-zA-Z0-9]*$"`
 	// Findings feed the cluster checkup and the background monitor.
 	Findings []Finding `yaml:"findings,omitempty" json:"findings,omitempty"`
+	// Tools are buttons of the plugin screen, by id, each run by a Go function over what the plugin read.
+	Tools map[string]Tool `yaml:"tools,omitempty" json:"tools,omitempty" schema:"keys=^[a-zA-Z][a-zA-Z0-9]*$"`
 	// Samples are demo objects per resource, in the API's shape: the demo context and the tests render them.
 	Samples map[string][]map[string]any `yaml:"samples" json:"samples" schema:"required"`
 	// I18n maps an English label to its translation, per locale; a missing label stays English.
@@ -84,8 +86,13 @@ type Resource struct {
 	Watch bool `yaml:"watch,omitempty" json:"watch,omitempty"`
 	// Reveal shows a Secret's data; it stays masked otherwise.
 	Reveal bool `yaml:"reveal,omitempty" json:"reveal,omitempty"`
+	// Optional is a resource the plugin does without (a decorative relation): forbidden or not served, it reads as empty with no error.
+	Optional bool `yaml:"optional,omitempty" json:"optional,omitempty"`
 	// Source is native:<id> to read through a Go reader instead of a list call.
 	Source string `yaml:"source,omitempty" json:"source,omitempty" schema:"pattern=^native:[A-Za-z0-9_-]+$"`
+	// Ref is the object a row of this resource opens, with source only: an expression giving
+	// a map of group, version, resource, kind, namespace and name ($.source).
+	Ref Expr `yaml:"ref,omitempty" json:"ref,omitempty"`
 }
 
 // ListOptions narrow a list call.
@@ -94,6 +101,9 @@ type ListOptions struct {
 	FieldSelector string `yaml:"fieldSelector,omitempty" json:"fieldSelector,omitempty"`
 	// Limit is the page size (0 or absent is 500).
 	Limit int `yaml:"limit,omitempty" json:"limit,omitempty" schema:"minimum=0,maximum=5000"`
+	// MetadataOnly reads each object's metadata alone (PartialObjectMetadata): a Secret's
+	// values, or a large spec, never leave the API server.
+	MetadataOnly bool `yaml:"metadataOnly,omitempty" json:"metadataOnly,omitempty"`
 }
 
 // HealthRule sets an object's health when its condition holds.
@@ -234,7 +244,12 @@ type Action struct {
 	// Body is the patch or object; its strings are templates (now, name, namespace, params.*).
 	Body any `yaml:"body,omitempty" json:"body,omitempty"`
 	// Subresource is the subresource of verb subresource (start, scale…).
-	Subresource string `yaml:"subresource,omitempty" json:"subresource,omitempty"`
+	Subresource string `yaml:"subresource,omitempty" json:"subresource,omitempty" schema:"pattern=^[a-z][a-z0-9-]*$"`
+	// Method is how verb subresource calls it: PUT (the default, as virtctl does), POST, or
+	// PATCH (a merge patch, as kubectl scale does).
+	Method string `yaml:"method,omitempty" json:"method,omitempty" schema:"enum=PUT|POST|PATCH"`
+	// PropagationPolicy is verb delete's: what happens to the object's dependents.
+	PropagationPolicy string `yaml:"propagationPolicy,omitempty" json:"propagationPolicy,omitempty" schema:"enum=Foreground|Background|Orphan"`
 	// RBAC is what the account needs; it becomes a can-I check.
 	RBAC *RBAC `yaml:"rbac" json:"rbac" schema:"required"`
 	// Confirm is how the app confirms: none, plain, or the object's name typed.
@@ -280,6 +295,18 @@ type Finding struct {
 	Detail Template `yaml:"detail,omitempty" json:"detail,omitempty"`
 	// Opens is the card the finding links to.
 	Opens string `yaml:"opens,omitempty" json:"opens,omitempty"`
+}
+
+// Tool is a button of the plugin screen run by Go (a check no expression can make).
+type Tool struct {
+	Label string `yaml:"label" json:"label" schema:"required"`
+	// Hint says what the tool does, under its button.
+	Hint string `yaml:"hint,omitempty" json:"hint,omitempty"`
+	// Run is native:<id>, the Go function that runs the tool.
+	Run string `yaml:"run" json:"run" schema:"required,pattern=^native:[A-Za-z0-9_-]+$"`
+	// Texts are the English words the Go function shows in its result, translated through
+	// i18n like the labels.
+	Texts []string `yaml:"texts,omitempty" json:"texts,omitempty"`
 }
 
 // Tones are the colors the apps know; Health order for worst(): ok < idle < info < unknown < warning < critical.

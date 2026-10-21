@@ -17,13 +17,17 @@ struct SourceFileView: View {
     /// The line to scroll to and highlight (1-based), nil for the top: the metadata.name of the
     /// resource a diff opened the file for.
     let line: Int?
+    /// False when opened from a node's machine config (Compare with Git): no Try on a node there,
+    /// it would stack a second editor.
+    let allowTry: Bool
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil) {
+    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil, allowTry: Bool = true) {
         self.source = source
         self.path = path
         self.app = app
         self.line = line
+        self.allowTry = allowTry
     }
 
     @Environment(AppModel.self) private var model
@@ -41,13 +45,21 @@ struct SourceFileView: View {
     @State private var pendingQuickEdit: QuickEdit?
     /// The quick edit the editor opens with, nil for the plain editor.
     @State private var quickEdit: QuickEdit?
+    /// The file is a Talos patch (on a Talos cluster): whether and why it can be tried on a node.
+    @State private var talosPatch: TalosPatchInfo?
+    @State private var pickingNode = false
+    /// The node the picker chose: the machine config screen opens once the sheet is gone.
+    @State private var pendingTry: PatchTarget?
+    @State private var tryTarget: PatchTarget?
+    /// The file is encrypted with SOPS: shown, never edited on the phone.
+    @State private var sops: SopsInfo?
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
     private var name: String { path.split(separator: "/").last.map(String.init) ?? path }
 
     private var page: URL? {
-        webURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: path, dir: false))
+        hosts.browserURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: path, dir: false))
     }
 
     var body: some View {
@@ -69,9 +81,15 @@ struct SourceFileView: View {
         .sheet(item: $quickSheet, onDismiss: openPendingQuickEdit) { sheet in
             quickSheetView(sheet)
         }
+        .sheet(isPresented: $pickingNode, onDismiss: openPendingTry) {
+            if let talosPatch { TalosPatchNodeSheet(info: talosPatch) { node in pickNode(node) } }
+        }
+        .navigationDestination(item: $tryTarget) { target in
+            MachineConfigView(node: target.node, hostname: target.hostname, patch: target.patch)
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if case .loaded(let file, _, _) = state, !file.file.truncated {
+                if case .loaded(let file, _, _) = state, !file.file.truncated, sops == nil {
                     Button {
                         quickEdit = nil
                         editing = true
@@ -80,7 +98,7 @@ struct SourceFileView: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                if case .loaded(let file, _, _) = state, !file.file.truncated, let quickTargets {
+                if case .loaded(let file, _, _) = state, !file.file.truncated, sops == nil, let quickTargets {
                     quickMenu(quickTargets)
                 }
             }
@@ -128,7 +146,14 @@ struct SourceFileView: View {
             .refreshable { await load() }
             .themedBackground()
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if let editBlock { SourceEditBlockBar(block: editBlock) }
+                VStack(spacing: 0) {
+                    if let sops {
+                        SopsBar(info: sops)
+                    } else {
+                        if let talosPatch { TalosPatchBar(info: talosPatch) { pickingNode = true } }
+                        if let editBlock { SourceEditBlockBar(block: editBlock) }
+                    }
+                }
             }
         }
     }
@@ -173,6 +198,21 @@ struct SourceFileView: View {
         editing = true
     }
 
+    /// The node picked: the machine config screen of it opens with the file once the sheet is gone.
+    private func pickNode(_ node: NodeOverview) {
+        guard case .loaded(let file, _, _) = state else { return }
+        let rev = shortRevision(source.ref)
+        let from = rev.isEmpty ? path : "\(path) @ \(rev)"
+        pendingTry = PatchTarget(node: node.node, hostname: node.hostname, patch: PatchRequest(content: file.file.content, from: from))
+        pickingNode = false
+    }
+
+    private func openPendingTry() {
+        guard let target = pendingTry else { return }
+        pendingTry = nil
+        tryTarget = target
+    }
+
     /// One numbered line; the line asked for is tinted and read out as such.
     private func row(_ numbered: NumberedLine, gutter: CGFloat) -> some View {
         let marked = numbered.number == line
@@ -201,7 +241,10 @@ struct SourceFileView: View {
             let saved = source.proposalHost.map { hosts.hasToken($0) } ?? false
             editBlock = sourceEditBlock(source, demo: demo, hasToken: saved)
             quickTargets = await Self.quickTargets(of: file)
-            state = .loaded(SourceFileText(file: file), at: Date())
+            sops = file.truncated ? nil : (try? await TalosClient.sopsInspect(file.content)).flatMap { $0.encrypted ? $0 : nil }
+            let encrypted = sops != nil
+            talosPatch = model.activeIsKube || !allowTry ? nil : await Self.talosPatch(of: file, path: path)
+            state = .loaded(SourceFileText(file: file, collapseSops: encrypted), at: Date())
         } catch let missing as GitHostMissing {
             missingHost = missing.host
         } catch {
@@ -216,6 +259,14 @@ struct SourceFileView: View {
         guard !file.truncated, let targets = try? await TalosClient.quickEditTargets(file.content),
               !targets.isEmpty else { return nil }
         return targets
+    }
+
+    /// What file is to Talos when it is a patch; nil for any other file (no bar).
+    private static func talosPatch(of file: GitFile, path: String) async -> TalosPatchInfo? {
+        let yaml = path.hasSuffix(".yaml") || path.hasSuffix(".yml")
+        guard yaml, !file.truncated, file.content.utf8.count <= PatchRequest.maxBytes,
+              let info = try? await TalosClient.talosPatchDetect(file.content), info.talos else { return nil }
+        return info
     }
 
     private func copy(_ content: String) {
@@ -267,9 +318,12 @@ struct SourceFileText {
     /// The line-number column's width, for the widest number.
     let gutter: CGFloat
 
-    init(file: GitFile) {
+    /// collapseSops: the file is SOPS-encrypted, its ciphertext tells nothing: each ENC[…] value
+    /// shows as such.
+    init(file: GitFile, collapseSops: Bool = false) {
         self.file = file
-        lines = file.truncated ? [] : filterLines(file.content.replacingOccurrences(of: "\r\n", with: "\n"), query: "")
+        let text = collapseSops ? collapseSopsValues(file.content) : file.content
+        lines = file.truncated ? [] : filterLines(text.replacingOccurrences(of: "\r\n", with: "\n"), query: "")
         gutter = CGFloat(max(2, String(lines.count).count)) * 7
     }
 }

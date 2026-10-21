@@ -1,6 +1,9 @@
 package plugin
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // The render tree is what KubePluginData returns and the apps draw (Plan §6, docs/plugins.md
 // "Render tree"): every value is resolved, every tone is a word, every label is translated.
@@ -20,6 +23,23 @@ type Tree struct {
 	Cards    []TreeCard  `json:"cards"`
 	Findings []TreeFind  `json:"findings"`
 	Errors   []TreeError `json:"errors"`
+	// Tools are the plugin's tool buttons, in id order (KubePluginTool runs one).
+	Tools []TreeTool `json:"tools,omitempty"`
+}
+
+// TreeTool is a tool's button.
+type TreeTool struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Hint  string `json:"hint,omitempty"`
+}
+
+// ToolResult is what a tool returns: a title, a health and cards, drawn as the tree's cards
+// are (rows with ref, status, trailing and detail).
+type ToolResult struct {
+	Title  string     `json:"title"`
+	Health string     `json:"health"`
+	Cards  []TreeCard `json:"cards"`
 }
 
 // TreePlugin says which plugin the tree is.
@@ -59,9 +79,12 @@ type TreeCard struct {
 
 // Ref names an object the apps can open.
 type Ref struct {
-	Group     string `json:"group"`
-	Version   string `json:"version"`
-	Resource  string `json:"resource"`
+	Group    string `json:"group"`
+	Version  string `json:"version"`
+	Resource string `json:"resource"`
+	// Kind is set when the resource's ref names another object: the apps open it without a
+	// catalog lookup.
+	Kind      string `json:"kind,omitempty"`
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 }
@@ -137,8 +160,8 @@ type TreeCondItem struct {
 	LastTransition int64  `json:"lastTransition"`
 }
 
-// TreeAction is a button. Allowed (the can-I answer) is set by KubePluginAction's step, not
-// by the render.
+// TreeAction is a button. Allowed (the can-I answer of its action's rbac) is not the
+// render's: KubePluginData sets it (Tree.SetAllowed); absent, the answer is unknown.
 type TreeAction struct {
 	ID             string      `json:"id"`
 	Label          string      `json:"label"`
@@ -193,6 +216,9 @@ type Input struct {
 	APIVersions map[string]string
 	// Errors are the read errors, carried into the tree.
 	Errors []TreeError
+	// Unread are the resource keys that could not be listed (forbidden, not served, failed),
+	// optional ones included: readable() is false for them.
+	Unread map[string]bool
 	// Partial: a list stopped at its limit (see Tree.Partial).
 	Partial bool
 	// Locale picks the i18n map ("fr", "pt-BR"); "" or a missing one is English.
@@ -211,11 +237,12 @@ type Heuristics interface {
 	ConditionTone(cond map[string]any) string
 }
 
-// SamplesInput is the demo input: every resource's samples, detected as demo.
-func SamplesInput(c *Compiled, locale string, h Heuristics) Input {
+// SamplesInput is the demo input: every resource's samples, detected as demo, their relative
+// times ("now-6h") resolved against now (see sampleTimes).
+func SamplesInput(c *Compiled, locale string, h Heuristics, now time.Time) Input {
 	objects := make(map[string][]map[string]any, len(c.Plugin.Samples))
 	for res, list := range c.Plugin.Samples {
-		objects[res] = list
+		objects[res] = sampleTimes(list, now)
 	}
 
 	return Input{Objects: objects, Detected: Detection{Active: true, Via: "demo"}, Locale: locale, Heuristics: h}

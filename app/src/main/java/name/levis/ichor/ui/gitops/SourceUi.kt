@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,11 +29,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.GitOpsSource
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.SourceReadPath
+import name.levis.ichor.model.gitHostWebUrl
 import name.levis.ichor.model.sourceRowLabel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
@@ -118,16 +121,28 @@ private fun SourceRow(source: GitSource, onClick: (() -> Unit)?) {
 internal fun repoLabel(source: GitSource): String = source.webURL.removePrefix("https://").ifEmpty { source.repoURL }
 
 /**
+ * Puts a forge link on the Git host whose alias it names (Settings → Git hosts), so a source
+ * Argo CD or Flux reach by an in-cluster or SSH name opens on the forge's own address.
+ */
+@Composable
+fun rememberGitWebUrl(): (String) -> String {
+    val store = (LocalContext.current.applicationContext as? TalosApp)?.gitHostStore ?: return { it }
+    val hosts by store.hosts.collectAsStateWithLifecycle()
+    return remember(hosts) { { url: String -> gitHostWebUrl(url, hosts) } }
+}
+
+/**
  * No token is saved for [host]: says so, with a shortcut to Settings → Git hosts and, when the
  * repository has a page, "Open in browser" ([url]).
  */
 @Composable
 fun GitHostMissingBox(host: String, url: String, onAddToken: (() -> Unit)?, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val web = rememberGitWebUrl()
     EmptyState(Icons.Outlined.Key, stringResource(R.string.gitops_source_no_token, host), modifier) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (onAddToken != null) Button(onClick = onAddToken) { Text(stringResource(R.string.gitops_source_add_token)) }
-            if (url.isNotEmpty()) OpenInBrowserButton { openUrl(context, url) }
+            if (url.isNotEmpty()) OpenInBrowserButton { openUrl(context, web(url)) }
         }
     }
 }

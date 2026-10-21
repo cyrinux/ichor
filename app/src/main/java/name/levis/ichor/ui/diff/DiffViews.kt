@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -104,6 +105,7 @@ fun DiffResourceCard(
     expanded: Boolean,
     onOpenSource: (() -> Unit)? = null,
     searching: Boolean = false,
+    onKeepLive: (() -> Unit)? = null,
     onToggle: () -> Unit,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -142,7 +144,31 @@ fun DiffResourceCard(
             }
         }
         if (onOpenSource != null) OpenSourceAction(onOpenSource, searching)
+        if (onKeepLive != null && !searching) KeepLiveAction(resource, onKeepLive)
         if (expanded && detail) DiffDetail(resource)
+    }
+}
+
+/**
+ * "Keep live values in Git", above the values changed in the cluster by hand ("spec.replicas
+ * 2 → 5"): opens the manifest's editor with them written, for a pull request.
+ */
+@Composable
+private fun KeepLiveAction(resource: KubeDiffResource, onClick: () -> Unit) {
+    val values = resource.liveChanges.joinToString(", ") { "${it.label} ${it.wanted} → ${it.live}" }
+    Column(Modifier.padding(top = 4.dp)) {
+        Text(
+            stringResource(R.string.gitops_keep_live_values, values),
+            style = MaterialTheme.typography.labelSmall,
+            fontFamily = FontFamily.Monospace,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
+            Icon(Icons.Outlined.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.gitops_keep_live), modifier = Modifier.padding(start = 8.dp))
+        }
     }
 }
 

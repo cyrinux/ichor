@@ -152,7 +152,7 @@ private fun FormField(
 
 /**
  * The pull request opened: its link (Open, Copy link) and when it takes effect: [tool]'s
- * controller applies it once merged.
+ * controller applies it once merged ("" for the cluster repository, which no controller is named for).
  */
 @Composable
 fun ProposeResult(result: GitProposalResult, tool: String, onDone: () -> Unit, modifier: Modifier = Modifier) {
@@ -166,7 +166,7 @@ fun ProposeResult(result: GitProposalResult, tool: String, onDone: () -> Unit, m
         Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = LocalStatusColors.current.ok, modifier = Modifier.size(40.dp))
         Text(stringResource(R.string.gitops_propose_done), style = MaterialTheme.typography.titleLarge)
         if (result.url.isNotEmpty()) Text(result.url, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
-        MutedText(stringResource(R.string.gitops_propose_applies, gitOpsToolLabel(tool)))
+        MutedText(if (tool.isEmpty()) stringResource(R.string.repo_propose_applies) else stringResource(R.string.gitops_propose_applies, gitOpsToolLabel(tool)))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (result.url.isNotEmpty()) {
                 Button(onClick = { openUrl(context, result.url) }) {

@@ -44,9 +44,12 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.DiffChange
 import name.levis.ichor.model.FluxDiff
+import name.levis.ichor.model.GitOpsEditCheck
+import name.levis.ichor.model.SopsWarning
 import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -60,6 +63,7 @@ import name.levis.ichor.ui.diff.DiffLines
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.kubebrowser.ErrorCard
 import name.levis.ichor.ui.kubebrowser.KubeYamlEditor
+import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * Edits one file of an app's source ([path] from the repository root) and opens a pull request
@@ -157,7 +161,17 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                     val e = s.data
                     when {
                         e.result != null -> ProposeResult(e.result, target.tool, onDone = onBack, modifier = modifier)
-                        e.review != null -> EditReview(e.review, onBack = vm::backToEditor, onContinue = vm::openForm, onRetry = vm::review, modifier = modifier)
+                        e.review != null -> EditReview(
+                            e.review,
+                            onBack = vm::backToEditor,
+                            onContinue = vm::openForm,
+                            onRetry = vm::review,
+                            modifier = modifier,
+                            notice = e.notice,
+                            check = e.check,
+                            onRetryCheck = vm::check,
+                            sopsCheck = e.sops,
+                        )
                         else -> Column(modifier) {
                             // A quick edit that did not apply to the branch's file says why.
                             e.notice?.let { notice ->
@@ -187,7 +201,17 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
 
 /** What the draft changes, as a unified diff; Continue opens the pull request sheet. */
 @Composable
-private fun EditReview(review: UiState<FluxDiff>, onBack: () -> Unit, onContinue: () -> Unit, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+private fun EditReview(
+    review: UiState<FluxDiff>,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+    notice: UiText? = null,
+    check: UiState<GitOpsEditCheck>? = null,
+    onRetryCheck: () -> Unit = {},
+    sopsCheck: UiState<SopsWarning>? = null,
+) {
     when (review) {
         UiState.Loading -> Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator()
@@ -208,10 +232,29 @@ private fun EditReview(review: UiState<FluxDiff>, onBack: () -> Unit, onContinue
                 }
                 return
             }
+            // A clear-text secret where .sops.yaml encrypts: asked once more before the pull request.
+            val sops = (sopsCheck as? UiState.Loaded)?.data?.takeIf { it.warn }
+            var confirmingSops by remember { mutableStateOf(false) }
+            if (confirmingSops && sops != null) {
+                ConfirmDialog(
+                    title = stringResource(R.string.sops_confirm_title),
+                    text = stringResource(R.string.sops_confirm_text, sopsWhat(sops), sops.rule.pathRegex),
+                    confirm = stringResource(R.string.gitops_edit_continue),
+                    onConfirm = {
+                        confirmingSops = false
+                        onContinue()
+                    },
+                    onDismiss = { confirmingSops = false },
+                    destructive = true,
+                )
+            }
             Column(modifier.fillMaxSize().imePadding()) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
+                    notice?.let { MutedText(it.asString(), Modifier.padding(bottom = 8.dp)) }
                     DiffLines(file.lines)
                     if (file.truncated) MutedText(stringResource(R.string.diff_truncated), Modifier.padding(top = 4.dp))
+                    sops?.let { SopsWarningText(it, Modifier.padding(top = 16.dp)) }
+                    check?.let { EditCheckSection(it, onRetry = onRetryCheck, modifier = Modifier.padding(top = 16.dp)) }
                 }
                 Row(
                     Modifier.padding(16.dp).navigationBarsPadding(),
@@ -219,7 +262,14 @@ private fun EditReview(review: UiState<FluxDiff>, onBack: () -> Unit, onContinue
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
-                    Button(onClick = onContinue) { Text(stringResource(R.string.gitops_edit_continue)) }
+                    // Waits for the .sops.yaml read (a quick one), never for the build.
+                    Button(onClick = { if (sops != null) confirmingSops = true else onContinue() }, enabled = sopsCheck != UiState.Loading) {
+                        Text(stringResource(R.string.gitops_edit_continue))
+                    }
+                    // The pull request can still be opened: the person decides.
+                    if ((check as? UiState.Loaded)?.data?.fails == true) {
+                        Text(stringResource(R.string.gitops_check_fails), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
         }

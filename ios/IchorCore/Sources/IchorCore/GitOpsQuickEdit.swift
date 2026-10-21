@@ -296,7 +296,9 @@ public struct QuickEditReplicaTarget: Hashable, Identifiable, Sendable {
 /// One edit as GitOpsQuickEdit takes it.
 public struct QuickEdit: Encodable, Hashable, Sendable {
     public enum Op: String, Encodable, Sendable {
-        case image, replicas
+        /// keep: the live values of a diff written where the file holds the wanted ones;
+        /// talos: a machine config patch written into a node's file of the cluster repository.
+        case image, replicas, keep, talos
     }
 
     public let op: Op
@@ -313,12 +315,20 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
     public let kustomizeImage: String?
     /// The kustomization `replicas:` entry edited instead of a workload.
     public let kustomizeReplica: String?
-    /// The container, image or workload the title names; not sent.
+    /// The live values a keep edit writes.
+    public let changes: [DiffLiveChange]?
+    /// The container, image or workload the title names (talos: the first changed path); not sent.
     public let label: String
+    /// talos: the patch, the node, whether the file is new, and the values left to shared patches.
+    public let patch: String?
+    public let hostname: String?
+    public let create: Bool?
+    public let skipped: [String]?
 
     public init(op: Op, documentIndex: Int, kind: String? = nil, name: String? = nil, container: String? = nil,
                 image: String? = nil, replicas: Int? = nil, kustomizeImage: String? = nil, kustomizeReplica: String? = nil,
-                label: String) {
+                changes: [DiffLiveChange]? = nil, label: String, patch: String? = nil, hostname: String? = nil,
+                create: Bool? = nil, skipped: [String]? = nil) {
         self.op = op
         self.documentIndex = documentIndex
         self.kind = kind
@@ -328,11 +338,29 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
         self.replicas = replicas
         self.kustomizeImage = kustomizeImage
         self.kustomizeReplica = kustomizeReplica
+        self.changes = changes
         self.label = label
+        self.patch = patch
+        self.hostname = hostname
+        self.create = create
+        self.skipped = skipped
+    }
+
+    /// A kept machine config change of hostname written into its file: plan says where and what.
+    public static func talos(hostname: String, plan: TalosWriteBackPlan, firstPath: String) -> QuickEdit {
+        QuickEdit(op: .talos, documentIndex: 0, label: firstPath, patch: plan.patch, hostname: hostname, create: plan.create,
+                  skipped: plan.skipped.map { "\($0.path): \($0.why)" })
+    }
+
+    /// The live values of resource (document documentIndex of its manifest) kept in Git.
+    public static func keep(documentIndex: Int, resource: KubeDiffResource) -> QuickEdit {
+        QuickEdit(op: .keep, documentIndex: documentIndex, kind: resource.kind, name: resource.name,
+                  changes: resource.liveChanges, label: "\(resource.kind) \(resource.name)")
     }
 
     enum CodingKeys: String, CodingKey {
-        case op, documentIndex, kind, name, container, image, replicas, kustomizeImage, kustomizeReplica
+        case op, documentIndex, kind, name, container, image, replicas, kustomizeImage, kustomizeReplica, changes
+        case patch, hostname, create, skipped
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -346,6 +374,11 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
         try c.encodeIfPresent(replicas, forKey: .replicas)
         try c.encodeIfPresent(kustomizeImage, forKey: .kustomizeImage)
         try c.encodeIfPresent(kustomizeReplica, forKey: .kustomizeReplica)
+        try c.encodeIfPresent(changes, forKey: .changes)
+        try c.encodeIfPresent(patch, forKey: .patch)
+        try c.encodeIfPresent(hostname, forKey: .hostname)
+        try c.encodeIfPresent(create, forKey: .create)
+        try c.encodeIfPresent(skipped, forKey: .skipped)
     }
 
     /// The JSON GitOpsQuickEdit takes.
@@ -359,20 +392,24 @@ public struct QuickEditResult: Decodable, Hashable, Sendable {
     public let changed: Bool
     /// The line edited (1-based), 0 when unknown.
     public let line: Int
+    /// For a keep edit: the live values not written (the file does not set them) and why.
+    public let skipped: [String]
 
-    public init(content: String, changed: Bool, line: Int = 0) {
+    public init(content: String, changed: Bool, line: Int = 0, skipped: [String] = []) {
         self.content = content
         self.changed = changed
         self.line = line
+        self.skipped = skipped
     }
 
-    enum CodingKeys: String, CodingKey { case content, changed, line }
+    enum CodingKeys: String, CodingKey { case content, changed, line, skipped }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         content = try c.field(.content, "")
         changed = try c.field(.changed, false)
         line = try c.field(.line, 0)
+        skipped = try c.field(.skipped, [String]())
     }
 }
 
@@ -387,6 +424,11 @@ public func quickEditTitle(_ edit: QuickEdit) -> String {
         return "Bump \(edit.label) to \(tag.isEmpty ? image : tag)"
     case .replicas:
         return "Scale \(edit.label) to \(edit.replicas ?? 0)"
+    case .keep:
+        return "Keep live changes of \(edit.label)"
+    case .talos:
+        let node = edit.hostname ?? ""
+        return edit.label.isEmpty ? "Keep \(node)'s config change in Git" : "Keep \(node)'s config change in Git: \(edit.label)"
     }
 }
 

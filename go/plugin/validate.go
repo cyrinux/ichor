@@ -61,6 +61,7 @@ func Validate(p *Plugin) []Problem {
 	v.cards()
 	v.actions()
 	v.findings()
+	v.tools()
 	v.samples()
 	v.i18n()
 
@@ -244,6 +245,12 @@ func (v *validator) resourceDecls() {
 		if r.Source != "" && !nativeRef.MatchString(r.Source) {
 			v.errorf(path+".source", "%q: use native:<id>", r.Source)
 		}
+
+		if !r.Ref.IsZero() && r.Source == "" {
+			v.errorf(path+".ref", "needs source: a listed object opens itself, only a Go reader's objects name another one")
+		}
+
+		v.checkExpr(path+".ref", r.Ref, refScope(v.fieldNames(key)), false)
 
 		if r.List != nil && (r.List.Limit < 0 || r.List.Limit > 5000) {
 			v.errorf(path+".list.limit", "must be between 1 and 5000 (0 or absent is 500)")
@@ -613,6 +620,7 @@ func (v *validator) actions() {
 
 		v.rbac(path+".rbac", a.RBAC)
 		v.enum(path+".confirm", a.Confirm, Action{}, "Confirm")
+		v.actionRequest(path, a, onOK)
 
 		if a.Audit == "" {
 			v.errorf(path+".audit", "is missing: name the audit entry (%s.%s)", v.p.ID, id)
@@ -676,6 +684,8 @@ func (v *validator) params(path string, params []Param) []string {
 		if prm.Type == "enum" && len(prm.Values) == 0 {
 			v.errorf(ppath+".values", "an enum parameter lists its values")
 		}
+
+		v.paramDefault(ppath, prm)
 	}
 
 	return names
@@ -732,6 +742,27 @@ func (v *validator) findings() {
 
 		if _, ok := v.p.Cards[f.Opens]; f.Opens != "" && !ok {
 			v.errorf(path+".opens", "%q is not a card (%s)", f.Opens, strings.Join(sortedKeys(v.p.Cards), ", "))
+		}
+	}
+}
+
+// tools: a known run id is checked when the tool runs, as a native source's is when read.
+func (v *validator) tools() {
+	for _, id := range sortedKeys(v.p.Tools) {
+		t, path := v.p.Tools[id], "tools."+id
+		if !keyPattern.MatchString(id) {
+			v.errorf(path, "%q: a tool id is letters and digits, starting with a letter", id)
+		}
+
+		if t.Label == "" {
+			v.errorf(path+".label", "is missing")
+		}
+
+		switch {
+		case t.Run == "":
+			v.errorf(path+".run", "is missing: name the Go function (native:<id>)")
+		case !nativeRef.MatchString(t.Run):
+			v.errorf(path+".run", "%q: use native:<id>", t.Run)
 		}
 	}
 }

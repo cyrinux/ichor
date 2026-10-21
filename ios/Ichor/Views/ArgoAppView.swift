@@ -88,6 +88,8 @@ struct ArgoAppView: View {
                 }
             }
             GitOpsSourceSection(sources: gitSources, app: .argo(namespace: namespace, name: name))
+            // The pull requests opened from the phone for it; a merged one not running yet syncs from here.
+            ProposalsSection(app: .argo(namespace: namespace, name: name), refresh: app.revision) { syncSheet = SyncRequest(resources: []) }
             ArgoFreezeSection(app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
                               freeze: { freezeSheet = true },
                               extend: {
@@ -97,7 +99,9 @@ struct ArgoAppView: View {
                               },
                               unfreeze: { confirmUnfreeze = true })
             ArgoConditionsSection(app: app, downNodes: downNodes)
-            if let op = app.operation { ArgoOperationSection(operation: op, canTerminate: app.canTerminate) { confirmTerminate = true } }
+            if let op = app.operation {
+                ArgoOperationSection(operation: op, canTerminate: app.canTerminate, app: (namespace: app.namespace, name: app.name)) { confirmTerminate = true }
+            }
             ArgoNetworkSection(model: network, downNodes: downNodes, pods: app.unhealthyPods,
                                openNode: { openNode = $0 }, changed: { Task { await load() } })
             if !app.resources.isEmpty { timeline(app) }

@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -18,6 +19,26 @@ class GitOpsQuickEditTest {
         assertEquals("Scale podinfo to 3", quickEditTitle(QuickEdit.replicas(0, "podinfo", 3)))
         assertEquals("Bump app to 1.2.0", quickEditTitle(QuickEdit.kustomize(0, "ghcr.io/example-org/app", "1.2.0")))
         assertEquals("Scale web to 0", quickEditTitle(QuickEdit.replicas(0, "web", 0, kustomizeReplica = "web")))
+    }
+
+    @Test
+    fun aKeepEditSendsTheLiveChangesOfItsObject() {
+        val change = DiffLiveChange(listOf("spec", "replicas"), "spec.replicas", "2", "5", "int")
+        val resource = KubeDiffResource(kind = "Deployment", name = "web", change = DiffChange.CHANGED, liveChanges = listOf(change))
+        val edit = QuickEdit.keep(1, resource)
+        assertEquals("Keep live changes of Deployment web", quickEditTitle(edit))
+
+        val json = Json.parseToJsonElement(quickEditJson(edit)).jsonObject
+        assertEquals(setOf("op", "documentIndex", "kind", "name", "changes"), json.keys)
+        assertEquals("keep", json.getValue("op").jsonPrimitive.content)
+        assertEquals(1, json.getValue("documentIndex").jsonPrimitive.int)
+        assertEquals("Deployment", json.getValue("kind").jsonPrimitive.content)
+        val sent = json.getValue("changes").jsonArray.single().jsonObject
+        assertEquals(setOf("path", "label", "wanted", "live", "type"), sent.keys)
+
+        // Through a route and back; a keep edit with nothing to keep is no edit.
+        assertEquals(edit, decodeQuickEdit(encodeQuickEdit(edit)))
+        assertNull(decodeQuickEdit(encodeQuickEdit(edit.copy(changes = emptyList()))))
     }
 
     @Test

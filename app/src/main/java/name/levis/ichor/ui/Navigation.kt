@@ -24,6 +24,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.opensAlone
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeOverview
@@ -32,7 +33,9 @@ import name.levis.ichor.model.allows
 import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.kubeNodeName
+import name.levis.ichor.model.linkedPlugin
 import name.levis.ichor.model.nodeTab
+import name.levis.ichor.ui.plugins.pluginRouteFor
 import name.levis.ichor.ui.workloads.NETPERF_TAB
 import name.levis.ichor.monitor.AlertAction
 import name.levis.ichor.monitor.AlertActionRequest
@@ -48,6 +51,7 @@ import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.ui.nav.Routes
 import name.levis.ichor.ui.nav.appGraph
 import name.levis.ichor.ui.nav.gitOpsGraph
+import name.levis.ichor.ui.settings.SettingsPage
 import name.levis.ichor.ui.nav.kubeGraph
 import name.levis.ichor.ui.nav.openNodeAction
 import name.levis.ichor.ui.nav.navMaskMark
@@ -310,7 +314,8 @@ fun Navigation(
                     onWorkloads = { nav.navigate(Routes.workloads()) },
                     onMetrics = { nav.navigate(Routes.metrics()) },
                     onAlerts = { nav.navigate(Routes.alerts()) },
-                    onDataServices = { nav.navigate(Routes.dataServices(it)) },
+                    onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
+                    onPlugin = { nav.navigate(name.levis.ichor.ui.plugins.pluginRoute(it)) },
                     onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                     onFlux = { nav.navigate(Routes.FLUX) },
                     onHealth = { nav.navigate(Routes.HEALTH) },
@@ -342,6 +347,8 @@ fun Navigation(
                     onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                     onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
                     onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
+                    onRepository = { nav.navigate(Routes.repoSource()) },
+                    onGitHosts = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
                     onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
                     onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
                     onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
@@ -438,7 +445,10 @@ private suspend fun ShareTarget.talosRoute(app: TalosApp, action: AlertActionReq
     ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
-    ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })
+    // A data service's catalog id opens its tab; "plugin-<id>" (a plugin finding's alert) where
+    // that plugin's tile leads, its own screen when this build cannot tell.
+    ShareTarget.DATA -> linkedPlugin?.let { id -> pluginRouteFor(app.pluginRepository, id) ?: KubeBrowserRoutes.plugin(id) }
+        ?: DataServiceKind.entries.firstOrNull { it.catalogId == kind }.let { Routes.dataServices(it, solo = it?.opensAlone == true) }
     ShareTarget.CHECKUP -> Routes.CHECKUP
     ShareTarget.ALERTS -> Routes.alerts(silence = action?.takeIf { it.action == AlertAction.SILENCE }?.target.orEmpty())
     else -> kubeFocus?.let { Routes.workloads(it) }

@@ -19,6 +19,9 @@ type pluginProbe struct {
 	apps     map[string]detection
 	services map[string]detection
 	hints    hintSet
+	// allowReveal lets a resource's reveal show a Secret's values: an installed plugin, outside
+	// screenshot mode. A plugin previewed before it is installed never reveals.
+	allowReveal bool
 
 	mu     sync.Mutex
 	served map[string]bool // group/version/resource → served
@@ -30,6 +33,11 @@ func newPluginProbe(ctx context.Context, k *kubeClient, plugins []*plugin.Compil
 		return nil, err
 	}
 
+	return newPluginProbeFrom(ctx, k, plugins, hints, groups), nil
+}
+
+// newPluginProbeFrom is newPluginProbe over API groups already read (the checkup's).
+func newPluginProbeFrom(ctx context.Context, k *kubeClient, plugins []*plugin.Compiled, hints hintSet, groups map[string]string) *pluginProbe {
 	p := &pluginProbe{groups: groups, hints: hints, served: map[string]bool{}}
 
 	if detectsBy(plugins, func(d plugin.Detect) bool { return d.Pods != "" }) {
@@ -41,7 +49,7 @@ func newPluginProbe(ctx context.Context, k *kubeClient, plugins []*plugin.Compil
 		p.services = queryServices(ctx, k)
 	}
 
-	return p, nil
+	return p
 }
 
 func detectsBy(plugins []*plugin.Compiled, match func(plugin.Detect) bool) bool {
@@ -50,28 +58,36 @@ func detectsBy(plugins []*plugin.Compiled, match func(plugin.Detect) bool) bool 
 
 // detect is the first of the plugin's detections the cluster matches.
 func (p *pluginProbe) detect(ctx context.Context, k *kubeClient, c *plugin.Compiled) plugin.Detection {
+	f := p.detection(ctx, k, c)
+
+	return plugin.Detection{Active: f.via != "", Via: f.via}
+}
+
+// detection is detect with what Settings shows of it: the version of the matching group, or
+// where the matching pods or Services run.
+func (p *pluginProbe) detection(ctx context.Context, k *kubeClient, c *plugin.Compiled) detection {
 	for _, d := range c.Plugin.Detect {
 		switch {
 		case d.Group != "":
 			if version, ok := p.groups[d.Group]; ok && (d.Resource == "" || p.serves(ctx, k, d.Group, version, d.Resource)) {
-				return plugin.Detection{Active: true, Via: detectedByAPI}
+				return detection{via: detectedByAPI, version: version}
 			}
 		case d.Pods != "":
-			if _, ok := p.apps[d.Pods]; ok {
-				return plugin.Detection{Active: true, Via: detectedByPods}
+			if f, ok := p.apps[d.Pods]; ok {
+				return f
 			}
 
 			if p.apps == nil && p.hints[d.Pods] {
-				return plugin.Detection{Active: true, Via: detectedByInventory}
+				return detection{via: detectedByInventory}
 			}
 		case d.Service != "":
-			if _, ok := p.services[d.Service]; ok {
-				return plugin.Detection{Active: true, Via: detectedByServices}
+			if f, ok := p.services[d.Service]; ok {
+				return f
 			}
 		}
 	}
 
-	return plugin.Detection{}
+	return detection{}
 }
 
 // serves asks the group version for its resources, once per resource.
@@ -93,22 +109,29 @@ func (p *pluginProbe) serves(ctx context.Context, k *kubeClient, group, version,
 	return served
 }
 
+// errPluginNotServed is a resource of a group the cluster does not serve.
+var errPluginNotServed = errors.New("the cluster does not serve")
+
 // fetchPluginInput detects c on the cluster and, when it is there, lists its resources in
-// scope (a namespace, "" for all; cluster-scoped resources ignore it).
-func fetchPluginInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string) (plugin.Input, error) {
+// scope (a namespace, "" for all; cluster-scoped resources ignore it). allowReveal: see
+// pluginProbe.
+func fetchPluginInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string, allowReveal bool) (plugin.Input, error) {
 	probe, err := newPluginProbe(ctx, k, []*plugin.Compiled{c}, nil)
 	if err != nil {
 		return plugin.Input{}, err
 	}
 
+	probe.allowReveal = allowReveal
+
 	return probe.fetch(ctx, k, c, scope), nil
 }
 
 // fetch lists every resource of c at once. A resource that cannot be read (forbidden, not
-// served) is an entry of the input's errors: the plugin still renders what it could read.
+// served) is an entry of the input's errors, unless it is optional: the plugin still renders
+// what it could read.
 func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string) plugin.Input {
 	in := plugin.Input{
-		Objects: map[string][]map[string]any{}, APIVersions: map[string]string{},
+		Objects: map[string][]map[string]any{}, APIVersions: map[string]string{}, Unread: map[string]bool{},
 		Detected: p.detect(ctx, k, c), Heuristics: coreHeuristics{},
 	}
 
@@ -134,7 +157,7 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 
 			// A panic here must not reach gomobile: it is this resource's error.
 			err := safeCall(func() (err error) {
-				objs, note, err = listPluginResource(ctx, k, decl, version, scope)
+				objs, note, err = listPluginResource(ctx, k, p, decl, version, scope, p.allowReveal)
 
 				return err
 			})
@@ -142,12 +165,22 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 			mu.Lock()
 			defer mu.Unlock()
 
+			// A Go reader may return what it read along with the error of what it could not
+			// (objects and an error): part was read, so the resource stays readable (readable()
+			// holds) and the error is still an entry of the tree's errors.
 			in.Objects[key] = objs
+			if err != nil && objs == nil {
+				in.Unread[key] = true
+			}
 
 			switch {
+			case err != nil && decl.Optional && (isForbidden(err) || isNotFound(err) || errors.Is(err, errPluginNotServed)):
+				// An optional resource the account may not read, or the cluster does not serve: nothing to say.
 			case err != nil:
-				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: kubeError(err).Error()})
-			case note != "":
+				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: pluginReadError(err)})
+			}
+
+			if note != "" {
 				in.Partial = true
 				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: note})
 			}
@@ -181,22 +214,19 @@ func resourceLabel(decl plugin.Resource) string {
 	return decl.Resource + "." + decl.Group
 }
 
+// partialNotePrefix starts the errors entry of a list cut at its limit.
+const partialNotePrefix = "showing the first "
+
+// isPartialNote tells the entry of a list cut at its limit from a read that failed.
+func isPartialNote(message string) bool { return strings.HasPrefix(message, partialNotePrefix) }
+
 // errPluginListFull stops a list once it holds its limit.
 var errPluginListFull = errors.New("plugin list holds its limit")
 
 // listPluginResource reads at most list.limit objects (500 by default) of decl, page by page
 // with the declared selectors; note says when more are left out. Secrets are masked unless
-// the resource reveals them.
-func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource, version, scope string) ([]map[string]any, string, error) {
-	if version == "" {
-		return nil, "", fmt.Errorf("the cluster does not serve %s", decl.Group)
-	}
-
-	ref, err := newResourceRef(decl.Group, version, decl.Resource)
-	if err != nil {
-		return nil, "", err
-	}
-
+// the resource reveals them and allowReveal (see tidyPluginObject).
+func listPluginResource(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, version, scope string, allowReveal bool) ([]map[string]any, string, error) {
 	namespace := ""
 	if decl.Scope == "Namespaced" {
 		namespace = scope
@@ -204,10 +234,28 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 
 	q := pageQuery{}
 	if decl.List != nil {
-		q = pageQuery{limit: decl.List.Limit, labelSelector: decl.List.LabelSelector, fieldSelector: decl.List.FieldSelector}
+		q = pageQuery{
+			limit: decl.List.Limit, labelSelector: decl.List.LabelSelector, fieldSelector: decl.List.FieldSelector,
+			metadataOnly: decl.List.MetadataOnly,
+		}
 	}
 
 	q.limit = clampPageLimit(q.limit)
+
+	// A Go reader's resource is never "not served": its group, version and resource only
+	// name it.
+	if decl.Source != "" {
+		return listNativeResource(ctx, k, p, decl, namespace, q.limit, allowReveal)
+	}
+
+	if version == "" {
+		return nil, "", fmt.Errorf("%w %s", errPluginNotServed, decl.Group)
+	}
+
+	ref, err := newResourceRef(decl.Group, version, decl.Resource)
+	if err != nil {
+		return nil, "", err
+	}
 
 	var (
 		items []map[string]any
@@ -235,23 +283,58 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 	}
 
 	for _, obj := range items {
-		tidyPluginObject(obj, decl)
+		tidyPluginObject(obj, decl, allowReveal)
 	}
 
 	if more {
-		return items, fmt.Sprintf("showing the first %d %s", q.limit, decl.Resource), nil
+		return items, fmt.Sprintf("%s%d %s", partialNotePrefix, q.limit, decl.Resource), nil
 	}
 
 	return items, "", nil
 }
 
-// tidyPluginObject drops managedFields and masks a Secret's values unless revealed.
-func tidyPluginObject(obj map[string]any, decl plugin.Resource) {
+// listNativeResource is listPluginResource for a resource its Go reader selects (source:
+// native:<id>, see plugin_native.go): at most limit of the objects it keeps, and its error
+// when it returned objects too (a partial read).
+func listNativeResource(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, namespace string, limit int, allowReveal bool) ([]map[string]any, string, error) {
+	items, err := readNativeSource(ctx, k, p, decl, namespace)
+	if err != nil && items == nil {
+		return nil, "", err
+	}
+
+	note := ""
+	if len(items) > limit {
+		items, note = items[:limit], fmt.Sprintf("%s%d %s", partialNotePrefix, limit, decl.Resource)
+	}
+
+	for _, obj := range items {
+		tidyPluginObject(obj, decl, allowReveal)
+	}
+
+	return items, note, err
+}
+
+// pluginReadError is the message of a resource's read error; the errors a Go reader joins
+// (errors.Join: several lists refused) each say theirs.
+func pluginReadError(err error) string {
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		return sectionError(joined.Unwrap()...)
+	}
+
+	return kubeError(err).Error()
+}
+
+// tidyPluginObject drops managedFields and masks a Secret's values. They show only when the
+// resource reveals them, the plugin is installed (allowReveal) and screenshot mode is off:
+// as for KubeConfigData (errSecretRevealScreenshot), a value in clear has no place in a
+// screenshot, and masking would alter it.
+func tidyPluginObject(obj map[string]any, decl plugin.Resource, allowReveal bool) {
 	if meta, ok := obj["metadata"].(map[string]any); ok {
 		delete(meta, "managedFields")
 	}
 
-	if decl.Group == "" && decl.Resource == "secrets" && !decl.Reveal {
+	reveal := decl.Reveal && allowReveal && !privacy.isEnabled()
+	if decl.Group == "" && decl.Resource == "secrets" && !reveal {
 		maskSecretValues(obj)
 	}
 }

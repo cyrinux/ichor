@@ -69,7 +69,8 @@ the Play Console reports.
   it can be bought again and is acknowledged in time). Create each id `docs/roadmap.json`
   lists under Monetize with Play → Products → In-app products, and activate it. An id missing
   in the Console, or inactive, simply shows no button. Ids used now:
-  `tip_2`, `tip_5`, `tip_10`, and `fund_<feature>_2`, `_5`, `_10` per feature.
+  `tip_2`, `tip_5`, `tip_10`, and `fund_<feature>_2`, `_5`, `_10` per feature (open now:
+  `fund_relay_*`, `fund_plugins_*`).
   Name a product after its feature ("Act on data services: €5"), as Play shows that name on
   the payment sheet and the receipt.
 - **Adding a feature:** create its products, add an entry to `docs/roadmap.json` (title and

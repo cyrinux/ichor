@@ -87,7 +87,7 @@ public func clusterGroupKey(_ context: ContextSummary, masked: Bool) -> ClusterG
         let authKey = context.authKey ?? ""
         id = authKey.isEmpty ? (identity.isEmpty ? nil : identity) : authKey
         owner = identity.isEmpty ? nil : identity
-    } else if let cloud {
+    } else if let cloud, !cloud.owner.isEmpty {
         id = cloud.owner
         owner = cloud.shortOwner
     }

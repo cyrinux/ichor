@@ -32,6 +32,10 @@ type source struct {
 // FileName is the file the plugin was loaded from.
 func (p *Plugin) FileName() string { return p.src.name }
 
+// Line is the file line of a YAML path (fields.sleepinfo.asleep, cards.list.row.title,
+// health.sleepinfo[0]), or of its nearest ancestor written in the file; 0 when none is.
+func (p *Plugin) Line(path string) int { return p.src.line(path) }
+
 // line is the line of path, or of its nearest ancestor that has one.
 func (s source) line(path string) int {
 	for path != "" {

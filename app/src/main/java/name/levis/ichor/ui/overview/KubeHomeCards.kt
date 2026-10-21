@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Button
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.clusterLogo
 import name.levis.ichor.model.KubeNodeInfo
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.NodeFilter
@@ -42,6 +44,7 @@ import name.levis.ichor.model.readyCount
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BundledLogo
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.rememberKubeWhoAmI
@@ -86,7 +89,7 @@ internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
 @Composable
 internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeNodesOverview?) {
     Card(Modifier.fillMaxWidth()) {
-        SummaryIdentityBand(name)
+        SummaryIdentityBand(name, leading = { BundledLogo(clusterLogo(cluster), Modifier.padding(end = 8.dp).size(24.dp)) })
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val version = nodes?.serverVersion?.takeIf { it.isNotEmpty() }

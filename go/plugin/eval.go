@@ -33,6 +33,11 @@ type object struct {
 	health  string
 	reason  string
 	message string
+	// rule is the 1-based index of the health rule that matched, 0 when none did (Lint).
+	rule int
+	// ref is the object the resource's ref names, evaluated once (refDone).
+	ref     *Ref
+	refDone bool
 }
 
 // renderer is one Render: the objects by resource, the data services computed so far, and
@@ -45,9 +50,9 @@ type renderer struct {
 	objects map[string][]*object
 	// vars are the resources' objects by key, as join() and the aggregations name them.
 	vars map[string]expr.Value
-	// owner maps an object (by its map's identity) to its resource key, so that a joined
-	// object becomes a ref.
-	owner  map[uintptr]string
+	// owner maps a listed object (by its map's identity) to what was derived from it, so
+	// that a joined object becomes a ref.
+	owner  map[uintptr]*object
 	ds     map[string]expr.Value
 	dsRefs map[string][]*Ref
 	tables map[string]TreeSection
@@ -59,7 +64,7 @@ type renderer struct {
 func newRenderer(c *Compiled, in Input, now time.Time) *renderer {
 	return &renderer{
 		c: c, in: in, now: now, i18n: localeMap(c.Plugin.I18n, in.Locale),
-		objects: map[string][]*object{}, vars: map[string]expr.Value{}, owner: map[uintptr]string{},
+		objects: map[string][]*object{}, vars: map[string]expr.Value{}, owner: map[uintptr]*object{},
 		ds: map[string]expr.Value{}, dsRefs: map[string][]*Ref{}, tables: map[string]TreeSection{},
 		failed: map[string]bool{},
 	}
@@ -79,8 +84,9 @@ func (r *renderer) indexObjects() {
 				continue
 			}
 
-			r.owner[identity(raw)] = res
-			r.objects[res] = append(r.objects[res], &object{raw: raw, res: res, fields: map[string]expr.Value{}})
+			o := &object{raw: raw, res: res, fields: map[string]expr.Value{}}
+			r.owner[identity(raw)] = o
+			r.objects[res] = append(r.objects[res], o)
 			raws = append(raws, raw)
 		}
 
@@ -125,7 +131,7 @@ func (r *renderer) evalHealth(o *object) {
 			continue
 		}
 
-		o.health, o.reason = rule.Health, rule.Reason
+		o.health, o.reason, o.rule = rule.Health, rule.Reason, i+1
 		o.message = r.template(where+".message", rule.Message, env)
 
 		return
@@ -262,23 +268,60 @@ func (r *renderer) tone(where string, t Tone, env expr.Env, def string) string {
 	}
 }
 
-// refOf is the ref of an object listed by the plugin, nil for anything else.
+// refOf is the ref of an object listed by the plugin, nil for anything else. A resource
+// with a ref opens the object it names instead (nil when it names none).
 func (r *renderer) refOf(v any) *Ref {
 	m, ok := v.(map[string]any)
 	if !ok || m == nil {
 		return nil
 	}
 
-	res, ok := r.owner[identity(m)]
+	o, ok := r.owner[identity(m)]
 	if !ok {
 		return nil
 	}
 
+	decl := r.c.Plugin.Resources[o.res]
+	if !decl.Ref.IsZero() {
+		return r.declaredRef(o, decl.Ref)
+	}
+
 	meta, _ := m["metadata"].(map[string]any)
-	decl := r.c.Plugin.Resources[res]
-	ref := &Ref{Group: decl.Group, Version: r.version(res), Resource: decl.Resource}
+	ref := &Ref{Group: decl.Group, Version: r.version(o.res), Resource: decl.Resource}
 	ref.Namespace, _ = meta["namespace"].(string)
 	ref.Name, _ = meta["name"].(string)
+
+	return ref
+}
+
+// declaredRef evaluates a resource's ref over o once: rows, findings and relations all ask.
+func (r *renderer) declaredRef(o *object, e Expr) *Ref {
+	if !o.refDone {
+		o.refDone = true
+		o.ref = refFromMap(r.eval("resources."+o.res+".ref", e, r.objectEnv(o)))
+	}
+
+	return o.ref
+}
+
+// refFromMap reads {group, version, resource, kind, namespace, name}; nil without a name
+// or a resource.
+func refFromMap(v expr.Value) *Ref {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	str := func(key string) string {
+		s, _ := m[key].(string)
+
+		return s
+	}
+
+	ref := &Ref{Group: str("group"), Version: str("version"), Resource: str("resource"), Kind: str("kind"), Namespace: str("namespace"), Name: str("name")}
+	if ref.Name == "" || ref.Resource == "" {
+		return nil
+	}
 
 	return ref
 }
@@ -300,6 +343,15 @@ func (r *renderer) version(res string) string {
 // tr translates a label; a label the locale lacks stays English.
 func (r *renderer) tr(s string) string {
 	if t, ok := r.i18n[s]; ok && t != "" {
+		return t
+	}
+
+	return s
+}
+
+// Translate is s in the plugin's locale map (a tool's texts); a text it lacks stays English.
+func (c *Compiled) Translate(locale, s string) string {
+	if t := localeMap(c.Plugin.I18n, locale)[s]; t != "" {
 		return t
 	}
 

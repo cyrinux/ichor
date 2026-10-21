@@ -64,6 +64,7 @@ func FluxSourceTree(configYAML, contextName, kubeServer, kind, namespace, name, 
 	}
 
 	sortGitForgeEntries(entries)
+	markSOPSEntries(entries)
 
 	return toJSON(gitForgeTree{Ref: tree.revision, SHA: tree.commit, Entries: entries})
 }

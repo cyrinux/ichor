@@ -1,22 +1,7 @@
 import Foundation
 
-// Data services: kube-green sleep schedules (see DataServices.swift).
-
-public struct KubeGreenStatus: Decodable, Equatable, Sendable {
-    public let version: String
-    public let error: String
-    /// Problems first.
-    public let sleepInfos: [KubeGreenSleepInfo]
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        version = try c.field(.version, "")
-        error = try c.field(.error, "")
-        sleepInfos = try c.field(.sleepInfos, [])
-    }
-
-    private enum CodingKeys: String, CodingKey { case version, error, sleepInfos }
-}
+// kube-green SleepInfos as the workload and CronJob rows read them
+// (go/ichorgo/kube_kubegreen_namespace.go); kube-green's own screen is the built-in plugin.
 
 public struct KubeGreenSleepInfo: Decodable, Equatable, Identifiable, Sendable {
     public let namespace: String
@@ -150,15 +135,6 @@ public extension KubeGreenNamespace {
 
     /// The instant a change made now is undone: the next wake-up while asleep, else the next sleep.
     var changeUndoneAt: Int64 { asleep ? nextWakeUpAt : nextSleepAt }
-}
-
-public extension KubeGreenStatus {
-    /// Sleep schedules are the items; one that needs a look is a warning, never critical.
-    var summary: ServiceSummary {
-        if !error.isEmpty && sleepInfos.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: error) }
-        let healths = sleepInfos.map(\.health)
-        return ServiceSummary(total: sleepInfos.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: error)
-    }
 }
 
 // The schedule editor's values, checked the way the SleepInfo CRD and the Go core check them,
