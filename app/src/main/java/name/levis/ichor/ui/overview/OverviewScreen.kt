@@ -9,6 +9,7 @@ import name.levis.ichor.monitor.freezeReminderHook
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -58,6 +59,10 @@ import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.components.ReadableWidth
+import name.levis.ichor.ui.components.WideReadableWidthDp
+import name.levis.ichor.ui.components.readableWidth
+import name.levis.ichor.ui.components.rememberTwoPanes
 import name.levis.ichor.ui.tour.DemoTourHost
 
 class OverviewViewModel(
@@ -235,7 +240,8 @@ private fun TalosOverview(
                 is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.pageContent(padding))
                 is UiState.Loaded -> OverviewLoaded(
                     s,
-                    Modifier.pageContent(padding).fillMaxSize(),
+                    // Two columns on a tablet need the wider column (OverviewItems).
+                    Modifier.padding(padding).readableWidth(if (rememberTwoPanes()) WideReadableWidthDp.dp else ReadableWidth).fillMaxSize(),
                     onRefresh = { refreshOverview(vm, timeVm, discoveryVm, cardVms, cards, scope) },
                     onRetry = vm::refresh,
                     topology = { vm.talos.cached<ClusterTopology>(TOPOLOGY)?.value },

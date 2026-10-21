@@ -278,8 +278,9 @@ tour** shows it again.
   root shell on the node, like `kubectl debug node/`: a privileged pod in the node's namespaces,
   then `nsenter`. Off by default (Settings → Kubernetes → Node debug shell), behind the app lock,
   recorded in the activity log, and the pod is deleted when the shell ends.
-- **Tablets and foldables (Android):** on a tablet or an unfolded foldable, the nodes list and
-  the Argo CD apps open their node or app side by side with the list. On a phone the app stays
+- **Tablets and foldables (Android):** on a tablet or an unfolded foldable, the overview shows
+  its cards in two columns under the cluster summary, and the nodes list and the Argo CD and
+  Flux apps open their node or app side by side with the list. On a phone the app stays
   in portrait, except logs, shells, charts, YAML, diffs, source files and maps, which rotate to
   landscape and use the width.
 - **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.

@@ -16,7 +16,7 @@ import name.levis.ichor.ui.argocd.ArgoWindowsScreen
 import name.levis.ichor.ui.flux.DiffTool
 import name.levis.ichor.ui.flux.FluxAppScreen
 import name.levis.ichor.ui.flux.FluxDiffScreen
-import name.levis.ichor.ui.flux.FluxScreen
+import name.levis.ichor.ui.flux.FluxListDetail
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_ARGO
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_FLUX
 import name.levis.ichor.ui.gitops.SourceBrowserScreen
@@ -86,7 +86,13 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         )
     }
     composable(Routes.FLUX) {
-        FluxScreen(onBack = { nav.popBackStack() }, onApp = { kind, ns, name -> nav.navigate(Routes.fluxApp(kind, ns, name)) })
+        FluxListDetail(
+            onBack = { nav.popBackStack() },
+            onOpenApp = { kind, ns, name -> nav.navigate(Routes.fluxApp(kind, ns, name)) },
+            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+            onDiff = { kind, ns, name -> nav.navigate(Routes.fluxDiff(kind, ns, name)) },
+            onSource = { kind, ns, name, idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_FLUX, kind, ns, name, idx)) },
+        )
     }
     composable(
         Routes.FLUX_APP,
