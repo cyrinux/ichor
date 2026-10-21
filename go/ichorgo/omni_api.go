@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/cosi-project/runtime/api/v1alpha1"
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"go.yaml.in/yaml/v4"
 	"google.golang.org/grpc"
@@ -83,7 +84,7 @@ func omniDial(cfgCtx *clientconfig.Context, signing *omniSigning) (*grpc.ClientC
 
 // omniTLS trusts the context's CA (a self-hosted Omni), else the system's roots.
 func omniTLS(cfgCtx *clientconfig.Context) (*tls.Config, error) {
-	tlsConfig := baseTLS(omniTestRoots, false)
+	tlsConfig := httpx.BaseTLS(omniTestRoots, false)
 
 	if cfgCtx.CA != "" {
 		pem, err := base64.StdEncoding.DecodeString(cfgCtx.CA)

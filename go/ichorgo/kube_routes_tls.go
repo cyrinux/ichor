@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // What is wrong with the certificate a route serves (kubeRoute.CertIssue), worst first.
@@ -94,7 +96,7 @@ func dialRouteCert(ctx context.Context, t certTarget) (routeCert, bool) {
 	defer cancel()
 
 	// Not verified: only the served certificate is read, nothing is sent.
-	cfg := baseTLS(nil, true)
+	cfg := httpx.BaseTLS(nil, true)
 	cfg.ServerName = t.host
 
 	d := tls.Dialer{Config: cfg}

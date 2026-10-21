@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // EKS sign-in, as `aws eks get-token` and aws-iam-authenticator do it: the bearer is a
@@ -39,7 +41,7 @@ var (
 	awsSSOPortalEndpoint = func(region string) string {
 		return "https://portal.sso." + region + ".amazonaws.com" + awsDomainSuffix(region)
 	}
-	awsHTTPClient = func() *http.Client { return newHTTPClient(httpClientOpts{timeout: oidcHTTPTimeout}) }
+	awsHTTPClient = func() *http.Client { return httpx.New(httpx.Opts{Timeout: oidcHTTPTimeout}) }
 )
 
 // awsDomainSuffix completes the China partition's domain.

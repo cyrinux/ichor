@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	"github.com/siderolabs/talos/pkg/machinery/constants"
 	"github.com/siderolabs/talos/pkg/machinery/resources/block"
@@ -105,7 +106,7 @@ func MaintenanceNodeInspect(address string, timeoutSec int) (out string, err err
 func maintenanceClient(ctx context.Context, address string) (*client.Client, error) {
 	c, err := client.New(ctx,
 		// The maintenance API has a throwaway self-signed certificate: nothing to verify.
-		client.WithTLSConfig(baseTLS(nil, true)),
+		client.WithTLSConfig(httpx.BaseTLS(nil, true)),
 		client.WithEndpoints(address),
 	)
 	if err != nil {
@@ -199,7 +200,7 @@ func asksClientCert(ctx context.Context, address string) (bool, error) {
 
 	// Only the certificate request is looked at: nothing to verify.
 	asked := false
-	config := baseTLS(nil, true)
+	config := httpx.BaseTLS(nil, true)
 	config.NextProtos = []string{"h2"}
 	config.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
 		asked = true

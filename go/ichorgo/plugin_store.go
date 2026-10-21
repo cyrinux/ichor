@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	"github.com/cyrinux/ichor/go/plugin"
 )
 
@@ -252,11 +253,11 @@ func PluginFetchURL(rawURL string) (out string, err error) {
 	}
 
 	client := *pluginFetchClient()
-	client.CheckRedirect = httpsRedirectsOnly
+	client.CheckRedirect = httpx.HTTPSRedirectsOnly
 
 	resp, err := client.Do(req)
 	if err != nil {
-		if errors.Is(err, errInsecureRedirect) {
+		if errors.Is(err, httpx.ErrInsecureRedirect) {
 			return "", errors.New("the URL redirects to plain http: only https:// URLs can be downloaded")
 		}
 
@@ -281,7 +282,7 @@ func PluginFetchURL(rawURL string) (out string, err error) {
 }
 
 func defaultPluginFetchClient() *http.Client {
-	return newHTTPClient(httpClientOpts{timeout: pluginFetchTime, followRedirects: true})
+	return httpx.New(httpx.Opts{Timeout: pluginFetchTime, FollowRedirects: true})
 }
 
 // pluginFetchClient is PluginFetchURL's client; the tests give a TLS test server's.

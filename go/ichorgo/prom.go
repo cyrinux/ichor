@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 const (
@@ -346,5 +348,5 @@ func promHTTPClient(src promSource) (*http.Client, error) {
 		roots = pool
 	}
 
-	return newHTTPClient(httpClientOpts{tls: baseTLS(roots, src.InsecureSkipVerify)}), nil
+	return httpx.New(httpx.Opts{TLS: httpx.BaseTLS(roots, src.InsecureSkipVerify)}), nil
 }
