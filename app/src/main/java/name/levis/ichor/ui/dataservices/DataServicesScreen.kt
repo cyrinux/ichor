@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.dataservices
 
+import name.levis.ichor.setKubeServer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi

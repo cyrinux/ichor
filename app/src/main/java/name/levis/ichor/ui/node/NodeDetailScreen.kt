@@ -82,7 +82,7 @@ fun NodeDetailScreen(
     initialCordon: Boolean = false,
     onTab: (Int) -> Unit,
     onMenu: (NodeMenuEntry) -> Unit,
-    power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
+    power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.nodeLifecycleRepository, node) }),
 ) {
     var confirming by remember { mutableStateOf<PowerAction?>(null) }
     // A reboot/shutdown started from the overview opens its confirmation once (not again on rotation).
@@ -115,7 +115,7 @@ fun NodeDetailScreen(
         confirmingCordon = true
     }
     var confirmingReset by remember { mutableStateOf(false) }
-    val reset: ResetViewModel = viewModel(key = "reset-$node", factory = factory { ResetViewModel(app.talosRepository, node) })
+    val reset: ResetViewModel = viewModel(key = "reset-$node", factory = factory { ResetViewModel(app.nodeLifecycleRepository, node) })
     val resetState by reset.state.collectAsStateWithLifecycle()
     var cordonBusy by remember { mutableStateOf(false) }
 

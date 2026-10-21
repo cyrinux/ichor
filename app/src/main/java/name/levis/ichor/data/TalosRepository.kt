@@ -1,61 +1,23 @@
 package name.levis.ichor.data
 
 import name.levis.ichor.ui.UiText
-import name.levis.ichor.ui.goErrorText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
-import name.levis.ichorgo.ClusterUpgradeListener
-import name.levis.ichorgo.K8sUpgradeListener
-import name.levis.ichorgo.ConfigApplyListener
-import name.levis.ichorgo.ConfigTryListener
-import name.levis.ichorgo.MaintenanceListener
-import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.OverviewListener
 import name.levis.ichor.util.StartupTrace
-import name.levis.ichor.model.ConfigApplyEvent
-import name.levis.ichor.model.MaintenanceInspection
 import name.levis.ichor.model.MetaKeyList
-import name.levis.ichor.model.JoinConfigPreview
-import name.levis.ichor.model.CpReplacePlan
-import name.levis.ichor.model.CpReplaceWait
-import name.levis.ichor.model.ConfigApplyMode
-import name.levis.ichor.model.ConfigApplyProgress
-import name.levis.ichor.model.ConfigEdit
-import name.levis.ichor.model.ConfigSnippet
-import name.levis.ichor.model.ConfigSnippetList
-import name.levis.ichor.model.DriftFix
-import name.levis.ichor.model.SnippetEdits
-import name.levis.ichor.model.TalosPatchDraft
-import name.levis.ichor.model.TalosPatchInfo
-import name.levis.ichor.model.ConfigPreview
-import name.levis.ichor.model.ConfigSchemaStatus
-import name.levis.ichor.model.ConfigTree
-import name.levis.ichor.model.ConfigTryCommand
-import name.levis.ichor.model.ConfigTryEvent
-import name.levis.ichor.model.ConfigTryProgress
-import name.levis.ichor.model.MultiConfigEvent
-import name.levis.ichor.model.MultiConfigPreview
-import name.levis.ichor.model.MultiConfigProgress
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.NetTool
 import name.levis.ichor.model.NetToolEvent
 import name.levis.ichor.model.NetToolOptions
-import name.levis.ichor.model.ClusterUpgradeCommand
-import name.levis.ichor.model.ClusterUpgradePlan
-import name.levis.ichor.model.K8sUpgradePlan
-import name.levis.ichor.model.K8sVersionChoice
 import name.levis.ichor.model.ClusterSensorHealth
 import name.levis.ichor.model.ClusterStorageHealth
-import name.levis.ichor.model.MaintenanceAction
-import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.KubeNodeMeta
 import name.levis.ichor.model.NodeMetaEdits
 import name.levis.ichor.model.NodeMetaPlan
-import name.levis.ichor.model.MaintenanceUpgrade
-import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.LogEntry
@@ -82,20 +44,9 @@ import name.levis.ichor.model.NodeTime
 import name.levis.ichor.model.DiskHealthReport
 import name.levis.ichor.model.DiskLayoutList
 import name.levis.ichor.model.DiskUsage
-import name.levis.ichor.model.EtcdForfeitResult
-import name.levis.ichor.model.EtcdMemberPlan
-import name.levis.ichor.model.SnapshotEncryption
-import name.levis.ichor.model.SnapshotInfo
-import name.levis.ichor.model.SnapshotRecipient
 import name.levis.ichor.model.MountList
-import name.levis.ichor.model.NodeDiscovery
-import name.levis.ichor.model.EndpointMatch
-import name.levis.ichor.model.EndpointProbe
 import name.levis.ichor.model.KubeSpanDiagAll
 import name.levis.ichor.model.NodeFeatures
-import name.levis.ichor.model.UpgradeExtensionCheck
-import name.levis.ichor.model.NodeResetPlan
-import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ResourceDetail
 import name.levis.ichor.model.ResourceList
 import name.levis.ichor.model.ResourceType
@@ -113,9 +64,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.withLastKnown
@@ -130,12 +79,12 @@ class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_confi
 /**
  * The Talos API through the Go core, and the results cache every repository shares (see
  * [GoCall]): Kubernetes calls live in [KubeRepository], Argo CD and Flux in [GitOpsRepository],
- * data services in [DataServicesRepository].
+ * data services in [DataServicesRepository]; etcd in [EtcdRepository], the machine config in
+ * [MachineConfigRepository], maintenance, power, upgrades and joins in [NodeLifecycleRepository].
  */
 class TalosRepository(go: GoCall) : GoRepository(go) {
 
     private val configs = go.configs
-    private val kubeServers = go.kubeServers
     private val results = go.results
     private val streams = TalosStreams(configs)
 
@@ -170,9 +119,6 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         val previous = last()
         fresh.withLastKnown(previous?.value, previous?.at ?: 0L)
     }
-
-    /** `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time. */
-    suspend fun etcdDefragment(node: String) = call { cfg, ctx -> Ichorgo.etcdDefragment(cfg, ctx, node) }
 
     /** One sample of node counters for the live graphs (not cached: always fresh). */
     suspend fun stats(node: String): NodeStats = call { cfg, ctx ->
@@ -239,201 +185,6 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
 
     /** Like [followLogs] for one CRI container (`talosctl logs -k -f`). */
     fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = streams.followContainerLogs(node, containerId, tailLines)
-
-    /**
-     * The node's active machine config as YAML (os:admin). Secrets are masked unless
-     * [revealSecrets]. Never cached: it may hold secrets.
-     */
-    suspend fun machineConfig(node: String, revealSecrets: Boolean): String = call { cfg, ctx ->
-        Ichorgo.nodeMachineConfig(cfg, ctx, node, revealSecrets)
-    }
-
-    /**
-     * Makes the Talos config schema of [node]'s version ready for [machineConfigDescribe]:
-     * downloaded the first time a version is seen, then kept by the core. A schema that
-     * cannot be had is not an error ([ConfigSchemaStatus.available] is false).
-     */
-    suspend fun machineConfigSchema(node: String): ConfigSchemaStatus = call { cfg, ctx ->
-        TalosJson.decodeFromString(ConfigSchemaStatus.serializer(), Ichorgo.machineConfigSchemaPrepare(cfg, ctx, node))
-    }
-
-    /** [yaml] (a machine config or a draft of one) as a tree, described with the schema of [talosVersion] when the core has it. Local. */
-    suspend fun machineConfigDescribe(yaml: String, talosVersion: String): ConfigTree = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(ConfigTree.serializer(), Ichorgo.machineConfigDescribe(yaml, talosVersion))
-    }
-
-    /** [draft] with [edit] applied. Local: nothing is sent to the node. */
-    suspend fun machineConfigEdit(draft: String, edit: ConfigEdit): String = withContext(Dispatchers.IO) {
-        Ichorgo.machineConfigEdit(draft, TalosJson.encodeToString(ConfigEdit.serializer(), edit))
-    }
-
-    /** The ready-made config changes. Local. */
-    suspend fun configSnippets(): List<ConfigSnippet> = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(ConfigSnippetList.serializer(), Ichorgo.configSnippets()).snippets
-    }
-
-    /** The edits of [draft] that snippet [id] makes with [params]. Local. */
-    suspend fun configSnippetEdits(draft: String, id: String, params: Map<String, String>): SnippetEdits = withContext(Dispatchers.IO) {
-        val json = TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), params)
-        TalosJson.decodeFromString(SnippetEdits.serializer(), Ichorgo.configSnippetEdits(draft, id, json))
-    }
-
-    /** The edits of [draft] that give it the reference's value of a drift difference. Local. */
-    suspend fun driftFixEdits(draft: String, fix: DriftFix): SnippetEdits = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(SnippetEdits.serializer(), Ichorgo.driftFixEdits(draft, fix.key, fix.before, fix.after))
-    }
-
-    /** Whether [content] is a Talos patch that can be tried on a node. Local. */
-    suspend fun talosPatchDetect(content: String): TalosPatchInfo = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(TalosPatchInfo.serializer(), Ichorgo.talosPatchDetect(content))
-    }
-
-    /**
-     * [node]'s config with the patch [content] applied (os:admin: read with its secrets, checked
-     * with a dry run), redacted: the draft the review shows.
-     */
-    suspend fun talosPatchDraft(node: String, content: String): TalosPatchDraft = call { cfg, ctx ->
-        TalosJson.decodeFromString(TalosPatchDraft.serializer(), Ichorgo.talosPatchDraft(cfg, ctx, node, content))
-    }
-
-    /** The field edits of [draft] that make the patch [content], when it only sets values. Local. */
-    suspend fun talosPatchEdits(draft: String, content: String): SnippetEdits = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(SnippetEdits.serializer(), Ichorgo.talosPatchEdits(draft, content))
-    }
-
-    /**
-     * What applying [draft] to [node] would change (os:admin), validated by the node with a dry
-     * run. [base] is the redacted config the draft was made from; refused when the node no
-     * longer holds it.
-     */
-    suspend fun machineConfigPreview(node: String, base: String, draft: String): ConfigPreview = call { cfg, ctx ->
-        TalosJson.decodeFromString(ConfigPreview.serializer(), Ichorgo.machineConfigPreview(cfg, ctx, node, base, draft))
-    }
-
-    /**
-     * Applies [draft] to [node] in Talos's try mode for [timeoutSeconds] and follows it: the
-     * node reverts by itself unless [ConfigTryCommand.KEEP] comes through [commands] first.
-     * Cancelling the collection only stops following; the node still reverts.
-     */
-    /** StartConfigApply: [draft] applied for good in [mode]; closing the flow stops following it. */
-    fun applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode): Flow<ConfigApplyEvent> = callbackFlow {
-        val stored = configs.forCall()
-        val run = Ichorgo.startConfigApply(
-            stored.yaml,
-            stored.activeContext,
-            node,
-            base,
-            draft,
-            mode.wire,
-            object : ConfigApplyListener {
-                override fun onProgress(json: String) {
-                    runCatching { TalosJson.decodeFromString(ConfigApplyProgress.serializer(), json) }
-                        .onSuccess { trySend(ConfigApplyEvent.Progress(it)) }
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(ConfigApplyEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
-        )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
-
-    /**
-     * MachineConfigMultiPreview: [edits] replayed on each of [nodes]' own config, previewed per
-     * node with a dry run (os:admin). A node the edits do not fit carries its error.
-     */
-    suspend fun machineConfigMultiPreview(nodes: List<String>, edits: List<ConfigEdit>): MultiConfigPreview = call { cfg, ctx ->
-        TalosJson.decodeFromString(
-            MultiConfigPreview.serializer(),
-            Ichorgo.machineConfigMultiPreview(cfg, ctx, nodes.joinToString(","), TalosJson.encodeToString(ListSerializer(ConfigEdit.serializer()), edits)),
-        )
-    }
-
-    /** StartConfigApplyMulti: [edits] applied to [nodes] one after the other in [mode]; closing the flow stops following. */
-    fun applyMachineConfigMulti(nodes: List<String>, edits: List<ConfigEdit>, mode: ConfigApplyMode): Flow<MultiConfigEvent> = callbackFlow {
-        val stored = configs.forCall()
-        val run = Ichorgo.startConfigApplyMulti(
-            stored.yaml,
-            stored.activeContext,
-            nodes.joinToString(","),
-            TalosJson.encodeToString(ListSerializer(ConfigEdit.serializer()), edits),
-            mode.wire,
-            object : ConfigApplyListener {
-                override fun onProgress(json: String) {
-                    runCatching { TalosJson.decodeFromString(MultiConfigProgress.serializer(), json) }
-                        .onSuccess { trySend(MultiConfigEvent.Progress(it)) }
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(MultiConfigEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
-        )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
-
-    fun tryMachineConfig(node: String, base: String, draft: String, timeoutSeconds: Int, commands: Flow<ConfigTryCommand>): Flow<ConfigTryEvent> = callbackFlow {
-        val stored = configs.forCall()
-        val run = Ichorgo.startConfigTry(
-            stored.yaml,
-            stored.activeContext,
-            node,
-            base,
-            draft,
-            timeoutSeconds.toLong(),
-            object : ConfigTryListener {
-                override fun onProgress(json: String) {
-                    runCatching { TalosJson.decodeFromString(ConfigTryProgress.serializer(), json) }
-                        .onSuccess { trySend(ConfigTryEvent.Progress(it)) }
-                }
-
-                override fun onDone(outcome: String, errMessage: String) {
-                    trySend(ConfigTryEvent.Done(outcome, errMessage))
-                    close()
-                }
-            },
-        )
-        launch {
-            commands.collect {
-                when (it) {
-                    ConfigTryCommand.KEEP -> run.keep()
-                    ConfigTryCommand.REVERT -> run.revert()
-                }
-            }
-        }
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
-
-    /** `talosctl etcd alarm disarm` through [node] (os:operator or os:admin); alarms are cluster-wide. */
-    suspend fun etcdAlarmDisarm(node: String) = call { cfg, ctx -> Ichorgo.etcdAlarmDisarm(cfg, ctx, node) }
-
-    /** Checks the public keys typed for an encrypted snapshot (one per line); throws with the line at fault. */
-    suspend fun checkSnapshotRecipients(text: String): List<SnapshotRecipient> = withContext(Dispatchers.Default) {
-        TalosJson.decodeFromString(ListSerializer(SnapshotRecipient.serializer()), Ichorgo.checkSnapshotRecipients(text))
-    }
-
-    /**
-     * Streams `talosctl -n NODE etcd snapshot` into [destPath] (written atomically by Go),
-     * age-encrypted while it streams unless [encryption] is [SnapshotEncryption.None].
-     * Cancelling the collector cancels the download.
-     */
-    fun etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption): Flow<SnapshotEvent> = streams.etcdSnapshot(node, destPath, encryption)
-
-    /** The one-tap NOSPACE fix (see [TalosStreams.etcdNospaceFix]); needs os:admin. */
-    fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> =
-        streams.etcdNospaceFix(snapshotNode, destPath, encryption)
-
-    /** What the snapshot file at [path] needs before a recovery (encrypted, with what). */
-    suspend fun snapshotInspect(path: String): SnapshotInfo = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(SnapshotInfo.serializer(), Ichorgo.snapshotInspect(path))
-    }
-
-    /** Recovers etcd on [node] from a snapshot (see [TalosStreams.etcdRecover]); needs os:admin. */
-    fun etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Boolean): Flow<EtcdRecoverEvent> =
-        streams.etcdRecover(node, path, identity, passphrase, skipHashCheck)
 
     /** A network check from [node] (see [TalosStreams.netTool]); needs os:admin. */
     fun netTool(node: String, tool: NetTool, target: String, options: NetToolOptions): Flow<NetToolEvent> =
@@ -526,12 +277,6 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(NodeResources.serializer(), Ichorgo.nodeResources(cfg, ctx, node))
     }
 
-    suspend fun etcd(): EtcdOverview = remember(ETCD) { etcdUncached() }
-
-    private suspend fun etcdUncached(): EtcdOverview = call { cfg, ctx ->
-        TalosJson.decodeFromString(EtcdOverview.serializer(), Ichorgo.etcdStatus(cfg, ctx))
-    }
-
     /** Last [lines] lines of a Talos service log, or of the kernel log when [service] is null. */
     suspend fun logs(node: String, service: String?, lines: Int = 500): LogTail = call { cfg, ctx ->
         val json = if (service == null) Ichorgo.kernelLogs(cfg, ctx, node, lines.toLong())
@@ -576,30 +321,6 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     }
 
     /**
-     * What a maintenance of [node] would do: pods to evict, budgets, reboot checks (os:admin).
-     * On a kubeconfig cluster [node] is the Kubernetes node name, and the plan is a drain's
-     * (no Talos checks). Never cached.
-     */
-    suspend fun maintenancePlan(node: String): MaintenancePlan {
-        val json = if (configs.forCall().activeIsKube) {
-            kubeCall { cfg, ctx, server -> Ichorgo.kubeDrainPlan(cfg, ctx, server, node) }
-        } else {
-            talosKubeCall { cfg, ctx, server -> Ichorgo.nodeMaintenancePlan(cfg, ctx, server, node) }
-        }
-        return TalosJson.decodeFromString(MaintenancePlan.serializer(), json)
-    }
-
-    /**
-     * `kubectl cordon` ([on]) or `uncordon` of [node] (os:admin): its Talos address, or its
-     * Kubernetes name on a kubeconfig cluster. The Talos one resolves the node through Talos.
-     */
-    suspend fun cordon(node: String, on: Boolean) = if (configs.forCall().activeIsKube) {
-        kubeCall { cfg, ctx, server -> Ichorgo.kubeNodeCordon(cfg, ctx, server, node, on) }
-    } else {
-        talosKubeCall { cfg, ctx, server -> Ichorgo.kubeCordon(cfg, ctx, server, node, on) }
-    }
-
-    /**
      * The taints and labels of [node] (os:admin): its Talos address, or its Kubernetes name on a
      * kubeconfig cluster, like [cordon].
      */
@@ -632,127 +353,6 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
             talosKubeCall { cfg, ctx, server -> Ichorgo.nodeMetaApply(cfg, ctx, server, node, body, force) }
         }
     }
-
-    /**
-     * Starts the maintenance of [node] (cordon, drain, then [action]); returns at once, the
-     * run reports to [listener]. The core refuses blockers, and acknowledgments unless [acknowledged].
-     * A kubeconfig cluster only drains ([node]: the Kubernetes node name). [upgrade]: what
-     * [MaintenanceAction.UPGRADE] installs, required for it.
-     */
-    fun startMaintenance(
-        node: String,
-        action: MaintenanceAction,
-        includeBare: Boolean,
-        acknowledged: Boolean,
-        listener: MaintenanceListener,
-        upgrade: MaintenanceUpgrade? = null,
-    ): MaintenanceRun {
-        val stored = configs.forCall()
-        if (stored.activeIsKube) {
-            require(action == MaintenanceAction.NONE) { "a cluster without Talos can only be drained" }
-            val target = kubeServers.targetFor(stored)
-            return Ichorgo.startKubeDrain(target.yaml, target.context, target.server, node, includeBare, listener)
-        }
-        val server = kubeServers.serverFor(stored)
-        if (action == MaintenanceAction.UPGRADE) {
-            val up = requireNotNull(upgrade) { "an upgrade maintenance needs its installer image" }
-            return Ichorgo.startNodeMaintenanceUpgrade(
-                stored.yaml, stored.activeContext, server, node, up.image, includeBare, acknowledged, up.force, listener,
-            )
-        }
-        return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
-    }
-
-    /**
-     * Every node of the context to [version], in the order the roll follows, with each node's
-     * checks (ClusterUpgradePlan). Nodes already on [version] are "done": a rerun continues.
-     */
-    /** The Kubernetes versions offered (K8sUpgradeVersions): one minor up at most, inside the Talos range. */
-    suspend fun k8sUpgradeVersions(): K8sVersionChoice = call { cfg, ctx ->
-        TalosJson.decodeFromString(K8sVersionChoice.serializer(), Ichorgo.k8sUpgradeVersions(cfg, ctx))
-    }
-
-    /** What upgrading Kubernetes to [version] would change (K8sUpgradePlan), read-only. */
-    suspend fun k8sUpgradePlan(version: String): K8sUpgradePlan = talosKubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(K8sUpgradePlan.serializer(), Ichorgo.k8sUpgradePlan(cfg, ctx, server, version))
-    }
-
-    /** StartK8sUpgrade: returns at once, the run reports to [onProgress] and [onDone] (once). */
-    fun startK8sUpgrade(version: String, dryRun: Boolean, onProgress: (String) -> Unit, onDone: (String) -> Unit): K8sUpgradeHandle {
-        val stored = configs.forCall()
-        val run = Ichorgo.startK8sUpgrade(
-            stored.yaml,
-            stored.activeContext,
-            kubeServers.serverFor(stored),
-            version,
-            dryRun,
-            object : K8sUpgradeListener {
-                override fun onProgress(json: String) = onProgress(json)
-                override fun onDone(errMessage: String) = onDone(errMessage)
-            },
-        )
-        return K8sUpgradeHandle { run.cancel() }
-    }
-
-    suspend fun clusterUpgradePlan(version: String): ClusterUpgradePlan = talosKubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(ClusterUpgradePlan.serializer(), Ichorgo.clusterUpgradePlan(cfg, ctx, server, version))
-    }
-
-    /** StartClusterUpgrade: returns at once, the roll reports to [onProgress] and [onDone] (once). */
-    fun startClusterUpgrade(
-        version: String,
-        drain: Boolean,
-        acknowledged: Boolean,
-        onProgress: (String) -> Unit,
-        onDone: (String) -> Unit,
-    ): ClusterUpgradeHandle {
-        val stored = configs.forCall()
-        val run = Ichorgo.startClusterUpgrade(
-            stored.yaml,
-            stored.activeContext,
-            kubeServers.serverFor(stored),
-            version,
-            drain,
-            acknowledged,
-            object : ClusterUpgradeListener {
-                override fun onProgress(json: String) = onProgress(json)
-                override fun onDone(errMessage: String) = onDone(errMessage)
-            },
-        )
-        return object : ClusterUpgradeHandle {
-            override fun send(command: ClusterUpgradeCommand) = when (command) {
-                ClusterUpgradeCommand.PAUSE -> run.pause()
-                ClusterUpgradeCommand.RESUME -> run.resume()
-                ClusterUpgradeCommand.ABORT -> run.abort()
-            }
-
-            override fun cancel() = run.cancel()
-        }
-    }
-
-    /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
-    /** [node]'s extensions against the Image Factory's official list for [image]'s version. Read-only. */
-    suspend fun upgradeExtensionCheck(node: String, image: String): UpgradeExtensionCheck = call { cfg, ctx ->
-        TalosJson.decodeFromString(UpgradeExtensionCheck.serializer(), Ichorgo.upgradeExtensionCheck(cfg, ctx, node, image))
-    }
-
-    suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
-
-    /** What resetting [node] would wipe and leave, and what forbids it. Read-only. */
-    suspend fun resetPlan(node: String): NodeResetPlan = talosKubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(NodeResetPlan.serializer(), Ichorgo.nodeResetPlan(cfg, ctx, server, node))
-    }
-
-    /** `talosctl reset --wipe-mode --graceful --reboot` on [node] (os:admin); refused on a plan blocker. */
-    suspend fun reset(node: String, request: ResetRequest) = call { cfg, ctx ->
-        Ichorgo.nodeReset(cfg, ctx, node, request.wipe.wire, request.graceful, request.reboot)
-    }
-
-    /** `talosctl rollback`: [node] reboots into the Talos it ran before its last upgrade (os:admin). */
-    suspend fun rollback(node: String) = call { cfg, ctx -> Ichorgo.rollback(cfg, ctx, node) }
-
-    /** `talosctl shutdown [--force]` (force skips cordon/drain); needs os:operator or higher. */
-    suspend fun shutdown(node: String, force: Boolean) = call { cfg, ctx -> Ichorgo.shutdown(cfg, ctx, node, force) }
 
     /** Streams the server-side health check; cancelling the collector cancels the check. */
     fun health(): Flow<HealthEvent> = streams.health()
@@ -862,40 +462,6 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(DiskHealthReport.serializer(), Ichorgo.nodeDiskHealth(cfg, ctx, node))
     }
 
-    /** `talosctl -n NODE etcd forfeit-leadership` (os:admin); [node] must be the leader. */
-    suspend fun etcdForfeitLeadership(node: String): EtcdForfeitResult = call { cfg, ctx ->
-        TalosJson.decodeFromString(EtcdForfeitResult.serializer(), Ichorgo.etcdForfeitLeadership(cfg, ctx, node))
-    }
-
-    /** `talosctl -n NODE etcd remove-member MEMBER` (os:admin), asked to another member's [node]. */
-    suspend fun etcdRemoveMember(node: String, memberId: String) = call { cfg, ctx ->
-        Ichorgo.etcdRemoveMember(cfg, ctx, node, memberId)
-    }
-
-    /** What removing [memberId] would leave (members, quorum) and what forbids it. Read-only. */
-    suspend fun etcdMemberPlan(memberId: String): EtcdMemberPlan = call { cfg, ctx ->
-        TalosJson.decodeFromString(EtcdMemberPlan.serializer(), Ichorgo.etcdMemberPlan(cfg, ctx, memberId))
-    }
-
-    /**
-     * Where replacing the failed etcd member [memberId] stands (steps from live state). [node]:
-     * the member's address as last seen, which names the old node once the member is removed. Read-only.
-     */
-    suspend fun controlPlaneReplacePlan(memberId: String, node: String): CpReplacePlan = call { cfg, ctx ->
-        TalosJson.decodeFromString(CpReplacePlan.serializer(), Ichorgo.controlPlaneReplacePlan(cfg, ctx, memberId, node))
-    }
-
-    /**
-     * Removes the failed member [memberId] as the replacement's step 2 (os:admin): Go reads the
-     * plan again and refuses a member that recovered or a removal that loses quorum.
-     */
-    suspend fun controlPlaneReplaceRemove(memberId: String) = call { cfg, ctx -> Ichorgo.controlPlaneReplaceRemove(cfg, ctx, memberId) }
-
-    /** Polls etcd up to [timeoutSec] until it has more healthy voting members than [membersBefore]. Read-only. */
-    suspend fun controlPlaneReplaceWait(membersBefore: Int, timeoutSec: Int): CpReplaceWait = call { cfg, ctx ->
-        TalosJson.decodeFromString(CpReplaceWait.serializer(), Ichorgo.controlPlaneReplaceWait(cfg, ctx, membersBefore.toLong(), timeoutSec.toLong()))
-    }
-
     /** Resource types the node knows (`talosctl get rd`). */
     suspend fun resourceTypes(node: String): List<ResourceType> = remember(resourceTypesKey(node)) {
         call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ResourceType.serializer()), Ichorgo.resourceTypes(cfg, ctx, node)) }
@@ -905,70 +471,6 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     suspend fun resourceList(node: String, namespace: String, type: String): ResourceList = call { cfg, ctx ->
         TalosJson.decodeFromString(ResourceList.serializer(), Ichorgo.resourceList(cfg, ctx, node, namespace, type))
     }
-
-    /** The cluster's members (Talos cluster discovery), flagged when the context already targets them. */
-    suspend fun discoverNodes(): NodeDiscovery = call { cfg, ctx ->
-        TalosJson.decodeFromString(NodeDiscovery.serializer(), Ichorgo.discoverNodes(cfg, ctx))
-    }
-
-    /**
-     * Hosts of [networks] (IPv4 or IPv6 CIDRs) answering the Talos API with the credentials of one of
-     * the stored Talos contexts. Not through [call]: it looks for any cluster, on whatever network.
-     */
-    suspend fun findEndpoints(networks: List<String>): List<EndpointMatch> {
-        val stored = configs.config.value ?: throw NoConfigException()
-        // Only clusters added from a kubeconfig: no Talos credentials to search with.
-        if (stored.talosYaml.isBlank()) return emptyList()
-        return withContext(Dispatchers.IO) {
-            TalosJson.decodeFromString(
-                ListSerializer(EndpointMatch.serializer()),
-                Ichorgo.findEndpoints(stored.talosYaml, networks.joinToString(",")),
-            )
-        }
-    }
-
-    /** Asks [endpoint] its version with [contextName]'s credentials, before adding it. */
-    suspend fun probeEndpoint(contextName: String, endpoint: String): EndpointProbe {
-        val stored = configs.config.value ?: throw NoConfigException()
-        return withContext(Dispatchers.IO) {
-            TalosJson.decodeFromString(EndpointProbe.serializer(), Ichorgo.probeEndpoint(stored.yamlFor(contextName), contextName, endpoint))
-        }
-    }
-
-    /**
-     * A node in maintenance mode at [address] (IP or host name on the LAN or VPN): version, disks
-     * and links over the unauthenticated maintenance API. Not through [call]: the node belongs to
-     * no cluster yet, so no talosconfig is involved.
-     */
-    suspend fun maintenanceNodeInspect(address: String): MaintenanceInspection = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(MaintenanceInspection.serializer(), Ichorgo.maintenanceNodeInspect(address, 0L))
-    }
-
-    /** A new node's config from [template]'s, redacted (never cached; the full one only goes to the node). */
-    suspend fun joinNodeConfigPreview(template: String, role: String, hostname: String, installDisk: String, staticAddress: String): JoinConfigPreview =
-        call { cfg, ctx ->
-            TalosJson.decodeFromString(
-                JoinConfigPreview.serializer(),
-                Ichorgo.joinNodeConfigPreview(cfg, ctx, template, role, hostname, installDisk, staticAddress, ""),
-            )
-        }
-
-    /** What to confirm before joining a node of [role]: one warning per line, from the Go core. */
-    suspend fun nodeJoinWarnings(role: String): List<String> = withContext(Dispatchers.IO) {
-        Ichorgo.nodeJoinWarnings(role).lines().filter { it.isNotBlank() }
-    }
-
-    /** See [TalosStreams.joinNode]. */
-    fun joinNode(
-        address: String,
-        template: String,
-        role: String,
-        hostname: String,
-        installDisk: String,
-        staticAddress: String,
-        replacing: Boolean,
-        stop: Flow<Any>,
-    ): Flow<JoinEvent> = streams.joinNode(address, template, role, hostname, installDisk, staticAddress, replacing, stop)
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
     suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->

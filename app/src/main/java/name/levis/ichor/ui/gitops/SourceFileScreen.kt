@@ -109,7 +109,7 @@ fun SourceFileScreen(
     val context = LocalContext.current
     val web = rememberGitWebUrl()
     val talos = context.applicationContext as TalosApp
-    val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository, talos.talosRepository) })
+    val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository, talos.machineConfigRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val quickSheet by vm.quick.sheet.collectAsStateWithLifecycle()
     val applied by vm.quick.applied.collectAsStateWithLifecycle()

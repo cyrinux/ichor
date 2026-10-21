@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.ETCD
 import name.levis.ichor.data.OVERVIEW
@@ -114,15 +115,15 @@ sealed interface DefragState {
     data class Failed(val message: String) : DefragState
 }
 
-class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdOverview>() {
+class EtcdViewModel(private val etcd: EtcdRepository) : LoadingViewModel<EtcdOverview>() {
     override val keepsDataOnFailure = true
-    override fun cached(): TalosRepository.Timed<EtcdOverview>? = talos.cached(ETCD)
-    override val restores get() = talos.restores
-    override suspend fun fetch() = talos.etcd()
+    override fun cached(): TalosRepository.Timed<EtcdOverview>? = etcd.cached(ETCD)
+    override val restores get() = etcd.restores
+    override suspend fun fetch() = etcd.etcd()
 
     /** node address -> hostname, from the cached overview when available. */
     fun knownHostnames(): Map<String, String> =
-        talos.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.associate { it.node to it.hostname }.orEmpty()
+        etcd.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.associate { it.node to it.hostname }.orEmpty()
 
     private val _defrag = MutableStateFlow<DefragState>(DefragState.Idle)
     val defrag: StateFlow<DefragState> = _defrag.asStateFlow()
@@ -134,7 +135,7 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
             targets.forEachIndexed { i, member ->
                 val name = hostnames[member.node] ?: member.node
                 _defrag.value = DefragState.Running(name, i + 1, targets.size)
-                val result = runCatching { talos.etcdDefragment(member.node) }
+                val result = runCatching { etcd.etcdDefragment(member.node) }
                 refresh()
                 result.exceptionOrNull()?.let {
                     _defrag.value = DefragState.Failed("$name: ${it.userMessage()}")
@@ -158,7 +159,7 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
         if (_disarm.value == DisarmState.Running) return
         _disarm.value = DisarmState.Running
         viewModelScope.launch {
-            val result = runCatching { talos.etcdAlarmDisarm(node) }
+            val result = runCatching { etcd.etcdAlarmDisarm(node) }
             refresh()
             _disarm.value = result.fold(
                 onSuccess = { DisarmState.Idle },
@@ -183,11 +184,11 @@ sealed interface DisarmState {
 fun EtcdScreen(
     onBack: () -> Unit,
     onReplace: (EtcdMember) -> Unit = {},
-    vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.talosRepository) }),
-    snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.talosRepository, app) }),
-    memberVm: EtcdMemberActionsViewModel = viewModel(factory = factory { EtcdMemberActionsViewModel(app.talosRepository) }),
-    fixVm: EtcdFixViewModel = viewModel(factory = factory { EtcdFixViewModel(app.talosRepository, app) }),
-    recoverVm: EtcdRecoverViewModel = viewModel(factory = factory { EtcdRecoverViewModel(app.talosRepository, app) }),
+    vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.etcdRepository) }),
+    snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.etcdRepository, app) }),
+    memberVm: EtcdMemberActionsViewModel = viewModel(factory = factory { EtcdMemberActionsViewModel(app.etcdRepository) }),
+    fixVm: EtcdFixViewModel = viewModel(factory = factory { EtcdFixViewModel(app.etcdRepository, app) }),
+    recoverVm: EtcdRecoverViewModel = viewModel(factory = factory { EtcdRecoverViewModel(app.etcdRepository, app) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val defrag by vm.defrag.collectAsStateWithLifecycle()

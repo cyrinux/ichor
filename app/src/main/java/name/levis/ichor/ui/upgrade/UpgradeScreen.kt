@@ -163,7 +163,7 @@ fun UpgradeScreen(
     fun rollback() {
         rollingBack = false
         scope.launch {
-            val result = runCatching { app.talosRepository.rollback(node) }
+            val result = runCatching { app.nodeLifecycleRepository.rollback(node) }
             snackbar.showSnackbar(result.exceptionOrNull()?.uiText()?.resolve(context) ?: context.getString(R.string.rollback_started, hostname))
         }
     }
@@ -498,7 +498,7 @@ private fun ExtensionCheckRow(node: String, image: String) {
     val app = LocalContext.current.applicationContext as TalosApp
     val colors = LocalStatusColors.current
     val check by produceState<UpgradeExtensionCheck?>(null, node, image) {
-        value = runCatching { app.talosRepository.upgradeExtensionCheck(node, image) }.getOrNull()
+        value = runCatching { app.nodeLifecycleRepository.upgradeExtensionCheck(node, image) }.getOrNull()
     }
     val c = check ?: return
     when {

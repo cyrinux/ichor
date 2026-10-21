@@ -52,7 +52,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.SnapshotEvent
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.VersionNotice
 import name.levis.ichor.ui.components.InfoNotice
@@ -99,7 +99,7 @@ val SnapshotState.busy: Boolean get() = this is SnapshotState.Running || this is
  * document the user picked. The cache copy is deleted in every case; leaving the screen
  * clears this view model, which cancels the download.
  */
-class EtcdSnapshotViewModel(private val talos: TalosRepository, private val app: TalosApp) : ViewModel() {
+class EtcdSnapshotViewModel(private val etcd: EtcdRepository, private val app: TalosApp) : ViewModel() {
     private val _state = MutableStateFlow<SnapshotState>(SnapshotState.Idle)
     val state: StateFlow<SnapshotState> = _state.asStateFlow()
     private var job: Job? = null
@@ -120,7 +120,7 @@ class EtcdSnapshotViewModel(private val talos: TalosRepository, private val app:
                 }
                 _state.value = SnapshotState.Running(target.hostname, 0, target.dbSize)
                 var result: SnapshotEvent? = null
-                talos.etcdSnapshot(target.node, temp.path, encryption).collect { event ->
+                etcd.etcdSnapshot(target.node, temp.path, encryption).collect { event ->
                     if (event is SnapshotEvent.Progress) {
                         _state.value = SnapshotState.Running(target.hostname, event.bytes, target.dbSize)
                     } else {
@@ -241,7 +241,7 @@ fun rememberSnapshotFlow(vm: EtcdSnapshotViewModel, contextName: String, fingerp
         SnapshotEncryptionDialog(
             hostname = target.hostname,
             savedKeys = savedKeys[fingerprint].orEmpty(),
-            checkKeys = app.talosRepository::checkSnapshotRecipients,
+            checkKeys = app.etcdRepository::checkSnapshotRecipients,
             onConfirm = { accepted(target, it) },
             onDismiss = { warning = null },
         )

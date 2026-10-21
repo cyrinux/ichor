@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.K8sPlanStep
 import name.levis.ichor.model.K8sUpgradePlan
@@ -75,7 +75,7 @@ import name.levis.ichor.ui.uiStateOf
 import name.levis.ichor.ui.uiText
 
 /** The versions offered and the plan of the one picked. */
-class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
+class K8sUpgradeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _choice = MutableStateFlow<UiState<K8sVersionChoice>>(UiState.Loading)
     val choice: StateFlow<UiState<K8sVersionChoice>> = _choice.asStateFlow()
     private val _version = MutableStateFlow("")
@@ -91,7 +91,7 @@ class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
     fun loadChoice() {
         _choice.value = UiState.Loading
         viewModelScope.launch {
-            val loaded = uiStateOf { talos.k8sUpgradeVersions() }
+            val loaded = uiStateOf { lifecycle.k8sUpgradeVersions() }
             _choice.value = loaded
             // The next minor when offered, else the newest patch of the current one.
             (loaded as? UiState.Loaded)?.data?.versions?.lastOrNull()?.let(::pick)
@@ -107,7 +107,7 @@ class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
         val version = _version.value.ifEmpty { return }
         planning?.cancel()
         _plan.value = UiState.Loading
-        planning = viewModelScope.launch { _plan.value = uiStateOf { talos.k8sUpgradePlan(version) } }
+        planning = viewModelScope.launch { _plan.value = uiStateOf { lifecycle.k8sUpgradePlan(version) } }
     }
 }
 
@@ -120,7 +120,7 @@ class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
 @Composable
 fun K8sUpgradeScreen(
     onBack: () -> Unit,
-    vm: K8sUpgradeViewModel = viewModel(key = "k8s-upgrade", factory = factory { K8sUpgradeViewModel(app.talosRepository) }),
+    vm: K8sUpgradeViewModel = viewModel(key = "k8s-upgrade", factory = factory { K8sUpgradeViewModel(app.nodeLifecycleRepository) }),
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp

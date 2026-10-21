@@ -109,7 +109,7 @@ fun MachineConfigScreen(
     onRepoEdit: (path: String, quick: String) -> Unit = { _, _ -> },
     vm: MachineConfigViewModel = viewModel(
         key = "machineconfig-$node",
-        factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
+        factory = factory { MachineConfigViewModel(app.talosRepository, app.machineConfigRepository, node, hostname, app.configTryManager, app.configMultiManager) },
     ),
     metaVm: MetaKeysViewModel = viewModel(key = "meta-$node", factory = factory { MetaKeysViewModel(app.talosRepository, node) }),
 ) {

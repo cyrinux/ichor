@@ -50,7 +50,7 @@ data class JoinRunState(
  * string resource in the app's language.
  */
 class JoinManager(
-    private val talos: TalosRepository,
+    private val lifecycle: NodeLifecycleRepository,
     private val configs: ConfigRepository,
     private val text: (Int, List<String>) -> String,
     private val onStarted: () -> Unit = {},
@@ -71,7 +71,7 @@ class JoinManager(
         val stopped = MutableStateFlow(false).also { stopRequested = it }
         job = scope.launch {
             try {
-                talos.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
+                lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                     .collect { event ->
                         when (event) {
                             is JoinEvent.Progress -> _current.update { it?.copy(events = it.events + event.progress) }
