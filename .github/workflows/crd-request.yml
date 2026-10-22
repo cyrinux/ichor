@@ -65,26 +65,32 @@ jobs:
           cat "$RUNNER_TEMP/request.txt" >>"$GITHUB_OUTPUT"
 
       # Into its own new directory, never the checkout. A redirect may only end on a public
-      # forge too, else the file is thrown away.
+      # forge too, else the file is thrown away. A GitLab file comes through its files API
+      # (fetch_url); a web page served instead of the file (a bot check) is refused by name.
       - name: Fetch the CRD
         id: fetch
         env:
-          CRD_URL: ${{ steps.request.outputs.crd_url }}
+          FETCH_URL: ${{ steps.request.outputs.fetch_url }}
           GH_TOKEN: ${{ github.token }}
         run: |
           dir="$RUNNER_TEMP/crd"
           mkdir "$dir"
-          if ! effective="$(curl --globoff --proto '=https' --proto-redir '=https' --tlsv1.2 --location --max-redirs 2 \
-              --max-filesize 4194304 --max-time 20 --fail --silent --show-error \
-              --write-out '%{url_effective}' --output "$dir/manifest.yaml" "$CRD_URL" 2>"$RUNNER_TEMP/reason.txt")" ||
-             ! python3 -I scripts/crd-request.py check-url "$effective" 2>>"$RUNNER_TEMP/reason.txt"; then
+          refuse() {
             rm -f "$dir/manifest.yaml"
-            echo "the CRD could not be fetched from its link" >"$RUNNER_TEMP/reason.txt"
             python3 -I scripts/crd-request.py refused "$RUNNER_TEMP/reason.txt" >"$RUNNER_TEMP/comment.md"
             gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/comment.md"
             gh issue edit "$ISSUE_NUMBER" --add-label crd-request:failed
+            echo "::error::Request refused: $(head -c 300 "$RUNNER_TEMP/reason.txt")"
             exit 1
+          }
+          if ! effective="$(curl --globoff --proto '=https' --proto-redir '=https' --tlsv1.2 --location --max-redirs 2 \
+              --max-filesize 4194304 --max-time 20 --fail --silent --show-error \
+              --write-out '%{url_effective}' --output "$dir/manifest.yaml" "$FETCH_URL" 2>"$RUNNER_TEMP/reason.txt")" ||
+             ! python3 -I scripts/crd-request.py check-url "$effective" 2>>"$RUNNER_TEMP/reason.txt"; then
+            echo "the CRD could not be fetched from its link" >"$RUNNER_TEMP/reason.txt"
+            refuse
           fi
+          python3 -I scripts/crd-request.py check-manifest "$dir/manifest.yaml" 2>"$RUNNER_TEMP/reason.txt" || refuse
           echo "manifest=$dir/manifest.yaml" >>"$GITHUB_OUTPUT"
 
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0

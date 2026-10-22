@@ -48,7 +48,7 @@ class ParseTest(unittest.TestCase):
     def test_happy_body(self):
         got = self.parse(body(docs="https://kube-green.dev/docs/"))
         self.assertEqual(got, {
-            "crd_url": KUBE_GREEN, "operator": "kube-green", "docs": "https://kube-green.dev/docs/",
+            "crd_url": KUBE_GREEN, "fetch_url": KUBE_GREEN, "operator": "kube-green", "docs": "https://kube-green.dev/docs/",
             "id": "kube-green", "branch": "crd-request/12-kube-green",
         })
 
@@ -81,6 +81,23 @@ class ParseTest(unittest.TestCase):
     def test_raw_link_on_any_public_host_is_kept(self):
         url = "https://forge.example.net/example-org/operator/-/raw/main/crds/widgets.yaml"
         self.assertEqual(self.parse(body(url=url))["crd_url"], url)
+
+    def test_self_hosted_gitlab_file_is_fetched_through_its_api(self):
+        url = "https://forge.example.net/example-org/operator/-/blob/main/config/crd/bases/example.org_widgets.yaml"
+        got = self.parse(body(url=url))
+        self.assertEqual(got["crd_url"], "https://forge.example.net/example-org/operator/-/raw/main/config/crd/bases/example.org_widgets.yaml")
+        self.assertEqual(got["fetch_url"], "https://forge.example.net/api/v4/projects/example-org%2Foperator/repository/files/"
+                                           "config%2Fcrd%2Fbases%2Fexample.org_widgets.yaml/raw?ref=main")
+
+    def test_gitlab_api_link_keeps_nested_groups_and_encodes_once(self):
+        url = "https://gitlab.com/example-org/team/operator/-/raw/v1.2.0/deploy/my%20crds/widgets.yaml"
+        self.assertEqual(self.parse(body(url=url))["fetch_url"], "https://gitlab.com/api/v4/projects/example-org%2Fteam%2Foperator/"
+                                                                 "repository/files/deploy%2Fmy%20crds%2Fwidgets.yaml/raw?ref=v1.2.0")
+
+    def test_other_forges_are_fetched_from_the_raw_link(self):
+        url = "https://git.example.org/example-org/operator/src/tag/v1.2.0/crds/widgets.yaml"
+        got = self.parse(body(url=url))
+        self.assertEqual(got["fetch_url"], got["crd_url"])
 
     def test_ip_address_host(self):
         for url in ("https://93.184.215.14/a/b.yaml", "https://[::1]/a/b.yaml"):
@@ -162,6 +179,31 @@ class ParseTest(unittest.TestCase):
 
     def test_operator_with_no_id(self):
         self.assertIn("plugin id", self.refused(body(operator="...")))
+
+
+class FetchTest(unittest.TestCase):
+    def test_check_url_takes_the_api_query_it_built(self):
+        crd_request.check_url("https://forge.example.net/api/v4/projects/a%2Fb/repository/files/c.yaml/raw?ref=main", query=True)
+
+    def test_web_page_is_not_a_manifest(self):
+        page = "\n<!doctype html><html><head><title>Making sure you&#39;re not a bot!</title>"
+        self.assertTrue(crd_request.is_web_page(page))
+        self.assertTrue(crd_request.is_web_page("﻿<html>"))
+        self.assertFalse(crd_request.is_web_page("---\napiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\n"))
+        self.assertFalse(crd_request.is_web_page('{"apiVersion": "apiextensions.k8s.io/v1"}'))
+
+    def test_main_check_manifest_refuses_a_web_page(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".yaml") as f:
+            f.write("<!doctype html><html></html>")
+            f.flush()
+            with tempfile.TemporaryFile("w+") as err:
+                stderr, crd_request.sys.stderr = crd_request.sys.stderr, err
+                try:
+                    self.assertEqual(crd_request.main(["crd-request.py", "check-manifest", f.name]), 1)
+                finally:
+                    crd_request.sys.stderr = stderr
+                err.seek(0)
+                self.assertIn("a web page", err.read())
 
 
 class CommentsTest(unittest.TestCase):
