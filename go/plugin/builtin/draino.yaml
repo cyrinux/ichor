@@ -1,0 +1,285 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# draino (draino.acides.org) drains a node when a condition holds: one cluster-scoped NodeDrain
+# names the node, the condition (a PromQL query…) and how often it is evaluated, and the
+# controller runs a kubectl drain pod when it matches. A NodeDrain the controller refuses
+# (status.validationError) never drains anything: that is the one critical state. A disabled
+# one, a dry run (spec.debug) and one not evaluated yet are shown for information. Each row
+# shows its node and when it last drained; the details hold the condition, the interval, the
+# flags and the last evaluation.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: draino
+name: draino
+website: https://forge.tedomum.net/acides/draino
+category: compute
+
+detect:
+  - group: draino.acides.org
+    resource: nodedrains
+
+resources:
+  nodedrain:
+    group: draino.acides.org
+    version: v1alpha1
+    resource: nodedrains
+    kind: NodeDrain
+    scope: Cluster
+
+fields:
+  nodedrain:
+    # Type indicates the type of condition.
+    conditionType: $.spec.condition.type | default("")
+    # Do a dry-run drain for debugging.
+    debug: $.spec.debug | default(false)
+    # Enable the drain.
+    enable: $.spec.enable | default(false)
+    # Force drain.
+    force: $.spec.force | default(true)
+    # The image of the kubectl pod that runs the drain.
+    image: '$.spec.image | default("bitnami/kubectl:latest")'
+    # How often the condition is evaluated (e.g., "30s", "2m").
+    interval: '$.spec.interval | default("2m")'
+    # The node to drain.
+    node: $.spec.node | default("")
+    # When the condition was last evaluated; null until the first evaluation.
+    checkedAt: $.status.lastCheckTime | time()
+    # When the node was last drained successfully; null when it never was.
+    drainedAt: $.status.lastDrainTime | time()
+    # The controller's validation error, "" when the NodeDrain is accepted.
+    validationError: $.status.validationError | default("")
+    notEvaluated: $.status.lastCheckTime == null
+
+health:
+  nodedrain:
+    - { when: fields.validationError != "", health: critical, reason: invalid, message: "invalid: {{ fields.validationError }}" }
+    - { when: "!fields.enable", health: info, reason: disabled, message: "disabled: the node is never drained" }
+    - { when: fields.debug, health: info, reason: dryRun, message: "dry run: the condition is evaluated but the node is not drained" }
+    - { when: fields.notEvaluated, health: info, reason: notEvaluatedYet, message: "not evaluated yet" }
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(nodedrain)
+      invalid: 'count(nodedrain, health == "critical")'
+      disabled: 'count(nodedrain, !fields.enable)'
+    health: worst(nodedrain.health)
+
+cards:
+  summary:
+    title:
+      count: dataServices.summary.total
+      one: "%d NodeDrain"
+      other: "%d NodeDrains"
+    health: dataServices.summary.health
+    badges:
+      - label: "invalid"
+        value: dataServices.summary.invalid
+        tone: critical
+        hideWhenZero: true
+      - label: "disabled"
+        value: dataServices.summary.disabled
+        tone: info
+        hideWhenZero: true
+  list:
+    from: nodedrain
+    sort:
+      - health desc
+      - $.metadata.name
+    empty: "No NodeDrains."
+    row:
+      title: $.metadata.name
+      status:
+        tone: health
+        text: fields.node
+      trailing:
+        text: fields.drainedAt | relativeTime()
+      detail:
+        - type: keyValues
+          items:
+            - label: "Node"
+              value: fields.node
+            - label: "Condition type"
+              value: fields.conditionType
+            - label: "Interval"
+              value: fields.interval
+            - label: "Enabled"
+              value: fields.enable
+            - label: "Force"
+              value: fields.force
+            - label: "Dry run"
+              value: fields.debug
+            - label: "Image"
+              value: fields.image
+            - label: "Last check"
+              value: fields.checkedAt | relativeTime()
+            - label: "Last drain"
+              value: fields.drainedAt | relativeTime()
+            - label: "Age"
+              value: $.metadata.creationTimestamp | relativeTime()
+
+findings:
+  - id: invalid
+    from: nodedrain
+    when: health == "critical"
+    severity: critical
+    title: "{{ name }}"
+    detail: "{{ message }}"
+    opens: list
+
+i18n:
+  fr:
+    "%d NodeDrain": "%d NodeDrain"
+    "%d NodeDrains": "%d NodeDrains"
+    "invalid": "invalides"
+    "disabled": "désactivés"
+    "No NodeDrains.": "Aucun NodeDrain."
+    "Node": "Nœud"
+    "Condition type": "Type de condition"
+    "Interval": "Intervalle"
+    "Enabled": "Activé"
+    "Force": "Forcé"
+    "Dry run": "Simulation"
+    "Image": "Image"
+    "Last check": "Dernière évaluation"
+    "Last drain": "Dernier drainage"
+    "Age": "Âge"
+    "invalid: {{ fields.validationError }}": "invalide : {{ fields.validationError }}"
+    "disabled: the node is never drained": "désactivé : le nœud n'est jamais drainé"
+    "dry run: the condition is evaluated but the node is not drained": "simulation : la condition est évaluée mais le nœud n'est pas drainé"
+    "not evaluated yet": "pas encore évalué"
+  de:
+    "%d NodeDrain": "%d NodeDrain"
+    "%d NodeDrains": "%d NodeDrains"
+    "invalid": "ungültig"
+    "disabled": "deaktiviert"
+    "No NodeDrains.": "Keine NodeDrains."
+    "Node": "Knoten"
+    "Condition type": "Bedingungstyp"
+    "Interval": "Intervall"
+    "Enabled": "Aktiviert"
+    "Force": "Erzwingen"
+    "Dry run": "Probelauf"
+    "Image": "Image"
+    "Last check": "Letzte Prüfung"
+    "Last drain": "Letztes Drain"
+    "Age": "Alter"
+    "invalid: {{ fields.validationError }}": "ungültig: {{ fields.validationError }}"
+    "disabled: the node is never drained": "deaktiviert: der Knoten wird nie geleert"
+    "dry run: the condition is evaluated but the node is not drained": "Probelauf: die Bedingung wird geprüft, der Knoten aber nicht geleert"
+    "not evaluated yet": "noch nicht geprüft"
+  es:
+    "%d NodeDrain": "%d NodeDrain"
+    "%d NodeDrains": "%d NodeDrains"
+    "invalid": "inválidos"
+    "disabled": "desactivados"
+    "No NodeDrains.": "Ningún NodeDrain."
+    "Node": "Nodo"
+    "Condition type": "Tipo de condición"
+    "Interval": "Intervalo"
+    "Enabled": "Activado"
+    "Force": "Forzar"
+    "Dry run": "Simulación"
+    "Image": "Imagen"
+    "Last check": "Última evaluación"
+    "Last drain": "Último drenaje"
+    "Age": "Antigüedad"
+    "invalid: {{ fields.validationError }}": "inválido: {{ fields.validationError }}"
+    "disabled: the node is never drained": "desactivado: el nodo nunca se drena"
+    "dry run: the condition is evaluated but the node is not drained": "simulación: la condición se evalúa pero el nodo no se drena"
+    "not evaluated yet": "aún no evaluado"
+  it:
+    "%d NodeDrain": "%d NodeDrain"
+    "%d NodeDrains": "%d NodeDrain"
+    "invalid": "non validi"
+    "disabled": "disattivati"
+    "No NodeDrains.": "Nessun NodeDrain."
+    "Node": "Nodo"
+    "Condition type": "Tipo di condizione"
+    "Interval": "Intervallo"
+    "Enabled": "Attivo"
+    "Force": "Forzato"
+    "Dry run": "Simulazione"
+    "Image": "Immagine"
+    "Last check": "Ultima valutazione"
+    "Last drain": "Ultimo drenaggio"
+    "Age": "Età"
+    "invalid: {{ fields.validationError }}": "non valido: {{ fields.validationError }}"
+    "disabled: the node is never drained": "disattivato: il nodo non viene mai drenato"
+    "dry run: the condition is evaluated but the node is not drained": "simulazione: la condizione è valutata ma il nodo non viene drenato"
+    "not evaluated yet": "non ancora valutato"
+  uk:
+    "%d NodeDrain": "%d NodeDrain"
+    "%d NodeDrains": "%d NodeDrains"
+    "invalid": "недійсних"
+    "disabled": "вимкнених"
+    "No NodeDrains.": "Немає NodeDrain."
+    "Node": "Вузол"
+    "Condition type": "Тип умови"
+    "Interval": "Інтервал"
+    "Enabled": "Увімкнено"
+    "Force": "Примусово"
+    "Dry run": "Пробний запуск"
+    "Image": "Образ"
+    "Last check": "Остання перевірка"
+    "Last drain": "Останнє очищення"
+    "Age": "Вік"
+    "invalid: {{ fields.validationError }}": "недійсний: {{ fields.validationError }}"
+    "disabled: the node is never drained": "вимкнено: вузол ніколи не очищується"
+    "dry run: the condition is evaluated but the node is not drained": "пробний запуск: умова перевіряється, але вузол не очищується"
+    "not evaluated yet": "ще не перевірено"
+
+# Invented names. demo-shop is healthy and drained once; demo-lab is refused by the controller;
+# demo-idle is disabled; demo-dry is a dry run; demo-fresh was never evaluated.
+samples:
+  nodedrain:
+    - metadata:
+        creationTimestamp: now-3d
+        name: demo-shop
+      spec:
+        condition:
+          type: PromQLQuery
+        enable: true
+        interval: 2m
+        node: demo-node-1
+      status:
+        lastCheckTime: now-1m
+        lastDrainTime: now-2d
+    - metadata:
+        creationTimestamp: now-4m
+        name: demo-lab
+      spec:
+        condition:
+          type: PromQLQuery
+        enable: true
+        interval: soon
+        node: demo-node-2
+      status:
+        validationError: "interval: invalid duration \"soon\""
+    - metadata:
+        creationTimestamp: now-5d
+        name: demo-idle
+      spec:
+        condition:
+          type: PromQLQuery
+        enable: false
+        node: demo-node-3
+      status:
+        lastCheckTime: now-5d
+    - metadata:
+        creationTimestamp: now-2h
+        name: demo-dry
+      spec:
+        condition:
+          type: PromQLQuery
+        debug: true
+        enable: true
+        node: demo-node-4
+      status:
+        lastCheckTime: now-2m
+    - metadata:
+        creationTimestamp: now-30s
+        name: demo-fresh
+      spec:
+        condition:
+          type: PromQLQuery
+        enable: true
+        node: demo-node-5
