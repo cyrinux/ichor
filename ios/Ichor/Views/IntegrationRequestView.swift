@@ -113,7 +113,7 @@ enum IntegrationLinks {
     static let newRequest = ProjectLinks.repo.appendingPathComponent("issues/new").appending(queryItems: [URLQueryItem(name: "template", value: "integration.yml")])
     static let reportBug = ProjectLinks.repo.appendingPathComponent("issues/new/choose")
 
-    /// "Ichor 1.4.0 (iOS)", in the request's App version field.
+    /// "Ichor 1.4.0 (iOS)", at the end of the request's notes.
     static var app: String {
         "Ichor \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") (iOS)"
     }

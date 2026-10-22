@@ -1,7 +1,9 @@
 name: CRD request
 
 # A "Plugin request from a CRD" issue (.github/ISSUE_TEMPLATE/crd-request.yml) becomes a plugin
-# draft pull request: the CRD is fetched from its public link, `probe plugin-from-crd` writes
+# draft pull request: the CRD is fetched from its public link (or, when the request names the
+# CRDs instead, as the app's Request an integration does, found on public GitHub by its name
+# and the project's home page read from the repository), `probe plugin-from-crd` writes
 # go/plugin/drafts/<id>.yaml, `plugin-lint -crd` checks it, and a draft pull request links the
 # issue. A maintainer reviews, translates and promotes it (go/plugin/drafts/README.md).
 #
@@ -64,13 +66,32 @@ jobs:
           fi
           cat "$RUNNER_TEMP/request.txt" >>"$GITHUB_OUTPUT"
 
+      # No link: the manifest is searched for on GitHub by the CRD's name (code search, which
+      # the workflow token may use), in the repository named after the project or else the most
+      # starred one. The pull request names it, for the reviewer to check.
+      - name: Find the CRD on GitHub
+        id: find
+        if: steps.request.outputs.crd_url == ''
+        env:
+          CRDS: ${{ steps.request.outputs.crds }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! python3 -I scripts/crd-request.py search >"$RUNNER_TEMP/found.txt" 2>"$RUNNER_TEMP/reason.txt"; then
+            python3 -I scripts/crd-request.py refused "$RUNNER_TEMP/reason.txt" >"$RUNNER_TEMP/comment.md"
+            gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/comment.md"
+            gh issue edit "$ISSUE_NUMBER" --add-label crd-request:failed
+            echo "::error::CRD not found: $(head -c 300 "$RUNNER_TEMP/reason.txt")"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/found.txt" >>"$GITHUB_OUTPUT"
+
       # Into its own new directory, never the checkout. A redirect may only end on a public
       # forge too, else the file is thrown away. A GitLab file comes through its files API
       # (fetch_url); a web page served instead of the file (a bot check) is refused by name.
       - name: Fetch the CRD
         id: fetch
         env:
-          FETCH_URL: ${{ steps.request.outputs.fetch_url }}
+          FETCH_URL: ${{ steps.request.outputs.fetch_url || steps.find.outputs.crd_url }}
           GH_TOKEN: ${{ github.token }}
         run: |
           dir="$RUNNER_TEMP/crd"
@@ -108,13 +129,14 @@ jobs:
           MANIFEST: ${{ steps.fetch.outputs.manifest }}
           ID: ${{ steps.request.outputs.id }}
           OPERATOR: ${{ steps.request.outputs.operator }}
-          DOCS: ${{ steps.request.outputs.docs }}
+          # The project's home page when the CRD was found on GitHub, else the documentation link.
+          WEBSITE: ${{ steps.find.outputs.website || steps.request.outputs.docs }}
           GH_TOKEN: ${{ github.token }}
         run: |
           go build -o "$RUNNER_TEMP/probe" ./cmd/probe
           log="$RUNNER_TEMP/generate.txt"
           args=(plugin-from-crd "$MANIFEST" -id "$ID" -name "$OPERATOR" -out "plugin/drafts/$ID.yaml")
-          [[ -z "$DOCS" ]] || args+=(-website "$DOCS")
+          [[ -z "$WEBSITE" ]] || args+=(-website "$WEBSITE")
           if ! "$RUNNER_TEMP/probe" "${args[@]}" >"$log" 2>&1; then
             if python3 -I ../scripts/crd-request.py is-covered "$log"; then
               python3 -I ../scripts/crd-request.py covered "$log" >"$RUNNER_TEMP/comment.md"
@@ -162,7 +184,8 @@ jobs:
           APP_SLUG: ${{ steps.token.outputs.app-slug }}
           ID: ${{ steps.request.outputs.id }}
           OPERATOR: ${{ steps.request.outputs.operator }}
-          CRD_URL: ${{ steps.request.outputs.crd_url }}
+          CRD_URL: ${{ steps.request.outputs.crd_url || steps.find.outputs.crd_url }}
+          FOUND_REPO: ${{ steps.find.outputs.repo }}
           BRANCH: ${{ steps.request.outputs.branch }}
           FALLBACK: ${{ steps.token.outputs.token == '' && '1' || '0' }}
         run: |
