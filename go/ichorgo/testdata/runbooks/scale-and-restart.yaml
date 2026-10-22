@@ -1,0 +1,11 @@
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Restart ingestion
+description: Scale the ingest API down to one replica, then restart it.
+steps:
+  - id: scale-down
+    action: scale
+    target: {kind: Deployment, namespace: demo-shop, name: ingest-api}
+    params: {replicas: 1}
+  - id: restart
+    action: rolloutRestart
+    target: {namespace: demo-shop, name: ingest-api}
