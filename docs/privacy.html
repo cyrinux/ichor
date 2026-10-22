@@ -93,13 +93,13 @@
 
   <main>
     <h1>Privacy policy</h1>
-    <p class="meta">Effective 4 October 2026. Applies to the Ichor apps for Android and iOS.</p>
+    <p class="meta">Effective 22 October 2026. Applies to the Ichor apps for Android and iOS.</p>
 
     <div class="summary">
       <p>Ichor has no server, no account and no ads. The developer receives none of your
       data. The app talks to your own Talos clusters and, only for the features listed below, to
-      GitHub, to Google's on-device barcode library, and, if you turn them on, to an icon
-      download service and an AI provider you choose yourself.</p>
+      GitHub and, if you turn them on, to an icon download service and an AI provider you choose
+      yourself.</p>
     </div>
 
     <h2>What stays on your phone</h2>
@@ -130,12 +130,9 @@
         repository for app updates. GitHub sees your IP address, as for
         any web request, and its <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">privacy statement</a> applies.
         Nothing about your cluster is sent.</li>
-      <li><strong>Google ML Kit</strong> (QR code import). Camera frames are decoded on the
-        phone and are neither stored nor sent. The library itself sends Google diagnostics and
-        usage data: device model and OS version, the app's package name and version, a
-        per-installation identifier that does not identify you or your device, performance
-        metrics and error codes. See
-        <a href="https://developers.google.com/ml-kit/android-data-disclosure">Google's ML Kit data disclosure</a>.</li>
+      <li><strong>QR code import.</strong> Camera frames are decoded on the phone by the
+        open-source <a href="https://github.com/zxing/zxing">ZXing</a> library; nothing is
+        stored or sent, and the camera is used only while the scanner is open.</li>
       <li><strong>App icons, only if you turn it on.</strong> The logos of about 330 common apps
         ship inside Ichor. When the <em>Download missing app icons</em> setting is on (it is off by
         default), the logos of other recognised apps are downloaded from jsDelivr
