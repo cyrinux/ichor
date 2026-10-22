@@ -47,7 +47,9 @@ const (
 	// length browsers and GitHub accept.
 	integrationIssueText = 4000
 	integrationLabel     = "integration"
-	integrationTemplate  = "integration.yml"
+	// The CRD bot's form (.github/ISSUE_TEMPLATE/crd-request.yml): once the user adds the
+	// CRD's public link, the crd-request workflow drafts the plugin pull request.
+	integrationTemplate = "crd-request.yml"
 )
 
 type integrationReport struct {
@@ -224,9 +226,10 @@ func integrationFamilies(groups []integrationGroup) []integrationFamily {
 	return out
 }
 
-// IntegrationIssueURL is the GitHub page opening a pre-filled integration request on repo
+// IntegrationIssueURL is the GitHub page opening a pre-filled plugin request on repo
 // ("owner/name") for familyJSON (one family, with only the groups the user picked); app names
 // the app and platform ("Ichor 1.4.0 (Android)"). Only group, version and kind names go in.
+// The CRD manifest URL is left for the user: the cluster does not know where it is published.
 func IntegrationIssueURL(repo, familyJSON, app string) (_ string, err error) {
 	defer maskErr(&err)
 
@@ -237,10 +240,9 @@ func IntegrationIssueURL(repo, familyJSON, app string) (_ string, err error) {
 
 	q := url.Values{}
 	q.Set("template", integrationTemplate)
-	q.Set("title", "Integration: "+f.ID)
+	q.Set("title", "Plugin request: "+f.ID)
 	q.Set("operator", f.ID)
-	q.Set("groups", integrationGroupsText(f.Groups))
-	q.Set("app", app)
+	q.Set("notes", "API groups and kinds served by the cluster:\n"+integrationGroupsText(f.Groups)+"\n\nFrom "+app)
 
 	return "https://github.com/" + repo + "/issues/new?" + q.Encode(), nil
 }
