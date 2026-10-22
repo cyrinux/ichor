@@ -3,6 +3,9 @@
 # instance. The operator labels its pods app.kubernetes.io/name=dragonfly, app=<instance> and
 # role=master|replica: each instance counts its ready pods against its replicas and names its
 # master, and the pods show their role. A pod is ready when it runs and every container is ready.
+# The master pod's row fails the instance over the way the operator documents it (delete the
+# master pod: the operator promotes the most up-to-date ready replica), only while a replica is
+# ready to take over.
 # go/ichorgo/plugin_dragonflydb_test.go holds it to the reader the apps used before.
 schemaVersion: ichor.dev/plugin/v1alpha1
 id: dragonfly
@@ -47,12 +50,22 @@ fields:
     podsMissing: fields.readyPods > 0 && fields.readyPods < fields.replicas
     # The operator's phase only matters when nothing else is wrong (the rules' order says so).
     notReady: fields.phase != "" && lower(fields.phase) != "ready"
+    # One pod: nothing to fail over to.
+    single: fields.replicas == 1
   pod:
     instance: $.metadata.labels.app | default("")
     role: $.metadata.labels.role | default("")
     # The master first under its instance.
     rank: 'fields.role == "master" ? 0 : 1'
     ready: '$.status.phase == "Running" && len($.status.containerStatuses) > 0 && len($.status.containerStatuses[?(@.ready != true)]) == 0'
+    # The replication readiness gate (spec.enableReplicationReadinessGate) holds a replica not
+    # ready while it loads the master's dataset.
+    syncing: 'len($.status.conditions[?(@.type == "dragonflydb.io/replication-ready" && @.status != "True")]) > 0'
+    # The replicas of the same instance that could take over: ready, and not still syncing.
+    readyReplicas: |
+      len(pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels.app == $.metadata.labels.app && @.metadata.labels.role == "replica"
+        && @.status.phase == "Running" && len(@.status.containerStatuses) > 0 && len(@.status.containerStatuses[?(@.ready != true)]) == 0
+        && len(@.status.conditions[?(@.type == "dragonflydb.io/replication-ready" && @.status != "True")]) == 0)])
 
 # The first rule that holds is the instance's reason: the worst one, in the reader's order.
 health:
@@ -63,6 +76,7 @@ health:
     - { when: fields.podsMissing, health: warning, reason: pods, message: "replicas missing" }
     - { when: fields.notReady, health: warning, reason: notReady, message: "operator: {{ fields.phase }}" }
   pod:
+    - { when: fields.syncing, health: info, reason: syncing, message: "Syncing from the master" }
     - { when: "!fields.ready", health: critical, reason: notReady, message: "Not ready" }
 
 dataServices:
@@ -112,6 +126,9 @@ cards:
           items:
             - { label: "Node", value: $.spec.nodeName | default(""), mono: true }
             - { label: "Phase", value: $.status.phase | default("") }
+            - { label: "Replicas ready", value: fields.readyReplicas }
+        - type: actions
+          items: [failOver]
 
 # The monitor's former Dragonfly alerts: an instance when critical, or with a replica down or
 # two masters; a rolling update is planned and only shows.
@@ -124,9 +141,35 @@ findings:
     title: "{{ namespace }}/{{ name }}"
     detail: "{{ message }}"
     opens: instances
+  # Info: listed in the checkup, never notified.
+  - id: instance-single
+    from: instance
+    when: fields.single && health == "ok"
+    severity: info
+    title: "{{ namespace }}/{{ name }}"
+    detail: "one pod, no replica to fail over to"
+    opens: instances
+
+# Fail over: delete the master pod, as the operator's high-availability docs say; the operator
+# elects the ready replica with the highest replication offset and moves the master Service.
+# Writes the replica had not received yet are lost, hence the typed name. Only on a master
+# with a replica ready to take over (checked again on a fresh read of the instance's pods);
+# the delete is pinned to the pod's uid, so a pod the StatefulSet recreated meanwhile is spared.
+actions:
+  failOver:
+    label: "Fail over now"
+    on: pod
+    verb: delete
+    propagationPolicy: Background
+    rbac: { verbs: [delete], group: "", resource: pods }
+    confirm: typedName
+    audit: dragonfly.failOver
+    enabledWhen: fields.role == "master" && fields.readyReplicas > 0
+    disabledReason: "needs a master with a ready replica"
 
 # The former demo: a session cache with a replica pending next to a healthy queue cache, plus
-# one instance per remaining state.
+# one instance per remaining state; a cart cache whose replica is still syncing behind the
+# readiness gate, and a one-pod job lock store for the single-pod finding.
 samples:
   instance:
     - metadata: { name: session-cache, namespace: demo-shop }
@@ -145,6 +188,12 @@ samples:
       spec: { replicas: 1 }
       status: { phase: Configuring-replication }
     - metadata: { name: scratch, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { phase: Ready }
+    - metadata: { name: cart-cache, namespace: demo-shop }
+      spec: { replicas: 2, enableReplicationReadinessGate: true }
+      status: { phase: Ready }
+    - metadata: { name: job-locks, namespace: demo-lab }
       spec: { replicas: 1 }
       status: { phase: Ready }
   pod:
@@ -174,6 +223,18 @@ samples:
     - metadata: { name: scratch-0, namespace: demo-lab, labels: { app.kubernetes.io/name: dragonfly, app: scratch, role: master } }
       spec: { nodeName: demo-worker-2 }
       status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: false }] }
+    - metadata: { name: cart-cache-0, namespace: demo-shop, labels: { app.kubernetes.io/name: dragonfly, app: cart-cache, role: master } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: cart-cache-1, namespace: demo-shop, labels: { app.kubernetes.io/name: dragonfly, app: cart-cache, role: replica } }
+      spec: { nodeName: demo-worker-1 }
+      status:
+        phase: Running
+        conditions: [{ type: dragonflydb.io/replication-ready, status: "False" }]
+        containerStatuses: [{ name: dragonfly, ready: true }]
+    - metadata: { name: job-locks-0, namespace: demo-lab, labels: { app.kubernetes.io/name: dragonfly, app: job-locks, role: master } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
 
 # The apps' former Dragonfly strings (dragonfly_* in app/src/main/res/values-*/strings.xml).
 i18n:
@@ -195,6 +256,11 @@ i18n:
     "master": "maître"
     "replica": "réplique"
     "Node": "Nœud"
+    "Fail over now": "Basculer maintenant"
+    "needs a master with a ready replica": "il faut un maître avec une réplique prête"
+    "Syncing from the master": "Synchronisation depuis le maître"
+    "one pod, no replica to fail over to": "un seul pod, aucune réplique vers laquelle basculer"
+    "Replicas ready": "Répliques prêtes"
   de:
     "%d Dragonfly instance": "%d Dragonfly-Instanz"
     "%d Dragonfly instances": "%d Dragonfly-Instanzen"
@@ -213,6 +279,11 @@ i18n:
     "master": "Master"
     "replica": "Replikat"
     "Node": "Knoten"
+    "Fail over now": "Jetzt umschalten"
+    "needs a master with a ready replica": "braucht einen Master mit einem bereiten Replikat"
+    "Syncing from the master": "Synchronisiert vom Master"
+    "one pod, no replica to fail over to": "ein Pod, kein Replikat zum Umschalten"
+    "Replicas ready": "Replikate bereit"
   es:
     "%d Dragonfly instance": "%d instancia de Dragonfly"
     "%d Dragonfly instances": "%d instancias de Dragonfly"
@@ -231,6 +302,11 @@ i18n:
     "master": "maestro"
     "replica": "réplica"
     "Node": "Nodo"
+    "Fail over now": "Conmutar ahora"
+    "needs a master with a ready replica": "necesita un maestro con una réplica lista"
+    "Syncing from the master": "Sincronizando desde el maestro"
+    "one pod, no replica to fail over to": "un solo pod, ninguna réplica a la que conmutar"
+    "Replicas ready": "Réplicas listas"
   it:
     "%d Dragonfly instance": "%d istanza Dragonfly"
     "%d Dragonfly instances": "%d istanze Dragonfly"
@@ -249,6 +325,11 @@ i18n:
     "master": "master"
     "replica": "replica"
     "Node": "Nodo"
+    "Fail over now": "Esegui failover ora"
+    "needs a master with a ready replica": "serve un master con una replica pronta"
+    "Syncing from the master": "Sincronizzazione dal master"
+    "one pod, no replica to fail over to": "un solo pod, nessuna replica su cui fare failover"
+    "Replicas ready": "Repliche pronte"
   uk:
     "%d Dragonfly instance": "%d екземпляр Dragonfly"
     "%d Dragonfly instances": "%d екземплярів Dragonfly"
@@ -267,3 +348,8 @@ i18n:
     "master": "головний"
     "replica": "репліка"
     "Node": "Вузол"
+    "Fail over now": "Перемкнути зараз"
+    "needs a master with a ready replica": "потрібен головний із готовою реплікою"
+    "Syncing from the master": "Синхронізація з головного"
+    "one pod, no replica to fail over to": "один под, немає репліки для перемикання"
+    "Replicas ready": "Репліки готові"

@@ -274,9 +274,23 @@ func TestDragonflyPluginDemo(t *testing.T) {
 	want := map[string]string{
 		"session-cache": "warning pods", "queue-cache": "ok ", "rate-limit": "warning notReady",
 		"feature-flags": "warning masters", "leaderboard": "critical noMaster", "scratch": "critical noReady",
+		"cart-cache": "ok ", "job-locks": "ok ",
 	}
 	if fmt.Sprint(health) != fmt.Sprint(want) || len(tree.Errors) != 0 {
 		t.Fatalf("demo rows %v, errors %+v", health, tree.Errors)
+	}
+
+	// The cart cache's replica still syncs behind the readiness gate; the job locks are one pod.
+	for _, row := range rookCard(t, tree, "pods").Rows {
+		if row.Title == "cart-cache-1" && (row.Health.Tone != "info" || row.Health.Reason != "syncing") {
+			t.Errorf("cart-cache-1: %+v", row.Health)
+		}
+	}
+
+	if !slices.ContainsFunc(tree.Findings, func(f plugin.TreeFind) bool {
+		return f.ID == "instance-single" && f.Severity == "info" && f.Title == "demo-lab/job-locks"
+	}) {
+		t.Errorf("no single-pod finding for the job locks: %+v", tree.Findings)
 	}
 }
 
