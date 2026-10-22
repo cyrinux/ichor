@@ -76,6 +76,7 @@
 {"id":"garage-operator","name":"Garage Operator","cat":"storage","icon":"garage","prefixes":["ghcr.io/rajsinghtech/garage-operator"]},
 {"id":"velero","name":"Velero","cat":"storage","prefixes":["velero/","docker.io/velero/"]},
 {"id":"kube-green","name":"kube-green","cat":"devops","icon":"gh:kube-green/kube-green@1045c7062173af5b204863ccd533567aa0492584/logo/logo.svg","prefixes":["kubegreen/","docker.io/kubegreen/"]},
+{"id":"dataflow","name":"Dataflow","cat":"devops","icon":"google-cloud-platform"},
 {"id":"castai","name":"CAST AI","cat":"devops","icon":"avatar:castai","match":["castai-agent","castai-cluster-controller","castai-workload-autoscaler","castai-evictor","castai-spot-handler"],"prefixes":["castai/","docker.io/castai/","us-docker.pkg.dev/castai-hub/"]},
 {"id":"volsync","name":"VolSync","cat":"storage","icon":"gh:backube/volsync@31cf70a970583c62d069d3aa7caf2c76acec1a0c/docs/media/volsync.svg","prefixes":["quay.io/backube/"]},
 {"id":"k8up","name":"K8up","cat":"storage","icon":"gh:cncf/artwork@fedb3dbbf74327337fb750eae0a4ec7c8b7398c0/projects/k8up/icon/k8up-icon-color.svg"},

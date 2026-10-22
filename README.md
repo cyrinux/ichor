@@ -325,7 +325,11 @@ tour** shows it again.
   of another kind (workloads, networking, policies…) is a tool in that family of the Kubernetes
   home. kube-green is one: Workloads → kube-green says which namespaces sleep on a schedule, when
   they wake up, and whether they are asleep right now, and a schedule can be moved from the phone
-  (days, sleep and wake-up times, time zone). Plugin actions run from their buttons.
+  (days, sleep and wake-up times, time zone). Workloads → Dataflow lists the Google Cloud
+  Dataflow jobs declared through Config Connector (DataflowJob and DataflowFlexTemplateJob):
+  each job's state, batch or streaming, its job id and region, and a reconcile that failed
+  (a missing dependency, an update refused); jobs launched outside Config Connector are not
+  shown. Plugin actions run from their buttons.
 - **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
   imported. Import a plugin file (one `just probe plugin-from-crd` drafted from a CRD, or
   `/ichor-crd-plugin` wrote, and `just probe plugin-lint` checked,
@@ -404,6 +408,7 @@ reads those roles and explains up front when a feature needs more.
 | **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
 | **Data services: External Secrets sync status and stores** | `Kubeconfig`, then the Kubernetes API (`list` on externalsecrets.external-secrets.io; optional secretstores, clustersecretstores and secrets with the `reconcile.external-secrets.io/managed=true` label, values masked) | **`os:admin`** |
 | **Refresh an ExternalSecret** | `Kubeconfig`, then the Kubernetes API (`get` and `patch` on externalsecrets.external-secrets.io in its namespace: merge patch of the `external-secrets.io/force-sync` annotation; the button is off with the reason without `patch`, and on a `CreatedOnce` secret) | **`os:admin`** |
+| **Dataflow jobs declared through Config Connector** | `Kubeconfig`, then the Kubernetes API (`list` on dataflowjobs and dataflowflextemplatejobs of dataflow.cnrm.cloud.google.com; jobs launched outside Config Connector are not shown) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
