@@ -115,6 +115,7 @@ enum OperationActivities {
         case (.fluxReconcile, .stopFollowing): GitOpsOperationJob.shared.stopFollowingFlux()
         case (.rollout, .stopFollowing): RolloutJob.shared.stopFollowing()
         case (.netPerf, .stop): NetPerfJob.shared.stop()
+        case (.runbook, .stop): RunbookJob.shared.stop()
         default: break
         }
     }
@@ -130,7 +131,7 @@ enum OperationActivities {
             (.upgrade, upgrade()), (.maintenance, maintenance()), (.configTry, configTry()), (.configMulti, configMulti()),
             (.clusterUpgrade, clusterUpgrade()), (.k8sUpgrade, k8sUpgrade()), (.imagePull, imagePull()), (.join, join()),
             (.imageScan, imageScan()), (.argoSync, argoSync()), (.fluxReconcile, fluxReconcile()), (.rollout, rollout()),
-            (.netPerf, netPerf()),
+            (.netPerf, netPerf()), (.runbook, runbook()),
         ]
         let locked = lockEnabled
         let screenshot = screenshotMode

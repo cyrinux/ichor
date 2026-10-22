@@ -64,6 +64,7 @@ extension OperationKind {
         case .fluxReconcile: String(localized: "Flux reconcile")
         case .rollout: String(localized: "Rollout restart")
         case .netPerf: String(localized: "Network test")
+        case .runbook: String(localized: "Runbook")
         }
     }
 }

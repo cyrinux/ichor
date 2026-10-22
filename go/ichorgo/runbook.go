@@ -292,15 +292,30 @@ func (s *runbookStep) validateParams() error {
 	return nil
 }
 
+// continuingAt is rb with continueOnError set on the steps ids names.
+func (rb runbook) continuingAt(ids []string) runbook {
+	steps := slices.Clone(rb.Steps)
+	for i := range steps {
+		if slices.Contains(ids, steps[i].ID) {
+			steps[i].ContinueOnError = true
+		}
+	}
+
+	rb.Steps = steps
+
+	return rb
+}
+
 // runbookPlanStep is one step of RunbookPlan.
 type runbookPlanStep struct {
-	ID          string        `json:"id"`
-	Action      string        `json:"action"`
-	Target      runbookTarget `json:"target"`
-	Destructive bool          `json:"destructive"`
-	Role        string        `json:"role"`
-	Allowed     bool          `json:"allowed"`
-	Denied      string        `json:"denied"`
+	ID              string        `json:"id"`
+	Action          string        `json:"action"`
+	Target          runbookTarget `json:"target"`
+	Destructive     bool          `json:"destructive"`
+	ContinueOnError bool          `json:"continueOnError"`
+	Role            string        `json:"role"`
+	Allowed         bool          `json:"allowed"`
+	Denied          string        `json:"denied"`
 }
 
 type runbookPlanResult struct {
@@ -312,7 +327,8 @@ type runbookPlanResult struct {
 
 // RunbookPlan validates runbookYAML (docs/runbooks.md) and says what each step will do,
 // without running anything: {"name","description","steps":[{"id","action","target":{"kind",
-// "namespace","name","node"},"destructive","role","allowed","denied"}],"errors":[]}. role is
+// "namespace","name","node"},"destructive","continueOnError","role","allowed","denied"}],
+// "errors":[]}. role is
 // the Talos role the step needs; allowed false with denied the reason when the credentials'
 // role or the cluster's RBAC refuses it. A runbook that does not load is an error naming the
 // step. In the demo every step is allowed (StartRunbook refuses the run). kubeServer: see
@@ -332,13 +348,41 @@ func RunbookPlan(configYAML, contextName, kubeServer, runbookYAML string) (out s
 
 	for _, s := range rb.Steps {
 		a := runbookActions[s.Action]
-		ps := runbookPlanStep{ID: s.ID, Action: s.Action, Target: s.Target, Destructive: a.destructive, Role: a.roles[0]}
+		ps := runbookPlanStep{ID: s.ID, Action: s.Action, Target: s.Target, Destructive: a.destructive, ContinueOnError: s.ContinueOnError, Role: a.roles[0]}
 		ps.Denied = gate.denied(s, a)
 		ps.Allowed = ps.Denied == ""
 		plan.Steps = append(plan.Steps, ps)
 	}
 
 	return toJSON(plan)
+}
+
+type runbookSummary struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Steps       int    `json:"steps"`
+	Destructive int    `json:"destructive"`
+}
+
+// RunbookSummary is what a list row shows of runbookYAML, without asking the cluster:
+// {"name","description","steps","destructive"} (the number of destructive steps). A runbook
+// that does not load is an error naming the step, as in RunbookPlan.
+func RunbookSummary(runbookYAML string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	rb, err := loadRunbook(runbookYAML)
+	if err != nil {
+		return "", err
+	}
+
+	sum := runbookSummary{Name: rb.Name, Description: rb.Description, Steps: len(rb.Steps)}
+	for _, s := range rb.Steps {
+		if runbookActions[s.Action].destructive {
+			sum.Destructive++
+		}
+	}
+
+	return toJSON(sum)
 }
 
 // runbookGate answers whether a step may run: the Talos role first, then the cluster's RBAC.

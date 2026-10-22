@@ -1,0 +1,86 @@
+package name.levis.ichor.model
+
+import kotlinx.serialization.Serializable
+
+/** The most a runbook file may weigh (the Go core's own limit). */
+const val RUNBOOK_MAX_BYTES = 64 * 1024
+
+/** A runbook kept for a cluster (RunbookStoreList's row); [problem] when it no longer loads. */
+@Serializable
+data class RunbookItem(
+    val id: String,
+    val name: String,
+    val description: String = "",
+    val steps: Int = 0,
+    val destructive: Int = 0,
+    val importedAt: Long = 0,
+    val problem: String = "",
+)
+
+@Serializable
+data class RunbookList(val items: List<RunbookItem> = emptyList())
+
+/** What a step acts on: a Kubernetes object, or a node. */
+@Serializable
+data class RunbookTarget(val kind: String = "", val namespace: String = "", val name: String = "", val node: String = "") {
+    val isNode: Boolean get() = node.isNotEmpty()
+
+    /** "Deployment demo-shop/ingest-api", or the node. */
+    val label: String get() = if (isNode) node else listOf(kind, "$namespace/$name").filter { it.isNotBlank() }.joinToString(" ")
+}
+
+/** One step of RunbookPlan: what it does, and whether the role and the cluster's RBAC allow it. */
+@Serializable
+data class RunbookPlanStep(
+    val id: String,
+    val action: String,
+    val target: RunbookTarget = RunbookTarget(),
+    val destructive: Boolean = false,
+    val continueOnError: Boolean = false,
+    val role: String = "",
+    val allowed: Boolean = true,
+    val denied: String = "",
+)
+
+@Serializable
+data class RunbookPlan(
+    val name: String = "",
+    val description: String = "",
+    val steps: List<RunbookPlanStep> = emptyList(),
+    val errors: List<String> = emptyList(),
+) {
+    /** The steps that would stop the run: refused, and not let past. */
+    fun blocking(continueIds: Set<String>): List<RunbookPlanStep> =
+        steps.filter { !it.allowed && !it.continueOnError && it.id !in continueIds }
+
+    fun canRun(continueIds: Set<String>): Boolean = steps.isNotEmpty() && blocking(continueIds).isEmpty()
+}
+
+/** A step's state while the runbook runs (RunbookListener.OnStep). */
+@Serializable
+data class RunbookStepState(
+    val index: Int = 0,
+    val id: String = "",
+    val state: String = "",
+    val message: String = "",
+    val startedAt: Long = 0,
+    val endedAt: Long = 0,
+) {
+    val waiting: Boolean get() = state == WAITING
+    val ended: Boolean get() = state == OK || state == FAILED || state == SKIPPED
+
+    companion object {
+        const val WAITING = "waiting"
+        const val RUNNING = "running"
+        const val OK = "ok"
+        const val FAILED = "failed"
+        const val SKIPPED = "skipped"
+    }
+}
+
+/** The run's end (RunbookListener.OnDone). */
+@Serializable
+data class RunbookResult(val ok: Boolean = false, val steps: List<RunbookStepState> = emptyList())
+
+/** How a destructive step is confirmed: a node's hostname typed, or a plain confirmation. */
+fun RunbookPlanStep.confirmsByHostname(): Boolean = target.isNode

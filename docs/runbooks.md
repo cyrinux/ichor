@@ -4,15 +4,23 @@ A runbook is an ordered list of the app's own actions, written once in calm and 
 step when it matters: "scale the ingest API to 0, run the compaction CronJob, scale it back to
 2, snapshot etcd". The Go core loads it, plans it (what each step does, whether it is
 destructive, the role it needs and whether the cluster allows it) and runs it, stopping at
-the first failed step. Every step calls the function the matching button calls, so it keeps
-that button's permission check, its refusal in the demo cluster and its entry in the
-Activity log; the run adds one more entry, `runbook`, with the number of steps that ran.
+the first failed step. Each destructive step waits for its own confirmation before it runs.
+Every step calls the function the matching button calls, so it keeps that button's
+permission check, its refusal in the demo cluster and its entry in the Activity log; the run
+adds one more entry, `runbook`, with the number of steps that ran.
+
+On the phone, the cluster menu's **Runbooks…** lists the cluster's runbooks. Import one by
+pasting it, from a file or from an https link; the app shows its plan before keeping it and
+never runs it on import. Run asks before each destructive step (the node's hostname for a
+node step), follows the run in the notification (Android) or a Live Activity (iOS), and can
+be stopped. A step the cluster's permissions refuse keeps Run off until you let the run go
+past it ("continue on error").
 
 Runbooks cannot do anything the app cannot already do: there are no conditions, loops or
-new actions. The Go API is `RunbookPlan` and `StartRunbook` (`go/ichorgo/runbook.go`,
-`runbook_run.go`); from a computer, `just probe runbook-plan FILE -context CTX` prints the
-plan and `just probe runbook-run FILE -yes -context CTX` runs it (`-yes` is required when a
-step is destructive).
+new actions. The Go API is `RunbookSummary`, `RunbookPlan` and `StartRunbook`
+(`go/ichorgo/runbook.go`, `runbook_run.go`); from a computer, `just probe runbook-plan FILE
+-context CTX` prints the plan and `just probe runbook-run FILE -yes -context CTX` runs it
+(`-yes` is required when a step is destructive, and confirms each such step).
 
 ## Format
 

@@ -10,6 +10,8 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
     /// Kubernetes-side runs started from the phone: an Argo CD sync, a Flux reconcile, a
     /// rollout restart and a network test.
     case argoSync, fluxReconcile, rollout, netPerf
+    /// A runbook's ordered steps (docs/runbooks.md).
+    case runbook
 
     /// The in-app link that opens the run's screen (ichor://open?op=…).
     public var link: URL { URL(string: "ichor://open?op=\(rawValue)")! }
@@ -47,6 +49,7 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
         case .fluxReconcile: "arrow.clockwise"
         case .rollout: "arrow.counterclockwise.circle"
         case .netPerf: "speedometer"
+        case .runbook: "list.bullet.rectangle"
         }
     }
 }
@@ -86,7 +89,7 @@ public enum OperationButton: String, Codable, Hashable, Sendable, CaseIterable {
         switch kind {
         case .upgrade, .join, .fluxReconcile, .rollout: return [.stopFollowing]
         case .argoSync: return [.terminate]
-        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan, .netPerf: return [.stop]
+        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan, .netPerf, .runbook: return [.stop]
         case .clusterUpgrade: return paused ? [.resume, .abort] : [.pause, .abort]
         case .configTry: return waiting ? [.keep, .revert] : []
         }

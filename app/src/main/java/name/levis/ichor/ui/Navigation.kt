@@ -71,7 +71,7 @@ enum class DeepLink {
     ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH,
 
     // A followed run's notification (OperationService): the screen it shows on.
-    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE, ARGO_APP, FLUX_APP, WORKLOAD, NETPERF;
+    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE, ARGO_APP, FLUX_APP, WORKLOAD, NETPERF, RUNBOOK;
 
     companion object {
         /** The screen an EXTRA_OPEN value names; null for anything else. */
@@ -240,6 +240,9 @@ fun Navigation(
             DeepLink.NETPERF -> if (!startWithImport && canUseKube() && app.netPerfManager.current.value != null) {
                 nav.navigate(Routes.workloads(KubeFocus(NETPERF_TAB))) { launchSingleTop = true }
             }
+            DeepLink.RUNBOOK -> if (!startWithImport && app.runbookManager.current.value != null) {
+                nav.navigate(Routes.RUNBOOK_RUN) { launchSingleTop = true }
+            }
         }
         onDeepLinkHandled()
     }
@@ -332,6 +335,7 @@ fun Navigation(
                         onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
                         onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
                         onAddNode = { nav.navigate(Routes.JOIN_NODE) },
+                        onRunbooks = { nav.navigate(Routes.RUNBOOKS) },
                         onDiagnose = { nav.navigate(Routes.diagnosis()) },
                         onAddCluster = { nav.navigate(Routes.IMPORT) },
                         onClustersCleared = { nav.resetTo(Routes.IMPORT) },

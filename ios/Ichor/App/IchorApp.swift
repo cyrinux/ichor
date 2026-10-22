@@ -298,6 +298,10 @@ enum Route: Hashable {
     case activity(cluster: String)
     /// Every cluster's nodes, pods, workloads and GitOps apps, as last seen.
     case search
+    /// The cluster's runbooks (docs/runbooks.md), one runbook's plan, and its run.
+    case runbooks
+    case runbookPlan(id: String)
+    case runbookRun(id: String)
 }
 
 /// The home screen: the Talos overview, or the Kubernetes home of a cluster added from a kubeconfig.
@@ -484,6 +488,9 @@ struct MainNavigation: View {
         case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
         case .activity(let cluster): ActivityLogView(cluster: cluster)
         case .search: SearchView { target in Task { await open(target) } }
+        case .runbooks: RunbooksView(path: $path)
+        case .runbookPlan(let id): RunbookPlanView(id: id, path: $path)
+        case .runbookRun(let id): RunbookRunView(id: id, path: $path)
         }
     }
 
@@ -565,6 +572,9 @@ struct MainNavigation: View {
             return Route.kubernetes(KubeFocus(tab: .workloads, id: w.id, namespace: w.namespace, name: w.name))
         case .netPerf:
             return NetPerfJob.shared.run == nil ? nil : Route.networkTest
+        case .runbook:
+            guard let run = RunbookJob.shared.run else { return nil }
+            return Route.runbookRun(id: run.id)
         case .configMulti, .imagePull, .imageScan:
             return nil
         }

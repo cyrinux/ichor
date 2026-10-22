@@ -43,6 +43,9 @@ struct OverviewTitleMenu: View {
             Button(action: shareIncident) {
                 Label("Share incident summary…", systemImage: "square.and.arrow.up")
             }
+            Button { path.append(.runbooks) } label: {
+                Label("Runbooks…", systemImage: "list.bullet.rectangle")
+            }
         }
         ShareLinkButton(target: .screen(.cluster))
     }
