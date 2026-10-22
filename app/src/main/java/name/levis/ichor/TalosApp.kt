@@ -435,6 +435,7 @@ class TalosApp : Application() {
                 forgetShownCluster()
             },
             proposals = proposals,
+            plugins = pluginRepository,
         )
     }
 

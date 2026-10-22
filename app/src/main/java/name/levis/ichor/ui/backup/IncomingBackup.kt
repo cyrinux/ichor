@@ -60,7 +60,7 @@ fun IncomingBackup(
 
     BackupFlow(vm, onRestored = onRestored, replaceWarning = hasConfig)
     when (val s = state) {
-        BackupState.RestoreDone -> LaunchedEffect(s) { vm.reset() }
+        is BackupState.RestoreDone -> LaunchedEffect(s) { vm.reset() }
         is BackupState.Failed -> AlertDialog(
             onDismissRequest = vm::reset,
             title = { Text(stringResource(R.string.backup_restore_title)) },

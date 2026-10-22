@@ -1923,6 +1923,8 @@
     <string name="backup_saved">Backup salvato. Conserva la passphrase in un posto sicuro.</string>
     <string name="backup_saved_age_keys">Backup salvato. Si apre con la tua chiave age su un computer.</string>
     <string name="backup_restored">Backup ripristinato.</string>
+    <string name="backup_plugins_restored">Plugin ripristinati: %1$d</string>
+    <string name="backup_plugins_skipped">Plugin esclusi, non sono più validi:\n%1$s</string>
     <string name="backup_err_wrong_passphrase">Passphrase errata o file danneggiato.</string>
     <string name="backup_err_passphrase_short">Usa almeno %1$d caratteri.</string>
     <string name="backup_err_passphrase_mismatch">Le passphrase non coincidono.</string>
@@ -5398,11 +5400,14 @@
     <string name="plugins_source_paste">Incolla</string>
     <string name="plugins_source_file">File</string>
     <string name="plugins_source_url">URL</string>
+    <string name="plugins_source_scan">Scansiona</string>
     <string name="plugins_field_yaml">YAML del plugin</string>
     <string name="plugins_paste_clipboard">Incolla dagli appunti</string>
     <string name="plugins_pick_file">Scegli un file</string>
     <string name="plugins_field_url">Indirizzo https:// del file del plugin</string>
     <string name="plugins_download">Scarica e verifica</string>
+    <string name="plugins_scan_hint">Inquadra il codice QR di un plugin: un link al suo file, o il file stesso su uno o più codici (just qr-parts).</string>
+    <string name="plugins_scan_again">Scansiona di nuovo</string>
     <string name="plugins_working">Verifica…</string>
     <string name="plugins_check">Verifica e importa</string>
     <string name="plugins_import_failed">Non importato:</string>

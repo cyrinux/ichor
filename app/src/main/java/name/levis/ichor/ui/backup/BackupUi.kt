@@ -41,7 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.model.PluginRestoreResult
 import name.levis.ichor.model.backupFileName
+import name.levis.ichor.model.skippedText
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
@@ -107,7 +109,8 @@ fun BackupStatus(state: BackupState) {
     val text = when (state) {
         BackupState.Sealing -> stringResource(R.string.backup_sealing)
         is BackupState.Saved -> stringResource(if (state.recipientsOnly) R.string.backup_saved_age_keys else R.string.backup_saved)
-        is BackupState.Restored, BackupState.RestoreDone -> stringResource(R.string.backup_restored)
+        is BackupState.Restored -> stringResource(R.string.backup_restored)
+        is BackupState.RestoreDone -> restoredText(state.plugins)
         is BackupState.Failed -> state.message.asString()
         else -> return
     }
@@ -116,6 +119,17 @@ fun BackupStatus(state: BackupState) {
         style = MaterialTheme.typography.bodySmall,
         color = if (state is BackupState.Failed) LocalStatusColors.current.bad else MaterialTheme.colorScheme.onSurfaceVariant,
     )
+}
+
+/** "Restored", with how many imported plugins came back and which were left out, and why. */
+@Composable
+private fun restoredText(plugins: PluginRestoreResult?): String {
+    val lines = listOfNotNull(
+        stringResource(R.string.backup_restored),
+        plugins?.restored?.size?.takeIf { it > 0 }?.let { stringResource(R.string.backup_plugins_restored, it) },
+        plugins?.takeIf { it.errors.isNotEmpty() }?.let { stringResource(R.string.backup_plugins_skipped, it.skippedText) },
+    )
+    return lines.joinToString("\n")
 }
 
 @Composable

@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
 data class BackupPayload(
     /**
      * The payload version, checked by the Go core; bump it for changes older apps cannot read.
-     * [backupFormatFor] when written (3, or 4 with proposals); 1 to 4 are read.
+     * [backupFormatFor] when written (3; 4 with proposals; 5 with plugins); 1 to 5 are read.
      */
     @EncodeDefault val format: Int = BACKUP_FORMAT_SETTINGS,
     val platform: String = "",
@@ -51,6 +51,8 @@ data class BackupPayload(
     val secrets: BackupSecrets? = null,
     /** The pull requests opened from the phone, per cluster fingerprint (format 4, only when there are some). */
     val proposals: Map<String, List<GitProposalRecord>>? = null,
+    /** The imported plugins (format 5, only when there are some): Ichorgo.pluginUserExport's answer. */
+    val plugins: BackupPlugins? = null,
 )
 
 @Serializable
@@ -99,11 +101,11 @@ data class BackupWolTarget(val mac: String, val broadcast: String = "", val port
 
 /**
  * The newest format this app reads and writes: 3 adds pins, Git hosts, AI settings and the
- * opt-in secrets; 4 the pull requests opened from the phone. Older apps refuse a newer format
+ * opt-in secrets; 4 the pull requests opened from the phone; 5 the imported plugins. Older apps refuse a newer format
  * ("update the app") rather than silently drop what it holds, so a backup is written in the
  * lowest format its content needs (see [backupFormatFor]).
  */
-const val BACKUP_FORMAT = 4
+const val BACKUP_FORMAT = 5
 
 /** The format that added pins, Git hosts, AI settings and the secrets. */
 const val BACKUP_FORMAT_SETTINGS = 3
@@ -111,9 +113,21 @@ const val BACKUP_FORMAT_SETTINGS = 3
 /** The format that added [BackupPayload.proposals]. */
 const val BACKUP_FORMAT_PROPOSALS = 4
 
-/** The format a backup holding [proposals] is written in: 4 only when it has some, so a backup without them opens in an app that reads 3. */
-fun backupFormatFor(proposals: Map<String, List<GitProposalRecord>>?): Int =
-    if (proposals.isNullOrEmpty()) BACKUP_FORMAT_SETTINGS else BACKUP_FORMAT_PROPOSALS
+/**
+ * The format that added [BackupPayload.plugins]: not 4, which an app already released reads
+ * while ignoring the plugins, so a backup with plugins is refused there ("update the app").
+ */
+const val BACKUP_FORMAT_PLUGINS = 5
+
+/**
+ * The format a backup holding [proposals] and [plugins] is written in: 5 with plugins, 4 with
+ * proposals only, else 3, so a backup opens in every app that can restore all it holds.
+ */
+fun backupFormatFor(proposals: Map<String, List<GitProposalRecord>>?, plugins: BackupPlugins? = null): Int = when {
+    !plugins?.plugins.isNullOrEmpty() -> BACKUP_FORMAT_PLUGINS
+    !proposals.isNullOrEmpty() -> BACKUP_FORMAT_PROPOSALS
+    else -> BACKUP_FORMAT_SETTINGS
+}
 
 /** The proposals of the clusters still in [fingerprints]; null when none has any. */
 fun backupProposals(fingerprints: List<String>, all: Map<String, List<GitProposalRecord>>): Map<String, List<GitProposalRecord>>? =

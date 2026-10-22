@@ -46,7 +46,11 @@ struct BackupSection: View {
                 }
             RestoreBackupButton(confirmFirst: true) {
                 message = String(localized: "Backup restored.")
-            } onError: { message = $0 }
+            } onError: {
+                message = $0
+            } onNote: { note in
+                message = String(localized: "Backup restored.") + " " + note
+            }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         } header: {
             Text("Backup")
@@ -87,6 +91,8 @@ struct RestoreBackupButton: View {
     var confirmFirst: Bool
     var onRestored: () -> Void
     var onError: (String) -> Void
+    /// After onRestored: what became of the backup's plugins, when it had some.
+    var onNote: ((String) -> Void)? = nil
 
     @State private var confirming = false
     @State private var importing = false
@@ -107,9 +113,10 @@ struct RestoreBackupButton: View {
                 }
             }
             .sheet(item: $picked) { backup in
-                UnlockBackupSheet(file: backup.data) {
+                UnlockBackupSheet(file: backup.data) { note in
                     picked = nil
                     onRestored()
+                    if let note { onNote?(note) }
                 }
             }
     }
@@ -287,7 +294,8 @@ private struct NewBackupPassphraseSheet: View {
 /// Asks a picked backup's passphrase and restores it; stays open on a wrong passphrase.
 private struct UnlockBackupSheet: View {
     let file: Data
-    var onRestored: () -> Void
+    /// With what became of the backup's plugins, nil when it has none.
+    var onRestored: (String?) -> Void
     @Environment(AppModel.self) private var model
     @Environment(AISettings.self) private var ai
     @Environment(GitHostStore.self) private var gitHosts
@@ -327,8 +335,8 @@ private struct UnlockBackupSheet: View {
         busy = true
         defer { busy = false }
         do {
-            try await AppBackup.restore(file, passphrase: passphrase, model: model, ai: ai, gitHosts: gitHosts)
-            onRestored()
+            let note = try await AppBackup.restore(file, passphrase: passphrase, model: model, ai: ai, gitHosts: gitHosts)
+            onRestored(note)
         } catch {
             self.error = error.localizedDescription
         }

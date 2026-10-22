@@ -202,18 +202,22 @@ func TestBackupHoldsKubeconfigClusters(t *testing.T) {
 	}
 }
 
+// Format 4 carries the proposals, format 5 the imported plugins (PluginUserExport's answer).
 func TestBackupFormat4KeepsProposals(t *testing.T) {
 	talos := testConfig(t, time.Now().Add(time.Hour))
 	proposals := map[string]any{"fp-lab": []map[string]any{{"repoURL": "https://git.example.org/example-org/cluster-config", "number": 12,
 		"title": "Raise ingest replicas", "state": "open"}}}
+	plugins := map[string]any{"plugins": []map[string]any{{"id": "widgets", "enabled": false,
+		"yaml": "schemaVersion: ichor.dev/plugin/v1alpha1\nid: widgets\n"}}}
 
 	for name, tc := range map[string]struct {
 		payload map[string]any
 		ok      bool
 	}{
 		"format 4 with proposals": {map[string]any{"format": 4, "talosconfig": talos, "proposals": proposals}, true},
+		"format 5 with plugins":   {map[string]any{"format": 5, "talosconfig": talos, "plugins": plugins}, true},
 		"format 3 still read":     {map[string]any{"format": 3, "talosconfig": talos}, true},
-		"format 5 refused":        {map[string]any{"format": 5, "talosconfig": talos}, false},
+		"format 6 refused":        {map[string]any{"format": 6, "talosconfig": talos}, false},
 	} {
 		raw, err := json.Marshal(tc.payload)
 		if err != nil {

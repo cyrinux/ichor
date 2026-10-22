@@ -3,7 +3,7 @@ import IchorCore
 
 /// Backs up the talosconfig, the kubeconfig of the clusters added without Talos, and the
 /// settings that go with them (pins, Git hosts, AI settings, the pull requests opened from the
-/// phone; their keys and tokens only when
+/// phone, the imported plugins; their keys and tokens only when
 /// the user opts in) into a file sealed with a
 /// passphrase (Argon2id + AES-256-GCM, in the Go core) or saved as an age file (a passphrase or
 /// age public keys), and restores one, on this device or
@@ -25,8 +25,10 @@ enum AppBackup {
         let aiBackup = await ai.backup(includeKeys: includeSecrets)
         // The pull requests opened from the phone: format 4 only when there are some.
         let proposals = backupProposals(model.proposals, fingerprints: fingerprints)
+        // The imported plugins: format 5 only when there are some.
+        let plugins = backupPlugins(try await TalosClient.exportPlugins())
         let payload = BackupPayload(
-            format: backupPayloadFormat(hasProposals: proposals != nil),
+            format: backupPayloadFormat(hasProposals: proposals != nil, hasPlugins: plugins != nil),
             platform: "ios",
             createdAt: Int64(Date().timeIntervalSince1970),
             talosconfig: model.yaml ?? "",
@@ -50,7 +52,8 @@ enum AppBackup {
             ai: aiBackup.settings,
             secrets: backupSecrets(include: includeSecrets, aiKeys: aiBackup.keys,
                                    gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:]),
-            proposals: proposals
+            proposals: proposals,
+            plugins: plugins
         )
         let json = try TalosJSON.encode(payload)
         switch format {
@@ -78,9 +81,11 @@ enum AppBackup {
     }
 
     /// Replaces the stored config and settings with those of `file`. Throws
-    /// `BackupError.wrongPassphrase` for a wrong passphrase, so the user can try again.
+    /// `BackupError.wrongPassphrase` for a wrong passphrase, so the user can try again. The
+    /// answer says what became of the backup's plugins, nil when it has none.
+    @discardableResult
     static func restore(_ file: Data, passphrase: String, model: AppModel, ai: AISettings,
-                        gitHosts: GitHostStore) async throws {
+                        gitHosts: GitHostStore) async throws -> String? {
         let json = try await localized { try await TalosClient.decryptBackup(file, passphrase: passphrase) }
         guard let payload = try? JSONDecoder().decode(BackupPayload.self, from: Data(json.utf8)) else {
             throw BackupError.invalidContent
@@ -108,6 +113,7 @@ enum AppBackup {
             model.storeProposals(proposals)
         }
         gitHosts.restore(restoredGitHosts(payload))
+        let pluginsNote = await restorePlugins(payload)
         if payload.ai != nil || payload.secrets?.aiKeys != nil {
             await ai.restore(payload.ai, keys: payload.secrets?.aiKeys ?? [:])
         }
@@ -127,6 +133,23 @@ enum AppBackup {
             let on = alerts ? await BackgroundMonitor.requestPermission() : false
             BackgroundMonitor.alertsEnabled = on
             if on { BackgroundMonitor.schedule() }
+        }
+        return pluginsNote
+    }
+
+    /// Stores a format 5 backup's plugins, each checked again here; the line the restore shows
+    /// about them, nil when the backup has none. A failure is that line: the clusters are restored.
+    private static func restorePlugins(_ payload: BackupPayload) async -> String? {
+        guard let plugins = restoredPlugins(payload) else { return nil }
+        do {
+            let result = try await TalosClient.restorePlugins(plugins)
+            var lines = [String(localized: "Plugins restored: \(result.restored.count).")]
+            if !result.errors.isEmpty {
+                lines.append(String(localized: "Plugins not restored: \(result.skippedLine)"))
+            }
+            return lines.joined(separator: " ")
+        } catch {
+            return String(localized: "Plugins not restored: \(error.localizedDescription)")
         }
     }
 

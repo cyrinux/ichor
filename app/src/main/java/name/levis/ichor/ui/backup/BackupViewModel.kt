@@ -8,6 +8,7 @@ import name.levis.ichor.data.BackupPassphraseException
 import name.levis.ichor.data.RestoreOutcome
 import name.levis.ichor.model.BackupFileFormat
 import name.levis.ichor.model.BackupSeal
+import name.levis.ichor.model.PluginRestoreResult
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +40,9 @@ sealed interface BackupState {
     data object Restoring : BackupState
     /** Restored, the screen is to act on [outcome] (once: [RestoreDone] after). */
     data class Restored(val outcome: RestoreOutcome) : BackupState
-    data object RestoreDone : BackupState
+
+    /** Restored and acted on; [plugins] stays for the status line when the backup had some. */
+    data class RestoreDone(val plugins: PluginRestoreResult? = null) : BackupState
 
     data class Failed(val message: UiText) : BackupState
 }
@@ -73,7 +76,7 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
     /** The restore's outcome, for the screen to act on once (recomposition, recreate()). */
     fun takeRestored(): RestoreOutcome? {
         val restored = _state.value as? BackupState.Restored ?: return null
-        _state.value = BackupState.RestoreDone
+        _state.value = BackupState.RestoreDone(restored.outcome.plugins)
         return restored.outcome
     }
 

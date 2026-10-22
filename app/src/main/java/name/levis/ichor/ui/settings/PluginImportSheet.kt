@@ -6,9 +6,12 @@ import androidx.annotation.StringRes
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -30,12 +33,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -54,6 +60,7 @@ import name.levis.ichor.model.PluginConsent
 import name.levis.ichor.model.PluginUserItem
 import name.levis.ichor.model.consent
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.importconfig.QrScanner
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.readBounded
@@ -63,6 +70,7 @@ private enum class PluginSource(@StringRes val label: Int) {
     PASTE(R.string.plugins_source_paste),
     FILE(R.string.plugins_source_file),
     URL(R.string.plugins_source_url),
+    SCAN(R.string.plugins_source_scan),
 }
 
 /**
@@ -125,6 +133,8 @@ private fun ImportStep(plugins: PluginRepository, onChecked: (yaml: String, item
     var url by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    // A new key starts a new scan: the scanner stops once it delivered a code.
+    var scanKey by remember { mutableIntStateOf(0) }
 
     fun run(block: suspend () -> Unit) {
         busy = true
@@ -212,6 +222,34 @@ private fun ImportStep(plugins: PluginRepository, onChecked: (yaml: String, item
                 enabled = url.isNotBlank() && !busy,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.plugins_download)) }
+        }
+        PluginSource.SCAN -> {
+            // A plugin link is downloaded, a plugin file (one code, or several from
+            // `just qr-parts`) taken as is; either way it is checked, then consented to.
+            key(scanKey) {
+                Box(Modifier.fillMaxWidth().height(300.dp).clip(MaterialTheme.shapes.medium)) {
+                    QrScanner(
+                        onScanned = { text ->
+                            run {
+                                val file = plugins.scanned(text)
+                                yaml = file
+                                onChecked(file, plugins.check(file))
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+            MutedText(stringResource(R.string.plugins_scan_hint))
+            if (error != null && !busy) {
+                OutlinedButton(
+                    onClick = {
+                        error = null
+                        scanKey++
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.plugins_scan_again)) }
+            }
         }
     }
     if (busy) {

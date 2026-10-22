@@ -2,7 +2,9 @@ package name.levis.ichor.data
 
 import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.model.PluginRestoreResult
 import name.levis.ichor.model.backupFormatFor
+import name.levis.ichor.model.restoredPlugins
 import name.levis.ichor.model.backupProposals
 import name.levis.ichor.model.restoredProposals
 import name.levis.ichor.model.BackupPayload
@@ -30,8 +32,11 @@ import name.levis.ichorgo.Ichorgo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** What a restore changed that the screen on display has to act on. */
-data class RestoreOutcome(val languageChanged: Boolean, val language: String)
+/**
+ * What a restore changed that the screen on display has to act on; [plugins] when the backup
+ * carried imported plugins (format 5).
+ */
+data class RestoreOutcome(val languageChanged: Boolean, val language: String, val plugins: PluginRestoreResult? = null)
 
 /**
  * Backs up the talosconfig, the kubeconfig and the settings that go with them into a file sealed with a
@@ -61,6 +66,8 @@ class BackupManager(
     private val onRestored: () -> Unit,
     /** The pull requests opened from the phone (format 4); null leaves them out. */
     private val proposals: ProposalsStore? = null,
+    /** The imported plugins (format 5); null leaves them out. */
+    private val plugins: PluginRepository? = null,
 ) {
     /**
      * The backup file of the stored config and settings, sealed as [seal] says (the app's format,
@@ -74,8 +81,9 @@ class BackupManager(
             val kubeconfig = stored.kubeYaml.takeIf { it.isNotBlank() }
             val fingerprints = stored.summary.contexts.map { it.fingerprint }
             val kept = proposals?.let { backupProposals(fingerprints, it.proposals.value) }
+            val imported = plugins?.export()
             val payload = BackupPayload(
-                format = backupFormatFor(kept),
+                format = backupFormatFor(kept, imported),
                 platform = "android",
                 createdAt = now,
                 talosconfig = stored.talosYaml,
@@ -112,6 +120,7 @@ class BackupManager(
                 ai = backupAi(ai.settings.value),
                 secrets = if (includeSecrets) secrets() else null,
                 proposals = kept,
+                plugins = imported,
             )
             val json = TalosJson.encodeToString(BackupPayload.serializer(), payload)
             backupCall {
@@ -192,15 +201,20 @@ class BackupManager(
         // settings.appLockMode is never applied: the lock's secret is device-bound. With a real
         // cluster restored and no lock here, the app shows the lock onboarding (lockRequired).
         restoreExtras(payload, fingerprints)
+        // Checked by the core as an import is: one this app no longer reads is reported, not stored.
+        val pluginsBack = restoredPlugins(payload)?.let { plugins?.restore(it) }
         val language = settings.language?.let(AppLocale::normalize)
         val languageChanged = language != null && language != ui.language.value
         if (languageChanged) ui.setLanguage(language)
 
         onRestored()
-        return RestoreOutcome(languageChanged, language ?: ui.language.value)
+        return RestoreOutcome(languageChanged, language ?: ui.language.value, pluginsBack)
     }
 
-    /** Pins, Git hosts and AI settings (format 3), the proposals (format 4), each only when the backup has it; secrets through their stores. */
+    /**
+     * Pins, Git hosts and AI settings (format 3), the proposals (format 4), each only when the
+     * backup has it; secrets through their stores. The plugins (format 5) are restored by [restore].
+     */
     private fun restoreExtras(payload: BackupPayload, fingerprints: List<String>) {
         restoredPins(payload.pins, fingerprints)?.forEach { (fp, list) -> pins.replace(fp, list) }
         restoredProposals(payload, fingerprints)?.forEach { (fp, list) -> proposals?.replace(fp, list) }

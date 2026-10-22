@@ -1915,6 +1915,8 @@
     <string name="backup_saved">Sicherung gespeichert. Bewahre die Passphrase sicher auf.</string>
     <string name="backup_saved_age_keys">Sicherung gespeichert. Sie lässt sich mit deinem age-Schlüssel auf einem Computer öffnen.</string>
     <string name="backup_restored">Sicherung wiederhergestellt.</string>
+    <string name="backup_plugins_restored">Wiederhergestellte Plugins: %1$d</string>
+    <string name="backup_plugins_skipped">Ausgelassene Plugins, sie sind nicht mehr gültig:\n%1$s</string>
     <string name="backup_err_wrong_passphrase">Falsche Passphrase oder beschädigte Datei.</string>
     <string name="backup_err_passphrase_short">Verwende mindestens %1$d Zeichen.</string>
     <string name="backup_err_passphrase_mismatch">Die Passphrasen stimmen nicht überein.</string>
@@ -5389,11 +5391,14 @@
     <string name="plugins_source_paste">Einfügen</string>
     <string name="plugins_source_file">Datei</string>
     <string name="plugins_source_url">URL</string>
+    <string name="plugins_source_scan">Scannen</string>
     <string name="plugins_field_yaml">Plugin-YAML</string>
     <string name="plugins_paste_clipboard">Aus der Zwischenablage einfügen</string>
     <string name="plugins_pick_file">Datei auswählen</string>
     <string name="plugins_field_url">https://-Adresse der Plugin-Datei</string>
     <string name="plugins_download">Herunterladen und prüfen</string>
+    <string name="plugins_scan_hint">Richte die Kamera auf den QR-Code eines Plugins: ein Link zu seiner Datei oder die Datei selbst, auf einem oder mehreren Codes (just qr-parts).</string>
+    <string name="plugins_scan_again">Erneut scannen</string>
     <string name="plugins_working">Wird geprüft…</string>
     <string name="plugins_check">Prüfen und importieren</string>
     <string name="plugins_import_failed">Nicht importiert:</string>

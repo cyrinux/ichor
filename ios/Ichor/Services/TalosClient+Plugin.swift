@@ -91,6 +91,25 @@ extension TalosClient {
     static func downloadPlugin(url: String) async throws -> String {
         try await run { IchorgoPluginFetchURL(url, $0) }
     }
+
+    /// What a scanned code holds: a plugin link (https, checked like downloadPlugin's) or the
+    /// plugin file; anything else throws. Nothing is fetched or stored.
+    static func pluginQRPayload(_ text: String) async throws -> PluginQRPayload {
+        try await json { IchorgoPluginQRPayload(text, $0) }
+    }
+
+    /// The imported plugins, their files and flags, for the backup.
+    static func exportPlugins() async throws -> PluginBackup {
+        try await json { IchorgoPluginUserExport($0) }
+    }
+
+    /// Stores a backup's plugins, each checked as an import is and kept on or off.
+    static func restorePlugins(_ backup: PluginBackup) async throws -> PluginRestoreResult {
+        let payload = try TalosJSON.encode(backup)
+        let result: PluginRestoreResult = try await json { IchorgoPluginUserRestore(payload, $0) }
+        await PluginCatalogCache.reset()
+        return result
+    }
 }
 
 /// The language Go translates a plugin's labels into: the one the app runs in ("fr"), so the

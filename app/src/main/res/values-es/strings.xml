@@ -1923,6 +1923,8 @@
     <string name="backup_saved">Copia guardada. Guarda la frase de contraseña en un lugar seguro.</string>
     <string name="backup_saved_age_keys">Copia guardada. Se abre con tu clave age en un ordenador.</string>
     <string name="backup_restored">Copia restaurada.</string>
+    <string name="backup_plugins_restored">Plugins restaurados: %1$d</string>
+    <string name="backup_plugins_skipped">Plugins omitidos, ya no son válidos:\n%1$s</string>
     <string name="backup_err_wrong_passphrase">Frase de contraseña incorrecta o archivo dañado.</string>
     <string name="backup_err_passphrase_short">Usa al menos %1$d caracteres.</string>
     <string name="backup_err_passphrase_mismatch">Las frases de contraseña no coinciden.</string>
@@ -5398,11 +5400,14 @@
     <string name="plugins_source_paste">Pegar</string>
     <string name="plugins_source_file">Archivo</string>
     <string name="plugins_source_url">URL</string>
+    <string name="plugins_source_scan">Escanear</string>
     <string name="plugins_field_yaml">YAML del plugin</string>
     <string name="plugins_paste_clipboard">Pegar desde el portapapeles</string>
     <string name="plugins_pick_file">Elegir un archivo</string>
     <string name="plugins_field_url">Dirección https:// del archivo del plugin</string>
     <string name="plugins_download">Descargar y comprobar</string>
+    <string name="plugins_scan_hint">Apunta la cámara al código QR de un plugin: un enlace a su archivo, o el propio archivo en uno o varios códigos (just qr-parts).</string>
+    <string name="plugins_scan_again">Escanear de nuevo</string>
     <string name="plugins_working">Comprobando…</string>
     <string name="plugins_check">Comprobar e importar</string>
     <string name="plugins_import_failed">No importado:</string>

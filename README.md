@@ -339,12 +339,14 @@ tour** shows it again.
 - **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
   imported. Import a plugin file (one `just probe plugin-from-crd` drafted from a CRD, or
   `/ichor-crd-plugin` wrote, and `just probe plugin-lint` checked,
-  for an operator Ichor does not know) by pasting it, picking it in Files, or from an https URL
-  (1 MiB at most). It is validated first, with the line of each problem; then a consent sheet
+  for an operator Ichor does not know) by pasting it, picking it in Files, from an https URL
+  (1 MiB at most), or by scanning a QR code (an `ichor://plugin?url=…` link, or the file itself
+  over one or several codes made with `just qr-parts`). It is validated first, with the line of each problem; then a consent sheet
   shows what it reads (a Secret whose values it shows in clear is flagged in red) and what it can
   change, with which verbs, before you enable it. It renders like a built-in, with your own
   Kubernetes access, through the resources it declares only; switch it off or remove it there.
-  The file stays on the phone, encrypted. Format: [docs/plugins.md](docs/plugins.md#user-plugins).
+  The file stays on the phone, encrypted, and travels with the app backup, on or off as it was.
+  Format: [docs/plugins.md](docs/plugins.md#user-plugins).
   For a CRD the app does not show yet, the
   [Plugin request](https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml) issue
   form takes its public manifest link.
@@ -1269,8 +1271,9 @@ a fresh install. Backups move between Android and iOS.
 - **What it holds:** the talosconfig (every cluster's credentials), the cluster on screen,
   theme, language, screenshot mode, monitoring and its storage thresholds, "Allow screenshots",
   each cluster's name, color, VPN-only setting, Wake-on-LAN targets, pins and repository, your Git hosts,
-  the pull requests opened from the phone (a backup that holds some needs this version or later to
-  restore), the AI diagnosis settings, and whether an app lock was on. API keys and Git tokens only
+  the pull requests opened from the phone and the plugins you imported, on or off (a backup that
+  holds either needs this version or later to restore; a plugin that no longer validates is
+  listed as left out), the AI diagnosis settings, and whether an app lock was on. API keys and Git tokens only
   when you turn on **Include API keys and Git tokens** while backing up (off by default:
   anyone with the file and its passphrase can use them).
 - **What it leaves out:** the app lock's secret and security-key data (set the lock again; the

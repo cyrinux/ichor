@@ -2,13 +2,14 @@ import SwiftUI
 import UniformTypeIdentifiers
 import IchorCore
 
-/// Imports a plugin file: pasted, picked in Files or downloaded from an https URL; Check has
-/// the core validate it, storing nothing. The consent step then shows what it reads (a Secret
-/// shown in clear in red) and can change; only Enable imports it, on. Cancel or closing the
-/// sheet leaves the stored plugins as they were. Same flow as Android's PluginImportSheet.kt.
+/// Imports a plugin file: pasted, picked in Files, downloaded from an https URL or scanned (a
+/// plugin link or the file itself, over several codes when large); Check has the core validate
+/// it, storing nothing. The consent step then shows what it reads (a Secret shown in clear in
+/// red) and can change; only Enable imports it, on. Cancel or closing the sheet leaves the
+/// stored plugins as they were. Same flow as Android's PluginImportSheet.kt.
 struct PluginImportSheet: View {
     private enum Source: String, CaseIterable, Identifiable {
-        case paste, file, url
+        case paste, file, url, scan
         var id: String { rawValue }
 
         var label: LocalizedStringKey {
@@ -16,6 +17,7 @@ struct PluginImportSheet: View {
             case .paste: "Paste"
             case .file: "File"
             case .url: "URL"
+            case .scan: "Scan"
             }
         }
     }
@@ -27,6 +29,7 @@ struct PluginImportSheet: View {
     @State private var busy = false
     @State private var failure: String?
     @State private var pickingFile = false
+    @State private var scanning = false
     /// The file checked and what it showed: nothing is stored until Enable.
     @State private var checked: (yaml: String, item: PluginUserItem)?
 
@@ -105,6 +108,22 @@ struct PluginImportSheet: View {
                     .textInputAutocapitalization(.never)
                 Button("Download and check") { Task { await download() } }
                     .disabled(busy || url.trimmingCharacters(in: .whitespaces).isEmpty)
+            case .scan:
+                Button("Scan a QR code") { scanning = true }
+                    .disabled(busy)
+                    .sheet(isPresented: $scanning) {
+                        NavigationStack {
+                            QRScannerView { text in
+                                scanning = false
+                                Task { await scanned(text) }
+                            }
+                            .navigationTitle("Scan a plugin QR code")
+                            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { scanning = false } } }
+                        }
+                    }
+                Text("A code holding an ichor://plugin link or the plugin file itself, over several codes when it is large (just qr-parts).")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             if busy {
                 HStack {
@@ -137,6 +156,24 @@ struct PluginImportSheet: View {
             await check(text)
         } catch {
             busy = false
+            failure = error.localizedDescription
+        }
+    }
+
+    /// A scanned code (its parts already joined): a plugin link is downloaded, a plugin file
+    /// checked; either then shows the consent step. Anything else says why it is not a plugin.
+    private func scanned(_ text: String) async {
+        failure = nil
+        do {
+            switch try await TalosClient.pluginQRPayload(text) {
+            case .url(let address):
+                url = address
+                await download()
+            case .yaml(let file):
+                yaml = file
+                await check(file)
+            }
+        } catch {
             failure = error.localizedDescription
         }
     }
