@@ -331,7 +331,11 @@ tour** shows it again.
   (a missing dependency, an update refused); jobs launched outside Config Connector are not
   shown. Workloads → Numaflow shows each pipeline and mono vertex (running, paused, failed and
   why), its vertices' pods and its inter-step buffer service, and pauses or resumes a pipeline.
-  Plugin actions run from their buttons.
+  Workloads → Temporal shows the Temporal clusters the Temporal operator runs (ready or not, and
+  which services are down), their namespaces and schedules, and pauses or unpauses a schedule;
+  Workloads → Temporal Worker Controller shows each worker rollout (current and target build,
+  ramp, a stalled rollout or a connection to Temporal that fails). Plugin actions run from their
+  buttons.
 - **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
   imported. Import a plugin file (one `just probe plugin-from-crd` drafted from a CRD, or
   `/ichor-crd-plugin` wrote, and `just probe plugin-lint` checked,
@@ -414,6 +418,9 @@ reads those roles and explains up front when a feature needs more.
 | **Data services: External Secrets sync status and stores** | `Kubeconfig`, then the Kubernetes API (`list` on externalsecrets.external-secrets.io; optional secretstores, clustersecretstores and secrets with the `reconcile.external-secrets.io/managed=true` label, values masked) | **`os:admin`** |
 | **Numaflow pipelines, vertices and buffer services** | `Kubeconfig`, then the Kubernetes API (`list` on pipelines, vertices, monovertices and interstepbufferservices in numaflow.numaproj.io; one it may not list is reported and the others still show) | **`os:admin`** |
 | **Pause or resume a Numaflow pipeline or mono vertex** | `Kubeconfig`, then the Kubernetes API (merge patch of `spec.lifecycle.desiredPhase`: `patch` on pipelines or monovertices in their namespace) | **`os:admin`** |
+| **Temporal clusters, namespaces and schedules** | `Kubeconfig`, then the Kubernetes API (`list` on temporalclusters, temporalnamespaces, temporalschedules and temporalclusterclients in temporal.io; a client's certificate Secret by name only) | **`os:admin`** |
+| **Pause or unpause a Temporal schedule** | `Kubeconfig`, then the Kubernetes API (merge patch of `spec.schedule.state.paused`: `patch` on temporalschedules in their namespace) | **`os:admin`** |
+| **Temporal worker deployments** | `Kubeconfig`, then the Kubernetes API (`list` on workerdeployments, connections, clusterconnections and workerresourcetemplates in temporal.io; connection Secrets by name only) | **`os:admin`** |
 | **Refresh an ExternalSecret** | `Kubeconfig`, then the Kubernetes API (`get` and `patch` on externalsecrets.external-secrets.io in its namespace: merge patch of the `external-secrets.io/force-sync` annotation; the button is off with the reason without `patch`, and on a `CreatedOnce` secret) | **`os:admin`** |
 | **Dataflow jobs declared through Config Connector** | `Kubeconfig`, then the Kubernetes API (`list` on dataflowjobs and dataflowflextemplatejobs of dataflow.cnrm.cloud.google.com; jobs launched outside Config Connector are not shown) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |

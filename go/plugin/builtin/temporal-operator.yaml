@@ -1,0 +1,737 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# The Temporal operator (alexandrevilain/temporal-operator, temporal.io/v1beta1) runs the
+# Temporal server: TemporalCluster, its TemporalNamespaces and TemporalSchedules, and the
+# TemporalClusterClients that get an mTLS certificate. On the phone: is the server Ready and
+# which of its services are not, does a namespace or a schedule fail to reconcile, is a
+# schedule paused or out of actions; and pause or unpause a schedule.
+# temporal.io is shared with the Temporal Worker Controller (temporal-worker-controller.yaml):
+# detection names temporalclusters, so a cluster that runs only the controller does not
+# activate this plugin.
+# The account needs list and get on the four resources; one it may not list lands in the
+# render's errors, the others still show. Pause and unpause need patch on temporalschedules.
+# A client's certificate Secret is shown by name only, never read.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: temporal-operator
+name: Temporal
+website: https://github.com/alexandrevilain/temporal-operator
+icon: temporal
+category: workloads
+catalogId: temporal
+
+detect:
+  - group: temporal.io
+    resource: temporalclusters
+
+resources:
+  temporalcluster:
+    group: temporal.io
+    version: v1beta1
+    resource: temporalclusters
+    kind: TemporalCluster
+    scope: Namespaced
+  # No printer columns upstream.
+  temporalnamespace:
+    group: temporal.io
+    version: v1beta1
+    resource: temporalnamespaces
+    kind: TemporalNamespace
+    scope: Namespaced
+  temporalschedule:
+    group: temporal.io
+    version: v1beta1
+    resource: temporalschedules
+    kind: TemporalSchedule
+    scope: Namespaced
+  # No printer columns and no conditions upstream.
+  temporalclusterclient:
+    group: temporal.io
+    version: v1beta1
+    resource: temporalclusterclients
+    kind: TemporalClusterClient
+    scope: Namespaced
+
+fields:
+  temporalcluster:
+    version: $.status.version | default("")
+    wantVersion: $.spec.version | default("")
+    shards: $.spec.numHistoryShards | default(0)
+    # status.services is absent until the operator reconciles once.
+    servicesTotal: len($.status.services | default([]))
+    servicesReady: len($.status.services[?(@.ready == true)] | default([]))
+    servicesDown: join($.status.services[?(@.ready != true)].name | default([]), ", ")
+    storeType: $.status.persistence.defaultStore.type | default("")
+    storeSetup: $.status.persistence.defaultStore.setup | default(false)
+    uiEnabled: $.spec.ui.enabled | default(false)
+    mtls: $.spec.mTLS.provider | default("")
+    createdAt: $.metadata.creationTimestamp | time()
+  temporalnamespace:
+    cluster: $.spec.clusterRef.name | default("")
+    retention: $.spec.retentionPeriod | default("")
+    global: $.spec.isGlobalNamespace | default(false)
+    owner: $.spec.ownerEmail | default("")
+    description: $.spec.description | default("")
+    clusterObj: join(temporalcluster, $.metadata.name == (left.spec.clusterRef.name | default("")) && $.metadata.namespace == (left.spec.clusterRef.namespace | default(left.metadata.namespace)))
+    createdAt: $.metadata.creationTimestamp | time()
+  temporalschedule:
+    temporalNamespace: $.spec.namespaceRef.name | default("")
+    paused: $.spec.schedule.state.paused | default(false)
+    notes: $.spec.schedule.state.notes | default("")
+    workflowType: $.spec.schedule.action.workflow.type | default("")
+    taskQueue: $.spec.schedule.action.workflow.taskQueue | default("")
+    crons: join($.spec.schedule.spec.crons | default([]), ", ")
+    intervals: len($.spec.schedule.spec.intervals | default([]))
+    calendars: len($.spec.schedule.spec.calendars | default([]))
+    tz: $.spec.schedule.spec.timezoneName | default("UTC")
+    remaining: $.spec.schedule.state.remainingActions | default(0)
+    limited: $.spec.schedule.state.limitedActions | default(false)
+    state: 'fields.paused ? "Paused" : "Active"'
+    createdAt: $.metadata.creationTimestamp | time()
+  temporalclusterclient:
+    cluster: $.spec.clusterRef.name | default("")
+    serverName: $.status.serverName | default("")
+    secret: $.status.secretRef.name | default("")
+    createdAt: $.metadata.creationTimestamp | time()
+
+health:
+  temporalcluster:
+    - when: conditions.Ready == false
+      health: critical
+      reason: notReady
+      message: 'not ready: {{ condition("Ready").message }}'
+    - when: conditions.ReconcileSuccess == false
+      health: warning
+      reason: reconcileFailed
+      message: 'reconcile failed: {{ condition("ReconcileSuccess").message }}'
+    - when: fields.servicesReady < fields.servicesTotal
+      health: warning
+      reason: servicesDown
+      message: "services not ready: {{ fields.servicesDown }}"
+    - when: fields.wantVersion != "" && fields.version != "" && fields.version != fields.wantVersion
+      health: info
+      reason: upgrading
+      message: "upgrading to {{ fields.wantVersion }}"
+    - when: conditions.Ready == null
+      health: unknown
+      reason: notReconciled
+      message: "not reconciled yet"
+  temporalnamespace:
+    - when: conditions.Ready == false
+      health: critical
+      reason: notReady
+      message: 'not ready: {{ condition("Ready").message }}'
+    - when: conditions.ReconcileSuccess == false
+      health: warning
+      reason: reconcileFailed
+      message: 'reconcile failed: {{ condition("ReconcileSuccess").message }}'
+    - when: conditions.Ready == null
+      health: unknown
+      reason: notReconciled
+      message: "not reconciled yet"
+  temporalschedule:
+    - when: conditions.Ready == false
+      health: critical
+      reason: notReady
+      message: 'not ready: {{ condition("Ready").message }}'
+    - when: conditions.ReconcileSuccess == false
+      health: warning
+      reason: reconcileFailed
+      message: 'reconcile failed: {{ condition("ReconcileSuccess").message }}'
+    - when: fields.paused
+      health: idle
+      reason: paused
+      message: "paused"
+    - when: fields.limited && fields.remaining == 0
+      health: warning
+      reason: exhausted
+      message: "no action left"
+    - when: conditions.Ready == null
+      health: unknown
+      reason: notReconciled
+      message: "not reconciled yet"
+  temporalclusterclient:
+    - when: fields.secret == ""
+      health: unknown
+      reason: notReconciled
+      message: "no certificate yet"
+
+dataServices:
+  summary:
+    aggregate:
+      clusters: count(temporalcluster)
+      clustersNotReady: count(temporalcluster, health == "critical")
+      namespaces: count(temporalnamespace)
+      schedules: count(temporalschedule)
+      schedulesPaused: count(temporalschedule, fields.paused)
+    health: worst([worst(temporalcluster.health), worst(temporalnamespace.health), worst(temporalschedule.health), worst(temporalclusterclient.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.clusters, one: "%d Temporal cluster", other: "%d Temporal clusters" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "not ready", value: dataServices.summary.clustersNotReady, tone: critical, hideWhenZero: true }
+      - { label: "paused schedules", value: dataServices.summary.schedulesPaused, tone: info, hideWhenZero: true }
+  clusters:
+    from: temporalcluster
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Temporal clusters."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.version
+      trailing: { text: 'string(fields.servicesReady) + "/" + string(fields.servicesTotal)' }
+      detail:
+        - type: gauge
+          label: "Services ready"
+          value: fields.servicesReady
+          max: fields.servicesTotal
+          tone: health
+        - type: keyValues
+          items:
+            - { label: "Version", value: fields.version, mono: true }
+            - { label: "Wanted", value: fields.wantVersion, mono: true }
+            - { label: "Services not ready", value: fields.servicesDown }
+            - { label: "History shards", value: fields.shards }
+            - { label: "Default store", value: fields.storeType }
+            - { label: "Store set up", value: fields.storeSetup }
+            - { label: "Web UI", value: fields.uiEnabled }
+            - { label: "mTLS", value: fields.mtls }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+        - type: conditions
+  namespaces:
+    from: temporalnamespace
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Temporal namespaces."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.retention
+      trailing: { text: fields.cluster }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Cluster", value: fields.cluster, mono: true }
+            - { label: "Retention", value: fields.retention }
+            - { label: "Global", value: fields.global }
+            - { label: "Owner", value: fields.owner }
+            - { label: "Description", value: fields.description }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+        - type: relations
+          items:
+            - { label: "Cluster", ref: fields.clusterObj }
+        - type: conditions
+  schedules:
+    from: temporalschedule
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Temporal schedules."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.state
+      trailing: { text: fields.workflowType }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Temporal namespace", value: fields.temporalNamespace, mono: true }
+            - { label: "Workflow", value: fields.workflowType, mono: true }
+            - { label: "Task queue", value: fields.taskQueue, mono: true }
+            - { label: "Crons", value: fields.crons, mono: true }
+            - { label: "Intervals", value: fields.intervals }
+            - { label: "Calendars", value: fields.calendars }
+            - { label: "Time zone", value: fields.tz }
+            - { label: "Remaining actions", value: 'fields.limited ? string(fields.remaining) : ""' }
+            - { label: "Notes", value: fields.notes }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+        - type: conditions
+        - type: actions
+          items: [pauseSchedule, unpauseSchedule]
+  clients:
+    from: temporalclusterclient
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Temporal cluster clients."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.cluster
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Cluster", value: fields.cluster, mono: true }
+            - { label: "Server name", value: fields.serverName, mono: true }
+            - { label: "Certificate Secret", value: fields.secret, mono: true }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+
+# The schedule's own lever: spec.schedule.state.paused, which the operator applies to the
+# Temporal schedule.
+actions:
+  pauseSchedule:
+    label: "Pause"
+    on: temporalschedule
+    verb: mergePatch
+    body: { spec: { schedule: { state: { paused: true } } } }
+    rbac: { verbs: [patch], group: temporal.io, resource: temporalschedules }
+    confirm: plain
+    audit: temporal.schedulePause
+    enabledWhen: "!fields.paused"
+    disabledReason: "already paused"
+  unpauseSchedule:
+    label: "Unpause"
+    on: temporalschedule
+    verb: mergePatch
+    body: { spec: { schedule: { state: { paused: false } } } }
+    rbac: { verbs: [patch], group: temporal.io, resource: temporalschedules }
+    confirm: plain
+    audit: temporal.scheduleUnpause
+    enabledWhen: fields.paused
+    disabledReason: "not paused"
+
+findings:
+  - id: cluster-not-ready
+    from: temporalcluster
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: clusters
+  - id: cluster-unhealthy
+    from: temporalcluster
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: clusters
+  - id: namespace-not-ready
+    from: temporalnamespace
+    when: health == "critical" || health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: namespaces
+  - id: schedule-not-ready
+    from: temporalschedule
+    when: health == "critical" || health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: schedules
+
+i18n:
+  fr:
+    '%d Temporal cluster': '%d cluster Temporal'
+    '%d Temporal clusters': '%d clusters Temporal'
+    'already paused': 'déjà en pause'
+    'Calendars': 'Calendriers'
+    'Certificate Secret': 'Secret du certificat'
+    'Cluster': 'Cluster'
+    'Created': 'Créé'
+    'Crons': 'Crons'
+    'Default store': 'Stockage par défaut'
+    'Description': 'Description'
+    'Global': 'Global'
+    'History shards': 'Shards d''historique'
+    'Intervals': 'Intervalles'
+    'mTLS': 'mTLS'
+    'no action left': 'plus aucune action'
+    'no certificate yet': 'pas encore de certificat'
+    'No Temporal cluster clients.': 'Aucun client de cluster Temporal.'
+    'No Temporal clusters.': 'Aucun cluster Temporal.'
+    'No Temporal namespaces.': 'Aucun namespace Temporal.'
+    'No Temporal schedules.': 'Aucune planification Temporal.'
+    'not paused': 'pas en pause'
+    'not ready': 'pas prêts'
+    'not ready: {{ condition("Ready").message }}': 'pas prêt : {{ condition("Ready").message }}'
+    'not reconciled yet': 'pas encore réconcilié'
+    'Notes': 'Notes'
+    'Owner': 'Responsable'
+    'Pause': 'Mettre en pause'
+    'paused': 'en pause'
+    'paused schedules': 'planifications en pause'
+    'reconcile failed: {{ condition("ReconcileSuccess").message }}': 'réconciliation en échec : {{ condition("ReconcileSuccess").message }}'
+    'Remaining actions': 'Actions restantes'
+    'Retention': 'Rétention'
+    'Server name': 'Nom du serveur'
+    'Services not ready': 'Services pas prêts'
+    'services not ready: {{ fields.servicesDown }}': 'services pas prêts : {{ fields.servicesDown }}'
+    'Services ready': 'Services prêts'
+    'Store set up': 'Stockage initialisé'
+    'Task queue': 'File de tâches'
+    'Temporal namespace': 'Namespace Temporal'
+    'Time zone': 'Fuseau horaire'
+    'Unpause': 'Reprendre'
+    'upgrading to {{ fields.wantVersion }}': 'mise à jour vers {{ fields.wantVersion }}'
+    'Version': 'Version'
+    'Wanted': 'Voulue'
+    'Web UI': 'Interface web'
+    'Workflow': 'Workflow'
+  de:
+    '%d Temporal cluster': '%d Temporal-Cluster'
+    '%d Temporal clusters': '%d Temporal-Cluster'
+    'already paused': 'bereits pausiert'
+    'Calendars': 'Kalender'
+    'Certificate Secret': 'Zertifikat-Secret'
+    'Cluster': 'Cluster'
+    'Created': 'Erstellt'
+    'Crons': 'Crons'
+    'Default store': 'Standardspeicher'
+    'Description': 'Beschreibung'
+    'Global': 'Global'
+    'History shards': 'History-Shards'
+    'Intervals': 'Intervalle'
+    'mTLS': 'mTLS'
+    'no action left': 'keine Aktion mehr'
+    'no certificate yet': 'noch kein Zertifikat'
+    'No Temporal cluster clients.': 'Keine Temporal-Cluster-Clients.'
+    'No Temporal clusters.': 'Keine Temporal-Cluster.'
+    'No Temporal namespaces.': 'Keine Temporal-Namespaces.'
+    'No Temporal schedules.': 'Keine Temporal-Zeitpläne.'
+    'not paused': 'nicht pausiert'
+    'not ready': 'nicht bereit'
+    'not ready: {{ condition("Ready").message }}': 'nicht bereit: {{ condition("Ready").message }}'
+    'not reconciled yet': 'noch nicht abgeglichen'
+    'Notes': 'Notizen'
+    'Owner': 'Besitzer'
+    'Pause': 'Pausieren'
+    'paused': 'pausiert'
+    'paused schedules': 'pausierte Zeitpläne'
+    'reconcile failed: {{ condition("ReconcileSuccess").message }}': 'Abgleich fehlgeschlagen: {{ condition("ReconcileSuccess").message }}'
+    'Remaining actions': 'Verbleibende Aktionen'
+    'Retention': 'Aufbewahrung'
+    'Server name': 'Servername'
+    'Services not ready': 'Dienste nicht bereit'
+    'services not ready: {{ fields.servicesDown }}': 'Dienste nicht bereit: {{ fields.servicesDown }}'
+    'Services ready': 'Dienste bereit'
+    'Store set up': 'Speicher eingerichtet'
+    'Task queue': 'Task-Queue'
+    'Temporal namespace': 'Temporal-Namespace'
+    'Time zone': 'Zeitzone'
+    'Unpause': 'Fortsetzen'
+    'upgrading to {{ fields.wantVersion }}': 'Aktualisierung auf {{ fields.wantVersion }}'
+    'Version': 'Version'
+    'Wanted': 'Gewünscht'
+    'Web UI': 'Weboberfläche'
+    'Workflow': 'Workflow'
+  es:
+    '%d Temporal cluster': '%d clúster de Temporal'
+    '%d Temporal clusters': '%d clústeres de Temporal'
+    'already paused': 'ya en pausa'
+    'Calendars': 'Calendarios'
+    'Certificate Secret': 'Secret del certificado'
+    'Cluster': 'Clúster'
+    'Created': 'Creado'
+    'Crons': 'Crons'
+    'Default store': 'Almacén predeterminado'
+    'Description': 'Descripción'
+    'Global': 'Global'
+    'History shards': 'Shards de historial'
+    'Intervals': 'Intervalos'
+    'mTLS': 'mTLS'
+    'no action left': 'no quedan acciones'
+    'no certificate yet': 'aún sin certificado'
+    'No Temporal cluster clients.': 'No hay clientes de clúster de Temporal.'
+    'No Temporal clusters.': 'No hay clústeres de Temporal.'
+    'No Temporal namespaces.': 'No hay namespaces de Temporal.'
+    'No Temporal schedules.': 'No hay programaciones de Temporal.'
+    'not paused': 'no está en pausa'
+    'not ready': 'no listos'
+    'not ready: {{ condition("Ready").message }}': 'no listo: {{ condition("Ready").message }}'
+    'not reconciled yet': 'aún no reconciliado'
+    'Notes': 'Notas'
+    'Owner': 'Propietario'
+    'Pause': 'Pausar'
+    'paused': 'en pausa'
+    'paused schedules': 'programaciones en pausa'
+    'reconcile failed: {{ condition("ReconcileSuccess").message }}': 'reconciliación fallida: {{ condition("ReconcileSuccess").message }}'
+    'Remaining actions': 'Acciones restantes'
+    'Retention': 'Retención'
+    'Server name': 'Nombre del servidor'
+    'Services not ready': 'Servicios no listos'
+    'services not ready: {{ fields.servicesDown }}': 'servicios no listos: {{ fields.servicesDown }}'
+    'Services ready': 'Servicios listos'
+    'Store set up': 'Almacén configurado'
+    'Task queue': 'Cola de tareas'
+    'Temporal namespace': 'Namespace de Temporal'
+    'Time zone': 'Zona horaria'
+    'Unpause': 'Reanudar'
+    'upgrading to {{ fields.wantVersion }}': 'actualizando a {{ fields.wantVersion }}'
+    'Version': 'Versión'
+    'Wanted': 'Deseada'
+    'Web UI': 'Interfaz web'
+    'Workflow': 'Workflow'
+  it:
+    '%d Temporal cluster': '%d cluster Temporal'
+    '%d Temporal clusters': '%d cluster Temporal'
+    'already paused': 'già in pausa'
+    'Calendars': 'Calendari'
+    'Certificate Secret': 'Secret del certificato'
+    'Cluster': 'Cluster'
+    'Created': 'Creato'
+    'Crons': 'Cron'
+    'Default store': 'Archivio predefinito'
+    'Description': 'Descrizione'
+    'Global': 'Globale'
+    'History shards': 'Shard della cronologia'
+    'Intervals': 'Intervalli'
+    'mTLS': 'mTLS'
+    'no action left': 'nessuna azione rimasta'
+    'no certificate yet': 'ancora nessun certificato'
+    'No Temporal cluster clients.': 'Nessun client di cluster Temporal.'
+    'No Temporal clusters.': 'Nessun cluster Temporal.'
+    'No Temporal namespaces.': 'Nessun namespace Temporal.'
+    'No Temporal schedules.': 'Nessuna pianificazione Temporal.'
+    'not paused': 'non in pausa'
+    'not ready': 'non pronti'
+    'not ready: {{ condition("Ready").message }}': 'non pronto: {{ condition("Ready").message }}'
+    'not reconciled yet': 'non ancora riconciliato'
+    'Notes': 'Note'
+    'Owner': 'Proprietario'
+    'Pause': 'Metti in pausa'
+    'paused': 'in pausa'
+    'paused schedules': 'pianificazioni in pausa'
+    'reconcile failed: {{ condition("ReconcileSuccess").message }}': 'riconciliazione fallita: {{ condition("ReconcileSuccess").message }}'
+    'Remaining actions': 'Azioni rimanenti'
+    'Retention': 'Conservazione'
+    'Server name': 'Nome del server'
+    'Services not ready': 'Servizi non pronti'
+    'services not ready: {{ fields.servicesDown }}': 'servizi non pronti: {{ fields.servicesDown }}'
+    'Services ready': 'Servizi pronti'
+    'Store set up': 'Archivio configurato'
+    'Task queue': 'Coda di task'
+    'Temporal namespace': 'Namespace Temporal'
+    'Time zone': 'Fuso orario'
+    'Unpause': 'Riprendi'
+    'upgrading to {{ fields.wantVersion }}': 'aggiornamento a {{ fields.wantVersion }}'
+    'Version': 'Versione'
+    'Wanted': 'Desiderata'
+    'Web UI': 'Interfaccia web'
+    'Workflow': 'Workflow'
+  uk:
+    '%d Temporal cluster': '%d кластер Temporal'
+    '%d Temporal clusters': '%d кластерів Temporal'
+    'already paused': 'вже призупинено'
+    'Calendars': 'Календарі'
+    'Certificate Secret': 'Secret сертифіката'
+    'Cluster': 'Кластер'
+    'Created': 'Створено'
+    'Crons': 'Cron'
+    'Default store': 'Сховище за замовчуванням'
+    'Description': 'Опис'
+    'Global': 'Глобальний'
+    'History shards': 'Шарди історії'
+    'Intervals': 'Інтервали'
+    'mTLS': 'mTLS'
+    'no action left': 'дій не залишилося'
+    'no certificate yet': 'ще немає сертифіката'
+    'No Temporal cluster clients.': 'Немає клієнтів кластера Temporal.'
+    'No Temporal clusters.': 'Немає кластерів Temporal.'
+    'No Temporal namespaces.': 'Немає просторів імен Temporal.'
+    'No Temporal schedules.': 'Немає розкладів Temporal.'
+    'not paused': 'не призупинено'
+    'not ready': 'не готові'
+    'not ready: {{ condition("Ready").message }}': 'не готово: {{ condition("Ready").message }}'
+    'not reconciled yet': 'ще не узгоджено'
+    'Notes': 'Нотатки'
+    'Owner': 'Власник'
+    'Pause': 'Призупинити'
+    'paused': 'призупинено'
+    'paused schedules': 'призупинені розклади'
+    'reconcile failed: {{ condition("ReconcileSuccess").message }}': 'узгодження не вдалося: {{ condition("ReconcileSuccess").message }}'
+    'Remaining actions': 'Залишок дій'
+    'Retention': 'Зберігання'
+    'Server name': 'Ім''я сервера'
+    'Services not ready': 'Сервіси не готові'
+    'services not ready: {{ fields.servicesDown }}': 'сервіси не готові: {{ fields.servicesDown }}'
+    'Services ready': 'Сервіси готові'
+    'Store set up': 'Сховище налаштовано'
+    'Task queue': 'Черга завдань'
+    'Temporal namespace': 'Простір імен Temporal'
+    'Time zone': 'Часовий пояс'
+    'Unpause': 'Відновити'
+    'upgrading to {{ fields.wantVersion }}': 'оновлення до {{ fields.wantVersion }}'
+    'Version': 'Версія'
+    'Wanted': 'Бажана'
+    'Web UI': 'Вебінтерфейс'
+    'Workflow': 'Workflow'
+
+# Invented names. demo-shop's orders-cluster is ready; demo-lab's billing-cluster is not
+# (its frontend is down), and analytics upgrades. Namespaces, schedules and clients cover
+# every rule; nightly-report is paused, cleanup ran out of actions.
+samples:
+  temporalcluster:
+    - metadata: { name: orders-cluster, namespace: demo-shop, creationTimestamp: now-30d }
+      spec:
+        version: 1.28.1
+        numHistoryShards: 512
+        persistence:
+          defaultStore: { name: default, sql: { pluginName: postgres12, databaseName: temporal, connectAddr: "postgres.demo-shop:5432", connectProtocol: tcp, user: temporal }, passwordSecretRef: { name: temporal-db, key: password } }
+          visibilityStore: { name: visibility, sql: { pluginName: postgres12, databaseName: temporal_visibility, connectAddr: "postgres.demo-shop:5432", connectProtocol: tcp, user: temporal }, passwordSecretRef: { name: temporal-db, key: password } }
+        ui: { enabled: true }
+        mTLS: { provider: cert-manager }
+      status:
+        version: 1.28.1
+        persistence: { defaultStore: { type: postgres12, setup: true, created: true, schemaVersion: "1.15" } }
+        services:
+          - { name: frontend, ready: true, version: 1.28.1 }
+          - { name: history, ready: true, version: 1.28.1 }
+          - { name: matching, ready: true, version: 1.28.1 }
+          - { name: worker, ready: true, version: 1.28.1 }
+        conditions:
+          - { type: Ready, status: "True", reason: ServicesReady, message: all services are ready, lastTransitionTime: now-2d }
+          - { type: ReconcileSuccess, status: "True", reason: ReconcileSuccess, lastTransitionTime: now-5m }
+    - metadata: { name: billing-cluster, namespace: demo-lab, creationTimestamp: now-12d }
+      spec:
+        version: 1.28.1
+        numHistoryShards: 4
+        persistence:
+          defaultStore: { name: default, sql: { pluginName: postgres12, databaseName: temporal, connectAddr: "postgres.demo-lab:5432", connectProtocol: tcp, user: temporal } }
+      status:
+        version: 1.28.1
+        persistence: { defaultStore: { type: postgres12, setup: true } }
+        services:
+          - { name: frontend, ready: false, version: 1.28.1 }
+          - { name: history, ready: true, version: 1.28.1 }
+          - { name: matching, ready: true, version: 1.28.1 }
+          - { name: worker, ready: false, version: 1.28.1 }
+        conditions:
+          - { type: Ready, status: "False", reason: ServicesNotReady, message: frontend is not ready, lastTransitionTime: now-14m }
+          - { type: ReconcileSuccess, status: "True", lastTransitionTime: now-3m }
+    - metadata: { name: analytics-cluster, namespace: demo-lab, creationTimestamp: now-60d }
+      spec:
+        version: 1.28.1
+        numHistoryShards: 128
+        persistence: { defaultStore: { name: default, cassandra: { hosts: ["cassandra.demo-lab"], port: 9042, keyspace: temporal, datacenter: dc1 } } }
+      status:
+        version: 1.27.3
+        persistence: { defaultStore: { type: cassandra, setup: true } }
+        services:
+          - { name: frontend, ready: true, version: 1.28.1 }
+          - { name: history, ready: true, version: 1.27.3 }
+          - { name: matching, ready: true, version: 1.27.3 }
+          - { name: worker, ready: true, version: 1.27.3 }
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-60d }
+          - { type: ReconcileSuccess, status: "True", lastTransitionTime: now-1m }
+    - metadata: { name: search-cluster, namespace: demo-lab, creationTimestamp: now-9d }
+      spec:
+        version: 1.28.1
+        numHistoryShards: 16
+        persistence: { defaultStore: { name: default, sql: { pluginName: mysql8, databaseName: temporal, connectAddr: "mysql.demo-lab:3306", connectProtocol: tcp, user: temporal } } }
+      status:
+        version: 1.28.1
+        services:
+          - { name: frontend, ready: true, version: 1.28.1 }
+          - { name: history, ready: true, version: 1.28.1 }
+          - { name: matching, ready: true, version: 1.28.1 }
+          - { name: worker, ready: true, version: 1.28.1 }
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-9d }
+          - { type: ReconcileSuccess, status: "False", reason: ReconcileError, message: "elasticsearch visibility store unreachable", lastTransitionTime: now-6m }
+    - metadata: { name: events-cluster, namespace: demo-shop, creationTimestamp: now-15d }
+      spec:
+        version: 1.28.1
+        numHistoryShards: 64
+        persistence: { defaultStore: { name: default, sql: { pluginName: postgres12, databaseName: temporal, connectAddr: "postgres.demo-shop:5432", connectProtocol: tcp, user: temporal } } }
+      status:
+        version: 1.28.1
+        services:
+          - { name: frontend, ready: true, version: 1.28.1 }
+          - { name: history, ready: true, version: 1.28.1 }
+          - { name: matching, ready: false, version: 1.28.1 }
+          - { name: worker, ready: true, version: 1.28.1 }
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-15d }
+          - { type: ReconcileSuccess, status: "True", lastTransitionTime: now-2m }
+    - metadata: { name: sandbox, namespace: demo-shop, creationTimestamp: now-1m }
+      spec:
+        version: 1.28.1
+        numHistoryShards: 1
+        persistence: { defaultStore: { name: default, sql: { pluginName: sqlite, databaseName: temporal, connectAddr: "localhost", connectProtocol: tcp, user: temporal } } }
+  temporalnamespace:
+    - metadata: { name: billing-ns, namespace: demo-shop, creationTimestamp: now-29d }
+      spec: { clusterRef: { name: orders-cluster }, retentionPeriod: 720h, ownerEmail: ops@example.com, description: invoices and payments }
+      status:
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-29d }
+          - { type: ReconcileSuccess, status: "True", lastTransitionTime: now-10m }
+    - metadata: { name: shipping-ns, namespace: demo-shop, creationTimestamp: now-20d }
+      spec: { clusterRef: { name: orders-cluster }, retentionPeriod: 168h, isGlobalNamespace: true }
+      status:
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-20d }
+          - { type: ReconcileSuccess, status: "False", reason: ReconcileError, message: "replication is not enabled on the cluster", lastTransitionTime: now-8m }
+    - metadata: { name: ledger-ns, namespace: demo-lab, creationTimestamp: now-2d }
+      spec: { clusterRef: { name: billing-cluster }, retentionPeriod: 72h }
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: ClusterNotReady, message: cluster billing-cluster is not ready, lastTransitionTime: now-14m }
+    - metadata: { name: trials-ns, namespace: demo-lab, creationTimestamp: now-1m }
+      spec: { clusterRef: { name: analytics-cluster }, retentionPeriod: 24h }
+  temporalschedule:
+    - metadata: { name: hourly-sync, namespace: demo-shop, creationTimestamp: now-10d }
+      spec:
+        namespaceRef: { name: billing-ns }
+        schedule:
+          action: { workflow: { type: SyncInvoices, taskQueue: billing } }
+          spec: { crons: ["0 * * * *"], timezoneName: Europe/Paris }
+      status:
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-10d }
+          - { type: ReconcileSuccess, status: "True", lastTransitionTime: now-1h }
+    - metadata: { name: nightly-report, namespace: demo-shop, creationTimestamp: now-40d }
+      spec:
+        namespaceRef: { name: billing-ns }
+        schedule:
+          action: { workflow: { type: BuildReport, taskQueue: reports } }
+          spec: { crons: ["0 2 * * *"] }
+          state: { paused: true, notes: paused during the migration }
+      status:
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-40d }
+    - metadata: { name: cleanup, namespace: demo-shop, creationTimestamp: now-5d }
+      spec:
+        namespaceRef: { name: billing-ns }
+        schedule:
+          action: { workflow: { type: PurgeDrafts, taskQueue: billing } }
+          spec: { intervals: [{ every: 6h }] }
+          state: { limitedActions: true, remainingActions: 0 }
+      status:
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-5d }
+    - metadata: { name: ledger-close, namespace: demo-lab, creationTimestamp: now-2d }
+      spec:
+        namespaceRef: { name: ledger-ns }
+        schedule:
+          action: { workflow: { type: CloseLedger, taskQueue: ledger } }
+          spec: { crons: ["30 23 * * *"] }
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: NamespaceNotReady, message: namespace ledger-ns is not ready, lastTransitionTime: now-14m }
+    - metadata: { name: weekly-digest, namespace: demo-shop, creationTimestamp: now-3d }
+      spec:
+        namespaceRef: { name: billing-ns }
+        schedule:
+          action: { workflow: { type: SendDigest, taskQueue: mail } }
+          spec: { crons: ["0 8 * * MON"] }
+      status:
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-3d }
+          - { type: ReconcileSuccess, status: "False", reason: ReconcileError, message: "task queue mail has no poller", lastTransitionTime: now-20m }
+    - metadata: { name: trial-expiry, namespace: demo-lab, creationTimestamp: now-1m }
+      spec:
+        namespaceRef: { name: trials-ns }
+        schedule:
+          action: { workflow: { type: ExpireTrials, taskQueue: trials } }
+          spec: { intervals: [{ every: 1h }] }
+  temporalclusterclient:
+    - metadata: { name: billing-app, namespace: demo-shop, creationTimestamp: now-29d }
+      spec: { clusterRef: { name: orders-cluster } }
+      status: { serverName: "frontend.orders-cluster.demo-shop", secretRef: { name: billing-app-mtls } }
+    - metadata: { name: new-app, namespace: demo-lab, creationTimestamp: now-1m }
+      spec: { clusterRef: { name: billing-cluster } }

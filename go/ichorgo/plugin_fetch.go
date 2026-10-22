@@ -69,8 +69,11 @@ func (p *pluginProbe) detection(ctx context.Context, k *kubeClient, c *plugin.Co
 	for _, d := range c.Plugin.Detect {
 		switch {
 		case d.Group != "":
-			if version, ok := p.groups[d.Group]; ok && (d.Resource == "" || p.serves(ctx, k, d.Group, version, d.Resource)) {
-				return detection{via: detectedByAPI, version: version}
+			if preferred, ok := p.groups[d.Group]; ok {
+				version := detectVersion(c.Plugin, d, preferred)
+				if d.Resource == "" || p.serves(ctx, k, d.Group, version, d.Resource) {
+					return detection{via: detectedByAPI, version: version}
+				}
 			}
 		case d.Pods != "":
 			if f, ok := p.apps[d.Pods]; ok {
@@ -88,6 +91,24 @@ func (p *pluginProbe) detection(ctx context.Context, k *kubeClient, c *plugin.Co
 	}
 
 	return detection{}
+}
+
+// detectVersion is the version a detect entry's resource is looked for at: the one the plugin
+// declares for that resource, since a group several products share serves each one's
+// resources at its own version (temporal.io: the operator's v1beta1, the worker controller's
+// v1alpha1) and the preferred version is only one of them; else the group's preferred version.
+func detectVersion(p *plugin.Plugin, d plugin.Detect, preferred string) string {
+	if d.Resource == "" {
+		return preferred
+	}
+
+	for _, r := range p.Resources {
+		if r.Group == d.Group && r.Resource == d.Resource && r.Version != "" && r.Version != "preferred" {
+			return r.Version
+		}
+	}
+
+	return preferred
 }
 
 // serves asks the group version for its resources, once per resource.
