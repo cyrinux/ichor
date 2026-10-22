@@ -12,6 +12,21 @@ spec.loader.exec_module(crd_request)
 
 KUBE_GREEN = "https://raw.githubusercontent.com/kube-green/kube-green/main/config/crd/bases/kube-green.com_sleepinfos.yaml"
 
+# Offline DNS: these names resolve to private addresses, any other name to a public one.
+PRIVATE = {"intranet.example.com": "10.0.0.5", "rebind.example.com": "127.0.0.1", "meta.example.com": "169.254.169.254",
+           "v6.example.com": "fd00::1"}
+
+
+def fake_resolve(host, port, proto=0):
+    if host == "nxdomain.example.com":
+        raise OSError("Name or service not known")
+    address = PRIVATE.get(host, "93.184.215.14")
+    family = 10 if ":" in address else 2
+    return [(family, 1, proto, "", (address, port))]
+
+
+crd_request.RESOLVE = fake_resolve
+
 
 def body(url=KUBE_GREEN, operator="kube-green", docs="_No response_", notes="_No response_", crds="_No response_"):
     """An issue body as GitHub writes a submitted crd-request.yml form."""
@@ -88,17 +103,42 @@ class ParseTest(unittest.TestCase):
         url = "https://codeberg.org/example-org/operator/src/branch/main/crds/widgets.yml"
         self.assertEqual(self.parse(body(url=url))["crd_url"], "https://codeberg.org/example-org/operator/raw/branch/main/crds/widgets.yml")
 
+    def test_self_hosted_gitlab_blob_link_becomes_raw(self):
+        url = "https://forge.example.net/example-org/operator/-/blob/main/deploy/crds/widgets.yaml"
+        self.assertEqual(self.parse(body(url=url))["crd_url"], "https://forge.example.net/example-org/operator/-/raw/main/deploy/crds/widgets.yaml")
+
+    def test_self_hosted_forgejo_src_link_becomes_raw(self):
+        url = "https://git.example.org/example-org/operator/src/tag/v1.2.0/crds/widgets.yaml"
+        self.assertEqual(self.parse(body(url=url))["crd_url"], "https://git.example.org/example-org/operator/raw/tag/v1.2.0/crds/widgets.yaml")
+
+    def test_raw_link_on_any_public_host_is_kept(self):
+        url = "https://forge.example.net/example-org/operator/-/raw/main/crds/widgets.yaml"
+        self.assertEqual(self.parse(body(url=url))["crd_url"], url)
+
+    def test_ip_address_host(self):
+        for url in ("https://93.184.215.14/a/b.yaml", "https://[::1]/a/b.yaml"):
+            with self.subTest(url=url):
+                self.assertIn("IP address", self.refused(body(url=url)))
+
+    def test_internal_names(self):
+        for host in ("localhost", "forge", "git.corp", "gitlab.internal", "forge.local"):
+            with self.subTest(host=host):
+                self.assertIn("public forge", self.refused(body(url=f"https://{host}/a/b/-/raw/main/c.yaml")))
+
+    def test_host_resolving_to_a_private_address(self):
+        for host in PRIVATE:
+            with self.subTest(host=host):
+                self.assertIn("public forge", self.refused(body(url=f"https://{host}/a/b/-/raw/main/c.yaml")))
+
+    def test_host_that_does_not_resolve(self):
+        self.assertIn("resolve", self.refused(body(url="https://nxdomain.example.com/a/b/-/raw/main/c.yaml")))
+
     def test_github_page_that_is_not_a_file(self):
         self.assertIn("point at a file", self.refused(body(url="https://github.com/kube-green/kube-green")))
 
     def test_http_link(self):
         self.assertIn("https://", self.refused(body(url=KUBE_GREEN.replace("https", "http", 1))))
 
-    def test_host_off_the_list(self):
-        self.assertIn("must be on", self.refused(body(url="https://example.com/crds/widgets.yaml")))
-
-    def test_lookalike_host(self):
-        self.assertIn("must be on", self.refused(body(url="https://raw.githubusercontent.com.example.com/a/b/main/c.yaml")))
 
     def test_userinfo_in_the_authority(self):
         self.assertIn("user name", self.refused(body(url="https://raw.githubusercontent.com@example.com/a/b/main/c.yaml")))

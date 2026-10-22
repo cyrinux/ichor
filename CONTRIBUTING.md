@@ -125,8 +125,8 @@ gh label create crd-request:failed --color b60205 --description "The generator w
 collaborator at once, and on anyone else's when a maintainer adds `crd-approved` (remove and
 add it again to rerun; the pull request is then updated, and its branch is overwritten, so
 commit review fixes after the last rerun). The run reads the issue as it is when the label is
-added: read it again just before approving. It fetches the CRD from an
-allowlisted forge (`scripts/crd-request.py`) or, for a request that names the CRDs and gives no
+added: read it again just before approving. It fetches the CRD from a
+public forge (`scripts/crd-request.py`) or, for a request that names the CRDs and gives no
 link (the app's Request an integration), finds it by GitHub code search and takes the project's
 home page as the website, writes `go/plugin/drafts/<id>.yaml` with
 `probe plugin-from-crd`, lints it against the CRD, and opens a draft pull request on the branch
