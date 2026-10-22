@@ -447,28 +447,28 @@
         margin: 0 0 2rem;
       }
 
-      /* Beta tester sign-up */
-      .beta-form {
+      /* The site's forms (beta sign-up, plugin request): no server, they hand off to a mail app or GitHub */
+      .site-form {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
         gap: 1rem 1.5rem;
         max-width: 48rem;
       }
-      .beta-form .field {
+      .site-form .field {
         display: flex;
         flex-direction: column;
         gap: 0.35rem;
       }
-      .beta-form .wide {
+      .site-form .wide {
         grid-column: 1 / -1;
       }
-      .beta-form label {
+      .site-form label {
         font-size: 0.9rem;
         font-weight: 500;
         color: var(--ink-2);
       }
-      .beta-form input,
-      .beta-form textarea {
+      .site-form input,
+      .site-form textarea {
         font: inherit;
         color: var(--ink);
         background: var(--surface);
@@ -477,21 +477,21 @@
         padding: 0.7rem 0.85rem;
         width: 100%;
       }
-      .beta-form textarea {
+      .site-form textarea {
         min-height: 7rem;
         resize: vertical;
       }
-      .beta-form input:focus-visible,
-      .beta-form textarea:focus-visible {
+      .site-form input:focus-visible,
+      .site-form textarea:focus-visible {
         outline: 3px solid var(--accent);
         outline-offset: 1px;
       }
-      .beta-form .button {
+      .site-form .button {
         cursor: pointer;
         font: inherit;
         font-weight: 500;
       }
-      .beta-form .note {
+      .site-form .note {
         margin: 0;
       }
 
@@ -3220,7 +3220,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 account your phone uses for the Play Store.
               </p>
               <form
-                class="beta-form"
+                class="site-form"
                 id="beta-form"
                 action="mailto:ichorformobile@proton.me?subject=Ichor%20Play%20Store%20beta"
                 method="post"
@@ -3277,6 +3277,56 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
               </p>
             </li>
           </ol>
+        </section>
+        <section id="plugin-request" aria-labelledby="plugin-request-title">
+          <h2 id="plugin-request-title">Ask for a plugin from its CRD</h2>
+          <p class="intro">
+            Any operator with a public CRD can become an Ichor plugin. Give the
+            link to its CRD manifest: a draft pull request is opened from it, and
+            a maintainer reviews and translates it. Look at the
+            <a href="https://github.com/cyrinux/ichor/issues?q=is%3Aissue+label%3Acrd-request">open requests</a>
+            first: a thumbs-up on one counts as much as a new request.
+          </p>
+          <!-- The field names are the GitHub issue form's ids (.github/ISSUE_TEMPLATE/crd-request.yml):
+               without the script, the browser builds the same prefilled link. -->
+          <form
+            class="site-form"
+            id="plugin-form"
+            action="https://github.com/cyrinux/ichor/issues/new"
+            method="get">
+            <input type="hidden" name="template" value="crd-request.yml" />
+            <div class="field wide">
+              <label for="plugin-crd-url">CRD manifest URL</label>
+              <input
+                id="plugin-crd-url"
+                name="crd_url"
+                type="url"
+                inputmode="url"
+                required
+                placeholder="https://raw.githubusercontent.com/kube-green/kube-green/main/config/crd/bases/kube-green.com_sleepinfos.yaml" />
+            </div>
+            <div class="field">
+              <label for="plugin-operator">Operator</label>
+              <input id="plugin-operator" name="operator" type="text" maxlength="60" required />
+            </div>
+            <div class="field">
+              <label for="plugin-docs">Documentation link</label>
+              <input id="plugin-docs" name="docs" type="url" inputmode="url" />
+            </div>
+            <div class="field wide">
+              <label for="plugin-notes">What should the app show?</label>
+              <textarea id="plugin-notes" name="notes" maxlength="4000"></textarea>
+            </div>
+            <div class="field wide">
+              <div class="actions">
+                <button class="button primary" type="submit">Open the request on GitHub</button>
+              </div>
+              <p class="note">
+                This opens a prefilled issue on GitHub, where you sign in and
+                submit it; nothing goes through this site.
+              </p>
+            </div>
+          </form>
         </section>
         <section id="install" aria-labelledby="install-title">
           <h2 id="install-title">Install</h2>
@@ -3540,6 +3590,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           <a href="https://www.talos.dev" translate="no">Talos Linux</a>
           <a data-i18n href="#support">Support the project</a>
           <a data-i18n href="plugins/">Plugin reference</a>
+          <a data-i18n href="#plugin-request">Plugin request</a>
           <a data-i18n href="privacy.html">Privacy policy</a>
         </div>
         <div class="ci-badges" translate="no">
@@ -3625,6 +3676,31 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
             encodeURIComponent("Ichor Play Store beta") +
             "&body=" +
             encodeURIComponent(body);
+        });
+      }
+
+      // The plugin request form opens GitHub's prefilled issue form: the same link the
+      // browser builds without the script, plus the title, without the empty fields.
+      var pluginForm = document.getElementById("plugin-form");
+      if (pluginForm) {
+        pluginForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var value = function (id) {
+            return document.getElementById(id).value.trim();
+          };
+          var operator = value("plugin-operator");
+          var params = new URLSearchParams({ template: "crd-request.yml", title: "Plugin request: " + operator });
+          [
+            ["crd_url", value("plugin-crd-url")],
+            ["operator", operator],
+            ["docs", value("plugin-docs")],
+            ["notes", value("plugin-notes").slice(0, 4000)],
+          ].forEach(function (field) {
+            if (field[1]) {
+              params.set(field[0], field[1]);
+            }
+          });
+          location.href = "https://github.com/cyrinux/ichor/issues/new?" + params.toString();
         });
       }
 
