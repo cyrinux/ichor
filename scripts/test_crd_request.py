@@ -367,5 +367,58 @@ class CommentsTest(unittest.TestCase):
         self.assertTrue(all("\n" not in line and "=" in line for line in lines))
 
 
+class TranslateTest(unittest.TestCase):
+    PLUGIN = (
+        "# yaml-language-server: $schema=../schema/plugin.schema.json\n"
+        "# Draft written by probe plugin-from-crd from nodedrains.draino.acides.org (v1alpha1).\n\n"
+        "id: draino\nresources:\n  nodedrain:\n    kind: NodeDrain\n    scope: Cluster\n"
+    )
+
+    def test_request_carries_the_missing_labels_and_the_plugin_words(self):
+        report = {"ok": True, "id": "draino", "filled": 3,
+                  "missing": {"fr": ["Node", "%d NodeDrains"], "xx": ["Node"], "de": []}}
+        request = crd_request.translate_request(report, self.PLUGIN)
+        self.assertEqual(request["model"], crd_request.MODEL)
+        self.assertEqual(request["response_format"], {"type": "json_object"})
+        task = crd_request.json.loads(request["messages"][1]["content"])
+        self.assertEqual(task["translate"], {"fr": ["Node", "%d NodeDrains"]})
+        self.assertEqual(task["kinds"], ["NodeDrain"])
+        self.assertIn("nodedrains.draino.acides.org", task["about"])
+        self.assertNotIn("$schema", task["about"])
+        self.assertIn("uk = Ukrainian", request["messages"][0]["content"])
+
+    def test_request_is_none_when_nothing_is_missing(self):
+        self.assertIsNone(crd_request.translate_request({"missing": {}}, self.PLUGIN))
+        self.assertIsNone(crd_request.translate_request({"missing": {"fr": []}}, self.PLUGIN))
+        self.assertIsNone(crd_request.translate_request({}, self.PLUGIN))
+
+    def completion(self, content):
+        return crd_request.json.dumps({"choices": [{"message": {"role": "assistant", "content": content}}]})
+
+    def test_response_keeps_the_shape_only(self):
+        answer = {"fr": {"Node": " Nœud ", "Age": "Â\nge", "Empty": "", "Long": "x" * 500, "N": 3},
+                  "xx": {"Node": "x"}, "de": "Knoten", "uk": {"Node": "Вузол"}}
+        out = crd_request.translate_response(self.completion("```json\n" + crd_request.json.dumps(answer) + "\n```"))
+        self.assertEqual(out, {"fr": {"Node": "Nœud"}, "uk": {"Node": "Вузол"}})
+
+    def test_response_refuses_what_is_not_translations(self):
+        for body in ["not json", "{}", self.completion("not json"), self.completion("[1]"),
+                     self.completion('{"fr": {}}'), self.completion('{"xx": {"Node": "x"}}')]:
+            with self.assertRaises(crd_request.Refused):
+                crd_request.translate_response(body)
+
+    def test_promotion_ticks_the_translation_step_when_the_lint_sees_none_missing(self):
+        env = {"ISSUE_NUMBER": "12", "OPERATOR": "Widgets", "CRD_URL": KUBE_GREEN, "ID": "widgets"}
+        clean = crd_request.pr_body('{"ok":true,"warnings":0}', env)
+        self.assertIn("- [x] Translate every label for fr, de, es, it and uk (`i18n`): done by the workflow, "
+                      "proofread them.", clean)
+        partial = crd_request.pr_body('draft.yaml:12: warning: cards.list.row.detail[0].items[1].label: '
+                                      '"Node" has no translation in fr', env)
+        self.assertIn("- [ ] Translate every label for fr, de, es, it and uk (`i18n`).", partial)
+        none = crd_request.pr_body("warning: no i18n: the 11 labels stay English in every language", env)
+        self.assertIn("- [ ] Translate every label", none)
+        self.assertNotIn("<i18n", clean + partial + none)
+
+
 if __name__ == "__main__":
     unittest.main()

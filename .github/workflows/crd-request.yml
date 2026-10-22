@@ -4,8 +4,10 @@ name: CRD request
 # draft pull request: the CRD is fetched from its public link (or, when the request names the
 # CRDs instead, as the app's Request an integration does, found on public GitHub by its name
 # and the project's home page read from the repository), `probe plugin-from-crd` writes
-# go/plugin/drafts/<id>.yaml, `plugin-lint -crd` checks it, and a draft pull request links the
-# issue. A maintainer reviews, translates and promotes it (go/plugin/drafts/README.md).
+# go/plugin/drafts/<id>.yaml, `plugin-i18n` translates its labels (the built-in plugins'
+# glossary, then GitHub Models for the rest, checked before it is written), `plugin-lint -crd`
+# checks it, and a draft pull request links the issue. A maintainer reviews, proofreads the
+# translations and promotes it (go/plugin/drafts/README.md).
 #
 # Issue bodies are written by anyone: scripts/crd-request.py reads them from the environment
 # and hands the shell only validated one-line values (an https link on a public forge, never
@@ -43,6 +45,7 @@ jobs:
       contents: write # the crd-request/* branch (the rulesets protect main and v* only)
       pull-requests: write # the draft pull request, or its update on a rerun
       issues: write # comments and labels on the request
+      models: read # GitHub Models translates the draft's labels
     env:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       GH_REPO: ${{ github.repository }}
@@ -157,6 +160,42 @@ jobs:
             exit 1
           fi
           echo "covered=false" >>"$GITHUB_OUTPUT"
+
+      # The labels the built-in plugins already translate come from their glossary; GitHub
+      # Models (the Actions token, `models: read`, no secret) is asked for the rest, and its
+      # answer is data: scripts/crd-request.py keeps its shape only and `plugin-i18n -fill`
+      # refuses a text that is not a label of the plugin or loses a {{ hole }}. Whatever fails
+      # here leaves those labels English, and the lint in the pull request says which.
+      - name: Translate the labels
+        if: steps.generate.outputs.covered == 'false'
+        working-directory: go
+        env:
+          MANIFEST: ${{ steps.fetch.outputs.manifest }}
+          ID: ${{ steps.request.outputs.id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          draft="plugin/drafts/$ID.yaml"
+          probe="$RUNNER_TEMP/probe"
+          cp "$draft" "$RUNNER_TEMP/english.yaml"
+          "$probe" plugin-i18n "$draft" >"$RUNNER_TEMP/i18n.json"
+          python3 -I ../scripts/crd-request.py translate-request "$RUNNER_TEMP/i18n.json" "$draft" >"$RUNNER_TEMP/request.json"
+          if [[ -s "$RUNNER_TEMP/request.json" ]]; then
+            if curl --fail --silent --show-error --max-time 120 --proto '=https' --tlsv1.2 \
+                 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+                 -H "Content-Type: application/json" --data @"$RUNNER_TEMP/request.json" \
+                 -o "$RUNNER_TEMP/response.json" https://models.github.ai/inference/chat/completions &&
+               python3 -I ../scripts/crd-request.py translate-response "$RUNNER_TEMP/response.json" >"$RUNNER_TEMP/fill.json" &&
+               "$probe" plugin-i18n "$draft" -fill "$RUNNER_TEMP/fill.json" >"$RUNNER_TEMP/i18n.json"; then
+              echo "Translated: $(cat "$RUNNER_TEMP/i18n.json")"
+            else
+              echo "::warning::The model's translations were not applied; those labels stay English."
+            fi
+          fi
+          if ! "$probe" plugin-lint "$draft" -crd "$MANIFEST" >"$RUNNER_TEMP/lint.txt" 2>&1; then
+            echo "::warning::The translated draft fails the lint; the English one is kept."
+            cp "$RUNNER_TEMP/english.yaml" "$draft"
+            "$probe" plugin-lint "$draft" -crd "$MANIFEST" >"$RUNNER_TEMP/lint.txt" 2>&1
+          fi
 
       # `if` cannot read secrets: the check goes through an environment variable.
       - name: Check for the CRD bot App
