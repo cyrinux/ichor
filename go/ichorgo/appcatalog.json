@@ -25,6 +25,7 @@
 {"id":"kubevirt","name":"KubeVirt","cat":"system","icon":"gh:cncf/artwork@fedb3dbbf74327337fb750eae0a4ec7c8b7398c0/projects/kubevirt/icon/color/kubevirt-icon-color.svg","prefixes":["quay.io/kubevirt/"]},
 {"id":"cluster-api","name":"Cluster API","cat":"system","icon":"gh:kubernetes-sigs/cluster-api@c8f8936061361390e2388c7db97261096713e7a2/docs/logos/kubernetes-cluster-logos_final-02.svg","prefixes":["registry.k8s.io/cluster-api/"]},
 {"id":"sidero","name":"Sidero Metal","cat":"system","icon":"sh:sidero","images":["siderolabs/sidero-controller-manager"]},
+{"id":"draino","name":"draino","cat":"system","icon":"kubernetes"},
 
 {"id":"cilium","name":"Cilium","cat":"networking","prefixes":["quay.io/cilium/"],"match":["hubble-relay","hubble-ui","hubble-ui-backend","cilium-envoy","tetragon"]},
 {"id":"calico","name":"Calico","cat":"networking","icon":"sh:calico","prefixes":["calico/","docker.io/calico/","quay.io/calico/","quay.io/tigera/"]},
