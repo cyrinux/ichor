@@ -286,7 +286,8 @@ tour** shows it again.
   in portrait, except logs, shells, charts, YAML, diffs, source files and maps, which rotate to
   landscape and use the width.
 - **iPad:** the overview shows its cards in two columns on a full or wide window, and the nodes
-  list and the Argo CD / Flux apps open their node or app side by side with the list; a narrow
+  list and the Argo CD / Flux apps open their node or app side by side with the list (Kubernetes
+  nodes too, with the node menu in the detail's toolbar); a narrow
   Split View or Stage Manager window keeps the iPhone layout. At full or wide width a sidebar
   lists your clusters and the current cluster's sections (Alerts, Kubernetes, Argo CD, Flux,
   data services, activity, search, settings) beside the screen open in the detail column.
