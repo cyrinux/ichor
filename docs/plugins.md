@@ -813,8 +813,15 @@ not the rule's reason. Editors and generators can check drafts against
 
 Users ask for one through the Plugin request issue form:
 `https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml`, or the website's
-form, which opens it prefilled (`https://cyrinux.github.io/ichor/#plugin-request`). The `crd-request`
-workflow (`.github/workflows/crd-request.yml`) fetches the CRD from the issue's link, runs
+form, which opens it prefilled (`https://cyrinux.github.io/ichor/#plugin-request`). The app's
+Settings → Support → Request an integration opens the same form with the operator and the CRD
+names (`<plural>.<group>`) of the API groups picked, and no link: the cluster does not know
+where the manifest is published. The `crd-request` workflow (`.github/workflows/crd-request.yml`)
+fetches the CRD from the issue's link or, without one, searches public GitHub for the CRD's name
+(`filename:<group>_<plural>.yaml`, then its text), takes the repository named after the group's
+project or else the most starred one (never a fork, an archive or a Helm template), and reads the
+project's home page from it as the plugin's `website`; the pull request names the repository
+for the reviewer to check. It then runs
 the generator and the lint, and opens a draft pull request with `go/plugin/drafts/<id>.yaml`;
 a CRD the app already reads gets a comment instead. Drafts are validated but not embedded: a
 maintainer reviews the health rules, translates the labels and moves the file to

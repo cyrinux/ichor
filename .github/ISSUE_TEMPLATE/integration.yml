@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Search the [open requests](https://github.com/cyrinux/ichor/issues?q=is%3Aissue+label%3Aintegration) first: a 👍 on an existing one counts as much as a new issue.
-        From the app, Settings → Support → Request an integration fills in the fields below from your cluster.
+        **Have a public link to the operator's CRD manifest?** Use the [Plugin request](https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml) form instead: a workflow drafts the plugin pull request from it. This form only records the wish.
   - type: input
     id: operator
     attributes:

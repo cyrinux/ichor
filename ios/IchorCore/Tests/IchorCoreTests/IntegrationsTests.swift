@@ -6,7 +6,7 @@ final class IntegrationsTests: XCTestCase {
     {"families":[
       {"id":"istio.io","groups":[
         {"name":"networking.istio.io","version":"v1","kinds":["Gateway","VirtualService"]},
-        {"name":"security.istio.io","version":"v1","kinds":[]}]},
+        {"name":"security.istio.io","version":"v1","kinds":["AuthorizationPolicy"],"resources":["authorizationpolicies"]}]},
       {"id":"example.io","groups":[{"name":"broken.example.io","version":"v1"}]}],
      "supported":["argoproj.io","longhorn.io"]}
     """#
@@ -15,6 +15,8 @@ final class IntegrationsTests: XCTestCase {
         let report = try TalosJSON.decode(IntegrationReport.self, from: json)
         XCTAssertEqual(report.families.map(\.id), ["istio.io", "example.io"])
         XCTAssertEqual(report.families[0].groups[0].kinds, ["Gateway", "VirtualService"])
+        XCTAssertEqual(report.families[0].groups[0].resources, [])
+        XCTAssertEqual(report.families[0].groups[1].resources, ["authorizationpolicies"])
         XCTAssertEqual(report.families[1].groups[0].kinds, [])
         XCTAssertEqual(report.supported, ["argoproj.io", "longhorn.io"])
     }
@@ -30,6 +32,6 @@ final class IntegrationsTests: XCTestCase {
         let picked = family.picking(["security.istio.io"])
         XCTAssertEqual(picked.id, "istio.io")
         XCTAssertEqual(picked.groups.map(\.name), ["security.istio.io"])
-        XCTAssertEqual(picked.json, #"{"groups":[{"kinds":[],"name":"security.istio.io","version":"v1"}],"id":"istio.io"}"#)
+        XCTAssertEqual(picked.json, #"{"groups":[{"kinds":["AuthorizationPolicy"],"name":"security.istio.io","resources":["authorizationpolicies"],"version":"v1"}],"id":"istio.io"}"#)
     }
 }

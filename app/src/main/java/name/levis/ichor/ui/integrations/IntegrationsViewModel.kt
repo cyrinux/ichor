@@ -18,7 +18,7 @@ import name.levis.ichorgo.Ichorgo
 /** The ReadProgress op of the integrations read (Go KubeIntegrations). */
 const val INTEGRATIONS_PROGRESS_OP = "integrations"
 
-/** The issue form a request opens, with nothing filled in for "something else". */
+/** The issue form a request opens, with nothing filled in for "something else" (no CRD known). */
 val INTEGRATION_FORM_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new?template=integration.yml"
 
 /**
