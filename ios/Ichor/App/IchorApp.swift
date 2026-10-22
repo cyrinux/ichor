@@ -35,6 +35,8 @@ struct IchorApp: App {
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
         // The runs' Live Activities, and their buttons' handler.
         OperationActivities.start()
+        // "Open cluster" and "Run a checkup" (Shortcuts, Siri, Control Center).
+        ClusterScreenLinks.install()
         // The Apple Watch's link: ready before a background run sends it the last check.
         WatchLink.shared.activate()
         // TipKit, for the demo tour's coach marks (DemoTour).

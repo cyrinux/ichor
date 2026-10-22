@@ -15,30 +15,6 @@ struct Entry: TimelineEntry {
     var link: URL?
 }
 
-/// A cluster the widget can show, from the list the app keeps in the App Group (WidgetCluster).
-struct ClusterEntity: AppEntity {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Cluster"
-    static var defaultQuery = ClusterQuery()
-
-    /// Its monitor key (monitorClusterKey): what its snapshot is kept under.
-    let id: String
-    let name: String
-
-    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
-}
-
-struct ClusterQuery: EntityQuery {
-    private var clusters: [ClusterEntity] {
-        SharedSnapshot.clusters(from: UserDefaults(suiteName: SharedSnapshot.suite)).map { ClusterEntity(id: $0.id, name: $0.name) }
-    }
-
-    func entities(for identifiers: [ClusterEntity.ID]) async throws -> [ClusterEntity] {
-        clusters.filter { identifiers.contains($0.id) }
-    }
-
-    func suggestedEntities() async throws -> [ClusterEntity] { clusters }
-}
-
 /// The widget's settings: which cluster it shows; none chosen (existing widgets too), the one
 /// open in the app.
 struct ClusterWidgetIntent: WidgetConfigurationIntent {

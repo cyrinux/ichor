@@ -169,5 +169,10 @@ struct IchorWidgets: WidgetBundle {
     var body: some Widget {
         TalosWidget()
         OperationActivityWidget()
+        // Control Center buttons: iOS 18 only, the app still runs on iOS 17.
+        if #available(iOS 18.0, *) {
+            OpenClusterControl()
+            RunCheckupControl()
+        }
     }
 }
