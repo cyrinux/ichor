@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"bytes"
-	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -116,70 +115,6 @@ type gitForge interface {
 	gitRequestReader
 }
 
-// GitForgeCheck tells whether hostJSON's token works: {"login","host","scopesOK","missing"}.
-func GitForgeCheck(hostJSON string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	h, err := parseGitForgeHost(hostJSON)
-	if err != nil {
-		return "", err
-	}
-
-	if h.Kind == gitForgeDemo {
-		return gitForgeJSON(gitForgeCheck{Login: "demo", Host: "git.home.example", ScopesOK: true, Missing: []string{}})
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
-	defer cancel()
-
-	c, err := newGitForge(h).check(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	c.Host = h.host
-	if c.Missing == nil {
-		c.Missing = []string{}
-	}
-
-	return gitForgeJSON(c)
-}
-
-// GitForgeTree lists the directory dir ("" for the root) of repoURL at ref (a branch, tag or
-// commit), directories first: {"ref","entries":[{path,type,size}]}. One level only.
-func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	h, repo, ref, dir, err := gitForgeArgs(hostJSON, repoURL, ref, dir)
-	if err != nil {
-		return "", err
-	}
-
-	var entries []gitForgeEntry
-
-	if h.Kind == gitForgeDemo {
-		entries, err = demoGitForgeTree(dir)
-	} else {
-		ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
-		defer cancel()
-
-		entries, err = newGitForge(h).tree(ctx, repo, ref, dir)
-	}
-
-	if errors.Is(err, errGitForgeNotFound) {
-		return "", fmt.Errorf("%s is not in %s at %s", cmp.Or(dir, "/"), repo.full(), ref)
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	sortGitForgeEntries(entries)
-	markSOPSEntries(entries)
-
-	return gitForgeJSON(gitForgeTree{Ref: ref, Entries: nonNil(entries)})
-}
-
 // sortGitForgeEntries puts directories first, then sorts by path.
 func sortGitForgeEntries(entries []gitForgeEntry) {
 	slices.SortFunc(entries, func(a, b gitForgeEntry) int {
@@ -193,52 +128,6 @@ func sortGitForgeEntries(entries []gitForgeEntry) {
 
 		return strings.Compare(a.Path, b.Path)
 	})
-}
-
-// GitForgeFile reads the file path of repoURL at ref: {"path","sha","size","content",
-// "truncated"}; a file over 1 MiB comes back truncated, without content.
-func GitForgeFile(hostJSON, repoURL, ref, path string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	h, repo, ref, path, err := gitForgeArgs(hostJSON, repoURL, ref, path)
-	if err != nil {
-		return "", err
-	}
-
-	if path == "" {
-		return "", errors.New("no file path given")
-	}
-
-	var f gitForgeFile
-
-	if h.Kind == gitForgeDemo {
-		f, err = demoGitForgeFile(path)
-	} else {
-		ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
-		defer cancel()
-
-		f, err = newGitForge(h).file(ctx, repo, ref, path)
-	}
-
-	if errors.Is(err, errGitForgeNotFound) {
-		return "", fmt.Errorf("%s is not in %s at %s", path, repo.full(), ref)
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	if f.Size > gitForgeMaxFile || len(f.Content) > gitForgeMaxFile {
-		f.Content, f.Truncated = "", true
-	}
-
-	return gitForgeJSON(f)
-}
-
-func gitForgeJSON(v any) (string, error) {
-	out, err := json.Marshal(v)
-
-	return string(out), err
 }
 
 // gitForgeArgs decodes and checks what every read takes; the path is cleaned of leading and

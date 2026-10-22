@@ -3,12 +3,9 @@ package ichorgo
 import (
 	"cmp"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
-	pathpkg "path"
-	"strings"
 )
 
 // A cluster's own repository (its Talos patches, its Kubernetes tree), saved per cluster on
@@ -33,39 +30,6 @@ type gitForgeRepoInfo struct {
 type gitRepoReader interface {
 	repoInfo(ctx context.Context, repo gitRepoRef) (gitForgeRepoInfo, error)
 	branchHead(ctx context.Context, repo gitRepoRef, branch string) (string, error)
-}
-
-// GitForgeRepo tells what hostJSON's token sees of repoURL and where branch ("" for the
-// default one) stands: {"defaultBranch","branch","headSha","webURL","private","canPush",
-// "forge"}. The demo host answers its sample repository.
-func GitForgeRepo(hostJSON, repoURL, branch string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	h, repo, err := gitForgeRepoArgs(hostJSON, repoURL)
-	if err != nil {
-		return "", err
-	}
-
-	branch = strings.TrimSpace(branch)
-	if branch != "" && !gitBranchName.MatchString(branch) {
-		return "", fmt.Errorf("%q is not a branch name", branch)
-	}
-
-	if h.Kind == gitForgeDemo {
-		return gitForgeJSON(demoGitForgeRepo(branch))
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
-	defer cancel()
-
-	info, err := readGitForgeRepo(ctx, newGitForge(h), repo, branch)
-	if err != nil {
-		return "", gitForgeRepoError(err, h, repo, info.Branch)
-	}
-
-	info.Forge = h.Kind
-
-	return gitForgeJSON(info)
 }
 
 // readGitForgeRepo reads the repository, then the head of branch (the default one if "").
@@ -232,52 +196,4 @@ func (g gitLabForge) branchHead(ctx context.Context, repo gitRepoRef, branch str
 	}
 
 	return b.Commit.ID, nil
-}
-
-// GitForgeRepoProposalDefaults is the prefilled pull request for a change of the file path
-// of the cluster repository repoURL: {"title","message","branch","body"} as
-// GitOpsProposalDefaults answers it, titled "Update <path> for <cluster>", branch
-// ichor/<cluster>-<file>-<4 hex>. No network.
-func GitForgeRepoProposalDefaults(repoURL, path, cluster string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	p, err := gitForgeRepoProposalDefaults(repoURL, path, cluster)
-	if err != nil {
-		return "", err
-	}
-
-	b, err := json.Marshal(p)
-	if err != nil {
-		return "", err
-	}
-
-	return string(b), nil
-}
-
-func gitForgeRepoProposalDefaults(repoURL, path, cluster string) (gitOpsProposal, error) {
-	_, owner, name, err := gitForgeRepo(repoURL)
-	if err != nil {
-		return gitOpsProposal{}, err
-	}
-
-	path = strings.Trim(strings.TrimSpace(path), "/")
-	if path == "" {
-		return gitOpsProposal{}, errTextDiffName
-	}
-
-	cluster = strings.TrimSpace(cluster)
-	file := strings.TrimSuffix(pathpkg.Base(path), pathpkg.Ext(path))
-
-	title, body := "Update "+path, "Proposed from Ichor in the cluster repository "+owner+"/"+name
-	if cluster != "" {
-		title += " for " + cluster
-		body += " of " + cluster
-	}
-
-	return gitOpsProposal{
-		Title:   title,
-		Message: title,
-		Branch:  "ichor/" + gitSlug(strings.Trim(cluster+"-"+file, "-")) + "-" + gitBranchSuffix(),
-		Body:    body + ".",
-	}, nil
 }

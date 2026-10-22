@@ -1,7 +1,6 @@
 package ichorgo
 
 import (
-	"net/url"
 	"regexp"
 	"strings"
 )
@@ -12,51 +11,7 @@ import (
 var (
 	// gitCommitSHA is a full or abbreviated Git object name.
 	gitCommitSHA = regexp.MustCompile(`^[0-9a-f]{7,64}$`)
-	// scpLikeURL is "git@host:org/repo.git": SSH without a scheme.
-	scpLikeURL = regexp.MustCompile(`^(?:[\w.-]+@)?([\w.-]+):([^/\s].*)$`)
 )
-
-// argoRepoWebURL is the https page of a repository, "" when it cannot be browsed: an OCI
-// registry, a local path, or something that is not a URL. SSH forms become https on the same
-// host; credentials and ports are dropped.
-func argoRepoWebURL(repo string) string {
-	repo = strings.TrimSpace(repo)
-	if repo == "" || strings.HasPrefix(repo, "oci://") {
-		return ""
-	}
-
-	var host, path string
-
-	switch {
-	case strings.Contains(repo, "://"):
-		u, err := url.Parse(repo)
-		if err != nil || u.Hostname() == "" {
-			return ""
-		}
-
-		switch u.Scheme {
-		case "https", "http", "ssh", "git", "git+ssh", "ssh+git":
-		default:
-			return ""
-		}
-
-		host, path = u.Hostname(), u.Path
-	default:
-		m := scpLikeURL.FindStringSubmatch(repo)
-		if m == nil {
-			return ""
-		}
-
-		host, path = m[1], "/"+m[2]
-	}
-
-	path = strings.TrimSuffix(strings.TrimRight(path, "/"), ".git")
-	if path == "" || path == "/" {
-		return ""
-	}
-
-	return "https://" + host + path
-}
 
 // argoCommitURL links the commit revision of repo: GitLab uses /-/commit/, Bitbucket
 // /commits/, every other forge (GitHub, Gitea, Forgejo, Codeberg, Azure DevOps, unknown

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/cyrinux/ichor/go/internal/httpx"
 )
@@ -18,6 +19,9 @@ import (
 
 // gitForgeMaxArchive bounds an archive as downloaded (compressed).
 const gitForgeMaxArchive = 48 << 20
+
+// gitForgeArchiveTimeout bounds an archive download, longer than an API call.
+const gitForgeArchiveTimeout = 2 * time.Minute
 
 var errGitForgeArchiveTooLarge = errors.New("the repository archive is over 48 MiB; browse it file by file")
 
@@ -199,4 +203,4 @@ func (c gitForgeClient) followArchive(ctx context.Context, from, loc string, pri
 }
 
 // gitForgeArchiveHTTP downloads archives: longer than an API call, never following a redirect.
-var gitForgeArchiveHTTP = httpx.New(httpx.Opts{Timeout: gitSnapshotTimeout})
+var gitForgeArchiveHTTP = httpx.New(httpx.Opts{Timeout: gitForgeArchiveTimeout})

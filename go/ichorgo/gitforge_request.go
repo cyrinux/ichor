@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 )
 
@@ -32,42 +31,6 @@ type gitRequestState struct {
 // gitRequestReader reads one pull or merge request of a repository.
 type gitRequestReader interface {
 	request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error)
-}
-
-// GitForgeRequest reads the pull request (merge request on GitLab, by its iid) number of
-// repoURL with hostJSON's token: {"state":"open|merged|closed","title","url","headSha",
-// "mergeSha","mergedAt","updatedAt","draft"}. The demo host answers its sample proposals
-// (number 1 open, 2 merged).
-func GitForgeRequest(hostJSON, repoURL string, number int) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	if number <= 0 {
-		return "", errGitRequestNumber
-	}
-
-	// A request is read by number: the ref the reads take is not used.
-	h, repo, _, _, err := gitForgeArgs(hostJSON, repoURL, "HEAD", "")
-	if err != nil {
-		return "", err
-	}
-
-	if h.Kind == gitForgeDemo {
-		return gitForgeJSON(demoGitRequest(repo, number))
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
-	defer cancel()
-
-	state, err := newGitForge(h).request(ctx, repo, number)
-	if errors.Is(err, errGitForgeNotFound) {
-		return "", fmt.Errorf("pull request #%d is not in %s (or the token cannot read it)", number, repo.full())
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	return gitForgeJSON(state)
 }
 
 func (g gitHubForge) request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
@@ -155,24 +118,3 @@ func mergedOnly(merged bool, sha string) string {
 
 	return ""
 }
-
-// demoGitRequest is the demo's sample proposals: #1 open, #2 merged (and deployed: its
-// commit is the demo's Argo CD app revision).
-func demoGitRequest(repo gitRepoRef, number int) gitRequestState {
-	url := "https://git.home.example/" + repo.full() + "/pulls/" + strconv.Itoa(number)
-	if number == demoMergedRequest {
-		return gitRequestState{
-			State: gitRequestMerged, Title: "Scale podinfo to 3", URL: url, HeadSHA: demoProposalHead,
-			MergeSHA: demoArgoRevision, MergedAt: "2026-10-18T08:30:00Z", UpdatedAt: "2026-10-18T08:30:00Z",
-		}
-	}
-
-	return gitRequestState{State: gitRequestOpen, Title: "Bump podinfo to 6.7.1", URL: url, HeadSHA: demoProposalHead, UpdatedAt: "2026-10-19T09:00:00Z"}
-}
-
-const (
-	demoMergedRequest = 2
-	demoProposalHead  = "b7a1c0de" + "00000000000000000000000000000000"
-	// demoArgoRevision is what the demo's Argo CD app argocd/hello-ichor runs.
-	demoArgoRevision = "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d"
-)

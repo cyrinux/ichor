@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"testing"
 )
 
@@ -90,61 +89,6 @@ func TestGitForgeRepoNotFound(t *testing.T) {
 	} {
 		if _, err := GitForgeRepo(host, bad.repo, bad.branch); err == nil {
 			t.Errorf("%+v accepted", bad)
-		}
-	}
-}
-
-func TestGitForgeRepoDemo(t *testing.T) {
-	out, err := GitForgeRepo(`{"kind":"demo"}`, "", "")
-
-	var info gitForgeRepoInfo
-	if err != nil || json.Unmarshal([]byte(out), &info) != nil || info.Branch != "main" || info.HeadSha != demoClusterRepoHead || !info.CanPush || info.Forge != gitForgeDemo {
-		t.Errorf("demo %s %v", out, err)
-	}
-
-	root, err := GitForgeTree(`{"kind":"demo"}`, demoClusterRepoURL, info.HeadSha, "")
-	for _, want := range []string{`"path":"talos","type":"dir"`, `"path":"kubernetes","type":"dir"`, `"path":".sops.yaml"`, `"path":"README.md"`} {
-		if err != nil || !strings.Contains(root, want) {
-			t.Errorf("root lacks %s: %s %v", want, root, err)
-		}
-	}
-
-	if out, err := GitForgeFile(`{"kind":"demo"}`, demoClusterRepoURL, info.HeadSha, "talos/talsecret.sops.yaml"); err != nil || !strings.Contains(out, "ENC[AES256_GCM") {
-		t.Errorf("sops file %s %v", out, err)
-	}
-
-	opts := `{"repoURL":"` + demoClusterRepoURL + `","baseRef":"main","path":"README.md","content":"x","message":"m","title":"t"}`
-	if _, err := GitForgePropose("", "", `{"kind":"demo"}`, opts); err == nil || err.Error() != errDemoUnavailable.Error() {
-		t.Errorf("demo propose: %v", err)
-	}
-}
-
-func TestGitForgeRepoProposalDefaults(t *testing.T) {
-	fixedBranchSuffix(t)
-
-	out, err := GitForgeRepoProposalDefaults("git@git.example.org:example-org/cluster-config.git", "/talos/nodes/cp-1.yaml", "lab")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	want := gitOpsProposal{
-		Title: "Update talos/nodes/cp-1.yaml for lab", Message: "Update talos/nodes/cp-1.yaml for lab",
-		Branch: "ichor/lab-cp-1-0001", Body: "Proposed from Ichor in the cluster repository example-org/cluster-config of lab.",
-	}
-
-	var got gitOpsProposal
-	if err := json.Unmarshal([]byte(out), &got); err != nil || got != want {
-		t.Errorf("got %+v %v, want %+v", got, err, want)
-	}
-
-	p, err := gitForgeRepoProposalDefaults(demoClusterRepoURL, "README.md", "")
-	if err != nil || p.Title != "Update README.md" || p.Branch != "ichor/readme-0002" || strings.Contains(p.Body, " of ") {
-		t.Errorf("no cluster: %+v %v", p, err)
-	}
-
-	for _, bad := range [][2]string{{"not a repo", "a.yaml"}, {demoClusterRepoURL, " / "}} {
-		if _, err := GitForgeRepoProposalDefaults(bad[0], bad[1], "lab"); err == nil {
-			t.Errorf("%v accepted", bad)
 		}
 	}
 }
