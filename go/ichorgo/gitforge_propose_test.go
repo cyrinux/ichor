@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // proposeContent is long enough that a wrapping base64 encoder would break its lines.
@@ -92,13 +94,13 @@ func proposeServer(t *testing.T, answers map[string][]proposeAnswer) (*httptest.
 func fixedBranchSuffix(t *testing.T) {
 	t.Helper()
 
-	n, prev := 0, gitBranchSuffix
-	gitBranchSuffix = func() string {
+	n, prev := 0, gitforge.BranchSuffix
+	gitforge.BranchSuffix = func() string {
 		n++
 
 		return fmt.Sprintf("%04d", n)
 	}
-	t.Cleanup(func() { gitBranchSuffix = prev })
+	t.Cleanup(func() { gitforge.BranchSuffix = prev })
 }
 
 func proposeOptions(t *testing.T, repoURL string, change func(map[string]any)) string {

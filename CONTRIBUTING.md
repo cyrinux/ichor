@@ -17,8 +17,9 @@ an issue first so we can agree on the approach before you spend time on it.
 `go/ichorgo` is the gomobile facade: the only package bound for the apps, so every exported
 function the apps call lives there, with the privacy masking, the audit log and the demo
 contexts. New transport or pure-logic code goes in its own package under `go/<domain>` (like
-`go/plugin`) or `go/internal/<name>` (like `go/internal/httpx`, the one outbound HTTP client),
-with its tests next to it; `ichorgo` imports it and keeps a thin wrapper per entry point.
+`go/plugin`, or `go/gitforge`, the Git forge transport) or `go/internal/<name>` (like
+`go/internal/httpx`, the one outbound HTTP client), with its tests next to it; `ichorgo`
+imports it and keeps a thin wrapper per entry point.
 
 ## Confirming risky actions
 

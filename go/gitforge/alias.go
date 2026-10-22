@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"fmt"
@@ -95,8 +95,8 @@ func gitRepoAddr(repoURL string) (addr string, scp bool) {
 // checkGitRepoHost refuses a repository that is not on h: its host must be h's (or a
 // well-known name for it) or one of h's aliases, host[:port] exactly, or host only for an
 // scp-like address.
-func (h gitForgeHost) checkGitRepoHost(repo gitRepoRef, repoURL string) error {
-	if repo.host == h.host {
+func (h Host) checkGitRepoHost(repo RepoRef, repoURL string) error {
+	if repo.Host == h.host {
 		return nil
 	}
 
@@ -108,11 +108,11 @@ func (h gitForgeHost) checkGitRepoHost(repo gitRepoRef, repoURL string) error {
 	}
 
 	if addr == "" {
-		addr = repo.host
+		addr = repo.Host
 	}
 
 	return fmt.Errorf("%s is on %s, not on the Git host %s: if it is the same server, add %s to the host's other names in Settings → Git hosts",
-		repo.full(), addr, h.host, addr)
+		repo.Full(), addr, h.host, addr)
 }
 
 // aliasHostOnly is an alias without its port.

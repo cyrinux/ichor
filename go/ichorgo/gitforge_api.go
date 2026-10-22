@@ -8,6 +8,8 @@ import (
 	"fmt"
 	pathpkg "path"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // GitForgeCheck tells whether hostJSON's token works: {"login","host","scopesOK","missing"}.
@@ -26,12 +28,12 @@ func GitForgeCheck(hostJSON string) (out string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
 	defer cancel()
 
-	c, err := newGitForge(h).check(ctx)
+	c, err := newGitForge(h).Check(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	c.Host = h.host
+	c.Host = h.HostName()
 	if c.Missing == nil {
 		c.Missing = []string{}
 	}
@@ -57,11 +59,11 @@ func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 		ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
 		defer cancel()
 
-		entries, err = newGitForge(h).tree(ctx, repo, ref, dir)
+		entries, err = newGitForge(h).Tree(ctx, repo, ref, dir)
 	}
 
 	if errors.Is(err, errGitForgeNotFound) {
-		return "", fmt.Errorf("%s is not in %s at %s", cmp.Or(dir, "/"), repo.full(), ref)
+		return "", fmt.Errorf("%s is not in %s at %s", cmp.Or(dir, "/"), repo.Full(), ref)
 	}
 
 	if err != nil {
@@ -96,11 +98,11 @@ func GitForgeFile(hostJSON, repoURL, ref, path string) (out string, err error) {
 		ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
 		defer cancel()
 
-		f, err = newGitForge(h).file(ctx, repo, ref, path)
+		f, err = newGitForge(h).File(ctx, repo, ref, path)
 	}
 
 	if errors.Is(err, errGitForgeNotFound) {
-		return "", fmt.Errorf("%s is not in %s at %s", path, repo.full(), ref)
+		return "", fmt.Errorf("%s is not in %s at %s", path, repo.Full(), ref)
 	}
 
 	if err != nil {
@@ -196,7 +198,7 @@ func gitForgeRepoProposalDefaults(repoURL, path, cluster string) (gitOpsProposal
 	return gitOpsProposal{
 		Title:   title,
 		Message: title,
-		Branch:  "ichor/" + gitSlug(strings.Trim(cluster+"-"+file, "-")) + "-" + gitBranchSuffix(),
+		Branch:  "ichor/" + gitSlug(strings.Trim(cluster+"-"+file, "-")) + "-" + gitforge.BranchSuffix(),
 		Body:    body + ".",
 	}, nil
 }
@@ -225,9 +227,9 @@ func GitForgeRequest(hostJSON, repoURL string, number int) (out string, err erro
 	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
 	defer cancel()
 
-	state, err := newGitForge(h).request(ctx, repo, number)
+	state, err := newGitForge(h).Request(ctx, repo, number)
 	if errors.Is(err, errGitForgeNotFound) {
-		return "", fmt.Errorf("pull request #%d is not in %s (or the token cannot read it)", number, repo.full())
+		return "", fmt.Errorf("pull request #%d is not in %s (or the token cannot read it)", number, repo.Full())
 	}
 
 	if err != nil {

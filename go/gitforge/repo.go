@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"cmp"
@@ -15,8 +15,8 @@ import (
 // gitLabDeveloper is GitLab's Developer access level: the lowest that pushes a branch.
 const gitLabDeveloper = 30
 
-// gitForgeRepoInfo is GitForgeRepo's answer. Branch is the branch asked, or the default one.
-type gitForgeRepoInfo struct {
+// RepoInfo is GitForgeRepo's answer. Branch is the branch asked, or the default one.
+type RepoInfo struct {
 	DefaultBranch string `json:"defaultBranch"`
 	Branch        string `json:"branch"`
 	HeadSha       string `json:"headSha"`
@@ -28,20 +28,20 @@ type gitForgeRepoInfo struct {
 
 // gitRepoReader reads a repository's metadata and a branch's head commit.
 type gitRepoReader interface {
-	repoInfo(ctx context.Context, repo gitRepoRef) (gitForgeRepoInfo, error)
-	branchHead(ctx context.Context, repo gitRepoRef, branch string) (string, error)
+	repoInfo(ctx context.Context, repo RepoRef) (RepoInfo, error)
+	branchHead(ctx context.Context, repo RepoRef, branch string) (string, error)
 }
 
-// readGitForgeRepo reads the repository, then the head of branch (the default one if "").
-func readGitForgeRepo(ctx context.Context, f gitRepoReader, repo gitRepoRef, branch string) (gitForgeRepoInfo, error) {
+// ReadRepo reads the repository, then the head of branch (the default one if "").
+func ReadRepo(ctx context.Context, f gitRepoReader, repo RepoRef, branch string) (RepoInfo, error) {
 	info, err := f.repoInfo(ctx, repo)
 	if err != nil {
-		return gitForgeRepoInfo{}, err
+		return RepoInfo{}, err
 	}
 
 	info.Branch = cmp.Or(branch, info.DefaultBranch)
 	if info.Branch == "" {
-		return info, fmt.Errorf("%s has no branch yet", repo.full())
+		return info, fmt.Errorf("%s has no branch yet", repo.Full())
 	}
 
 	if info.HeadSha, err = f.branchHead(ctx, repo, info.Branch); err != nil {
@@ -51,44 +51,44 @@ func readGitForgeRepo(ctx context.Context, f gitRepoReader, repo gitRepoRef, bra
 	return info, nil
 }
 
-// gitForgeRepoError words a 404: the repository, or the branch once the repository was read.
-func gitForgeRepoError(err error, h gitForgeHost, repo gitRepoRef, branch string) error {
-	if !errors.Is(err, errGitForgeNotFound) {
+// RepoError words a 404: the repository, or the branch once the repository was read.
+func RepoError(err error, h Host, repo RepoRef, branch string) error {
+	if !errors.Is(err, ErrNotFound) {
 		return err
 	}
 
 	if branch != "" {
-		return fmt.Errorf("branch %s is not in %s", branch, repo.full())
+		return fmt.Errorf("branch %s is not in %s", branch, repo.Full())
 	}
 
-	if h.Kind == gitForgeGitHub {
-		return fmt.Errorf("%s: not found or no access with this token (a fine-grained token must have this repository selected)", repo.full())
+	if h.Kind == KindGitHub {
+		return fmt.Errorf("%s: not found or no access with this token (a fine-grained token must have this repository selected)", repo.Full())
 	}
 
-	return fmt.Errorf("%s: not found or no access with this token", repo.full())
+	return fmt.Errorf("%s: not found or no access with this token", repo.Full())
 }
 
-// gitForgeRepoArgs decodes the host and the repository, as gitForgeArgs does without a ref.
-func gitForgeRepoArgs(hostJSON, repoURL string) (gitForgeHost, gitRepoRef, error) {
-	h, err := parseGitForgeHost(hostJSON)
+// RepoArgs decodes the host and the repository, as Args does without a ref.
+func RepoArgs(hostJSON, repoURL string) (Host, RepoRef, error) {
+	h, err := ParseHost(hostJSON)
 	if err != nil {
-		return gitForgeHost{}, gitRepoRef{}, err
+		return Host{}, RepoRef{}, err
 	}
 
-	if h.Kind == gitForgeDemo {
-		return h, gitRepoRef{host: h.host, owner: "example-org", name: "cluster-config"}, nil
+	if h.Kind == KindDemo {
+		return h, RepoRef{Host: h.host, Owner: "example-org", Name: "cluster-config"}, nil
 	}
 
-	var repo gitRepoRef
-	if repo.host, repo.owner, repo.name, err = gitForgeRepo(repoURL); err != nil {
-		return gitForgeHost{}, gitRepoRef{}, err
+	var repo RepoRef
+	if repo.Host, repo.Owner, repo.Name, err = ParseRepoURL(repoURL); err != nil {
+		return Host{}, RepoRef{}, err
 	}
 
 	if err := h.checkGitRepoHost(repo, repoURL); err != nil {
-		return gitForgeHost{}, gitRepoRef{}, err
+		return Host{}, RepoRef{}, err
 	}
 
-	repo.host = h.host
+	repo.Host = h.host
 
 	return h, repo, nil
 }
@@ -103,20 +103,20 @@ type gitHubRepo struct {
 	} `json:"permissions"`
 }
 
-func (r gitHubRepo) info() gitForgeRepoInfo {
-	return gitForgeRepoInfo{DefaultBranch: r.DefaultBranch, WebURL: r.HTMLURL, Private: r.Private, CanPush: r.Permissions.Push}
+func (r gitHubRepo) info() RepoInfo {
+	return RepoInfo{DefaultBranch: r.DefaultBranch, WebURL: r.HTMLURL, Private: r.Private, CanPush: r.Permissions.Push}
 }
 
-func (g gitHubForge) repoInfo(ctx context.Context, repo gitRepoRef) (gitForgeRepoInfo, error) {
+func (g gitHubForge) repoInfo(ctx context.Context, repo RepoRef) (RepoInfo, error) {
 	var r gitHubRepo
 	if _, err := g.c.get(ctx, reposPath(repo), nil, &r); err != nil {
-		return gitForgeRepoInfo{}, err
+		return RepoInfo{}, err
 	}
 
 	return r.info(), nil
 }
 
-func (g gitHubForge) branchHead(ctx context.Context, repo gitRepoRef, branch string) (string, error) {
+func (g gitHubForge) branchHead(ctx context.Context, repo RepoRef, branch string) (string, error) {
 	var b struct {
 		Commit struct {
 			SHA string `json:"sha"`
@@ -130,16 +130,16 @@ func (g gitHubForge) branchHead(ctx context.Context, repo gitRepoRef, branch str
 	return b.Commit.SHA, nil
 }
 
-func (g giteaForge) repoInfo(ctx context.Context, repo gitRepoRef) (gitForgeRepoInfo, error) {
+func (g giteaForge) repoInfo(ctx context.Context, repo RepoRef) (RepoInfo, error) {
 	var r gitHubRepo
 	if _, err := g.c.get(ctx, reposPath(repo), nil, &r); err != nil {
-		return gitForgeRepoInfo{}, err
+		return RepoInfo{}, err
 	}
 
 	return r.info(), nil
 }
 
-func (g giteaForge) branchHead(ctx context.Context, repo gitRepoRef, branch string) (string, error) {
+func (g giteaForge) branchHead(ctx context.Context, repo RepoRef, branch string) (string, error) {
 	var b struct {
 		Commit struct {
 			ID string `json:"id"`
@@ -153,7 +153,7 @@ func (g giteaForge) branchHead(ctx context.Context, repo gitRepoRef, branch stri
 	return b.Commit.ID, nil
 }
 
-func (g gitLabForge) repoInfo(ctx context.Context, repo gitRepoRef) (gitForgeRepoInfo, error) {
+func (g gitLabForge) repoInfo(ctx context.Context, repo RepoRef) (RepoInfo, error) {
 	type access struct {
 		AccessLevel int `json:"access_level"`
 	}
@@ -169,7 +169,7 @@ func (g gitLabForge) repoInfo(ctx context.Context, repo gitRepoRef) (gitForgeRep
 	}
 
 	if _, err := g.c.get(ctx, gitLabProject(repo), nil, &p); err != nil {
-		return gitForgeRepoInfo{}, err
+		return RepoInfo{}, err
 	}
 
 	level := 0
@@ -179,12 +179,12 @@ func (g gitLabForge) repoInfo(ctx context.Context, repo gitRepoRef) (gitForgeRep
 		}
 	}
 
-	return gitForgeRepoInfo{
+	return RepoInfo{
 		DefaultBranch: p.DefaultBranch, WebURL: p.WebURL, Private: p.Visibility != "public", CanPush: level >= gitLabDeveloper,
 	}, nil
 }
 
-func (g gitLabForge) branchHead(ctx context.Context, repo gitRepoRef, branch string) (string, error) {
+func (g gitLabForge) branchHead(ctx context.Context, repo RepoRef, branch string) (string, error) {
 	var b struct {
 		Commit struct {
 			ID string `json:"id"`

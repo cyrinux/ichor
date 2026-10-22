@@ -6,6 +6,8 @@ import (
 	"fmt"
 	pathpkg "path"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // The review step of a file edited in the source browser, and the defaults of the pull
@@ -120,7 +122,7 @@ func gitOpsProposalDefaults(tool, kind, namespace, name, path, cluster string) (
 	return gitOpsProposal{
 		Title:   title,
 		Message: title,
-		Branch:  "ichor/" + gitSlug(strings.Trim(name+"-"+file, "-")) + "-" + gitBranchSuffix(),
+		Branch:  "ichor/" + gitSlug(strings.Trim(name+"-"+file, "-")) + "-" + gitforge.BranchSuffix(),
 		Body:    body + ".",
 	}, nil
 }

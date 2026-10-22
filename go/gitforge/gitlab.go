@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"context"
@@ -16,18 +16,18 @@ import (
 // its URL-encoded full path (subgroups included).
 type gitLabForge struct{ c gitForgeClient }
 
-func gitLabProject(repo gitRepoRef) string { return "/projects/" + url.PathEscape(repo.full()) }
+func gitLabProject(repo RepoRef) string { return "/projects/" + url.PathEscape(repo.Full()) }
 
-func (g gitLabForge) check(ctx context.Context) (gitForgeCheck, error) {
+func (g gitLabForge) Check(ctx context.Context) (CheckResult, error) {
 	var user struct {
 		Username string `json:"username"`
 	}
 
 	if _, err := g.c.get(ctx, "/user", nil, &user); err != nil {
-		return gitForgeCheck{}, err
+		return CheckResult{}, err
 	}
 
-	out := gitForgeCheck{Login: user.Username, ScopesOK: true}
+	out := CheckResult{Login: user.Username, ScopesOK: true}
 
 	// The repository API needs read_api (or api); an older GitLab without this endpoint is
 	// trusted.
@@ -44,8 +44,8 @@ func (g gitLabForge) check(ctx context.Context) (gitForgeCheck, error) {
 	return out, nil
 }
 
-func (g gitLabForge) tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error) {
-	var entries []gitForgeEntry
+func (g gitLabForge) Tree(ctx context.Context, repo RepoRef, ref, dir string) ([]Entry, error) {
+	var entries []Entry
 
 	for page := 1; page <= gitForgeMaxPages; {
 		var items []struct {
@@ -65,7 +65,7 @@ func (g gitLabForge) tree(ctx context.Context, repo gitRepoRef, ref, dir string)
 
 		// GitLab answers an empty list, not a 404, for a path that is not a directory.
 		if page == 1 && len(items) == 0 && dir != "" {
-			return nil, errGitForgeNotFound
+			return nil, ErrNotFound
 		}
 
 		for _, it := range items {
@@ -74,7 +74,7 @@ func (g gitLabForge) tree(ctx context.Context, repo gitRepoRef, ref, dir string)
 				kind = "dir"
 			}
 
-			entries = append(entries, gitForgeEntry{Path: it.Path, Type: kind})
+			entries = append(entries, Entry{Path: it.Path, Type: kind})
 		}
 
 		next, err := strconv.Atoi(h.Get("X-Next-Page"))
@@ -88,7 +88,7 @@ func (g gitLabForge) tree(ctx context.Context, repo gitRepoRef, ref, dir string)
 	return entries, nil
 }
 
-func (g gitLabForge) file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error) {
+func (g gitLabForge) File(ctx context.Context, repo RepoRef, ref, path string) (File, error) {
 	var it struct {
 		FilePath     string `json:"file_path"`
 		Size         int64  `json:"size"`
@@ -103,31 +103,31 @@ func (g gitLabForge) file(ctx context.Context, repo gitRepoRef, ref, path string
 	// HEAD tells the size first: GitLab sends a file's whole content, whatever its size.
 	h, err := g.c.head(ctx, filePath, q)
 	if err != nil {
-		return gitForgeFile{}, err
+		return File{}, err
 	}
 
-	if size, err := strconv.ParseInt(h.Get("X-Gitlab-Size"), 10, 64); err == nil && size > gitForgeMaxFile {
-		return gitForgeFile{Path: path, SHA: h.Get("X-Gitlab-Last-Commit-Id"), Size: size, Truncated: true}, nil
+	if size, err := strconv.ParseInt(h.Get("X-Gitlab-Size"), 10, 64); err == nil && size > MaxFile {
+		return File{Path: path, SHA: h.Get("X-Gitlab-Last-Commit-Id"), Size: size, Truncated: true}, nil
 	}
 
 	if _, err := g.c.get(ctx, filePath, q, &it); err != nil {
-		return gitForgeFile{}, err
+		return File{}, err
 	}
 
-	f := gitForgeFile{Path: it.FilePath, SHA: it.LastCommitID, Size: it.Size}
-	if it.Size > gitForgeMaxFile {
+	f := File{Path: it.FilePath, SHA: it.LastCommitID, Size: it.Size}
+	if it.Size > MaxFile {
 		f.Truncated = true
 
 		return f, nil
 	}
 
 	if it.Encoding != "base64" {
-		return gitForgeFile{}, fmt.Errorf("%s: unexpected encoding %q", path, it.Encoding)
+		return File{}, fmt.Errorf("%s: unexpected encoding %q", path, it.Encoding)
 	}
 
 	content, err := base64.StdEncoding.DecodeString(strings.ReplaceAll(it.Content, "\n", ""))
 	if err != nil {
-		return gitForgeFile{}, errors.Join(fmt.Errorf("%s: unreadable content", path), err)
+		return File{}, errors.Join(fmt.Errorf("%s: unreadable content", path), err)
 	}
 
 	f.Content = string(content)
@@ -136,17 +136,17 @@ func (g gitLabForge) file(ctx context.Context, repo gitRepoRef, ref, path string
 }
 
 // branchFrom is baseRef itself: GitLab branches from a name.
-func (g gitLabForge) branchFrom(_ context.Context, _ gitRepoRef, baseRef string) (string, error) {
+func (g gitLabForge) branchFrom(_ context.Context, _ RepoRef, baseRef string) (string, error) {
 	return baseRef, nil
 }
 
-func (g gitLabForge) createBranch(ctx context.Context, repo gitRepoRef, from, branch string) error {
+func (g gitLabForge) createBranch(ctx context.Context, repo RepoRef, from, branch string) error {
 	return g.c.call(ctx, http.MethodPost, gitLabProject(repo)+"/repository/branches", map[string]string{"branch": branch, "ref": from}, nil)
 }
 
 // commitFile updates with PUT and last_commit_id (the file's sha as GitForgeFile read it); a
 // new file is a POST. GitLab does not answer the commit: the merge request tells it.
-func (g gitLabForge) commitFile(ctx context.Context, repo gitRepoRef, p gitProposal) (string, error) {
+func (g gitLabForge) commitFile(ctx context.Context, repo RepoRef, p Proposal) (string, error) {
 	in := map[string]string{"branch": p.Branch, "content": p.Content, "commit_message": p.Message}
 
 	method := http.MethodPost
@@ -159,7 +159,7 @@ func (g gitLabForge) commitFile(ctx context.Context, repo gitRepoRef, p gitPropo
 
 // openRequest opens the merge request, its branch removed once merged; a "Draft:" title is
 // GitLab's draft.
-func (g gitLabForge) openRequest(ctx context.Context, repo gitRepoRef, p gitProposal) (gitRequest, error) {
+func (g gitLabForge) openRequest(ctx context.Context, repo RepoRef, p Proposal) (gitRequest, error) {
 	var mr struct {
 		WebURL string `json:"web_url"`
 		IID    int    `json:"iid"`
@@ -177,6 +177,6 @@ func (g gitLabForge) openRequest(ctx context.Context, repo gitRepoRef, p gitProp
 	return gitRequest{URL: mr.WebURL, Number: mr.IID, Commit: mr.SHA}, nil
 }
 
-func (g gitLabForge) deleteBranch(ctx context.Context, repo gitRepoRef, branch string) error {
+func (g gitLabForge) deleteBranch(ctx context.Context, repo RepoRef, branch string) error {
 	return g.c.call(ctx, http.MethodDelete, gitLabProject(repo)+"/repository/branches/"+url.PathEscape(branch), nil, nil)
 }

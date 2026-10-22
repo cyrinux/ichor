@@ -272,8 +272,8 @@ func newSourceForge(hostJSON string, src gitopsSource) (sourceForge, error) {
 	f := newGitForge(h)
 
 	return sourceForge{
-		tree: func(ctx context.Context, dir string) ([]gitForgeEntry, error) { return f.tree(ctx, repo, ref, dir) },
-		file: func(ctx context.Context, p string) (gitForgeFile, error) { return f.file(ctx, repo, ref, p) },
+		tree: func(ctx context.Context, dir string) ([]gitForgeEntry, error) { return f.Tree(ctx, repo, ref, dir) },
+		file: func(ctx context.Context, p string) (gitForgeFile, error) { return f.File(ctx, repo, ref, p) },
 	}, nil
 }
 

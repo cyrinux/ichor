@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"errors"
@@ -12,8 +12,8 @@ import (
 
 func TestGitForgeKindOf(t *testing.T) {
 	for host, want := range map[string]string{
-		"github.com": gitForgeGitHub, "gitlab.com": gitForgeGitLab, "gitlab.example.org": gitForgeGitLab,
-		"gitea.home.example": gitForgeGitea, "forgejo.example.org": gitForgeGitea, "codeberg.org": gitForgeGitea,
+		"github.com": KindGitHub, "gitlab.com": KindGitLab, "gitlab.example.org": KindGitLab,
+		"gitea.home.example": KindGitea, "forgejo.example.org": KindGitea, "codeberg.org": KindGitea,
 	} {
 		if got, err := gitForgeKindOf(host); err != nil || got != want {
 			t.Errorf("%s: %q %v, want %q", host, got, err, want)
@@ -33,29 +33,29 @@ func TestGitForgeRepo(t *testing.T) {
 		"https://codeberg.org/example-org/platform/":         "codeberg.org|example-org|platform",
 		"https://user:pass@gitea.home.example/ops/fleet.git": "gitea.home.example|ops|fleet",
 	} {
-		host, owner, name, err := gitForgeRepo(in)
+		host, owner, name, err := ParseRepoURL(in)
 		if got := host + "|" + owner + "|" + name; err != nil || got != want {
 			t.Errorf("%s: %q %v, want %q", in, got, err, want)
 		}
 	}
 
 	for _, bad := range []string{"oci://registry/chart", "https://github.com/onlyowner", "not a url"} {
-		if _, _, _, err := gitForgeRepo(bad); err == nil {
+		if _, _, _, err := ParseRepoURL(bad); err == nil {
 			t.Errorf("%s accepted", bad)
 		}
 	}
 }
 
 func TestParseGitForgeHostRefusesPlainHTTP(t *testing.T) {
-	if _, err := parseGitForgeHost(gitHostJSON("github", "http://git.home.example")); err == nil || !strings.Contains(err.Error(), "https") {
+	if _, err := ParseHost(hostJSON("github", "http://git.home.example")); err == nil || !strings.Contains(err.Error(), "https") {
 		t.Errorf("plain http: %v", err)
 	}
 
-	if h, err := parseGitForgeHost(gitHostJSON("gitea", "http://127.0.0.1:3000/")); err != nil || h.BaseURL != "http://127.0.0.1:3000" {
+	if h, err := ParseHost(hostJSON("gitea", "http://127.0.0.1:3000/")); err != nil || h.BaseURL != "http://127.0.0.1:3000" {
 		t.Errorf("loopback: %+v %v", h, err)
 	}
 
-	if _, err := parseGitForgeHost(gitHostJSON("auto", "https://bitbucket.org")); err == nil {
+	if _, err := ParseHost(hostJSON("auto", "https://bitbucket.org")); err == nil {
 		t.Error("an unknown host was accepted")
 	}
 }
@@ -67,14 +67,14 @@ func TestParseGitForgeHostAPIAddresses(t *testing.T) {
 		`{"kind":"auto","baseURL":"https://gitlab.example.org/api/v4"}`:    "gitlab|gitlab.example.org|https://gitlab.example.org",
 		`{"kind":"auto","baseURL":"https://gitea.example.org/git/api/v1"}`: "gitea|gitea.example.org|https://gitea.example.org/git",
 	} {
-		h, err := parseGitForgeHost(in)
+		h, err := ParseHost(in)
 		if got := h.Kind + "|" + h.host + "|" + h.BaseURL; err != nil || got != want {
 			t.Errorf("%s: %q %v, want %q", in, got, err, want)
 		}
 	}
 
-	h, _ := parseGitForgeHost(`{"kind":"auto","baseURL":"https://api.github.com"}`) //nolint:errcheck
-	if api := newGitForge(h).(gitHubForge).c.api; api != "https://api.github.com" {
+	h, _ := ParseHost(`{"kind":"auto","baseURL":"https://api.github.com"}`) //nolint:errcheck
+	if api := New(h).(gitHubForge).c.api; api != "https://api.github.com" {
 		t.Errorf("github.com API %s", api)
 	}
 }
@@ -119,7 +119,7 @@ func TestNormalizeGitHostAliasesCapsAndDedupes(t *testing.T) {
 		t.Errorf("aliases %v", got)
 	}
 
-	h, err := parseGitForgeHost(gitHostJSONAliases("gitea", "https://git.example.org", "SSH.git.example.org", ""))
+	h, err := ParseHost(hostJSONAliases("gitea", "https://git.example.org", "SSH.git.example.org", ""))
 	if err != nil || !slices.Equal(h.aliases, []string{"ssh.git.example.org"}) {
 		t.Errorf("parsed %+v %v", h.aliases, err)
 	}
@@ -128,7 +128,7 @@ func TestNormalizeGitHostAliasesCapsAndDedupes(t *testing.T) {
 // A repository on the base host, a well-known name of it or an alias is read; any other is
 // refused before a request.
 func TestGitForgeArgsAliases(t *testing.T) {
-	host := gitHostJSONAliases("gitea", "https://git.example.org",
+	host := hostJSONAliases("gitea", "https://git.example.org",
 		"ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000", "git.lan.example:2222")
 
 	for name, tc := range map[string]struct {
@@ -151,7 +151,7 @@ func TestGitForgeArgsAliases(t *testing.T) {
 		"alias suffix lookalike": {"https://ssh.git.example.org.evil.example/example-org/platform", false},
 	} {
 		t.Run(name, func(t *testing.T) {
-			h, repo, _, _, err := gitForgeArgs(host, tc.repoURL, "main", "")
+			h, repo, _, _, err := Args(host, tc.repoURL, "main", "")
 			if !tc.ok {
 				if err == nil || !strings.Contains(err.Error(), "not on the Git host git.example.org") || !strings.Contains(err.Error(), "other names in Settings → Git hosts") {
 					t.Errorf("accepted or wrong error: %v", err)
@@ -164,7 +164,7 @@ func TestGitForgeArgsAliases(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if repo.host != "git.example.org" || repo.full() != "example-org/platform" || h.BaseURL != "https://git.example.org" {
+			if repo.Host != "git.example.org" || repo.Full() != "example-org/platform" || h.BaseURL != "https://git.example.org" {
 				t.Errorf("repo %+v base %s", repo, h.BaseURL)
 			}
 		})
@@ -198,7 +198,7 @@ func TestGitSlug(t *testing.T) {
 		"":                        "change",
 		strings.Repeat("ab ", 30): strings.Repeat("ab-", 13) + "a",
 	} {
-		if got := gitSlug(in); got != want {
+		if got := Slug(in); got != want {
 			t.Errorf("gitSlug(%q) = %q, want %q", in, got, want)
 		}
 	}
