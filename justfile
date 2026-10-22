@@ -169,7 +169,7 @@ test:
 
 # Run the Go core against a real cluster, e.g. `just probe overview`,
 # `just probe logs 10.0.0.2 kubelet`, `just probe -config talosconfig-phone etcd`.
-# Plugin files (plugin-validate, plugin-lint, plugin-render) are relative to where just runs.
+# Plugin files (plugin-validate, plugin-lint, plugin-render, plugin-from-crd) are relative to where just runs.
 probe *args:
     cd go && ICHOR_PROBE_CWD={{ quote(invocation_directory()) }} go run ./cmd/probe {{ args }}
 
