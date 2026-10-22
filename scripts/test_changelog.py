@@ -3,6 +3,7 @@
 import importlib.util
 import os
 import unittest
+import unittest.mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("changelog", os.path.join(HERE, "changelog.py"))
@@ -35,6 +36,24 @@ class ScrubTest(unittest.TestCase):
     def test_classify_drops_reference_from_item(self):
         self.assertEqual(changelog.classify("feat: pod logs search (CYR-42)", ""), ("new", "Pod logs search"))
         self.assertEqual(changelog.classify("fix(CYR-9): crash on resume", ""), ("fixed", "Crash on resume"))
+
+
+class GeneratedAtTest(unittest.TestCase):
+    """generated_at goes into the APK (assets/changelog.json): it must not be the build's clock."""
+
+    def test_source_date_epoch_wins(self):
+        with unittest.mock.patch.dict(os.environ, {"SOURCE_DATE_EPOCH": "1792627200"}):
+            self.assertEqual(changelog.generated_at(), "2026-10-22T00:00:00+00:00")
+
+    def test_otherwise_the_commit_time_in_utc(self):
+        env = {k: v for k, v in os.environ.items() if k != "SOURCE_DATE_EPOCH"}
+        with unittest.mock.patch.dict(os.environ, env, clear=True), \
+                unittest.mock.patch.object(changelog, "git", return_value="1792627200"):
+            self.assertEqual(changelog.generated_at(), "2026-10-22T00:00:00+00:00")
+
+    def test_same_commit_same_value(self):
+        with unittest.mock.patch.object(changelog, "git", return_value="1792627200"):
+            self.assertEqual(changelog.generated_at(), changelog.generated_at())
 
 
 if __name__ == "__main__":

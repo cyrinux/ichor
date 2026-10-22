@@ -114,6 +114,15 @@ def release(version, ref, range_spec):
     }
 
 
+def generated_at():
+    """When the document was made, as the commit says rather than the clock: the APK carries it
+    (assets/changelog.json), and a rebuild of the same tag must give the same bytes.
+    SOURCE_DATE_EPOCH (reproducible-builds.org) wins when set."""
+    epoch = os.environ.get("SOURCE_DATE_EPOCH") or git("log", "-1", "--format=%ct", "HEAD")
+    when = datetime.datetime.fromtimestamp(int(epoch), datetime.timezone.utc)
+    return when.isoformat(timespec="seconds")
+
+
 def history(limit):
     tags = release_tags()
     releases = []
@@ -142,7 +151,7 @@ def main():
         return
 
     document = {
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+        "generated_at": generated_at(),
         "releases": history(args.limit),
     }
     text = json.dumps(document, indent=2, ensure_ascii=False) + "\n"

@@ -34,6 +34,8 @@ android {
 
     buildTypes {
         release {
+            // As the phone app: no VCS info file, so a rebuild of the tag gives the same APK.
+            vcsInfo.include = false
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
