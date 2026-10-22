@@ -1923,6 +1923,8 @@
     <string name="backup_saved">Sauvegarde enregistrée. Conservez la phrase secrète en lieu sûr.</string>
     <string name="backup_saved_age_keys">Sauvegarde enregistrée. Elle s’ouvre avec votre clé age sur un ordinateur.</string>
     <string name="backup_restored">Sauvegarde restaurée.</string>
+    <string name="backup_plugins_restored">Plugins restaurés : %1$d</string>
+    <string name="backup_plugins_skipped">Plugins non restaurés, ils ne sont plus valides :\n%1$s</string>
     <string name="backup_err_wrong_passphrase">Phrase secrète incorrecte, ou fichier endommagé.</string>
     <string name="backup_err_passphrase_short">Utilisez au moins %1$d caractères.</string>
     <string name="backup_err_passphrase_mismatch">Les phrases secrètes diffèrent.</string>
@@ -5398,11 +5400,14 @@
     <string name="plugins_source_paste">Coller</string>
     <string name="plugins_source_file">Fichier</string>
     <string name="plugins_source_url">URL</string>
+    <string name="plugins_source_scan">Scanner</string>
     <string name="plugins_field_yaml">YAML du plugin</string>
     <string name="plugins_paste_clipboard">Coller depuis le presse-papiers</string>
     <string name="plugins_pick_file">Choisir un fichier</string>
     <string name="plugins_field_url">Adresse https:// du fichier du plugin</string>
     <string name="plugins_download">Télécharger et vérifier</string>
+    <string name="plugins_scan_hint">Visez le code QR d\'un plugin : un lien vers son fichier, ou le fichier lui-même sur un ou plusieurs codes (just qr-parts).</string>
+    <string name="plugins_scan_again">Scanner à nouveau</string>
     <string name="plugins_working">Vérification…</string>
     <string name="plugins_check">Vérifier et importer</string>
     <string name="plugins_import_failed">Non importé :</string>

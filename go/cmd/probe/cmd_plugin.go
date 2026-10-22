@@ -46,6 +46,14 @@ var pluginCommands = []command{
 		// plugin-from-crd MANIFEST: a validated, CRD-linted plugin draft (plugin.Generate); refuses a CRD the app already reads unless -force.
 		return noOutput, pluginFromCRD(flag.Args()[1:], os.Stdout, os.Stderr)
 	}},
+	{name: "plugin-qr", args: "TEXT", noConfig: true, run: func(e env) (string, error) {
+		// plugin-qr TEXT: PluginQRPayload, what a scanned code holds (a plugin link or file); fetches nothing.
+		if flag.NArg() != 2 {
+			return "", errors.New("usage: plugin-qr TEXT")
+		}
+
+		return ichorgo.PluginQRPayload(flag.Arg(1))
+	}},
 	{name: "plugin-list", noConfig: true, run: func(e env) (string, error) {
 		// plugin-list: the built-in plugins, one JSON line each.
 		return pluginList()

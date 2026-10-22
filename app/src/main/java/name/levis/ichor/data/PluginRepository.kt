@@ -2,7 +2,11 @@ package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import name.levis.ichor.model.BackupPlugins
+import name.levis.ichor.model.PLUGIN_QR_URL
 import name.levis.ichor.model.PluginCatalog
+import name.levis.ichor.model.PluginQrPayload
+import name.levis.ichor.model.PluginRestoreResult
 import name.levis.ichor.model.PluginDetect
 import name.levis.ichor.model.PluginFindingsReport
 import name.levis.ichor.model.PluginToolResult
@@ -104,6 +108,27 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
 
     /** A plugin file at an https URL, at most 1 MiB (the core refuses http and more). */
     suspend fun download(url: String): String = withContext(Dispatchers.IO) { Ichorgo.pluginFetchURL(url) }
+
+    /**
+     * The plugin file a scanned code gives (its parts already joined): a link is downloaded as
+     * [download] does, a file is taken as is. A code that holds neither throws the core's
+     * message. Nothing is stored: the file still goes through [check] and the consent step.
+     */
+    suspend fun scanned(text: String): String = withContext(Dispatchers.IO) {
+        val payload = TalosJson.decodeFromString(PluginQrPayload.serializer(), Ichorgo.pluginQRPayload(text))
+        if (payload.kind == PLUGIN_QR_URL) Ichorgo.pluginFetchURL(payload.url) else payload.yaml
+    }
+
+    /** The imported plugins for a backup; null when there are none. */
+    suspend fun export(): BackupPlugins? = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(BackupPlugins.serializer(), Ichorgo.pluginUserExport())
+    }.takeIf { it.plugins.isNotEmpty() }
+
+    /** Stores a backup's [plugins], each checked as an import is and kept on or off. */
+    suspend fun restore(plugins: BackupPlugins): PluginRestoreResult = withContext(Dispatchers.IO) {
+        val json = TalosJson.encodeToString(BackupPlugins.serializer(), plugins)
+        TalosJson.decodeFromString(PluginRestoreResult.serializer(), Ichorgo.pluginUserRestore(json))
+    }.also { forgetPlugins() }
 
     /**
      * The hub, the home tile and the catalog read the installed plugins again, for every

@@ -89,7 +89,7 @@ class BackupTest {
 
     @Test
     fun newBackupsAreFormatThreeUnlessTheyHoldProposals() {
-        assertEquals(4, BACKUP_FORMAT)
+        assertEquals(5, BACKUP_FORMAT)
         assertEquals(3, BackupPayload().format)
         val record = GitProposalRecord(repoURL = "https://git.example.org/example-org/cluster-config", number = 12, title = "Raise ingest replicas", state = "open")
         assertEquals(3, backupFormatFor(null))

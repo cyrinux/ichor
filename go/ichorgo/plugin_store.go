@@ -123,23 +123,34 @@ func PluginUserImport(yaml string) (out string, err error) {
 		return "", err
 	}
 
+	stored, err := storeUserPluginLocked(src, c, at, true)
+	if err != nil {
+		return "", err
+	}
+
+	return toJSON(stored.item())
+}
+
+// storeUserPluginLocked writes src, checked by checkUserPluginLocked as c replacing the stored
+// plugin at index at (-1 for none), and its index line with enabled.
+func storeUserPluginLocked(src []byte, c *plugin.Compiled, at int, enabled bool) (userPlugin, error) {
 	dir, aead := dataStore()
 	id := c.Plugin.ID
 
 	if err := os.MkdirAll(filepath.Join(dir, pluginStoreDir), 0o700); err != nil {
-		return "", err
+		return userPlugin{}, err
 	}
 
 	// The new file goes in place only once the index names its sha256: a failed write keeps
 	// the stored plugin as it was.
 	pending := userPluginPath(dir, id) + ".new"
 	if err := writeSealed(pending, src, aead); err != nil {
-		return "", err
+		return userPlugin{}, err
 	}
 	defer os.Remove(pending) //nolint:errcheck // gone once renamed
 
 	items := loadUserPluginsLocked()
-	stored := userPlugin{entry: userPluginEntry{ID: id, SHA256: sha256Hex(src), Enabled: true, ImportedAt: pluginNow().UnixMilli()}, compiled: c}
+	stored := userPlugin{entry: userPluginEntry{ID: id, SHA256: sha256Hex(src), Enabled: enabled, ImportedAt: pluginNow().UnixMilli()}, compiled: c}
 
 	next := slices.Clone(items)
 	if at < 0 {
@@ -149,14 +160,14 @@ func PluginUserImport(yaml string) (out string, err error) {
 	}
 
 	if err := writeUserPluginsLocked(next); err != nil {
-		return "", err
+		return userPlugin{}, err
 	}
 
 	if err := os.Rename(pending, userPluginPath(dir, id)); err != nil {
-		return "", err
+		return userPlugin{}, err
 	}
 
-	return toJSON(stored.item())
+	return stored, nil
 }
 
 // checkUserPluginLocked compiles src and checks it can be stored: the compiled plugin and the
@@ -239,9 +250,9 @@ func PluginFetchURL(rawURL string) (out string, err error) {
 	// The answer is the user's own file: only the error is masked.
 	defer maskErr(&err)
 
-	u, err := url.Parse(strings.TrimSpace(rawURL))
-	if err != nil || u.Scheme != "https" || u.Host == "" {
-		return "", errors.New("only https:// URLs can be downloaded")
+	u, err := pluginURL(rawURL)
+	if err != nil {
+		return "", err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), pluginFetchTime)
@@ -279,6 +290,16 @@ func PluginFetchURL(rawURL string) (out string, err error) {
 	}
 
 	return string(data), nil
+}
+
+// pluginURL is a plugin file's URL as PluginFetchURL downloads it: https with a host.
+func pluginURL(rawURL string) (*url.URL, error) {
+	u, err := url.Parse(strings.TrimSpace(rawURL))
+	if err != nil || u.Scheme != "https" || u.Host == "" {
+		return nil, errors.New("only https:// URLs can be downloaded")
+	}
+
+	return u, nil
 }
 
 func defaultPluginFetchClient() *http.Client {

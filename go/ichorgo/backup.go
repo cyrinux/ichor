@@ -51,7 +51,7 @@ const (
 const BackupMinPassphrase = 12
 
 // BackupPayloadFormat is the newest payload "format" this core understands (see backupPayload).
-const BackupPayloadFormat = 4
+const BackupPayloadFormat = 5
 
 // backupFormatSecrets is the first payload format that may carry a "secrets" object.
 const backupFormatSecrets = 3
@@ -233,8 +233,9 @@ func backupAEAD(passphrase string, p backupParams) (cipher.AEAD, error) {
 // Format 3 adds the rest of the settings (pins, Git hosts, AI settings…) and, when the user
 // opted in, a "secrets" object with API keys and Git tokens: an older app refuses it rather
 // than restoring it without them. Format 4 adds the pull requests opened from the phone
-// ("proposals", per cluster fingerprint); the apps write it only when there are some, so a
-// backup without them still opens in an app that reads 3.
+// ("proposals", per cluster fingerprint), format 5 the imported plugins ("plugins", see
+// PluginUserExport): an app that reads 4 would restore a backup with plugins and drop them
+// unseen, so it is refused instead. The apps write the lowest format their content needs.
 type backupPayload struct {
 	Format      int             `json:"format"`
 	Talosconfig string          `json:"talosconfig"`

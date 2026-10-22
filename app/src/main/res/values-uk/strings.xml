@@ -2033,6 +2033,8 @@
     <string name="backup_saved">Резервну копію збережено. Зберігайте парольну фразу в надійному місці.</string>
     <string name="backup_saved_age_keys">Резервну копію збережено. Вона відкривається вашим ключем age на комп’ютері.</string>
     <string name="backup_restored">Резервну копію відновлено.</string>
+    <string name="backup_plugins_restored">Відновлено плагінів: %1$d</string>
+    <string name="backup_plugins_skipped">Пропущені плагіни, вони більше не проходять перевірку:\n%1$s</string>
     <string name="backup_err_wrong_passphrase">Неправильна парольна фраза або файл пошкоджено.</string>
     <string name="backup_err_passphrase_short">Використайте щонайменше %1$d символів.</string>
     <string name="backup_err_passphrase_mismatch">Парольні фрази не збігаються.</string>
@@ -5641,11 +5643,14 @@
     <string name="plugins_source_paste">Вставити</string>
     <string name="plugins_source_file">Файл</string>
     <string name="plugins_source_url">URL</string>
+    <string name="plugins_source_scan">Сканувати</string>
     <string name="plugins_field_yaml">YAML плагіна</string>
     <string name="plugins_paste_clipboard">Вставити з буфера обміну</string>
     <string name="plugins_pick_file">Вибрати файл</string>
     <string name="plugins_field_url">Адреса https:// файлу плагіна</string>
     <string name="plugins_download">Завантажити й перевірити</string>
+    <string name="plugins_scan_hint">Наведіть камеру на QR-код плагіна: посилання на його файл або сам файл в одному чи кількох кодах (just qr-parts).</string>
+    <string name="plugins_scan_again">Сканувати ще раз</string>
     <string name="plugins_working">Перевірка…</string>
     <string name="plugins_check">Перевірити й імпортувати</string>
     <string name="plugins_import_failed">Не імпортовано:</string>

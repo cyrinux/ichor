@@ -710,7 +710,21 @@ The file is kept in the app's private data directory, `plugins/<id>.yaml`, encry
 app's key like the scan reports, with an index of each file's sha256 and whether it is on. Each
 launch checks every stored file again: one this app no longer reads (another `schemaVersion`
 after an update, a built-in that now has its id, a file changed on disk) is listed off with the
-reason and never loaded. Plugins are not in the app backup yet.
+reason and never loaded.
+
+**By QR code.** Import a plugin → Scan reads a code that holds either a link,
+`ichor://plugin?url=https://…` (downloaded as an https URL is, with the same checks), or the
+plugin file itself. A file too large for one code goes over several: `just qr-parts
+my-plugin.yaml` gzips it and prints one code per part (`ichor:<i>/<n>:…`), which the app collects
+in any order. Any other code is refused before anything is downloaded. Either way the file is
+then checked and shown on the consent sheet: a scanned plugin is never stored or enabled first.
+
+**In the backup.** The app backup carries the imported plugins (payload format 5, its
+`plugins` field: each one's file and whether it is on). Restoring checks each file as an import
+is and keeps it on or off: you consented to it on the phone it came from. One this app no longer
+reads (another `schemaVersion`, an `id` a built-in took since) is listed as left out, with the
+reason, and the others are restored. The built-in plugins are not in the backup: they ship with
+the app.
 
 | Call (gomobile) | Does |
 | -- | -- |
@@ -720,6 +734,9 @@ reason and never loaded. Plugins are not in the app backup yet.
 | `PluginUserSetEnabled(id, enabled)` | switches one on (refused while it has an `error`) or off |
 | `PluginUserRemove(id)` | deletes it and its file |
 | `PluginFetchURL(url)` | downloads a file for the import screen: https only, 1 MiB, 20 s |
+| `PluginQRPayload(text)` | reads a scanned code (its parts joined): `{"kind":"url","url"}` for an `ichor://plugin?url=https://…` link, `{"kind":"yaml","yaml"}` for a plugin file, else an error; fetches and stores nothing (`just probe plugin-qr TEXT`) |
+| `PluginUserExport()` | the imported plugins for the backup, sorted by id: `{"plugins":[{"id","enabled","yaml"}]}` |
+| `PluginUserRestore(json)` | stores a backup's `plugins`, each checked as an import is and kept on or off: `{"restored":[id],"errors":[{"id","error"}]}` |
 | `PluginCatalog()` | the installed plugins: the built-ins, then the enabled imported ones (`"user": true`) |
 
 ## Command line
