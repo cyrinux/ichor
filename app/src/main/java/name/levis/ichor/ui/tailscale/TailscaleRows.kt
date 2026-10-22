@@ -24,39 +24,8 @@ import name.levis.ichor.model.TailscaleProxyClass
 import name.levis.ichor.model.TailscaleProxyGroup
 import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.MutedText
-
-/**
- * One row: health dot and name, the details that matter, then (for a problem) the operator's
- * reason and message, shown in full so the row reads as expanded.
- */
-@Composable
-private fun RowShell(health: ServiceHealth, title: String, line: String, reason: String, message: String, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HealthDot(health)
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        line.takeIf { it.isNotEmpty() }?.let { MutedText(it, maxLines = 3, overflow = TextOverflow.Ellipsis) }
-        val problem = listOf(reason, message).filter { it.isNotEmpty() }.joinToString(": ")
-        if (health.needsAttention && problem.isNotEmpty()) {
-            Text(
-                problem,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (health == ServiceHealth.CRITICAL) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
+import name.levis.ichor.ui.components.ResourceDetails
+import name.levis.ichor.ui.components.ResourceRow
 
 /** "1 critical", in the header; red when there is any. */
 @Composable
@@ -99,7 +68,9 @@ fun ConnectorRow(c: TailscaleConnector, onClick: () -> Unit) {
         stringResource(R.string.tailscale_devices, c.devices.size),
         c.proxyClass.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.tailscale_proxy_class, it) },
     ).joinToString(" · ")
-    RowShell(c.serviceHealth, c.name, line, c.reason, c.message, onClick)
+    ResourceRow(c.serviceHealth, c.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line, c.serviceHealth, reasonMessage(c.reason, c.message))
+    }
 }
 
 /** An egress, ingress or kube-apiserver proxy pool: its type, size, devices and URL. */
@@ -114,14 +85,18 @@ fun ProxyGroupRow(g: TailscaleProxyGroup, onClick: () -> Unit) {
         readiness(g.ready),
         stringResource(R.string.tailscale_some_running).takeIf { !g.ready && g.available },
     ).joinToString(" · ")
-    RowShell(g.serviceHealth, g.name, line, g.reason, g.message, onClick)
+    ResourceRow(g.serviceHealth, g.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line, g.serviceHealth, reasonMessage(g.reason, g.message))
+    }
 }
 
 /** A ProxyClass: whether it validates, and how many connectors and proxy groups name it. */
 @Composable
 fun ProxyClassRow(pc: TailscaleProxyClass, onClick: () -> Unit) {
     val line = listOf(readiness(pc.ready), stringResource(R.string.tailscale_used_by, pc.usedBy)).joinToString(" · ")
-    RowShell(pc.serviceHealth, pc.name, line, pc.reason, pc.message, onClick)
+    ResourceRow(pc.serviceHealth, pc.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line, pc.serviceHealth, reasonMessage(pc.reason, pc.message))
+    }
 }
 
 /** The DNSConfig: the nameserver that resolves tailnet names in the cluster. */
@@ -131,9 +106,15 @@ fun DNSConfigRow(d: TailscaleDNSConfig, onClick: () -> Unit) {
         d.nameserverIP.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.tailscale_nameserver, it) },
         readiness(d.ready),
     ).joinToString(" · ")
-    RowShell(d.serviceHealth, d.name, line, d.reason, d.message, onClick)
+    ResourceRow(d.serviceHealth, d.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line, d.serviceHealth, reasonMessage(d.reason, d.message))
+    }
 }
 
 @Composable
 private fun readiness(ready: Boolean): String =
     stringResource(if (ready) R.string.common_status_ready else R.string.common_status_not_ready)
+
+/** A condition's reason and message, as the row's problem line. */
+private fun reasonMessage(reason: String, message: String): String =
+    listOf(reason, message).filter { it.isNotEmpty() }.joinToString(": ")

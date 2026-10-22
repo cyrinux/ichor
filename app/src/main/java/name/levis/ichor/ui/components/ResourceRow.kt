@@ -78,3 +78,20 @@ fun ResourceRow(
         Column(Modifier.padding(start = 22.dp)) { content() }
     }
 }
+
+/**
+ * A row's [line] of details (muted, up to three lines) and, when [health] needs attention, its
+ * [problem] in full: the failure or the conditions that are not True, in the error colour when
+ * critical. For a [ResourceRow]'s content.
+ */
+@Composable
+fun ResourceDetails(line: String, health: ServiceHealth? = null, problem: String = "") {
+    if (line.isNotEmpty()) MutedText(line, maxLines = 3, overflow = TextOverflow.Ellipsis)
+    if (health != null && health.needsAttention && problem.isNotEmpty()) {
+        Text(
+            problem,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (health == ServiceHealth.CRITICAL) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}

@@ -95,21 +95,33 @@ enum class GarageState(val wire: String, val health: ServiceHealth) {
     }
 }
 
-/** The garage-operator Deployment's own health. */
-@Serializable
-data class GarageOperatorStatus(
-    val namespace: String = "",
-    val name: String = "",
-    val ready: Int = 0,
-    val desired: Int = 0,
-    val health: String = "",
+/**
+ * A garage-operator item as the Go core reports it: where it lives, its health and why it is
+ * not ok. The five status kinds below share it.
+ */
+interface GarageOpResource {
+    val namespace: String
+    val name: String
+    val health: String
     /** Wire values of [GarageOpReason]. */
-    val reasons: List<String> = emptyList(),
-) {
+    val reasons: List<String>
+
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
     val label: String get() = "$namespace/$name"
     val reasonList: List<GarageOpReason> get() = reasons.mapNotNull(GarageOpReason::from)
 }
+
+/** The garage-operator Deployment's own health. */
+@Serializable
+data class GarageOperatorStatus(
+    override val namespace: String = "",
+    override val name: String = "",
+    val ready: Int = 0,
+    val desired: Int = 0,
+    override val health: String = "",
+    /** Wire values of [GarageOpReason]. */
+    override val reasons: List<String> = emptyList(),
+) : GarageOpResource
 
 /** One of the operator's conditions the Go core kept: a problem or a transition. */
 @Serializable
@@ -124,8 +136,8 @@ data class GarageOpCondition(
 
 @Serializable
 data class GarageClusterStatus(
-    val namespace: String = "",
-    val name: String = "",
+    override val namespace: String = "",
+    override val name: String = "",
     /** The garageInstance it drives, "ns/name"; "" when unmatched. */
     val instance: String = "",
     /** Pending..Failed, the operator's own word. */
@@ -143,14 +155,10 @@ data class GarageClusterStatus(
     val stagedLayoutVersion: Long = 0,
     val pendingGatewayTombstones: List<String> = emptyList(),
     val conditions: List<GarageOpCondition> = emptyList(),
-    val health: String = "",
+    override val health: String = "",
     /** Wire values of [GarageOpReason]. */
-    val reasons: List<String> = emptyList(),
-) {
-    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
-    val label: String get() = "$namespace/$name"
-    val reasonList: List<GarageOpReason> get() = reasons.mapNotNull(GarageOpReason::from)
-}
+    override val reasons: List<String> = emptyList(),
+) : GarageOpResource
 
 @Serializable
 data class GarageQuotaUsage(
@@ -166,8 +174,8 @@ data class GarageQuotaUsage(
 
 @Serializable
 data class GarageBucketStatus(
-    val namespace: String = "",
-    val name: String = "",
+    override val namespace: String = "",
+    override val name: String = "",
     val instance: String = "",
     /** spec.clusterRef.name. */
     val cluster: String = "",
@@ -181,14 +189,10 @@ data class GarageBucketStatus(
     val websiteUrl: String = "",
     val keysWithAccess: Int = 0,
     val conditions: List<GarageOpCondition> = emptyList(),
-    val health: String = "",
+    override val health: String = "",
     /** Wire values of [GarageOpReason]. */
-    val reasons: List<String> = emptyList(),
-) {
-    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
-    val label: String get() = "$namespace/$name"
-    val reasonList: List<GarageOpReason> get() = reasons.mapNotNull(GarageOpReason::from)
-}
+    override val reasons: List<String> = emptyList(),
+) : GarageOpResource
 
 @Serializable
 data class GarageKeyAllBuckets(
@@ -207,8 +211,8 @@ data class GarageKeyPermission(
 
 @Serializable
 data class GarageKeyStatus(
-    val namespace: String = "",
-    val name: String = "",
+    override val namespace: String = "",
+    override val name: String = "",
     val instance: String = "",
     val cluster: String = "",
     val phase: String = "",
@@ -219,20 +223,16 @@ data class GarageKeyStatus(
     /** Capped by the Go core; [bucketPermissionsTotal] tells how many more there are. */
     val bucketPermissions: List<GarageKeyPermission> = emptyList(),
     val bucketPermissionsTotal: Int = 0,
-    val health: String = "",
+    override val health: String = "",
     /** Wire values of [GarageOpReason]. */
-    val reasons: List<String> = emptyList(),
-) {
-    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
-    val label: String get() = "$namespace/$name"
-    val reasonList: List<GarageOpReason> get() = reasons.mapNotNull(GarageOpReason::from)
-}
+    override val reasons: List<String> = emptyList(),
+) : GarageOpResource
 
 /** The operator's GarageNode declaration: one durable Garage identity and layout role. */
 @Serializable
 data class GarageNodeCr(
-    val namespace: String = "",
-    val name: String = "",
+    override val namespace: String = "",
+    override val name: String = "",
     val instance: String = "",
     val cluster: String = "",
     val phase: String = "",
@@ -245,14 +245,10 @@ data class GarageNodeCr(
     val inLayout: Boolean = false,
     /** Seconds ago, -1 when connected or unknown. */
     val lastSeenSecs: Long = -1,
-    val health: String = "",
+    override val health: String = "",
     /** Wire values of [GarageOpReason]. */
-    val reasons: List<String> = emptyList(),
-) {
-    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
-    val label: String get() = "$namespace/$name"
-    val reasonList: List<GarageOpReason> get() = reasons.mapNotNull(GarageOpReason::from)
-}
+    override val reasons: List<String> = emptyList(),
+) : GarageOpResource
 
 /** Why a garage-operator item is not ok, as the Go core names it. */
 enum class GarageOpReason(val wire: String) {
