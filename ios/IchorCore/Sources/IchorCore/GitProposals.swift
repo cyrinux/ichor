@@ -22,10 +22,14 @@ public struct GitProposalRecord: Codable, Hashable, Sendable, Identifiable {
     public var forge: String
     /// Milliseconds since the epoch, as Android keeps it.
     public var createdAt: Int64
+    /// The last state the background monitor read on the forge ("open", "merged", "closed"; ""
+    /// before any, or for records kept before it was read) and when (milliseconds, 0 for none).
+    public var state: String
+    public var stateAt: Int64
 
     public init(tool: String, kind: String = "", namespace: String = "", name: String = "", repoURL: String, path: String,
                 title: String, url: String, number: Int, branch: String = "", commit: String = "", forge: String = "",
-                createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000)) {
+                createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000), state: String = "", stateAt: Int64 = 0) {
         self.tool = tool
         self.kind = kind
         self.namespace = namespace
@@ -39,6 +43,8 @@ public struct GitProposalRecord: Codable, Hashable, Sendable, Identifiable {
         self.commit = commit
         self.forge = forge
         self.createdAt = createdAt
+        self.state = state
+        self.stateAt = stateAt
     }
 
     /// One record per request.
@@ -51,7 +57,7 @@ public struct GitProposalRecord: Codable, Hashable, Sendable, Identifiable {
         self.tool == tool && self.kind == kind && self.namespace == namespace && self.name == name
     }
 
-    enum CodingKeys: String, CodingKey { case tool, kind, namespace, name, repoURL, path, title, url, number, branch, commit, forge, createdAt }
+    enum CodingKeys: String, CodingKey { case tool, kind, namespace, name, repoURL, path, title, url, number, branch, commit, forge, createdAt, state, stateAt }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -68,6 +74,8 @@ public struct GitProposalRecord: Codable, Hashable, Sendable, Identifiable {
         commit = try c.field(.commit, "")
         forge = try c.field(.forge, "")
         createdAt = try c.field(.createdAt, Int64(0))
+        state = try c.field(.state, "")
+        stateAt = try c.field(.stateAt, Int64(0))
     }
 }
 
@@ -159,9 +167,16 @@ public enum ProposalsStore {
         proposals.isEmpty ? nil : try? JSONEncoder().encode(proposals)
     }
 
-    /// The records with record first, a request kept once, 50 at most.
-    public static func adding(_ record: GitProposalRecord, to records: [GitProposalRecord]) -> [GitProposalRecord] {
-        Array(([record] + records.filter { $0.id != record.id }).prefix(maxPerCluster))
+    /// The records with record first, a request kept once, 50 at most. A new record is open
+    /// from now on, so the monitor tells when it is merged or closed.
+    public static func adding(_ record: GitProposalRecord, to records: [GitProposalRecord],
+                              now: Int64 = Int64(Date().timeIntervalSince1970 * 1000)) -> [GitProposalRecord] {
+        var record = record
+        if record.state.isEmpty {
+            record.state = "open"
+            record.stateAt = now
+        }
+        return Array(([record] + records.filter { $0.id != record.id }).prefix(maxPerCluster))
     }
 
     /// The proposals of the clusters still among fingerprints: a removed cluster's go with it.
@@ -179,4 +194,89 @@ public enum ProposalsStore {
                           path: "apps/hello-ichor/deployment.yaml", title: "Scale podinfo to 3",
                           url: "https://git.home.example/example-org/cluster-config/pulls/2", number: 2, forge: "demo", createdAt: 1_760_774_400_000),
     ]
+}
+
+// MARK: - Merged and closed alerts
+
+/// One item of GitForgeRequestStates; a non-empty error means it could not be read (empty state).
+public struct RequestStateItem: Codable, Hashable, Sendable {
+    public let repoURL: String
+    public let number: Int
+    public let state: String
+    public let mergedAt: String
+    public let closedAt: String
+    public let sha: String
+    public let error: String
+
+    public init(repoURL: String, number: Int, state: String, mergedAt: String = "", closedAt: String = "", sha: String = "", error: String = "") {
+        self.repoURL = repoURL
+        self.number = number
+        self.state = state
+        self.mergedAt = mergedAt
+        self.closedAt = closedAt
+        self.sha = sha
+        self.error = error
+    }
+
+    enum CodingKeys: String, CodingKey { case repoURL, number, state, mergedAt, closedAt, sha, error }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        repoURL = try c.field(.repoURL, "")
+        number = try c.field(.number, 0)
+        state = try c.field(.state, "")
+        mergedAt = try c.field(.mergedAt, "")
+        closedAt = try c.field(.closedAt, "")
+        sha = try c.field(.sha, "")
+        error = try c.field(.error, "")
+    }
+}
+
+/// An open proposal the forge now says is merged or closed: one notification.
+public struct ProposalChange: Hashable, Sendable {
+    public let record: GitProposalRecord
+    public let state: String
+
+    /// Stable across runs, so the notification replaces itself rather than repeating.
+    public var alertKey: String { "proposal:\(record.id)" }
+
+    /// The alert in English (the app words it in the user's language): a GitOps one, see alertKind.
+    public var alert: Alert {
+        let what = state == "merged" ? "merged" : "closed"
+        return Alert(key: alertKey, title: "Your pull request #\(record.number) was \(what)", text: record.title, problem: true)
+    }
+}
+
+/// The most requests one GitForgeRequestStates call reads.
+public let proposalStatesBatch = 20
+
+/// The records the monitor asks the forge about, by host, newest first and 20 per host at
+/// most: those still open or never read, outside the demo.
+public func proposalsToCheck(_ records: [GitProposalRecord]) -> [String: [GitProposalRecord]] {
+    let open = records.filter { ($0.state.isEmpty || $0.state == "open") && $0.forge != "demo" && $0.number > 0 }
+        .sorted { $0.createdAt > $1.createdAt }
+    return Dictionary(grouping: open, by: \.host).mapValues { Array($0.prefix(proposalStatesBatch)) }
+}
+
+/// The records with the forge's answers applied: a record that was open and is now merged or
+/// closed is a change (told once: its state is kept); one never read takes its state silently
+/// (the first read is a baseline); an item that could not be read changes nothing.
+public func proposalStateChanges(records: [GitProposalRecord], states: [RequestStateItem], now: Int64)
+    -> (records: [GitProposalRecord], changes: [ProposalChange]) {
+    var answers: [String: String] = [:]
+    for item in states where item.error.isEmpty && !item.state.isEmpty {
+        answers["\(item.repoURL)#\(item.number)"] = item.state
+    }
+    var changes: [ProposalChange] = []
+    let updated = records.map { record -> GitProposalRecord in
+        guard let state = answers[record.id], state != record.state else { return record }
+        var next = record
+        next.state = state
+        next.stateAt = now
+        if record.state == "open" && (state == "merged" || state == "closed") {
+            changes.append(ProposalChange(record: next, state: state))
+        }
+        return next
+    }
+    return (updated, changes)
 }

@@ -314,7 +314,7 @@ extension AppModel {
         storeSkippedTalosUpdates(keepClusterNames(saved: skippedTalosUpdates, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeClusterRepos(ClusterRepoStore.keep(clusterRepos, fingerprints: newSummary.contexts.map(\.fingerprint)))
-        storeProposals(ProposalsStore.keep(proposals, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeProposals(ProposalsStore.keep(storedProposals, fingerprints: newSummary.contexts.map(\.fingerprint)))
         // Sign-ins and Kubernetes access links go with their clusters.
         let kubeFingerprints = newKubeSummary?.contexts.map(\.fingerprint) ?? []
         storeKubeAccess(keepKubeAccess(kubeAccess, talos: newTalosSummary?.contexts.map(\.fingerprint) ?? [], kube: kubeFingerprints))

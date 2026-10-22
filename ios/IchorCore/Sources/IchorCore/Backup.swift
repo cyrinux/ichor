@@ -8,6 +8,8 @@ import Foundation
 /// Format 3 adds the pins, the Git hosts, the AI diagnosis settings and, only when the user
 /// opts in, their API keys and Git tokens (`secrets`). Not included: the app lock's secret
 /// and security-key data (device-bound; only whether a lock was on), the audit log, caches.
+/// Format 4 adds the pull requests opened from the phone (`proposals`), written only when there
+/// are some.
 public struct BackupPayload: Codable, Equatable, Sendable {
     /// The payload version, checked by the Go core; bump it for changes older apps cannot read.
     public var format: Int
@@ -35,12 +37,15 @@ public struct BackupPayload: Codable, Equatable, Sendable {
     public var ai: BackupAI?
     /// The AI keys and Git tokens: only when the user opted in, else left out of the JSON.
     public var secrets: BackupSecrets?
+    /// The pull requests opened from the phone by context fingerprint, as stored (format 4).
+    public var proposals: [String: [GitProposalRecord]]?
 
     public init(
         format: Int = backupFormat, platform: String? = nil, createdAt: Int64? = nil, talosconfig: String,
         kubeconfig: String? = nil, activeContextIndex: Int? = nil, settings: BackupSettings? = nil,
         clusters: [String: BackupCluster]? = nil, kubeAuth: [String: String]? = nil,
-        pins: [String: [Pin]]? = nil, gitHosts: [GitHost]? = nil, ai: BackupAI? = nil, secrets: BackupSecrets? = nil
+        pins: [String: [Pin]]? = nil, gitHosts: [GitHost]? = nil, ai: BackupAI? = nil, secrets: BackupSecrets? = nil,
+        proposals: [String: [GitProposalRecord]]? = nil
     ) {
         self.format = format
         self.platform = platform
@@ -55,11 +60,12 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         self.gitHosts = gitHosts
         self.ai = ai
         self.secrets = secrets
+        self.proposals = proposals
     }
 
     private enum CodingKeys: String, CodingKey {
         case format, platform, createdAt, talosconfig, kubeconfig, activeContextIndex, settings, clusters, kubeAuth
-        case pins, gitHosts, ai, secrets
+        case pins, gitHosts, ai, secrets, proposals
     }
 
     // A format 2 payload may leave the talosconfig out (or null) when it only holds a kubeconfig.
@@ -79,6 +85,7 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         gitHosts = try c.decodeIfPresent([GitHost].self, forKey: .gitHosts)?.filter { !$0.host.isEmpty }
         ai = try c.decodeIfPresent(BackupAI.self, forKey: .ai)
         secrets = try c.decodeIfPresent(BackupSecrets.self, forKey: .secrets)
+        proposals = try c.decodeIfPresent([String: [GitProposalRecord]].self, forKey: .proposals)
     }
 }
 
@@ -175,8 +182,26 @@ public let backupFormatKubeconfig = 2
 /// refuse it ("update the app") instead of silently dropping them.
 public let backupFormatSettings = 3
 
-/// The format to write: always 3 (the payload always holds the format 3 settings). Same as Android.
-public func backupPayloadFormat() -> Int { backupFormatSettings }
+/// The format of a payload holding the pull requests opened from the phone.
+public let backupFormatProposals = 4
+
+/// The format to write: 4 when it holds proposals, else 3 (the payload always holds the format
+/// 3 settings), so a backup without proposals still opens in an app that reads 3. Same as Android.
+public func backupPayloadFormat(hasProposals: Bool = false) -> Int {
+    hasProposals ? backupFormatProposals : backupFormatSettings
+}
+
+/// The proposals to back up: the clusters' records as stored, nil when there are none.
+public func backupProposals(_ stored: [String: [GitProposalRecord]], fingerprints: [String]) -> [String: [GitProposalRecord]]? {
+    let kept = ProposalsStore.keep(stored, fingerprints: fingerprints).filter { !$0.value.isEmpty }
+    return kept.isEmpty ? nil : kept
+}
+
+/// The proposals of a restored payload for the restored clusters: only a format 4+ one carries them.
+public func restoredProposals(_ payload: BackupPayload, fingerprints: [String]) -> [String: [GitProposalRecord]]? {
+    guard payload.format >= backupFormatProposals, let proposals = payload.proposals else { return nil }
+    return ProposalsStore.keep(proposals, fingerprints: fingerprints)
+}
 
 /// The kubeconfig of a restored payload: only a format 2+ one carries it, nil when it holds none.
 public func restoredKubeconfig(_ payload: BackupPayload) -> String? {

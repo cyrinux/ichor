@@ -188,6 +188,15 @@ extension TalosClient {
         return try await Self.json { IchorgoGitForgeRequest(json, url, number, $0) }
     }
 
+    /// The states of records' requests, all on the forge hostJSON names (20 at most, see
+    /// proposalsToCheck), for the background monitor; empty when the call fails. An item that
+    /// could not be read carries its error.
+    static func requestStates(_ records: [GitProposalRecord], hostJSON: String) async -> [RequestStateItem] {
+        let refs = records.map { RequestStateItem(repoURL: $0.repoURL, number: $0.number, state: "") }
+        guard !refs.isEmpty, let requests = try? TalosJSON.encode(refs) else { return [] }
+        return (try? await json { IchorgoGitForgeRequestStates(hostJSON, requests, $0) }) ?? []
+    }
+
     /// Whether record's app runs the merged state: its merge commit, else its head (a squash
     /// merge's commit is a new one). nil for the repository, which no app follows here.
     func revisionRuns(_ record: GitProposalRecord, state: GitRequestState) async throws -> RevisionRuns? {

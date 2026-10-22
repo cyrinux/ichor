@@ -185,6 +185,10 @@ final class AppModel {
         proposals = ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
         monitorUnwatched = Set(UserDefaults.standard.stringArray(forKey: BackgroundMonitor.unwatchedKey) ?? [])
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
+        // The background monitor saved the proposals' states (merged, closed).
+        NotificationCenter.default.addObserver(forName: .proposalsChanged, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reloadProposals() }
+        }
     }
 
     /// Nil while the cluster on screen waits for its VPN (see vpnHeldBack): its calls could only time out.
