@@ -177,28 +177,25 @@ None of them.
 ### Data safety
 
 Basis: the app has no backend. Cluster data goes straight to the user's own cluster. The AI
-report goes to a provider the user picked, with their own key, only when they tap Ask. The one
-silent transfer is Google ML Kit's diagnostics
-([disclosure](https://developers.google.com/ml-kit/android-data-disclosure)), which must be
-declared because SDK collection counts as the app's.
+report goes to a provider the user picked, with their own key, only when they tap Ask. There
+is no silent transfer: no SDK in the app sends anything on its own. QR codes are decoded on
+the phone by ZXing (open source), which has no network code.
+
+History: until v1.34 the QR scanner was Google ML Kit, whose diagnostics (device model, OS,
+package and version, a per-install identifier, performance data) had to be declared. ML Kit
+was removed in v1.35.0 (PR #491). The Play Console form was resubmitted with the answers
+below on <date: fill in when resubmitted>.
 
 **Data collection and security**
 
 | Question | Answer |
 |---|---|
-| Does your app collect or share any of the required user data types? | **Yes** (ML Kit diagnostics) |
-| Is all of the user data collected by your app encrypted in transit? | **Yes** |
-| Do you provide a way for users to request that their data is deleted? | **No**. The developer holds none; ML Kit's per-install identifier is reset by uninstalling |
+| Does your app collect or share any of the required user data types? | **No** |
 
-**Data types**
+With "No", Play skips the encryption and deletion questions and the data types: nothing is
+collected or shared in Play's sense (the borderline cases below explain why).
 
-| Data type | Collected | Shared | Ephemeral | Required or optional | Purposes |
-|---|---|---|---|---|---|
-| App info and performance → **Diagnostics** | Yes | No | No | Required | Analytics |
-| App info and performance → **Other app performance data** | Yes | No | No | Required | Analytics |
-| Device or other IDs → **Device or other IDs** | Yes | No | No | Required | Analytics |
-
-Everything else: **not collected**. Reasoning for the borderline cases:
+Every data type: **not collected**. Reasoning for the borderline cases:
 
 - **Talosconfig, cluster state, logs** go only to servers the user owns and configured, not
   to the developer or a third party. They are not collected in Play's sense.
