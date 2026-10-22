@@ -355,7 +355,9 @@ proxying behave exactly like `talosctl`.
   fits almost all phones.
 
 **F-Droid:** not listed yet. The planned route is [IzzyOnDroid](https://apt.izzysoft.de/fdroid/),
-an F-Droid repository that ships the signed release APKs. The release also carries
+an F-Droid repository that ships the signed release APKs. Release APKs are rebuilt from their
+tag and compared in CI (`just verify-release`, see
+[Reproducible builds](CONTRIBUTING.md#reproducible-builds)). The release also carries
 `ichor-wear-v<version>.apk`, the Wear OS tile: it only works with the Google Play phone build
 (same package and signing key), so it is not meant for F-Droid.
 

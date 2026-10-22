@@ -127,6 +127,38 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "$TAG" --notes ""
 
+  # Rebuilds the published arm64 APK from the tag (unsigned, in the same Nix shell and with
+  # the same Gradle heap as android.yml's release job) and compares it with the one just
+  # published, signatures stripped (scripts/verify-release.py). A difference fails the run
+  # with the differing entries attached: a packager rebuilding from the tag would get
+  # another APK. It reads the caches the android job reads and saves none.
+  verify:
+    needs: [publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # scripts/version.sh counts the commits for the versionCode
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-toolchain
+
+      - name: Rebuild and compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
+        run: python3 -I scripts/verify-release.py verify "$TAG" --repo "$GITHUB_REPOSITORY" --report "$RUNNER_TEMP/differences.txt"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: reproducibility-differences
+          path: ${{ runner.temp }}/differences.txt
+          if-no-files-found: ignore
+
   # Announces the release in the Discord #changelog channel through its webhook, once the
   # GitHub release exists so the title can link to it. The message is the release's entry
   # from scripts/changelog.py (scripts/discord-notes.py). Skipped until the

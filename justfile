@@ -109,6 +109,12 @@ build:
 build-release:
     ./build.sh release
 
+# Rebuilds a published release from its tag in the Nix shell and compares the APK with the
+# one on GitHub once both signatures are stripped (CONTRIBUTING.md "Reproducible builds").
+# `just verify-release v1.40.1 --abi x86_64 --keep` keeps both for diffoscope.
+verify-release TAG *flags:
+    python3 -I scripts/verify-release.py verify {{TAG}} {{flags}}
+
 # Google Play App Bundle (app/build/outputs/bundle/play/app-play.aab): the release build
 # without the self-updater and donation links, signed with the ICHOR_KEYSTORE* upload key.
 build-play:

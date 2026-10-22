@@ -77,6 +77,30 @@ The trace carries step names, counts and durations only, but before posting numb
 issue, check that nothing identifies your clusters: write "~23 contexts" and "cluster B", not
 a context name, a hostname or an address.
 
+## Reproducible builds
+
+Every release APK on GitHub can be rebuilt from its tag and must come out the same once the
+signatures are stripped. The `verify` job of `release.yml` checks it on each tag; by hand, on
+Linux x86_64 with Nix:
+
+```
+just verify-release v1.40.1            # the arm64-v8a APK
+just verify-release v1.40.1 --abi x86_64 --keep
+```
+
+It downloads `ichor-<tag>-<abi>.apk` from the release (`gh` must be signed in), rebuilds the tag
+from a clean checkout with `./build.sh release` in the pinned Nix shell, unsigned, and compares
+both entry by entry: name, order, size, CRC-32, compression and timestamp. What signing adds is
+left out on both sides: the v1 files (`META-INF/*.SF`, `*.RSA`, `*.DSA`, `*.EC`,
+`MANIFEST.MF`) and the APK Signing Block of v2/v3. It prints `identical: N entries`, or lists
+the differing entries and exits 1. Only the Nix shell gives a comparable build (the JDK,
+Gradle, Go, SDK build-tools and NDK are pinned there); without `nix` the script refuses.
+
+When it fails, keep both stripped APKs (`--keep`) and run `diffoscope` on them; the usual
+causes are a value the build takes from the moment or the machine (a timestamp or a path in a
+`BuildConfig` field or a resource, a non-pinned dependency). Fix the cause rather than leaving
+the entry out, and say here what was fixed.
+
 ## Code ownership
 
 [@cyrinux](https://github.com/cyrinux) is the default owner for all repository files;
