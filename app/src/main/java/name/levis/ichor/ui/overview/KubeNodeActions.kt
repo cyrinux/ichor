@@ -4,15 +4,20 @@ import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -132,8 +137,6 @@ internal fun KubeNodeActionSheets(
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val debugShell by app.uiPreferences.nodeDebugShell.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var cordoning by remember { mutableStateOf<KubeNodeInfo?>(null) }
     node?.let {
         KubeNodeMenuSheet(
@@ -161,21 +164,74 @@ internal fun KubeNodeActionSheets(
             onDismiss = onClose,
         )
     }
-    cordoning?.let { target ->
-        CordonDialog(
-            hostname = target.name,
-            cordoned = target.cordoned,
-            onConfirm = { on ->
-                cordoning = null
-                scope.launch {
-                    val message = cordonKubeNode(app.maintenanceManager, context, target.name, on)
-                    onCordoned()
-                    snackbar.showSnackbar(message, withDismissAction = true, duration = SnackbarDuration.Long)
-                }
-            },
-            onDismiss = { cordoning = null },
-        )
+    KubeNodeCordonDialog(cordoning, snackbar, onDone = { cordoning = null }, onCordoned = onCordoned)
+}
+
+/**
+ * The cordon or uncordon confirmation for [target] (none when null). On confirm the cordon runs
+ * here and tells [snackbar] how it went, then [onCordoned] reloads; [onDone] clears [target].
+ */
+@Composable
+internal fun KubeNodeCordonDialog(target: KubeNodeInfo?, snackbar: SnackbarHostState, onDone: () -> Unit, onCordoned: () -> Unit) {
+    target ?: return
+    val app = LocalContext.current.applicationContext as TalosApp
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CordonDialog(
+        hostname = target.name,
+        cordoned = target.cordoned,
+        onConfirm = { on ->
+            onDone()
+            scope.launch {
+                val message = cordonKubeNode(app.maintenanceManager, context, target.name, on)
+                onCordoned()
+                snackbar.showSnackbar(message, withDismissAction = true, duration = SnackbarDuration.Long)
+            }
+        },
+        onDismiss = onDone,
+    )
+}
+
+/**
+ * The node menu as a row of chips, for a node shown beside the list: the same actions, icons and
+ * permission gating as [KubeNodeMenuSheet]; a refused one is disabled with its reason below.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun KubeNodeActionRow(
+    node: KubeNodeInfo,
+    onCordon: () -> Unit,
+    onDrain: () -> Unit,
+    onMeta: () -> Unit,
+    onDebug: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val access = rememberKubeActionAccess("")
+    val podAccess = if (onDebug != null) rememberKubeActionAccess(NODE_DEBUG_NAMESPACE) else null
+    val cordonDenial = access?.denial(KubeAction.CORDON_NODE)
+    val drainDenial = access?.denial(KubeAction.DRAIN_NODE)
+    val metaDenial = access?.denial(KubeAction.EDIT_NODE_META)
+    val debugDenial = podAccess?.denial(KubeAction.DEBUG_NODE)
+    Column(modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KubeNodeActionChip(stringResource(if (node.cordoned) R.string.node_menu_uncordon else R.string.node_menu_cordon), Icons.Outlined.Block, cordonDenial, onCordon)
+            KubeNodeActionChip(stringResource(R.string.node_menu_drain), Icons.AutoMirrored.Outlined.Logout, drainDenial, onDrain)
+            KubeNodeActionChip(stringResource(R.string.node_meta_menu), Icons.Outlined.Sell, metaDenial, onMeta)
+            if (onDebug != null) KubeNodeActionChip(stringResource(R.string.node_menu_kube_debug_shell), Icons.Outlined.Terminal, debugDenial, onDebug)
+        }
+        // Each refusal once: chips refused for the same reason share its note.
+        listOfNotNull(cordonDenial, drainDenial, metaDenial, debugDenial).distinct().forEach { KubeDenialNote(it) }
     }
+}
+
+@Composable
+private fun KubeNodeActionChip(label: String, icon: ImageVector, denial: KubePermission?, onClick: () -> Unit) {
+    AssistChip(
+        onClick = onClick,
+        enabled = denial == null,
+        label = { Text(label) },
+        leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+    )
 }
 
 /** Cordons ([on]) or uncordons the Kubernetes node [name]; returns the message to show. */
