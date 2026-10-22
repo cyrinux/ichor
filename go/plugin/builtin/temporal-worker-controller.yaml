@@ -1,0 +1,515 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# The Temporal Worker Controller (temporalio/temporal-worker-controller, temporal.io/v1alpha1)
+# rolls out versioned Temporal workers: a WorkerDeployment ramps traffic from its current
+# build to a target build, through a Connection (or ClusterConnection) to the Temporal
+# server; WorkerResourceTemplates attach resources to each version. On the phone: is a
+# rollout stalled or ramping, is the connection to the server healthy, which builds still drain.
+# temporal.io is shared with the Temporal operator (temporal-operator.yaml): detection names
+# workerdeployments, so a cluster that runs only the operator does not activate this plugin.
+# The deprecated kinds TemporalWorkerDeployment and TemporalConnection are not read.
+# The account needs list and get on the four resources; one it may not list lands in the
+# render's errors, the others still show. Connection Secrets are shown by name only, never
+# read. No action: the rollout levers are edits of spec.rollout.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: temporal-worker-controller
+name: Temporal Worker Controller
+website: https://github.com/temporalio/temporal-worker-controller
+icon: temporal
+category: workloads
+catalogId: temporal-worker-controller
+
+detect:
+  - group: temporal.io
+    resource: workerdeployments
+
+resources:
+  workerdeployment:
+    group: temporal.io
+    version: v1alpha1
+    resource: workerdeployments
+    kind: WorkerDeployment
+    scope: Namespaced
+  # No status upstream.
+  connection:
+    group: temporal.io
+    version: v1alpha1
+    resource: connections
+    kind: Connection
+    scope: Namespaced
+  clusterconnection:
+    group: temporal.io
+    version: v1alpha1
+    resource: clusterconnections
+    kind: ClusterConnection
+    scope: Cluster
+  workerresourcetemplate:
+    group: temporal.io
+    version: v1alpha1
+    resource: workerresourcetemplates
+    kind: WorkerResourceTemplate
+    scope: Namespaced
+
+fields:
+  workerdeployment:
+    current: $.status.currentVersion.buildID | default("")
+    target: $.status.targetVersion.buildID | default("")
+    # NotRegistered, Created, Inactive, Ramping, Current, Draining or Drained.
+    targetStatus: $.status.targetVersion.status | default("")
+    ramp: $.status.targetVersion.rampPercentage | default(0)
+    rampingSince: $.status.targetVersion.rampingSince | time()
+    strategy: $.spec.rollout.strategy | default("")
+    replicas: $.spec.replicas | default(1)
+    versions: $.status.versionCount | default(0)
+    draining: join($.status.deprecatedVersions[?(@.status == "Draining")].buildID | default([]), ", ")
+    connection: coalesce($.status.observedConnectionRef.name, $.spec.workerOptions.connectionRef.name, "")
+    temporalNamespace: $.spec.workerOptions.temporalNamespace | default("")
+    createdAt: $.metadata.creationTimestamp | time()
+  connection:
+    host: $.spec.hostPort | default("")
+    auth: 'has($.spec.mutualTLSSecretRef) ? "mTLS" : (has($.spec.apiKeySecretRef) ? "API key" : "none")'
+    secret: coalesce($.spec.mutualTLSSecretRef.name, $.spec.apiKeySecretRef.name, "")
+    tlsServerName: $.spec.tls.serverName | default("")
+    createdAt: $.metadata.creationTimestamp | time()
+  clusterconnection:
+    host: $.spec.hostPort | default("")
+    auth: 'has($.spec.mutualTLSSecretRef) ? "mTLS" : (has($.spec.apiKeySecretRef) ? "API key" : "none")'
+    secret: coalesce($.spec.mutualTLSSecretRef.name, $.spec.apiKeySecretRef.name, "")
+    tlsServerName: $.spec.tls.serverName | default("")
+    createdAt: $.metadata.creationTimestamp | time()
+  workerresourcetemplate:
+    worker: coalesce($.spec.workerDeploymentRef.name, $.spec.temporalWorkerDeploymentRef.name, "")
+    templateKind: $.spec.template.kind | default("")
+    workerObj: join(workerdeployment, $.metadata.namespace == left.metadata.namespace && $.metadata.name == coalesce(left.spec.workerDeploymentRef.name, left.spec.temporalWorkerDeploymentRef.name, ""))
+    createdAt: $.metadata.creationTimestamp | time()
+
+health:
+  workerdeployment:
+    - when: conditions.Stalled == true
+      health: critical
+      reason: rolloutStalled
+      message: 'rollout stalled: {{ condition("Stalled").message }}'
+    - when: conditions.ConnectionHealthy == false
+      health: critical
+      reason: connectionUnhealthy
+      message: 'cannot reach Temporal: {{ condition("ConnectionHealthy").message }}'
+    - when: conditions.Ready == false
+      health: warning
+      reason: notReady
+      message: 'not ready: {{ condition("Ready").message }}'
+    - when: fields.targetStatus == "Ramping"
+      health: info
+      reason: ramping
+      message: "ramping {{ fields.target }} at {{ fields.ramp }}%"
+    - when: fields.target != "" && fields.current != fields.target
+      health: info
+      reason: rolloutInProgress
+      message: "rolling out {{ fields.target }}"
+    - when: conditions.Ready == null
+      health: unknown
+      reason: notReconciled
+      message: "not reconciled yet"
+  workerresourcetemplate:
+    - when: fields.workerObj == null
+      health: warning
+      reason: workerMissing
+      message: "worker deployment {{ fields.worker }} not found"
+
+dataServices:
+  summary:
+    aggregate:
+      workers: count(workerdeployment)
+      ramping: count(workerdeployment, fields.targetStatus == "Ramping")
+      stalled: count(workerdeployment, health == "critical")
+    health: worst([worst(workerdeployment.health), worst(workerresourcetemplate.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.workers, one: "%d worker deployment", other: "%d worker deployments" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "stalled", value: dataServices.summary.stalled, tone: critical, hideWhenZero: true }
+      - { label: "ramping", value: dataServices.summary.ramping, tone: info, hideWhenZero: true }
+  workers:
+    from: workerdeployment
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No worker deployments."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.targetStatus
+      trailing: { text: 'fields.targetStatus == "Ramping" ? string(fields.ramp) + "%" : fields.current' }
+      detail:
+        - type: gauge
+          label: "Ramp"
+          value: fields.ramp
+          max: 100
+          unit: "%"
+          tone: health
+        - type: keyValues
+          items:
+            - { label: "Current build", value: fields.current, mono: true }
+            - { label: "Target build", value: fields.target, mono: true }
+            - { label: "Strategy", value: fields.strategy }
+            - { label: "Ramping since", value: fields.rampingSince | relativeTime() }
+            - { label: "Replicas", value: fields.replicas }
+            - { label: "Versions", value: fields.versions }
+            - { label: "Draining builds", value: fields.draining, mono: true }
+            - { label: "Connection", value: fields.connection, mono: true }
+            - { label: "Temporal namespace", value: fields.temporalNamespace, mono: true }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+        - type: conditions
+  connections:
+    from: connection
+    sort: [$.metadata.namespace, $.metadata.name]
+    empty: "No connections."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.auth
+      trailing: { text: fields.host }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Host", value: fields.host, mono: true }
+            - { label: "Authentication", value: fields.auth }
+            - { label: "Secret", value: fields.secret, mono: true }
+            - { label: "TLS server name", value: fields.tlsServerName, mono: true }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+  clusterConnections:
+    from: clusterconnection
+    sort: [$.metadata.name]
+    empty: "No cluster connections."
+    row:
+      title: $.metadata.name
+      status:
+        tone: health
+        text: fields.auth
+      trailing: { text: fields.host }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Host", value: fields.host, mono: true }
+            - { label: "Authentication", value: fields.auth }
+            - { label: "Secret", value: fields.secret, mono: true }
+            - { label: "TLS server name", value: fields.tlsServerName, mono: true }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+  templates:
+    from: workerresourcetemplate
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No worker resource templates."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.templateKind
+      trailing: { text: fields.worker }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Worker deployment", value: fields.worker, mono: true }
+            - { label: "Kind", value: fields.templateKind }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+        - type: relations
+          items:
+            - { label: "Worker deployment", ref: fields.workerObj }
+        - type: conditions
+
+findings:
+  - id: rollout-stalled
+    from: workerdeployment
+    when: conditions.Stalled == true
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: workers
+  - id: connection-unhealthy
+    from: workerdeployment
+    when: conditions.Stalled != true && conditions.ConnectionHealthy == false
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: workers
+  - id: worker-not-ready
+    from: workerdeployment
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: workers
+
+i18n:
+  fr:
+    '%d worker deployment': '%d déploiement de workers'
+    '%d worker deployments': '%d déploiements de workers'
+    'Authentication': 'Authentification'
+    'cannot reach Temporal: {{ condition("ConnectionHealthy").message }}': 'Temporal injoignable : {{ condition("ConnectionHealthy").message }}'
+    'Connection': 'Connexion'
+    'Created': 'Créé'
+    'Current build': 'Build actuel'
+    'Draining builds': 'Builds en vidange'
+    'Host': 'Hôte'
+    'Kind': 'Type'
+    'No cluster connections.': 'Aucune connexion de cluster.'
+    'No connections.': 'Aucune connexion.'
+    'No worker deployments.': 'Aucun déploiement de workers.'
+    'No worker resource templates.': 'Aucun modèle de ressource de worker.'
+    'not ready: {{ condition("Ready").message }}': 'pas prêt : {{ condition("Ready").message }}'
+    'not reconciled yet': 'pas encore réconcilié'
+    'Ramp': 'Montée'
+    'ramping': 'en montée'
+    'Ramping since': 'En montée depuis'
+    'ramping {{ fields.target }} at {{ fields.ramp }}%': 'montée de {{ fields.target }} à {{ fields.ramp }} %'
+    'Replicas': 'Réplicas'
+    'rolling out {{ fields.target }}': 'déploiement de {{ fields.target }}'
+    'rollout stalled: {{ condition("Stalled").message }}': 'déploiement bloqué : {{ condition("Stalled").message }}'
+    'Secret': 'Secret'
+    'stalled': 'bloqués'
+    'Strategy': 'Stratégie'
+    'Target build': 'Build cible'
+    'Temporal namespace': 'Namespace Temporal'
+    'TLS server name': 'Nom de serveur TLS'
+    'Versions': 'Versions'
+    'Worker deployment': 'Déploiement de workers'
+    'worker deployment {{ fields.worker }} not found': 'déploiement de workers {{ fields.worker }} introuvable'
+  de:
+    '%d worker deployment': '%d Worker-Deployment'
+    '%d worker deployments': '%d Worker-Deployments'
+    'Authentication': 'Authentifizierung'
+    'cannot reach Temporal: {{ condition("ConnectionHealthy").message }}': 'Temporal nicht erreichbar: {{ condition("ConnectionHealthy").message }}'
+    'Connection': 'Verbindung'
+    'Created': 'Erstellt'
+    'Current build': 'Aktueller Build'
+    'Draining builds': 'Builds im Draining'
+    'Host': 'Host'
+    'Kind': 'Art'
+    'No cluster connections.': 'Keine Cluster-Verbindungen.'
+    'No connections.': 'Keine Verbindungen.'
+    'No worker deployments.': 'Keine Worker-Deployments.'
+    'No worker resource templates.': 'Keine Worker-Ressourcenvorlagen.'
+    'not ready: {{ condition("Ready").message }}': 'nicht bereit: {{ condition("Ready").message }}'
+    'not reconciled yet': 'noch nicht abgeglichen'
+    'Ramp': 'Hochlauf'
+    'ramping': 'im Hochlauf'
+    'Ramping since': 'Hochlauf seit'
+    'ramping {{ fields.target }} at {{ fields.ramp }}%': 'Hochlauf von {{ fields.target }} bei {{ fields.ramp }} %'
+    'Replicas': 'Replikate'
+    'rolling out {{ fields.target }}': 'Rollout von {{ fields.target }}'
+    'rollout stalled: {{ condition("Stalled").message }}': 'Rollout festgefahren: {{ condition("Stalled").message }}'
+    'Secret': 'Secret'
+    'stalled': 'festgefahren'
+    'Strategy': 'Strategie'
+    'Target build': 'Ziel-Build'
+    'Temporal namespace': 'Temporal-Namespace'
+    'TLS server name': 'TLS-Servername'
+    'Versions': 'Versionen'
+    'Worker deployment': 'Worker-Deployment'
+    'worker deployment {{ fields.worker }} not found': 'Worker-Deployment {{ fields.worker }} nicht gefunden'
+  es:
+    '%d worker deployment': '%d despliegue de workers'
+    '%d worker deployments': '%d despliegues de workers'
+    'Authentication': 'Autenticación'
+    'cannot reach Temporal: {{ condition("ConnectionHealthy").message }}': 'no se puede contactar con Temporal: {{ condition("ConnectionHealthy").message }}'
+    'Connection': 'Conexión'
+    'Created': 'Creado'
+    'Current build': 'Build actual'
+    'Draining builds': 'Builds en drenaje'
+    'Host': 'Host'
+    'Kind': 'Tipo'
+    'No cluster connections.': 'No hay conexiones de clúster.'
+    'No connections.': 'No hay conexiones.'
+    'No worker deployments.': 'No hay despliegues de workers.'
+    'No worker resource templates.': 'No hay plantillas de recursos de worker.'
+    'not ready: {{ condition("Ready").message }}': 'no listo: {{ condition("Ready").message }}'
+    'not reconciled yet': 'aún no reconciliado'
+    'Ramp': 'Rampa'
+    'ramping': 'en rampa'
+    'Ramping since': 'En rampa desde'
+    'ramping {{ fields.target }} at {{ fields.ramp }}%': 'rampa de {{ fields.target }} al {{ fields.ramp }} %'
+    'Replicas': 'Réplicas'
+    'rolling out {{ fields.target }}': 'desplegando {{ fields.target }}'
+    'rollout stalled: {{ condition("Stalled").message }}': 'despliegue atascado: {{ condition("Stalled").message }}'
+    'Secret': 'Secret'
+    'stalled': 'atascados'
+    'Strategy': 'Estrategia'
+    'Target build': 'Build objetivo'
+    'Temporal namespace': 'Namespace de Temporal'
+    'TLS server name': 'Nombre de servidor TLS'
+    'Versions': 'Versiones'
+    'Worker deployment': 'Despliegue de workers'
+    'worker deployment {{ fields.worker }} not found': 'despliegue de workers {{ fields.worker }} no encontrado'
+  it:
+    '%d worker deployment': '%d deployment di worker'
+    '%d worker deployments': '%d deployment di worker'
+    'Authentication': 'Autenticazione'
+    'cannot reach Temporal: {{ condition("ConnectionHealthy").message }}': 'Temporal non raggiungibile: {{ condition("ConnectionHealthy").message }}'
+    'Connection': 'Connessione'
+    'Created': 'Creato'
+    'Current build': 'Build attuale'
+    'Draining builds': 'Build in drenaggio'
+    'Host': 'Host'
+    'Kind': 'Tipo'
+    'No cluster connections.': 'Nessuna connessione di cluster.'
+    'No connections.': 'Nessuna connessione.'
+    'No worker deployments.': 'Nessun deployment di worker.'
+    'No worker resource templates.': 'Nessun modello di risorsa per worker.'
+    'not ready: {{ condition("Ready").message }}': 'non pronto: {{ condition("Ready").message }}'
+    'not reconciled yet': 'non ancora riconciliato'
+    'Ramp': 'Rampa'
+    'ramping': 'in rampa'
+    'Ramping since': 'In rampa da'
+    'ramping {{ fields.target }} at {{ fields.ramp }}%': 'rampa di {{ fields.target }} al {{ fields.ramp }}%'
+    'Replicas': 'Repliche'
+    'rolling out {{ fields.target }}': 'rollout di {{ fields.target }}'
+    'rollout stalled: {{ condition("Stalled").message }}': 'rollout bloccato: {{ condition("Stalled").message }}'
+    'Secret': 'Secret'
+    'stalled': 'bloccati'
+    'Strategy': 'Strategia'
+    'Target build': 'Build di destinazione'
+    'Temporal namespace': 'Namespace Temporal'
+    'TLS server name': 'Nome server TLS'
+    'Versions': 'Versioni'
+    'Worker deployment': 'Deployment di worker'
+    'worker deployment {{ fields.worker }} not found': 'deployment di worker {{ fields.worker }} non trovato'
+  uk:
+    '%d worker deployment': '%d розгортання воркерів'
+    '%d worker deployments': '%d розгортань воркерів'
+    'Authentication': 'Автентифікація'
+    'cannot reach Temporal: {{ condition("ConnectionHealthy").message }}': 'Temporal недоступний: {{ condition("ConnectionHealthy").message }}'
+    'Connection': 'З''єднання'
+    'Created': 'Створено'
+    'Current build': 'Поточна збірка'
+    'Draining builds': 'Збірки, що спорожнюються'
+    'Host': 'Хост'
+    'Kind': 'Тип'
+    'No cluster connections.': 'Немає з''єднань кластера.'
+    'No connections.': 'Немає з''єднань.'
+    'No worker deployments.': 'Немає розгортань воркерів.'
+    'No worker resource templates.': 'Немає шаблонів ресурсів воркерів.'
+    'not ready: {{ condition("Ready").message }}': 'не готово: {{ condition("Ready").message }}'
+    'not reconciled yet': 'ще не узгоджено'
+    'Ramp': 'Нарощування'
+    'ramping': 'нарощуються'
+    'Ramping since': 'Нарощується з'
+    'ramping {{ fields.target }} at {{ fields.ramp }}%': 'нарощування {{ fields.target }} до {{ fields.ramp }}%'
+    'Replicas': 'Репліки'
+    'rolling out {{ fields.target }}': 'розгортання {{ fields.target }}'
+    'rollout stalled: {{ condition("Stalled").message }}': 'розгортання застрягло: {{ condition("Stalled").message }}'
+    'Secret': 'Secret'
+    'stalled': 'застряглі'
+    'Strategy': 'Стратегія'
+    'Target build': 'Цільова збірка'
+    'Temporal namespace': 'Простір імен Temporal'
+    'TLS server name': 'Ім''я сервера TLS'
+    'Versions': 'Версії'
+    'Worker deployment': 'Розгортання воркерів'
+    'worker deployment {{ fields.worker }} not found': 'розгортання воркерів {{ fields.worker }} не знайдено'
+
+# Invented names. payments-worker ramps build-2a9f at 25%, orders-worker runs one build,
+# reports-worker is stalled, fraud-worker cannot reach Temporal, mailer-worker is not ready,
+# search-worker rolls out without ramping, new-worker is fresh.
+samples:
+  workerdeployment:
+    - metadata: { name: payments-worker, namespace: demo-shop, creationTimestamp: now-20d }
+      spec:
+        replicas: 3
+        rollout: { strategy: Progressive, steps: [{ rampPercentage: 25, pauseDuration: 10m }, { rampPercentage: 75, pauseDuration: 10m }] }
+        sunset: { scaledownDelay: 1h, deleteDelay: 24h }
+        workerOptions: { connectionRef: { name: temporal-prod }, temporalNamespace: payments }
+      status:
+        currentVersion: { buildID: build-17c4, status: Current }
+        targetVersion: { buildID: build-2a9f, status: Ramping, rampPercentage: 25, rampingSince: now-7m }
+        deprecatedVersions:
+          - { buildID: build-0b31, status: Draining }
+          - { buildID: build-0a02, status: Drained, drainedSince: now-2d }
+        versionCount: 4
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-20d }
+          - { type: ConnectionHealthy, status: "True", lastTransitionTime: now-20d }
+          - { type: Progressing, status: "True", reason: Ramping, lastTransitionTime: now-7m }
+    - metadata: { name: orders-worker, namespace: demo-shop, creationTimestamp: now-40d }
+      spec:
+        rollout: { strategy: AllAtOnce }
+        sunset: {}
+        workerOptions: { connectionRef: { name: temporal-prod }, temporalNamespace: orders }
+      status:
+        currentVersion: { buildID: build-9e40, status: Current }
+        targetVersion: { buildID: build-9e40, status: Current }
+        versionCount: 1
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-3d }
+          - { type: ConnectionHealthy, status: "True", lastTransitionTime: now-40d }
+          - { type: RolloutComplete, status: "True", lastTransitionTime: now-3d }
+    - metadata: { name: reports-worker, namespace: demo-lab, creationTimestamp: now-9d }
+      spec:
+        rollout: { strategy: Progressive, steps: [{ rampPercentage: 10, pauseDuration: 5m }] }
+        sunset: {}
+        workerOptions: { connectionRef: { name: temporal-lab }, temporalNamespace: reports }
+      status:
+        currentVersion: { buildID: build-51aa, status: Current }
+        targetVersion: { buildID: build-6c02, status: Inactive }
+        versionCount: 2
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-9d }
+          - { type: ConnectionHealthy, status: "True", lastTransitionTime: now-9d }
+          - { type: Stalled, status: "True", reason: GateWorkflowFailed, message: "gate workflow failed on build-6c02", lastTransitionTime: now-35m }
+    - metadata: { name: fraud-worker, namespace: demo-lab, creationTimestamp: now-4d }
+      spec:
+        rollout: { strategy: Manual }
+        sunset: {}
+        workerOptions: { connectionRef: { name: temporal-lab }, temporalNamespace: fraud }
+      status:
+        currentVersion: { buildID: build-c3d1, status: Current }
+        targetVersion: { buildID: build-c3d1, status: Current }
+        conditions:
+          - { type: ConnectionHealthy, status: "False", reason: AuthFailed, message: "temporal-frontend.demo-lab:7233: certificate expired", lastTransitionTime: now-12m }
+    - metadata: { name: mailer-worker, namespace: demo-shop, creationTimestamp: now-6d }
+      spec:
+        rollout: { strategy: AllAtOnce }
+        sunset: {}
+        workerOptions: { connectionRef: { name: temporal-prod }, temporalNamespace: mail }
+      status:
+        currentVersion: { buildID: build-88f0, status: Current }
+        targetVersion: { buildID: build-88f0, status: Current }
+        conditions:
+          - { type: Ready, status: "False", reason: PodsNotReady, message: "1 of 2 pods ready", lastTransitionTime: now-4m }
+          - { type: ConnectionHealthy, status: "True", lastTransitionTime: now-6d }
+    - metadata: { name: search-worker, namespace: demo-lab, creationTimestamp: now-11d }
+      spec:
+        rollout: { strategy: AllAtOnce }
+        sunset: {}
+        workerOptions: { connectionRef: { name: temporal-lab }, temporalNamespace: search }
+      status:
+        currentVersion: { buildID: build-1f2e, status: Current }
+        targetVersion: { buildID: build-3b7d, status: Created }
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-11d }
+          - { type: ConnectionHealthy, status: "True", lastTransitionTime: now-11d }
+    - metadata: { name: new-worker, namespace: demo-shop, creationTimestamp: now-1m }
+      spec:
+        rollout: { strategy: AllAtOnce }
+        sunset: {}
+        workerOptions: { connectionRef: { name: temporal-prod }, temporalNamespace: payments }
+  connection:
+    - metadata: { name: temporal-prod, namespace: demo-shop, creationTimestamp: now-40d }
+      spec: { hostPort: "temporal-frontend.demo-shop:7233", mutualTLSSecretRef: { name: temporal-prod-mtls } }
+    - metadata: { name: temporal-lab, namespace: demo-lab, creationTimestamp: now-12d }
+      spec: { hostPort: "temporal-frontend.demo-lab:7233", apiKeySecretRef: { name: temporal-lab-key, key: api-key }, tls: { serverName: frontend.demo-lab } }
+  clusterconnection:
+    - metadata: { name: temporal-shared, creationTimestamp: now-50d }
+      spec: { hostPort: "temporal-frontend.demo-shared:7233", mutualTLSSecretRef: { name: temporal-shared-mtls } }
+    - metadata: { name: temporal-dev, creationTimestamp: now-5d }
+      spec: { hostPort: "temporal-frontend.demo-dev:7233" }
+  workerresourcetemplate:
+    - metadata: { name: payments-hpa, namespace: demo-shop, creationTimestamp: now-20d }
+      spec:
+        workerDeploymentRef: { name: payments-worker }
+        template: { apiVersion: autoscaling/v2, kind: HorizontalPodAutoscaler, spec: { minReplicas: 2, maxReplicas: 6 } }
+    - metadata: { name: legacy-pdb, namespace: demo-lab, creationTimestamp: now-30d }
+      spec:
+        workerDeploymentRef: { name: old-worker }
+        template: { apiVersion: policy/v1, kind: PodDisruptionBudget, spec: { minAvailable: 1 } }

@@ -200,6 +200,8 @@
 {"id":"argo-workflows","name":"Argo Workflows","cat":"devops","icon":"argo-cd","match":["workflow-controller","argoexec","argocli"]},
 {"id":"argo-rollouts","name":"Argo Rollouts","cat":"devops","icon":"argo-cd","match":["argo-rollouts","kubectl-argo-rollouts"]},
 {"id":"numaflow","name":"Numaflow","cat":"devops","icon":"avatar:numaproj","prefixes":["quay.io/numaproj/numaflow"]},
+{"id":"temporal","name":"Temporal","cat":"devops","icon":"avatar:temporalio","prefixes":["docker.io/temporalio/","ghcr.io/alexandrevilain/temporal-operator"]},
+{"id":"temporal-worker-controller","name":"Temporal Worker Controller","cat":"devops","icon":"avatar:temporalio"},
 {"id":"flux","name":"Flux","cat":"devops","icon":"flux-cd","prefixes":["ghcr.io/fluxcd/"]},
 {"id":"crossplane","name":"Crossplane","cat":"devops","prefixes":["xpkg.upbound.io/"]},
 {"id":"gitea","name":"Gitea","cat":"devops"},
