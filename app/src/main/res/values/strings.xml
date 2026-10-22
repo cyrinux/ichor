@@ -439,7 +439,6 @@
     <string name="clusters_manage">Manage clusters…</string>
     <string name="clusters_add">Add a cluster</string>
     <string name="clusters_swipe_hint">Swipe the top bar left or right to switch cluster.</string>
-    <string name="clusters_remove">Remove %1$s</string>
     <string name="clusters_remove_title">Remove %1$s?</string>
     <string name="clusters_remove_body">This cluster\'s config and client key will be removed from this device. The other clusters are kept.</string>
     <string name="clusters_color">Color of %1$s</string>
@@ -1312,6 +1311,8 @@
     <string name="hardware_product">Product</string>
     <string name="hardware_version">Version</string>
     <string name="hardware_serial">Serial number</string>
+    <string name="hardware_find_parts">Find spare parts</string>
+    <string name="hardware_find_parts_hint">Opens the Ichor site with this part\'s model and serial number, then the vendor\'s page or a web search</string>
     <string name="hardware_sku">SKU</string>
     <string name="hardware_bios">BIOS</string>
     <string name="hardware_cores_threads">%1$d cores / %2$d threads</string>
@@ -2106,10 +2107,7 @@
         <item quantity="one">%1$d restart</item>
         <item quantity="other">%1$d restarts</item>
     </plurals>
-    <string name="evidence_service">Service status</string>
-    <string name="evidence_link">Network link changed</string>
     <string name="evidence_unavailable">Evidence unavailable</string>
-    <string name="evidence_recovered">Evidence collection recovered</string>
     <string name="evidence_available">This section can be sampled again.</string>
     <string name="evidence_details">Technical details</string>
     <string name="evidence_hide_details">Hide technical details</string>
@@ -2230,7 +2228,6 @@
     <string name="garage_tranquility_confirm">Apply</string>
     <string name="garage_tranquility_done">Resync tranquility of %1$s set to %2$d</string>
     <string name="garage_tranquility_failed">Could not change the resync speed of %1$s: %2$s</string>
-    <string name="garage_operator_title">Garage operator</string>
     <string name="garage_operator_clusters">Clusters</string>
     <string name="garage_operator_buckets">Buckets</string>
     <string name="garage_operator_keys">Keys</string>
@@ -2418,7 +2415,6 @@
     <string name="crossplane_count_ok">%1$d ok</string>
     <string name="crossplane_managed_count">%1$d of %2$d managed resources listed</string>
     <string name="crossplane_truncated">Long list: healthy managed resources past the first 500 are left out; the search looks at the ones listed.</string>
-    <string name="crossplane_package">Package</string>
     <string name="crossplane_claim_kind">claim kind %1$s</string>
     <string name="crossplane_compositions">%1$d compositions</string>
     <string name="crossplane_composites_count">%1$d composites</string>
@@ -3836,8 +3832,6 @@
     <string name="rollback_confirm">Roll back</string>
     <string name="rollback_body">The node reboots now into the Talos version it ran before its last upgrade, without draining its pods. For an upgrade that boots but misbehaves.</string>
     <string name="rollback_started">Rollback started: %1$s is rebooting</string>
-    <string name="checkup_health_menu">Checkup and API server</string>
-    <string name="checkup_reading">Reading the cluster…</string>
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Not available for this cluster: it was added from a kubeconfig, so the app reaches its Kubernetes API only, not Talos.</string>
@@ -4925,7 +4919,6 @@
     <string name="cnpg_promote_unavailable">This instance cannot be promoted in the cluster\'s current state.</string>
     <string name="cnpg_promote_requested">Promotion to %1$s requested</string>
     <string name="cnpg_promote_failed">Could not promote %1$s: %2$s</string>
-    <string name="cnpg_promote_loading">Reading promotion preview…</string>
 
     <string name="cnpg_restart_primary">Restart primary</string>
     <string name="cnpg_hibernate_action">Hibernate cluster</string>
@@ -4944,7 +4937,6 @@
     <string name="longhorn_salvage_replica">%1$s on %2$s · healthy: %3$s · failed: %4$s</string>
     <string name="longhorn_salvage_requested">Salvage requested</string>
     <string name="longhorn_salvage_failed">Could not salvage volume: %1$s</string>
-    <string name="longhorn_volume_name">Volume name</string>
 
     <string name="longhorn_attach">Attach volume</string>
     <string name="longhorn_detach">Detach volume</string>
@@ -5049,7 +5041,6 @@
     <string name="kpol_not_installed">Kyverno is not installed on this cluster</string>
     <string name="kpol_not_installed_hint">Kyverno admits or refuses workloads by policy and reports what breaks the rules.</string>
     <string name="kpol_empty">No Kyverno policies</string>
-    <string name="kpol_empty_hint">Kyverno runs, but no policy is defined.</string>
     <string name="kpol_no_match">No policy matches “%1$s”</string>
     <string name="kpol_engine">Kyverno engine</string>
     <string name="kpol_controller_ready">%1$s: %2$s of %3$s ready</string>
@@ -5092,7 +5083,6 @@
     <string name="kpol_webhook_fail_gatekeeper">Fail: requests are refused while Gatekeeper is down</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore: policies are skipped while Gatekeeper is down</string>
     <string name="kpol_empty_gatekeeper">No Gatekeeper policies</string>
-    <string name="kpol_empty_hint_gatekeeper">Gatekeeper runs, but no policy is defined.</string>
     <string name="kpol_warn">Warn</string>
     <string name="kpol_mode_warn">A request that breaks it is let through with a warning</string>
     <string name="kpol_audited">Last audit %1$s</string>
@@ -5135,7 +5125,6 @@
     <string name="velero_restore_reason_all_namespaces">This backup holds every namespace: restoring it restores them all</string>
     <string name="velero_restore_started">Restore %1$s started</string>
     <string name="velero_restore_running">restoring…</string>
-    <string name="velero_restore_validation_errors">Velero refused the restore: %1$s</string>
     <string name="velero_restore_close">Close</string>
     <string name="velero_restore_items_label">Items</string>
     <string name="velero_restore_volumes_label">Volume snapshots</string>
@@ -5543,4 +5532,6 @@
     <string name="staged_marker">Staged</string>
     <string name="staged_full">A pull request holds at most 20 files.</string>
     <string name="staged_changed_upstream">This file changed on the branch since it was staged: it opens as it is now, without the staged edit.</string>
+    <string name="talos_writeback_node">Propose in Git for %1$s</string>
+    <string name="talos_writeback_multi_desc">Write the change into each node\'s file of the cluster repository: one pull request per node.</string>
 </resources>

@@ -283,7 +283,11 @@ tour** shows it again.
   Flux apps open their node or app side by side with the list. On a phone the app stays
   in portrait, except logs, shells, charts, YAML, diffs, source files and maps, which rotate to
   landscape and use the width.
-- **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.
+- **iPad:** the overview shows its cards in two columns on a full or wide window, and the nodes
+  list and the Argo CD / Flux apps open their node or app side by side with the list; a narrow
+  Split View or Stage Manager window keeps the iPhone layout. At full or wide width a sidebar
+  lists your clusters and the current cluster's sections (Alerts, Kubernetes, Argo CD, Flux,
+  data services, activity, search, settings) beside the screen open in the detail column.
   On an iPhone the app stays in portrait, except logs, shells, charts, YAML, diffs and the
   KubeSpan map, which rotate to landscape.
 - **Background:** alerts and a home-screen widget. The findings of the plugins the cluster runs
@@ -658,6 +662,11 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   the thermal zones and `CPUFreqStats` (Talos 1.5+). Cores held below 70 % of their top speed
   under the `performance` governor, or a sensor above its max, mark the node *Throttled* there
   and, once that screen was opened, on its row in the node lists. A VM has no Sensors card.
+- **Spare parts:** *Find spare parts* next to the system, each memory module and each disk on
+  *About this node* opens a page of the Ichor site, in your browser, with the part's
+  manufacturer, model or part number and serial number: copy them, open the vendor's support
+  or warranty page, or search the web. The app itself contacts no vendor; the details travel
+  after the `#` of the address, which browsers keep to themselves.
 - **Temperature alert:** Settings → Alerts → Node temperatures (off by default, Talos clusters)
   reads every node's hottest sensor at each background check.
   - **Running hot:** a node at its sensor's critical limit − 5 °C (else its max) notifies at once.
@@ -1719,7 +1728,8 @@ just i18n-check   # also part of `just check` and the iOS CI build
 ```
 
 It fails on a missing translation, or when placeholders (`%1$s`, `%@`, `%lld`) differ from
-English.
+English. It also fails on an Android key that no code or resource reads: delete it in all six
+files.
 
 ## Support the project
 

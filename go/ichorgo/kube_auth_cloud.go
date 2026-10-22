@@ -16,6 +16,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // The cloud sign-ins that need no browser: GKE with a service account key, DigitalOcean with
@@ -31,7 +33,7 @@ const (
 
 var (
 	doAPIEndpoint  = "https://api.digitalocean.com"
-	cloudHTTP      = func() *http.Client { return newHTTPClient(httpClientOpts{timeout: oidcHTTPTimeout}) }
+	cloudHTTP      = func() *http.Client { return httpx.New(httpx.Opts{Timeout: oidcHTTPTimeout}) }
 	gcpTokenTarget = func(serviceAccountTokenURI string) string { return serviceAccountTokenURI }
 )
 

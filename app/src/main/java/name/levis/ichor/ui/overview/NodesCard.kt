@@ -211,7 +211,7 @@ private fun NodeChip(node: NodeOverview, onClick: () -> Unit, onLongClick: () ->
             Spacer(Modifier.width(6.dp))
             Text(node.hostname, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (node.cordoned) {
-                Text(" · " + stringResource(R.string.kube_node_cordoned), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                Text(" · " + stringResource(R.string.kube_node_cordoned), style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

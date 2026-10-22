@@ -340,74 +340,7 @@ struct MainNavigation: View {
     @State private var linkMessage: String?
 
     var body: some View {
-        NavigationStack(path: $path) {
-            HomeView(path: $path)
-                .navigationDestination(for: Route.self) { route in
-                    switch route {
-                    case .node(let ref): NodeDetailView(ref: ref)
-                    case .nodeLive(let ref): NodeTabsView(ref: ref, initialTab: .live)
-                    case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
-                    case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
-                    case .k8sUpgrade: K8sUpgradePlanView()
-                    case .joinNode: JoinNodeView(path: $path)
-                    case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
-                    case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab)
-                    case .nodes(let filter, let nodes, let selected): NodesView(nodes: nodes, filter: filter, selected: selected, path: $path)
-                    case .kubeNodes(let filter, let nodes, let query): KubeNodesView(nodes: nodes, filter: filter, query: query, path: $path)
-                    case .logs(let node, let hostname, let service):
-                        LogsView(node: node, hostname: hostname, service: service)
-                    case .containerLogs(let node, let hostname, let container):
-                        LogsView(node: node, hostname: hostname, service: nil, container: container)
-                    case .insights: InsightsView()
-                    case .capacity: KubeCapacityView()
-                    case .metrics: MetricsView()
-                    case .supportBundle: SupportBundleView()
-                    case .integrations: IntegrationRequestView()
-                    case .changelog: ChangelogView()
-                    case .licenses: LicensesView()
-                    case .supportedIntegrations: SupportedIntegrationsView()
-                    case .etcd: EtcdView()
-                    case .replaceControlPlane(let memberId, let node, let hostname):
-                        ReplaceControlPlaneView(memberId: memberId, node: node, hostname: hostname)
-                    case .kubespan: KubeSpanView()
-                    case .workloads: KubernetesView()
-                    case .kubernetes(let focus): KubernetesView(focus: focus)
-                    case .networkTest: KubernetesView(networkTest: true)
-                    case .dataServices(let hints, let downNodes, let kind, let solo): DataServicesView(hints: hints, downNodes: downNodes, selected: kind, solo: solo)
-                    case .dataServicesPlugin(let hints, let downNodes, let plugin): DataServicesView(hints: hints, downNodes: downNodes, plugin: plugin)
-                    case .plugin(let id): PluginView(pluginID: id)
-                    case .argoCD(let downNodes, let selected): ArgoCDView(downNodes: downNodes, selected: selected)
-                    case .argoWindows: ArgoWindowsView()
-                    case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])
-                    case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
-                    case .gitOpsSource(let source, let dir, let app): SourceBrowserView(source: source, dir: dir, app: app)
-                    case .gitOpsFile(let source, let path, let app): SourceFileView(source: source, path: path, app: app)
-                    case .flux(let downNodes, let selected): FluxView(downNodes: downNodes, selected: selected)
-                    case .checkup: CheckupView()
-                    case .alerts: AlertsView(path: $path)
-                    case .health: HealthView()
-                    case .settings: SettingsView()
-                    case .settingsPage(let page): SettingsPageView(page: page)
-                    case .diagnosis(let note): DiagnosisView(initialNote: note)
-                    case .importConfig: ImportView { path.removeAll() }
-                    case .clusters: ClustersView()
-                    case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
-                    case .storage(let node, let hostname): StorageView(node: node, hostname: hostname)
-                    case .hardware(let node, let hostname): HardwareView(node: node, hostname: hostname)
-                    case .drain(let node, let hostname): MaintenanceView(node: node, hostname: hostname, drainOnly: true)
-                    case .upgrade(let node, let hostname): UpgradeView(node: node, hostname: hostname)
-                    case .maintenance(let node, let hostname): MaintenanceView(node: node, hostname: hostname)
-                    case .machineConfig(let node, let hostname): MachineConfigView(node: node, hostname: hostname)
-                    case .kubeNodeDebug(let node): KubeNodeDebugView(node: node)
-                    case .nodeMeta(let node, let hostname): NodeMetaEditorView(node: node, hostname: hostname)
-                    case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
-                    case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
-                    case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
-                    case .activity(let cluster): ActivityLogView(cluster: cluster)
-                    case .search: SearchView { target in Task { await open(target) } }
-                    }
-                }
-        }
+        shell
         // Wake-on-LAN settings and results, for the node menus of every screen.
         .wakeOnLanPresenter()
         // The screenshot mode switching (under its cover): the screens pushed with the old names
@@ -467,6 +400,91 @@ struct MainNavigation: View {
         }
         .messageAlert($freezeMessage)
         .messageAlert($linkMessage)
+    }
+
+    /// A regular-width iPad: the clusters and sections in a sidebar beside the stack. Elsewhere
+    /// (iPhone, a narrow Split View or Slide Over) the stack alone. Both share `path`, so a
+    /// resize keeps the screens open.
+    @ViewBuilder private var shell: some View {
+        if UIDevice.current.userInterfaceIdiom == .pad && sizeClass == .regular {
+            SidebarNavigation(path: $path) { stack }
+        } else {
+            stack
+        }
+    }
+
+    private var stack: some View {
+        NavigationStack(path: $path) {
+            HomeView(path: $path)
+                .navigationDestination(for: Route.self) { destination($0) }
+        }
+    }
+
+    /// The screen of each route, for both shells.
+    @ViewBuilder private func destination(_ route: Route) -> some View {
+        switch route {
+        case .node(let ref): NodeDetailView(ref: ref)
+        case .nodeLive(let ref): NodeTabsView(ref: ref, initialTab: .live)
+        case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
+        case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
+        case .k8sUpgrade: K8sUpgradePlanView()
+        case .joinNode: JoinNodeView(path: $path)
+        case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
+        case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab)
+        case .nodes(let filter, let nodes, let selected): NodesView(nodes: nodes, filter: filter, selected: selected, path: $path)
+        case .kubeNodes(let filter, let nodes, let query): KubeNodesView(nodes: nodes, filter: filter, query: query, path: $path)
+        case .logs(let node, let hostname, let service):
+            LogsView(node: node, hostname: hostname, service: service)
+        case .containerLogs(let node, let hostname, let container):
+            LogsView(node: node, hostname: hostname, service: nil, container: container)
+        case .insights: InsightsView()
+        case .capacity: KubeCapacityView()
+        case .metrics: MetricsView()
+        case .supportBundle: SupportBundleView()
+        case .integrations: IntegrationRequestView()
+        case .changelog: ChangelogView()
+        case .licenses: LicensesView()
+        case .supportedIntegrations: SupportedIntegrationsView()
+        case .etcd: EtcdView()
+        case .replaceControlPlane(let memberId, let node, let hostname):
+            ReplaceControlPlaneView(memberId: memberId, node: node, hostname: hostname)
+        case .kubespan: KubeSpanView()
+        case .workloads: KubernetesView()
+        case .kubernetes(let focus): KubernetesView(focus: focus)
+        case .networkTest: KubernetesView(networkTest: true)
+        case .dataServices(let hints, let downNodes, let kind, let solo): DataServicesView(hints: hints, downNodes: downNodes, selected: kind, solo: solo)
+        case .dataServicesPlugin(let hints, let downNodes, let plugin): DataServicesView(hints: hints, downNodes: downNodes, plugin: plugin)
+        case .plugin(let id): PluginView(pluginID: id)
+        case .argoCD(let downNodes, let selected): ArgoCDView(downNodes: downNodes, selected: selected)
+        case .argoWindows: ArgoWindowsView()
+        case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])
+        case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
+        case .gitOpsSource(let source, let dir, let app): SourceBrowserView(source: source, dir: dir, app: app)
+        case .gitOpsFile(let source, let path, let app): SourceFileView(source: source, path: path, app: app)
+        case .flux(let downNodes, let selected): FluxView(downNodes: downNodes, selected: selected)
+        case .checkup: CheckupView()
+        case .alerts: AlertsView(path: $path)
+        case .health: HealthView()
+        case .settings: SettingsView()
+        case .settingsPage(let page): SettingsPageView(page: page)
+        case .diagnosis(let note): DiagnosisView(initialNote: note)
+        case .importConfig: ImportView { path.removeAll() }
+        case .clusters: ClustersView()
+        case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
+        case .storage(let node, let hostname): StorageView(node: node, hostname: hostname)
+        case .hardware(let node, let hostname): HardwareView(node: node, hostname: hostname)
+        case .drain(let node, let hostname): MaintenanceView(node: node, hostname: hostname, drainOnly: true)
+        case .upgrade(let node, let hostname): UpgradeView(node: node, hostname: hostname)
+        case .maintenance(let node, let hostname): MaintenanceView(node: node, hostname: hostname)
+        case .machineConfig(let node, let hostname): MachineConfigView(node: node, hostname: hostname)
+        case .kubeNodeDebug(let node): KubeNodeDebugView(node: node)
+        case .nodeMeta(let node, let hostname): NodeMetaEditorView(node: node, hostname: hostname)
+        case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
+        case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
+        case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
+        case .activity(let cluster): ActivityLogView(cluster: cluster)
+        case .search: SearchView { target in Task { await open(target) } }
+        }
     }
 
     /// From a freeze reminder: the sync windows, after "+1 h" on the freeze when it was chosen.

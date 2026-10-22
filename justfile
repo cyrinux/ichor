@@ -132,11 +132,12 @@ length-check:
     python3 scripts/check-file-length.py
 
 # Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS,
-# every iOS key with a placeholder formatted with its arguments, and every website string in
-# docs-i18n/.
+# every iOS key with a placeholder formatted with its arguments, every Android key read
+# somewhere, and every website string in docs-i18n/.
 i18n-check:
     python3 scripts/check-translations.py
     python3 scripts/check-ios-strings.py
+    python3 scripts/check-unused-strings.py
     python3 scripts/site-i18n.py --check
 
 # Translated website: `just site` writes docs/<lang>/ (as CI does before publishing);

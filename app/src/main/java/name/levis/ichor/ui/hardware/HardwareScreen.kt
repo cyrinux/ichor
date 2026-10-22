@@ -148,7 +148,10 @@ private fun HardwareCard(part: HardwarePart, hw: NodeHardware, sensors: NodeSens
             sensorsState is UiState.Failed -> Section(title, sensorsState.message.asString(), empty = false) {}
         }
         HardwarePart.SYSTEM -> Section(title, hw.errors[HardwareSection.SYSTEM], hw.system == null) {
-            hw.system?.let { SystemRows(it) }
+            hw.system?.let {
+                SystemRows(it)
+                FindPartsButton("system", it.manufacturer, it.product, it.serial)
+            }
         }
         HardwarePart.PROCESSORS -> Section(title, hw.errors[HardwareSection.PROCESSORS], hw.processors.isEmpty()) {
             hw.processors.forEachIndexed { i, cpu ->
@@ -158,12 +161,16 @@ private fun HardwareCard(part: HardwarePart, hw: NodeHardware, sensors: NodeSens
         }
         HardwarePart.MEMORY -> Section(title, hw.errors[HardwareSection.MEMORY], hw.memory.isEmpty()) {
             InfoRow(stringResource(R.string.hardware_memory_total), formatBytes(hw.totalMemoryBytes))
-            hw.memory.forEach { MemoryRow(it) }
+            hw.memory.forEach {
+                MemoryRow(it)
+                FindPartsButton("memory", it.manufacturer, it.type, it.serial)
+            }
         }
         HardwarePart.DISKS -> Section(title, hw.errors[HardwareSection.DISKS], hw.disks.isEmpty()) {
             hw.sortedDisks.forEachIndexed { i, disk ->
                 if (i > 0) HorizontalDivider()
                 DiskRow(disk)
+                FindPartsButton("disk", "", disk.model, disk.serial)
             }
         }
         HardwarePart.EXTENSIONS -> Section(title, hw.errors[HardwareSection.EXTENSIONS], hw.extensions.isEmpty()) {

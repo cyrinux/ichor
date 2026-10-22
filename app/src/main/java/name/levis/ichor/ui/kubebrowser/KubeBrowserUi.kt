@@ -27,6 +27,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import name.levis.ichor.R
 import name.levis.ichor.model.CellTone
 import name.levis.ichor.model.KubeObjectRef
@@ -65,7 +66,7 @@ fun ToneLabel(text: String, color: Color, modifier: Modifier = Modifier, mono: B
         style = MaterialTheme.typography.labelSmall,
         color = color,
         fontFamily = if (mono) FontFamily.Monospace else null,
-        maxLines = 1,
+        maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = modifier
             .background(color.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp),
@@ -144,7 +145,7 @@ fun FieldChip(label: String, value: String, valueColor: Color = Color.Unspecifie
             .padding(horizontal = 8.dp, vertical = 3.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(value, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = valueColor, maxLines = 2)
     }
 }

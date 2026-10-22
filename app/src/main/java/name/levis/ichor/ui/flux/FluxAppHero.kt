@@ -115,7 +115,7 @@ fun FluxActionButtons(
         if (app.canCorrectDrift) {
             Button(onClick = onCorrectDrift, enabled = !busy && denial == null) {
                 Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.flux_action_correct_drift), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+                Text(stringResource(R.string.flux_action_correct_drift), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         FluxActionRow(app, busy || denial != null, onDiff, onAction)
@@ -140,7 +140,7 @@ private fun FluxActionRow(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)?, on
         if (app.isKustomization && onDiff != null) {
             OutlinedButton(onClick = onDiff) {
                 Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.flux_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+                Text(stringResource(R.string.flux_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         if (app.isHelmRelease) {
@@ -157,5 +157,5 @@ private fun FluxActionRow(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)?, on
 @Composable
 private fun ButtonContent(icon: ImageVector, action: FluxAction) {
     Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-    Text(stringResource(action.label), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+    Text(stringResource(action.label), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
 }

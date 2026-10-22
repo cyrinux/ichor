@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Find spare parts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersatzteile finden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar piezas de repuesto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouver des pièces de rechange"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova ricambi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти запчастини"
+          }
+        }
+      }
+    },
+    "Opens the Ichor site with this part's model and serial number, then the vendor's page or a web search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Ichor-Website mit Modell und Seriennummer dieses Teils, dann die Seite des Herstellers oder eine Websuche"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el sitio de Ichor con el modelo y el número de serie de esta pieza, luego la página del fabricante o una búsqueda web"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le site d'Ichor avec le modèle et le numéro de série de cette pièce, puis la page du fabricant ou une recherche web"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il sito di Ichor con il modello e il numero di serie di questo componente, poi la pagina del produttore o una ricerca web"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває сайт Ichor із моделлю та серійним номером цієї деталі, далі сторінку виробника або пошук в інтернеті"
+          }
+        }
+      }
+    },
+    "Propose in Git for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proposer dans Git pour %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proponer en Git para %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Git vorschlagen für %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proponi in Git per %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запропонувати в Git для %@"
+          }
+        }
+      }
+    },
+    "Write the change into each node's file of the cluster repository: one pull request per node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écrivez la modification dans le fichier de chaque nœud du dépôt du cluster : une pull request par nœud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe el cambio en el archivo de cada nodo del repositorio del clúster: una pull request por nodo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibe die Änderung in die Datei jedes Nodes im Cluster-Repository: ein Pull Request pro Node."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrivi la modifica nel file di ogni nodo del repository del cluster: una pull request per nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запишіть зміну у файл кожного вузла в репозиторії кластера: один pull request на вузол."
+          }
+        }
+      }
+    },
     "This file changed on the branch since it was staged: it opens as it is now, without the staged edit." : {
       "extractionState" : "manual",
       "localizations" : {

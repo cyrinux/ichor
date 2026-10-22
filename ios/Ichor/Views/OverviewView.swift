@@ -210,39 +210,62 @@ struct OverviewView: View {
                         )
                         .themedBackground()
                     } else {
-                        List {
-                            OverviewBannerSections(
-                                lastKnownOutage: overview.showsLastKnown ? overview.outage : nil,
-                                retry: load,
-                                showsSwitcherTip: tourActive && tourShowsSwitcher,
-                                look: look,
-                                discovered: discovered.count,
-                                showDiscovered: { showDiscovered = true }
-                            )
-                            // The sections as arranged (Customize overview, in the ⋯ menu).
-                            ForEach(layout.visible) { card in section(card, overview: overview) }
-                            // The Talos update section alone, with no release to offer, leaves the list as empty
-                            // (the Pinned one too, without pins).
-                            if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate || $0 == .pinned && pins.isEmpty }) {
-                                Section {
-                                    Button { customizing = true } label: {
-                                        Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
+                        // Two columns on a wide iPad (OverviewColumns); a narrow Split View keeps one.
+                        GeometryReader { geometry in
+                            let columns = OverviewColumns.count(width: geometry.size.width, regularPad: ListDetailLayout.isSplit(sizeClass))
+                            Group {
+                                if columns == 2 {
+                                    let split = OverviewColumns.split(layout.visible)
+                                    HStack(alignment: .top, spacing: 0) {
+                                        overviewList(split.leading, overview: overview, leading: true)
+                                        overviewList(split.trailing, overview: overview, leading: false)
                                     }
+                                } else {
+                                    overviewList(layout.visible, overview: overview, leading: true)
                                 }
                             }
+                            .environment(\.availableWidth, geometry.size.width)
                         }
-                        .refreshable {
-                            await load()
-                            // Sites rarely change: the map is only asked again on a pull.
-                            if let client = model.client, outage == nil {
-                                await TopologyStore.shared.load(with: client, key: model.topologyKey, force: true)
-                            }
-                        }
-                        .themedBackground()
                     }
                 }
             }
         }
+    }
+
+    /// One column of the overview: `cards` as arranged; the `leading` (or only) one also holds
+    /// the banners and the notice when every card is hidden.
+    private func overviewList(_ cards: [OverviewCard], overview: ClusterOverview, leading: Bool) -> some View {
+        List {
+            if leading {
+                OverviewBannerSections(
+                    lastKnownOutage: overview.showsLastKnown ? overview.outage : nil,
+                    retry: load,
+                    showsSwitcherTip: tourActive && tourShowsSwitcher,
+                    look: look,
+                    discovered: discovered.count,
+                    showDiscovered: { showDiscovered = true }
+                )
+            }
+            // The sections as arranged (Customize overview, in the ⋯ menu).
+            ForEach(cards) { card in section(card, overview: overview) }
+            // The Talos update section alone, with no release to offer, leaves the list as empty
+            // (the Pinned one too, without pins).
+            if leading, layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate || $0 == .pinned && pins.isEmpty }) {
+                Section {
+                    Button { customizing = true } label: {
+                        Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .refreshable {
+            await load()
+            // Sites rarely change: the map is only asked again on a pull.
+            if let client = model.client, outage == nil {
+                await TopologyStore.shared.load(with: client, key: model.topologyKey, force: true)
+            }
+        }
+        .themedBackground()
     }
 
     /// The screenshot-mode sign, AI diagnosis, the bar's icons as arranged and the ⋯ menu.

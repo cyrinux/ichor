@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // A Git forge's REST API, read with the phone's own token: list a directory, read a file,
@@ -41,9 +43,9 @@ const (
 	gitForgeMaxPages = 50
 )
 
-// gitForgeHTTP refuses redirects (newHTTPClient's default): the token is never carried to
+// gitForgeHTTP refuses redirects (httpx.New's default): the token is never carried to
 // another address.
-var gitForgeHTTP = newHTTPClient(httpClientOpts{timeout: gitForgeTimeout})
+var gitForgeHTTP = httpx.New(httpx.Opts{Timeout: gitForgeTimeout})
 
 // errGitForgeNotFound is a 404, worded by the caller with the path and ref asked.
 var errGitForgeNotFound = errors.New("not found")

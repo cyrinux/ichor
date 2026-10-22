@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import name.levis.ichor.R
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -78,7 +79,7 @@ fun Tag(label: String, color: Color = LocalStatusColors.current.muted, modifier:
             label,
             style = MaterialTheme.typography.labelSmall,
             fontFamily = if (mono) FontFamily.Monospace else null,
-            maxLines = 1,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
         )
     }

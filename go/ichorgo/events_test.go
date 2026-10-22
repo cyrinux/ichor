@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -120,15 +121,32 @@ func eventsFake(t *testing.T) (*fakeTalos, string) {
 	return f, f.start(t, eventsCP, eventsWorker)
 }
 
-func TestRunEventsStreamsUntilTheStreamEnds(t *testing.T) {
+func TestRunEventsReopensAfterTheStreamEnds(t *testing.T) {
+	fastEventsBackoff(t)
+
 	f, cfg := eventsFake(t)
 
-	var gotNodes []string
-
-	var gotTail int32
+	var (
+		mu       sync.Mutex
+		opened   int
+		gotNodes []string
+		gotTail  int32
+	)
 
 	f.events = func(nodes []string, req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
-		gotNodes, gotTail = nodes, req.GetTailEvents()
+		mu.Lock()
+		opened++
+		first := opened == 1
+		if first {
+			gotNodes, gotTail = nodes, req.GetTailEvents()
+		}
+		mu.Unlock()
+
+		if !first {
+			<-stream.Context().Done()
+
+			return nil
+		}
 
 		return sendEvents(stream,
 			talosEvent(t, eventsCP, xidAt(eventsAt, 1), &machineapi.ServiceStateEvent{
@@ -160,45 +178,132 @@ func TestRunEventsStreamsUntilTheStreamEnds(t *testing.T) {
 		t.Errorf("second event = %+v", second)
 	}
 
-	// The stream ended (EOF): there is no reconnection, the run ends with the stream.
+	// The stream ended (EOF): the feed goes on with a new stream, nothing reaches OnDone.
+	if ev := r.next(t); ev.Action != "reconnecting" {
+		t.Errorf("after the stream ended = %+v, want the reconnecting line", ev)
+	}
+
 	select {
 	case msg := <-done:
-		if msg != "EOF" {
-			t.Errorf("runEvents = %q, want EOF", msg)
-		}
-	case <-time.After(10 * time.Second):
-		t.Fatal("runEvents did not return")
+		t.Fatalf("runEvents ended with %q, want a new stream", msg)
+	default:
 	}
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	if strings.Join(gotNodes, ",") != eventsCP+","+eventsWorker || gotTail != 5 {
 		t.Errorf("stream opened for %v, tail %d", gotNodes, gotTail)
 	}
 }
 
+// fastEventsBackoff shortens the wait before an events stream is reopened.
+func fastEventsBackoff(t *testing.T) {
+	t.Helper()
+
+	minWait, maxWait := eventsBackoffMin, eventsBackoffMax
+	eventsBackoffMin, eventsBackoffMax = time.Millisecond, 4*time.Millisecond
+
+	t.Cleanup(func() { eventsBackoffMin, eventsBackoffMax = minWait, maxWait })
+}
+
+// A stream error reopens the stream after the last event relayed: Talos then sends only the
+// events after that id (as its buffer does with tail_id), so none is lost or repeated.
 func TestRunEventsStreamError(t *testing.T) {
+	fastEventsBackoff(t)
+
 	f, cfg := eventsFake(t)
-	f.events = func(_ []string, _ *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
-		if err := sendEvents(stream, talosEvent(t, eventsWorker, xidAt(eventsAt, 1), &machineapi.PhaseEvent{Phase: "boot", Action: machineapi.PhaseEvent_START})); err != nil {
-			return err
+
+	buffer := []*machineapi.Event{
+		talosEvent(t, eventsWorker, xidAt(eventsAt, 1), &machineapi.PhaseEvent{Phase: "boot", Action: machineapi.PhaseEvent_START}),
+		talosEvent(t, eventsWorker, xidAt(eventsAt, 2), &machineapi.PhaseEvent{Phase: "boot", Action: machineapi.PhaseEvent_STOP}),
+		talosEvent(t, eventsWorker, xidAt(eventsAt, 3), &machineapi.TaskEvent{Task: "startKubelet", Action: machineapi.TaskEvent_START}),
+	}
+
+	var (
+		mu      sync.Mutex
+		tailIDs []string
+	)
+
+	f.events = func(_ []string, req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
+		mu.Lock()
+		tailIDs = append(tailIDs, req.GetTailId())
+		first := len(tailIDs) == 1
+		mu.Unlock()
+
+		if first {
+			if err := sendEvents(stream, buffer[0]); err != nil {
+				return err
+			}
+
+			return status.Error(codes.Unavailable, "connection to "+eventsWorker+" lost")
 		}
 
-		return status.Error(codes.Unavailable, "connection to "+eventsWorker+" lost")
+		for _, ev := range buffer {
+			if ev.GetId() > req.GetTailId() {
+				if err := sendEvents(stream, ev); err != nil {
+					return err
+				}
+			}
+		}
+
+		<-stream.Context().Done()
+
+		return nil
+	}
+
+	r := newTalosEventsRecorder()
+	run := StartEvents(cfg, "fake", eventsWorker, 0, r)
+
+	var got []string
+	for range 4 {
+		ev := r.next(t)
+		got = append(got, ev.Subject+" "+ev.Action)
+	}
+
+	want := []string{"boot start", "events reconnecting", "boot stop", "startKubelet start"}
+	if strings.Join(got, ", ") != strings.Join(want, ", ") {
+		t.Errorf("events = %v, want %v", got, want)
+	}
+
+	run.Cancel()
+
+	if msg := r.wait(t); msg != "" {
+		t.Errorf("OnDone after Cancel = %q, want empty", msg)
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if len(tailIDs) != 2 || tailIDs[1] != xidAt(eventsAt, 1) {
+		t.Errorf("streams opened with tail ids %q, want a second one after %s", tailIDs, xidAt(eventsAt, 1))
+	}
+
+	select {
+	case raw := <-r.events:
+		t.Errorf("unexpected event: %s", raw)
+	default:
+	}
+}
+
+// A refusal is not retried: the feed ends with it.
+func TestRunEventsPermanentError(t *testing.T) {
+	fastEventsBackoff(t)
+
+	f, cfg := eventsFake(t)
+	f.events = func(_ []string, _ *machineapi.EventsRequest, _ grpc.ServerStreamingServer[machineapi.Event]) error {
+		return status.Error(codes.PermissionDenied, "not authorized")
 	}
 
 	r := newTalosEventsRecorder()
 	StartEvents(cfg, "fake", eventsWorker, 0, r)
 
-	if ev := r.next(t); ev.Node != eventsWorker || ev.Kind != "phase" || ev.Subject != "boot" || ev.Action != "start" {
-		t.Errorf("event = %+v", ev)
-	}
-
-	if msg := r.wait(t); msg != "unreachable: connection to "+eventsWorker+" lost" {
+	if msg := r.wait(t); !strings.Contains(msg, "not authorized") {
 		t.Errorf("OnDone = %q", msg)
 	}
 
-	// One stream error ends the run: the app opens a new one, watchEvents does not.
-	if got := f.called("Events"); len(got) != 1 || got[0] != "Events "+eventsWorker {
-		t.Errorf("Events calls = %v", got)
+	if got := f.called("Events"); len(got) != 1 {
+		t.Errorf("Events calls = %v, want one", got)
 	}
 }
 
@@ -293,7 +398,7 @@ func TestWatchEventsSkipsAndReportsNodes(t *testing.T) {
 
 	before := time.Now()
 	//lint:ignore SA1019 as in runEvents
-	err = watchEvents(client.WithNodes(t.Context(), eventsCP, eventsWorker), s.client, 3, ch)
+	err = watchEvents(client.WithNodes(t.Context(), eventsCP, eventsWorker), s.client, client.WithTailEvents(3), ch)
 
 	if err == nil || !strings.Contains(err.Error(), "EOF") {
 		t.Errorf("watchEvents = %v, want EOF", err)
@@ -342,7 +447,7 @@ func TestWatchEventsStopsWhenNobodyReads(t *testing.T) {
 	defer cancel()
 
 	// An unbuffered channel nobody reads: the event can't be handed over before ctx ends.
-	if err := watchEvents(ctx, s.client, 1, make(chan eventItem)); err == nil {
+	if err := watchEvents(ctx, s.client, client.WithTailEvents(1), make(chan eventItem)); err == nil {
 		t.Fatal("watchEvents returned no error after its context ended")
 	}
 }

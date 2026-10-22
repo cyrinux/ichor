@@ -98,6 +98,7 @@ struct HardwareView: View {
                 InfoRow(label: String(localized: "SKU"), value: system.sku)
                 InfoRow(label: String(localized: "UUID"), value: system.uuid, monospaced: true)
                 InfoRow(label: String(localized: "BIOS version"), value: system.biosVersion)
+                FindPartsButton(kind: "system", manufacturer: system.manufacturer, model: system.product, serial: system.serial)
             }
         } header: {
             Text("System").sectionTarget("system")
@@ -143,6 +144,7 @@ struct HardwareView: View {
                     }
                     Text(verbatim: memoryDetails(module)).font(.caption).foregroundStyle(.secondary)
                 }
+                FindPartsButton(kind: "memory", manufacturer: module.manufacturer, model: module.type, serial: module.serial)
             }
         } header: {
             Text("Memory").sectionTarget("memory")
@@ -169,6 +171,7 @@ struct HardwareView: View {
                     }
                     Text(verbatim: diskDetails(disk)).font(.caption).foregroundStyle(.secondary)
                 }
+                FindPartsButton(kind: "disk", manufacturer: "", model: disk.model, serial: disk.serial)
             }
         } header: {
             Text("Disks").sectionTarget("disks")
