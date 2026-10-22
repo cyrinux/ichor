@@ -42,6 +42,10 @@ var pluginCommands = []command{
 		// plugin-tool ID TOOL [-scope NS] [-locale xx] [-demo]: KubePluginTool on a plugin, read-only.
 		return pluginTool(e, flag.Args()[1:])
 	}},
+	{name: "plugin-from-crd", args: "MANIFEST [-id ID] [-name NAME] [-website URL] [-category C] [-out FILE] [-force]", noConfig: true, run: func(e env) (string, error) {
+		// plugin-from-crd MANIFEST: a validated, CRD-linted plugin draft (plugin.Generate); refuses a CRD the app already reads unless -force.
+		return noOutput, pluginFromCRD(flag.Args()[1:], os.Stdout, os.Stderr)
+	}},
 	{name: "plugin-list", noConfig: true, run: func(e env) (string, error) {
 		// plugin-list: the built-in plugins, one JSON line each.
 		return pluginList()

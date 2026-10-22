@@ -738,6 +738,7 @@ validated first, before any config is read.
 | `just probe plugin-findings [-locale xx] [-hints a,b] [-demo]` | every active built-in plugin's findings, what the background monitor reads (`KubePluginFindings`), from the cluster (`-context CTX`) or the samples (`-demo`) | the report as JSON (see "Findings") | 0, or 1 when the API server answers nothing |
 | `just probe plugin-action ID ACTION NAMESPACE NAME [PARAMS_JSON]` | runs a built-in plugin's action on one object (`KubePluginAction`; `""` as `NAMESPACE` for a cluster-scoped resource), `-context CTX`. It changes the cluster | `done` | 0, or 1 with the error |
 | `just probe plugin-tool ID TOOL [-scope NS] [-locale xx] [-demo]` | runs a plugin's tool (`KubePluginTool`) over what it reads from the cluster (`-context CTX`) or its samples (`-demo`); read-only | the tool's result as JSON (see "Tools") | 0, or 1 with the error (`unknown tool`, a tool with no demo under `-demo`) |
+| `just probe plugin-from-crd MANIFEST [-id ID] [-name NAME] [-website URL] [-category C] [-out FILE] [-force]` | writes a plugin draft for a CRD manifest (see "Writing a plugin from a CRD"), validated and linted against it; refuses a CRD a built-in plugin or a native integration already reads unless `-force` | the draft on stdout (or in `-out`); `{"ok":true,"id":"…","warnings":n}` on stderr | 0, or 1 (`already covered by built-in plugin kube-green`, a file that is not a CRD) |
 | `just probe plugin-list` | the built-in plugins | one JSON line each: `{id, name, version, category, resources, cards, actions, findings, file}` | 0 |
 | `just plugin-check [DIR]` | `plugin-validate` on every `*.yaml` of `DIR` (default `go/plugin/builtin`); `./build.sh check` runs it on the built-ins | as `plugin-validate` | as `plugin-validate` |
 
@@ -783,9 +784,13 @@ the other commands need nothing.
 
 ## Writing a plugin from a CRD
 
-A converter (the `/ichor-crd-plugin` Claude Code skill, or a person) turns a CRD into a
-plugin draft, then runs `just probe plugin-validate FILE` and `just probe plugin-lint FILE
--crd MANIFEST` until both pass. Editors and generators can check drafts against
+`just probe plugin-from-crd MANIFEST` writes the draft; the `/ichor-crd-plugin` skill or a
+person refines it (health rules, labels, translations), then runs `just probe plugin-validate
+FILE` and `just probe plugin-lint FILE -crd MANIFEST` until both pass. The generator follows
+the table below and gives the same file for the same CRD; its draft already passes both, with
+the "no i18n" warning and, at most, health rules no sample triggers (listed in a comment
+above `samples`). It writes one finding per severity, as a finding's `when` reads `health`,
+not the rule's reason. Editors and generators can check drafts against
 `go/plugin/schema/plugin.schema.json`. The exit codes are the contract; problems are
 `FILE:LINE: message` lines on stderr.
 

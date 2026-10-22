@@ -327,7 +327,8 @@ tour** shows it again.
   they wake up, and whether they are asleep right now, and a schedule can be moved from the phone
   (days, sleep and wake-up times, time zone). Plugin actions run from their buttons.
 - **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
-  imported. Import a plugin file (one `/ichor-crd-plugin` or `just probe plugin-lint` checked,
+  imported. Import a plugin file (one `just probe plugin-from-crd` drafted from a CRD, or
+  `/ichor-crd-plugin` wrote, and `just probe plugin-lint` checked,
   for an operator Ichor does not know) by pasting it, picking it in Files, or from an https URL
   (1 MiB at most). It is validated first, with the line of each problem; then a consent sheet
   shows what it reads (a Secret whose values it shows in clear is flagged in red) and what it can
