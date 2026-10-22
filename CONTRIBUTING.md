@@ -106,12 +106,36 @@ the entry out, and say here what was fixed.
 The "Plugin request from a CRD" issue form (`.github/ISSUE_TEMPLATE/crd-request.yml`) labels its
 issues `crd-request`; a maintainer adds `crd-approved` to a request from outside the project
 before the generator acts on it. GitHub silently drops a label the repository does not have,
-so a fork creates both once:
+so a fork creates them once (`crd-request:failed` marks a request the workflow refused):
 
 ```
 gh label create crd-request --color 5319e7 --description "A plugin request from a CRD link; the generator workflow acts on it"
 gh label create crd-approved --color 0e8a16 --description "A maintainer approved this request for the generator workflow"
+gh label create crd-request:failed --color b60205 --description "The generator workflow refused or could not draft this request"
 ```
+
+`.github/workflows/crd-request.yml` acts on a request opened by the owner, a member or a
+collaborator at once, and on anyone else's when a maintainer adds `crd-approved` (remove and
+add it again to rerun; the pull request is then updated, and its branch is overwritten, so
+commit review fixes after the last rerun). The run reads the issue as it is when the label is
+added: read it again just before approving. It fetches the CRD from an
+allowlisted forge (`scripts/crd-request.py`), writes `go/plugin/drafts/<id>.yaml` with
+`probe plugin-from-crd`, lints it against the CRD, and opens a draft pull request on the branch
+`crd-request/<issue>-<id>`. A CRD the app already reads gets a comment and the `duplicate`
+label instead.
+
+A pull request opened with `GITHUB_TOKEN` starts no checks, and this repository does not let
+`GITHUB_TOKEN` open one (Settings → Actions → General). The workflow uses a GitHub App when
+it is configured:
+
+1. Create a GitHub App (no webhook) with the repository permissions Contents: read and write,
+   Pull requests: read and write, Issues: read and write, and install it on this repository
+   only.
+2. Add the repository secrets `CRD_BOT_CLIENT_ID` (the App's client ID) and
+   `CRD_BOT_PRIVATE_KEY` (a private key it generated).
+
+Without them the workflow pushes the branch and comments the link to open the pull request by
+hand. Promoting a draft to a built-in plugin is described in `go/plugin/drafts/README.md`.
 
 ## Code ownership
 

@@ -795,7 +795,12 @@ not the rule's reason. Editors and generators can check drafts against
 `FILE:LINE: message` lines on stderr.
 
 Users ask for one through the Plugin request issue form:
-`https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml`.
+`https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml`. The `crd-request`
+workflow (`.github/workflows/crd-request.yml`) fetches the CRD from the issue's link, runs
+the generator and the lint, and opens a draft pull request with `go/plugin/drafts/<id>.yaml`;
+a CRD the app already reads gets a comment instead. Drafts are validated but not embedded: a
+maintainer reviews the health rules, translates the labels and moves the file to
+`go/plugin/builtin/` (`go/plugin/drafts/README.md`).
 
 What it reads from the CRD (`go/plugin/crd.go` decodes these):
 
