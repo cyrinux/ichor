@@ -266,6 +266,17 @@ internal object Routes {
 
     fun activity(cluster: String = "") = "activity?cluster=${Uri.encode(cluster)}"
 
+    /** The runbooks of the cluster on screen. */
+    const val RUNBOOKS = "runbooks"
+
+    /** One runbook's plan, by its id in the cluster's list. */
+    const val RUNBOOK_PLAN = "runbookplan?id={id}"
+
+    fun runbookPlan(id: String) = "runbookplan?id=${Uri.encode(id)}"
+
+    /** The runbook running or last run. */
+    const val RUNBOOK_RUN = "runbookrun"
+
     /** The vulnerability scan reports kept on the phone for [cluster]. */
     const val SCAN_REPORTS = "scan-reports?cluster={cluster}"
 

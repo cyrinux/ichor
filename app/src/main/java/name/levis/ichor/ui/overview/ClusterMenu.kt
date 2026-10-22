@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
@@ -59,6 +60,8 @@ fun ClusterMenu(
     onUpgradeKubernetes: (() -> Unit)? = null,
     /** "Add a node…": null for a cluster without the Talos API (or one Omni manages). */
     onAddNode: (() -> Unit)? = null,
+    /** "Runbooks…": the cluster's own ordered lists of actions. */
+    onRunbooks: (() -> Unit)? = null,
 ) {
     var switching by remember(expanded) { mutableStateOf(false) }
     var incident by remember { mutableStateOf(false) }
@@ -141,6 +144,16 @@ fun ClusterMenu(
                     onClick = {
                         onDismiss()
                         add()
+                    },
+                )
+            }
+            onRunbooks?.let { open ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.runbooks_menu)) },
+                    leadingIcon = { Icon(Icons.Outlined.Checklist, contentDescription = null) },
+                    onClick = {
+                        onDismiss()
+                        open()
                     },
                 )
             }

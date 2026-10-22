@@ -1065,8 +1065,16 @@ while "Keep last known state" is on and neither the app lock nor the screenshot 
 link) to a Pinned card at the top of that cluster's overview: up to 12 per cluster, each with its
 ready or health state when the overview knows it, opening like its share link; a long press on a
 row (Android) or a swipe (iOS) unpins it, and the card moves or hides like the others.
-Runbooks, ordered lists of these actions run step by step, are in the Go core so far
-([docs/runbooks.md](docs/runbooks.md)).
+
+**Runbooks** (the cluster menu's "Runbooks…"): your own ordered lists of the app's actions
+(scale, restart, suspend or run a CronJob, Argo CD sync, Flux reconcile, etcd snapshot, node
+reboot or maintenance), written once in YAML and imported by paste, file or https link. The
+plan shows each step's target, whether it is destructive, the role it needs and whether the
+cluster's permissions allow it, before the runbook is kept; nothing runs on import. A run asks
+before every destructive step (the node's hostname for a node step), shows its progress and
+Stop in the notification (Android) or a Live Activity (iOS), stops at the first failed step
+unless you let it go past, and records every step in the Activity log. Runbooks are kept per
+cluster, encrypted on the phone. Format and actions: [docs/runbooks.md](docs/runbooks.md).
 
 **Open a screen straight from the home screen or a shortcut:**
 

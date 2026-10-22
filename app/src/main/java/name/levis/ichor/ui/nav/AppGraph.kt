@@ -15,6 +15,9 @@ import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.kubebrowser.KubeLinks
+import name.levis.ichor.ui.runbooks.RunbookPlanScreen
+import name.levis.ichor.ui.runbooks.RunbookRunScreen
+import name.levis.ichor.ui.runbooks.RunbooksScreen
 import name.levis.ichor.ui.search.SearchScreen
 import name.levis.ichor.ui.settings.LicensesScreen
 import name.levis.ichor.ui.settings.SettingsActions
@@ -59,6 +62,19 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
     composable(Routes.ACTIVITY, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
         val cluster = entry.arguments?.getString("cluster").orEmpty()
         ActivityScreen(cluster = cluster, onBack = { nav.popBackStack() }, onScanReports = { nav.navigate(Routes.scanReports(cluster)) })
+    }
+    composable(Routes.RUNBOOKS) {
+        RunbooksScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(Routes.runbookPlan(it)) })
+    }
+    composable(Routes.RUNBOOK_PLAN, arguments = listOf(navArgument("id") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        RunbookPlanScreen(
+            id = entry.arguments?.getString("id").orEmpty(),
+            onBack = { nav.popBackStack() },
+            onRunning = { nav.navigate(Routes.RUNBOOK_RUN) { popUpTo(Routes.RUNBOOK_PLAN) { inclusive = true } } },
+        )
+    }
+    composable(Routes.RUNBOOK_RUN) {
+        RunbookRunScreen(onBack = { nav.popBackStack() }, onActivity = { nav.navigate(Routes.activity(it)) })
     }
     composable(Routes.SCAN_REPORTS, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
         SavedScansScreen(cluster = entry.arguments?.getString("cluster").orEmpty(), onBack = { nav.popBackStack() })

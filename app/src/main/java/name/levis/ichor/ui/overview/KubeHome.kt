@@ -155,6 +155,8 @@ class KubeHomeNavigation(
     val onActivity: (cluster: String) -> Unit,
     /** The search across clusters. */
     val onSearch: () -> Unit,
+    /** The cluster's runbooks. */
+    val onRunbooks: () -> Unit,
 )
 
 /**
@@ -270,6 +272,7 @@ fun KubeHomeScreen(
                                 onManage = { showClusters = true },
                                 onDismiss = { clusterMenu = false },
                                 onSearch = nav.onSearch,
+                                onRunbooks = nav.onRunbooks,
                             )
                         }
                     }

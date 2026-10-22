@@ -82,4 +82,7 @@ fun TalosApp.followedOperations(): List<FollowedOperation<*>> = listOf(
     FollowedOperation(OperationKind.NETPERF, netPerfManager.current, NetPerfPresenter) { action ->
         if (action == OperationAction.STOP) netPerfManager.stop()
     },
+    FollowedOperation(OperationKind.RUNBOOK, runbookManager.current, RunbookPresenter) { action ->
+        if (action == OperationAction.STOP) runbookManager.stop()
+    },
 )

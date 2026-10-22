@@ -80,6 +80,8 @@ class OverviewScreenNavigation(
     val onActivity: (cluster: String) -> Unit,
     /** The search across clusters. */
     val onSearch: () -> Unit,
+    /** The cluster's runbooks. */
+    val onRunbooks: () -> Unit,
     /** Opens a pinned object's screen, like its share link. */
     val onOpenTarget: (ShareTarget) -> Unit,
 ) {
@@ -123,5 +125,6 @@ class OverviewScreenNavigation(
         onAllNodes = onKubeNodes,
         onActivity = onActivity,
         onSearch = onSearch,
+        onRunbooks = onRunbooks,
     )
 }
