@@ -68,6 +68,9 @@ type integrationGroup struct {
 	Name    string   `json:"name"`
 	Version string   `json:"version"`
 	Kinds   []string `json:"kinds"`
+	// Resources are the plural names, sorted: "<resource>.<group>" names the CRD, which the
+	// crd-request workflow searches public GitHub for when the request carries no link.
+	Resources []string `json:"resources"`
 	// Crossplane categories identify dynamic provider and composite groups.
 	Crossplane bool `json:"-"`
 }
@@ -103,7 +106,7 @@ func readIntegrations(ctx context.Context, k *kubeClient) (integrationReport, er
 		case integrationSupported()[name]:
 			report.Supported = append(report.Supported, name)
 		case !isBuiltinGroup(name):
-			unknown = append(unknown, integrationGroup{Name: name, Version: version, Kinds: []string{}})
+			unknown = append(unknown, integrationGroup{Name: name, Version: version, Kinds: []string{}, Resources: []string{}})
 		}
 	}
 
@@ -161,12 +164,21 @@ func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrati
 					g.Crossplane = true
 				}
 				// "foos/status" and "foos/scale" are subresources of a kind already listed.
-				if !strings.Contains(r.Name, "/") && r.Kind != "" && !slices.Contains(g.Kinds, r.Kind) {
+				if strings.Contains(r.Name, "/") || r.Kind == "" {
+					continue
+				}
+
+				if !slices.Contains(g.Kinds, r.Kind) {
 					g.Kinds = append(g.Kinds, r.Kind)
+				}
+
+				if !slices.Contains(g.Resources, r.Name) {
+					g.Resources = append(g.Resources, r.Name)
 				}
 			}
 
 			slices.Sort(g.Kinds)
+			slices.Sort(g.Resources)
 		})
 	}
 
@@ -229,7 +241,8 @@ func integrationFamilies(groups []integrationGroup) []integrationFamily {
 // IntegrationIssueURL is the GitHub page opening a pre-filled plugin request on repo
 // ("owner/name") for familyJSON (one family, with only the groups the user picked); app names
 // the app and platform ("Ichor 1.4.0 (Android)"). Only group, version and kind names go in.
-// The CRD manifest URL is left for the user: the cluster does not know where it is published.
+// The CRD manifest URL is left empty: the cluster does not know where it is published, so the
+// CRD names go in and the crd-request workflow searches public GitHub for the manifest.
 func IntegrationIssueURL(repo, familyJSON, app string) (_ string, err error) {
 	defer maskErr(&err)
 
@@ -242,6 +255,7 @@ func IntegrationIssueURL(repo, familyJSON, app string) (_ string, err error) {
 	q.Set("template", integrationTemplate)
 	q.Set("title", "Plugin request: "+f.ID)
 	q.Set("operator", f.ID)
+	q.Set("crds", integrationCRDsText(f.Groups))
 	q.Set("notes", "API groups and kinds served by the cluster:\n"+integrationGroupsText(f.Groups)+"\n\nFrom "+app)
 
 	return "https://github.com/" + repo + "/issues/new?" + q.Encode(), nil
@@ -283,11 +297,33 @@ func integrationGroupsText(groups []integrationGroup) string {
 	return b.String()
 }
 
+// integrationCRDsText is one "<resource>.<group>" CRD name per line, cut at integrationIssueText.
+func integrationCRDsText(groups []integrationGroup) string {
+	var b strings.Builder
+
+	for _, g := range groups {
+		for _, r := range g.Resources {
+			line := r + "." + g.Name
+			if b.Len()+len(line)+1 > integrationIssueText {
+				return b.String()
+			}
+
+			if b.Len() > 0 {
+				b.WriteByte('\n')
+			}
+
+			b.WriteString(line)
+		}
+	}
+
+	return b.String()
+}
+
 func demoIntegrations() integrationReport {
 	report := integrationReport{
 		Families: []integrationFamily{
 			{ID: "kueue.x-k8s.io", Groups: []integrationGroup{
-				{Name: "kueue.x-k8s.io", Version: "v1beta1", Kinds: []string{"ClusterQueue", "LocalQueue"}},
+				{Name: "kueue.x-k8s.io", Version: "v1beta1", Kinds: []string{"ClusterQueue", "LocalQueue"}, Resources: []string{"clusterqueues", "localqueues"}},
 			}},
 		},
 		Supported: []string{groupKEDA, groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport, groupKubeVirt, groupTailscale, groupClusterAPI, groupSidero},

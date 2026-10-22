@@ -1,5 +1,5 @@
 name: Plugin request from a CRD
-description: Give a public CRD manifest link; a draft plugin pull request is opened from it
+description: Give a public CRD manifest link, or the CRD's name; a draft plugin pull request is opened from it
 title: "Plugin request: "
 labels: ["crd-request", "integration"]
 # The field ids are the query parameters that prefill the form (the site's "Ask for a plugin"
@@ -10,19 +10,26 @@ body:
     attributes:
       value: |
         Search the [open requests](https://github.com/cyrinux/ichor/issues?q=is%3Aissue+label%3Acrd-request) first: a 👍 on an existing one counts as much as a new issue.
-        What happens next: a workflow fetches the CRD, writes a draft plugin, opens a pull request and comments here with its link. A maintainer then reviews it, translates it and adds it to the app.
-        From the app, Settings → Support → Request an integration fills in the operator and the API groups your cluster serves; add the CRD's link.
-        The link must be public and carry nothing private.
+        What happens next: a workflow fetches the CRD (from the link, or by searching public GitHub for its name), writes a draft plugin, opens a pull request and comments here with its link. A maintainer then reviews it, translates it and adds it to the app.
+        From the app, Settings → Support → Request an integration fills in the operator and the CRD names your cluster serves.
+        A link must be public and carry nothing private.
   - type: input
     id: crd_url
     attributes:
       label: CRD manifest URL
       description: >-
         A public link on raw.githubusercontent.com, github.com (a `blob` link is fine), gitlab.com
-        or codeberg.org: one CRD or a file of several, YAML or JSON, 4 MiB at most.
+        or codeberg.org: one CRD or a file of several, YAML or JSON, 4 MiB at most. Leave it
+        empty to have the CRD searched for by its name below.
       placeholder: https://raw.githubusercontent.com/<org>/<repo>/main/config/crd/bases/<group>_<plural>.yaml
-    validations:
-      required: true
+  - type: textarea
+    id: crds
+    attributes:
+      label: CRD names
+      description: >-
+        Without a link: one `<plural>.<group>` per line, as `kubectl get crd` lists them; the
+        workflow searches public GitHub for the manifest of the first one it finds.
+      placeholder: sleepinfos.kube-green.com
   - type: input
     id: operator
     attributes:

@@ -18,8 +18,8 @@ import name.levis.ichorgo.Ichorgo
 /** The ReadProgress op of the integrations read (Go KubeIntegrations). */
 const val INTEGRATIONS_PROGRESS_OP = "integrations"
 
-/** The CRD bot's issue form a request opens, with nothing filled in for "something else". */
-val INTEGRATION_FORM_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new?template=crd-request.yml"
+/** The issue form a request opens, with nothing filled in for "something else" (no CRD known). */
+val INTEGRATION_FORM_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new?template=integration.yml"
 
 /**
  * The operators this cluster runs that Ichor does not show, and the API groups the user picked

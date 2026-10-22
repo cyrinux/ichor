@@ -13,12 +13,29 @@ spec.loader.exec_module(crd_request)
 KUBE_GREEN = "https://raw.githubusercontent.com/kube-green/kube-green/main/config/crd/bases/kube-green.com_sleepinfos.yaml"
 
 
-def body(url=KUBE_GREEN, operator="kube-green", docs="_No response_", notes="_No response_"):
+def body(url=KUBE_GREEN, operator="kube-green", docs="_No response_", notes="_No response_", crds="_No response_"):
     """An issue body as GitHub writes a submitted crd-request.yml form."""
     return (
-        f"### CRD manifest URL\n\n{url}\n\n### Operator\n\n{operator}\n\n### Documentation link\n\n{docs}\n\n"
+        f"### CRD manifest URL\n\n{url}\n\n### CRD names\n\n{crds}\n\n### Operator\n\n{operator}\n\n"
+        f"### Documentation link\n\n{docs}\n\n"
         f"### What should the app show?\n\n{notes}\n\n### Before submitting\n\n- [X] The CRD is public\n"
     )
+
+
+def fake_github(repos, pages):
+    """A GitHub API of search pages (query -> items) and repositories (full_name -> fields)."""
+    calls = []
+
+    def api(path, params, token):
+        calls.append(path)
+        if path == "/search/code":
+            return {"items": pages.get(params["q"], [])}
+        return repos[path.removeprefix("/repos/")]
+    return api, calls
+
+
+def hit(repo, path, fork=False):
+    return {"path": path, "repository": {"full_name": repo, "fork": fork}}
 
 
 class ParseTest(unittest.TestCase):
@@ -33,9 +50,25 @@ class ParseTest(unittest.TestCase):
     def test_happy_body(self):
         got = self.parse(body(docs="https://kube-green.dev/docs/"))
         self.assertEqual(got, {
-            "crd_url": KUBE_GREEN, "operator": "kube-green", "docs": "https://kube-green.dev/docs/",
+            "crd_url": KUBE_GREEN, "crds": "", "operator": "kube-green", "docs": "https://kube-green.dev/docs/",
             "id": "kube-green", "branch": "crd-request/12-kube-green",
         })
+
+    def test_crd_names_instead_of_a_link(self):
+        got = self.parse(body(url="_No response_", crds="clusterqueues.kueue.x-k8s.io\n`localqueues.kueue.x-k8s.io`\n", operator="kueue.x-k8s.io"))
+        self.assertEqual(got["crd_url"], "")
+        self.assertEqual(got["crds"], "clusterqueues.kueue.x-k8s.io localqueues.kueue.x-k8s.io")
+        self.assertEqual(got["id"], "kueue")
+
+    def test_crd_names_in_a_code_fence(self):
+        got = self.parse(body(url="_No response_", crds="```text\nsleepinfos.kube-green.com\n```"))
+        self.assertEqual(got["crds"], "sleepinfos.kube-green.com")
+
+    def test_bad_crd_names(self):
+        for crds in ("SleepInfo", "sleepinfos", "a.b; rm -rf /", "$(id).example.io", "x" * 254 + ".io"):
+            with self.subTest(crds=crds):
+                self.assertIn("CRD name", self.refused(body(url="_No response_", crds=crds)))
+        self.assertIn("at most", self.refused(body(url="_No response_", crds="\n".join(f"a{i}.example.io" for i in range(21)))))
 
     def test_no_response_fields_are_empty(self):
         self.assertEqual(self.parse(body())["docs"], "")
@@ -85,7 +118,7 @@ class ParseTest(unittest.TestCase):
     def test_three_megabyte_body(self):
         self.assertIn("longer", self.refused(body(notes="x" * 3_000_000)))
 
-    def test_missing_url(self):
+    def test_missing_url_and_names(self):
         self.assertIn("empty", self.refused(body(url="_No response_")))
 
     def test_shell_injection_in_the_operator_is_refused(self):
@@ -147,6 +180,82 @@ class CommentsTest(unittest.TestCase):
                "m.yaml: the CRD has no spec.names.plural or spec.names.kind")
         self.assertEqual(crd_request.covered_by(log), "")
 
+    def test_search_prefers_the_repository_named_after_the_project(self):
+        pages = {"filename:kueue.x-k8s.io_clusterqueues.yaml": [
+            hit("big/charts", "charts/kueue/crds/kueue.x-k8s.io_clusterqueues.yaml"),
+            hit("someone/kueue", "config/crd/bases/kueue.x-k8s.io_clusterqueues.yaml", fork=True),
+            hit("kubernetes-sigs/kueue", "charts/kueue/templates/crd/kueue.x-k8s.io_clusterqueues.yaml"),
+            hit("kubernetes-sigs/kueue", "config/components/crd/bases/kueue.x-k8s.io_clusterqueues.yaml"),
+        ]}
+        repos = {
+            "big/charts": {"stargazers_count": 50000, "default_branch": "main", "homepage": ""},
+            "kubernetes-sigs/kueue": {"stargazers_count": 3000, "default_branch": "main", "homepage": "https://kueue.sigs.k8s.io"},
+        }
+        api, calls = fake_github(repos, pages)
+        got = crd_request.search(["clusterqueues.kueue.x-k8s.io", "localqueues.kueue.x-k8s.io"], "t", api)
+        self.assertEqual(got, {
+            "crd_url": "https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/config/components/crd/bases/kueue.x-k8s.io_clusterqueues.yaml",
+            "website": "https://kueue.sigs.k8s.io", "repo": "kubernetes-sigs/kueue",
+        })
+        self.assertNotIn("/repos/someone/kueue", calls)
+
+    def test_search_falls_back_to_stars_and_the_repository_page(self):
+        pages = {
+            "filename:postgresql.cnpg.io_clusters.yaml": [],
+            "filename:postgresql.cnpg.io_clusters.yml": [],
+            '"name: clusters.postgresql.cnpg.io" extension:yaml': [
+                hit("certified/operators", "operators/cloudnative-pg/1.22.2/manifests/postgresql.cnpg.io_clusters.yaml"),
+                hit("cloudnative-pg/cloudnative-pg", "config/crd/bases/postgresql.cnpg.io_clusters.yaml"),
+                hit("old/mirror", "crds/clusters.yaml"),
+            ],
+        }
+        repos = {
+            "certified/operators": {"stargazers_count": 200, "default_branch": "main", "homepage": "http://insecure.example"},
+            "cloudnative-pg/cloudnative-pg": {"stargazers_count": 9000, "default_branch": "main", "homepage": None},
+            "old/mirror": {"stargazers_count": 99999, "default_branch": "main", "archived": True},
+        }
+        api, _ = fake_github(repos, pages)
+        got = crd_request.search(["clusters.postgresql.cnpg.io"], "", api)
+        self.assertEqual(got["repo"], "cloudnative-pg/cloudnative-pg")
+        self.assertEqual(got["website"], "https://github.com/cloudnative-pg/cloudnative-pg")
+        self.assertTrue(got["crd_url"].endswith("/main/config/crd/bases/postgresql.cnpg.io_clusters.yaml"))
+
+    def test_search_learns_the_project_name_from_operator_catalogs(self):
+        pages = {"filename:postgresql.cnpg.io_clusters.yaml": [
+            hit("k8s-operatorhub/community-operators", "operators/cloudnative-pg/1.23.4/manifests/postgresql.cnpg.io_clusters.yaml"),
+            hit("k8s-operatorhub/community-operators", "operators/cloudnative-pg/1.21.0/manifests/postgresql.cnpg.io_clusters.yaml"),
+            hit("cloudnative-pg/artifacts", "bundles/1.21.5/manifests/postgresql.cnpg.io_clusters.yaml"),
+            hit("cloudnative-pg/artifacts", "bundles/1.23.10/manifests/postgresql.cnpg.io_clusters.yaml"),
+            hit("cloudnative-pg/artifacts", "bundles/1.23.9/manifests/postgresql.cnpg.io_clusters.yaml"),
+        ]}
+        repos = {
+            "k8s-operatorhub/community-operators": {"stargazers_count": 900, "default_branch": "main", "homepage": "https://operatorhub.io"},
+            "cloudnative-pg/artifacts": {"stargazers_count": 5, "default_branch": "main", "homepage": "https://cloudnative-pg.io"},
+        }
+        api, _ = fake_github(repos, pages)
+        got = crd_request.search(["clusters.postgresql.cnpg.io"], "", api)
+        self.assertEqual(got["repo"], "cloudnative-pg/artifacts")
+        self.assertTrue(got["crd_url"].endswith("/bundles/1.23.10/manifests/postgresql.cnpg.io_clusters.yaml"))
+        self.assertEqual(got["website"], "https://cloudnative-pg.io")
+
+    def test_best_path_prefers_the_source_over_a_bundle(self):
+        self.assertEqual(crd_request.best_path(["bundle/manifests/x.yaml", "config/crd/bases/x.yaml"]), "config/crd/bases/x.yaml")
+        self.assertEqual(crd_request.best_path(["bundles/v1.9.0/x.yaml", "bundles/v1.10.0/x.yaml"]), "bundles/v1.10.0/x.yaml")
+
+    def test_search_nothing_found_is_refused_within_the_query_budget(self):
+        api, calls = fake_github({}, {})
+        with self.assertRaises(crd_request.Refused) as ctx:
+            crd_request.search([f"a{i}.example.io" for i in range(5)], "", api)
+        self.assertIn("give its link", str(ctx.exception))
+        self.assertEqual(len(calls), crd_request.MAX_QUERIES)
+
+    def test_search_refuses_an_odd_path_or_branch(self):
+        pages = {"filename:example.io_things.yaml": [hit("acme/things", "crds/example.io_things.yaml")]}
+        api, _ = fake_github({"acme/things": {"stargazers_count": 1, "default_branch": "$(id)"}}, pages)
+        with self.assertRaises(crd_request.Refused):
+            crd_request.search(["things.example.io"], "", api)
+        self.assertEqual(crd_request.manifest_candidates([hit("acme/things", "crds/`x`.yaml"), hit("acme/things", "a/templates/x.yaml")]), {})
+
     def test_pr_body(self):
         env = {"ISSUE_NUMBER": "12", "OPERATOR": "Widgets", "CRD_URL": KUBE_GREEN, "ID": "widgets"}
         out = crd_request.pr_body("draft.yaml: 0 warnings", env)
@@ -156,6 +265,8 @@ class CommentsTest(unittest.TestCase):
         self.assertNotIn("<id>", out)
         self.assertNotIn("GITHUB_TOKEN", out)
         self.assertIn("GITHUB_TOKEN", crd_request.pr_body("", {**env, "FALLBACK": "1"}))
+        self.assertNotIn("searching GitHub", out)
+        self.assertIn("**kube-green/kube-green**", crd_request.pr_body("", {**env, "FOUND_REPO": "kube-green/kube-green"}))
 
     def test_main_parse_prints_output_lines(self):
         os.environ["ISSUE_BODY"], os.environ["ISSUE_NUMBER"] = body(), "7"

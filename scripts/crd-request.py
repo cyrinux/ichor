@@ -6,8 +6,12 @@ validated, on one line, and the shell never sees the raw body.
 
 Usage (run with python3 -I):
   crd-request.py parse                  ISSUE_BODY, ISSUE_NUMBER from the environment; prints
-                                        crd_url=, operator=, docs=, id=, branch= lines for
-                                        $GITHUB_OUTPUT, or one reason on stderr and exit 1
+                                        crd_url=, crds=, operator=, docs=, id=, branch= lines
+                                        for $GITHUB_OUTPUT, or one reason on stderr and exit 1
+                                        (crd_url is empty when the request names the CRDs instead)
+  crd-request.py search                 CRDS (names, space-separated), GH_TOKEN: searches public
+                                        GitHub for the first CRD's manifest; prints crd_url=,
+                                        website=, repo= for $GITHUB_OUTPUT, or a reason and exit 1
   crd-request.py check-url URL          exit 0 when URL is on the allowlist (the address curl
                                         ended on after redirects), else a reason and exit 1
   crd-request.py refused REASON_FILE    the comment for a request refused before any fetch
@@ -20,10 +24,13 @@ Usage (run with python3 -I):
                                         (COMPARE_URL, BRANCH)
 """
 
+import json
 import os
 import re
 import sys
-from urllib.parse import urlsplit, urlunsplit
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlencode, urlsplit, urlunsplit
+from urllib.request import Request, urlopen
 
 # Hosts a CRD manifest is fetched from: public forges' raw files, nothing else.
 HOSTS = {"raw.githubusercontent.com", "github.com", "gitlab.com", "codeberg.org"}
@@ -34,6 +41,23 @@ MAX_URL = 2048
 # "@" is allowed in a path; in the authority (a user name) check_url refuses it.
 URL_CHARS = re.compile(r"[A-Za-z0-9._~:/?#\[\]@!$&'()*+,;=%-]+")
 OPERATOR = re.compile(r"[A-Za-z0-9 ._-]{1,60}")
+# A CRD name as the API serves it: "<plural>.<group>", lower-case DNS labels.
+CRD_NAME = re.compile(r"[a-z0-9-]+(?:\.[a-z0-9-]+)+")
+MAX_CRDS = 20
+# Public GitHub code search, for a request that names the CRDs but has no link.
+API = "https://api.github.com"
+REPO_NAME = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+BRANCH_NAME = re.compile(r"[A-Za-z0-9._/-]+")
+MAX_QUERIES = 6  # code search allows 10 a minute
+MAX_REPOS = 5  # candidates looked up for their stars and home page
+# A repository named after the project wins over any number of stars: mirrors and chart
+# collections have more files, not the project. The name comes from the group's labels ("kueue"
+# in kubernetes-sigs/kueue) or from an operator catalog, whose layout
+# operators/<project>/<version>/manifests/ names it (cloudnative-pg, whose CRDs live in
+# cloudnative-pg/artifacts, a repository no label of postgresql.cnpg.io names).
+NAME_MATCH = 1_000_000
+CATALOG_PATH = re.compile(r"(?:^|.*/)operators/([a-z0-9-]+)/[^/]+/manifests/[^/]+")
+VERSION_SEGMENT = re.compile(r"v?\d+(?:\.\d+)+")
 # A CRD link's path: no "[]{}" (curl globs) and nothing Markdown reads as a link or an image.
 CRD_PATH = re.compile(r"[A-Za-z0-9._~/%+-]+")
 NO_RESPONSE = "_No response_"
@@ -112,6 +136,23 @@ def crd_url(value: str) -> str:
     return url
 
 
+def crd_names(text: str) -> list[str]:
+    """The CRD names of the request, one per line; code fences and backticks are ignored."""
+    names: list[str] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("```"):
+            continue
+        line = line.strip("`")
+        if len(line) > 253 or not CRD_NAME.fullmatch(line):
+            raise Refused("a CRD name must be <plural>.<group> in lower-case letters, digits, dots and dashes")
+        if line not in names:
+            names.append(line)
+    if len(names) > MAX_CRDS:
+        raise Refused(f"at most {MAX_CRDS} CRD names")
+    return names
+
+
 def plugin_id(operator: str) -> str:
     """The plugin id the generator would make from a group, made from the operator."""
     label = operator.lower()
@@ -127,7 +168,11 @@ def parse(body: str, number: str) -> dict[str, str]:
     if not number.isdigit():
         raise Refused("no issue number")
     fields = sections(body)
-    url = crd_url(fields.get("CRD manifest URL", ""))
+    url = fields.get("CRD manifest URL", "")
+    url = crd_url(url) if url else ""
+    crds = crd_names(fields.get("CRD names", ""))
+    if not url and not crds:
+        raise Refused("the CRD manifest URL is empty and no CRD name is given")
     operator = fields.get("Operator", "")
     if not OPERATOR.fullmatch(operator):
         raise Refused("the operator must be 1 to 60 letters, digits, spaces, dots, dashes or underscores")
@@ -137,7 +182,118 @@ def parse(body: str, number: str) -> dict[str, str]:
     docs = fields.get("Documentation link", "")
     if docs:
         check_url(docs, "the documentation link", hosts=None)
-    return {"crd_url": url, "operator": operator, "docs": docs, "id": pid, "branch": f"crd-request/{number}-{pid}"}
+    return {
+        "crd_url": url, "crds": " ".join(crds), "operator": operator, "docs": docs, "id": pid,
+        "branch": f"crd-request/{number}-{pid}",
+    }
+
+
+def github(path: str, params: dict[str, str], token: str) -> dict:
+    """One GitHub REST call; a failure is a Refused with its status, never a traceback."""
+    headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    url = f"{API}{path}" + (f"?{urlencode(params)}" if params else "")
+    try:
+        with urlopen(Request(url, headers=headers), timeout=20) as r:
+            return json.load(r)
+    except HTTPError as e:
+        raise Refused(f"GitHub answered {e.code} to {path}") from None
+    except (URLError, TimeoutError, ValueError) as e:
+        raise Refused(f"GitHub could not be reached for {path}: {e}") from None
+
+
+def search_queries(crd: str) -> list[str]:
+    """Where a project publishes the CRD: kubebuilder's <group>_<plural>.yaml, then its text."""
+    plural, group = crd.split(".", 1)
+    return [f"filename:{group}_{plural}.yaml", f"filename:{group}_{plural}.yml", f'"name: {crd}" extension:yaml']
+
+
+def group_labels(crd: str) -> list[str]:
+    """The labels of the CRD's group that can name its project: "postgresql", "cnpg" for
+    clusters.postgresql.cnpg.io (the top-level domain and short labels left out)."""
+    return [label for label in crd.split(".")[1:-1] if len(label) >= 3]
+
+
+def project_hints(crd: str, found: dict[str, list[str]]) -> list[str]:
+    """What the project may be called: the group's labels and the names operator catalogs file
+    the CRD under."""
+    hints = group_labels(crd)
+    for paths in found.values():
+        for path in paths:
+            m = CATALOG_PATH.fullmatch(path)
+            if m and len(m[1]) >= 3 and m[1] not in hints:
+                hints.append(m[1])
+    return hints
+
+
+def natural(text: str) -> list:
+    return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", text)]
+
+
+def best_path(paths: list[str]) -> str:
+    """The source manifest when there is one (no version in its path; a crd directory first),
+    else the newest bundle."""
+    plain = [p for p in paths if not any(VERSION_SEGMENT.fullmatch(seg) for seg in p.split("/"))]
+    return min(plain, key=lambda p: ("crd" not in p.lower(), len(p))) if plain else max(paths, key=natural)
+
+
+def manifest_candidates(items: list[dict]) -> dict[str, list[str]]:
+    """The manifests found, by repository, in search order: plain files only, never a Helm
+    template (its directives are not YAML) nor a fork."""
+    out: dict[str, list[str]] = {}
+    for item in items:
+        repo, path = item.get("repository", {}), item.get("path", "")
+        name = repo.get("full_name", "")
+        if repo.get("fork") or not REPO_NAME.fullmatch(name) or not CRD_PATH.fullmatch(path):
+            continue
+        if "/templates/" in f"/{path}" or not path.lower().endswith(EXTENSIONS):
+            continue
+        out.setdefault(name, []).append(path)
+    return out
+
+
+def search(crds: list[str], token: str, api=github) -> dict[str, str]:
+    """The public manifest of the first CRD that is found: the repository named after the
+    group's project, else the most starred one; its home page as the website."""
+    queries = 0
+    for crd in crds:
+        for query in search_queries(crd):
+            if queries == MAX_QUERIES:
+                break
+            queries += 1
+            found = manifest_candidates(api("/search/code", {"q": query, "per_page": "100"}, token).get("items", []))
+            if found:
+                return pick_manifest(crd, found, token, api)
+    raise Refused(f"no public manifest was found on GitHub for {', '.join(crds[:2])}; give its link")
+
+
+def pick_manifest(crd: str, found: dict[str, list[str]], token: str, api) -> dict[str, str]:
+    hints = project_hints(crd, found)
+    # The repositories named after the project first, so they are among those looked up.
+    ranked = sorted(found, key=lambda name: not any(h in name.lower() for h in hints))
+    best, best_score, best_repo = None, -1, {}
+    for name in ranked[:MAX_REPOS]:
+        repo = api(f"/repos/{name}", {}, token)
+        if repo.get("archived") or repo.get("fork"):
+            continue
+        score = int(repo.get("stargazers_count") or 0)
+        if any(h in name.lower() for h in hints):
+            score += NAME_MATCH
+        if score > best_score:
+            best, best_score, best_repo = (name, best_path(found[name])), score, repo
+    if best is None:
+        raise Refused(f"the manifests found for {crd} are all in archived repositories; give its link")
+    name, path = best
+    branch = str(best_repo.get("default_branch") or "")
+    if not BRANCH_NAME.fullmatch(branch):
+        raise Refused(f"{name} has no usable default branch")
+    homepage = str(best_repo.get("homepage") or "")
+    try:
+        check_url(homepage, "the home page", hosts=None)
+    except Refused:
+        homepage = f"https://github.com/{name}"
+    return {"crd_url": crd_url(f"https://raw.githubusercontent.com/{name}/{quote(branch)}/{quote(path)}"), "website": homepage, "repo": name}
 
 
 def fenced(text: str) -> str:
@@ -179,6 +335,14 @@ def pr_body(lint: str, env: dict[str, str]) -> str:
         f"Closes #{env['ISSUE_NUMBER']}",
         f"A plugin draft for **{env['OPERATOR']}**, generated by `probe plugin-from-crd` from `{env['CRD_URL']}`. "
         "Nothing under `go/plugin/drafts/` is embedded in the app.",
+    ]
+    if env.get("FOUND_REPO"):
+        parts.append(
+            f"The request gave no link: the manifest was found by searching GitHub for the CRD's name, in "
+            f"**{env['FOUND_REPO']}**, and its home page is the draft's website. Check that this is the upstream "
+            "project, not a mirror or a chart collection, before promoting."
+        )
+    parts += [
         "Lint against the CRD:\n\n" + fenced(lint or "no output"),
         PROMOTION.replace("<id>", env.get("ID") or "<id>"),
     ]
@@ -201,6 +365,9 @@ def main(argv: list[str]) -> int:
                 print(f"{key}={value}")
         elif cmd == "check-url":
             check_url(args[0])
+        elif cmd == "search":
+            for key, value in search(os.environ.get("CRDS", "").split(), os.environ.get("GH_TOKEN", "")).items():
+                print(f"{key}={value}")
         elif cmd == "refused":
             print(f"This request was not acted on: {read(args[0]).strip()}. Edit the issue, then a maintainer "
                   "removes and adds the `crd-approved` label to run it again.")

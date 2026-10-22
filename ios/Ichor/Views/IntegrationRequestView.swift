@@ -110,7 +110,7 @@ private struct IntegrationFamilySection: View {
 enum IntegrationLinks {
     /// "owner/name", from the project's GitHub URL.
     static let repo = String(ProjectLinks.repo.path.drop(while: { $0 == "/" }))
-    static let newRequest = ProjectLinks.repo.appendingPathComponent("issues/new").appending(queryItems: [URLQueryItem(name: "template", value: "crd-request.yml")])
+    static let newRequest = ProjectLinks.repo.appendingPathComponent("issues/new").appending(queryItems: [URLQueryItem(name: "template", value: "integration.yml")])
     static let reportBug = ProjectLinks.repo.appendingPathComponent("issues/new/choose")
 
     /// "Ichor 1.4.0 (iOS)", at the end of the request's notes.
