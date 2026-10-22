@@ -54,4 +54,51 @@ class GitProposalRecordTest {
         assertEquals(listOf(1, 2), DEMO_PROPOSALS.map { it.number })
         assertTrue(DEMO_PROPOSALS.all { it.isFor("argocd", "Application", "argocd", "hello-ichor") })
     }
+
+    private val repo = "https://git.example.org/example-org/cluster-config"
+
+    private fun rec(number: Int, state: String, forge: String = "gitea") =
+        GitProposalRecord(repoURL = repo, number = number, title = "Change $number", state = state, forge = forge)
+
+    @Test
+    fun oldRecordsWithoutStateStillDecode() {
+        val old = """[{"repoURL":"$repo","number":3,"title":"Bump","createdAt":1}]"""
+        val records = decodeProposals(old)
+        assertEquals("", records?.single()?.state)
+        assertEquals(0L, records?.single()?.stateAt)
+        assertEquals(records, decodeProposals(encodeProposals(records.orEmpty())))
+    }
+
+    @Test
+    fun aRequestOpenedFromThePhoneStartsOpen() {
+        assertEquals(GitRequestState.STATE_OPEN, openedProposal(rec(1, ""), 42).state)
+        assertEquals(42L, openedProposal(rec(1, ""), 42).stateAt)
+        assertEquals("merged", openedProposal(rec(1, "merged"), 42).state)
+    }
+
+    @Test
+    fun onlyOpenOrUnreadRequestsAreAsked() {
+        val asked = proposalsToCheck(listOf(rec(1, "open"), rec(2, ""), rec(3, "merged"), rec(4, "closed"), rec(5, "open", forge = "demo")))
+        assertEquals(listOf(1, 2), asked.map { it.number })
+    }
+
+    @Test
+    fun aChangeFromOpenIsToldOnce() {
+        val records = listOf(rec(1, "open"), rec(2, "open"), rec(3, ""), rec(4, "open"), rec(5, "open"))
+        val items = listOf(
+            GitRequestStateItem(repo, 1, state = "merged"),
+            GitRequestStateItem(repo, 2, state = "closed"),
+            GitRequestStateItem(repo, 3, state = "merged"),
+            GitRequestStateItem(repo, 4, error = "HTTP 429"),
+            GitRequestStateItem(repo, 5, state = "open"),
+        )
+        val (next, changes) = proposalStateChanges(records, items, 1000)
+        assertEquals(listOf(1 to "merged", 2 to "closed"), changes.map { it.record.number to it.state })
+        assertEquals(listOf("merged", "closed", "merged", "open", "open"), next.map { it.state })
+        assertEquals("never read: taken silently", 1000L, next[2].stateAt)
+        assertEquals("unreadable: kept as it was", records[3], next[3])
+
+        val (_, again) = proposalStateChanges(next, items, 2000)
+        assertTrue("told once", again.isEmpty())
+    }
 }

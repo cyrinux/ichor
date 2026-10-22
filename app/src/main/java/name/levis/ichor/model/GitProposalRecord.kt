@@ -25,6 +25,9 @@ data class GitProposalRecord(
     val commit: String = "",
     val forge: String = "",
     val createdAt: Long = 0,
+    /** The request's last known state ([GitRequestState.STATE_OPEN]…), "" when never read; [stateAt] when it was (ms). */
+    val state: String = "",
+    val stateAt: Long = 0,
 ) {
     /** One record per request. */
     val key: String get() = "$repoURL#$number"
@@ -59,6 +62,50 @@ data class GitRequestState(
     }
 }
 
+/** One answer of `GitForgeRequestStates`: [state] is empty when [error] says why it could not be read. */
+@Serializable
+data class GitRequestStateItem(
+    val repoURL: String = "",
+    val number: Int = 0,
+    val state: String = "",
+    val mergedAt: String = "",
+    val closedAt: String = "",
+    val sha: String = "",
+    val error: String = "",
+) {
+    val key: String get() = "$repoURL#$number"
+}
+
+/** A request the background monitor saw merged or closed since it was open ([state] the new one). */
+data class ProposalChange(val record: GitProposalRecord, val state: String)
+
+/** The proposals the background monitor asks their forge about: still open (or never read), not the demo's. */
+fun proposalsToCheck(records: List<GitProposalRecord>): List<GitProposalRecord> =
+    records.filter { (it.state.isEmpty() || it.state == GitRequestState.STATE_OPEN) && it.forge != "demo" && it.number > 0 }
+
+/**
+ * [records] with the states the forge answered ([items], by request), and the changes to tell:
+ * open -> merged or closed. A record never read before ("") takes its state silently, so a request
+ * merged before the app could watch it is not announced late; one that could not be read keeps its own.
+ */
+fun proposalStateChanges(
+    records: List<GitProposalRecord>,
+    items: List<GitRequestStateItem>,
+    nowMillis: Long,
+): Pair<List<GitProposalRecord>, List<ProposalChange>> {
+    val answered = items.filter { it.error.isEmpty() && it.state.isNotEmpty() }.associateBy { it.key }
+    val changes = mutableListOf<ProposalChange>()
+    val next = records.map { record ->
+        val item = answered[record.key] ?: return@map record
+        if (item.state == record.state) return@map record
+        val updated = record.copy(state = item.state, stateAt = nowMillis)
+        val ended = item.state == GitRequestState.STATE_MERGED || item.state == GitRequestState.STATE_CLOSED
+        if (record.state == GitRequestState.STATE_OPEN && ended) changes += ProposalChange(updated, item.state)
+        updated
+    }
+    return next to changes
+}
+
 /** `GitOpsRevisionRuns`: whether the app runs a commit, the one it runs, whether it is synced. */
 @Serializable
 data class RevisionRuns(val runs: Boolean = false, val revision: String = "", val synced: Boolean = false)
@@ -86,6 +133,10 @@ fun proposalStatus(state: GitRequestState?, runs: RevisionRuns?): ProposalStatus
 /** The records kept for one cluster: [record] first, a request kept once, [MAX_PROPOSALS] at most. */
 fun withProposal(records: List<GitProposalRecord>, record: GitProposalRecord): List<GitProposalRecord> =
     (listOf(record) + records.filter { it.key != record.key }).take(MAX_PROPOSALS)
+
+/** A request just opened from the phone: open, so the monitor tells when it is merged or closed. */
+fun openedProposal(record: GitProposalRecord, nowMillis: Long): GitProposalRecord =
+    if (record.state.isEmpty()) record.copy(state = GitRequestState.STATE_OPEN, stateAt = nowMillis) else record
 
 const val MAX_PROPOSALS = 50
 

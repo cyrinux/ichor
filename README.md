@@ -122,10 +122,12 @@ tour** shows it again.
   error and the file and line it names. A file in no kustomization is checked as YAML; a Helm
   chart is not rendered on the phone, and a remote base is not fetched, which the check says.
   The pull request can be opened either way. The phone remembers each request it
-  opened (50 per cluster, only on this device): **Proposals** on the Argo CD or Flux app (and
+  opened (50 per cluster, kept in the backup): **Proposals** on the Argo CD or Flux app (and
   at the cluster repository's root) shows whether each is open, merged or closed on the forge
   and, once merged, whether the app runs that commit; a merged one not running yet offers
-  **Reconcile now**, which syncs or reconciles with the usual follow.
+  **Reconcile now**, which syncs or reconciles with the usual follow. With alerts on, the
+  background check tells you when one of them is merged or closed ("Your pull request #12 was
+  merged"), and the notification opens the app it changed.
 - **Stage several files and propose them together:** in the cluster repository, Review also
   offers **Stage**: the edit waits, the file gets a dot in the browser, and **Staged changes**
   lists the files (lines added and removed), opens one again or removes it, then opens one pull
@@ -1247,7 +1249,8 @@ a fresh install. Backups move between Android and iOS.
 - **What it holds:** the talosconfig (every cluster's credentials), the cluster on screen,
   theme, language, screenshot mode, monitoring and its storage thresholds, "Allow screenshots",
   each cluster's name, color, VPN-only setting, Wake-on-LAN targets, pins and repository, your Git hosts,
-  the AI diagnosis settings, and whether an app lock was on. API keys and Git tokens only
+  the pull requests opened from the phone (a backup that holds some needs this version or later to
+  restore), the AI diagnosis settings, and whether an app lock was on. API keys and Git tokens only
   when you turn on **Include API keys and Git tokens** while backing up (off by default:
   anyone with the file and its passphrase can use them).
 - **What it leaves out:** the app lock's secret and security-key data (set the lock again; the

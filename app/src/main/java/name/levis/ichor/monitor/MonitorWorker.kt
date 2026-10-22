@@ -88,10 +88,14 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         if (run.state != firstPass) store.saveState(run.state)
         scheduleWidgetStaleRefresh(applicationContext, run.state.clusters.values, now)
 
+        // The pull requests opened from the phone, on the clusters this run could read: their new
+        // states are kept even with alerts off, so turning them on later tells nothing stale.
+        val proposals = proposalAlerts(app, reads.filter { !it.skipped && it.snapshot != null }.map { it.context }, now)
+
         if (store.alertsEnabled.value) {
             // Snoozed from their notification: nothing, problem or resolved, until it is over.
             app.alertSnoozes.prune(now)
-            run.alerts.forEach { post(app, it, now) }
+            (run.alerts + proposals).forEach { post(app, it, now) }
         }
         ClusterWidget().updateAll(applicationContext)
         app.syncWear()

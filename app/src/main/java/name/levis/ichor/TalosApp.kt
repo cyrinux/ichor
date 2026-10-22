@@ -434,6 +434,7 @@ class TalosApp : Application() {
                 talosRepository.invalidate()
                 forgetShownCluster()
             },
+            proposals = proposals,
         )
     }
 

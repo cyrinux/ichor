@@ -27,7 +27,7 @@ val Alert.channel: AlertChannel
         AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE,
         -> AlertChannel.CLUSTER
         AlertKind.DATA_PROBLEM, AlertKind.DATA_OK, AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> AlertChannel.DATA
-        AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> AlertChannel.GITOPS
+        AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK, AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED -> AlertChannel.GITOPS
         AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED, AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED -> AlertChannel.CERTS
     }
 
@@ -47,6 +47,15 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
         ShareTarget.dataServices(DataServiceKind.entries.firstOrNull { it.alertSystem == system }?.catalogId.orEmpty())
     }
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsTarget()
+    // The app the request changed; the cluster for the repository's own.
+    AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED -> {
+        val d = ProposalDetail.parse(detail)
+        when {
+            !d.isApp() -> ShareTarget.screen(ShareTarget.CLUSTER)
+            d.tool == GITOPS_FLUX -> ShareTarget.fluxApp(d.kind, d.namespace, d.name)
+            else -> ShareTarget.argoApp(d.namespace, d.name)
+        }
+    }
     // A data services link naming the plugin ("plugin-<id>"): the app opens where its tile leads (its
     // Data services tab or its own screen); an app that does not know it, the first tab.
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> ShareTarget.plugin(PluginIssue.parse(detail).plugin.ifEmpty { pluginOfKey(key) })

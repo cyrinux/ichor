@@ -88,9 +88,27 @@ class BackupTest {
     }
 
     @Test
-    fun newBackupsAreFormatThree() {
-        assertEquals(3, BACKUP_FORMAT)
+    fun newBackupsAreFormatThreeUnlessTheyHoldProposals() {
+        assertEquals(4, BACKUP_FORMAT)
         assertEquals(3, BackupPayload().format)
+        val record = GitProposalRecord(repoURL = "https://git.example.org/example-org/cluster-config", number = 12, title = "Raise ingest replicas", state = "open")
+        assertEquals(3, backupFormatFor(null))
+        assertEquals(3, backupFormatFor(emptyMap()))
+        assertEquals(4, backupFormatFor(mapOf("fp" to listOf(record))))
+    }
+
+    @Test
+    fun proposalsTravelWithTheBackupOfTheirClusters() {
+        val record = GitProposalRecord(repoURL = "https://git.example.org/example-org/cluster-config", number = 12, title = "Raise ingest replicas", state = "open")
+        val kept = backupProposals(listOf("fp-a"), mapOf("fp-a" to listOf(record), "fp-gone" to listOf(record), "fp-empty" to emptyList()))
+        assertEquals(mapOf("fp-a" to listOf(record)), kept)
+        assertNull(backupProposals(listOf("fp-b"), mapOf("fp-a" to listOf(record))))
+
+        val payload = BackupPayload(format = backupFormatFor(kept), proposals = kept)
+        val back = TalosJson.decodeFromString(BackupPayload.serializer(), TalosJson.encodeToString(BackupPayload.serializer(), payload))
+        assertEquals(mapOf("fp-a" to listOf(record)), restoredProposals(back, listOf("fp-a", "fp-b")))
+        assertNull("a format 3 backup has none", restoredProposals(back.copy(format = 3), listOf("fp-a")))
+        assertTrue(restoredProposals(back, listOf("fp-b")).isNullOrEmpty())
     }
 
     @Test

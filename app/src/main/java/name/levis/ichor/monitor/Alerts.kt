@@ -21,6 +21,8 @@ enum class AlertKind {
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
     /** A CRD plugin's finding ([Alert.key] its key, [Alert.detail]: a [PluginIssue]), or no longer. */
     PLUGIN_PROBLEM, PLUGIN_OK,
+    /** A pull request opened from the phone was merged, or closed without it ([Alert.detail]: a [ProposalDetail]). */
+    PROPOSAL_MERGED, PROPOSAL_CLOSED,
 }
 
 /**

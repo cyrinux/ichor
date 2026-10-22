@@ -29,6 +29,8 @@ import name.levis.ichor.model.DEMO_PROPOSALS
 import name.levis.ichor.model.GitProposalRecord
 import name.levis.ichor.model.GitRepoSearch
 import name.levis.ichor.model.GitRequestState
+import name.levis.ichor.model.GitRequestStateItem
+import kotlinx.serialization.json.JsonPrimitive
 import name.levis.ichor.model.RevisionRuns
 import name.levis.ichor.model.TalosConfigPatch
 import name.levis.ichor.model.TalosRepoCompare
@@ -334,6 +336,18 @@ class GitOpsRepository(
     fun forgetProposal(record: GitProposalRecord) {
         val active = go.configs.config.value?.activeSummary ?: return
         proposals?.remove(active.fingerprint, record)
+    }
+
+    /**
+     * The states of [records] (one Git host's, 20 at most) on their forge, with the host's token
+     * (GitForgeRequestStates); empty when the host has no token. For the background monitor.
+     */
+    suspend fun requestStates(host: String, records: List<GitProposalRecord>): List<GitRequestStateItem> {
+        val json = runCatching { forgeHost(host) }.getOrNull() ?: return emptyList()
+        val requests = records.joinToString(",", "[", "]") { """{"repoURL":${JsonPrimitive(it.repoURL)},"number":${it.number}}""" }
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(ListSerializer(GitRequestStateItem.serializer()), Ichorgo.gitForgeRequestStates(json, requests))
+        }
     }
 
     /** The state of [record]'s request on its forge, with its host's token. */
