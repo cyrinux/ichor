@@ -60,7 +60,8 @@ import name.levis.ichor.ui.overview.statusLabel
  * Every node of a large cluster added from a kubeconfig, where the dense home card only
  * shows dots: search by name or address, filter by status, the nodes grouped by status (the
  * worst first), the same rows and actions as home. [initialQuery] searches for a node (an alert's). [vm] is the Kubernetes home's, so both
- * show the same load and a pull here refreshes home too.
+ * show the same load and a pull here refreshes home too. A tap opens the node menu, or goes to
+ * [onNode] when set (the node shown beside the list on a tablet).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,6 +73,7 @@ fun KubeNodesScreen(
     onDebug: (name: String) -> Unit,
     onMeta: (name: String) -> Unit,
     initialQuery: String = "",
+    onNode: ((KubeNodeInfo) -> Unit)? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf(initialQuery) }
@@ -110,7 +112,7 @@ fun KubeNodesScreen(
                         EmptyText(emptyOrNoMatch(query, R.string.nodes_none, R.string.nodes_no_match))
                     } else {
                         NodeList(groups) { node ->
-                            KubeNodeRow(node, onClick = { sheetFor = node }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+                            KubeNodeRow(node, onClick = { onNode?.invoke(node) ?: run { sheetFor = node } }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
                         }
                     }
                 }

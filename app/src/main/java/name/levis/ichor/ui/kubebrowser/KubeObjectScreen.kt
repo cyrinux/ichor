@@ -103,6 +103,8 @@ fun KubeObjectScreen(
     onScanReports: (String) -> Unit = {},
     /** The diff of the Argo CD or Flux app applying the object, scrolled to it ([focus] "kind/namespace/name"). */
     onGitOpsDiff: ((owner: ObjectOwner, focus: String) -> Unit)? = null,
+    /** Shown above the tabs, outside the editor (a node's actions beside the node list). */
+    header: (@Composable () -> Unit)? = null,
     vm: KubeObjectViewModel = viewModel(
         key = "kube-object-${ref.group}/${ref.resource}/${ref.namespace}/${ref.name}",
         factory = factory { KubeObjectViewModel(app.kubeBrowser, ref) },
@@ -296,6 +298,7 @@ fun KubeObjectScreen(
                     )
                 }
                 else -> {
+                    header?.invoke()
                     PrimaryTabRow(selectedTabIndex = tabIndex(tab, hasData = dataVm != null)) {
                         AppTab(selected = tab == TAB_SUMMARY, onClick = { tab = TAB_SUMMARY }, text = { Text(stringResource(R.string.kb_tab_summary)) })
                         if (dataVm != null) {

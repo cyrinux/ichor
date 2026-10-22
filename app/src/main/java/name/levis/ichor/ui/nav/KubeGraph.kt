@@ -37,7 +37,7 @@ import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubeevents.KubeEventsScreen
-import name.levis.ichor.ui.kubenodes.KubeNodesScreen
+import name.levis.ichor.ui.kubenodes.KubeNodesListDetail
 import name.levis.ichor.ui.metrics.METRICS_TAB_MONITORING
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.overview.KubeHomeViewModel
@@ -77,7 +77,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     ) { entry ->
         // The Kubernetes home's data and refresh: only ever opened from it, so it is below on the stack.
         val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
-        KubeNodesScreen(
+        KubeNodesListDetail(
             initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
             initialQuery = entry.arguments?.getString("query").orEmpty(),
             vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository, app::kubeNodesSeed) }),
@@ -85,6 +85,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
             onDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
             onMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
+            onOwner = kubeLinks.onObject,
         )
     }
     composable(
