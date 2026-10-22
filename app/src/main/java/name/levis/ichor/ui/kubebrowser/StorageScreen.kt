@@ -4,20 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -29,7 +21,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,40 +42,15 @@ import name.levis.ichor.model.StorageClaim
 import name.levis.ichor.model.StorageLevel
 import name.levis.ichor.model.filteredClaims
 import name.levis.ichor.model.title
-import name.levis.ichor.ui.LoadingViewModel
-import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.CardListPadding
-import name.levis.ichor.ui.components.groupedCardRows
-import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.UsageBar
-import name.levis.ichor.ui.components.emptyOrNoMatch
-import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.workloads.KubeFilters
-import name.levis.ichor.ui.workloads.NamespacesViewModel
-import name.levis.ichor.ui.workloads.rememberKubeScope
-import name.levis.ichor.ui.workloads.scopeError
 import name.levis.ichor.util.formatBytes
 
 /** The claims of a namespace (null for every one), with their volume, pods and fill. */
-class StorageViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<KubeStorage>() {
-    private var namespace: String? = null
-    private var started = false
-
-    fun setNamespace(namespace: String?) {
-        if (started && namespace == this.namespace) return
-        started = true
-        this.namespace = namespace
-        refresh(reset = true)
-    }
-
+class StorageViewModel(private val browser: KubeBrowserRepository) : NamespaceLoadingViewModel<KubeStorage>() {
     override suspend fun fetch() = browser.storage(namespace)
 }
 
@@ -104,7 +70,6 @@ fun StorageScreen(
     vm: StorageViewModel = viewModel(factory = factory { StorageViewModel(app.kubeBrowser) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val state by vm.state.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()
     var snapshots by remember { mutableStateOf<VolumeSnapshots?>(null) }
@@ -112,10 +77,7 @@ fun StorageScreen(
     var busy by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<String?>(null) }
     val actionScope = rememberCoroutineScope()
-    val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
-    val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
-    val control = rememberKubeScope(app, namespaces, mask.enabled)
-    LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setNamespace(control.scope.namespace) }
+    val control = rememberListScope(vm)
     LaunchedEffect(control.scope, control.ready, generation, config?.activeContext) {
         snapshots = null
         confirming = null
@@ -139,55 +101,33 @@ fun StorageScreen(
             title = { Text(stringResource(R.string.snapshot_create)) }, text = { Text(it) },
             confirmButton = { androidx.compose.material3.TextButton(onClick = { result = null }) { Text(stringResource(R.string.common_ok)) } })
     }
-    var query by rememberSaveable { mutableStateOf("") }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.storage_title)) },
-                navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
-            )
-        },
-    ) { padding ->
-        Column(Modifier.pageContent(padding).fillMaxSize()) {
-            if (busy) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth())
-            val loaded = (state as? UiState.Loaded)?.data
-            val listed = remember(loaded) { loaded?.claims.orEmpty().map { it.namespace }.distinct().sorted() }
-            KubeFilters(control, listed, query, { query = it }, R.string.storage_kube_search)
+    KubeScopedList(
+        title = stringResource(R.string.storage_title),
+        vm = vm,
+        control = control,
+        onBack = onBack,
+        items = KubeStorage::claims,
+        namespaceOf = StorageClaim::namespace,
+        filter = { rows, query -> rows.filteredClaims(query) },
+        key = StorageClaim::key,
+        search = R.string.storage_kube_search,
+        empty = R.string.storage_kube_empty,
+        noMatch = R.string.storage_kube_no_match,
+        above = { if (busy) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth()) },
+        notes = { loaded ->
             if (loaded?.partialAccess == true) {
                 MutedText(stringResource(R.string.storage_kube_partial), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
-            HorizontalDivider()
-            val rest = Modifier.weight(1f)
-            val s = state
-            when {
-                !control.ready -> EmptyText(stringResource(R.string.kube_scope_type_prompt), rest)
-                s is UiState.Failed -> ErrorBox(scopeError(s.message, control.scope), { vm.refresh() }, rest)
-                s is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                    val rows = remember(s.data, query) { s.data.claims.filteredClaims(query) }
-                    if (rows.isEmpty()) {
-                        EmptyText(emptyOrNoMatch(query, R.string.storage_kube_empty, R.string.storage_kube_no_match))
-                    } else {
-                        // All namespaces: one card per namespace, its name as the card's title.
-                        val byNamespace = if (control.scope.namespace == null) { r: StorageClaim -> r.namespace } else null
-                        LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
-                            groupedCardRows(rows, groupOf = byNamespace, key = { it.key }) { c ->
-                                ClaimRow(
-                                    c,
-                                    onClick = { onClaim(KubeObjectRef.pvc(c.namespace, c.name)) },
-                                    onDataService = onDataService,
-                                    onPlugin = onPlugin,
-                                    canSnapshot = !busy && config?.activeSummary?.isDemo == false && snapshots?.canCreate(c) == true,
-                                    onSnapshot = { confirming = c },
-                                )
-                            }
-                        }
-                    }
-                }
-                else -> LoadingBox(rest)
-            }
-        }
+        },
+    ) { c ->
+        ClaimRow(
+            c,
+            onClick = { onClaim(KubeObjectRef.pvc(c.namespace, c.name)) },
+            onDataService = onDataService,
+            onPlugin = onPlugin,
+            canSnapshot = !busy && config?.activeSummary?.isDemo == false && snapshots?.canCreate(c) == true,
+            onSnapshot = { confirming = c },
+        )
     }
 }
 
