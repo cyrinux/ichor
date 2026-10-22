@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // The demo answers from fixed data, without network.
@@ -31,8 +33,8 @@ func TestGitForgeDemo(t *testing.T) {
 func TestGitForgeRepoDemo(t *testing.T) {
 	out, err := GitForgeRepo(`{"kind":"demo"}`, "", "")
 
-	var info gitForgeRepoInfo
-	if err != nil || json.Unmarshal([]byte(out), &info) != nil || info.Branch != "main" || info.HeadSha != demoClusterRepoHead || !info.CanPush || info.Forge != gitForgeDemo {
+	var info gitforge.RepoInfo
+	if err != nil || json.Unmarshal([]byte(out), &info) != nil || info.Branch != "main" || info.HeadSha != demoClusterRepoHead || !info.CanPush || info.Forge != gitforge.KindDemo {
 		t.Errorf("demo %s %v", out, err)
 	}
 
@@ -49,7 +51,7 @@ func TestGitForgeRepoDemo(t *testing.T) {
 
 	opts := `{"repoURL":"` + demoClusterRepoURL + `","baseRef":"main","path":"README.md","content":"x","message":"m","title":"t"}`
 	if _, err := GitForgePropose("", "", `{"kind":"demo"}`, opts); err == nil || err.Error() != errDemoUnavailable.Error() {
-		t.Errorf("demo propose: %v", err)
+		t.Errorf("demo gitforge.Propose: %v", err)
 	}
 }
 
@@ -87,7 +89,7 @@ func TestGitForgeRequestDemo(t *testing.T) {
 	open := requestOf(t)(GitForgeRequest(`{"kind":"demo"}`, demoClusterRepoURL, 1))
 	merged := requestOf(t)(GitForgeRequest(`{"kind":"demo"}`, demoClusterRepoURL, demoMergedRequest))
 
-	if open.State != gitRequestOpen || merged.State != gitRequestMerged || merged.MergeSHA != demoArgoRevision {
+	if open.State != gitforge.RequestOpen || merged.State != gitforge.RequestMerged || merged.MergeSHA != demoArgoRevision {
 		t.Errorf("demo %+v %+v", open, merged)
 	}
 }

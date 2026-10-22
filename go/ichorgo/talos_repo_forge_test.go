@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // tooLargeArchive holds one file more than a snapshot unpacks.
@@ -78,7 +80,7 @@ func TestTalosRepoFilesTooLargeReadsTheTalosDirectory(t *testing.T) {
 	var treeCalls atomic.Int32
 
 	srv := gitServer(t, talosForgeRoutes(t, &treeCalls))
-	host, repo := gitHostJSON(gitForgeGitHub, srv.URL), "https://127.0.0.1/example-org/cluster-config"
+	host, repo := gitHostJSON(gitforge.KindGitHub, srv.URL), "https://127.0.0.1/example-org/cluster-config"
 
 	out, err := TalosRepoFiles(host, repo, "main", "/talos/", "cp-1", "controlplane")
 	if err != nil {
@@ -111,7 +113,7 @@ func TestTalosRepoFilesTooLargeWithoutTalosDirectory(t *testing.T) {
 	var treeCalls atomic.Int32
 
 	srv := gitServer(t, talosForgeRoutes(t, &treeCalls))
-	host, repo := gitHostJSON(gitForgeGitHub, srv.URL), "https://127.0.0.1/example-org/cluster-config"
+	host, repo := gitHostJSON(gitforge.KindGitHub, srv.URL), "https://127.0.0.1/example-org/cluster-config"
 
 	_, err := TalosRepoFiles(host, repo, "main", " / ", "cp-1", "controlplane")
 	if err == nil || !strings.Contains(err.Error(), "set its Talos directory") {
@@ -136,14 +138,14 @@ func TestTalosDirReaderBoundsTheFiles(t *testing.T) {
 	routes["/api/v3/repos/example-org/cluster-config/contents/talos"] = jsonAnswer("[" + strings.Join(entries, ",") + "]")
 
 	srv := gitServer(t, routes)
-	h, err := parseGitForgeHost(gitHostJSON(gitForgeGitHub, srv.URL))
+	h, err := gitforge.ParseHost(gitHostJSON(gitforge.KindGitHub, srv.URL))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	repo := gitRepoRef{Host: h.HostName(), Owner: "example-org", Name: "cluster-config"}
+	repo := gitforge.RepoRef{Host: h.HostName(), Owner: "example-org", Name: "cluster-config"}
 
-	_, err = talosDirReader("talos")(t.Context(), newGitForge(h), repo, snapTestSHA)
+	_, err = talosDirReader("talos")(t.Context(), gitforge.New(h), repo, snapTestSHA)
 	if err == nil || !strings.Contains(err.Error(), "more than 200 YAML files") {
 		t.Errorf("201 files: %v", err)
 	}
@@ -157,7 +159,7 @@ func TestTalosPathsReaderReadsTheChosenFiles(t *testing.T) {
 	var treeCalls atomic.Int32
 
 	srv := gitServer(t, talosForgeRoutes(t, &treeCalls))
-	host, repo := gitHostJSON(gitForgeGitHub, srv.URL), "https://127.0.0.1/example-org/cluster-config"
+	host, repo := gitHostJSON(gitforge.KindGitHub, srv.URL), "https://127.0.0.1/example-org/cluster-config"
 
 	paths := []string{"talos/patches/dns.yaml", "talos/nodes/cp-1.yaml", "talos/nodes/cp-1.yaml" + talosInlineMark + "3", "talos/gone.yaml"}
 

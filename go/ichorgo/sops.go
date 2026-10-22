@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // SOPS files in a repository, read and never decrypted: who a file is encrypted for (its
@@ -508,7 +510,7 @@ func holdsValue(v any) bool {
 }
 
 // markSOPSEntries flags the files of a listing SOPS encrypts by their name.
-func markSOPSEntries(entries []gitForgeEntry) {
+func markSOPSEntries(entries []gitforge.Entry) {
 	for i := range entries {
 		entries[i].SOPS = entries[i].Type != "dir" && isSOPSPath(entries[i].Path)
 	}

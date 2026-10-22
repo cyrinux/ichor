@@ -4,6 +4,8 @@ import (
 	"cmp"
 	"strconv"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // The demo's Git repository: one app, podinfo, as a GitOps repository would hold it, and the
@@ -167,15 +169,15 @@ spec:
 }
 
 // demoGitForgeRepo is the demo cluster repository as GitForgeRepo answers it.
-func demoGitForgeRepo(branch string) gitForgeRepoInfo {
-	return gitForgeRepoInfo{
+func demoGitForgeRepo(branch string) gitforge.RepoInfo {
+	return gitforge.RepoInfo{
 		DefaultBranch: "main", Branch: cmp.Or(branch, "main"), HeadSha: demoClusterRepoHead,
-		WebURL: demoClusterRepoURL, Private: true, CanPush: true, Forge: gitForgeDemo,
+		WebURL: demoClusterRepoURL, Private: true, CanPush: true, Forge: gitforge.KindDemo,
 	}
 }
 
 // demoGitForgeTree lists one directory of the demo repository.
-func demoGitForgeTree(dir string) ([]gitForgeEntry, error) {
+func demoGitForgeTree(dir string) ([]gitforge.Entry, error) {
 	sizes := make(map[string]int64, len(demoGitForgeFiles))
 	for p, c := range demoGitForgeFiles {
 		sizes[p] = int64(len(c))
@@ -183,34 +185,34 @@ func demoGitForgeTree(dir string) ([]gitForgeEntry, error) {
 
 	entries := listTreeDir(sizes, dir)
 	if entries == nil {
-		return nil, errGitForgeNotFound
+		return nil, gitforge.ErrNotFound
 	}
 
 	return entries, nil
 }
 
 // demoGitForgeFile reads one file of the demo repository.
-func demoGitForgeFile(path string) (gitForgeFile, error) {
+func demoGitForgeFile(path string) (gitforge.File, error) {
 	content, ok := demoGitForgeFiles[path]
 	if !ok {
-		return gitForgeFile{}, errGitForgeNotFound
+		return gitforge.File{}, gitforge.ErrNotFound
 	}
 
-	return gitForgeFile{Path: path, SHA: "0d1e2m3o4" + strings.Repeat("0", 31), Size: int64(len(content)), Content: content}, nil
+	return gitforge.File{Path: path, SHA: "0d1e2m3o4" + strings.Repeat("0", 31), Size: int64(len(content)), Content: content}, nil
 }
 
 // demoGitRequest is the demo's sample proposals: #1 open, #2 merged (and deployed: its
 // commit is the demo's Argo CD app revision).
-func demoGitRequest(repo gitRepoRef, number int) gitRequestState {
+func demoGitRequest(repo gitforge.RepoRef, number int) gitforge.RequestState {
 	url := "https://git.home.example/" + repo.Full() + "/pulls/" + strconv.Itoa(number)
 	if number == demoMergedRequest {
-		return gitRequestState{
-			State: gitRequestMerged, Title: "Scale podinfo to 3", URL: url, HeadSHA: demoProposalHead,
+		return gitforge.RequestState{
+			State: gitforge.RequestMerged, Title: "Scale podinfo to 3", URL: url, HeadSHA: demoProposalHead,
 			MergeSHA: demoArgoRevision, MergedAt: "2026-10-18T08:30:00Z", UpdatedAt: "2026-10-18T08:30:00Z",
 		}
 	}
 
-	return gitRequestState{State: gitRequestOpen, Title: "Bump podinfo to 6.7.1", URL: url, HeadSHA: demoProposalHead, UpdatedAt: "2026-10-19T09:00:00Z"}
+	return gitforge.RequestState{State: gitforge.RequestOpen, Title: "Bump podinfo to 6.7.1", URL: url, HeadSHA: demoProposalHead, UpdatedAt: "2026-10-19T09:00:00Z"}
 }
 
 const (

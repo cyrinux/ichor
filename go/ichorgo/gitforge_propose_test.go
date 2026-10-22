@@ -129,7 +129,7 @@ type proposeCase struct {
 	answers   map[string][]proposeAnswer
 	wantCalls []string
 	wantErr   string
-	check     func(t *testing.T, calls []proposeCall, out gitProposeResult)
+	check     func(t *testing.T, calls []proposeCall, out gitforge.ProposeResult)
 }
 
 func runProposeCases(t *testing.T, kind, repoURL string, cases []proposeCase) {
@@ -168,7 +168,7 @@ func runProposeCases(t *testing.T, kind, repoURL string, cases []proposeCase) {
 				t.Fatal(err)
 			}
 
-			var res gitProposeResult
+			var res gitforge.ProposeResult
 			if err := json.Unmarshal([]byte(out), &res); err != nil {
 				t.Fatalf("%v: %s", err, out)
 			}
@@ -256,7 +256,7 @@ func TestGitForgeProposeGitHub(t *testing.T) {
 	runProposeCases(t, "github", "https://127.0.0.1/example-org/platform.git", []proposeCase{
 		{
 			name: "update", answers: ok, wantCalls: []string{ref, refs, put, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.URL != "https://git.example.org/example-org/platform/pull/42" || res.Number != 42 || res.Branch != branch || res.Commit != "c0mm17" {
 					t.Errorf("result %+v", res)
 				}
@@ -273,7 +273,7 @@ func TestGitForgeProposeGitHub(t *testing.T) {
 		{
 			name: "new file without sha", change: func(o map[string]any) { o["fileSha"] = ""; o["draft"] = true }, answers: ok,
 			wantCalls: []string{ref, refs, put, pulls},
-			check: func(t *testing.T, calls []proposeCall, _ gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, _ gitforge.ProposeResult) {
 				if _, has := bodyOf(t, calls, put)["sha"]; has {
 					t.Error("a new file was sent with a sha")
 				}
@@ -290,7 +290,7 @@ func TestGitForgeProposeGitHub(t *testing.T) {
 			name:      "branch exists",
 			answers:   with(refs, proposeAnswer{422, `{"message":"Reference already exists"}`}, proposeAnswer{201, `{}`}),
 			wantCalls: []string{ref, refs, refs, put, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.Branch != "ichor/bump-podinfo-to-6-7-1-0002" {
 					t.Errorf("branch %q", res.Branch)
 				}
@@ -317,7 +317,7 @@ func TestGitForgeProposeGitHub(t *testing.T) {
 			change:    func(o map[string]any) { o["branch"] = "ichor/podinfo-6-7-1" },
 			answers:   ok,
 			wantCalls: []string{ref, refs, put, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.Branch != "ichor/podinfo-6-7-1" || calls[1].body["ref"] != "refs/heads/ichor/podinfo-6-7-1" {
 					t.Errorf("branch %q, ref %v", res.Branch, calls[1].body["ref"])
 				}
@@ -359,7 +359,7 @@ func TestGitForgeProposeGitLab(t *testing.T) {
 	runProposeCases(t, "gitlab", "https://127.0.0.1/group/sub/platform.git", []proposeCase{
 		{
 			name: "update", change: func(o map[string]any) { o["draft"] = true }, answers: ok, wantCalls: []string{create, put, mrs},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.URL != "https://git.example.org/group/sub/platform/-/merge_requests/7" || res.Number != 7 || res.Branch != branch || res.Commit != "m3r93" {
 					t.Errorf("result %+v", res)
 				}
@@ -377,7 +377,7 @@ func TestGitForgeProposeGitLab(t *testing.T) {
 		{
 			name: "new file is a POST", change: func(o map[string]any) { o["fileSha"] = "" }, answers: ok,
 			wantCalls: []string{create, post, mrs},
-			check: func(t *testing.T, calls []proposeCall, _ gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, _ gitforge.ProposeResult) {
 				if _, has := bodyOf(t, calls, post)["last_commit_id"]; has {
 					t.Error("a new file was sent with last_commit_id")
 				}
@@ -393,7 +393,7 @@ func TestGitForgeProposeGitLab(t *testing.T) {
 			name:      "branch exists",
 			answers:   with(create, proposeAnswer{400, `{"message":"Branch already exists"}`}, proposeAnswer{201, `{}`}),
 			wantCalls: []string{create, create, put, mrs},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.Branch != "ichor/bump-podinfo-to-6-7-1-0002" || calls[1].body["branch"] != res.Branch {
 					t.Errorf("branch %q, retried %v", res.Branch, calls[1].body["branch"])
 				}
@@ -442,7 +442,7 @@ func TestGitForgeProposeGitea(t *testing.T) {
 	runProposeCases(t, "gitea", "https://127.0.0.1/example-org/platform", []proposeCase{
 		{
 			name: "update", change: func(o map[string]any) { o["draft"] = true }, answers: ok, wantCalls: []string{create, put, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.URL != "https://git.example.org/example-org/platform/pulls/3" || res.Number != 3 || res.Branch != branch || res.Commit != "9173a" {
 					t.Errorf("result %+v", res)
 				}
@@ -456,7 +456,7 @@ func TestGitForgeProposeGitea(t *testing.T) {
 		{
 			name: "new file is a POST", change: func(o map[string]any) { o["fileSha"] = "" }, answers: ok,
 			wantCalls: []string{create, post, pulls},
-			check: func(t *testing.T, calls []proposeCall, _ gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, _ gitforge.ProposeResult) {
 				if _, has := bodyOf(t, calls, post)["sha"]; has {
 					t.Error("a new file was sent with a sha")
 				}
@@ -474,7 +474,7 @@ func TestGitForgeProposeGitea(t *testing.T) {
 			name:      "branch exists",
 			answers:   with(create, proposeAnswer{409, `{"message":"The branch already exists."}`}, proposeAnswer{201, `{}`}),
 			wantCalls: []string{create, create, put, pulls},
-			check: func(t *testing.T, _ []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, _ []proposeCall, res gitforge.ProposeResult) {
 				if res.Branch != "ichor/bump-podinfo-to-6-7-1-0002" {
 					t.Errorf("branch %q", res.Branch)
 				}
@@ -502,7 +502,7 @@ func TestGitForgeProposeValidation(t *testing.T) {
 		"path not clean":   {func(o map[string]any) { o["path"] = "apps/./podinfo.yaml" }, "is not a file path"},
 		"no path":          {func(o map[string]any) { o["path"] = "" }, "is not a file path"},
 		"path is root":     {func(o map[string]any) { o["path"] = "." }, "is not a file path"},
-		"content too big":  {func(o map[string]any) { o["content"] = strings.Repeat("a", gitForgeMaxFile+1) }, "over 1 MiB"},
+		"content too big":  {func(o map[string]any) { o["content"] = strings.Repeat("a", gitforge.MaxFile+1) }, "over 1 MiB"},
 		"no message":       {func(o map[string]any) { o["message"] = " " }, "no commit message"},
 		"no title":         {func(o map[string]any) { o["title"] = "" }, "no title"},
 		"no base":          {func(o map[string]any) { o["baseRef"] = "" }, "no branch, tag or commit"},

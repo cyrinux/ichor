@@ -16,19 +16,19 @@ import (
 func GitForgeCheck(hostJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	h, err := parseGitForgeHost(hostJSON)
+	h, err := gitforge.ParseHost(hostJSON)
 	if err != nil {
 		return "", err
 	}
 
-	if h.Kind == gitForgeDemo {
-		return gitForgeJSON(gitForgeCheck{Login: "demo", Host: "git.home.example", ScopesOK: true, Missing: []string{}})
+	if h.Kind == gitforge.KindDemo {
+		return gitForgeJSON(gitforge.CheckResult{Login: "demo", Host: "git.home.example", ScopesOK: true, Missing: []string{}})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), gitforge.Timeout)
 	defer cancel()
 
-	c, err := newGitForge(h).Check(ctx)
+	c, err := gitforge.New(h).Check(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -46,23 +46,23 @@ func GitForgeCheck(hostJSON string) (out string, err error) {
 func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	h, repo, ref, dir, err := gitForgeArgs(hostJSON, repoURL, ref, dir)
+	h, repo, ref, dir, err := gitforge.Args(hostJSON, repoURL, ref, dir)
 	if err != nil {
 		return "", err
 	}
 
-	var entries []gitForgeEntry
+	var entries []gitforge.Entry
 
-	if h.Kind == gitForgeDemo {
+	if h.Kind == gitforge.KindDemo {
 		entries, err = demoGitForgeTree(dir)
 	} else {
-		ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), gitforge.Timeout)
 		defer cancel()
 
-		entries, err = newGitForge(h).Tree(ctx, repo, ref, dir)
+		entries, err = gitforge.New(h).Tree(ctx, repo, ref, dir)
 	}
 
-	if errors.Is(err, errGitForgeNotFound) {
+	if errors.Is(err, gitforge.ErrNotFound) {
 		return "", fmt.Errorf("%s is not in %s at %s", cmp.Or(dir, "/"), repo.Full(), ref)
 	}
 
@@ -70,10 +70,10 @@ func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 		return "", err
 	}
 
-	sortGitForgeEntries(entries)
+	gitforge.SortEntries(entries)
 	markSOPSEntries(entries)
 
-	return gitForgeJSON(gitForgeTree{Ref: ref, Entries: nonNil(entries)})
+	return gitForgeJSON(gitforge.Tree{Ref: ref, Entries: nonNil(entries)})
 }
 
 // GitForgeFile reads the file path of repoURL at ref: {"path","sha","size","content",
@@ -81,7 +81,7 @@ func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 func GitForgeFile(hostJSON, repoURL, ref, path string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	h, repo, ref, path, err := gitForgeArgs(hostJSON, repoURL, ref, path)
+	h, repo, ref, path, err := gitforge.Args(hostJSON, repoURL, ref, path)
 	if err != nil {
 		return "", err
 	}
@@ -90,18 +90,18 @@ func GitForgeFile(hostJSON, repoURL, ref, path string) (out string, err error) {
 		return "", errors.New("no file path given")
 	}
 
-	var f gitForgeFile
+	var f gitforge.File
 
-	if h.Kind == gitForgeDemo {
+	if h.Kind == gitforge.KindDemo {
 		f, err = demoGitForgeFile(path)
 	} else {
-		ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), gitforge.Timeout)
 		defer cancel()
 
-		f, err = newGitForge(h).File(ctx, repo, ref, path)
+		f, err = gitforge.New(h).File(ctx, repo, ref, path)
 	}
 
-	if errors.Is(err, errGitForgeNotFound) {
+	if errors.Is(err, gitforge.ErrNotFound) {
 		return "", fmt.Errorf("%s is not in %s at %s", path, repo.Full(), ref)
 	}
 
@@ -109,7 +109,7 @@ func GitForgeFile(hostJSON, repoURL, ref, path string) (out string, err error) {
 		return "", err
 	}
 
-	if f.Size > gitForgeMaxFile || len(f.Content) > gitForgeMaxFile {
+	if f.Size > gitforge.MaxFile || len(f.Content) > gitforge.MaxFile {
 		f.Content, f.Truncated = "", true
 	}
 
@@ -128,26 +128,26 @@ func gitForgeJSON(v any) (string, error) {
 func GitForgeRepo(hostJSON, repoURL, branch string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	h, repo, err := gitForgeRepoArgs(hostJSON, repoURL)
+	h, repo, err := gitforge.RepoArgs(hostJSON, repoURL)
 	if err != nil {
 		return "", err
 	}
 
 	branch = strings.TrimSpace(branch)
-	if branch != "" && !gitBranchName.MatchString(branch) {
+	if branch != "" && !gitforge.BranchName.MatchString(branch) {
 		return "", fmt.Errorf("%q is not a branch name", branch)
 	}
 
-	if h.Kind == gitForgeDemo {
+	if h.Kind == gitforge.KindDemo {
 		return gitForgeJSON(demoGitForgeRepo(branch))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), gitforge.Timeout)
 	defer cancel()
 
-	info, err := readGitForgeRepo(ctx, newGitForge(h), repo, branch)
+	info, err := gitforge.ReadRepo(ctx, gitforge.New(h), repo, branch)
 	if err != nil {
-		return "", gitForgeRepoError(err, h, repo, info.Branch)
+		return "", gitforge.RepoError(err, h, repo, info.Branch)
 	}
 
 	info.Forge = h.Kind
@@ -176,7 +176,7 @@ func GitForgeRepoProposalDefaults(repoURL, path, cluster string) (out string, er
 }
 
 func gitForgeRepoProposalDefaults(repoURL, path, cluster string) (gitOpsProposal, error) {
-	_, owner, name, err := gitForgeRepo(repoURL)
+	_, owner, name, err := gitforge.ParseRepoURL(repoURL)
 	if err != nil {
 		return gitOpsProposal{}, err
 	}
@@ -198,7 +198,7 @@ func gitForgeRepoProposalDefaults(repoURL, path, cluster string) (gitOpsProposal
 	return gitOpsProposal{
 		Title:   title,
 		Message: title,
-		Branch:  "ichor/" + gitSlug(strings.Trim(cluster+"-"+file, "-")) + "-" + gitforge.BranchSuffix(),
+		Branch:  "ichor/" + gitforge.Slug(strings.Trim(cluster+"-"+file, "-")) + "-" + gitforge.BranchSuffix(),
 		Body:    body + ".",
 	}, nil
 }
@@ -211,24 +211,24 @@ func GitForgeRequest(hostJSON, repoURL string, number int) (out string, err erro
 	defer maskResult(&out, &err)
 
 	if number <= 0 {
-		return "", errGitRequestNumber
+		return "", gitforge.ErrRequestNumber
 	}
 
 	// A request is read by number: the ref the reads take is not used.
-	h, repo, _, _, err := gitForgeArgs(hostJSON, repoURL, "HEAD", "")
+	h, repo, _, _, err := gitforge.Args(hostJSON, repoURL, "HEAD", "")
 	if err != nil {
 		return "", err
 	}
 
-	if h.Kind == gitForgeDemo {
+	if h.Kind == gitforge.KindDemo {
 		return gitForgeJSON(demoGitRequest(repo, number))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), gitForgeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), gitforge.Timeout)
 	defer cancel()
 
-	state, err := newGitForge(h).Request(ctx, repo, number)
-	if errors.Is(err, errGitForgeNotFound) {
+	state, err := gitforge.New(h).Request(ctx, repo, number)
+	if errors.Is(err, gitforge.ErrNotFound) {
 		return "", fmt.Errorf("pull request #%d is not in %s (or the token cannot read it)", number, repo.Full())
 	}
 
