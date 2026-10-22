@@ -325,7 +325,10 @@ tour** shows it again.
   of another kind (workloads, networking, policies…) is a tool in that family of the Kubernetes
   home. kube-green is one: Workloads → kube-green says which namespaces sleep on a schedule, when
   they wake up, and whether they are asleep right now, and a schedule can be moved from the phone
-  (days, sleep and wake-up times, time zone). Plugin actions run from their buttons.
+  (days, sleep and wake-up times, time zone). Numaflow is another: Workloads → Numaflow shows
+  each pipeline and mono vertex (running, paused, failed and why), its vertices' pods and its
+  inter-step buffer service, and pauses or resumes a pipeline. Plugin actions run from their
+  buttons.
 - **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
   imported. Import a plugin file (one `just probe plugin-from-crd` drafted from a CRD, or
   `/ichor-crd-plugin` wrote, and `just probe plugin-lint` checked,
@@ -403,6 +406,8 @@ reads those roles and explains up front when a feature needs more.
 | **Data services: ExternalDNS hostnames and controllers** | `Kubeconfig`, then the Kubernetes API (deployments, ingresses, services, optional dnsendpoints.externaldns.k8s.io and httproutes/gateways) | **`os:admin`** |
 | **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
 | **Data services: External Secrets sync status and stores** | `Kubeconfig`, then the Kubernetes API (`list` on externalsecrets.external-secrets.io; optional secretstores, clustersecretstores and secrets with the `reconcile.external-secrets.io/managed=true` label, values masked) | **`os:admin`** |
+| **Numaflow pipelines, vertices and buffer services** | `Kubeconfig`, then the Kubernetes API (`list` on pipelines, vertices, monovertices and interstepbufferservices in numaflow.numaproj.io; one it may not list is reported and the others still show) | **`os:admin`** |
+| **Pause or resume a Numaflow pipeline or mono vertex** | `Kubeconfig`, then the Kubernetes API (merge patch of `spec.lifecycle.desiredPhase`: `patch` on pipelines or monovertices in their namespace) | **`os:admin`** |
 | **Refresh an ExternalSecret** | `Kubeconfig`, then the Kubernetes API (`get` and `patch` on externalsecrets.external-secrets.io in its namespace: merge patch of the `external-secrets.io/force-sync` annotation; the button is off with the reason without `patch`, and on a `CreatedOnce` secret) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
