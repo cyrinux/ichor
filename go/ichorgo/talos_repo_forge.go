@@ -6,6 +6,8 @@ import (
 	"fmt"
 	pathpkg "path"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // Talos from Git on a repository too big for a snapshot: a Talos directory is usually a few
@@ -33,7 +35,7 @@ type talosRepoRead struct {
 }
 
 // talosForgeReader reads the files a Talos feature needs from the forge, at commit sha.
-type talosForgeReader func(ctx context.Context, f gitForge, repo gitRepoRef, sha string) (map[string][]byte, error)
+type talosForgeReader func(ctx context.Context, f gitforge.Forge, repo gitforge.RepoRef, sha string) (map[string][]byte, error)
 
 func readTalosRepo(hostJSON, repoURL, ref string, read talosForgeReader) (talosRepoRead, error) {
 	snap, _, err := loadRepoSnapshot(hostJSON, repoURL, ref)
@@ -41,11 +43,11 @@ func readTalosRepo(hostJSON, repoURL, ref string, read talosForgeReader) (talosR
 		return talosRepoRead{files: snap.files, sha: snap.sha}, nil
 	}
 
-	if !errors.Is(err, errRepoTooLarge) && !errors.Is(err, errGitForgeArchiveTooLarge) {
+	if !errors.Is(err, errRepoTooLarge) && !errors.Is(err, gitforge.ErrArchiveTooLarge) {
 		return talosRepoRead{}, err
 	}
 
-	h, repo, ref, _, err := gitForgeArgs(hostJSON, repoURL, ref, "")
+	h, repo, ref, _, err := gitforge.Args(hostJSON, repoURL, ref, "")
 	if err != nil {
 		return talosRepoRead{}, err
 	}
@@ -53,7 +55,7 @@ func readTalosRepo(hostJSON, repoURL, ref string, read talosForgeReader) (talosR
 	ctx, cancel := context.WithTimeout(context.Background(), gitSnapshotTimeout)
 	defer cancel()
 
-	f := newGitForge(h)
+	f := gitforge.New(h)
 
 	sha, err := snapshotCommit(ctx, f, repo, ref)
 	if err != nil {
@@ -69,10 +71,10 @@ func readTalosRepo(hostJSON, repoURL, ref string, read talosForgeReader) (talosR
 }
 
 // talosDirReader walks dir, at most talosDirMaxDepth levels below it, and reads its YAML
-// files (at most talosDirMaxFiles, each under gitForgeMaxFile). A blank dir is refused: the
+// files (at most talosDirMaxFiles, each under gitforge.MaxFile). A blank dir is refused: the
 // whole repository would be walked one directory per request.
 func talosDirReader(dir string) talosForgeReader {
-	return func(ctx context.Context, f gitForge, repo gitRepoRef, sha string) (map[string][]byte, error) {
+	return func(ctx context.Context, f gitforge.Forge, repo gitforge.RepoRef, sha string) (map[string][]byte, error) {
 		root := strings.Trim(strings.TrimSpace(dir), "/")
 		if root == "" {
 			return nil, errTalosDirBlank
@@ -84,7 +86,7 @@ func talosDirReader(dir string) talosForgeReader {
 
 		walk = func(d string, depth int) error {
 			entries, err := f.Tree(ctx, repo, sha, d)
-			if errors.Is(err, errGitForgeNotFound) {
+			if errors.Is(err, gitforge.ErrNotFound) {
 				return fmt.Errorf("%s is not in %s at %.7s", d, repo.Full(), sha)
 			}
 
@@ -98,7 +100,7 @@ func talosDirReader(dir string) talosForgeReader {
 					if err := walk(e.Path, depth+1); err != nil {
 						return err
 					}
-				case e.Type == "file" && isYAMLPath(e.Path) && e.Size <= gitForgeMaxFile:
+				case e.Type == "file" && isYAMLPath(e.Path) && e.Size <= gitforge.MaxFile:
 					if len(files) == talosDirMaxFiles {
 						return fmt.Errorf("%s holds more than %d YAML files: the app reads at most that many", root, talosDirMaxFiles)
 					}
@@ -122,7 +124,7 @@ func talosDirReader(dir string) talosForgeReader {
 // talosPathsReader reads the files paths name (an inline talconfig patch's file once); a file
 // missing at the commit is left out, for loadTalosPatches to skip it with why.
 func talosPathsReader(paths []string) talosForgeReader {
-	return func(ctx context.Context, f gitForge, repo gitRepoRef, sha string) (map[string][]byte, error) {
+	return func(ctx context.Context, f gitforge.Forge, repo gitforge.RepoRef, sha string) (map[string][]byte, error) {
 		files := map[string][]byte{}
 
 		for _, p := range paths {
@@ -132,7 +134,7 @@ func talosPathsReader(paths []string) talosForgeReader {
 			}
 
 			file, err := f.File(ctx, repo, sha, name)
-			if errors.Is(err, errGitForgeNotFound) {
+			if errors.Is(err, gitforge.ErrNotFound) {
 				continue
 			}
 

@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // Where an Argo CD or Flux app's files are: the repository, the revision the cluster runs,
@@ -125,7 +127,7 @@ func argoGitOpsSources(o argoObject) []gitopsSource {
 
 	for i, s := range sources {
 		g := gitopsSource{
-			RepoURL: s.RepoURL, WebURL: argoRepoWebURL(s.RepoURL), Tracked: cmp.Or(s.TargetRevision, "HEAD"),
+			RepoURL: s.RepoURL, WebURL: gitforge.RepoWebURL(s.RepoURL), Tracked: cmp.Or(s.TargetRevision, "HEAD"),
 			Path: cleanSourcePath(s.Path), Chart: s.Chart, ValueFiles: []string{},
 		}
 
@@ -311,7 +313,7 @@ func fluxGitOpsSource(ctx context.Context, k *kubeClient, groups map[string]stri
 	case "GitRepository":
 		// Flux's precedence: commit, name, semver, tag, branch (master by default).
 		g.Tracked = cmp.Or(r.Commit, r.Name, r.SemVer, r.Tag, r.Branch, "master")
-		g.WebURL = argoRepoWebURL(src.Spec.URL)
+		g.WebURL = gitforge.RepoWebURL(src.Spec.URL)
 		g.Browsable = g.WebURL != ""
 	case "OCIRepository":
 		g.Tracked = cmp.Or(r.Digest, r.SemVer, r.Tag, "latest")

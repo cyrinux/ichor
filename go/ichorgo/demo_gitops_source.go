@@ -1,5 +1,7 @@
 package ichorgo
 
+import "github.com/cyrinux/ichor/go/gitforge"
+
 // The demo's GitOps sources: podinfo deployed from the demo fleet repository, whose files
 // are the demo Git repository's (demo_gitforge.go).
 
@@ -10,7 +12,7 @@ const (
 
 func demoGitOpsSource(tool string) gitopsSources {
 	g := gitopsSource{
-		RepoURL: demoGitOpsRepo, WebURL: argoRepoWebURL(demoGitOpsRepo), Tracked: "main", Revision: demoGitOpsCommit,
+		RepoURL: demoGitOpsRepo, WebURL: gitforge.RepoWebURL(demoGitOpsRepo), Tracked: "main", Revision: demoGitOpsCommit,
 		Path: "apps/podinfo", Kind: gitopsKindKustomize, ValueFiles: []string{}, Browsable: true,
 	}
 

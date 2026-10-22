@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cyrinux/ichor/go/gitforge"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -63,10 +64,10 @@ func FluxSourceTree(configYAML, contextName, kubeServer, kind, namespace, name, 
 		return "", fmt.Errorf("%s is not in %s/%s at %s", cmpOrRoot(dir), ns, nm, tree.revision)
 	}
 
-	sortGitForgeEntries(entries)
+	gitforge.SortEntries(entries)
 	markSOPSEntries(entries)
 
-	return toJSON(gitForgeTree{Ref: tree.revision, SHA: tree.commit, Entries: entries})
+	return toJSON(gitforge.Tree{Ref: tree.revision, SHA: tree.commit, Entries: entries})
 }
 
 // FluxSourceFile reads the file path of the artifact of the Flux source kind namespace/name:
@@ -95,8 +96,8 @@ func FluxSourceFile(configYAML, contextName, kubeServer, kind, namespace, name, 
 		return "", fmt.Errorf("%s is not in %s/%s at %s", filePath, ns, nm, tree.revision)
 	}
 
-	f := gitForgeFile{Path: filePath, SHA: tree.commit, Size: int64(len(content)), Content: string(content)}
-	if f.Size > gitForgeMaxFile {
+	f := gitforge.File{Path: filePath, SHA: tree.commit, Size: int64(len(content)), Content: string(content)}
+	if f.Size > gitforge.MaxFile {
 		f.Content, f.Truncated = "", true
 	}
 
@@ -296,7 +297,7 @@ func storeFluxTree(key string, t *fluxTree) {
 
 // listTreeDir lists the direct children of dir among files (path → size): files with their
 // size, directories once. nil when dir holds nothing.
-func listTreeDir(files map[string]int64, dir string) []gitForgeEntry {
+func listTreeDir(files map[string]int64, dir string) []gitforge.Entry {
 	prefix := ""
 	if dir != "" {
 		prefix = dir + "/"
@@ -304,7 +305,7 @@ func listTreeDir(files map[string]int64, dir string) []gitForgeEntry {
 
 	seen := map[string]bool{}
 
-	var entries []gitForgeEntry
+	var entries []gitforge.Entry
 
 	for p, size := range files {
 		rest, ok := strings.CutPrefix(p, prefix)
@@ -315,13 +316,13 @@ func listTreeDir(files map[string]int64, dir string) []gitForgeEntry {
 		if name, _, isDir := strings.Cut(rest, "/"); isDir {
 			if !seen[prefix+name] {
 				seen[prefix+name] = true
-				entries = append(entries, gitForgeEntry{Path: prefix + name, Type: "dir"})
+				entries = append(entries, gitforge.Entry{Path: prefix + name, Type: "dir"})
 			}
 
 			continue
 		}
 
-		entries = append(entries, gitForgeEntry{Path: p, Type: "file", Size: size})
+		entries = append(entries, gitforge.Entry{Path: p, Type: "file", Size: size})
 	}
 
 	return entries

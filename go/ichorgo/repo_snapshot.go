@@ -20,6 +20,8 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // A repository at one commit, downloaded as one archive and kept on the phone: the whole tree
@@ -29,7 +31,7 @@ import (
 // commit.
 
 const (
-	gitSnapshotTimeout = gitForgeArchiveTimeout
+	gitSnapshotTimeout = gitforge.ArchiveTimeout
 	// gitSnapshotMemory is how many unpacked snapshots stay in memory.
 	gitSnapshotMemory = 3
 	// gitSnapshotMemoryBytes bounds their text, all together (the newest is always kept).
@@ -90,19 +92,19 @@ func GitRepoSnapshotPrepare(hostJSON, repoURL, ref string) (out string, err erro
 
 // loadRepoSnapshot is the snapshot of repoURL at ref, and whether it was already on the phone.
 func loadRepoSnapshot(hostJSON, repoURL, ref string) (*repoSnapshot, bool, error) {
-	h, repo, ref, _, err := gitForgeArgs(hostJSON, repoURL, ref, "")
+	h, repo, ref, _, err := gitforge.Args(hostJSON, repoURL, ref, "")
 	if err != nil {
 		return nil, false, err
 	}
 
-	if h.Kind == gitForgeDemo {
+	if h.Kind == gitforge.KindDemo {
 		return demoRepoSnapshot(ref), true, nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), gitSnapshotTimeout)
 	defer cancel()
 
-	sha, err := snapshotCommit(ctx, newGitForge(h), repo, ref)
+	sha, err := snapshotCommit(ctx, gitforge.New(h), repo, ref)
 	if err != nil {
 		return nil, false, err
 	}
@@ -125,8 +127,8 @@ func loadRepoSnapshot(hostJSON, repoURL, ref string) (*repoSnapshot, bool, error
 		}
 	}
 
-	data, err := gitForgeArchive(ctx, h, repo, sha)
-	if errors.Is(err, errGitForgeNotFound) {
+	data, err := gitforge.Archive(ctx, h, repo, sha)
+	if errors.Is(err, gitforge.ErrNotFound) {
 		return nil, false, fmt.Errorf("%s is not in %s", ref, repo.Full())
 	}
 
@@ -147,13 +149,13 @@ func loadRepoSnapshot(hostJSON, repoURL, ref string) (*repoSnapshot, bool, error
 
 // snapshotCommit is the full commit ref names (a branch, a tag, a short sha, HEAD), asked of
 // the forge: the cache is keyed by commits only, so a ref that moves is never served stale.
-func snapshotCommit(ctx context.Context, f gitForge, repo gitRepoRef, ref string) (string, error) {
+func snapshotCommit(ctx context.Context, f gitforge.Forge, repo gitforge.RepoRef, ref string) (string, error) {
 	if commitSHA.MatchString(ref) {
 		return ref, nil
 	}
 
 	sha, err := f.RefCommit(ctx, repo, ref)
-	if errors.Is(err, errGitForgeNotFound) {
+	if errors.Is(err, gitforge.ErrNotFound) {
 		return "", fmt.Errorf("%s is not in %s", ref, repo.Full())
 	}
 

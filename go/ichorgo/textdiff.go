@@ -32,7 +32,7 @@ func TextDiff(before, after, name string) (out string, err error) {
 	}
 
 	for _, s := range []string{before, after} {
-		if len(s) > gitForgeMaxFile {
+		if len(s) > gitforge.MaxFile {
 			return "", fmt.Errorf("%s is over 1 MiB: compare it on a computer", name)
 		}
 	}
@@ -122,7 +122,7 @@ func gitOpsProposalDefaults(tool, kind, namespace, name, path, cluster string) (
 	return gitOpsProposal{
 		Title:   title,
 		Message: title,
-		Branch:  "ichor/" + gitSlug(strings.Trim(name+"-"+file, "-")) + "-" + gitforge.BranchSuffix(),
+		Branch:  "ichor/" + gitforge.Slug(strings.Trim(name+"-"+file, "-")) + "-" + gitforge.BranchSuffix(),
 		Body:    body + ".",
 	}, nil
 }

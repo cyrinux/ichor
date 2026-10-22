@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // GitOpsSourceFind: from a drifted resource of an Argo CD or Flux diff to the file in Git that
@@ -250,30 +252,30 @@ func treeFilesUnder(files map[string][]byte, dir string) sourceFiles {
 
 // sourceForge reads one repository at one ref: the demo's or a Git host's.
 type sourceForge struct {
-	tree func(ctx context.Context, dir string) ([]gitForgeEntry, error)
-	file func(ctx context.Context, p string) (gitForgeFile, error)
+	tree func(ctx context.Context, dir string) ([]gitforge.Entry, error)
+	file func(ctx context.Context, p string) (gitforge.File, error)
 }
 
-// newSourceForge checks hostJSON against the source's repository (gitForgeArgs: the token only
+// newSourceForge checks hostJSON against the source's repository (gitforge.Args: the token only
 // goes to its own host) and reads at the commit the cluster runs, or the tracked ref.
 func newSourceForge(hostJSON string, src gitopsSource) (sourceForge, error) {
-	h, repo, ref, _, err := gitForgeArgs(hostJSON, src.RepoURL, cmp.Or(src.Revision, src.Tracked), src.Path)
+	h, repo, ref, _, err := gitforge.Args(hostJSON, src.RepoURL, cmp.Or(src.Revision, src.Tracked), src.Path)
 	if err != nil {
 		return sourceForge{}, err
 	}
 
-	if h.Kind == gitForgeDemo {
+	if h.Kind == gitforge.KindDemo {
 		return sourceForge{
-			tree: func(_ context.Context, dir string) ([]gitForgeEntry, error) { return demoGitForgeTree(dir) },
-			file: func(_ context.Context, p string) (gitForgeFile, error) { return demoGitForgeFile(p) },
+			tree: func(_ context.Context, dir string) ([]gitforge.Entry, error) { return demoGitForgeTree(dir) },
+			file: func(_ context.Context, p string) (gitforge.File, error) { return demoGitForgeFile(p) },
 		}, nil
 	}
 
-	f := newGitForge(h)
+	f := gitforge.New(h)
 
 	return sourceForge{
-		tree: func(ctx context.Context, dir string) ([]gitForgeEntry, error) { return f.Tree(ctx, repo, ref, dir) },
-		file: func(ctx context.Context, p string) (gitForgeFile, error) { return f.File(ctx, repo, ref, p) },
+		tree: func(ctx context.Context, dir string) ([]gitforge.Entry, error) { return f.Tree(ctx, repo, ref, dir) },
+		file: func(ctx context.Context, p string) (gitforge.File, error) { return f.File(ctx, repo, ref, p) },
 	}, nil
 }
 
@@ -303,16 +305,16 @@ func walkForgeFiles(ctx context.Context, r sourceForge, dir string) (sourceFiles
 				break
 			}
 
-			if errors.Is(err, errGitForgeNotFound) {
+			if errors.Is(err, gitforge.ErrNotFound) {
 				return sourceFiles{}, fmt.Errorf("%s is not in the repository", cmpOrRoot(d))
 			}
 
 			return sourceFiles{}, err
 		}
 
-		sortGitForgeEntries(entries)
+		gitforge.SortEntries(entries)
 
-		if d == dir && slices.ContainsFunc(entries, func(e gitForgeEntry) bool { return path.Base(e.Path) == "Chart.yaml" && e.Type == "file" }) {
+		if d == dir && slices.ContainsFunc(entries, func(e gitforge.Entry) bool { return path.Base(e.Path) == "Chart.yaml" && e.Type == "file" }) {
 			out.helm = true
 
 			return out, nil
@@ -340,7 +342,7 @@ func walkForgeFiles(ctx context.Context, r sourceForge, dir string) (sourceFiles
 				break
 			}
 
-			if errors.Is(err, errGitForgeNotFound) || errors.Is(err, errGitForgeTooLarge) {
+			if errors.Is(err, gitforge.ErrNotFound) || errors.Is(err, gitforge.ErrTooLarge) {
 				continue
 			}
 

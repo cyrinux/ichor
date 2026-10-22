@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 func Test_findManifest(t *testing.T) {
@@ -155,7 +157,7 @@ func TestTreeFilesUnderBounds(t *testing.T) {
 }
 
 func TestWalkForgeFiles(t *testing.T) {
-	tree := map[string][]gitForgeEntry{
+	tree := map[string][]gitforge.Entry{
 		"apps":     {{Path: "apps/web", Type: "dir"}, {Path: "apps/kustomization.yaml", Type: "file", Size: 10}, {Path: "apps/huge.yaml", Type: "file", Size: gitopsFindMaxFile + 1}},
 		"apps/web": {{Path: "apps/web/deploy.yaml", Type: "file", Size: 10}, {Path: "apps/web/logo.png", Type: "file", Size: 10}},
 	}
@@ -163,17 +165,17 @@ func TestWalkForgeFiles(t *testing.T) {
 	var read []string
 
 	r := sourceForge{
-		tree: func(_ context.Context, dir string) ([]gitForgeEntry, error) {
+		tree: func(_ context.Context, dir string) ([]gitforge.Entry, error) {
 			if e, ok := tree[dir]; ok {
 				return e, nil
 			}
 
-			return nil, errGitForgeNotFound
+			return nil, gitforge.ErrNotFound
 		},
-		file: func(_ context.Context, p string) (gitForgeFile, error) {
+		file: func(_ context.Context, p string) (gitforge.File, error) {
 			read = append(read, p)
 
-			return gitForgeFile{Path: p, Content: "kind: Deployment\nmetadata:\n  name: web\n"}, nil
+			return gitforge.File{Path: p, Content: "kind: Deployment\nmetadata:\n  name: web\n"}, nil
 		},
 	}
 
@@ -190,8 +192,8 @@ func TestWalkForgeFiles(t *testing.T) {
 		t.Errorf("missing dir: %v", err)
 	}
 
-	r.file = func(context.Context, string) (gitForgeFile, error) {
-		return gitForgeFile{}, errors.New("the token for git.example.org was refused")
+	r.file = func(context.Context, string) (gitforge.File, error) {
+		return gitforge.File{}, errors.New("the token for git.example.org was refused")
 	}
 	if _, err := walkForgeFiles(context.Background(), r, "apps"); err == nil {
 		t.Error("a refused token was ignored")
@@ -210,12 +212,12 @@ func TestWalkForgeFiles(t *testing.T) {
 func TestGitOpsSourceFindChecksTheHost(t *testing.T) {
 	src := gitopsSource{RepoURL: "https://git.example.org/team/fleet.git", Tracked: "main", Path: "apps", Kind: gitopsKindDirectory, Browsable: true}
 
-	host, _ := json.Marshal(gitForgeHost{Kind: gitForgeGitea, BaseURL: "https://code.example.net", Token: "secret-token"}) //nolint:errcheck
+	host, _ := json.Marshal(gitforge.Host{Kind: gitforge.KindGitea, BaseURL: "https://code.example.net", Token: "secret-token"}) //nolint:errcheck
 	if _, err := newSourceForge(string(host), src); err == nil || strings.Contains(err.Error(), "secret-token") {
 		t.Errorf("other host: %v", err)
 	}
 
-	host, _ = json.Marshal(gitForgeHost{Kind: gitForgeGitea, BaseURL: "https://code.example.net", Token: "t", Aliases: []string{"git.example.org"}}) //nolint:errcheck
+	host, _ = json.Marshal(gitforge.Host{Kind: gitforge.KindGitea, BaseURL: "https://code.example.net", Token: "t", Aliases: []string{"git.example.org"}}) //nolint:errcheck
 	if _, err := newSourceForge(string(host), src); err != nil {
 		t.Errorf("alias: %v", err)
 	}

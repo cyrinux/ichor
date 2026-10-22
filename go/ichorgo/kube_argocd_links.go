@@ -3,6 +3,8 @@ package ichorgo
 import (
 	"regexp"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // Browsable links for what Argo CD deploys: the repository page and the commit a revision
@@ -22,7 +24,7 @@ func argoCommitURL(repo, revision string) string {
 		return ""
 	}
 
-	base := argoRepoWebURL(repo)
+	base := gitforge.RepoWebURL(repo)
 	if base == "" {
 		return ""
 	}

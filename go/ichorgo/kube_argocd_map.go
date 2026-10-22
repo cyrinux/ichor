@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"slices"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // The fields of argoproj.io/v1alpha1 objects the app reads.
@@ -188,7 +190,7 @@ func mapArgoApp(o argoObject, apps map[string]bool) argoApp {
 
 	sources := argoSourcesOf(o.Spec)
 	for _, s := range sources {
-		a.Sources = append(a.Sources, argoSrc{Repo: s.RepoURL, RepoURL: argoRepoWebURL(s.RepoURL), Path: s.Path, Chart: s.Chart, TargetRevision: s.TargetRevision})
+		a.Sources = append(a.Sources, argoSrc{Repo: s.RepoURL, RepoURL: gitforge.RepoWebURL(s.RepoURL), Path: s.Path, Chart: s.Chart, TargetRevision: s.TargetRevision})
 	}
 
 	a.RevisionURL = argoRevisionURL(sources, st.Sync.Revisions, a.Revision)

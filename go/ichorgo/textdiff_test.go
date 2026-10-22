@@ -9,7 +9,7 @@ import (
 )
 
 func TestTextDiff(t *testing.T) {
-	big := strings.Repeat("x", gitForgeMaxFile+1)
+	big := strings.Repeat("x", gitforge.MaxFile+1)
 
 	cases := []struct {
 		name, before, after, file string

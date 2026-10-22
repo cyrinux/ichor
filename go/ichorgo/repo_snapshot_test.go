@@ -14,6 +14,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 const snapTestSHA = "0123456789abcdef0123456789abcdef01234567"
@@ -113,13 +115,13 @@ func TestGitForgeArchivePerForge(t *testing.T) {
 		kind   string
 		routes map[string]func(w http.ResponseWriter, r *http.Request)
 	}{
-		{gitForgeGitHub, map[string]func(w http.ResponseWriter, r *http.Request){
+		{gitforge.KindGitHub, map[string]func(w http.ResponseWriter, r *http.Request){
 			"/api/v3/repos/example-org/cluster-config/commits/main": jsonAnswer(`{"sha":"` + snapTestSHA + `","files":[]}`),
 			"/api/v3/repos/example-org/cluster-config/tarball/" + snapTestSHA: func(w http.ResponseWriter, r *http.Request) {
 				http.Redirect(w, r, codeload.URL+"/example-org/cluster-config/legacy.tar.gz/"+snapTestSHA+"?token=signed", http.StatusFound)
 			},
 		}},
-		{gitForgeGitLab, map[string]func(w http.ResponseWriter, r *http.Request){
+		{gitforge.KindGitLab, map[string]func(w http.ResponseWriter, r *http.Request){
 			"/api/v4/projects/example-org%2Fcluster-config/repository/commits/main": jsonAnswer(`{"id":"` + snapTestSHA + `"}`),
 			"/api/v4/projects/example-org%2Fcluster-config/repository/archive.tar.gz": func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Query().Get("sha") != snapTestSHA {
@@ -129,7 +131,7 @@ func TestGitForgeArchivePerForge(t *testing.T) {
 				serve(w, r)
 			},
 		}},
-		{gitForgeGitea, map[string]func(w http.ResponseWriter, r *http.Request){
+		{gitforge.KindGitea, map[string]func(w http.ResponseWriter, r *http.Request){
 			"/api/v1/repos/example-org/cluster-config/commits":                            giteaCommits(t),
 			"/api/v1/repos/example-org/cluster-config/archive/" + snapTestSHA + ".tar.gz": serve,
 		}},
@@ -173,7 +175,7 @@ func TestRepoSnapshotCache(t *testing.T) {
 			w.Write(archive) //nolint:errcheck
 		},
 	})
-	host, repo := gitHostJSON(gitForgeGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config"
+	host, repo := gitHostJSON(gitforge.KindGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config"
 
 	status := func() repoSnapshotStatus {
 		t.Helper()
@@ -234,7 +236,7 @@ func TestRepoSnapshotWithoutDataDirStaysInMemory(t *testing.T) {
 	})
 
 	// A commit is not resolved: no branch call.
-	if _, err := GitRepoSnapshotPrepare(gitHostJSON(gitForgeGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config", snapTestSHA); err != nil {
+	if _, err := GitRepoSnapshotPrepare(gitHostJSON(gitforge.KindGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config", snapTestSHA); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -244,11 +246,11 @@ func TestGitForgeArchiveTooLarge(t *testing.T) {
 
 	srv := gitServer(t, map[string]func(w http.ResponseWriter, r *http.Request){
 		"/api/v1/repos/example-org/cluster-config/archive/" + snapTestSHA + ".tar.gz": func(w http.ResponseWriter, _ *http.Request) {
-			w.Write(make([]byte, gitForgeMaxArchive+1)) //nolint:errcheck
+			w.Write(make([]byte, gitforge.MaxArchive+1)) //nolint:errcheck
 		},
 	})
 
-	_, err := GitRepoSearch(gitHostJSON(gitForgeGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config", snapTestSHA, "x", 0)
+	_, err := GitRepoSearch(gitHostJSON(gitforge.KindGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config", snapTestSHA, "x", 0)
 	if err == nil || err.Error() != "the repository archive is over 48 MiB; browse it file by file" {
 		t.Errorf("too large: %v", err)
 	}
@@ -263,7 +265,7 @@ func TestGitForgeArchiveRedirectRefusals(t *testing.T) {
 		},
 	})
 
-	_, err := GitRepoSnapshotPrepare(gitHostJSON(gitForgeGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config", snapTestSHA)
+	_, err := GitRepoSnapshotPrepare(gitHostJSON(gitforge.KindGitea, srv.URL), "https://127.0.0.1/example-org/cluster-config", snapTestSHA)
 	if err == nil || !strings.Contains(err.Error(), "plain http") {
 		t.Errorf("plain http redirect: %v", err)
 	}
@@ -280,13 +282,13 @@ func TestSnapshotCommitResolvesEveryRef(t *testing.T) {
 		"/api/v3/repos/example-org/cluster-config/commits/v1.2.0": jsonAnswer(`{"sha":"` + strings.ToUpper(snapTestSHA) + `"}`),
 		"/api/v3/repos/example-org/cluster-config/commits/HEAD":   jsonAnswer(`{"sha":"not-a-sha"}`),
 	})
-	h, err := parseGitForgeHost(gitHostJSON(gitForgeGitHub, srv.URL))
+	h, err := gitforge.ParseHost(gitHostJSON(gitforge.KindGitHub, srv.URL))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	f := newGitForge(h)
-	repo := gitRepoRef{Host: "127.0.0.1", Owner: "example-org", Name: "cluster-config"}
+	f := gitforge.New(h)
+	repo := gitforge.RepoRef{Host: "127.0.0.1", Owner: "example-org", Name: "cluster-config"}
 
 	if sha, err := snapshotCommit(t.Context(), f, repo, "v1.2.0"); err != nil || sha != snapTestSHA {
 		t.Errorf("tag: %q %v", sha, err)
@@ -331,7 +333,7 @@ func TestConcurrentSnapshotLoadsDownloadOnce(t *testing.T) {
 			w.Write(archive) //nolint:errcheck
 		},
 	})
-	host := gitHostJSON(gitForgeGitea, srv.URL)
+	host := gitHostJSON(gitforge.KindGitea, srv.URL)
 
 	done := make(chan error, 4)
 	for range 4 {

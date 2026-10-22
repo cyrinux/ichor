@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // decodeAnswer checks a call's answer and decodes it: decodeAnswer[T](t)(Call(...)).
@@ -27,8 +29,8 @@ func decodeAnswer[T any](t *testing.T) func(string, error) T {
 	}
 }
 
-func requestOf(t *testing.T) func(string, error) gitRequestState {
-	return decodeAnswer[gitRequestState](t)
+func requestOf(t *testing.T) func(string, error) gitforge.RequestState {
+	return decodeAnswer[gitforge.RequestState](t)
 }
 
 func TestGitForgeRequest(t *testing.T) {
@@ -51,30 +53,30 @@ func TestGitForgeRequest(t *testing.T) {
 	repo := srv.URL + "/example-org/cluster-config"
 
 	merged := requestOf(t)(GitForgeRequest(gitHostJSON("github", srv.URL+"/api/v3"), repo, 7))
-	if merged.State != gitRequestMerged || merged.MergeSHA != "m3rg3d" || merged.HeadSHA != "h3ad" || merged.Title != "Scale podinfo to 3" {
+	if merged.State != gitforge.RequestMerged || merged.MergeSHA != "m3rg3d" || merged.HeadSHA != "h3ad" || merged.Title != "Scale podinfo to 3" {
 		t.Errorf("github merged %+v", merged)
 	}
 
 	// An open request's merge commit is GitHub's test merge: not given.
 	draft := requestOf(t)(GitForgeRequest(gitHostJSON("github", srv.URL+"/api/v3"), repo, 8))
-	if draft.State != gitRequestOpen || !draft.Draft || draft.MergeSHA != "" {
+	if draft.State != gitforge.RequestOpen || !draft.Draft || draft.MergeSHA != "" {
 		t.Errorf("github draft %+v", draft)
 	}
 
-	if s := requestOf(t)(GitForgeRequest(gitHostJSON("github", srv.URL+"/api/v3"), repo, 9)); s.State != gitRequestClosed {
+	if s := requestOf(t)(GitForgeRequest(gitHostJSON("github", srv.URL+"/api/v3"), repo, 9)); s.State != gitforge.RequestClosed {
 		t.Errorf("github closed %+v", s)
 	}
 
 	lab := requestOf(t)(GitForgeRequest(gitHostJSON("gitlab", srv.URL), repo, 3))
-	if lab.State != gitRequestMerged || lab.MergeSHA != "squ4sh" {
+	if lab.State != gitforge.RequestMerged || lab.MergeSHA != "squ4sh" {
 		t.Errorf("gitlab merged %+v", lab)
 	}
 
-	if s := requestOf(t)(GitForgeRequest(gitHostJSON("gitlab", srv.URL), repo, 4)); s.State != gitRequestOpen {
+	if s := requestOf(t)(GitForgeRequest(gitHostJSON("gitlab", srv.URL), repo, 4)); s.State != gitforge.RequestOpen {
 		t.Errorf("gitlab open %+v", s)
 	}
 
-	if s := requestOf(t)(GitForgeRequest(gitHostJSON("gitea", srv.URL), repo, 5)); s.State != gitRequestMerged || s.MergeSHA != "g1tea" {
+	if s := requestOf(t)(GitForgeRequest(gitHostJSON("gitea", srv.URL), repo, 5)); s.State != gitforge.RequestMerged || s.MergeSHA != "g1tea" {
 		t.Errorf("gitea %+v", s)
 	}
 
@@ -82,7 +84,7 @@ func TestGitForgeRequest(t *testing.T) {
 		t.Errorf("missing: %v", err)
 	}
 
-	if _, err := GitForgeRequest(gitHostJSON("github", srv.URL+"/api/v3"), repo, 0); err != errGitRequestNumber {
+	if _, err := GitForgeRequest(gitHostJSON("github", srv.URL+"/api/v3"), repo, 0); err != gitforge.ErrRequestNumber {
 		t.Errorf("no number: %v", err)
 	}
 }
@@ -98,8 +100,8 @@ func TestGitForgeRequestGitHubStyle(t *testing.T) {
 		"/api/v1/repos/example-org/cluster-config/pulls/12": jsonAnswer(pr),
 	})
 
-	want := gitRequestState{
-		State: gitRequestMerged, Title: "Pin the chart", URL: "https://forge.example.org/example-org/cluster-config/pulls/12",
+	want := gitforge.RequestState{
+		State: gitforge.RequestMerged, Title: "Pin the chart", URL: "https://forge.example.org/example-org/cluster-config/pulls/12",
 		HeadSHA: "h3ad", MergeSHA: "m3rg3", MergedAt: "2026-10-19T09:00:00Z", UpdatedAt: "2026-10-19T09:01:00Z",
 	}
 

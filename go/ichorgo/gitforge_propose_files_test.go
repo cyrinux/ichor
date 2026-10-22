@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 const kustomizationContent = "resources:\n  - deployment.yaml\nimages:\n  - name: podinfo\n    newTag: 6.7.1\n"
@@ -62,7 +64,7 @@ func TestGitForgeProposeFilesGitHub(t *testing.T) {
 	runProposeCases(t, "github", "https://127.0.0.1/example-org/platform", []proposeCase{
 		{
 			name: "two files, two commits", change: twoFiles, answers: ok, wantCalls: []string{ref, refs, putA, putB, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.Number != 43 || res.Commit != "c2" || !slices.Equal(res.Commits, []string{"c1", "c2"}) {
 					t.Errorf("result %+v", res)
 				}
@@ -78,7 +80,7 @@ func TestGitForgeProposeFilesGitHub(t *testing.T) {
 		},
 		{
 			name: "a deletion", change: withDelete, answers: ok, wantCalls: []string{ref, refs, putA, putB, delC, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				wantFields(t, delC, bodyOf(t, calls, delC), map[string]any{"message": "Bump podinfo to 6.7.1 (3/3)", "sha": "01d", "branch": branch})
 
 				if len(res.Commits) != 3 {
@@ -120,7 +122,7 @@ func TestGitForgeProposeFilesGitLab(t *testing.T) {
 	runProposeCases(t, "gitlab", "https://127.0.0.1/group/platform.git", []proposeCase{
 		{
 			name: "one commit with three actions", change: withDelete, answers: ok, wantCalls: []string{create, commits, mrs},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.Number != 8 || !slices.Equal(res.Commits, []string{"0ne"}) {
 					t.Errorf("result %+v", res)
 				}
@@ -181,7 +183,7 @@ func TestGitForgeProposeFilesGitea(t *testing.T) {
 	runProposeCases(t, "gitea", "https://127.0.0.1/example-org/platform", []proposeCase{
 		{
 			name: "one commit", change: withDelete, answers: ok, wantCalls: []string{create, batch, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if res.Commit != "6a7c4" || !slices.Equal(res.Commits, []string{"6a7c4"}) {
 					t.Errorf("result %+v", res)
 				}
@@ -215,7 +217,7 @@ func TestGitForgeProposeFilesGitea(t *testing.T) {
 			name: "older server: one commit per file", change: twoFiles,
 			answers:   answering(ok, batch, proposeAnswer{404, `{"message":"Not Found"}`}),
 			wantCalls: []string{create, batch, putA, postB, pulls},
-			check: func(t *testing.T, calls []proposeCall, res gitProposeResult) {
+			check: func(t *testing.T, calls []proposeCall, res gitforge.ProposeResult) {
 				if !slices.Equal(res.Commits, []string{"g1", "g2"}) {
 					t.Errorf("commits %v", res.Commits)
 				}
@@ -241,7 +243,7 @@ func TestGitForgeProposeFilesValidation(t *testing.T) {
 
 	file := func(path string) map[string]any { return map[string]any{"path": path, "content": "a: 1\n"} }
 
-	many := make([]any, gitProposeMaxFiles+1)
+	many := make([]any, gitforge.ProposeMaxFiles+1)
 	for i := range many {
 		many[i] = file("apps/f" + strings.Repeat("x", i) + ".yaml")
 	}
@@ -258,7 +260,7 @@ func TestGitForgeProposeFilesValidation(t *testing.T) {
 		"root":           {func(o map[string]any) { twoFiles(o); o["files"] = []any{file("/")} }, "is not a file path"},
 		"too big": {func(o map[string]any) {
 			twoFiles(o)
-			o["files"] = []any{map[string]any{"path": "a.yaml", "content": strings.Repeat("a", gitForgeMaxFile+1)}}
+			o["files"] = []any{map[string]any{"path": "a.yaml", "content": strings.Repeat("a", gitforge.MaxFile+1)}}
 		}, "a.yaml is over 1 MiB"},
 		"delete without sha": {func(o map[string]any) {
 			twoFiles(o)

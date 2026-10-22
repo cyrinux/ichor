@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cyrinux/ichor/go/gitforge"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -167,7 +168,7 @@ func parseQuickEdit(editJSON string) (quickEdit, error) {
 // parseQuickEditDocs decodes every document of the file; nil stands for an empty document,
 // so indexes match the documents' order in the file.
 func parseQuickEditDocs(content string) ([]*yaml.Node, error) {
-	if len(content) > gitForgeMaxFile {
+	if len(content) > gitforge.MaxFile {
 		return nil, errors.New("the file is over 1 MiB: edit it on a computer")
 	}
 

@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 const (
@@ -131,7 +133,7 @@ func TestSopsTreeAndDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var tree gitForgeTree
+	var tree gitforge.Tree
 	if err := json.Unmarshal([]byte(out), &tree); err != nil {
 		t.Fatal(err)
 	}

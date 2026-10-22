@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 // GitForgePropose commits one file of repoURL on a new branch from baseRef and opens a pull
@@ -20,7 +22,7 @@ func GitForgePropose(configYAML, contextName, hostJSON, optionsJSON string) (out
 	contextName = unmaskContext(configYAML, contextName)
 
 	var (
-		res    gitProposeResult
+		res    gitforge.ProposeResult
 		target string
 	)
 
@@ -43,36 +45,36 @@ func GitForgePropose(configYAML, contextName, hostJSON, optionsJSON string) (out
 
 // gitForgePropose is GitForgePropose once its context is unmasked; target gets the
 // repository and path once they are known.
-func gitForgePropose(configYAML, contextName, hostJSON, optionsJSON string, target *string) (gitProposeResult, error) {
-	h, err := parseGitForgeHost(hostJSON)
+func gitForgePropose(configYAML, contextName, hostJSON, optionsJSON string, target *string) (gitforge.ProposeResult, error) {
+	h, err := gitforge.ParseHost(hostJSON)
 	if err != nil {
-		return gitProposeResult{}, err
+		return gitforge.ProposeResult{}, err
 	}
 
-	if h.Kind == gitForgeDemo || configYAML != "" && isDemoContext(configYAML, contextName) {
-		return gitProposeResult{}, errDemoUnavailable
+	if h.Kind == gitforge.KindDemo || configYAML != "" && isDemoContext(configYAML, contextName) {
+		return gitforge.ProposeResult{}, errDemoUnavailable
 	}
 
-	var p gitProposal
+	var p gitforge.Proposal
 	if err := json.Unmarshal([]byte(optionsJSON), &p); err != nil {
-		return gitProposeResult{}, fmt.Errorf("invalid proposal: %w", err)
+		return gitforge.ProposeResult{}, fmt.Errorf("invalid proposal: %w", err)
 	}
 
 	if privacy.isEnabled() {
-		return gitProposeResult{}, errGitProposePrivacy
+		return gitforge.ProposeResult{}, errGitProposePrivacy
 	}
 
-	h, repo, p, err := checkGitProposal(hostJSON, p)
+	h, repo, p, err := gitforge.CheckProposal(hostJSON, p)
 	if err != nil {
-		return gitProposeResult{}, err
+		return gitforge.ProposeResult{}, err
 	}
 
-	*target = repo.Full() + ":" + proposalPaths(p)
+	*target = repo.Full() + ":" + gitforge.ProposalPaths(p)
 
-	ctx, cancel := context.WithTimeout(context.Background(), gitProposeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), gitforge.ProposeTimeout)
 	defer cancel()
 
-	res, err := propose(ctx, newGitForge(h), repo, p)
+	res, err := gitforge.Propose(ctx, gitforge.New(h), repo, p)
 	res.Forge = h.Kind
 
 	return res, err

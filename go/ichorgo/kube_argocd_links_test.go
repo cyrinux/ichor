@@ -3,6 +3,8 @@ package ichorgo
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 func TestArgoRepoWebURL(t *testing.T) {
@@ -21,8 +23,8 @@ func TestArgoRepoWebURL(t *testing.T) {
 	}
 
 	for in, want := range cases {
-		if got := argoRepoWebURL(in); got != want {
-			t.Errorf("argoRepoWebURL(%q) = %q, want %q", in, got, want)
+		if got := gitforge.RepoWebURL(in); got != want {
+			t.Errorf("gitforge.RepoWebURL(%q) = %q, want %q", in, got, want)
 		}
 	}
 }

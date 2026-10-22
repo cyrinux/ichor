@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 const (
@@ -176,7 +178,7 @@ func TestFluxSourceTreeFromArtifact(t *testing.T) {
 	}
 
 	entries := listTreeDir(root.sizes(), "")
-	sortGitForgeEntries(entries)
+	gitforge.SortEntries(entries)
 
 	out, _ := json.Marshal(entries) //nolint:errcheck
 	if string(out) != `[{"path":"apps","type":"dir","size":0},{"path":"README.md","type":"file","size":6}]` {

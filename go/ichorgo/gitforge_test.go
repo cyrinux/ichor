@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 const gitTestToken = "ghp_test_not_a_real_token"
@@ -75,7 +77,7 @@ func TestGitHubTreeAndFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var tree gitForgeTree
+	var tree gitforge.Tree
 	if err := json.Unmarshal([]byte(out), &tree); err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +91,7 @@ func TestGitHubTreeAndFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var f gitForgeFile
+	var f gitforge.File
 	if err := json.Unmarshal([]byte(out), &f); err != nil || f.Content != "kind: Deployment" || f.SHA != "abc123" || f.Truncated {
 		t.Errorf("file %+v %v", f, err)
 	}
@@ -183,7 +185,7 @@ func TestGitLabTreePagesAndPrivateToken(t *testing.T) {
 // Gitea sends a file's whole content: one too large to read comes back truncated, described
 // from its directory's listing.
 func TestGiteaLargeFileIsTruncated(t *testing.T) {
-	big := strings.Repeat("A", gitForgeMaxBody)
+	big := strings.Repeat("A", gitforge.MaxBody)
 
 	srv := gitServer(t, map[string]func(w http.ResponseWriter, r *http.Request){
 		"/api/v1/repos/ops/fleet/contents/charts/big.tgz": jsonAnswer(`{"type":"file","path":"charts/big.tgz","sha":"5ha","size":3000000,"encoding":"base64","content":"` + big + `"}`),
