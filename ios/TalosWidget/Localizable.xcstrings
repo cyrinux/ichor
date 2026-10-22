@@ -1,6 +1,244 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Says what Ichor's last background check saw on a cluster. None chosen: the one open in the app." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indique ce que la dernière vérification en arrière-plan d’Ichor a vu sur un cluster. Aucun choisi : celui ouvert dans l’app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dice lo que vio la última comprobación en segundo plano de Ichor en un clúster. Si no eliges ninguno: el que está abierto en la app."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sagt, was Ichors letzte Hintergrundprüfung auf einem Cluster gesehen hat. Keiner gewählt: der in der App geöffnete."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dice cosa ha visto l’ultimo controllo in background di Ichor su un cluster. Nessuno scelto: quello aperto nell’app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомляє, що побачила остання фонова перевірка Ichor у кластері. Якщо не вибрано: той, що відкритий у застосунку."
+          }
+        }
+      }
+    },
+    "Open cluster" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster öffnen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити кластер"
+          }
+        }
+      }
+    },
+    "Opens a cluster's overview in Ichor. None chosen: the one open in the app." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre la vue d’ensemble d’un cluster dans Ichor. Aucun choisi : celui ouvert dans l’app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la vista general de un clúster en Ichor. Si no eliges ninguno: el que está abierto en la app."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Übersicht eines Clusters in Ichor. Keiner gewählt: der in der App geöffnete."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre la panoramica di un cluster in Ichor. Nessuno scelto: quello aperto nell’app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває огляд кластера в Ichor. Якщо не вибрано: той, що відкритий у застосунку."
+          }
+        }
+      }
+    },
+    "Run a checkup" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer un bilan"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer una revisión"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-up starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui un controllo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити перевірку"
+          }
+        }
+      }
+    },
+    "Opens the cluster checkup in Ichor. None chosen: the cluster open in the app." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le bilan du cluster dans Ichor. Aucun choisi : le cluster ouvert dans l’app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la revisión del clúster en Ichor. Si no eliges ninguno: el clúster abierto en la app."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet den Cluster-Check-up in Ichor. Keiner gewählt: der in der App geöffnete Cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il controllo del cluster in Ichor. Nessuno scelto: il cluster aperto nell’app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває перевірку кластера в Ichor. Якщо не вибрано: кластер, відкритий у застосунку."
+          }
+        }
+      }
+    },
+    "Opens the cluster open in Ichor." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le cluster ouvert dans Ichor."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el clúster abierto en Ichor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet den in Ichor geöffneten Cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il cluster aperto in Ichor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває кластер, відкритий в Ichor."
+          }
+        }
+      }
+    },
+    "Opens the checkup of the cluster open in Ichor." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le bilan du cluster ouvert dans Ichor."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la revisión del clúster abierto en Ichor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet den Check-up des in Ichor geöffneten Clusters."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il controllo del cluster aperto in Ichor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває перевірку кластера, відкритого в Ichor."
+          }
+        }
+      }
+    },
     "Terminate" : {
       "extractionState" : "manual",
       "localizations" : {

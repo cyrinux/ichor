@@ -1,3 +1,4 @@
+import AppIntents
 import BackgroundTasks
 import Foundation
 import IchorCore
@@ -55,6 +56,8 @@ enum SharedStore {
         WidgetCenter.shared.reloadAllTimelines()
         // The active cluster changed, or a cluster was added, renamed or masked.
         WatchLink.shared.send()
+        // The Siri phrases that name a cluster ("What is the state of <cluster>…").
+        IchorShortcuts.updateAppShortcutParameters()
     }
 }
 

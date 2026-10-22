@@ -1085,6 +1085,11 @@ cluster, encrypted on the phone. Format and actions: [docs/runbooks.md](docs/run
   after unlock; it greys out when the cluster is removed.
 - **iOS:** "Open in Ichor" in the Shortcuts app takes a share link and opens its screen once
   unlocked, so a shortcut (or Siri, with the phrase you give it) opens a node, an app or etcd.
+  "Cluster status" answers "What is the state of <cluster> in Ichor": Siri says what the last
+  background check saw (nodes ready, etcd, how long ago, and when it may be out of date) from
+  the widget's data, with no network call and without unlocking the app. "Open cluster" and
+  "Run a checkup" open that cluster's overview or checkup after unlock, from Shortcuts, Siri or,
+  on iOS 18, two Control Center buttons. None of them changes anything on the cluster.
 
 ### Kubernetes clusters without Talos
 
