@@ -175,6 +175,8 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertTitle(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertTitle(context, alert)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertTitle(context, alert)
+    AlertKind.PROPOSAL_MERGED -> context.getString(R.string.monitor_proposal_merged, ProposalDetail.parse(alert.detail).number)
+    AlertKind.PROPOSAL_CLOSED -> context.getString(R.string.monitor_proposal_closed, ProposalDetail.parse(alert.detail).number)
 }
 
 /** "kube-green: demo-lab/weekend", or "… is healthy again": the plugin's name and its finding's own title. */
@@ -373,4 +375,7 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertText(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertText(context, alert)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertText(context, alert)
+    // The request's own title, unmasked: left out in screenshot mode.
+    AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED ->
+        if ((context.applicationContext as? name.levis.ichor.TalosApp)?.uiPreferences?.privacyMask?.value?.enabled == true) "" else alert.subject
 }

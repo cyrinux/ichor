@@ -154,6 +154,10 @@ var dataCommands = []command{
 
 		return ichorgo.GitForgeRequest(flag.Arg(1), flag.Arg(2), n)
 	}},
+	{name: "forge-request-states", args: "HOSTJSON REQUESTSJSON", run: func(env) (string, error) {
+		// REQUESTSJSON: [{"repoURL":"https://github.com/example-org/fork","number":1}], 20 at most.
+		return ichorgo.GitForgeRequestStates(flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "gitops-revision-runs", args: "TOOL KIND NAMESPACE NAME SHA", run: func(e env) (string, error) {
 		return ichorgo.GitOpsRevisionRuns(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5))
 	}},

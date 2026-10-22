@@ -5823,4 +5823,8 @@
     <string name="runbook_notification_failed">Ранбук %1$s не запустився</string>
     <string name="runbook_notification_public">Виконується ранбук</string>
     <string name="runbook_notification_result_public">Ранбук завершено</string>
+    <string name="monitor_proposal_merged">Ваш pull request #%1$s злито</string>
+    <string name="monitor_proposal_closed">Ваш pull request #%1$s закрито</string>
+    <string name="proposals_merged_ago">Злито %1$s</string>
+    <string name="proposals_closed_ago">Закрито %1$s</string>
 </resources>

@@ -42,6 +42,8 @@ public func alertKind(key: String) -> String {
     switch prefix {
     case "am": return "alertmanager"
     case "unreachable": return "cluster"
+    // A pull request opened from the phone, merged or closed: told as a GitOps alert.
+    case "proposal": return "gitops"
     default: return prefix
     }
 }

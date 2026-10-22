@@ -30,6 +30,31 @@ extension BackgroundMonitor {
         }
     }
 
+    /// Posts the merged and closed proposals (checkProposals) like the other gitops alerts: their
+    /// category, snooze and cluster subtitle; a tap opens the app or object they changed.
+    static func postProposals(_ found: [ProposalAlert], now: Date) async {
+        guard !found.isEmpty else { return }
+        let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
+        let masked = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
+        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
+        let labels = ClusterLabels(names: names, masked: masked)
+        let snoozes = AlertSnoozeStore.current(now: now)
+        for item in found {
+            let context = item.context
+            let text = localizedProposal(item.change, masked: masked)
+            let alert = item.change.alert
+            guard !snoozes.notSnoozed([alert], cluster: context.fingerprint, now: now).isEmpty else { continue }
+            var target = proposalTarget(item.change.record)
+            target.cluster = context.clusterID
+            let link = context.clusterID.isEmpty ? nil : TalosClient.shareLink(for: target)
+            await post(alert, localized: text, cluster: labels.of(context),
+                       id: alertNotificationID(cluster: monitorClusterKey(context), alertKey: alert.key), link: link,
+                       actions: alertActions(key: alert.key, problem: alert.problem, canWake: false),
+                       info: [AlertNotificationActions.clusterKey: context.fingerprint, AlertNotificationActions.alertKey: alert.key],
+                       hideDetails: hide)
+        }
+    }
+
     /// Whether the node of a node alert can be woken: a Wake-on-LAN setting or a MAC seen.
     private static func canWake(_ alert: Alert, cluster: String) async -> Bool {
         guard alert.problem, !cluster.isEmpty, alert.key.hasPrefix("node:") else { return false }

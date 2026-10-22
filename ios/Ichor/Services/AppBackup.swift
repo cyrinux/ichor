@@ -2,7 +2,8 @@ import Foundation
 import IchorCore
 
 /// Backs up the talosconfig, the kubeconfig of the clusters added without Talos, and the
-/// settings that go with them (pins, Git hosts, AI settings; their keys and tokens only when
+/// settings that go with them (pins, Git hosts, AI settings, the pull requests opened from the
+/// phone; their keys and tokens only when
 /// the user opts in) into a file sealed with a
 /// passphrase (Argon2id + AES-256-GCM, in the Go core) or saved as an age file (a passphrase or
 /// age public keys), and restores one, on this device or
@@ -22,8 +23,10 @@ enum AppBackup {
         }
         let fingerprints = summary.contexts.map(\.fingerprint)
         let aiBackup = await ai.backup(includeKeys: includeSecrets)
+        // The pull requests opened from the phone: format 4 only when there are some.
+        let proposals = backupProposals(model.proposals, fingerprints: fingerprints)
         let payload = BackupPayload(
-            format: backupPayloadFormat(),
+            format: backupPayloadFormat(hasProposals: proposals != nil),
             platform: "ios",
             createdAt: Int64(Date().timeIntervalSince1970),
             talosconfig: model.yaml ?? "",
@@ -46,7 +49,8 @@ enum AppBackup {
             gitHosts: gitHosts.hosts.isEmpty ? nil : gitHosts.hosts,
             ai: aiBackup.settings,
             secrets: backupSecrets(include: includeSecrets, aiKeys: aiBackup.keys,
-                                   gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:])
+                                   gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:]),
+            proposals: proposals
         )
         let json = try TalosJSON.encode(payload)
         switch format {
@@ -99,6 +103,10 @@ enum AppBackup {
         KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.signInFingerprints))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)
         PinStore.shared.restore(restoredPins(payload, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? []))
+        // A format 4 backup's pull requests; an older one leaves the stored ones as they are.
+        if let proposals = restoredProposals(payload, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? []) {
+            model.storeProposals(proposals)
+        }
         gitHosts.restore(restoredGitHosts(payload))
         if payload.ai != nil || payload.secrets?.aiKeys != nil {
             await ai.restore(payload.ai, keys: payload.secrets?.aiKeys ?? [:])

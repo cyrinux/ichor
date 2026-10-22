@@ -21,9 +21,9 @@ import kotlinx.serialization.Serializable
 data class BackupPayload(
     /**
      * The payload version, checked by the Go core; bump it for changes older apps cannot read.
-     * Always [BACKUP_FORMAT] when written; 1 and 2 are still read.
+     * [backupFormatFor] when written (3, or 4 with proposals); 1 to 4 are read.
      */
-    @EncodeDefault val format: Int = BACKUP_FORMAT,
+    @EncodeDefault val format: Int = BACKUP_FORMAT_SETTINGS,
     val platform: String = "",
     /** Unix seconds. */
     val createdAt: Long = 0,
@@ -49,6 +49,8 @@ data class BackupPayload(
     val ai: BackupAi? = null,
     /** Only with "Include API keys and Git tokens"; otherwise absent from the JSON. */
     val secrets: BackupSecrets? = null,
+    /** The pull requests opened from the phone, per cluster fingerprint (format 4, only when there are some). */
+    val proposals: Map<String, List<GitProposalRecord>>? = null,
 )
 
 @Serializable
@@ -96,10 +98,32 @@ data class BackupClusterRepo(val repoURL: String, val branch: String = "", val t
 data class BackupWolTarget(val mac: String, val broadcast: String = "", val port: Int = WOL_DEFAULT_PORT)
 
 /**
- * The format every new backup is written in: 3 adds pins, Git hosts, AI settings and the
- * opt-in secrets. Older apps refuse it ("update the app") rather than silently drop them.
+ * The newest format this app reads and writes: 3 adds pins, Git hosts, AI settings and the
+ * opt-in secrets; 4 the pull requests opened from the phone. Older apps refuse a newer format
+ * ("update the app") rather than silently drop what it holds, so a backup is written in the
+ * lowest format its content needs (see [backupFormatFor]).
  */
-const val BACKUP_FORMAT = 3
+const val BACKUP_FORMAT = 4
+
+/** The format that added pins, Git hosts, AI settings and the secrets. */
+const val BACKUP_FORMAT_SETTINGS = 3
+
+/** The format that added [BackupPayload.proposals]. */
+const val BACKUP_FORMAT_PROPOSALS = 4
+
+/** The format a backup holding [proposals] is written in: 4 only when it has some, so a backup without them opens in an app that reads 3. */
+fun backupFormatFor(proposals: Map<String, List<GitProposalRecord>>?): Int =
+    if (proposals.isNullOrEmpty()) BACKUP_FORMAT_SETTINGS else BACKUP_FORMAT_PROPOSALS
+
+/** The proposals of the clusters still in [fingerprints]; null when none has any. */
+fun backupProposals(fingerprints: List<String>, all: Map<String, List<GitProposalRecord>>): Map<String, List<GitProposalRecord>>? =
+    all.filterKeys { it in fingerprints }.filterValues { it.isNotEmpty() }.takeIf { it.isNotEmpty() }
+
+/** The proposals of a restored [payload] for the clusters it restored ([fingerprints]); null before format 4. */
+fun restoredProposals(payload: BackupPayload, fingerprints: List<String>): Map<String, List<GitProposalRecord>>? =
+    payload.proposals?.takeIf { payload.format >= BACKUP_FORMAT_PROPOSALS }
+        ?.filterKeys { it in fingerprints }
+        ?.mapValues { (_, list) -> list.take(MAX_PROPOSALS) }
 
 /** The format that added [BackupPayload.kubeconfig]. */
 const val BACKUP_FORMAT_KUBE = 2

@@ -271,8 +271,12 @@ enum BackgroundMonitor {
             outcomes += await evaluateTrends(history, jobs: jobs, snapshots: &snapshots, now: now)
         }
         SharedStore.save(snapshots)
+        // The pull requests opened from the phone: their states are kept even with alerts off,
+        // so turning them on does not tell old merges.
+        let proposals = await checkProposals(contexts: contexts.filter { !$0.needsEndpoint }, now: now)
         guard alertsEnabled else { return }
         await post(outcomes, now: now)
+        await postProposals(proposals, now: now)
     }
 
     /// One record per cluster read (or not answering) in each one's sealed ring. A track not read

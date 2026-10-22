@@ -2,7 +2,9 @@ package name.levis.ichor.data
 
 import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
-import name.levis.ichor.model.BACKUP_FORMAT
+import name.levis.ichor.model.backupFormatFor
+import name.levis.ichor.model.backupProposals
+import name.levis.ichor.model.restoredProposals
 import name.levis.ichor.model.BackupPayload
 import name.levis.ichor.model.BackupSeal
 import name.levis.ichor.model.BackupSecrets
@@ -57,6 +59,8 @@ class BackupManager(
     private val setPrivacyMask: (PrivacyMask) -> Unit,
     private val notificationsAllowed: () -> Boolean,
     private val onRestored: () -> Unit,
+    /** The pull requests opened from the phone (format 4); null leaves them out. */
+    private val proposals: ProposalsStore? = null,
 ) {
     /**
      * The backup file of the stored config and settings, sealed as [seal] says (the app's format,
@@ -69,8 +73,9 @@ class BackupManager(
             val mask = ui.privacyMask.value
             val kubeconfig = stored.kubeYaml.takeIf { it.isNotBlank() }
             val fingerprints = stored.summary.contexts.map { it.fingerprint }
+            val kept = proposals?.let { backupProposals(fingerprints, it.proposals.value) }
             val payload = BackupPayload(
-                format = BACKUP_FORMAT,
+                format = backupFormatFor(kept),
                 platform = "android",
                 createdAt = now,
                 talosconfig = stored.talosYaml,
@@ -106,6 +111,7 @@ class BackupManager(
                 gitHosts = backupGitHosts(gitHosts.hosts.value),
                 ai = backupAi(ai.settings.value),
                 secrets = if (includeSecrets) secrets() else null,
+                proposals = kept,
             )
             val json = TalosJson.encodeToString(BackupPayload.serializer(), payload)
             backupCall {
@@ -194,9 +200,10 @@ class BackupManager(
         return RestoreOutcome(languageChanged, language ?: ui.language.value)
     }
 
-    /** Pins, Git hosts and AI settings (format 3), each only when the backup has it; secrets through their stores. */
+    /** Pins, Git hosts and AI settings (format 3), the proposals (format 4), each only when the backup has it; secrets through their stores. */
     private fun restoreExtras(payload: BackupPayload, fingerprints: List<String>) {
         restoredPins(payload.pins, fingerprints)?.forEach { (fp, list) -> pins.replace(fp, list) }
+        restoredProposals(payload, fingerprints)?.forEach { (fp, list) -> proposals?.replace(fp, list) }
         val hosts = restoredGitHosts(payload.gitHosts)
         val tokens = restoredGitTokens(payload.secrets, hosts)
         // No token in the backup: "" keeps the one this device has for the host.

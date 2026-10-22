@@ -5580,4 +5580,8 @@
     <string name="runbook_notification_failed">Il runbook %1$s non è partito</string>
     <string name="runbook_notification_public">Un runbook è in esecuzione</string>
     <string name="runbook_notification_result_public">Runbook terminato</string>
+    <string name="monitor_proposal_merged">La tua pull request #%1$s è stata unita</string>
+    <string name="monitor_proposal_closed">La tua pull request #%1$s è stata chiusa</string>
+    <string name="proposals_merged_ago">Unita %1$s</string>
+    <string name="proposals_closed_ago">Chiusa %1$s</string>
 </resources>

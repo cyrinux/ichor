@@ -35,6 +35,7 @@ import name.levis.ichor.ui.components.SectionCard
 import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.uiText
+import name.levis.ichor.util.timeAgo
 
 /** What one proposal's row knows: the forge's answer and what the app runs, or why not. */
 private data class ProposalView(val state: GitRequestState? = null, val runs: RevisionRuns? = null, val error: UiText? = null)
@@ -86,6 +87,13 @@ fun ProposalsCard(
                 },
             ) {
                 view?.error?.let { MutedText(it.asString()) }
+                // The forge cannot be read now: what the background monitor last saw of it.
+                if (view?.error != null && r.stateAt > 0) {
+                    when (r.state) {
+                        GitRequestState.STATE_MERGED -> MutedText(stringResource(R.string.proposals_merged_ago, timeAgo(r.stateAt)))
+                        GitRequestState.STATE_CLOSED -> MutedText(stringResource(R.string.proposals_closed_ago, timeAgo(r.stateAt)))
+                    }
+                }
                 if (onReconcile != null && (status == ProposalStatus.MERGED || status == ProposalStatus.OTHER_REVISION)) {
                     MutedText(stringResource(if (status == ProposalStatus.MERGED) R.string.proposals_not_deployed else R.string.proposals_other_revision))
                     Row(Modifier.padding(top = 4.dp)) {

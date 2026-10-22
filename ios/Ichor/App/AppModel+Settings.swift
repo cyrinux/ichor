@@ -42,7 +42,7 @@ extension AppModel {
     /// Keeps a pull request opened from the phone for the cluster on screen (not in the demo).
     func rememberProposal(_ record: GitProposalRecord) {
         guard let active = activeSummary, !active.demo, !active.fingerprint.isEmpty else { return }
-        var all = proposals
+        var all = storedProposals
         all[active.fingerprint] = ProposalsStore.adding(record, to: all[active.fingerprint] ?? [])
         storeProposals(all)
     }
@@ -50,10 +50,22 @@ extension AppModel {
     /// Forgets a proposal of the cluster on screen.
     func forgetProposal(_ record: GitProposalRecord) {
         guard let active = activeSummary else { return }
-        var all = proposals
+        var all = storedProposals
         all[active.fingerprint] = all[active.fingerprint]?.filter { $0.id != record.id }
         if all[active.fingerprint]?.isEmpty == true { all[active.fingerprint] = nil }
         storeProposals(all)
+    }
+
+    /// The proposals as stored now: the background monitor writes their states there, so a
+    /// change made here starts from them and never puts back an older state.
+    var storedProposals: [String: [GitProposalRecord]] {
+        ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
+    }
+
+    /// Reads the proposals again after the background monitor saved their states.
+    func reloadProposals() {
+        let stored = storedProposals
+        if stored != proposals { proposals = stored }
     }
 
     // Internal, not private: AppModel+Clusters.swift uses it.

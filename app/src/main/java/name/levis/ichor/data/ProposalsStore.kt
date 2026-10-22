@@ -6,6 +6,7 @@ import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.GitProposalRecord
 import name.levis.ichor.model.decodeProposals
 import name.levis.ichor.model.encodeProposals
+import name.levis.ichor.model.openedProposal
 import name.levis.ichor.model.withProposal
 
 /**
@@ -17,8 +18,11 @@ class ProposalsStore(prefs: SharedPreferences) {
     val proposals: StateFlow<Map<String, List<GitProposalRecord>>> get() = map.values
 
     /** Keeps [record] for the cluster [fingerprint], first. */
-    fun add(fingerprint: String, record: GitProposalRecord) =
-        map.set(fingerprint, withProposal(map.values.value[fingerprint].orEmpty(), record))
+    fun add(fingerprint: String, record: GitProposalRecord, nowMillis: Long = System.currentTimeMillis()) =
+        map.set(fingerprint, withProposal(map.values.value[fingerprint].orEmpty(), openedProposal(record, nowMillis)))
+
+    /** Replaces the records of [fingerprint] (the monitor's states, a restored backup's); none forgets them. */
+    fun replace(fingerprint: String, records: List<GitProposalRecord>) = map.set(fingerprint, records.ifEmpty { null })
 
     /** Forgets [record] of the cluster [fingerprint]. */
     fun remove(fingerprint: String, record: GitProposalRecord) {

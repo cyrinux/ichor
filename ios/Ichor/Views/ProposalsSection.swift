@@ -38,9 +38,23 @@ struct ProposalsSection: View {
         }
     }
 
+    /// The state the background monitor last read, when the forge cannot be read now: merged or
+    /// closed only (an open one says nothing more than "Unknown").
+    private func storedState(_ record: GitProposalRecord) -> GitRequestState? {
+        record.state == "merged" || record.state == "closed" ? GitRequestState(state: record.state) : nil
+    }
+
+    /// "merged 2 hours ago" from the stored state.
+    private func storedLine(_ record: GitProposalRecord) -> String {
+        let at = Date(timeIntervalSince1970: TimeInterval(record.stateAt) / 1000)
+        let ago = RelativeDateTimeFormatter().localizedString(for: at, relativeTo: .now)
+        return record.state == "merged" ? String(localized: "merged \(ago)") : String(localized: "closed \(ago)")
+    }
+
     @ViewBuilder
     private func row(_ record: GitProposalRecord, view: ProposalView?) -> some View {
-        let status = proposalStatus(view?.state, view?.runs)
+        let stored = view?.state == nil ? storedState(record) : nil
+        let status = proposalStatus(view?.state ?? stored, view?.runs)
         VStack(alignment: .leading, spacing: 4) {
             Button {
                 if let url = URL(string: record.url), !record.url.isEmpty { openURL(url) }
@@ -58,6 +72,7 @@ struct ProposalsSection: View {
             }
             .buttonStyle(.plain)
             if let error = view?.error { Text(verbatim: error).font(.caption).foregroundStyle(.secondary) }
+            if stored != nil, record.stateAt > 0 { Text(verbatim: storedLine(record)).font(.caption).foregroundStyle(.secondary) }
             if let reconcile, status == .merged || status == .otherRevision {
                 Text(status == .merged ? "Merged, not deployed yet." : "Merged; the app runs another commit (a newer one, or this one is not applied yet).")
                     .font(.caption).foregroundStyle(.secondary)
