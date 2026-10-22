@@ -25,40 +25,10 @@ import name.levis.ichor.model.SideroServer
 import name.levis.ichor.model.SideroServerClass
 import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.ResourceDetails
+import name.levis.ichor.ui.components.ResourceRow
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.timeAgo
-
-/**
- * One row: health dot and name, the details that matter, then (for a problem) the failure or
- * the conditions that are not True, in full.
- */
-@Composable
-private fun RowShell(health: ServiceHealth, title: String, line: String, problem: String, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HealthDot(health)
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        line.takeIf { it.isNotEmpty() }?.let { MutedText(it, maxLines = 3, overflow = TextOverflow.Ellipsis) }
-        if (health.needsAttention && problem.isNotEmpty()) {
-            Text(
-                problem,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (health == ServiceHealth.CRITICAL) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
 
 private fun ratio(r: CapiReplicas) = "${r.ready}/${r.desired}"
 
@@ -73,7 +43,9 @@ fun ClusterRow(c: CapiCluster, onClick: () -> Unit) {
         c.versions.takeIf { it.isNotEmpty() }?.joinToString(", "),
         stringResource(R.string.cluster_lifecycle_paused).takeIf { c.paused },
     ).joinToString(" · ")
-    RowShell(c.serviceHealth, c.name, line, c.problem, onClick)
+    ResourceRow(c.serviceHealth, c.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line, c.serviceHealth, c.problem)
+    }
 }
 
 /** A Machine: its phase, role, node, version and addresses, and how long it has been stuck. */
@@ -89,7 +61,9 @@ fun MachineRow(m: CapiMachine, onClick: () -> Unit) {
         else if (m.stuckSince > 0) stringResource(R.string.cluster_lifecycle_stuck, timeAgo(m.stuckSince))
         else stringResource(R.string.cluster_lifecycle_stuck_plain),
     ).joinToString(" · ")
-    RowShell(m.serviceHealth, m.name, line, m.problem, onClick)
+    ResourceRow(m.serviceHealth, m.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line, m.serviceHealth, m.problem)
+    }
 }
 
 /** A MachineDeployment: its phase, its replicas ready and available of desired, and version. */
@@ -100,7 +74,9 @@ fun MachineDeploymentRow(d: CapiMachineDeployment, onClick: () -> Unit) {
         stringResource(R.string.cluster_lifecycle_md_counts, d.ready.toString(), d.available.toString(), d.desired.toString()),
         d.version.takeIf { it.isNotEmpty() },
     ).joinToString(" · ")
-    RowShell(d.serviceHealth, d.name, line, "", onClick)
+    ResourceRow(d.serviceHealth, d.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line)
+    }
 }
 
 /** A bare-metal server: accepted, cordoned, in use, clean; its power, classes, CPU and memory. */
@@ -118,12 +94,16 @@ fun ServerRow(s: SideroServer, onClick: () -> Unit) {
         s.cpu.takeIf { it.isNotEmpty() },
         s.memoryBytes.takeIf { it > 0 }?.let { formatBytes(it) },
     ).joinToString(" · ")
-    RowShell(s.serviceHealth, s.hostname.ifEmpty { s.name }, line, "", onClick)
+    ResourceRow(s.serviceHealth, s.hostname.ifEmpty { s.name }, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line)
+    }
 }
 
 /** A ServerClass: how many of its servers are free and in use. */
 @Composable
 fun ServerClassRow(sc: SideroServerClass, onClick: () -> Unit) {
     val health = if (sc.available == 0 && sc.inUse > 0) ServiceHealth.WARNING else ServiceHealth.OK
-    RowShell(health, sc.name, stringResource(R.string.cluster_lifecycle_class_counts, sc.available.toString(), sc.inUse.toString()), "", onClick)
+    ResourceRow(health, sc.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(stringResource(R.string.cluster_lifecycle_class_counts, sc.available.toString(), sc.inUse.toString()))
+    }
 }

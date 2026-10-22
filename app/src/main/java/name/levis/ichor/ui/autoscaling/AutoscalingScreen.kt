@@ -64,6 +64,7 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.ResourceRow
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.Tag
@@ -306,22 +307,14 @@ private fun groupLabel(group: String): String = stringResource(
 /** Name, bounds "6 of 2–6", current/desired and the state. */
 @Composable
 private fun HpaRowItem(row: HpaRow, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ResourceRow(
+        health = null,
+        title = row.name,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        subtitle = listOf(row.namespace, targetText(row.target), hpaBoundsText(row.current, row.min, row.max)).joinToString("  ·  "),
+        trailing = { AutoscaleStateBadge(row.state) },
+        onClick = onClick,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                row.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            AutoscaleStateBadge(row.state)
-        }
-        MutedText(listOf(row.namespace, targetText(row.target), hpaBoundsText(row.current, row.min, row.max)).joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (row.managedBy.isNotEmpty()) {
             MutedText(stringResource(R.string.autoscaling_managed_by, row.managedBy, row.scaledObject), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -331,22 +324,14 @@ private fun HpaRowItem(row: HpaRow, onClick: () -> Unit) {
 /** Name, its target and triggers, the state; current/desired when the HPA answers. */
 @Composable
 private fun ScaledObjectRowItem(row: ScaledObjectRow, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ResourceRow(
+        health = null,
+        title = row.name,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        subtitle = listOf(row.namespace, targetText(row.target)).joinToString("  ·  "),
+        trailing = { AutoscaleStateBadge(row.state) },
+        onClick = onClick,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                row.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            AutoscaleStateBadge(row.state)
-        }
-        MutedText(listOf(row.namespace, targetText(row.target)).joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (row.triggers.isNotEmpty()) {
             MutedText(row.triggers.joinToString("  ·  ") { it.label }, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -355,45 +340,28 @@ private fun ScaledObjectRowItem(row: ScaledObjectRow, onClick: () -> Unit) {
 
 @Composable
 private fun ScaledJobRowItem(row: ScaledJobRow, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                row.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            AutoscaleStateBadge(row.state)
-        }
-        MutedText(listOf(row.namespace, row.triggers.firstOrNull()?.label.orEmpty()).filter { it.isNotEmpty() }.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
+    ResourceRow(
+        health = null,
+        title = row.name,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        subtitle = listOf(row.namespace, row.triggers.firstOrNull()?.label.orEmpty()).filter { it.isNotEmpty() }.joinToString("  ·  "),
+        trailing = { AutoscaleStateBadge(row.state) },
+        onClick = onClick,
+    )
 }
 
 /** Name, the target, and the first container's request → recommendation. */
 @Composable
 private fun VpaRowItem(row: VpaRow, onClick: () -> Unit) {
     val first = row.containers.firstOrNull()
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ResourceRow(
+        health = null,
+        title = row.name,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        subtitle = listOf(row.namespace, targetText(row.target), row.updateMode).filter { it.isNotEmpty() }.joinToString("  ·  "),
+        trailing = { AutoscaleStateBadge(row.state) },
+        onClick = onClick,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                row.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            AutoscaleStateBadge(row.state)
-        }
-        MutedText(listOf(row.namespace, targetText(row.target), row.updateMode).filter { it.isNotEmpty() }.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (first != null) {
             MutedText(
                 stringResource(R.string.autoscaling_vpa_change, first.name, vpaChangeText(first.cpuRequest, first.cpuTarget)),
@@ -408,33 +376,22 @@ private fun VpaRowItem(row: VpaRow, onClick: () -> Unit) {
 @Composable
 private fun NodePoolRowItem(row: NodePoolRow, claimCount: Int, onClick: () -> Unit) {
     val colors = LocalStatusColors.current
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                row.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
+    ResourceRow(
+        health = null,
+        title = row.name,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        subtitle = listOf(
+            stringResource(R.string.autoscaling_pool_usage, row.resources.cpu, row.limits.cpu),
+            stringResource(R.string.autoscaling_pool_nodes, row.resources.nodes.toString()),
+            stringResource(R.string.autoscaling_pool_claims, claimCount.toString()),
+        ).joinToString("  ·  "),
+        trailing = {
             if (row.atLimit) {
                 Tag(stringResource(R.string.autoscaling_at_limit), colors.bad, Modifier)
             } else {
                 AutoscaleStateBadge(if (row.ready) AUTOSCALE_OK else AUTOSCALE_NOT_READY)
             }
-        }
-        MutedText(
-            listOf(
-                stringResource(R.string.autoscaling_pool_usage, row.resources.cpu, row.limits.cpu),
-                stringResource(R.string.autoscaling_pool_nodes, row.resources.nodes.toString()),
-                stringResource(R.string.autoscaling_pool_claims, claimCount.toString()),
-            ).joinToString("  ·  "),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
+        },
+        onClick = onClick,
+    )
 }

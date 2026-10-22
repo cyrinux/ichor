@@ -24,30 +24,9 @@ import name.levis.ichor.model.CrossplaneReason
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.ResourceDetails
+import name.levis.ichor.ui.components.ResourceRow
 import name.levis.ichor.util.timeAgo
-
-/** One row of the screen: health dot, kind and name, then the details that matter. */
-@Composable
-private fun RowShell(health: ServiceHealth, title: String, line: String, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HealthDot(health)
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            trailing?.invoke()
-        }
-        line.takeIf { it.isNotEmpty() }?.let { MutedText(it, maxLines = 3, overflow = TextOverflow.Ellipsis) }
-    }
-}
 
 /** "critical 1 · warning 2 · ok 12" pieces, in the header. */
 @Composable
@@ -68,12 +47,16 @@ fun PackageRow(p: CrossplanePackage, onClick: () -> Unit) {
         conditionText(p.installed),
         conditionText(p.healthy),
     ).joinToString(" · ")
-    RowShell(
+    ResourceRow(
         health = p.serviceHealth,
         title = "${p.kind} ${p.label}",
-        line = (listOf(line.takeIf { it.isNotEmpty() }) + p.reasonList.map { reasonText(it) }).filterNotNull().joinToString(" · "),
+        modifier = Modifier.padding(horizontal = 16.dp),
         onClick = onClick,
-    )
+    ) {
+        ResourceDetails(
+            (listOf(line.takeIf { it.isNotEmpty() }) + p.reasonList.map { reasonText(it) }).filterNotNull().joinToString(" · "),
+        )
+    }
 }
 
 /** An XRD: the API it defines, its scope and claim kind, its compositions and composites. */
@@ -87,12 +70,16 @@ fun DefinitionRow(d: CrossplaneDefinition, onClick: () -> Unit) {
         stringResource(R.string.crossplane_composites_count, d.composites),
         conditionText(d.established),
     ).joinToString(" · ")
-    RowShell(
+    ResourceRow(
         health = d.serviceHealth,
         title = d.label,
-        line = (listOf(line.takeIf { it.isNotEmpty() }) + d.reasonList.map { reasonText(it) }).filterNotNull().joinToString(" · "),
+        modifier = Modifier.padding(horizontal = 16.dp),
         onClick = onClick,
-    )
+    ) {
+        ResourceDetails(
+            (listOf(line.takeIf { it.isNotEmpty() }) + d.reasonList.map { reasonText(it) }).filterNotNull().joinToString(" · "),
+        )
+    }
 }
 
 /** A composite resource, a claim or a managed resource: Ready and Synced with their reasons. */
@@ -109,14 +96,18 @@ fun ObjectRow(o: CrossplaneObject, showKind: Boolean, onClick: () -> Unit, actio
         conditionText(o.synced),
         o.synced.message.takeIf { it.isNotEmpty() },
     ).joinToString(" · ")
-    RowShell(
+    ResourceRow(
         health = o.serviceHealth,
         title = (if (showKind) "${o.kind} " else "") + o.label,
-        line = (listOf(line.takeIf { it.isNotEmpty() }) + o.reasonList.map { reasonText(it) } +
-            listOfNotNull(stringResource(R.string.crossplane_paused).takeIf { o.paused })).filterNotNull().joinToString(" · "),
+        modifier = Modifier.padding(horizontal = 16.dp),
+        trailing = { actions?.invoke() },
         onClick = onClick,
-        trailing = actions,
-    )
+    ) {
+        ResourceDetails(
+            (listOf(line.takeIf { it.isNotEmpty() }) + o.reasonList.map { reasonText(it) } +
+                listOfNotNull(stringResource(R.string.crossplane_paused).takeIf { o.paused })).filterNotNull().joinToString(" · "),
+        )
+    }
 }
 
 /** "True Available · 3 h ago", or null when the condition says nothing. */
