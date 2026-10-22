@@ -1062,6 +1062,8 @@ while "Keep last known state" is on and neither the app lock nor the screenshot 
 link) to a Pinned card at the top of that cluster's overview: up to 12 per cluster, each with its
 ready or health state when the overview knows it, opening like its share link; a long press on a
 row (Android) or a swipe (iOS) unpins it, and the card moves or hides like the others.
+Runbooks, ordered lists of these actions run step by step, are in the Go core so far
+([docs/runbooks.md](docs/runbooks.md)).
 
 **Open a screen straight from the home screen or a shortcut:**
 

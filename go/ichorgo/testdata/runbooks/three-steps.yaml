@@ -1,0 +1,14 @@
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Three steps
+steps:
+  - id: scale-down
+    action: scale
+    target: {namespace: demo-shop, name: ingest-api}
+    params: {replicas: 0}
+  - id: restart-missing
+    action: rolloutRestart
+    target: {namespace: demo-shop, name: missing-api}
+  - id: scale-up
+    action: scale
+    target: {namespace: demo-shop, name: ingest-api}
+    params: {replicas: 2}
