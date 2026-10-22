@@ -116,6 +116,9 @@ jobs:
       - name: Build release APK
         env:
           ICHOR_SKIP_TESTS: "1"
+          # More headroom than gradle.properties on the 16 GB runner for the three packaged splits;
+          # only the -Dorg.gradle.jvmargs property reaches the forked daemon (a bare -Xmx would not).
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
           ICHOR_KEYSTORE_BASE64: ${{ secrets.ICHOR_KEYSTORE_BASE64 }}
           ICHOR_KEYSTORE_PASSWORD: ${{ secrets.ICHOR_KEYSTORE_PASSWORD }}
           ICHOR_KEY_ALIAS: ${{ secrets.ICHOR_KEY_ALIAS }}
