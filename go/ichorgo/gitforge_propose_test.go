@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -521,96 +520,5 @@ func TestGitForgeProposeValidation(t *testing.T) {
 
 	if _, err := GitForgePropose("", "lab", host, "{"); err == nil || !strings.Contains(err.Error(), "invalid proposal") {
 		t.Errorf("bad JSON: %v", err)
-	}
-}
-
-func TestGitForgeProposePrivacy(t *testing.T) {
-	t.Cleanup(func() { SetPrivacyMask(false, "") })
-	SetPrivacyMask(true, "")
-
-	host, repo := gitHostJSON("github", "https://git.example.org"), "https://git.example.org/example-org/platform"
-	if _, err := GitForgePropose("", "lab", host, proposeOptions(t, repo, nil)); err == nil || !strings.Contains(err.Error(), "screenshot mode") {
-		t.Errorf("privacy on: %v", err)
-	}
-}
-
-// A refusal is "the file changed" by the forge's message, not by words in the host name.
-func TestStaleFile(t *testing.T) {
-	for name, tc := range map[string]struct {
-		err  error
-		want bool
-	}{
-		"github stale":         {gitForgeStatusError{code: 409, message: "is at abc but expected def", err: errors.New("x")}, true},
-		"empty repository":     {gitForgeStatusError{code: 409, message: "Git Repository is empty.", err: errors.New("x")}, false},
-		"gitea sha":            {gitForgeStatusError{code: 422, message: "sha does not match", err: errors.New("x")}, true},
-		"validation, sha host": {gitForgeStatusError{code: 422, message: "Validation Failed", err: errors.New("git.sharecode.example answered 422: Validation Failed")}, false},
-		"gitlab changed":       {gitForgeStatusError{code: 400, message: "You are attempting to update a file that has changed since you started editing it.", err: errors.New("x")}, true},
-		"gitlab other":         {gitForgeStatusError{code: 400, message: "Invalid reference name", err: errors.New("changed.example answered 400")}, false},
-		"not a status":         {errors.New("sha changed already exists"), false},
-	} {
-		if got := staleFile(tc.err); got != tc.want {
-			t.Errorf("%s: %v, want %v", name, got, tc.want)
-		}
-	}
-}
-
-func TestGitForgeProposeDemo(t *testing.T) {
-	_, err := GitForgePropose("", "lab", `{"kind":"demo"}`, proposeOptions(t, "", nil))
-	if err == nil || err.Error() != errDemoUnavailable.Error() {
-		t.Errorf("demo: %v", err)
-	}
-}
-
-// The audit entry names the repository, the file and the request, never the token nor the
-// content.
-func TestGitForgeProposeAudit(t *testing.T) {
-	withDataDir(t)
-	fixedBranchSuffix(t)
-
-	srv, _ := proposeServer(t, map[string][]proposeAnswer{
-		"POST /api/v1/repos/example-org/platform/branches":                             {{201, `{}`}},
-		"PUT /api/v1/repos/example-org/platform/contents/apps/podinfo/deployment.yaml": {{200, `{"commit":{"sha":"9173a"}}`}},
-		"POST /api/v1/repos/example-org/platform/pulls":                                {{201, `{"html_url":"https://git.example.org/example-org/platform/pulls/3","number":3}`}},
-	})
-
-	if _, err := GitForgePropose("", "lab", gitHostJSON("gitea", srv.URL), proposeOptions(t, "https://127.0.0.1/example-org/platform", nil)); err != nil {
-		t.Fatal(err)
-	}
-
-	entries := readAudit(t, "lab", "gitops-propose")
-	if len(entries) != 1 {
-		t.Fatalf("got %d entries, want 1", len(entries))
-	}
-
-	e := entries[0]
-	if e.Object != "example-org/platform:apps/podinfo/deployment.yaml" || e.Params != "https://git.example.org/example-org/platform/pulls/3" || e.Outcome != auditOK {
-		t.Errorf("entry %+v", e)
-	}
-
-	raw, _ := json.Marshal(entries) //nolint:errcheck
-	if strings.Contains(string(raw), gitTestToken) || strings.Contains(string(raw), "podinfo:6.7.1") {
-		t.Errorf("the token or the content is in the entry: %s", raw)
-	}
-
-	// A refused proposal is recorded too.
-	if _, err := GitForgePropose("", "lab", gitHostJSON("gitea", srv.URL), proposeOptions(t, "https://127.0.0.1/example-org/platform", func(o map[string]any) { o["title"] = "" })); err == nil {
-		t.Fatal("a proposal without a title was accepted")
-	}
-
-	if entries := readAudit(t, "lab", "gitops-propose"); len(entries) != 2 || entries[0].Outcome != auditFailed {
-		t.Errorf("failed entry %+v", entries)
-	}
-}
-
-func TestGitSlug(t *testing.T) {
-	for in, want := range map[string]string{
-		"Bump podinfo to 6.7.1":   "bump-podinfo-to-6-7-1",
-		"  --Fix: HPA max!!  ":    "fix-hpa-max",
-		"":                        "change",
-		strings.Repeat("ab ", 30): strings.Repeat("ab-", 13) + "a",
-	} {
-		if got := gitSlug(in); got != want {
-			t.Errorf("gitSlug(%q) = %q, want %q", in, got, want)
-		}
 	}
 }

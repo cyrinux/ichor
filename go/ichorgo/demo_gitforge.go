@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"cmp"
+	"strconv"
 	"strings"
 )
 
@@ -197,3 +198,24 @@ func demoGitForgeFile(path string) (gitForgeFile, error) {
 
 	return gitForgeFile{Path: path, SHA: "0d1e2m3o4" + strings.Repeat("0", 31), Size: int64(len(content)), Content: content}, nil
 }
+
+// demoGitRequest is the demo's sample proposals: #1 open, #2 merged (and deployed: its
+// commit is the demo's Argo CD app revision).
+func demoGitRequest(repo gitRepoRef, number int) gitRequestState {
+	url := "https://git.home.example/" + repo.full() + "/pulls/" + strconv.Itoa(number)
+	if number == demoMergedRequest {
+		return gitRequestState{
+			State: gitRequestMerged, Title: "Scale podinfo to 3", URL: url, HeadSHA: demoProposalHead,
+			MergeSHA: demoArgoRevision, MergedAt: "2026-10-18T08:30:00Z", UpdatedAt: "2026-10-18T08:30:00Z",
+		}
+	}
+
+	return gitRequestState{State: gitRequestOpen, Title: "Bump podinfo to 6.7.1", URL: url, HeadSHA: demoProposalHead, UpdatedAt: "2026-10-19T09:00:00Z"}
+}
+
+const (
+	demoMergedRequest = 2
+	demoProposalHead  = "b7a1c0de" + "00000000000000000000000000000000"
+	// demoArgoRevision is what the demo's Argo CD app argocd/hello-ichor runs.
+	demoArgoRevision = "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d"
+)

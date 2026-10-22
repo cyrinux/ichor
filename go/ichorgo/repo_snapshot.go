@@ -29,7 +29,7 @@ import (
 // commit.
 
 const (
-	gitSnapshotTimeout = 2 * time.Minute
+	gitSnapshotTimeout = gitForgeArchiveTimeout
 	// gitSnapshotMemory is how many unpacked snapshots stay in memory.
 	gitSnapshotMemory = 3
 	// gitSnapshotMemoryBytes bounds their text, all together (the newest is always kept).

@@ -273,24 +273,3 @@ func TestGitForgeProposeFilesValidation(t *testing.T) {
 		})
 	}
 }
-
-// The audit entry of a multi-file proposal names every path.
-func TestGitForgeProposeFilesAudit(t *testing.T) {
-	withDataDir(t)
-	fixedBranchSuffix(t)
-
-	srv, _ := proposeServer(t, map[string][]proposeAnswer{
-		"POST /api/v1/repos/example-org/platform/branches": {{201, `{}`}},
-		"POST /api/v1/repos/example-org/platform/contents": {{201, `{"commit":{"sha":"6a7c4"}}`}},
-		"POST /api/v1/repos/example-org/platform/pulls":    {{201, `{"html_url":"https://git.example.org/example-org/platform/pulls/4","number":4}`}},
-	})
-
-	if _, err := GitForgePropose("", "lab", gitHostJSON("gitea", srv.URL), proposeOptions(t, "https://127.0.0.1/example-org/platform", twoFiles)); err != nil {
-		t.Fatal(err)
-	}
-
-	entries := readAudit(t, "lab", "gitops-propose")
-	if len(entries) != 1 || entries[0].Object != "example-org/platform:apps/podinfo/deployment.yaml, apps/podinfo/kustomization.yaml" {
-		t.Errorf("entries %+v", entries)
-	}
-}

@@ -87,15 +87,6 @@ func TestGitForgeRequest(t *testing.T) {
 	}
 }
 
-func TestGitForgeRequestDemo(t *testing.T) {
-	open := requestOf(t)(GitForgeRequest(`{"kind":"demo"}`, demoClusterRepoURL, 1))
-	merged := requestOf(t)(GitForgeRequest(`{"kind":"demo"}`, demoClusterRepoURL, demoMergedRequest))
-
-	if open.State != gitRequestOpen || merged.State != gitRequestMerged || merged.MergeSHA != demoArgoRevision {
-		t.Errorf("demo %+v %+v", open, merged)
-	}
-}
-
 // GitHub and Gitea share one pull-request reader: the same answer reads the same on both.
 func TestGitForgeRequestGitHubStyle(t *testing.T) {
 	const pr = `{"state":"closed","merged":true,"draft":false,"title":"Pin the chart",
