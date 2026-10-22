@@ -202,6 +202,42 @@ func TestBackupHoldsKubeconfigClusters(t *testing.T) {
 	}
 }
 
+func TestBackupFormat4KeepsProposals(t *testing.T) {
+	talos := testConfig(t, time.Now().Add(time.Hour))
+	proposals := map[string]any{"fp-lab": []map[string]any{{"repoURL": "https://git.example.org/example-org/cluster-config", "number": 12,
+		"title": "Raise ingest replicas", "state": "open"}}}
+
+	for name, tc := range map[string]struct {
+		payload map[string]any
+		ok      bool
+	}{
+		"format 4 with proposals": {map[string]any{"format": 4, "talosconfig": talos, "proposals": proposals}, true},
+		"format 3 still read":     {map[string]any{"format": 3, "talosconfig": talos}, true},
+		"format 5 refused":        {map[string]any{"format": 5, "talosconfig": talos}, false},
+	} {
+		raw, err := json.Marshal(tc.payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		sealed, err := EncryptBackup(string(raw), backupTestPassphrase)
+		if !tc.ok {
+			requireBackupErr(t, err, BackupErrUnsupported)
+
+			continue
+		}
+
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		out, err := DecryptBackup(sealed, backupTestPassphrase)
+		if err != nil || out != string(raw) {
+			t.Errorf("%s: payload not kept as written (%v)", name, err)
+		}
+	}
+}
+
 func TestBackupSecretsNeedFormat3(t *testing.T) {
 	talos := testConfig(t, time.Now().Add(time.Hour))
 	secrets := map[string]any{
