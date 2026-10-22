@@ -4,31 +4,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,46 +27,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
-import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.model.JobRow
 import name.levis.ichor.model.JobRunState
 import name.levis.ichor.model.KubeJobs
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.filteredJobs
-import name.levis.ichor.ui.LoadingViewModel
-import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.CardListPadding
-import name.levis.ichor.ui.components.groupedCardRows
-import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.localizedDuration
-import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.components.rememberKubeCanDenial
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.workloads.KubeFilters
-import name.levis.ichor.ui.workloads.NamespacesViewModel
-import name.levis.ichor.ui.workloads.rememberKubeScope
-import name.levis.ichor.ui.workloads.scopeError
 
 /** The Jobs of a namespace (null for every one), failures first. */
-class JobsViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<KubeJobs>() {
-    private var namespace: String? = null
-    private var started = false
-
-    fun setNamespace(namespace: String?) {
-        if (started && namespace == this.namespace) return
-        started = true
-        this.namespace = namespace
-        refresh(reset = true)
-    }
-
+class JobsViewModel(private val browser: KubeBrowserRepository) : NamespaceLoadingViewModel<KubeJobs>() {
     override suspend fun fetch() = browser.jobs(namespace)
 }
 
@@ -92,13 +58,7 @@ fun JobsScreen(
     onObject: (KubeObjectRef) -> Unit,
     vm: JobsViewModel = viewModel(factory = factory { JobsViewModel(app.kubeBrowser) }),
 ) {
-    val app = LocalContext.current.applicationContext as TalosApp
-    val state by vm.state.collectAsStateWithLifecycle()
-    val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
-    val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
-    val control = rememberKubeScope(app, namespaces, mask.enabled)
-    LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setNamespace(control.scope.namespace) }
-    var query by rememberSaveable { mutableStateOf("") }
+    val control = rememberListScope(vm)
     var deleting by remember { mutableStateOf<KubeObjectRef?>(null) }
 
     deleting?.let { ref ->
@@ -108,47 +68,25 @@ fun JobsScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.kube_jobs_title)) },
-                navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
-            )
-        },
-    ) { padding ->
-        Column(Modifier.pageContent(padding).fillMaxSize()) {
-            val loaded = (state as? UiState.Loaded)?.data
-            val listed = remember(loaded) { loaded?.jobs.orEmpty().map { it.namespace }.distinct().sorted() }
-            KubeFilters(control, listed, query, { query = it }, R.string.kube_jobs_search)
-            HorizontalDivider()
-            val rest = Modifier.weight(1f)
-            val s = state
-            when {
-                !control.ready -> EmptyText(stringResource(R.string.kube_scope_type_prompt), rest)
-                s is UiState.Failed -> ErrorBox(scopeError(s.message, control.scope), { vm.refresh() }, rest)
-                s is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                    val rows = remember(s.data, query) { s.data.jobs.filteredJobs(query) }
-                    if (rows.isEmpty()) {
-                        EmptyText(emptyOrNoMatch(query, R.string.kube_jobs_empty, R.string.kube_jobs_no_match))
-                    } else {
-                        // All namespaces: one card per namespace, its name as the card's title.
-                        val byNamespace = if (control.scope.namespace == null) { r: JobRow -> r.namespace } else null
-                        LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
-                            groupedCardRows(rows, groupOf = byNamespace, key = { it.key }) { job ->
-                                JobRowItem(
-                                    job,
-                                    onClick = { onObject(job.ref) },
-                                    onOwner = onObject,
-                                    onDelete = { deleting = job.ref },
-                                )
-                            }
-                        }
-                    }
-                }
-                else -> LoadingBox(rest)
-            }
-        }
+    KubeScopedList(
+        title = stringResource(R.string.kube_jobs_title),
+        vm = vm,
+        control = control,
+        onBack = onBack,
+        items = KubeJobs::jobs,
+        namespaceOf = JobRow::namespace,
+        filter = { rows, query -> rows.filteredJobs(query) },
+        key = JobRow::key,
+        search = R.string.kube_jobs_search,
+        empty = R.string.kube_jobs_empty,
+        noMatch = R.string.kube_jobs_no_match,
+    ) { job ->
+        JobRowItem(
+            job,
+            onClick = { onObject(job.ref) },
+            onOwner = onObject,
+            onDelete = { deleting = job.ref },
+        )
     }
 }
 

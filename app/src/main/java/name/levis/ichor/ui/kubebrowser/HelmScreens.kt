@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -17,19 +16,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -45,7 +41,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
-import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.model.HelmRelease
 import name.levis.ichor.model.HelmReleaseDetail
@@ -62,8 +57,6 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.CardListPadding
-import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoRow
@@ -71,27 +64,11 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.components.emptyOrNoMatch
-import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.workloads.KubeFilters
-import name.levis.ichor.ui.workloads.NamespacesViewModel
-import name.levis.ichor.ui.workloads.rememberKubeScope
-import name.levis.ichor.ui.workloads.scopeError
 
 /** The Helm releases of a namespace (null for every one), their latest revision each. */
-class HelmReleasesViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<List<HelmRelease>>() {
-    private var namespace: String? = null
-    private var started = false
-
-    fun setNamespace(namespace: String?) {
-        if (started && namespace == this.namespace) return
-        started = true
-        this.namespace = namespace
-        refresh(reset = true)
-    }
-
+class HelmReleasesViewModel(private val browser: KubeBrowserRepository) : NamespaceLoadingViewModel<List<HelmRelease>>() {
     override suspend fun fetch() = browser.helmReleases(namespace).releases
 }
 
@@ -118,51 +95,23 @@ fun HelmReleasesScreen(
     onRelease: (HelmRelease) -> Unit,
     vm: HelmReleasesViewModel = viewModel(factory = factory { HelmReleasesViewModel(app.kubeBrowser) }),
 ) {
-    val app = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
-    val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
-    val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
-    val control = rememberKubeScope(app, namespaces, mask.enabled)
-    LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setNamespace(control.scope.namespace) }
-    var query by rememberSaveable { mutableStateOf("") }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.kb_helm_title)) },
-                navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
-            )
-        },
-    ) { padding ->
-        Column(Modifier.pageContent(padding).fillMaxSize()) {
-            val loaded = (state as? UiState.Loaded)?.data
-            val listed = remember(loaded) { loaded.orEmpty().map { it.namespace }.distinct().sorted() }
-            KubeFilters(control, listed, query, { query = it }, R.string.kb_helm_search)
-            HorizontalDivider()
-            val rest = Modifier.weight(1f)
-            val s = state
-            when {
-                !control.ready -> EmptyText(stringResource(R.string.kube_scope_type_prompt), rest)
-                s is UiState.Failed -> ErrorBox(scopeError(s.message, control.scope), { vm.refresh() }, rest)
-                s is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                    val rows = remember(s.data, query) { s.data.filteredReleases(query) }
-                    val now = remember(s.data) { System.currentTimeMillis() }
-                    if (rows.isEmpty()) {
-                        EmptyText(emptyOrNoMatch(query, R.string.kb_helm_empty, R.string.kb_helm_no_match))
-                    } else {
-                        // All namespaces: one card per namespace, its name as the card's title.
-                        val byNamespace = if (control.scope.namespace == null) { r: HelmRelease -> r.namespace } else null
-                        LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
-                            groupedCardRows(rows, groupOf = byNamespace, key = { it.key }) { r ->
-                                ReleaseRow(r, now) { onRelease(r) }
-                            }
-                        }
-                    }
-                }
-                else -> LoadingBox(rest)
-            }
-        }
+    // Ages count from when the list was read.
+    val now = remember(state) { System.currentTimeMillis() }
+    KubeScopedList(
+        title = stringResource(R.string.kb_helm_title),
+        vm = vm,
+        control = rememberListScope(vm),
+        onBack = onBack,
+        items = { it },
+        namespaceOf = HelmRelease::namespace,
+        filter = { rows, query -> rows.filteredReleases(query) },
+        key = HelmRelease::key,
+        search = R.string.kb_helm_search,
+        empty = R.string.kb_helm_empty,
+        noMatch = R.string.kb_helm_no_match,
+    ) { r ->
+        ReleaseRow(r, now) { onRelease(r) }
     }
 }
 
