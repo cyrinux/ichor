@@ -49,4 +49,19 @@ extension OperationActivities {
         return OperationContent(title: title, step: NetPerfJob.step(run), done: count?.done, total: count?.total,
                                 buttons: OperationButton.offered(for: .netPerf, stopping: run.stopping))
     }
+
+    /// A runbook: "Step 2 of 3 · scale-down", "Waiting for you" while a destructive step waits
+    /// for its confirmation (not a failure), Stop.
+    static func runbook() -> OperationContent? {
+        guard let run = RunbookJob.shared.run else { return nil }
+        let title = run.plan.name
+        if !run.running {
+            let phase: OperationPhase = run.stopped ? .stopped : run.succeeded ? .succeeded : .failed
+            return OperationContent(title: title, step: RunbookJob.result(run), phase: phase)
+        }
+        let count = operationCount(index: run.progress.ended, total: run.progress.steps.count)
+        return OperationContent(title: title, step: RunbookJob.step(run), done: count?.done, total: count?.total,
+                                phase: run.progress.waiting == nil ? .running : .paused,
+                                buttons: OperationButton.offered(for: .runbook, stopping: run.stopping))
+    }
 }

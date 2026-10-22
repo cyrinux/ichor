@@ -175,6 +175,7 @@ struct KubeHomeView: View {
                 }
             }
             Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
+            Button { path.append(.runbooks) } label: { Label("Runbooks…", systemImage: "list.bullet.rectangle") }
             ShareLinkButton(target: .screen(.cluster))
         }
         .safeAreaInset(edge: .top, spacing: 0) {
