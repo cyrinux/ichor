@@ -101,6 +101,18 @@ causes are a value the build takes from the moment or the machine (a timestamp o
 `BuildConfig` field or a resource, a non-pinned dependency). Fix the cause rather than leaving
 the entry out, and say here what was fixed.
 
+## Plugin requests
+
+The "Plugin request from a CRD" issue form (`.github/ISSUE_TEMPLATE/crd-request.yml`) labels its
+issues `crd-request`; a maintainer adds `crd-approved` to a request from outside the project
+before the generator acts on it. GitHub silently drops a label the repository does not have,
+so a fork creates both once:
+
+```
+gh label create crd-request --color 5319e7 --description "A plugin request from a CRD link; the generator workflow acts on it"
+gh label create crd-approved --color 0e8a16 --description "A maintainer approved this request for the generator workflow"
+```
+
 ## Code ownership
 
 [@cyrinux](https://github.com/cyrinux) is the default owner for all repository files;

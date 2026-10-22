@@ -794,6 +794,9 @@ not the rule's reason. Editors and generators can check drafts against
 `go/plugin/schema/plugin.schema.json`. The exit codes are the contract; problems are
 `FILE:LINE: message` lines on stderr.
 
+Users ask for one through the Plugin request issue form:
+`https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml`.
+
 What it reads from the CRD (`go/plugin/crd.go` decodes these):
 
 | CRD | Plugin |

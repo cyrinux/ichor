@@ -339,6 +339,9 @@ tour** shows it again.
   change, with which verbs, before you enable it. It renders like a built-in, with your own
   Kubernetes access, through the resources it declares only; switch it off or remove it there.
   The file stays on the phone, encrypted. Format: [docs/plugins.md](docs/plugins.md#user-plugins).
+  For a CRD the app does not show yet, the
+  [Plugin request](https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml) issue
+  form takes its public manifest link.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
