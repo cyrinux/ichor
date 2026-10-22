@@ -89,6 +89,9 @@ build_inside() {
     staticcheck ./...
     # = just plugin-check (just is not in the dev shell): every built-in plugin validates.
     go run ./cmd/probe plugin-validate plugin/builtin/*.yaml
+    # Plugin drafts (crd-request.yml) are not embedded, but they must not rot red either.
+    drafts=(plugin/drafts/*.yaml)
+    [[ ! -e "${drafts[0]}" ]] || go run ./cmd/probe plugin-validate "${drafts[@]}"
   fi
   if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 ]]; then
     echo "ICHOR_SKIP_TESTS=1: skipping go test"
