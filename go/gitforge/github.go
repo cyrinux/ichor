@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"context"
@@ -26,17 +26,17 @@ type contentsEntry struct {
 	Content  string `json:"content"`
 }
 
-func (g gitHubForge) check(ctx context.Context) (gitForgeCheck, error) {
+func (g gitHubForge) Check(ctx context.Context) (CheckResult, error) {
 	var user struct {
 		Login string `json:"login"`
 	}
 
 	h, err := g.c.get(ctx, "/user", nil, &user)
 	if err != nil {
-		return gitForgeCheck{}, err
+		return CheckResult{}, err
 	}
 
-	out := gitForgeCheck{Login: user.Login, ScopesOK: true}
+	out := CheckResult{Login: user.Login, ScopesOK: true}
 
 	// A classic token lists its scopes; a fine-grained one lists none (its repository access
 	// is checked when used).
@@ -54,17 +54,17 @@ func (g gitHubForge) check(ctx context.Context) (gitForgeCheck, error) {
 	return out, nil
 }
 
-func (g gitHubForge) tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error) {
+func (g gitHubForge) Tree(ctx context.Context, repo RepoRef, ref, dir string) ([]Entry, error) {
 	return contentsTree(ctx, g.c, reposPath(repo)+"/contents", ref, dir)
 }
 
-func (g gitHubForge) file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error) {
+func (g gitHubForge) File(ctx context.Context, repo RepoRef, ref, path string) (File, error) {
 	return contentsFile(ctx, g.c, reposPath(repo)+"/contents", ref, path)
 }
 
 // contentsTree lists dir through a contents endpoint (GitHub, Gitea): an array for a
 // directory; a file answers an object.
-func contentsTree(ctx context.Context, c gitForgeClient, base, ref, dir string) ([]gitForgeEntry, error) {
+func contentsTree(ctx context.Context, c gitForgeClient, base, ref, dir string) ([]Entry, error) {
 	path := base
 	if dir != "" {
 		path += "/" + escapePath(dir)
@@ -80,14 +80,14 @@ func contentsTree(ctx context.Context, c gitForgeClient, base, ref, dir string) 
 		return nil, fmt.Errorf("%s is a file, not a directory", dir)
 	}
 
-	entries := make([]gitForgeEntry, 0, len(items))
+	entries := make([]Entry, 0, len(items))
 	for _, it := range items {
 		kind := "file"
 		if it.Type == "dir" {
 			kind = "dir"
 		}
 
-		entries = append(entries, gitForgeEntry{Path: it.Path, Type: kind, Size: it.Size})
+		entries = append(entries, Entry{Path: it.Path, Type: kind, Size: it.Size})
 	}
 
 	return entries, nil
@@ -96,41 +96,41 @@ func contentsTree(ctx context.Context, c gitForgeClient, base, ref, dir string) 
 // contentsFile reads path through a contents endpoint (GitHub, Gitea); content is base64.
 // GitHub sends no content over 1 MiB (encoding "none"); Gitea sends it all, so an answer
 // too large to read is a truncated file, described from its directory's listing.
-func contentsFile(ctx context.Context, c gitForgeClient, base, ref, path string) (gitForgeFile, error) {
+func contentsFile(ctx context.Context, c gitForgeClient, base, ref, path string) (File, error) {
 	var raw json.RawMessage
 
 	_, err := c.get(ctx, base+"/"+escapePath(path), url.Values{"ref": {ref}}, &raw)
-	if errors.Is(err, errGitForgeTooLarge) {
+	if errors.Is(err, ErrTooLarge) {
 		return contentsListed(ctx, c, base, ref, path)
 	}
 
 	if err != nil {
-		return gitForgeFile{}, err
+		return File{}, err
 	}
 
 	var it contentsEntry
 	if err := json.Unmarshal(raw, &it); err != nil {
-		return gitForgeFile{}, fmt.Errorf("%s is a directory, not a file", path)
+		return File{}, fmt.Errorf("%s is a directory, not a file", path)
 	}
 
 	if it.Type != "file" {
-		return gitForgeFile{}, fmt.Errorf("%s is a %s, not a file", path, it.Type)
+		return File{}, fmt.Errorf("%s is a %s, not a file", path, it.Type)
 	}
 
-	f := gitForgeFile{Path: it.Path, SHA: it.SHA, Size: it.Size}
-	if it.Size > gitForgeMaxFile || it.Encoding == "none" {
+	f := File{Path: it.Path, SHA: it.SHA, Size: it.Size}
+	if it.Size > MaxFile || it.Encoding == "none" {
 		f.Truncated = true
 
 		return f, nil
 	}
 
 	if it.Encoding != "base64" {
-		return gitForgeFile{}, fmt.Errorf("%s: unexpected encoding %q", path, it.Encoding)
+		return File{}, fmt.Errorf("%s: unexpected encoding %q", path, it.Encoding)
 	}
 
 	content, err := base64.StdEncoding.DecodeString(strings.ReplaceAll(it.Content, "\n", ""))
 	if err != nil {
-		return gitForgeFile{}, fmt.Errorf("%s: unreadable content: %w", path, err)
+		return File{}, fmt.Errorf("%s: unreadable content: %w", path, err)
 	}
 
 	f.Content = string(content)
@@ -140,7 +140,7 @@ func contentsFile(ctx context.Context, c gitForgeClient, base, ref, path string)
 
 // contentsListed describes a file too large to read from its directory's listing: its sha
 // and size, truncated.
-func contentsListed(ctx context.Context, c gitForgeClient, base, ref, path string) (gitForgeFile, error) {
+func contentsListed(ctx context.Context, c gitForgeClient, base, ref, path string) (File, error) {
 	dir := base
 	if i := strings.LastIndex(path, "/"); i >= 0 {
 		dir += "/" + escapePath(path[:i])
@@ -148,25 +148,25 @@ func contentsListed(ctx context.Context, c gitForgeClient, base, ref, path strin
 
 	var items []contentsEntry
 	if _, err := c.get(ctx, dir, url.Values{"ref": {ref}}, &items); err != nil {
-		return gitForgeFile{}, err
+		return File{}, err
 	}
 
 	for _, it := range items {
 		if it.Path == path {
-			return gitForgeFile{Path: it.Path, SHA: it.SHA, Size: it.Size, Truncated: true}, nil
+			return File{Path: it.Path, SHA: it.SHA, Size: it.Size, Truncated: true}, nil
 		}
 	}
 
-	return gitForgeFile{}, errGitForgeNotFound
+	return File{}, ErrNotFound
 }
 
 // reposPath is a repository's API path on GitHub and Gitea.
-func reposPath(repo gitRepoRef) string {
-	return "/repos/" + url.PathEscape(repo.owner) + "/" + url.PathEscape(repo.name)
+func reposPath(repo RepoRef) string {
+	return "/repos/" + url.PathEscape(repo.Owner) + "/" + url.PathEscape(repo.Name)
 }
 
 // branchFrom is the commit baseRef points to: a GitHub ref is created from a sha.
-func (g gitHubForge) branchFrom(ctx context.Context, repo gitRepoRef, baseRef string) (string, error) {
+func (g gitHubForge) branchFrom(ctx context.Context, repo RepoRef, baseRef string) (string, error) {
 	var ref struct {
 		Object struct {
 			SHA string `json:"sha"`
@@ -178,21 +178,21 @@ func (g gitHubForge) branchFrom(ctx context.Context, repo gitRepoRef, baseRef st
 	}
 
 	if ref.Object.SHA == "" {
-		return "", fmt.Errorf("%s: no commit for %s", repo.full(), baseRef)
+		return "", fmt.Errorf("%s: no commit for %s", repo.Full(), baseRef)
 	}
 
 	return ref.Object.SHA, nil
 }
 
-func (g gitHubForge) createBranch(ctx context.Context, repo gitRepoRef, from, branch string) error {
+func (g gitHubForge) createBranch(ctx context.Context, repo RepoRef, from, branch string) error {
 	return g.c.call(ctx, http.MethodPost, reposPath(repo)+"/git/refs", map[string]string{"ref": "refs/heads/" + branch, "sha": from}, nil)
 }
 
-func (g gitHubForge) commitFile(ctx context.Context, repo gitRepoRef, p gitProposal) (string, error) {
+func (g gitHubForge) commitFile(ctx context.Context, repo RepoRef, p Proposal) (string, error) {
 	return putContents(ctx, g.c, http.MethodPut, reposPath(repo)+"/contents/"+escapePath(p.Path), p)
 }
 
-func (g gitHubForge) openRequest(ctx context.Context, repo gitRepoRef, p gitProposal) (gitRequest, error) {
+func (g gitHubForge) openRequest(ctx context.Context, repo RepoRef, p Proposal) (gitRequest, error) {
 	var pr struct {
 		HTMLURL string `json:"html_url"`
 		Number  int    `json:"number"`
@@ -206,14 +206,14 @@ func (g gitHubForge) openRequest(ctx context.Context, repo gitRepoRef, p gitProp
 	return gitRequest{URL: pr.HTMLURL, Number: pr.Number}, nil
 }
 
-func (g gitHubForge) deleteBranch(ctx context.Context, repo gitRepoRef, branch string) error {
+func (g gitHubForge) deleteBranch(ctx context.Context, repo RepoRef, branch string) error {
 	return g.c.call(ctx, http.MethodDelete, reposPath(repo)+"/git/refs/heads/"+escapePath(branch), nil, nil)
 }
 
 // putContents writes p's file through a contents endpoint (GitHub, Gitea) on p.Branch:
 // base64 on one line (Gitea refuses line breaks), the sha only for an update. It returns
 // the new commit.
-func putContents(ctx context.Context, c gitForgeClient, method, path string, p gitProposal) (string, error) {
+func putContents(ctx context.Context, c gitForgeClient, method, path string, p Proposal) (string, error) {
 	in := map[string]string{"message": p.Message, "content": base64.StdEncoding.EncodeToString([]byte(p.Content)), "branch": p.Branch}
 	if p.FileSha != "" {
 		in["sha"] = p.FileSha

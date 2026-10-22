@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/gitforge"
 )
 
 func TestTextDiff(t *testing.T) {
@@ -92,10 +94,10 @@ func TestTextDiffTruncatesALargeDiff(t *testing.T) {
 }
 
 func TestGitOpsProposalDefaults(t *testing.T) {
-	prev := gitBranchSuffix
-	gitBranchSuffix = func() string { return "a1b2" }
+	prev := gitforge.BranchSuffix
+	gitforge.BranchSuffix = func() string { return "a1b2" }
 
-	t.Cleanup(func() { gitBranchSuffix = prev })
+	t.Cleanup(func() { gitforge.BranchSuffix = prev })
 
 	cases := []struct {
 		name                                      string

@@ -202,7 +202,7 @@ func demoGitForgeFile(path string) (gitForgeFile, error) {
 // demoGitRequest is the demo's sample proposals: #1 open, #2 merged (and deployed: its
 // commit is the demo's Argo CD app revision).
 func demoGitRequest(repo gitRepoRef, number int) gitRequestState {
-	url := "https://git.home.example/" + repo.full() + "/pulls/" + strconv.Itoa(number)
+	url := "https://git.home.example/" + repo.Full() + "/pulls/" + strconv.Itoa(number)
 	if number == demoMergedRequest {
 		return gitRequestState{
 			State: gitRequestMerged, Title: "Scale podinfo to 3", URL: url, HeadSHA: demoProposalHead,

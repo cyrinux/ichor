@@ -67,7 +67,7 @@ func gitForgePropose(configYAML, contextName, hostJSON, optionsJSON string, targ
 		return gitProposeResult{}, err
 	}
 
-	*target = repo.full() + ":" + proposalPaths(p)
+	*target = repo.Full() + ":" + proposalPaths(p)
 
 	ctx, cancel := context.WithTimeout(context.Background(), gitProposeTimeout)
 	defer cancel()

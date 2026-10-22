@@ -1,4 +1,9 @@
-package ichorgo
+// Package gitforge is the Git forge transport: GitHub, GitLab and Gitea/Forgejo, each reached
+// over https with one token that comes with every call and is never kept. It lists a
+// directory, reads a file or an archive, checks a token, and proposes a change as a branch and
+// a pull or merge request. It does no masking of shared output, no audit log, no demo answers
+// and no prefilled proposal text: the app's Go facade adds those.
+package gitforge
 
 import (
 	"bytes"
@@ -24,37 +29,37 @@ import (
 
 // The forges the client speaks; demo answers from fixed data, auto guesses from the host.
 const (
-	gitForgeGitHub = "github"
-	gitForgeGitLab = "gitlab"
-	gitForgeGitea  = "gitea"
-	gitForgeAuto   = "auto"
-	gitForgeDemo   = "demo"
+	KindGitHub = "github"
+	KindGitLab = "gitlab"
+	KindGitea  = "gitea"
+	KindAuto   = "auto"
+	KindDemo   = "demo"
 )
 
 const (
-	gitForgeTimeout = 20 * time.Second
-	// gitForgeMaxFile is the largest file read: GitHub's contents API stops there too.
-	gitForgeMaxFile = 1 << 20
-	// gitForgeMaxBody bounds an answer: a 1 MiB file is about 1.4 MiB in base64, a full
+	Timeout = 20 * time.Second
+	// MaxFile is the largest file read: GitHub's contents API stops there too.
+	MaxFile = 1 << 20
+	// MaxBody bounds an answer: a 1 MiB file is about 1.4 MiB in base64, a full
 	// directory page well under it. A bigger answer is a file read as truncated.
-	gitForgeMaxBody = 3 << 20
+	MaxBody = 3 << 20
 	// gitForgeMaxPages bounds a GitLab directory listing (100 entries a page).
 	gitForgeMaxPages = 50
 )
 
 // gitForgeHTTP refuses redirects (httpx.New's default): the token is never carried to
 // another address.
-var gitForgeHTTP = httpx.New(httpx.Opts{Timeout: gitForgeTimeout})
+var gitForgeHTTP = httpx.New(httpx.Opts{Timeout: Timeout})
 
-// errGitForgeNotFound is a 404, worded by the caller with the path and ref asked.
-var errGitForgeNotFound = errors.New("not found")
+// ErrNotFound is a 404, worded by the caller with the path and ref asked.
+var ErrNotFound = errors.New("not found")
 
-// errGitForgeTooLarge is an answer over gitForgeMaxBody: a file read reports it truncated.
-var errGitForgeTooLarge = errors.New("answer too large")
+// ErrTooLarge is an answer over MaxBody: a file read reports it truncated.
+var ErrTooLarge = errors.New("answer too large")
 
-// gitForgeHost is where and how to reach a forge: {"kind","baseURL","token","aliases"};
-// aliases are other host[:port] names of the same server (gitforge_alias.go).
-type gitForgeHost struct {
+// Host is where and how to reach a forge: {"kind","baseURL","token","aliases"};
+// aliases are other host[:port] names of the same server (alias.go).
+type Host struct {
 	Kind    string   `json:"kind"`
 	BaseURL string   `json:"baseURL"`
 	Token   string   `json:"token"`
@@ -64,14 +69,17 @@ type gitForgeHost struct {
 	aliases []string // Aliases, normalized
 }
 
-// gitRepoRef is a repository on a forge: owner may hold GitLab subgroups (group/sub).
-type gitRepoRef struct {
-	host, owner, name string
+// HostName is the host of BaseURL, as ParseHost read it.
+func (h Host) HostName() string { return h.host }
+
+// RepoRef is a repository on a forge: owner may hold GitLab subgroups (group/sub).
+type RepoRef struct {
+	Host, Owner, Name string
 }
 
-func (r gitRepoRef) full() string { return r.owner + "/" + r.name }
+func (r RepoRef) Full() string { return r.Owner + "/" + r.Name }
 
-type gitForgeEntry struct {
+type Entry struct {
 	Path string `json:"path"`
 	Type string `json:"type"` // file or dir
 	Size int64  `json:"size"`
@@ -79,13 +87,13 @@ type gitForgeEntry struct {
 	SOPS bool `json:"sops,omitempty"`
 }
 
-type gitForgeTree struct {
-	Ref     string          `json:"ref"`
-	SHA     string          `json:"sha,omitempty"`
-	Entries []gitForgeEntry `json:"entries"`
+type Tree struct {
+	Ref     string  `json:"ref"`
+	SHA     string  `json:"sha,omitempty"`
+	Entries []Entry `json:"entries"`
 }
 
-type gitForgeFile struct {
+type File struct {
 	Path string `json:"path"`
 	// SHA is what a later update must name: the blob sha (GitHub, Gitea) or the last commit
 	// of the file (GitLab).
@@ -95,19 +103,19 @@ type gitForgeFile struct {
 	Truncated bool   `json:"truncated"`
 }
 
-type gitForgeCheck struct {
+type CheckResult struct {
 	Login    string   `json:"login"`
 	Host     string   `json:"host"`
 	ScopesOK bool     `json:"scopesOK"`
 	Missing  []string `json:"missing"`
 }
 
-// gitForge is one forge's API behind the three reads and the writes of a proposal
-// (gitforge_propose.go).
-type gitForge interface {
-	check(ctx context.Context) (gitForgeCheck, error)
-	tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error)
-	file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error)
+// Forge is one forge's API behind the three reads and the writes of a proposal
+// (propose.go).
+type Forge interface {
+	Check(ctx context.Context) (CheckResult, error)
+	Tree(ctx context.Context, repo RepoRef, ref, dir string) ([]Entry, error)
+	File(ctx context.Context, repo RepoRef, ref, path string) (File, error)
 	gitRepoReader
 	gitArchiver
 	gitCommitResolver
@@ -115,9 +123,9 @@ type gitForge interface {
 	gitRequestReader
 }
 
-// sortGitForgeEntries puts directories first, then sorts by path.
-func sortGitForgeEntries(entries []gitForgeEntry) {
-	slices.SortFunc(entries, func(a, b gitForgeEntry) int {
+// SortEntries puts directories first, then sorts by path.
+func SortEntries(entries []Entry) {
+	slices.SortFunc(entries, func(a, b Entry) int {
 		if a.Type != b.Type {
 			if a.Type == "dir" {
 				return -1
@@ -130,52 +138,52 @@ func sortGitForgeEntries(entries []gitForgeEntry) {
 	})
 }
 
-// gitForgeArgs decodes and checks what every read takes; the path is cleaned of leading and
+// Args decodes and checks what every read takes; the path is cleaned of leading and
 // trailing slashes and may not climb out of the repository.
-func gitForgeArgs(hostJSON, repoURL, ref, path string) (gitForgeHost, gitRepoRef, string, string, error) {
-	h, err := parseGitForgeHost(hostJSON)
+func Args(hostJSON, repoURL, ref, path string) (Host, RepoRef, string, string, error) {
+	h, err := ParseHost(hostJSON)
 	if err != nil {
-		return gitForgeHost{}, gitRepoRef{}, "", "", err
+		return Host{}, RepoRef{}, "", "", err
 	}
 
-	repo := gitRepoRef{host: "git.home.example", owner: "example-org", name: "platform"}
-	if h.Kind != gitForgeDemo {
-		if repo.host, repo.owner, repo.name, err = gitForgeRepo(repoURL); err != nil {
-			return gitForgeHost{}, gitRepoRef{}, "", "", err
+	repo := RepoRef{Host: "git.home.example", Owner: "example-org", Name: "platform"}
+	if h.Kind != KindDemo {
+		if repo.Host, repo.Owner, repo.Name, err = ParseRepoURL(repoURL); err != nil {
+			return Host{}, RepoRef{}, "", "", err
 		}
 
 		// The token is for h.host: a repository elsewhere is not read with it. One on an
 		// alias is read from h.host, the only address any request goes to.
 		if err := h.checkGitRepoHost(repo, repoURL); err != nil {
-			return gitForgeHost{}, gitRepoRef{}, "", "", err
+			return Host{}, RepoRef{}, "", "", err
 		}
 
-		repo.host = h.host
+		repo.Host = h.host
 	}
 
 	ref = strings.TrimSpace(ref)
 	if ref == "" {
-		return gitForgeHost{}, gitRepoRef{}, "", "", errors.New("no branch, tag or commit given")
+		return Host{}, RepoRef{}, "", "", errors.New("no branch, tag or commit given")
 	}
 
 	path = strings.Trim(strings.TrimSpace(path), "/")
 	if slices.Contains(strings.Split(path, "/"), "..") {
-		return gitForgeHost{}, gitRepoRef{}, "", "", fmt.Errorf("%s leaves the repository", path)
+		return Host{}, RepoRef{}, "", "", fmt.Errorf("%s leaves the repository", path)
 	}
 
 	return h, repo, ref, path, nil
 }
 
-// parseGitForgeHost decodes {"kind","baseURL","token"}: https only (http for a loopback
+// ParseHost decodes {"kind","baseURL","token"}: https only (http for a loopback
 // address), the kind guessed from the host when "auto".
-func parseGitForgeHost(hostJSON string) (gitForgeHost, error) {
-	var h gitForgeHost
+func ParseHost(hostJSON string) (Host, error) {
+	var h Host
 	if err := json.Unmarshal([]byte(hostJSON), &h); err != nil {
-		return gitForgeHost{}, fmt.Errorf("invalid Git host: %w", err)
+		return Host{}, fmt.Errorf("invalid Git host: %w", err)
 	}
 
 	h.Kind = strings.ToLower(strings.TrimSpace(h.Kind))
-	if h.Kind == gitForgeDemo {
+	if h.Kind == KindDemo {
 		h.host = "git.home.example"
 
 		return h, nil
@@ -183,11 +191,11 @@ func parseGitForgeHost(hostJSON string) (gitForgeHost, error) {
 
 	u, err := url.Parse(strings.TrimRight(strings.TrimSpace(h.BaseURL), "/"))
 	if err != nil || u.Hostname() == "" {
-		return gitForgeHost{}, fmt.Errorf("invalid Git host address %q", h.BaseURL)
+		return Host{}, fmt.Errorf("invalid Git host address %q", h.BaseURL)
 	}
 
 	if u.Scheme != "https" && !(u.Scheme == "http" && isLoopbackHost(u.Hostname())) {
-		return gitForgeHost{}, fmt.Errorf("%s: the Git host must be reached over https", u.Hostname())
+		return Host{}, fmt.Errorf("%s: the Git host must be reached over https", u.Hostname())
 	}
 
 	// A pasted API address is the forge's own: the API path is added back per forge.
@@ -202,16 +210,16 @@ func parseGitForgeHost(hostJSON string) (gitForgeHost, error) {
 		h.BaseURL = "https://github.com"
 	}
 
-	if h.Kind == "" || h.Kind == gitForgeAuto {
+	if h.Kind == "" || h.Kind == KindAuto {
 		if h.Kind, err = gitForgeKindOf(h.host); err != nil {
-			return gitForgeHost{}, err
+			return Host{}, err
 		}
 	}
 
 	switch h.Kind {
-	case gitForgeGitHub, gitForgeGitLab, gitForgeGitea:
+	case KindGitHub, KindGitLab, KindGitea:
 	default:
-		return gitForgeHost{}, fmt.Errorf("unknown Git host kind %q: pick GitHub, GitLab or Gitea/Forgejo in Settings", h.Kind)
+		return Host{}, fmt.Errorf("unknown Git host kind %q: pick GitHub, GitLab or Gitea/Forgejo in Settings", h.Kind)
 	}
 
 	return h, nil
@@ -246,20 +254,20 @@ func gitForgeHostName(host string) string {
 func gitForgeKindOf(host string) (string, error) {
 	switch {
 	case host == "github.com":
-		return gitForgeGitHub, nil
+		return KindGitHub, nil
 	case strings.Contains(host, "gitlab"):
-		return gitForgeGitLab, nil
+		return KindGitLab, nil
 	case strings.Contains(host, "gitea"), strings.Contains(host, "forgejo"), host == "codeberg.org":
-		return gitForgeGitea, nil
+		return KindGitea, nil
 	}
 
 	return "", fmt.Errorf("unknown Git host %s: pick GitHub, GitLab or Gitea/Forgejo in Settings", host)
 }
 
-// gitForgeRepo splits a repository URL (https, ssh or scp-like, with or without .git) into
+// ParseRepoURL splits a repository URL (https, ssh or scp-like, with or without .git) into
 // its host, owner and name; a GitLab project in subgroups keeps them in owner.
-func gitForgeRepo(repoURL string) (host, owner, name string, err error) {
-	web := argoRepoWebURL(repoURL)
+func ParseRepoURL(repoURL string) (host, owner, name string, err error) {
+	web := RepoWebURL(repoURL)
 	if web == "" {
 		return "", "", "", fmt.Errorf("%s is not a Git repository address", repoURL)
 	}
@@ -275,11 +283,11 @@ func gitForgeRepo(repoURL string) (host, owner, name string, err error) {
 	return gitForgeHostName(host), strings.Join(segs[:len(segs)-1], "/"), segs[len(segs)-1], nil
 }
 
-func newGitForge(h gitForgeHost) gitForge {
+func New(h Host) Forge {
 	switch h.Kind {
-	case gitForgeGitLab:
+	case KindGitLab:
 		return gitLabForge{gitForgeClient{host: h, api: h.BaseURL + "/api/v4"}}
-	case gitForgeGitea:
+	case KindGitea:
 		return giteaForge{gitForgeClient{host: h, api: h.BaseURL + "/api/v1"}}
 	default:
 		api := h.BaseURL + "/api/v3" // GitHub Enterprise Server
@@ -303,12 +311,12 @@ func escapePath(p string) string {
 
 // gitForgeClient sends the GETs of one forge with its token.
 type gitForgeClient struct {
-	host gitForgeHost
+	host Host
 	api  string
 }
 
 // get decodes the JSON answer to GET api+path?query into out and returns its headers;
-// errGitForgeTooLarge past gitForgeMaxBody.
+// ErrTooLarge past MaxBody.
 func (c gitForgeClient) get(ctx context.Context, path string, query url.Values, out any) (http.Header, error) {
 	resp, err := c.do(ctx, http.MethodGet, path, query)
 	if err != nil {
@@ -317,10 +325,10 @@ func (c gitForgeClient) get(ctx context.Context, path string, query url.Values, 
 
 	defer resp.Body.Close() //nolint:errcheck
 
-	body := &io.LimitedReader{R: resp.Body, N: gitForgeMaxBody}
+	body := &io.LimitedReader{R: resp.Body, N: MaxBody}
 	if err := json.NewDecoder(body).Decode(out); err != nil {
 		if body.N == 0 {
-			return nil, errGitForgeTooLarge
+			return nil, ErrTooLarge
 		}
 
 		return nil, fmt.Errorf("%s: unreadable answer: %w", c.host.host, err)
@@ -357,7 +365,7 @@ func (c gitForgeClient) doBody(ctx context.Context, method, path string, query u
 	}
 
 	resp, err := c.send(ctx, method, target, body, false)
-	if err == nil && resp.StatusCode == http.StatusUnauthorized && c.host.Kind == gitForgeGitLab && c.host.Token != "" {
+	if err == nil && resp.StatusCode == http.StatusUnauthorized && c.host.Kind == KindGitLab && c.host.Token != "" {
 		resp.Body.Close() //nolint:errcheck
 
 		resp, err = c.send(ctx, method, target, body, true)
@@ -438,7 +446,7 @@ func (c gitForgeClient) status(resp *http.Response) error {
 	case code == http.StatusUnauthorized:
 		return fmt.Errorf("the token for %s was refused", host)
 	case code == http.StatusNotFound:
-		return errGitForgeNotFound
+		return ErrNotFound
 	case code == http.StatusTooManyRequests || code == http.StatusForbidden && rateLimited(resp.Header):
 		if until := rateLimitReset(resp.Header); !until.IsZero() {
 			return fmt.Errorf("rate limited by %s until %s", host, until.Local().Format("15:04"))

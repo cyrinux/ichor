@@ -141,7 +141,7 @@ func TestTalosDirReaderBoundsTheFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repo := gitRepoRef{host: h.host, owner: "example-org", name: "cluster-config"}
+	repo := gitRepoRef{Host: h.HostName(), Owner: "example-org", Name: "cluster-config"}
 
 	_, err = talosDirReader("talos")(t.Context(), newGitForge(h), repo, snapTestSHA)
 	if err == nil || !strings.Contains(err.Error(), "more than 200 YAML files") {

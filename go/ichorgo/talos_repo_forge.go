@@ -83,9 +83,9 @@ func talosDirReader(dir string) talosForgeReader {
 		var walk func(d string, depth int) error
 
 		walk = func(d string, depth int) error {
-			entries, err := f.tree(ctx, repo, sha, d)
+			entries, err := f.Tree(ctx, repo, sha, d)
 			if errors.Is(err, errGitForgeNotFound) {
-				return fmt.Errorf("%s is not in %s at %.7s", d, repo.full(), sha)
+				return fmt.Errorf("%s is not in %s at %.7s", d, repo.Full(), sha)
 			}
 
 			if err != nil {
@@ -103,7 +103,7 @@ func talosDirReader(dir string) talosForgeReader {
 						return fmt.Errorf("%s holds more than %d YAML files: the app reads at most that many", root, talosDirMaxFiles)
 					}
 
-					file, err := f.file(ctx, repo, sha, e.Path)
+					file, err := f.File(ctx, repo, sha, e.Path)
 					if err != nil {
 						return err
 					}
@@ -131,7 +131,7 @@ func talosPathsReader(paths []string) talosForgeReader {
 				continue
 			}
 
-			file, err := f.file(ctx, repo, sha, name)
+			file, err := f.File(ctx, repo, sha, name)
 			if errors.Is(err, errGitForgeNotFound) {
 				continue
 			}

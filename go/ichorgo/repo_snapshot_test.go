@@ -280,8 +280,13 @@ func TestSnapshotCommitResolvesEveryRef(t *testing.T) {
 		"/api/v3/repos/example-org/cluster-config/commits/v1.2.0": jsonAnswer(`{"sha":"` + strings.ToUpper(snapTestSHA) + `"}`),
 		"/api/v3/repos/example-org/cluster-config/commits/HEAD":   jsonAnswer(`{"sha":"not-a-sha"}`),
 	})
-	f := newGitForge(gitForgeHost{Kind: gitForgeGitHub, BaseURL: srv.URL, Token: gitTestToken, host: "127.0.0.1"})
-	repo := gitRepoRef{host: "127.0.0.1", owner: "example-org", name: "cluster-config"}
+	h, err := parseGitForgeHost(gitHostJSON(gitForgeGitHub, srv.URL))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f := newGitForge(h)
+	repo := gitRepoRef{Host: "127.0.0.1", Owner: "example-org", Name: "cluster-config"}
 
 	if sha, err := snapshotCommit(t.Context(), f, repo, "v1.2.0"); err != nil || sha != snapTestSHA {
 		t.Errorf("tag: %q %v", sha, err)

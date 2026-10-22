@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"context"
@@ -17,37 +17,37 @@ import (
 // clone would pull packfiles. GitHub answers with a redirect to a signed URL on another host
 // (codeload.github.com): that one is fetched without the token.
 
-// gitForgeMaxArchive bounds an archive as downloaded (compressed).
-const gitForgeMaxArchive = 48 << 20
+// MaxArchive bounds an archive as downloaded (compressed).
+const MaxArchive = 48 << 20
 
-// gitForgeArchiveTimeout bounds an archive download, longer than an API call.
-const gitForgeArchiveTimeout = 2 * time.Minute
+// ArchiveTimeout bounds an archive download, longer than an API call.
+const ArchiveTimeout = 2 * time.Minute
 
-var errGitForgeArchiveTooLarge = errors.New("the repository archive is over 48 MiB; browse it file by file")
+var ErrArchiveTooLarge = errors.New("the repository archive is over 48 MiB; browse it file by file")
 
 // gitArchiver names where a forge serves a repository's archive at ref, below its API.
 type gitArchiver interface {
-	archivePath(repo gitRepoRef, ref string) (string, url.Values)
+	archivePath(repo RepoRef, ref string) (string, url.Values)
 }
 
-func (g gitHubForge) archivePath(repo gitRepoRef, ref string) (string, url.Values) {
+func (g gitHubForge) archivePath(repo RepoRef, ref string) (string, url.Values) {
 	return reposPath(repo) + "/tarball/" + escapePath(ref), nil
 }
 
-func (g gitLabForge) archivePath(repo gitRepoRef, ref string) (string, url.Values) {
+func (g gitLabForge) archivePath(repo RepoRef, ref string) (string, url.Values) {
 	return gitLabProject(repo) + "/repository/archive.tar.gz", url.Values{"sha": {ref}}
 }
 
-func (g giteaForge) archivePath(repo gitRepoRef, ref string) (string, url.Values) {
+func (g giteaForge) archivePath(repo RepoRef, ref string) (string, url.Values) {
 	return reposPath(repo) + "/archive/" + escapePath(ref) + ".tar.gz", nil
 }
 
 // gitCommitResolver tells the commit a branch, tag, short sha or HEAD stands for.
 type gitCommitResolver interface {
-	refCommit(ctx context.Context, repo gitRepoRef, ref string) (string, error)
+	RefCommit(ctx context.Context, repo RepoRef, ref string) (string, error)
 }
 
-func (g gitHubForge) refCommit(ctx context.Context, repo gitRepoRef, ref string) (string, error) {
+func (g gitHubForge) RefCommit(ctx context.Context, repo RepoRef, ref string) (string, error) {
 	var c struct {
 		SHA string `json:"sha"`
 	}
@@ -57,7 +57,7 @@ func (g gitHubForge) refCommit(ctx context.Context, repo gitRepoRef, ref string)
 	return c.SHA, err
 }
 
-func (g gitLabForge) refCommit(ctx context.Context, repo gitRepoRef, ref string) (string, error) {
+func (g gitLabForge) RefCommit(ctx context.Context, repo RepoRef, ref string) (string, error) {
 	var c struct {
 		ID string `json:"id"`
 	}
@@ -67,7 +67,7 @@ func (g gitLabForge) refCommit(ctx context.Context, repo gitRepoRef, ref string)
 	return c.ID, err
 }
 
-func (g giteaForge) refCommit(ctx context.Context, repo gitRepoRef, ref string) (string, error) {
+func (g giteaForge) RefCommit(ctx context.Context, repo RepoRef, ref string) (string, error) {
 	var list []struct {
 		SHA string `json:"sha"`
 	}
@@ -78,22 +78,22 @@ func (g giteaForge) refCommit(ctx context.Context, repo gitRepoRef, ref string) 
 	}
 
 	if len(list) == 0 {
-		return "", errGitForgeNotFound
+		return "", ErrNotFound
 	}
 
 	return list[0].SHA, nil
 }
 
-// gitForgeArchive downloads repo's archive at ref through h's API, at most gitForgeMaxArchive.
-func gitForgeArchive(ctx context.Context, h gitForgeHost, repo gitRepoRef, ref string) ([]byte, error) {
-	f := newGitForge(h)
+// Archive downloads repo's archive at ref through h's API, at most MaxArchive.
+func Archive(ctx context.Context, h Host, repo RepoRef, ref string) ([]byte, error) {
+	f := New(h)
 	path, query := f.archivePath(repo, ref)
 
 	return gitForgeClientOf(f).download(ctx, path, query)
 }
 
 // gitForgeClientOf is the client behind one of the three forges.
-func gitForgeClientOf(f gitForge) gitForgeClient {
+func gitForgeClientOf(f Forge) gitForgeClient {
 	switch f := f.(type) {
 	case gitHubForge:
 		return f.c
@@ -117,7 +117,7 @@ func (c gitForgeClient) download(ctx context.Context, path string, query url.Val
 	privateToken := false
 
 	resp, err := c.sendVia(ctx, gitForgeArchiveHTTP, http.MethodGet, target, nil, false)
-	if err == nil && resp.StatusCode == http.StatusUnauthorized && c.host.Kind == gitForgeGitLab && c.host.Token != "" {
+	if err == nil && resp.StatusCode == http.StatusUnauthorized && c.host.Kind == KindGitLab && c.host.Token != "" {
 		resp.Body.Close() //nolint:errcheck
 
 		privateToken = true
@@ -143,17 +143,17 @@ func (c gitForgeClient) download(ctx context.Context, path string, query url.Val
 		return nil, err
 	}
 
-	if n, err := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64); err == nil && n > gitForgeMaxArchive {
-		return nil, errGitForgeArchiveTooLarge
+	if n, err := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64); err == nil && n > MaxArchive {
+		return nil, ErrArchiveTooLarge
 	}
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, gitForgeMaxArchive+1))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, MaxArchive+1))
 	if err != nil {
 		return nil, c.scrub(fmt.Errorf("%s: %w", c.host.host, err))
 	}
 
-	if len(body) > gitForgeMaxArchive {
-		return nil, errGitForgeArchiveTooLarge
+	if len(body) > MaxArchive {
+		return nil, ErrArchiveTooLarge
 	}
 
 	return body, nil
@@ -203,4 +203,4 @@ func (c gitForgeClient) followArchive(ctx context.Context, from, loc string, pri
 }
 
 // gitForgeArchiveHTTP downloads archives: longer than an API call, never following a redirect.
-var gitForgeArchiveHTTP = httpx.New(httpx.Opts{Timeout: gitForgeArchiveTimeout})
+var gitForgeArchiveHTTP = httpx.New(httpx.Opts{Timeout: ArchiveTimeout})

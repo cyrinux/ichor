@@ -107,7 +107,7 @@ func loadRepoSnapshot(hostJSON, repoURL, ref string) (*repoSnapshot, bool, error
 		return nil, false, err
 	}
 
-	key := snapshotKey(h.host+"/"+repo.full(), sha)
+	key := snapshotKey(h.HostName()+"/"+repo.Full(), sha)
 
 	// A search submitted again while the first still downloads waits for it.
 	unlock := lockSnapshotKey(key)
@@ -127,7 +127,7 @@ func loadRepoSnapshot(hostJSON, repoURL, ref string) (*repoSnapshot, bool, error
 
 	data, err := gitForgeArchive(ctx, h, repo, sha)
 	if errors.Is(err, errGitForgeNotFound) {
-		return nil, false, fmt.Errorf("%s is not in %s", ref, repo.full())
+		return nil, false, fmt.Errorf("%s is not in %s", ref, repo.Full())
 	}
 
 	if err != nil {
@@ -152,9 +152,9 @@ func snapshotCommit(ctx context.Context, f gitForge, repo gitRepoRef, ref string
 		return ref, nil
 	}
 
-	sha, err := f.refCommit(ctx, repo, ref)
+	sha, err := f.RefCommit(ctx, repo, ref)
 	if errors.Is(err, errGitForgeNotFound) {
-		return "", fmt.Errorf("%s is not in %s", ref, repo.full())
+		return "", fmt.Errorf("%s is not in %s", ref, repo.Full())
 	}
 
 	if err != nil {
@@ -162,7 +162,7 @@ func snapshotCommit(ctx context.Context, f gitForge, repo gitRepoRef, ref string
 	}
 
 	if sha = strings.ToLower(sha); !commitSHA.MatchString(sha) {
-		return "", fmt.Errorf("%s: no commit for %s", repo.full(), ref)
+		return "", fmt.Errorf("%s: no commit for %s", repo.Full(), ref)
 	}
 
 	return sha, nil

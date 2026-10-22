@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"net/url"
@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-// argoRepoWebURL is the https page of a repository, "" when it cannot be browsed: an OCI
+// RepoWebURL is the https page of a repository, "" when it cannot be browsed: an OCI
 // registry, a local path, or something that is not a URL. SSH forms become https on the same
 // host; credentials and ports are dropped.
-func argoRepoWebURL(repo string) string {
+func RepoWebURL(repo string) string {
 	repo = strings.TrimSpace(repo)
 	if repo == "" || strings.HasPrefix(repo, "oci://") {
 		return ""

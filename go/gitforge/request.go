@@ -1,4 +1,4 @@
-package ichorgo
+package gitforge
 
 import (
 	"context"
@@ -10,14 +10,14 @@ import (
 // closed, its head and merge commits (a squash merge's differs from the head), when.
 
 const (
-	gitRequestOpen   = "open"
-	gitRequestMerged = "merged"
-	gitRequestClosed = "closed"
+	RequestOpen   = "open"
+	RequestMerged = "merged"
+	RequestClosed = "closed"
 )
 
-var errGitRequestNumber = errors.New("no pull request number given")
+var ErrRequestNumber = errors.New("no pull request number given")
 
-type gitRequestState struct {
+type RequestState struct {
 	State     string `json:"state"` // open, merged, closed
 	Title     string `json:"title"`
 	URL       string `json:"url"`
@@ -30,16 +30,16 @@ type gitRequestState struct {
 
 // gitRequestReader reads one pull or merge request of a repository.
 type gitRequestReader interface {
-	request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error)
+	Request(ctx context.Context, repo RepoRef, number int) (RequestState, error)
 }
 
-func (g gitHubForge) request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
+func (g gitHubForge) Request(ctx context.Context, repo RepoRef, number int) (RequestState, error) {
 	return g.c.gitHubStylePullRequest(ctx, repo, number)
 }
 
 // gitHubStylePullRequest reads a pull request from GitHub, or from Gitea which mirrors
 // GitHub's pull-request JSON.
-func (c gitForgeClient) gitHubStylePullRequest(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
+func (c gitForgeClient) gitHubStylePullRequest(ctx context.Context, repo RepoRef, number int) (RequestState, error) {
 	var pr struct {
 		State          string `json:"state"`
 		Title          string `json:"title"`
@@ -55,16 +55,16 @@ func (c gitForgeClient) gitHubStylePullRequest(ctx context.Context, repo gitRepo
 	}
 
 	if _, err := c.get(ctx, reposPath(repo)+"/pulls/"+strconv.Itoa(number), nil, &pr); err != nil {
-		return gitRequestState{}, err
+		return RequestState{}, err
 	}
 
-	return gitRequestState{
+	return RequestState{
 		State: requestState(pr.State, pr.Merged), Title: pr.Title, URL: pr.HTMLURL, HeadSHA: pr.Head.SHA,
 		MergeSHA: mergedOnly(pr.Merged, pr.MergeCommitSHA), MergedAt: pr.MergedAt, UpdatedAt: pr.UpdatedAt, Draft: pr.Draft,
 	}, nil
 }
 
-func (g gitLabForge) request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
+func (g gitLabForge) Request(ctx context.Context, repo RepoRef, number int) (RequestState, error) {
 	var mr struct {
 		State           string `json:"state"` // opened, merged, closed, locked
 		Title           string `json:"title"`
@@ -78,22 +78,22 @@ func (g gitLabForge) request(ctx context.Context, repo gitRepoRef, number int) (
 	}
 
 	if _, err := g.c.get(ctx, gitLabProject(repo)+"/merge_requests/"+strconv.Itoa(number), nil, &mr); err != nil {
-		return gitRequestState{}, err
+		return RequestState{}, err
 	}
 
-	merged := mr.State == gitRequestMerged
+	merged := mr.State == RequestMerged
 	sha := mr.MergeCommitSHA
 	if sha == "" {
 		sha = mr.SquashCommitSHA
 	}
 
-	return gitRequestState{
+	return RequestState{
 		State: requestState(mr.State, merged), Title: mr.Title, URL: mr.WebURL, HeadSHA: mr.SHA,
 		MergeSHA: mergedOnly(merged, sha), MergedAt: mr.MergedAt, UpdatedAt: mr.UpdatedAt, Draft: mr.Draft,
 	}, nil
 }
 
-func (g giteaForge) request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
+func (g giteaForge) Request(ctx context.Context, repo RepoRef, number int) (RequestState, error) {
 	return g.c.gitHubStylePullRequest(ctx, repo, number)
 }
 
@@ -102,11 +102,11 @@ func (g giteaForge) request(ctx context.Context, repo gitRepoRef, number int) (g
 func requestState(state string, merged bool) string {
 	switch {
 	case merged:
-		return gitRequestMerged
-	case state == gitRequestOpen || state == "opened":
-		return gitRequestOpen
+		return RequestMerged
+	case state == RequestOpen || state == "opened":
+		return RequestOpen
 	default:
-		return gitRequestClosed
+		return RequestClosed
 	}
 }
 
