@@ -6,14 +6,17 @@ validated, on one line, and the shell never sees the raw body.
 
 Usage (run with python3 -I):
   crd-request.py parse                  ISSUE_BODY, ISSUE_NUMBER from the environment; prints
-                                        crd_url=, crds=, operator=, docs=, id=, branch= lines
-                                        for $GITHUB_OUTPUT, or one reason on stderr and exit 1
-                                        (crd_url is empty when the request names the CRDs instead)
+                                        crd_url=, fetch_url=, crds=, operator=, docs=, id=,
+                                        branch= lines for $GITHUB_OUTPUT, or one reason on stderr
+                                        and exit 1 (crd_url and fetch_url are empty when the
+                                        request names the CRDs instead)
   crd-request.py search                 CRDS (names, space-separated), GH_TOKEN: searches public
                                         GitHub for the first CRD's manifest; prints crd_url=,
                                         website=, repo= for $GITHUB_OUTPUT, or a reason and exit 1
   crd-request.py check-url URL          exit 0 when URL is on a public forge (the address curl
                                         ended on after redirects), else a reason and exit 1
+  crd-request.py check-manifest FILE    exit 0 unless FILE is a web page (a bot check or a
+                                        sign-in page served instead of the file), else a reason
   crd-request.py refused REASON_FILE    the comment for a request refused before any fetch
   crd-request.py failed LOG_FILE        the comment for a CRD the generator or the lint rejects
   crd-request.py is-covered LOG_FILE    exit 0 when the generator refused a CRD the app already reads
@@ -31,7 +34,7 @@ import re
 import socket
 import sys
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode, urlsplit, urlunsplit
+from urllib.parse import quote, unquote, urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 # A CRD manifest is fetched from any public forge (GitHub, a GitLab, a Gitea or a Forgejo, hosted
@@ -41,6 +44,8 @@ INTERNAL_SUFFIXES = (".local", ".localhost", ".internal", ".lan", ".home.arpa", 
 RESOLVE = socket.getaddrinfo  # the tests replace it to stay offline
 # A Gitea or Forgejo file page: /<owner>/<repo>/src/{branch,tag,commit}/…
 GITEA_SRC = re.compile(r"^(/[^/]+/[^/]+)/src/(?=(?:branch|tag|commit)/)")
+# A GitLab raw file: /<group>/…/<project>/-/raw/<ref>/<path> (a ref is taken as one segment).
+GITLAB_RAW = re.compile(r"/(.+?)/-/raw/([^/]+)/(.+)")
 EXTENSIONS = (".yaml", ".yml", ".json")
 MAX_BODY = 65536  # GitHub caps an issue body at 65,536 characters
 MAX_URL = 2048
@@ -109,6 +114,22 @@ def raw_url(url: str) -> str:
     return urlunsplit(("https", host, path, "", ""))
 
 
+def fetch_url(url: str) -> str:
+    """The address the runner fetches a raw link from. A GitLab raw file goes through the files
+    API: a self-hosted GitLab may answer "/-/raw/" with a bot check page and let its API through."""
+    parts = urlsplit(url)
+    m = GITLAB_RAW.fullmatch(parts.path)
+    if not m:
+        return url
+    project, ref, path = (quote(unquote(g), safe="") for g in m.groups())
+    return urlunsplit(("https", parts.hostname, f"/api/v4/projects/{project}/repository/files/{path}/raw", f"ref={ref}", ""))
+
+
+def is_web_page(text: str) -> bool:
+    """A CRD manifest is YAML or JSON: one that starts with "<" is an HTML page."""
+    return text.lstrip("\ufeff \t\r\n").startswith("<")
+
+
 def public_host(host: str, field: str) -> None:
     """Refuses an IP address, an internal name, or a name that resolves to a non-public address:
     the runner fetches the link."""
@@ -128,9 +149,10 @@ def public_host(host: str, field: str) -> None:
         raise Refused(f"{field} must be on a public forge")
 
 
-def check_url(url: str, field: str = "the CRD manifest URL", forge: bool = True) -> None:
+def check_url(url: str, field: str = "the CRD manifest URL", forge: bool = True, query: bool = False) -> None:
     """Refuses a URL that is not a plain https link; a forge link (forge) must also be on a
-    public host and carry no query."""
+    public host and, unless query (an address this script built, never one from the issue), carry
+    no query."""
     if not url:
         raise Refused(f"{field} is empty")
     if len(url) > MAX_URL or not URL_CHARS.fullmatch(url):
@@ -148,7 +170,7 @@ def check_url(url: str, field: str = "the CRD manifest URL", forge: bool = True)
         raise Refused(f"{field} is not a valid link")
     if forge:
         public_host(parts.hostname, field)
-        if parts.query:
+        if parts.query and not query:
             raise Refused(f"{field} must not carry a query (a token in a link is private)")
 
 
@@ -209,7 +231,7 @@ def parse(body: str, number: str) -> dict[str, str]:
     if docs:
         check_url(docs, "the documentation link", forge=False)
     return {
-        "crd_url": url, "crds": " ".join(crds), "operator": operator, "docs": docs, "id": pid,
+        "crd_url": url, "fetch_url": fetch_url(url), "crds": " ".join(crds), "operator": operator, "docs": docs, "id": pid,
         "branch": f"crd-request/{number}-{pid}",
     }
 
@@ -390,7 +412,11 @@ def main(argv: list[str]) -> int:
             for key, value in parse(os.environ.get("ISSUE_BODY", ""), os.environ.get("ISSUE_NUMBER", "")).items():
                 print(f"{key}={value}")
         elif cmd == "check-url":
-            check_url(args[0])
+            check_url(args[0], query=True)
+        elif cmd == "check-manifest":
+            if is_web_page(read(args[0])):
+                raise Refused("the CRD link returned a web page, not the file (a bot check or a sign-in "
+                              "page): link a raw file on a forge that serves it to scripts")
         elif cmd == "search":
             for key, value in search(os.environ.get("CRDS", "").split(), os.environ.get("GH_TOKEN", "")).items():
                 print(f"{key}={value}")
