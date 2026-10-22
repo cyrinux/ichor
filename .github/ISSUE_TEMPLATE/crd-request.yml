@@ -17,8 +17,9 @@ body:
     attributes:
       label: CRD manifest URL
       description: >-
-        A public link on raw.githubusercontent.com, github.com (a `blob` link is fine), gitlab.com
-        or codeberg.org: one CRD or a file of several, YAML or JSON, 4 MiB at most.
+        A public link on any forge: GitHub, a GitLab or a Gitea/Forgejo, hosted or self-hosted
+        (a file page link is fine), or a raw file link. One CRD or a file of several, YAML or
+        JSON, 4 MiB at most.
       placeholder: https://raw.githubusercontent.com/<org>/<repo>/main/config/crd/bases/<group>_<plural>.yaml
     validations:
       required: true

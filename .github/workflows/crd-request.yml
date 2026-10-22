@@ -6,8 +6,9 @@ name: CRD request
 # issue. A maintainer reviews, translates and promotes it (go/plugin/drafts/README.md).
 #
 # Issue bodies are written by anyone: scripts/crd-request.py reads them from the environment
-# and hands the shell only validated one-line values (an https link on an allowlisted forge,
-# an operator name of plain characters). A request from the owner, a member or a collaborator
+# and hands the shell only validated one-line values (an https link on a public forge, never
+# an IP address or a host that resolves to a private address, and an operator name of plain
+# characters). A request from the owner, a member or a collaborator
 # runs when opened; anyone else's waits for a maintainer to add the `crd-approved` label, and
 # removing and adding it again reruns the request (the pull request is then updated).
 #
@@ -63,8 +64,8 @@ jobs:
           fi
           cat "$RUNNER_TEMP/request.txt" >>"$GITHUB_OUTPUT"
 
-      # Into its own new directory, never the checkout. A redirect may only end on the
-      # allowlist too, else the file is thrown away.
+      # Into its own new directory, never the checkout. A redirect may only end on a public
+      # forge too, else the file is thrown away.
       - name: Fetch the CRD
         id: fetch
         env:

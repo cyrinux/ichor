@@ -8,7 +8,7 @@ Usage (run with python3 -I):
   crd-request.py parse                  ISSUE_BODY, ISSUE_NUMBER from the environment; prints
                                         crd_url=, operator=, docs=, id=, branch= lines for
                                         $GITHUB_OUTPUT, or one reason on stderr and exit 1
-  crd-request.py check-url URL          exit 0 when URL is on the allowlist (the address curl
+  crd-request.py check-url URL          exit 0 when URL is on a public forge (the address curl
                                         ended on after redirects), else a reason and exit 1
   crd-request.py refused REASON_FILE    the comment for a request refused before any fetch
   crd-request.py failed LOG_FILE        the comment for a CRD the generator or the lint rejects
@@ -20,13 +20,20 @@ Usage (run with python3 -I):
                                         (COMPARE_URL, BRANCH)
 """
 
+import ipaddress
 import os
 import re
+import socket
 import sys
 from urllib.parse import urlsplit, urlunsplit
 
-# Hosts a CRD manifest is fetched from: public forges' raw files, nothing else.
-HOSTS = {"raw.githubusercontent.com", "github.com", "gitlab.com", "codeberg.org"}
+# A CRD manifest is fetched from any public forge (GitHub, a GitLab, a Gitea or a Forgejo, hosted
+# or self-hosted), never from an IP address, an internal name or a host that resolves to a
+# non-public address: the runner fetches it.
+INTERNAL_SUFFIXES = (".local", ".localhost", ".internal", ".lan", ".home.arpa", ".corp")
+RESOLVE = socket.getaddrinfo  # the tests replace it to stay offline
+# A Gitea or Forgejo file page: /<owner>/<repo>/src/{branch,tag,commit}/…
+GITEA_SRC = re.compile(r"^(/[^/]+/[^/]+)/src/(?=(?:branch|tag|commit)/)")
 EXTENSIONS = (".yaml", ".yml", ".json")
 MAX_BODY = 65536  # GitHub caps an issue body at 65,536 characters
 MAX_URL = 2048
@@ -62,7 +69,8 @@ def sections(body: str) -> dict[str, str]:
 
 
 def raw_url(url: str) -> str:
-    """The raw file a forge page link points at; a raw link as it is."""
+    """The raw file a forge page link points at, told by its path on any host (a GitLab's
+    "/-/blob/", a Gitea's or Forgejo's "/src/branch/"); a raw link as it is."""
     parts = urlsplit(url)
     host, path = parts.hostname, parts.path
     if host == "github.com":
@@ -70,19 +78,35 @@ def raw_url(url: str) -> str:
         if not m:
             raise Refused("a github.com link must point at a file (…/blob/<branch>/<path>)")
         host, path = "raw.githubusercontent.com", f"/{m[1]}/{m[2]}/{m[3]}"
-    elif host == "gitlab.com":
+    elif "/-/blob/" in path:
         path = path.replace("/-/blob/", "/-/raw/", 1)
-        if "/-/raw/" not in path:
-            raise Refused("a gitlab.com link must point at a file (…/-/blob/<branch>/<path>)")
-    elif host == "codeberg.org":
-        path = re.sub(r"^(/[^/]+/[^/]+)/src/", r"\1/raw/", path)
-        if not re.match(r"^/[^/]+/[^/]+/raw/", path):
-            raise Refused("a codeberg.org link must point at a file (…/src/branch/<branch>/<path>)")
+    elif GITEA_SRC.match(path):
+        path = GITEA_SRC.sub(r"\1/raw/", path, count=1)
     return urlunsplit(("https", host, path, "", ""))
 
 
-def check_url(url: str, field: str = "the CRD manifest URL", hosts=HOSTS) -> None:
-    """Refuses a URL that is not a plain https link on hosts (any host when hosts is None)."""
+def public_host(host: str, field: str) -> None:
+    """Refuses an IP address, an internal name, or a name that resolves to a non-public address:
+    the runner fetches the link."""
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        pass
+    else:
+        raise Refused(f"{field} must name a forge, not an IP address")
+    if "." not in host or host.endswith(INTERNAL_SUFFIXES):
+        raise Refused(f"{field} must be on a public forge")
+    try:
+        addresses = {info[4][0] for info in RESOLVE(host, 443, proto=socket.IPPROTO_TCP)}
+    except (OSError, UnicodeError):
+        raise Refused(f"{field}'s host does not resolve") from None
+    if not addresses or not all(ipaddress.ip_address(a.split("%", 1)[0]).is_global for a in addresses):
+        raise Refused(f"{field} must be on a public forge")
+
+
+def check_url(url: str, field: str = "the CRD manifest URL", forge: bool = True) -> None:
+    """Refuses a URL that is not a plain https link; a forge link (forge) must also be on a
+    public host and carry no query."""
     if not url:
         raise Refused(f"{field} is empty")
     if len(url) > MAX_URL or not URL_CHARS.fullmatch(url):
@@ -96,10 +120,12 @@ def check_url(url: str, field: str = "the CRD manifest URL", hosts=HOSTS) -> Non
         raise Refused(f"{field} must start with https://")
     if "@" in parts.netloc or port is not None:
         raise Refused(f"{field} must not carry a user name, a password or a port")
-    if hosts is not None and parts.hostname not in hosts:
-        raise Refused(f"{field} must be on {', '.join(sorted(hosts))}")
-    if hosts is not None and parts.query:
-        raise Refused(f"{field} must not carry a query (a token in a link is private)")
+    if not parts.hostname:
+        raise Refused(f"{field} is not a valid link")
+    if forge:
+        public_host(parts.hostname, field)
+        if parts.query:
+            raise Refused(f"{field} must not carry a query (a token in a link is private)")
 
 
 def crd_url(value: str) -> str:
@@ -136,7 +162,7 @@ def parse(body: str, number: str) -> dict[str, str]:
         raise Refused("no plugin id can be made from the operator")
     docs = fields.get("Documentation link", "")
     if docs:
-        check_url(docs, "the documentation link", hosts=None)
+        check_url(docs, "the documentation link", forge=False)
     return {"crd_url": url, "operator": operator, "docs": docs, "id": pid, "branch": f"crd-request/{number}-{pid}"}
 
 
