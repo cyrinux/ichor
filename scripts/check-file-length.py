@@ -31,7 +31,6 @@ SKIPPED_DIRS = {"build", "DerivedData"}
 KNOWN = {
     "go/ichorgo/talosfake_test.go": 1055,
     "go/ichorgo/imagescan_test.go": 989,
-    "go/plugin/validate.go": 821,
 }
 
 
