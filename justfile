@@ -127,6 +127,10 @@ deadcode:
 a11y-check:
     python3 scripts/check-accessibility.py
 
+# No Go, Kotlin or Swift source file over 800 lines (tests 1,200), Android and iOS.
+length-check:
+    python3 scripts/check-file-length.py
+
 # Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS,
 # every iOS key with a placeholder formatted with its arguments, every Android key read
 # somewhere, and every website string in docs-i18n/.
