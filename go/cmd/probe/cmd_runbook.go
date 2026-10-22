@@ -51,23 +51,33 @@ func probeRunbookRun(e env) (string, error) {
 		return "", err
 	}
 
-	r := runbookProbe{done: make(chan string, 1), failed: make(chan string, 1)}
-	ichorgo.StartRunbook(e.cfg, e.context, e.kubeServer, src, r)
+	// -yes confirmed every destructive step up front: confirm each as it waits.
+	r := runbookProbe{done: make(chan string, 1), failed: make(chan string, 1), waits: make(chan int, 64)}
+	run := ichorgo.StartRunbook(e.cfg, e.context, e.kubeServer, src, "", r)
 
-	select {
-	case out := <-r.done:
-		var res struct {
-			OK bool `json:"ok"`
+	for {
+		select {
+		case i := <-r.waits:
+			run.Confirm(i)
+		case out := <-r.done:
+			return runbookOutcome(out)
+		case msg := <-r.failed:
+			return "", errors.New(msg)
 		}
-
-		if err := json.Unmarshal([]byte(out), &res); err != nil || !res.OK {
-			return "", fmt.Errorf("the runbook did not complete: %s", out)
-		}
-
-		return out, nil
-	case msg := <-r.failed:
-		return "", errors.New(msg)
 	}
+}
+
+// runbookOutcome is the run's result, an error when a step failed or was skipped.
+func runbookOutcome(out string) (string, error) {
+	var res struct {
+		OK bool `json:"ok"`
+	}
+
+	if err := json.Unmarshal([]byte(out), &res); err != nil || !res.OK {
+		return "", fmt.Errorf("the runbook did not complete: %s", out)
+	}
+
+	return out, nil
 }
 
 // refuseDestructive names the first destructive step of planJSON unless yes.
@@ -92,8 +102,22 @@ func refuseDestructive(planJSON string, yes bool) error {
 	return nil
 }
 
-type runbookProbe struct{ done, failed chan string }
+type runbookProbe struct {
+	done, failed chan string
+	waits        chan int
+}
 
-func (r runbookProbe) OnStep(_ int, stateJSON string) { fmt.Println(stateJSON) }
-func (r runbookProbe) OnDone(resultJSON string)       { r.done <- resultJSON }
-func (r runbookProbe) OnError(message string)         { r.failed <- message }
+func (r runbookProbe) OnStep(index int, stateJSON string) {
+	fmt.Println(stateJSON)
+
+	var st struct {
+		State string `json:"state"`
+	}
+
+	if json.Unmarshal([]byte(stateJSON), &st) == nil && st.State == "waiting" {
+		r.waits <- index
+	}
+}
+
+func (r runbookProbe) OnDone(resultJSON string) { r.done <- resultJSON }
+func (r runbookProbe) OnError(message string)   { r.failed <- message }

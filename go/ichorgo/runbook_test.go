@@ -50,18 +50,45 @@ func runbookKube(t *testing.T, allowed func(ssarAttributes) bool) (*fakeKubeAPI,
 
 type runbookRecorder struct {
 	steps  chan runbookStepState
+	waits  chan int
 	done   chan runbookResult
 	failed chan string
 }
 
 func newRunbookRecorder() *runbookRecorder {
-	return &runbookRecorder{steps: make(chan runbookStepState, 100), done: make(chan runbookResult, 1), failed: make(chan string, 1)}
+	return &runbookRecorder{steps: make(chan runbookStepState, 100), waits: make(chan int, 100), done: make(chan runbookResult, 1), failed: make(chan string, 1)}
+}
+
+// startConfirmed starts the runbook and confirms every destructive step as it waits.
+func startConfirmed(t *testing.T, cfg, cluster, src, continueIDs string, rec *runbookRecorder) *RunbookRun {
+	t.Helper()
+
+	run := StartRunbook(cfg, cluster, "", src, continueIDs, rec)
+	stop := make(chan struct{})
+	t.Cleanup(func() { close(stop) })
+
+	go func() {
+		for {
+			select {
+			case i := <-rec.waits:
+				run.Confirm(i)
+			case <-stop:
+				return
+			}
+		}
+	}()
+
+	return run
 }
 
 func (r *runbookRecorder) OnStep(_ int, js string) {
 	var s runbookStepState
 	_ = json.Unmarshal([]byte(js), &s)
 	r.steps <- s
+
+	if s.State == runbookWaiting {
+		r.waits <- s.Index
+	}
 }
 
 func (r *runbookRecorder) OnDone(js string) {
@@ -128,7 +155,7 @@ func TestRunbookRunsStepsAndRecordsThem(t *testing.T) {
 
 	f, cfg := runbookKube(t, nil)
 	rec := newRunbookRecorder()
-	StartRunbook(cfg, "admin@test", "", readRunbookFixture(t, "scale-and-restart.yaml"), rec)
+	startConfirmed(t, cfg, "admin@test", readRunbookFixture(t, "scale-and-restart.yaml"), "", rec)
 
 	res, msg := rec.wait(t)
 	if msg != "" || !res.OK || len(res.Steps) != 2 || res.Steps[0].State != runbookOK || res.Steps[1].State != runbookOK {
@@ -156,10 +183,13 @@ func TestRunbookRunsStepsAndRecordsThem(t *testing.T) {
 func TestRunbookStopsAtTheFirstFailure(t *testing.T) {
 	cases := map[string]struct {
 		continueOnError bool
+		continueIDs     string
 		third           string
 	}{
-		"stops":             {false, runbookSkipped},
-		"continue on error": {true, runbookOK},
+		"stops":                    {false, "", runbookSkipped},
+		"continue on error":        {true, "", runbookOK},
+		"continued by the user":    {false, "restart-missing", runbookOK},
+		"another step's id passed": {false, "scale-up", runbookSkipped},
 	}
 
 	for name, c := range cases {
@@ -174,7 +204,7 @@ func TestRunbookStopsAtTheFirstFailure(t *testing.T) {
 			}
 
 			rec := newRunbookRecorder()
-			StartRunbook(cfg, "admin@test", "", src, rec)
+			startConfirmed(t, cfg, "admin@test", src, c.continueIDs, rec)
 
 			res, msg := rec.wait(t)
 			if msg != "" || res.OK || len(res.Steps) != 3 {
@@ -286,7 +316,7 @@ func TestRunbookDemoIsPlannedNotRun(t *testing.T) {
 	}
 
 	rec := newRunbookRecorder()
-	StartRunbook(cfg, "", "", src, rec)
+	StartRunbook(cfg, "", "", src, "", rec)
 
 	if _, msg := rec.wait(t); msg != errDemoUnavailable.Error() {
 		t.Errorf("demo run: %q, want the demo refusal", msg)
@@ -297,30 +327,63 @@ func TestRunbookDemoIsPlannedNotRun(t *testing.T) {
 	}
 }
 
-func TestRunbookStopSkipsTheRest(t *testing.T) {
+func TestRunbookDestructiveStepWaitsForConfirm(t *testing.T) {
 	withDataDir(t)
 
 	f, cfg := runbookKube(t, nil)
-	// Stop while the first step's scale is answered.
-	release := make(chan struct{})
-	f.beforeAnswer = func(r *http.Request) {
-		if r.Method == http.MethodPatch {
-			<-release
-		}
+	rec := newRunbookRecorder()
+	run := StartRunbook(cfg, "admin@test", "", readRunbookFixture(t, "three-steps.yaml"), "", rec)
+
+	if s := <-rec.steps; s.State != runbookWaiting || s.Index != 0 {
+		t.Fatalf("first state = %+v, want waiting", s)
 	}
 
-	rec := newRunbookRecorder()
-	run := StartRunbook(cfg, "admin@test", "", readRunbookFixture(t, "three-steps.yaml"), rec)
+	// Another step's confirmation does not let it run.
+	run.Confirm(1)
+	time.Sleep(50 * time.Millisecond)
 
-	if s := <-rec.steps; s.State != runbookRunning {
-		t.Fatalf("first state = %+v", s)
+	if req := lastActionRequest(f, http.MethodPatch); req.method != "" {
+		t.Fatalf("a step ran before its confirmation: %+v", req)
 	}
 
 	run.Stop()
-	close(release)
 
 	res, _ := rec.wait(t)
-	if res.OK || res.Steps[1].State != runbookSkipped || res.Steps[2].State != runbookSkipped {
-		t.Errorf("after Stop: %+v", res.Steps)
+	if res.OK || len(res.Steps) != 3 {
+		t.Fatalf("after Stop: %+v", res)
+	}
+
+	for _, s := range res.Steps {
+		if s.State != runbookSkipped {
+			t.Errorf("step %s = %s, want skipped", s.ID, s.State)
+		}
+	}
+
+	if req := lastActionRequest(f, http.MethodPatch); req.method != "" {
+		t.Errorf("a step ran after Stop: %+v", req)
+	}
+}
+
+func TestRunbookSummaryAndPlanFlags(t *testing.T) {
+	out, err := RunbookSummary(readRunbookFixture(t, "three-steps.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var sum runbookSummary
+	if err := json.Unmarshal([]byte(out), &sum); err != nil || sum.Name != "Three steps" || sum.Steps != 3 || sum.Destructive != 3 {
+		t.Errorf("summary = %s (%v)", out, err)
+	}
+
+	if _, err := RunbookSummary("schemaVersion: x"); err == nil {
+		t.Error("a broken runbook was summarised")
+	}
+
+	_, cfg := runbookKube(t, nil)
+	src := strings.Replace(readRunbookFixture(t, "three-steps.yaml"), "name: missing-api}", "name: missing-api}\n    continueOnError: true", 1)
+
+	p := planOf(t, cfg, "admin@test", src)
+	if p.Steps[0].ContinueOnError || !p.Steps[1].ContinueOnError {
+		t.Errorf("continueOnError in the plan = %+v", p.Steps)
 	}
 }

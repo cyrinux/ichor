@@ -13,7 +13,8 @@ import (
 // RunbookListener follows a runbook run (implemented in Kotlin/Swift).
 type RunbookListener interface {
 	// OnStep gets {"index","id","state","message","startedAt","endedAt"} when step index (from
-	// 0) starts and when it ends: state running, ok, failed or skipped; times in unix ms.
+	// 0) starts and when it ends: state waiting (a destructive step waits for Confirm),
+	// running, ok, failed or skipped; times in unix ms.
 	OnStep(index int, stateJSON string)
 	// OnDone gets {"ok","steps":[…]} once every step ran or was skipped.
 	OnDone(resultJSON string)
@@ -24,7 +25,17 @@ type RunbookListener interface {
 
 // RunbookRun is a handle on a running runbook.
 type RunbookRun struct {
-	cancel context.CancelFunc
+	cancel  context.CancelFunc
+	confirm chan int
+}
+
+// Confirm lets the destructive step index, waiting since its "waiting" state, run. A
+// confirmation for another step is ignored.
+func (r *RunbookRun) Confirm(index int) {
+	select {
+	case r.confirm <- index:
+	default:
+	}
 }
 
 // Stop ends the run: a running step that has its own handle (maintenance, snapshot, a
@@ -32,6 +43,7 @@ type RunbookRun struct {
 func (r *RunbookRun) Stop() { r.cancel() }
 
 const (
+	runbookWaiting = "waiting"
 	runbookRunning = "running"
 	runbookOK      = "ok"
 	runbookFailed  = "failed"
@@ -55,19 +67,26 @@ type runbookResult struct {
 // StartRunbook runs the steps of runbookYAML in order (docs/runbooks.md), each through the
 // exported function its button calls, so each keeps its own can-I gate, demo refusal and
 // Activity entry; one more entry, "runbook", records the whole. It stops at the first
-// failed step unless that step has continueOnError. The demo is refused before any step.
-// Roles: each step's (see RunbookPlan). kubeServer: see KubePods.
-func StartRunbook(configYAML, contextName, kubeServer, runbookYAML string, listener RunbookListener) *RunbookRun {
+// failed step unless that step has continueOnError, or its id is in continueIDs (comma
+// separated: the steps the user chose to go past). Each destructive step waits, in state
+// waiting, until Confirm(its index) or Stop. The demo is refused before any step. Roles:
+// each step's (see RunbookPlan). kubeServer: see KubePods.
+func StartRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs string, listener RunbookListener) *RunbookRun {
 	contextName = unmaskContext(configYAML, contextName)
 	listener = maskedRunbookListener{listener}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	handle := &RunbookRun{cancel: cancel, confirm: make(chan int, 1)}
 
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnError)
 
 		rb, err := loadRunbook(runbookYAML)
+		if err == nil {
+			rb = rb.continuingAt(splitCSV(continueIDs))
+		}
+
 		if err == nil && isDemoContext(configYAML, contextName) {
 			err = errDemoUnavailable
 		}
@@ -78,11 +97,11 @@ func StartRunbook(configYAML, contextName, kubeServer, runbookYAML string, liste
 			return
 		}
 
-		r := runbookExec{target: kubeTarget{configYAML, contextName, kubeServer}, listener: listener}
+		r := runbookExec{target: kubeTarget{configYAML, contextName, kubeServer}, listener: listener, confirm: handle.confirm}
 		emitJSON(r.run(ctx, rb), listener.OnDone)
 	}()
 
-	return &RunbookRun{cancel: cancel}
+	return handle
 }
 
 type maskedRunbookListener struct{ RunbookListener }
@@ -102,6 +121,21 @@ func (l maskedRunbookListener) OnError(message string) {
 type runbookExec struct {
 	target   kubeTarget
 	listener RunbookListener
+	confirm  <-chan int
+}
+
+// confirmed waits until step index is confirmed; false when the run was stopped first.
+func (r runbookExec) confirmed(ctx context.Context, index int) bool {
+	for {
+		select {
+		case <-ctx.Done():
+			return false
+		case i := <-r.confirm:
+			if i == index {
+				return true
+			}
+		}
+	}
 }
 
 func (r runbookExec) run(ctx context.Context, rb runbook) runbookResult {
@@ -121,6 +155,20 @@ func (r runbookExec) run(ctx context.Context, rb runbook) runbookResult {
 			emitJSON(st, func(js string) { r.listener.OnStep(i, js) })
 
 			continue
+		}
+
+		if runbookActions[s.Action].destructive {
+			st.State = runbookWaiting
+			emitJSON(st, func(js string) { r.listener.OnStep(i, js) })
+
+			if !r.confirmed(ctx, i) {
+				stopped, res.OK = "the run was stopped", false
+				st.State, st.Message = runbookSkipped, stopped
+				res.Steps[i] = st
+				emitJSON(st, func(js string) { r.listener.OnStep(i, js) })
+
+				continue
+			}
 		}
 
 		st.State, st.StartedAt = runbookRunning, time.Now().UnixMilli()
