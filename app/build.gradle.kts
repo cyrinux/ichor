@@ -51,6 +51,10 @@ android {
         }
         release {
             applicationIdSuffix = ".foss"
+            // No META-INF/version-control-info.textproto: AGP writes the commit from a clone but a
+            // stub from a git worktree, so the same tag gave two APKs (CONTRIBUTING.md
+            // "Reproducible builds"). The version name already names the build.
+            vcsInfo.include = false
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

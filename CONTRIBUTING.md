@@ -101,6 +101,13 @@ causes are a value the build takes from the moment or the machine (a timestamp o
 `BuildConfig` field or a resource, a non-pinned dependency). Fix the cause rather than leaving
 the entry out, and say here what was fixed.
 
+Fixed so far (the first `verify` run, on v1.41.0):
+- `lib/*/libgojni.so`: `gomobile bind -trimpath` (`build.sh`), so the checkout's path is not in the Go core.
+- `META-INF/version-control-info.textproto`: `vcsInfo.include = false` on the release build types; AGP
+  wrote the commit from a clone but a stub from the git worktree `verify` builds in.
+- `assets/changelog.json`: `generated_at` is the commit's time (or `SOURCE_DATE_EPOCH`), not the clock's
+  (`scripts/changelog.py`).
+
 ## Plugin requests
 
 The "Plugin request from a CRD" issue form (`.github/ISSUE_TEMPLATE/crd-request.yml`) labels its
