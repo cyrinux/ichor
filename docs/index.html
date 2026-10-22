@@ -7,11 +7,11 @@
     <meta
       name="description"
       data-i18n-attr="content"
-      content="Ichor is a free, open-source Android and iPhone app for Talos Linux and any Kubernetes cluster: EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni or an OIDC sign-in from a kubeconfig. Node health, logs, etcd, live graphs, workloads and pods, Argo CD and Flux, an audit log of what the phone changed, and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
+      content="Ichor is a free, open-source Android and iPhone app for Talos Linux and any Kubernetes cluster: EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni or an OIDC sign-in from a kubeconfig. Node health, logs, etcd, live graphs, workloads and pods, Argo CD and Flux with pull requests from the phone, Alertmanager, capacity, plugins for any CRD, cluster-wide Talos upgrades, an audit log of what the phone changed, and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
     />
     <meta
       name="keywords"
-      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, EKS, GKE, AKS, Omni, kubeconfig, OIDC, Argo CD, Flux, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, netperf, network test, Longhorn, CloudNativePG, cgroups, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
+      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, EKS, GKE, AKS, Omni, kubeconfig, OIDC, Argo CD, Flux, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, netperf, network test, Longhorn, CloudNativePG, cgroups, configuration drift, incident timeline, pull request, GitOps, Alertmanager, capacity, plugins, CRD, runbooks, Wake-on-LAN, Android, iOS"
     />
     <link rel="canonical" href="https://cyrinux.github.io/ichor/" />
     <link rel="alternate" hreflang="en" href="https://cyrinux.github.io/ichor/" />
@@ -34,7 +34,7 @@
     <meta
       property="og:description"
       data-i18n-attr="content"
-      content="Every cluster you run, from your phone. Built for Talos Linux, with the same client as talosctl; opens any kubeconfig too: EKS, GKE, AKS, DigitalOcean, Rancher, Omni, OIDC. Node health, logs, etcd, alerts, workloads, Argo CD and Flux, an audit log of what the phone changed."
+      content="Every cluster you run, from your phone. Built for Talos Linux, with the same client as talosctl; opens any kubeconfig too: EKS, GKE, AKS, DigitalOcean, Rancher, Omni, OIDC. Node health, logs, etcd, alerts, workloads, Argo CD and Flux with pull requests, Alertmanager, capacity, plugins for any CRD, an audit log of what the phone changed."
     />
     <meta
       property="og:image"
@@ -47,10 +47,16 @@
         "@type": "SoftwareApplication",
         "name": "Ichor for Talos Linux",
         "alternateName": "Ichor",
-        "description": "Monitor and operate Talos Linux and any Kubernetes cluster (EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni, OIDC) from your phone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps running in the cluster, Kubernetes workloads and pods, network tests between nodes, Longhorn, CloudNativePG, Garage and Dragonfly health, node pressure, configuration drift, incident recording, bottleneck metrics and alerts.",
+        "description": "Monitor and operate Talos Linux and any Kubernetes cluster (EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni, OIDC) from your phone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps running in the cluster, every Kubernetes screen with Alertmanager, capacity, policies and virtual machines, Argo CD and Flux with pull requests opened from the phone, plugins for any CRD, cluster-wide Talos and Kubernetes upgrades, runbooks, network tests between nodes, data services health, node pressure, configuration drift, incident recording, bottleneck metrics and alerts.",
         "featureList": [
           "Cluster overview and background alerts",
           "Any kubeconfig: EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni, OIDC sign-in",
+          "Plugins: twelve built-in operators and your own CRDs from one YAML file",
+          "Edit files in Git and open pull requests from the phone",
+          "Capacity: free room, OOM risk and what losing a node costs",
+          "Alertmanager, live events, autoscaling, policies, storage, virtual machines",
+          "Cluster-wide Talos upgrades, Kubernetes upgrades, add or replace a node, etcd recovery",
+          "Runbooks and background long runs with Live Activities",
           "Security key (FIDO2) app lock and sealed configs",
           "Encrypted audit log of every change made from the app",
           "Argo CD and Flux, with the diff a sync would apply",
@@ -1656,14 +1662,15 @@
         <div class="hero">
           <div>
             <a class="newpill" href="#new" data-i18n
-              ><b>1.21</b> Security keys, an audit log, Argo CD diffs and CAST AI →</a
+              ><b>1.41</b> Plugins for any CRD, pull requests from the phone, capacity and runbooks →</a
             >
             <h1>Every cluster you run, from your phone.</h1>
             <p class="lede">
               Ichor was built for Talos Linux and still speaks to it with the same
               client as talosctl. Today it also opens any kubeconfig: EKS, GKE,
               AKS, DigitalOcean, Rancher, Sidero Omni or an OIDC sign-in, with
-              nothing to install on the cluster and nothing in between.
+              nothing to install on the cluster and nothing in between. And when
+              an operator is missing, a plugin in one YAML file gives it a screen.
             </p>
             <div class="actions">
               <a class="button primary" data-i18n href="#beta"
@@ -1795,7 +1802,9 @@
                   <p>
                     EKS, GKE, AKS, DigitalOcean and Rancher: list the clusters of
                     the account and add them, or import the kubeconfig the CLI
-                    wrote. Exec plugins are replaced by a sign-in on the phone.
+                    wrote. Exec plugins are replaced by a sign-in on the phone:
+                    IAM Identity Center from its start URL, your Google account
+                    or your organisation's OAuth client, Entra ID.
                   </p>
                 </li>
                 <li>
@@ -1871,8 +1880,19 @@
             <li>ServiceAccount token</li>
             <li>Argo CD</li>
             <li>Flux</li>
+            <li>Argo Rollouts</li>
             <li>Cilium · Calico</li>
             <li>CAST AI</li>
+            <li>Cluster API</li>
+            <li>Crossplane</li>
+            <li>Tailscale</li>
+            <li>KubeVirt</li>
+            <li>Longhorn · Rook Ceph</li>
+            <li>CloudNativePG</li>
+            <li>Velero</li>
+            <li>Kyverno · Gatekeeper</li>
+            <li>Alertmanager</li>
+            <li>Any CRD, as a plugin</li>
           </ul>
 
           <p class="reassure">
@@ -1885,16 +1905,325 @@
         </section>
 
         <section id="new" aria-labelledby="new-title">
-          <p class="eyebrow">New in 1.18 to 1.21</p>
+          <p class="eyebrow">New in 1.22 to 1.41</p>
           <h2 id="new-title">
+            Your operators, your Git, your day two. All on the phone.
+          </h2>
+          <p class="intro">
+            Twenty releases in two weeks: plugins that give any CRD a screen,
+            pull requests opened from a diff on the phone, a capacity screen
+            that simulates losing a node, Alertmanager and the rest of the
+            Kubernetes home, cluster-wide Talos upgrades, and runbooks that
+            keep running when the screen goes dark.
+          </p>
+
+          <div class="spotlight">
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Plugins: the External Secrets plugin lists db-credentials synced two minutes ago, api-keys with its SecretStore not ready, kube-green sleeping the default namespace at 20:00, and my-operator.yaml imported by QR code and enabled."
+              >
+                <div class="title" data-i18n>Plugins · External Secrets</div>
+                <div class="line" aria-hidden="true">
+                  <span>db-credentials</span><span data-i18n>synced 2 min ago</span>
+                  <span class="tag same" data-i18n>refresh</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>api-keys</span><span data-i18n>SecretStore not ready</span>
+                  <span class="tag bad" data-i18n>stale</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>kube-green</span><span data-i18n>sleeps default at 20:00</span>
+                  <span class="tag run" data-i18n>schedule</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>my-operator.yaml</span><span data-i18n>imported by QR</span>
+                  <span class="tag same" data-i18n>enabled</span>
+                </div>
+              </div>
+              <h3>Any operator, as a plugin</h3>
+              <p>
+                A plugin is one YAML file: the resources to read, what counts
+                as healthy, the cards, actions and findings. Twelve ship built
+                in, kube-green, External Secrets, ExternalDNS, Sealed Secrets,
+                Rook Ceph, MariaDB, Percona, Dragonfly, Temporal, Numaflow and
+                Dataflow. Import yours from a paste, a file, a URL or a QR code,
+                see what it reads and can change before enabling it. Its
+                findings reach the checkup and the background alerts.
+              </p>
+              <p class="ask">"Does the app know my operator?" → it does now, without an app release.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Pull request from the phone: the grafana image goes from 12.2 to 12.3 in values.yaml, the kustomize build checks 14 objects with one changed, pull request 142 is open on GitHub for review, and the cluster now runs commit a1b2c3d."
+              >
+                <div class="title" data-i18n>Pull request · grafana 12.2 → 12.3</div>
+                <div class="line" aria-hidden="true">
+                  <span>values.yaml</span><span>+1 −1</span>
+                  <span class="tag diff">~</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>kustomize build</span><span data-i18n>14 objects · 1 changed</span>
+                  <span class="tag same">ok</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>PR #142</span><span data-i18n>open on GitHub</span>
+                  <span class="tag run" data-i18n>review</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>cluster</span><span data-i18n>runs a1b2c3d</span>
+                  <span class="tag same" data-i18n>merged</span>
+                </div>
+              </div>
+              <h3>Edit in Git, from the phone</h3>
+              <p>
+                Browse the files an Argo CD or Flux app deploys, at the revision
+                the cluster runs. Edit one, or quick-edit an image tag or the
+                replicas, review the diff with its kustomize build checked, and
+                open a pull request on GitHub, GitLab, Gitea or Forgejo. A value
+                changed by hand in the cluster, or a kept Talos machine config
+                change, is proposed back to its file. The app tells you when the
+                pull request is merged and when the cluster runs it.
+              </p>
+              <p class="ask">"Can you bump that tag?" → a pull request, from the train.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Capacity of prod-eu: 38 percent of CPU and 12 percent of memory free; losing w-3 would leave four pods Pending and preempt two; immich uses 94 percent of its memory limit and risks an OOM kill."
+              >
+                <div class="title" data-i18n>Capacity · prod-eu</div>
+                <div class="bar" aria-hidden="true">
+                  <span data-i18n>CPU free</span
+                  ><span class="meter"><i style="width: 38%"></i></span
+                  ><span>38%</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span data-i18n>memory free</span
+                  ><span class="meter"><i class="hot" style="width: 12%"></i></span
+                  ><span>12%</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>lose w-3</span><span data-i18n>4 Pending · 2 preempted</span>
+                  <span class="tag bad">N+1</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>immich</span><span data-i18n>94% of memory limit</span>
+                  <span class="tag diff" data-i18n>OOM risk</span>
+                </div>
+              </div>
+              <h3>Capacity, and what losing a node costs</h3>
+              <p>
+                Free CPU, memory and disk per cluster, every workload's OOM and
+                eviction risk by QoS class and priority, and a simulation: take
+                one node or several away and see where the pods go, which are
+                preempted, which stay Pending and what to scale down. CPU and
+                memory in use come from metrics-server, like
+                <code>kubectl top</code>.
+              </p>
+              <p class="ask">"Can we drain w-3 tonight?" → four pods say no.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Kubernetes Observe screens: Alertmanager has two firing alerts and one silenced, KubePodCrashLooping; live events show FailedScheduling on loki-2; the api-gateway HPA scaled from 3 to 8; Kyverno reports one violation in audit mode."
+              >
+                <div class="title" data-i18n>Kubernetes · Observe</div>
+                <div class="line" aria-hidden="true">
+                  <span>Alertmanager</span><span data-i18n>2 firing · 1 silenced</span>
+                  <span class="tag bad">CrashLooping</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>events</span><span>FailedScheduling · loki-2</span>
+                  <span class="tag run" data-i18n>live</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>autoscaling</span><span>api-gateway 3 → 8</span>
+                  <span class="tag diff">HPA</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>policies</span><span data-i18n>1 violation · Kyverno</span>
+                  <span class="tag diff" data-i18n>audit</span>
+                </div>
+              </div>
+              <h3>The whole Kubernetes home</h3>
+              <p>
+                Workloads, Networking, Storage, Observe and Browse: Services and
+                load balancing, Jobs, storage claims and their fill, autoscaling
+                with HPA, KEDA, VPA and Karpenter, Kyverno and Gatekeeper
+                policies, KubeVirt virtual machines, Velero backups, Helm
+                releases, live events, and Alertmanager with silences set from
+                the phone. Every object has a summary, YAML with schema help,
+                scale, delete and the actions your RBAC allows, and lists update
+                live.
+              </p>
+              <p class="ask">"Who fired at 3 am?" → the alert, silenced in one tap.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Cluster upgrade from Talos 1.12.3 to 1.13.0: cp-1 is done, cp-2 is draining and rebooting, w-1 to w-3 are queued, and a new node w-4 sits in maintenance mode with its config sent."
+              >
+                <div class="title" data-i18n>Upgrade cluster · 1.12.3 → 1.13.0</div>
+                <div class="tl" aria-hidden="true">
+                  <time>cp-1</time><i class="dot" style="background: #5bd18b"></i>
+                  <span data-i18n>upgraded · back in 2 min</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>cp-2</time><i class="dot" style="background: #f2c14e"></i>
+                  <span data-i18n>drained · rebooting</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>w-1…3</time><i class="dot" style="background: #8fa3bf"></i>
+                  <span data-i18n>queued</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>w-4</time><i class="dot" style="background: #7cb7ff"></i>
+                  <span data-i18n>new · maintenance mode · config sent</span>
+                </div>
+              </div>
+              <h3>Day two on Talos, from the phone</h3>
+              <p>
+                Upgrade every node one after the other, draining first when the
+                upgrade would not, and upgrade Kubernetes after a dry run. Add a
+                node: inspect it in maintenance mode, make its config from a
+                member, send it and follow it until it joins. Replace a
+                control-plane node with a guided plan, recover etcd from a
+                snapshot, fix its NOSPACE alarm in one tap, and reset or wipe a
+                node, refused when it would break etcd.
+              </p>
+              <p class="ask">"The 1.13 upgrade?" → all eight nodes, from the sofa.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Runbook rotate loki: step one, an Argo CD sync of loki with prune, is done; step two, a rollout restart of loki, is running with two of three pods ready; step three, a reboot of w-2, waits for a confirmation; the run shows as a Live Activity on the Lock Screen with a Stop button."
+              >
+                <div class="title" data-i18n>Runbook · rotate loki</div>
+                <div class="tl" aria-hidden="true">
+                  <time>1</time><i class="dot" style="background: #5bd18b"></i>
+                  <span>argocd sync · loki · prune</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>2</time><i class="dot" style="background: #f2c14e"></i>
+                  <span data-i18n>rollout restart · loki · 2/3</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>3</time><i class="dot" style="background: #ff6b6b"></i>
+                  <span data-i18n>reboot · w-2 · confirm first</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>Live Activity</span><span data-i18n>Lock Screen · Dynamic Island</span>
+                  <span class="tag run" data-i18n>Stop</span>
+                </div>
+              </div>
+              <h3>Runbooks, and long runs that outlive the screen</h3>
+              <p>
+                A runbook is an ordered list of the app's own actions, imported
+                with its plan shown first and run with a confirmation per
+                destructive step. Syncs, reconciles, restarts, multi-node config
+                applies and network tests run in the background with progress
+                and Stop: in one Operations notification channel on Android, on
+                the Lock Screen and in the Dynamic Island on iOS.
+              </p>
+              <p class="ask">"Did the Friday runbook finish?" → step 3 is waiting for you.</p>
+            </article>
+          </div>
+
+          <ul class="alsonew" aria-label="Also new">
+            <li>
+              <h3>Sign in to the cloud, no CLI</h3>
+              <p>
+                GKE with your Google account or your organisation's OAuth
+                client, EKS with IAM Identity Center from the start URL alone.
+                Paste or scan an aws config, gcloud credentials or an
+                omniconfig and the sign-in is prefilled.
+              </p>
+            </li>
+            <li>
+              <h3>Images scanned for vulnerabilities</h3>
+              <p>
+                Grype or Trivy scans a pod's, a workload's or a node's Talos
+                system images. Reports stay on the phone and what is new since
+                the last scan is marked.
+              </p>
+            </li>
+            <li>
+              <h3>Thirty days of history</h3>
+              <p>
+                Per-node uptime, what changed since you last looked, fill and
+                memory sparklines, a storage forecast that says "full in ~9
+                days", and an anonymised incident summary to share as Markdown.
+              </p>
+            </li>
+            <li>
+              <h3>Search, Siri and the wrist</h3>
+              <p>
+                Search every cluster's nodes, pods, workloads and apps from the
+                home, or from Spotlight, Siri and Shortcuts on iOS. An Apple
+                Watch app and a Wear OS tile show each cluster's health.
+              </p>
+            </li>
+            <li>
+              <h3>Tablets and iPad</h3>
+              <p>
+                Nodes and GitOps apps open beside their list, the overview shows
+                two columns, and the iPad sidebar lists your clusters and the
+                cluster's sections next to the current screen.
+              </p>
+            </li>
+            <li>
+              <h3>Settings, backups and keys</h3>
+              <p>
+                Settings grouped into pages. Backups as age files, with a
+                passphrase or your age public keys, now keep pins, Git hosts
+                and AI settings, and move between Android and iPhone.
+              </p>
+            </li>
+            <li>
+              <h3>More in your hands</h3>
+              <p>
+                Helm rollback with hooks and wait, scale anything that serves
+                /scale, taints and labels with a dry-run plan, pasted YAML with
+                a dry-run diff, a debug container for images without a shell,
+                an image pre-pulled on every node, dead pods cleaned up.
+              </p>
+            </li>
+            <li>
+              <h3>Node tools and hardware</h3>
+              <p>
+                DNS, ping, port, traceroute and HTTP/TLS checks from a node,
+                sensors, CPU frequency and throttling, each disk's partitions
+                and encryption, and spare parts for the server, from its
+                hardware screen.
+              </p>
+            </li>
+          </ul>
+        </section>
+
+        <section id="operate" aria-labelledby="operate-title">
+          <p class="eyebrow">Operating, not only watching</p>
+          <h2 id="operate-title">
             Every change on record, every action checked first.
           </h2>
           <p class="intro">
-            Four releases of operating, not only watching: a security key to
-            unlock the app, an encrypted log of what the app changed and who
-            tapped it, the diff Argo CD would apply, a PromQL assistant on the
-            metrics screen, CAST AI's savings on both platforms, and Kubernetes
-            actions that know in advance whether your account may run them.
+            A security key to unlock the app, an encrypted log of what the app
+            changed and who tapped it, the diff Argo CD would apply, a PromQL
+            assistant on the metrics screen, CAST AI's savings on both
+            platforms, and Kubernetes actions that know in advance whether your
+            account may run them.
           </p>
 
           <div class="spotlight">
@@ -2197,12 +2526,14 @@
               </div>
               <h3>Data services</h3>
               <p>
-                Ichor recognises Longhorn, CloudNativePG, Garage and Dragonfly
-                in the cluster and checks them: degraded volumes and their
-                replicas, Postgres instances and stale or failed backups, Garage
-                nodes, Dragonfly's master and replicas. Each problem names the
-                node behind it, and opt-in alerts tell you when a volume faults
-                or backups stop.
+                Ichor recognises Longhorn, CloudNativePG, Garage, Rook Ceph,
+                MariaDB, Percona and Dragonfly in the cluster and checks them:
+                degraded volumes and their replicas, Postgres instances and
+                stale or failed backups, CSI snapshots and backup CronJobs,
+                Garage nodes, Dragonfly's master and replicas. Each problem
+                names the node behind it. Promote a replica, fail over, salvage
+                a volume or take its snapshot from the row, and opt-in alerts
+                tell you when a volume faults, a disk fills or backups stop.
               </p>
               <p class="ask">"Did last night's backup run?" → yes, or why not.</p>
             </article>
@@ -2386,7 +2717,7 @@
               <p>
                 Every container on every node, grouped into the apps you
                 recognise, with their logos: Home Assistant, Immich, the *arr
-                stack, Longhorn, Cilium and about 250 more. Sidecars and init
+                stack, Longhorn, Cilium and about 400 more. Sidecars and init
                 containers join their app, and Ichor flags an app running two
                 versions at once or an unpinned <code>:latest</code> image.
               </p>
@@ -2546,7 +2877,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
             <li>
               <h3>Logos for the rest, if you want</h3>
               <p>
-                For apps beyond the 330 bundled ones, Ichor can download a logo
+                For apps beyond the 400 bundled ones, Ichor can download a logo
                 from the open Dashboard Icons set. It is off by default and
                 sends only the icon's public name.
               </p>
@@ -3108,8 +3439,8 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                   <strong>Data services</strong
                   ><span
                     >Longhorn volumes, CloudNativePG clusters and their backups,
-                    Garage and Dragonfly, with the node behind each
-                    problem.</span
+                    Garage, Rook Ceph, MariaDB, Percona and Dragonfly, with the
+                    node behind each problem and the fix in the row.</span
                   >
                 </td>
                 <td class="role" translate="no">admin</td>
@@ -3156,6 +3487,197 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 </td>
                 <td class="role" translate="no">admin</td>
               </tr>
+              <tr>
+                <td class="cmd" translate="no">dig, ping, nc -z, traceroute, curl -v</td>
+                <td class="what">
+                  <strong>Node network tools</strong
+                  ><span
+                    >DNS, ping, port, traceroute and HTTP/TLS checks run from
+                    a node, parsed into fields.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">talosctl upgrade on every node, talosctl upgrade-k8s</td>
+                <td class="what">
+                  <strong>Cluster upgrade</strong
+                  ><span
+                    >Every node one after the other, drained first when needed,
+                    and Kubernetes after a dry run, with a warning when an
+                    extension has no build for the target.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">talosctl apply-config --insecure, talosctl reset</td>
+                <td class="what">
+                  <strong>Add, replace, reset a node</strong
+                  ><span
+                    >Inspect a node in maintenance mode, send it a config made
+                    from a member and follow it until it joins; replace a
+                    control-plane node with a guided plan; reset or wipe one,
+                    refused when etcd would break.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">talosctl etcd defrag, alarm disarm, bootstrap --recover-from</td>
+                <td class="what">
+                  <strong>etcd repair</strong
+                  ><span
+                    >Fix a NOSPACE alarm in one tap (snapshot, defragment,
+                    disarm, check) and recover etcd from a snapshot.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">talosctl get disks, volumestatus</td>
+                <td class="what">
+                  <strong>Storage and hardware</strong
+                  ><span
+                    >Each disk's partitions, free space and encryption, sensors,
+                    CPU frequency and throttling, and spare parts for the
+                    server.</span
+                  >
+                </td>
+                <td class="role" translate="no">reader</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl get all -A, kubectl describe, kubectl scale</td>
+                <td class="what">
+                  <strong>Any Kubernetes object</strong
+                  ><span
+                    >A browser of every kind, each object with a summary of
+                    conditions, owners and events, YAML with schema help,
+                    scale, delete and the actions your RBAC allows.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl get svc,jobs,pvc,hpa, kubectl top</td>
+                <td class="what">
+                  <strong>Services, Jobs, Storage, Autoscaling, Capacity</strong
+                  ><span
+                    >Addresses and routes, load balancer pools, Job state and
+                    owner, claims and their fill, HPA, KEDA, VPA and Karpenter,
+                    free room per cluster and what losing a node would
+                    cost.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl get events -w, amtool alert, amtool silence</td>
+                <td class="what">
+                  <strong>Live events and Alertmanager</strong
+                  ><span
+                    >Cluster-wide events as they happen, firing alerts and
+                    silences, a silence set from the phone, and alerts on your
+                    phone when one fires.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl get cpol,policyreports, constraints</td>
+                <td class="what">
+                  <strong>Policies</strong
+                  ><span
+                    >Kyverno and Gatekeeper policies, their findings and the
+                    engine's health; switch a policy between Audit and
+                    Enforce.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">virtctl, kubectl get vm,vmi</td>
+                <td class="what">
+                  <strong>Virtual machines</strong
+                  ><span
+                    >KubeVirt VMs with start, stop, restart, migrate, pause and
+                    a serial console in the app's terminal.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">helm rollback, velero restore, kubectl apply --dry-run</td>
+                <td class="what">
+                  <strong>Helm, Velero and YAML</strong
+                  ><span
+                    >Roll a Helm release back with its hooks, restore a Velero
+                    backup with a preview and namespace mapping, run a schedule
+                    now, and apply pasted YAML after a dry-run diff.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl argo rollouts, kubectl get managed, tailscale</td>
+                <td class="what">
+                  <strong>Argo Rollouts, Crossplane, Tailscale, Cluster API</strong
+                  ><span
+                    >Promote, abort or retry a rollout; pause, resume or
+                    reconcile a Crossplane resource; connectors and proxy
+                    groups; clusters, machines and Sidero Metal servers.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">grype, trivy image</td>
+                <td class="what">
+                  <strong>Image scan</strong
+                  ><span
+                    >Vulnerabilities of a pod's, a workload's or a node's Talos
+                    system images, reports kept with what is new since the last
+                    scan.</span
+                  >
+                </td>
+                <td class="role" translate="no">reader</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">git checkout -b, git commit, gh pr create</td>
+                <td class="what">
+                  <strong>Git and pull requests</strong
+                  ><span
+                    >Browse and search the files an app deploys, edit one or
+                    several, review the diff and its kustomize build, and open
+                    a pull request on GitHub, GitLab, Gitea or Forgejo.</span
+                  >
+                </td>
+                <td class="role" translate="no">Git token</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">a shell script of kubectl and talosctl calls</td>
+                <td class="what">
+                  <strong>Runbooks</strong
+                  ><span
+                    >An ordered list of the app's own actions, imported with
+                    its plan shown first, run with a confirmation per
+                    destructive step.</span
+                  >
+                </td>
+                <td class="role" translate="no">per step</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl get &lt;your CRD&gt;</td>
+                <td class="what">
+                  <strong>Plugins</strong
+                  ><span
+                    >Twelve built-in operators, and your own CRDs described in
+                    one YAML file, with cards, actions and findings that reach
+                    the checkup and the alerts.</span
+                  >
+                </td>
+                <td class="role" translate="no">RBAC</td>
+              </tr>
             </tbody>
           </table>
         </section>
@@ -3190,10 +3712,12 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
               <h3>Admin</h3>
               <code>os:admin</code>
               <p>
-                Adds the health check, machine config, Talos upgrades, issuing
-                talosconfigs, kubeconfig export, debug shells, Kubernetes
-                rollout restarts and pod deletes, network tests, data services
-                and node pressure.
+                Adds the health check, machine config, Talos and Kubernetes
+                upgrades, adding, replacing and resetting nodes, etcd repair,
+                issuing talosconfigs, kubeconfig export, debug shells, network
+                tests, node pressure, and every Kubernetes screen through the
+                admin kubeconfig Talos issues. On a kubeconfig cluster, what
+                you may do is your RBAC, asked before you tap.
               </p>
             </div>
           </div>
@@ -3431,6 +3955,20 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
                 a service account key, or OIDC in the browser. The Talos screens
                 are hidden; every Kubernetes screen, background alerts and data
                 services are there, and what you may do is your RBAC.
+              </p>
+            </details>
+            <details>
+              <summary>My operator is not on the list. Can the app show it?</summary>
+              <p>
+                Yes. A plugin describes a custom resource in one YAML file:
+                what to read, what counts as healthy, the cards, actions and
+                findings. Twelve operators ship as built-in plugins, and you can
+                import your own from a paste, a file, an https link or a QR
+                code; Settings → Plugins shows what each one reads and can
+                change before you enable it. The
+                <a href="plugins/">plugin reference</a> has the format, and the
+                <a href="#plugin-request">request form</a> turns a public CRD
+                link into a draft pull request.
               </p>
             </details>
             <details>

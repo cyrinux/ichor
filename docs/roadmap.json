@@ -53,12 +53,13 @@
       },
       "goal": 300,
       "raised": 0,
-      "status": "open",
+      "status": "shipped",
       "products": [
         "fund_plugins_2",
         "fund_plugins_5",
         "fund_plugins_10"
-      ]
+      ],
+      "shippedIn": "1.39.0"
     },
     {
       "id": "data-services-actions",
