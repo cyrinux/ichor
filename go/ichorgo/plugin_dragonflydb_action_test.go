@@ -205,7 +205,7 @@ func TestDragonflySyncingReplicaAndSinglePod(t *testing.T) {
 // background, pinned to the uid it checked, and records it in the audit log.
 func TestDragonflyFailOverDeletesTheMaster(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 	dragonflyBuiltin(t)
 
 	f := dfActionAPI(t, dfRawPods())
@@ -242,7 +242,7 @@ func TestDragonflyFailOverDeletesTheMaster(t *testing.T) {
 // deleted.
 func TestDragonflyFailOverWithoutAReadyReplicaRefused(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 	dragonflyBuiltin(t)
 
 	f := dfActionAPI(t, dfRawPods())

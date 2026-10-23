@@ -75,6 +75,7 @@ import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.monitor.AlertActionToken
 import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.wholeClusters
 import name.levis.ichor.monitor.seed
 import name.levis.ichor.monitor.toKubeNodesSeed
 import name.levis.ichor.monitor.toOverviewSeed
@@ -103,6 +104,7 @@ import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.VpnMonitor
+import name.levis.ichor.data.AuditEventClusters
 import name.levis.ichor.data.UnwatchedClusters
 import name.levis.ichor.data.VpnOnlyClusters
 import name.levis.ichor.data.KubeScopes
@@ -126,6 +128,7 @@ import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.heldBackForVpn
+import name.levis.ichor.model.seededAuditEventClusters
 import name.levis.ichor.model.signInKeys
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
@@ -328,6 +331,8 @@ class TalosApp : Application() {
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
     /** The clusters the background monitor leaves out (all are watched by default). */
     val unwatchedClusters by lazy { UnwatchedClusters(getSharedPreferences(UnwatchedClusters.FILE, Context.MODE_PRIVATE)) }
+    /** The clusters that record actions as Kubernetes Events (none by default). */
+    val auditEventClusters by lazy { AuditEventClusters(getSharedPreferences(AuditEventClusters.FILE, Context.MODE_PRIVATE)) }
     /** The cluster each home-screen widget shows. */
     val widgetClusters by lazy { WidgetClusters(getSharedPreferences(WidgetClusters.FILE, Context.MODE_PRIVATE)) }
     val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
@@ -431,11 +436,13 @@ class TalosApp : Application() {
             setPrivacyMask = this::setPrivacyMask,
             notificationsAllowed = { canPostNotifications(this) },
             onRestored = {
+                applyAuditEventClusters()
                 talosRepository.invalidate()
                 forgetShownCluster()
             },
             proposals = proposals,
             plugins = pluginRepository,
+            auditEvents = auditEventClusters,
         )
     }
 
@@ -560,7 +567,7 @@ class TalosApp : Application() {
         // Before any Go call: the monitor worker and the widget run in this process too.
         Ichorgo.setAuthStore(kubeAuthStore)
         applyPrivacyMask(uiPreferences.privacyMask.value)
-        Ichorgo.setAuditEvents(uiPreferences.auditEvents.value)
+        applyAuditEventClusters()
         // Where Go remembers node names, so a node that is down still shows its hostname.
         Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
         StartupTrace.markOnce("app.goInit done")
@@ -581,6 +588,12 @@ class TalosApp : Application() {
                     clusterRepos.sync(it.summary)
                     proposals.sync(it.summary)
                     unwatchedClusters.sync(it.summary)
+                    // The app-wide switch of older versions, once: on, every cluster keeps recording.
+                    seededAuditEventClusters(uiPreferences.takeLegacyAuditEvents(), it.summary)
+                        .forEach { fp -> auditEventClusters.set(fp, true) }
+                    // Per cluster: a context added to a recording cluster records too; removed ones go.
+                    auditEventClusters.replaceWith(wholeClusters(auditEventClusters.fingerprints.value, it.summary))
+                    applyAuditEventClusters()
                     widgetClusters.sync(it.summary)
                     // A removed cluster's snoozes go with it (its snapshot at the next check).
                     alertSnoozes.retain(it.summary.contexts.map { c -> c.fingerprint })

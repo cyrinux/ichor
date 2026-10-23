@@ -2,8 +2,11 @@ package ichorgo
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -43,48 +46,178 @@ func TestAuditEventBodyAndMessage(t *testing.T) {
 	}
 }
 
-func TestAuditEventWanted(t *testing.T) {
-	SetAuditEvents(true)
-	t.Cleanup(func() { SetAuditEvents(false) })
+// recordActionsOn makes exactly these clusters record actions for the test.
+func recordActionsOn(t *testing.T, fingerprints ...string) {
+	t.Helper()
 
+	SetAuditEventClusters(strings.Join(fingerprints, "\n"))
+	t.Cleanup(func() { SetAuditEventClusters("") })
+}
+
+func TestAuditEventWanted(t *testing.T) {
+	recordActionsOn(t, "aaaaaaaaaaaaaaaa", " bbbbbbbbbbbbbbbb ", "")
+
+	object := auditEntry{Namespace: "web", Object: "Deployment/web"}
 	cases := []struct {
-		e    auditEntry
-		want bool
+		name        string
+		e           auditEntry
+		fingerprint string
+		want        bool
 	}{
-		{auditEntry{Namespace: "web", Object: "Deployment/web"}, true},
-		{auditEntry{Namespace: "web", Object: "web"}, false},           // no kind (a Longhorn volume name)
-		{auditEntry{Node: "node-1", Object: "Service/kubelet"}, false}, // a Talos action: no namespace
-		{auditEntry{Node: "node-1"}, false},                            // a reboot
-		{auditEntry{Namespace: "web", Object: "Deployment/web", Demo: true}, false},
+		{"a cluster that records", object, "aaaaaaaaaaaaaaaa", true},
+		{"spaces trimmed", object, "bbbbbbbbbbbbbbbb", true},
+		{"another cluster", object, "cccccccccccccccc", false},
+		{"unknown context", object, "", false},
+		{"no kind (a Longhorn volume name)", auditEntry{Namespace: "web", Object: "web"}, "aaaaaaaaaaaaaaaa", false},
+		{"a Talos action: no namespace", auditEntry{Node: "node-1", Object: "Service/kubelet"}, "aaaaaaaaaaaaaaaa", false},
+		{"a reboot", auditEntry{Node: "node-1"}, "aaaaaaaaaaaaaaaa", false},
+		{"the demo", auditEntry{Namespace: "web", Object: "Deployment/web", Demo: true}, "aaaaaaaaaaaaaaaa", false},
 	}
 
-	for i, c := range cases {
-		if got := auditEventWanted(c.e); got != c.want {
-			t.Errorf("case %d: wanted %v, got %v", i, c.want, got)
+	for _, c := range cases {
+		if got := auditEventWanted(c.e, c.fingerprint); got != c.want {
+			t.Errorf("%s: wanted %v, got %v", c.name, c.want, got)
 		}
 	}
 
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 
-	if auditEventWanted(auditEntry{Namespace: "web", Object: "Deployment/web"}) {
-		t.Fatal("events posted while the setting is off")
+	if auditEventsSomewhere() || auditEventWanted(object, "aaaaaaaaaaaaaaaa") {
+		t.Fatal("events posted with no cluster recording")
 	}
 }
 
-// TestRecordOutcomePostsEvent: with the setting on, a recorded Kubernetes action posts one
-// Event on its object, on the cluster the action ran on; a failure to post is swallowed.
+// The fingerprint of an action's context is the one the apps see in the config summary, for
+// a Talos context and for a kubeconfig one, and "" for a context the config does not have.
+func TestAuditClusterFingerprintMatchesTheSummary(t *testing.T) {
+	talos := testConfig(t, time.Now().Add(24*time.Hour))
+
+	var summary configSummary
+	if err := json.Unmarshal([]byte(mustParse(t, ParseConfig, talos)), &summary); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, c := range summary.Contexts {
+		if got := auditClusterFingerprint(talos, c.Name); got != c.Fingerprint || got == "" {
+			t.Errorf("talos %s: %q, the summary says %q", c.Name, got, c.Fingerprint)
+		}
+	}
+
+	if got, want := auditClusterFingerprint(talos, ""), summary.Contexts[0].Fingerprint; got != want {
+		t.Errorf("talos current context: %q, want %q (lab)", got, want)
+	}
+
+	kube := newFakeKubeAPI(t, nil).kubeconfigFor("https://kube.invalid:6443")
+
+	var kubeSummary kubeconfigSummary
+	if err := json.Unmarshal([]byte(mustParse(t, ParseKubeconfig, kube)), &kubeSummary); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, c := range kubeSummary.Contexts {
+		if got := auditClusterFingerprint(kube, c.Name); got != c.Fingerprint || got == "" {
+			t.Errorf("kube %s: %q, the summary says %q", c.Name, got, c.Fingerprint)
+		}
+	}
+
+	if auditClusterFingerprint(talos, "nope") != "" || auditClusterFingerprint(kube, "nope") != "" || auditClusterFingerprint("", "lab") != "" {
+		t.Error("an unknown context has a fingerprint")
+	}
+}
+
+func mustParse(t *testing.T, parse func(string) (string, error), config string) string {
+	t.Helper()
+
+	out, err := parse(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return out
+}
+
+// Two clusters, one recording: the Event reaches only its API server.
+func TestRecordOutcomePostsOnlyOnClustersThatRecord(t *testing.T) {
+	answers := map[string]string{"POST /api/v1/namespaces/web/events": `{"kind":"Event","metadata":{"name":"ichor-abc12"}}`}
+	on, off := newFakeKubeAPI(t, answers), newFakeKubeAPI(t, answers)
+	cfg := twoClusterKubeconfig(on, off)
+
+	recordActionsOn(t, auditClusterFingerprint(cfg, "admin@on"))
+	t.Cleanup(func() { auditEventPosted = nil })
+
+	posted := make(chan struct{}, 4)
+	auditEventPosted = func() { posted <- struct{}{} }
+
+	scale := auditAction{Action: "scale", Namespace: "web", Object: "Deployment/web", Params: "replicas=2"}
+	recordOutcome(cfg, "admin@off", scale, nil)
+	recordOutcome(cfg, "admin@on", scale, nil)
+	waitPosted(t, posted)
+
+	if got := countPosts(on); got != 1 {
+		t.Errorf("the recording cluster got %d Events, want 1", got)
+	}
+
+	if got := countPosts(off); got != 0 {
+		t.Errorf("the other cluster got %d Events, want none", got)
+	}
+}
+
+func countPosts(f *fakeKubeAPI) int {
+	n := 0
+
+	for _, r := range f.recorded() {
+		if r.method == "POST" {
+			n++
+		}
+	}
+
+	return n
+}
+
+// twoClusterKubeconfig has the contexts admin@on and admin@off, each on its own fake API server.
+func twoClusterKubeconfig(on, off *fakeKubeAPI) string {
+	ca := func(f *fakeKubeAPI) string {
+		return base64.StdEncoding.EncodeToString(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.Certificate().Raw}))
+	}
+
+	return fmt.Sprintf(`apiVersion: v1
+kind: Config
+current-context: admin@on
+clusters:
+- name: on
+  cluster:
+    server: %s
+    certificate-authority-data: %s
+- name: off
+  cluster:
+    server: %s
+    certificate-authority-data: %s
+users:
+- name: admin
+  user:
+    token: secret-token
+contexts:
+- name: admin@on
+  context: {cluster: on, user: admin}
+- name: admin@off
+  context: {cluster: off, user: admin}
+`, on.URL, ca(on), off.URL, ca(off))
+}
+
+// TestRecordOutcomePostsEvent: on a cluster that records actions, a recorded Kubernetes action
+// posts one Event on its object, on the cluster the action ran on; a failure to post is swallowed.
 func TestRecordOutcomePostsEvent(t *testing.T) {
 	f := newFakeKubeAPI(t, map[string]string{
 		"POST /api/v1/namespaces/web/events": `{"kind":"Event","metadata":{"name":"ichor-abc12"}}`,
 	})
 
-	SetAuditEvents(true)
-	t.Cleanup(func() { SetAuditEvents(false); auditEventPosted = nil })
+	cfg := f.kubeconfigFor(f.URL)
+
+	recordActionsOn(t, auditClusterFingerprint(cfg, "admin@test"))
+	t.Cleanup(func() { auditEventPosted = nil })
 
 	posted := make(chan struct{}, 4)
 	auditEventPosted = func() { posted <- struct{}{} }
-
-	cfg := f.kubeconfigFor(f.URL)
 
 	recordOutcome(cfg, "admin@test", auditAction{Action: "scale", Namespace: "web", Object: "Deployment/web", Params: "replicas=2"}, nil)
 	waitPosted(t, posted)

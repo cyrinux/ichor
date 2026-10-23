@@ -78,10 +78,6 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _remoteAppIcons = MutableStateFlow(prefs.getBoolean(KEY_REMOTE_APP_ICONS, false))
     val remoteAppIcons: StateFlow<Boolean> = _remoteAppIcons.asStateFlow()
 
-    /** Also writes a Kubernetes Event (IchorAction) on each object the app changes. Off by default. */
-    private val _auditEvents = MutableStateFlow(prefs.getBoolean(KEY_AUDIT_EVENTS, false))
-    val auditEvents: StateFlow<Boolean> = _auditEvents.asStateFlow()
-
     /** Logs where a cold start's time goes to logcat (tag Ichor.Startup). Off by default. */
     private val _startupTrace = MutableStateFlow(prefs.getBoolean(KEY_STARTUP_TRACE, false))
     val startupTrace: StateFlow<Boolean> = _startupTrace.asStateFlow()
@@ -185,9 +181,15 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _remoteAppIcons.value = enabled
     }
 
-    fun setAuditEvents(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_AUDIT_EVENTS, enabled).apply()
-        _auditEvents.value = enabled
+    /**
+     * The app-wide "Record actions in the cluster" switch of older versions, read once and
+     * removed (it is per cluster now, in [AuditEventClusters]); null when it was never set.
+     */
+    fun takeLegacyAuditEvents(): Boolean? {
+        if (!prefs.contains(KEY_AUDIT_EVENTS)) return null
+        val on = prefs.getBoolean(KEY_AUDIT_EVENTS, false)
+        prefs.edit().remove(KEY_AUDIT_EVENTS).commit()
+        return on
     }
 
     fun setStartupTrace(enabled: Boolean) {

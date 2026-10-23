@@ -1972,7 +1972,6 @@
     <string name="settings_offline_cache">Keep last known state</string>
     <string name="settings_offline_cache_desc">Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can\'t be reached. Kept for 24 hours and never backed up.</string>
     <string name="settings_audit_events">Record actions in the cluster</string>
-    <string name="settings_audit_events_desc">Also write a Kubernetes Event (reason IchorAction) on each object the app changes, so the cluster’s own history shows what the phone did: kubectl get events, the Argo CD or Lens timelines. Only for Kubernetes objects: node reboots and Talos changes send nothing. Best effort, never blocks an action.</string>
     <string name="settings_startup_trace">Startup timing in logcat</string>
     <string name="settings_startup_trace_summary">Logs how long each step of a cold start takes (config, cluster connection, first node, home screen), for a bug report: adb logcat -s Ichor.Startup. Durations and counts only, never a cluster name or an address. Stays on the phone.</string>
     <string name="about_icon_credits">App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners.</string>

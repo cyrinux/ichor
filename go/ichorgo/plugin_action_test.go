@@ -114,7 +114,7 @@ func TestKubePluginActionPerVerb(t *testing.T) {
 // data service, so the resources are listed: two widgets let it run.
 func TestKubePluginActionEnabledWhen(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 
 	f, cfg := actionCluster(t)
 
@@ -223,7 +223,7 @@ func TestKubePluginActionParamStaysInTheBody(t *testing.T) {
 // Kind/name, and the params as compact JSON; one readable by the audit screen.
 func TestKubePluginActionAudit(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 
 	_, cfg := actionCluster(t)
 

@@ -284,7 +284,7 @@ func TestKubeVMActionRefusedBeforeTheCluster(t *testing.T) {
 // both actions record themselves.
 func TestKubeVMStopForce(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 
 	f := newFakeKubeAPI(t, map[string]string{
 		"GET /apis":             apisKubeVirtActions,

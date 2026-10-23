@@ -14,6 +14,7 @@ import name.levis.ichor.ui.operations.OperationKind
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
+import name.levis.ichor.model.auditEventClustersArgument
 import name.levis.ichor.model.signsOutOnRemoval
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -155,10 +156,19 @@ private fun TalosApp.cancelNamedNotifications() {
     name.levis.ichor.ui.operations.OperationKind.entries.forEach { manager.cancel(it.resultId) }
 }
 
-/** Turns the Kubernetes Events on changed objects on or off, in Go and in the saved settings. */
-fun TalosApp.setAuditEvents(enabled: Boolean) {
-    uiPreferences.setAuditEvents(enabled)
-    Ichorgo.setAuditEvents(enabled)
+/**
+ * Sets whether the cluster of [context] (all its contexts) records actions: a Kubernetes
+ * Event on each object the app changes there. Saved, then handed to Go.
+ */
+fun TalosApp.setAuditEvents(context: ContextSummary, on: Boolean) {
+    val summary = configRepository.config.value?.summary ?: return
+    clusterFingerprints(summary, context).forEach { auditEventClusters.set(it, on) }
+    applyAuditEventClusters()
+}
+
+/** Hands Go the clusters that record actions (it keeps none of its own across launches). */
+fun TalosApp.applyAuditEventClusters() {
+    Ichorgo.setAuditEventClusters(auditEventClustersArgument(auditEventClusters.fingerprints.value))
 }
 
 /** Turns the startup timing in logcat on or off (always on in a debug build). */

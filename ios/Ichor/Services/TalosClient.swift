@@ -41,8 +41,11 @@ enum PrivacyKeys {
     static let words = "privacyMaskWords"
 }
 
-/// UserDefaults key of the Kubernetes Events setting (TalosClient.setAuditEvents).
+/// UserDefaults keys of "Record actions in the cluster" (TalosClient.setAuditEventClusters).
 enum AuditEventKeys {
+    /// The clusters that record actions, by context fingerprint.
+    static let clusters = "auditEventClusters"
+    /// The app-wide switch of older versions: read once to seed `clusters`, then removed.
     static let enabled = "auditEvents"
 }
 
@@ -163,13 +166,15 @@ struct TalosClient: Sendable {
         setPrivacyMask(enabled: defaults.bool(forKey: PrivacyKeys.enabled), extraWords: defaults.string(forKey: PrivacyKeys.words) ?? "")
     }
 
-    /// Also writes a Kubernetes Event (reason IchorAction) on each object the app changes.
-    static func setAuditEvents(_ enabled: Bool) {
-        IchorgoSetAuditEvents(enabled)
+    /// The clusters (context fingerprints) where each object the app changes also gets a
+    /// Kubernetes Event (reason IchorAction); none elsewhere.
+    static func setAuditEventClusters(_ fingerprints: Set<String>) {
+        IchorgoSetAuditEventClusters(fingerprints.sorted().joined(separator: "\n"))
     }
 
+    /// Applies the stored clusters; call at launch and in background tasks, before Go acts.
     static func applyStoredAuditEvents() {
-        setAuditEvents(UserDefaults.standard.bool(forKey: AuditEventKeys.enabled))
+        setAuditEventClusters(Set(UserDefaults.standard.stringArray(forKey: AuditEventKeys.clusters) ?? []))
     }
 
     func driftSnapshot() async throws -> String {

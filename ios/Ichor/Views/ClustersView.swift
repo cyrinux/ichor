@@ -263,6 +263,13 @@ struct ClustersView: View {
                                  set: { model.setWatchInBackground($0, for: context) })) {
                 Label("Watch in the background", systemImage: "bell.badge")
             }
+            // Per cluster, off by default: a Kubernetes Event on each object the app changes there.
+            if !context.demo {
+                Toggle(isOn: Binding(get: { model.recordsActions(context) },
+                                     set: { model.setRecordActions($0, for: context) })) {
+                    Label("Record actions in the cluster", systemImage: "clock.badge.checkmark")
+                }
+            }
         }
         // Not in screenshot mode (the endpoints shown are fake), nor for the demo; Talos endpoints
         // only (a kubeconfig cluster's server comes with its kubeconfig).

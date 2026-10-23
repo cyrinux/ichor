@@ -149,10 +149,12 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     public var kubeAccess: String?
     /// The cluster's own Git repository (its Cluster repository setting); never a token.
     public var repository: ClusterRepo?
+    /// "Record actions in the cluster" (a Kubernetes Event per change); nil: off.
+    public var auditEvents: Bool?
 
     public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
                 wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil,
-                repository: ClusterRepo? = nil) {
+                repository: ClusterRepo? = nil, auditEvents: Bool? = nil) {
         self.name = name
         self.color = color
         self.vpnOnly = vpnOnly
@@ -160,6 +162,7 @@ public struct BackupCluster: Codable, Equatable, Sendable {
         self.kubeServer = kubeServer
         self.kubeAccess = kubeAccess
         self.repository = repository
+        self.auditEvents = auditEvents
     }
 }
 
@@ -254,7 +257,7 @@ public func backupPassphraseProblem(_ passphrase: String, again: String) -> Back
 public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int],
                            kubeServers: [String: String], vpnOnly: Set<String> = [],
                            wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:],
-                           repos: [String: ClusterRepo] = [:]) -> [String: BackupCluster] {
+                           repos: [String: ClusterRepo] = [:], auditEvents: Set<String> = []) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
         var wol: [String: BackupWolTarget] = [:]
@@ -264,7 +267,7 @@ public func backupClusters(fingerprints: [String], names: [String: String], colo
         out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
                                 vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
                                 kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 },
-                                repository: repos[fp])
+                                repository: repos[fp], auditEvents: auditEvents.contains(fp) ? true : nil)
     }
     return out
 }
@@ -282,6 +285,8 @@ public struct RestoredClusters: Equatable, Sendable {
     public var kubeAccess: [String: String] = [:]
     /// Normalized; one without an address is dropped.
     public var repos: [String: ClusterRepo] = [:]
+    /// The clusters that record actions.
+    public var auditEvents: Set<String> = []
 }
 
 public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints: [String]) -> RestoredClusters {
@@ -293,8 +298,10 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
     var wakeOnLan: [String: WolTarget] = [:]
     var kubeAccess: [String: String] = [:]
     var repos: [String: ClusterRepo] = [:]
+    var auditEvents: Set<String> = []
     for (fp, cluster) in clusters ?? [:] where known.contains(fp) {
         if let repo = cluster.repository.flatMap(normalizeClusterRepo) { repos[fp] = repo }
+        if cluster.auditEvents == true { auditEvents.insert(fp) }
         if let target = cluster.kubeAccess, target != fp, known.contains(target) { kubeAccess[fp] = target }
         if cluster.vpnOnly == true { vpnOnly.insert(fp) }
         for (node, wol) in cluster.wakeOnLan ?? [:] {
@@ -313,7 +320,7 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
         }
     }
     return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly,
-                            wakeOnLan: wakeOnLan, kubeAccess: kubeAccess, repos: repos)
+                            wakeOnLan: wakeOnLan, kubeAccess: kubeAccess, repos: repos, auditEvents: auditEvents)
 }
 
 /// The sign-ins of a restored payload for the clusters it restored (`fingerprints`), empty

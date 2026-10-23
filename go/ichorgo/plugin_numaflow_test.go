@@ -214,7 +214,7 @@ func TestNumaflowPauseResumePatch(t *testing.T) {
 	} {
 		t.Run(c.action, func(t *testing.T) {
 			withDataDir(t)
-			SetAuditEvents(false)
+			SetAuditEventClusters("")
 			useBuiltinPlugin(t, "numaflow", nfNow)
 
 			path := nfBase + "namespaces/shop/" + c.resource + "/" + c.name

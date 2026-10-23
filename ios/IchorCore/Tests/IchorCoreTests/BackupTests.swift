@@ -115,6 +115,22 @@ final class BackupTests: XCTestCase {
         ])
     }
 
+    func testRecordActionsTravelsPerCluster() throws {
+        let clusters = backupClusters(fingerprints: ["aaaa", "bbbb"], names: [:], colors: [:], kubeServers: [:],
+                                      auditEvents: ["aaaa", "gone"])
+        XCTAssertEqual(clusters, ["aaaa": BackupCluster(auditEvents: true), "bbbb": BackupCluster()])
+        let decoded = try JSONDecoder().decode([String: BackupCluster].self, from: JSONEncoder().encode(clusters))
+        XCTAssertEqual(restoredClusters(decoded, fingerprints: ["aaaa", "bbbb"]).auditEvents, ["aaaa"])
+        XCTAssertEqual(restoredClusters(decoded, fingerprints: ["bbbb"]).auditEvents, [])
+    }
+
+    func testAnOlderBackupRestoresWithoutRecordingActions() throws {
+        let decoded = try JSONDecoder().decode([String: BackupCluster].self, from: Data(#"{"aaaa":{"name":"Home","vpnOnly":true}}"#.utf8))
+        let restored = restoredClusters(decoded, fingerprints: ["aaaa"])
+        XCTAssertEqual(restored.vpnOnly, ["aaaa"])
+        XCTAssertEqual(restored.auditEvents, [])
+    }
+
     func testRestoredClustersCheckVpnOnlyAndWakeOnLan() {
         let restored = restoredClusters(
             [

@@ -175,7 +175,7 @@ func fastConsoleRetry(t *testing.T) {
 // with code 0, after a 400 while the console was not ready. The open is audited.
 func TestVMConsoleRoundTrip(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 	fastConsoleRetry(t)
 
 	f := newFakeVMConsoleAPI(t, "Running", 2, 0)
@@ -233,7 +233,7 @@ func TestVMConsoleRoundTrip(t *testing.T) {
 // TestVMConsoleClose: closing the session ends it as "closed", like a pod shell.
 func TestVMConsoleClose(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 
 	f := newFakeVMConsoleAPI(t, "Running", 0, 0)
 	l := newConsoleRecorder()
@@ -253,7 +253,7 @@ func TestVMConsoleClose(t *testing.T) {
 // open, one that never gets ready, the demo and a bad name all end at once with a message.
 func TestVMConsoleRefusals(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 	fastConsoleRetry(t)
 
 	vmConsoleWait = 100 * time.Millisecond

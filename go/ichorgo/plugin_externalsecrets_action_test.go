@@ -69,7 +69,7 @@ func TestExternalSecretsForceSyncInTheTree(t *testing.T) {
 // policy on, and records it in the audit log.
 func TestExternalSecretsForceSyncPatches(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 	useBuiltinPlugin(t, "external-secrets", esNow)
 
 	f := esAPI(t, http.StatusOK, http.StatusOK)
@@ -95,7 +95,7 @@ func TestExternalSecretsForceSyncPatches(t *testing.T) {
 // A CreatedOnce ExternalSecret, as read now, is refused with the reason and nothing is sent.
 func TestExternalSecretsForceSyncCreatedOnceRefused(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 	useBuiltinPlugin(t, "external-secrets", esNow)
 
 	f := esAPI(t, http.StatusOK, http.StatusOK)

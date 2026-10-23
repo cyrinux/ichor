@@ -102,6 +102,26 @@ extension AppModel {
         storeMonitorUnwatched(settingWatched(on, for: context, contexts: summary?.contexts ?? [], unwatched: monitorUnwatched))
     }
 
+    /// Whether `context`'s cluster records actions (a Kubernetes Event per change).
+    func recordsActions(_ context: ContextSummary) -> Bool {
+        clusterFlagged(context, contexts: summary?.contexts ?? [], members: auditEventClusters)
+    }
+
+    /// Turns "Record actions in the cluster" on or off for `context`'s cluster (all its contexts).
+    func setRecordActions(_ on: Bool, for context: ContextSummary) {
+        storeAuditEventClusters(settingClusterFlag(on, for: context, contexts: summary?.contexts ?? [],
+                                                   members: auditEventClusters))
+    }
+
+    /// Saves the clusters that record actions and hands them to Go.
+    // Internal, not private: AppModel+Clusters.swift uses it.
+    func storeAuditEventClusters(_ fingerprints: Set<String>) {
+        guard fingerprints != auditEventClusters else { return }
+        auditEventClusters = fingerprints
+        UserDefaults.standard.set(fingerprints.sorted(), forKey: AuditEventKeys.clusters)
+        TalosClient.setAuditEventClusters(fingerprints)
+    }
+
     // Internal, not private: AppModel+Clusters.swift uses it.
 
     func storeMonitorUnwatched(_ fingerprints: Set<String>) {

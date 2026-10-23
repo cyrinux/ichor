@@ -131,7 +131,8 @@ func recordOutcome(configYAML, contextName string, a auditAction, err error) {
 		e.Outcome, e.Error = auditFailed, redactSecrets(err.Error())
 	}
 
-	if auditEventWanted(e) {
+	// The fingerprint is only worked out when some cluster records actions at all.
+	if auditEventsSomewhere() && auditEventWanted(e, auditClusterFingerprint(configYAML, contextName)) {
 		postAuditEvent(kubeTarget{configYAML, contextName, a.Server}, e)
 	}
 
