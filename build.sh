@@ -63,6 +63,41 @@ use_native_ndk_linux_arm64() {
   export ANDROID_NDK_HOME="$shadow"
 }
 
+# The Go core as app/libs/ichorgo.aar, one library per ABI (see splits in app/build.gradle.kts),
+# the same bytes from any checkout: -trimpath keeps the source paths out, and gomobile's
+# `replace <module> => <dir>`, which Go keeps in the library's build info, names the same
+# directory everywhere because the bind runs from a fixed link to this checkout's go/.
+GOBIND_LINK=/tmp/ichor-gobind/go
+bind_go_core() {
+  mkdir -p "$(dirname "$GOBIND_LINK")"
+  # Two builds at once would swap the link under each other.
+  if command -v flock >/dev/null; then
+    exec 9>"$(dirname "$GOBIND_LINK").lock"
+    flock 9
+  fi
+  ln -sfn "$ROOT/go" "$GOBIND_LINK"
+  (cd "$GOBIND_LINK" && gomobile bind -v -target=android/arm64,android/arm,android/amd64 -androidapi 26 \
+    -javapkg=name.levis -trimpath -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" \
+    -o "$ROOT/app/libs/ichorgo.aar" ./ichorgo)
+  check_go_core_paths
+  if command -v flock >/dev/null; then flock -u 9; fi
+}
+
+# Fails when the arm64 library's build info names a directory other than GOBIND_LINK: then
+# a rebuild from another checkout would not give the published bytes (CONTRIBUTING.md
+# "Reproducible builds").
+check_go_core_paths() {
+  local lib="$ROOT/.cache/gobind-check.so" paths
+  python3 -c 'import sys, zipfile; sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read("jni/arm64-v8a/libgojni.so"))' \
+    "$ROOT/app/libs/ichorgo.aar" >"$lib"
+  paths="$(go version -m "$lib" | awk '$1 == "=>" && $2 ~ /^\// { print $2 }' | sort -u)"
+  rm -f "$lib"
+  if [[ "$paths" != "$GOBIND_LINK" ]]; then
+    echo "libgojni.so names ${paths:-no directory}, not $GOBIND_LINK: the APK would depend on the checkout's path" >&2
+    exit 1
+  fi
+}
+
 build_inside() {
   # versionName/versionCode for Gradle (see scripts/version.sh).
   set -a
@@ -107,10 +142,7 @@ build_inside() {
   fi
   # app/libs only holds this generated (gitignored) AAR, so a fresh checkout lacks it.
   mkdir -p "$ROOT/app/libs"
-  # One APK per ABI is split from this AAR (see splits in app/build.gradle.kts). -trimpath:
-  # the checkout's path stays out of libgojni.so, so a rebuild elsewhere gives the same bytes.
-  gomobile bind -v -target=android/arm64,android/arm,android/amd64 -androidapi 26 -javapkg=name.levis -trimpath \
-    -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" -o "$ROOT/app/libs/ichorgo.aar" ./ichorgo
+  bind_go_core
   cd "$ROOT"
   gradle --no-daemon "${GRADLE_TASKS[@]}"
   case "$VARIANT" in
