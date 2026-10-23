@@ -2091,6 +2091,8 @@
     <string name="kube_server_title">Kubernetes API address</string>
     <string name="kube_server_label">Address</string>
     <string name="kube_server_hint">Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.</string>
+    <string name="cluster_kube_server_menu">Kubernetes API address…</string>
+    <string name="cluster_kube_server_set">API address: %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pods</string>
@@ -4759,6 +4761,9 @@
     <string name="read_progress_step_wait_idle">Wait for the second sample</string>
     <string name="read_progress_step_scrape2">Second metrics sample</string>
     <string name="capacity_title">Capacity</string>
+    <string name="kube_menu_explore">Explore</string>
+    <string name="kube_menu_health">Health</string>
+    <string name="kube_menu_installed">Installed here</string>
     <string name="capacity_intro">Free room counts requests against allocatable, as the scheduler does; usage comes from metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: losing any one node leaves no pod Pending</string>
     <string name="capacity_n_plus_one_short">Losing %1$s leaves %2$s pods Pending</string>

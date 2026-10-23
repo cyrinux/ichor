@@ -96,11 +96,13 @@ fun <A : Enum<A>> LazyListScope.actionBarItems(
     onChange: (ActionBar<A>) -> Unit,
     drag: BarDragState,
     spacing: Float,
+    /** The menu's sections: each menu row says which it is in (the menu sorts by them). */
+    groups: ActionGroups<A>? = null,
 ) {
     item(key = "bar-title") {
         SectionTitle(stringResource(R.string.overview_edit_bar), stringResource(R.string.overview_edit_bar_hint))
     }
-    items(bar.icons, key = ::slot) { action -> BarRow(action, look, inMenu = false, current, onChange, drag, spacing) }
+    items(bar.icons, key = ::slot) { action -> BarRow(action, look, inMenu = false, current, onChange, drag, spacing, null) }
     item(key = MENU_LINE) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -111,7 +113,7 @@ fun <A : Enum<A>> LazyListScope.actionBarItems(
             Text(stringResource(R.string.overview_edit_menu), style = MaterialTheme.typography.titleSmall)
         }
     }
-    items(bar.menu, key = ::slot) { action -> BarRow(action, look, inMenu = true, current, onChange, drag, spacing) }
+    items(bar.menu, key = ::slot) { action -> BarRow(action, look, inMenu = true, current, onChange, drag, spacing, groups?.label?.invoke(action)) }
     if (!bar.isDefault) item(key = "bar-reset") {
         Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().animateItem()) {
             TextButton(onClick = { onChange(bar.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
@@ -133,7 +135,13 @@ fun SectionTitle(title: String, hint: String, modifier: Modifier = Modifier) {
  * screen's content while it is customized. Every change is applied at once through [onChange].
  */
 @Composable
-fun <A : Enum<A>> ActionBarEditor(bar: ActionBar<A>, look: ActionLook<A>, onChange: (ActionBar<A>) -> Unit, modifier: Modifier = Modifier) {
+fun <A : Enum<A>> ActionBarEditor(
+    bar: ActionBar<A>,
+    look: ActionLook<A>,
+    onChange: (ActionBar<A>) -> Unit,
+    modifier: Modifier = Modifier,
+    groups: ActionGroups<A>? = null,
+) {
     val current by rememberUpdatedState(bar)
     val change by rememberUpdatedState(onChange)
     val drag = remember { BarDragState() }
@@ -143,7 +151,7 @@ fun <A : Enum<A>> ActionBarEditor(bar: ActionBar<A>, look: ActionLook<A>, onChan
         verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         modifier = modifier.fillMaxSize(),
     ) {
-        actionBarItems(bar, look, { current }, { change(it) }, drag, spacing)
+        actionBarItems(bar, look, { current }, { change(it) }, drag, spacing, groups)
     }
 }
 
@@ -156,6 +164,8 @@ private fun <A : Enum<A>> LazyItemScope.BarRow(
     onChange: (ActionBar<A>) -> Unit,
     drag: BarDragState,
     spacing: Float,
+    /** The menu section the row is in (a string resource), shown under its name. */
+    group: Int?,
 ) {
     val lifted = drag.dragged == action
     val moveUp = stringResource(R.string.overview_edit_move_up)
@@ -196,7 +206,10 @@ private fun <A : Enum<A>> LazyItemScope.BarRow(
                     .padding(12.dp),
             )
             Icon(look.icon(action), contentDescription = null, Modifier.padding(end = 12.dp))
-            Text(look.label(action), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).padding(vertical = 12.dp))
+            Column(Modifier.weight(1f).padding(vertical = 12.dp)) {
+                Text(look.label(action), style = MaterialTheme.typography.titleMedium)
+                if (group != null) MutedText(stringResource(group))
+            }
             if (inMenu) {
                 TooltipIconButton(Icons.Outlined.ArrowUpward, stringResource(R.string.overview_edit_to_bar), onClick = { onChange(current().toBar(action)) })
             } else {

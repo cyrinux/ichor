@@ -6,10 +6,9 @@ import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Computer
+import androidx.compose.material.icons.outlined.DataUsage
 import androidx.compose.material.icons.outlined.Dataset
-import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.HealthAndSafety
@@ -27,7 +26,11 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.KubernetesAction
+import name.levis.ichor.model.KubernetesActionGroup
+import name.levis.ichor.model.group
+import name.levis.ichor.model.groupedMenu
 import name.levis.ichor.model.title
+import name.levis.ichor.ui.components.ActionGroups
 import name.levis.ichor.ui.components.ActionLook
 import name.levis.ichor.ui.dataservices.fallbackIcon
 
@@ -43,11 +46,10 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.SERVICES -> Icons.Outlined.Lan
     KubernetesAction.JOBS -> Icons.Outlined.TaskAlt
     KubernetesAction.EVENTS -> Icons.Outlined.Timeline
-    KubernetesAction.API_ADDRESS -> Icons.Outlined.Dns
     KubernetesAction.POLICIES -> Icons.Outlined.Gavel
     KubernetesAction.AUTOSCALING -> Icons.Outlined.Speed
     KubernetesAction.VIRTUAL_MACHINES -> Icons.Outlined.Computer
-    KubernetesAction.CLEAN_UP_PODS -> Icons.Outlined.CleaningServices
+    KubernetesAction.CAPACITY -> Icons.Outlined.DataUsage
     KubernetesAction.CROSSPLANE -> Icons.Outlined.Extension
     KubernetesAction.TAILSCALE -> Icons.Outlined.VpnLock
     KubernetesAction.ARGO_ROLLOUTS -> Icons.Outlined.Upgrade
@@ -65,6 +67,18 @@ val KubernetesAction.dataServiceKind: DataServiceKind?
         else -> null
     }
 
+private fun KubernetesActionGroup.label(): Int = when (this) {
+    KubernetesActionGroup.EXPLORE -> R.string.kube_menu_explore
+    KubernetesActionGroup.HEALTH -> R.string.kube_menu_health
+    KubernetesActionGroup.INSTALLED -> R.string.kube_menu_installed
+}
+
+/** The Kubernetes screen's menu in sections (Explore, Health, Installed here), in its bar and its editor. */
+val kubernetesActionGroups = ActionGroups<KubernetesAction>(
+    label = { it.group.label() },
+    sections = { menu -> groupedMenu(menu).map { (group, actions) -> group.label() to actions } },
+)
+
 /** How the Kubernetes screen's actions look, in its bar and its editor. */
 val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) { action ->
     // Product names: never translated.
@@ -81,11 +95,10 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.SERVICES -> R.string.kube_services_title
             KubernetesAction.JOBS -> R.string.kube_jobs_title
             KubernetesAction.EVENTS -> R.string.kube_events_stream_title
-            KubernetesAction.API_ADDRESS -> R.string.kube_server_title
             KubernetesAction.POLICIES -> R.string.kpol_title
             KubernetesAction.AUTOSCALING -> R.string.autoscaling_title
             KubernetesAction.VIRTUAL_MACHINES -> R.string.vm_title
-            KubernetesAction.CLEAN_UP_PODS -> R.string.sanitize_title
+            KubernetesAction.CAPACITY -> R.string.capacity_title
             KubernetesAction.CROSSPLANE -> R.string.crossplane_title
             KubernetesAction.TAILSCALE -> R.string.tailscale_title
             KubernetesAction.ARGO_ROLLOUTS -> R.string.argo_rollouts_title

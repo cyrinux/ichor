@@ -34,16 +34,19 @@ enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, ALERTS, HELM,
 /** The Kubernetes home's app-bar actions; one bar for every cluster added from a kubeconfig. */
 typealias KubeHomeBar = ActionBar<KubeHomeAction>
 
-/** What the Kubernetes screen's app bar offers: the screens it leads to, its share link and the API address. */
-enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS,
+/**
+ * What the Kubernetes screen's app bar offers: the screens it leads to and its share link. The
+ * API address was here: it is set from the cluster's row in Manage clusters now, and a saved
+ * bar drops it.
+ */
+enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS,
     /** Kyverno's admission policies; last, so the saved and default bars keep their icons. */
     POLICIES,
     /** What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs. */
     AUTOSCALING,
-    /** KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs. */
+    /** KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs. Clean up
+     *  dead pods was here: it is a control of the Pods tab now, and a saved bar drops it. */
     VIRTUAL_MACHINES,
-    /** Clean up the current namespace's dead pods (k9s sanitize), on the pods tab; last, so the saved bars keep theirs. */
-    CLEAN_UP_PODS,
     /** Crossplane, the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal, each offered
      *  when the cluster runs it (as on the Kubernetes home); last, so the saved bars keep theirs. */
     CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE,
@@ -51,7 +54,9 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
      *  CAST AI), each offered when the cluster runs it; last, so the saved bars keep theirs.
      *  Sealed Secrets and ExternalDNS are plugins now: the Security and Networking families open
      *  them, and a saved bar drops their entries. */
-    DATA_SERVICES, CERT_MANAGER, CASTAI;
+    DATA_SERVICES, CERT_MANAGER, CASTAI,
+    /** Free room per node and what losing one costs, as on the Kubernetes home; last, so the saved bars keep theirs. */
+    CAPACITY;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)
@@ -59,6 +64,28 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
 }
 
 typealias KubernetesBar = ActionBar<KubernetesAction>
+
+/** The sections of the Kubernetes screen's menu, in their order. */
+enum class KubernetesActionGroup { EXPLORE, HEALTH, INSTALLED }
+
+/** Which section of the menu an action is in: a property of the action, whatever the saved bar. */
+val KubernetesAction.group: KubernetesActionGroup
+    get() = when (this) {
+        KubernetesAction.RESOURCES, KubernetesAction.HELM, KubernetesAction.STORAGE, KubernetesAction.SERVICES,
+        KubernetesAction.JOBS, KubernetesAction.EVENTS, KubernetesAction.SHARE,
+        -> KubernetesActionGroup.EXPLORE
+        KubernetesAction.CHECKUP, KubernetesAction.CAPACITY, KubernetesAction.API_HEALTH,
+        KubernetesAction.NETWORK_POLICIES, KubernetesAction.FLOWS,
+        -> KubernetesActionGroup.HEALTH
+        KubernetesAction.POLICIES, KubernetesAction.AUTOSCALING, KubernetesAction.VIRTUAL_MACHINES, KubernetesAction.CROSSPLANE,
+        KubernetesAction.TAILSCALE, KubernetesAction.ARGO_ROLLOUTS, KubernetesAction.CLUSTER_LIFECYCLE,
+        KubernetesAction.DATA_SERVICES, KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI,
+        -> KubernetesActionGroup.INSTALLED
+    }
+
+/** [menu] in sections, in section order; inside a section the saved order holds. Empty sections are left out. */
+fun groupedMenu(menu: List<KubernetesAction>): List<Pair<KubernetesActionGroup, List<KubernetesAction>>> =
+    KubernetesActionGroup.entries.mapNotNull { group -> menu.filter { it.group == group }.takeIf { it.isNotEmpty() }?.let { group to it } }
 
 /**
  * What a Kubernetes object's app bar offers (the resource browser's object screen). Delete

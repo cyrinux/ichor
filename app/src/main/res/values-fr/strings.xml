@@ -2092,6 +2092,8 @@
     <string name="kube_server_title">Adresse de l’API Kubernetes</string>
     <string name="kube_server_label">Adresse</string>
     <string name="kube_server_hint">Utilisée à la place de l’adresse du kubeconfig fourni par Talos, par exemple une redirection de port, un répartiteur de charge ou un nom public : hôte, hôte:port ou URL https. Sans port, celui du kubeconfig est utilisé. Le certificat reste vérifié avec l’adresse propre du cluster. Laissez vide pour revenir à celle du kubeconfig. Sur cet appareil uniquement.</string>
+    <string name="cluster_kube_server_menu">Adresse de l’API Kubernetes…</string>
+    <string name="cluster_kube_server_set">Adresse de l’API : %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pods</string>
@@ -4753,6 +4755,9 @@
     <string name="read_progress_step_wait_idle">Attente du second relevé</string>
     <string name="read_progress_step_scrape2">Second relevé des métriques</string>
     <string name="capacity_title">Capacité</string>
+    <string name="kube_menu_explore">Explorer</string>
+    <string name="kube_menu_health">Santé</string>
+    <string name="kube_menu_installed">Installé ici</string>
     <string name="capacity_intro">La place libre compte les requests face à l\'allouable, comme le scheduler ; l\'usage vient de metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1 : perdre n\'importe quel nœud ne laisse aucun pod Pending</string>
     <string name="capacity_n_plus_one_short">Perdre %1$s laisse %2$s pods Pending</string>

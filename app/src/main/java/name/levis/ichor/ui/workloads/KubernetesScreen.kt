@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.workloads
 
-import name.levis.ichor.setKubeServer
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -86,6 +85,7 @@ fun KubernetesScreen(
     onNetworkPolicies: () -> Unit,
     onApiHealth: () -> Unit,
     onCheckup: () -> Unit,
+    onCapacity: () -> Unit,
     onFlows: (namespace: String?, pod: String?) -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
@@ -149,10 +149,17 @@ fun KubernetesScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
-    val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
-    var editing by remember { mutableStateOf(false) }
-    // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
-    LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
+    // The API address, set from the cluster's row in Manage clusters: a new one (also set while
+    // this screen was in the back stack) reloads every list through it, and a load in flight
+    // through the old one is cancelled.
+    val server = config?.realFingerprint?.let { servers[it] }.orEmpty()
+    var listedThrough by rememberSaveable { mutableStateOf(server) }
+    LaunchedEffect(server) {
+        if (server != listedThrough) {
+            listedThrough = server
+            (listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces, dataServices) + operators).forEach { it.refresh(reset = true) }
+        }
+    }
     val scope = rememberKubeScope(app, namespaces, mask.enabled, focus.namespace)
     val bar by app.uiPreferences.kubernetesBar.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
@@ -162,21 +169,6 @@ fun KubernetesScreen(
     var sanitizing by rememberSaveable { mutableStateOf(false) }
     if (sanitizing) {
         SanitizeSheet(scope.scope.namespace, app.kubeRepository, app.podSweepManager, config?.activeContext.orEmpty(), onDismiss = { sanitizing = false })
-    }
-
-    if (editing && fingerprint != null) {
-        KubeServerDialog(
-            saved = servers[fingerprint].orEmpty(),
-            onSave = { server ->
-                editing = false
-                if (server != servers[fingerprint].orEmpty()) {
-                    app.setKubeServer(fingerprint, server)
-                    // Both reload through the new address; a load in flight through the old one is cancelled.
-                    (listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces, dataServices) + operators).forEach { it.refresh(reset = true) }
-                }
-            },
-            onDismiss = { editing = false },
-        )
     }
 
     Scaffold(
@@ -204,11 +196,10 @@ fun KubernetesScreen(
                                 KubernetesAction.SERVICES -> onServices()
                                 KubernetesAction.JOBS -> onJobs()
                                 KubernetesAction.EVENTS -> onEvents()
-                                KubernetesAction.API_ADDRESS -> editing = true
                                 KubernetesAction.POLICIES -> onPolicies()
                                 KubernetesAction.AUTOSCALING -> onAutoscaling()
                                 KubernetesAction.VIRTUAL_MACHINES -> onVirtualMachines()
-                                KubernetesAction.CLEAN_UP_PODS -> sanitizing = true
+                                KubernetesAction.CAPACITY -> onCapacity()
                                 KubernetesAction.CROSSPLANE -> onCrossplane()
                                 KubernetesAction.TAILSCALE -> onTailscale()
                                 KubernetesAction.ARGO_ROLLOUTS -> onArgoRollouts()
@@ -224,8 +215,6 @@ fun KubernetesScreen(
                             when (action) {
                                 KubernetesAction.SHARE -> tab < ShareTarget.KUBE_TABS.size
                                 KubernetesAction.FLOWS -> hasFlows
-                                KubernetesAction.API_ADDRESS -> fingerprint != null
-                                KubernetesAction.CLEAN_UP_PODS -> tab == 1
                                 KubernetesAction.CROSSPLANE -> hasCrossplane
                                 KubernetesAction.TAILSCALE -> hasTailscale
                                 KubernetesAction.ARGO_ROLLOUTS -> hasRollouts
@@ -236,13 +225,14 @@ fun KubernetesScreen(
                                 else -> true
                             }
                         },
+                        groups = kubernetesActionGroups,
                     )
                 },
             )
         },
     ) { padding ->
         if (customizing) {
-            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding))
+            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding), groups = kubernetesActionGroups)
             return@Scaffold
         }
         Column(Modifier.pageContent(padding).fillMaxSize()) {
@@ -264,6 +254,7 @@ fun KubernetesScreen(
                         focusKey = focusKey(page),
                         onFocused = onFocused,
                         pullLinks = pullLinks,
+                        onCleanUp = { sanitizing = true },
                     )
                     2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey(page), onFocused = onFocused)
                     else -> NetPerfTab(netPerf)

@@ -5,6 +5,7 @@ import name.levis.ichor.renameCluster
 import name.levis.ichor.setVpnOnly
 import name.levis.ichor.setWatched
 import name.levis.ichor.setAuditEvents
+import name.levis.ichor.setKubeServer
 import name.levis.ichor.setKubeAccess
 import name.levis.ichor.removeCluster
 import android.widget.Toast
@@ -53,6 +54,7 @@ fun ManageClustersSheet(
     val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
     val unwatched by app.unwatchedClusters.fingerprints.collectAsStateWithLifecycle()
     val auditEvents by app.auditEventClusters.fingerprints.collectAsStateWithLifecycle()
+    val kubeServers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var account by remember { mutableStateOf<ContextSummary?>(null) }
@@ -114,6 +116,9 @@ fun ManageClustersSheet(
         auditEvents = auditEvents,
         onAuditEvents = app::setAuditEvents,
         onRepository = { repository = it },
+        kubeServers = kubeServers,
+        // An open Kubernetes screen reloads its lists through the new address.
+        onKubeServer = { cluster, server -> app.setKubeServer(cluster.fingerprint, server) },
     )
 
     repository?.let { cluster ->

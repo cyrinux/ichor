@@ -2218,6 +2218,8 @@
     <string name="kube_server_title">Адреса Kubernetes API</string>
     <string name="kube_server_label">Адреса</string>
     <string name="kube_server_hint">Використовується замість адреси з kubeconfig, який видає Talos, наприклад переадресація порту, балансувальник навантаження або публічне ім’я: хост, хост:порт або https URL. Без порту використовується порт із kubeconfig. Сертифікат і далі перевіряється за власною адресою кластера. Залиште порожнім, щоб знову використовувати адресу з kubeconfig. Лише на цьому пристрої.</string>
+    <string name="cluster_kube_server_menu">Адреса Kubernetes API…</string>
+    <string name="cluster_kube_server_set">Адреса API: %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Поди</string>
@@ -4983,6 +4985,9 @@
     <string name="read_progress_step_wait_idle">Очікування другої вибірки</string>
     <string name="read_progress_step_scrape2">Друга вибірка метрик</string>
     <string name="capacity_title">Ємність</string>
+    <string name="kube_menu_explore">Огляд</string>
+    <string name="kube_menu_health">Стан</string>
+    <string name="kube_menu_installed">Встановлено тут</string>
     <string name="capacity_intro">Вільне місце рахує requests щодо allocatable, як планувальник; використання надходить із metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: втрата будь-якого вузла не залишає подів у Pending</string>
     <string name="capacity_n_plus_one_short">Втрата %1$s залишає %2$s подів у Pending</string>

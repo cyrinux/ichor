@@ -2084,6 +2084,8 @@
     <string name="kube_server_title">Kubernetes-API-Adresse</string>
     <string name="kube_server_label">Adresse</string>
     <string name="kube_server_hint">Wird statt der Adresse in der von Talos ausgestellten kubeconfig verwendet, z. B. eine Portweiterleitung, ein Load Balancer oder ein öffentlicher Name: Host, Host:Port oder eine https-URL. Ohne Port wird der aus der kubeconfig verwendet. Das Zertifikat wird weiterhin gegen die eigene Adresse des Clusters geprüft. Leer lassen, um wieder die der kubeconfig zu verwenden. Nur auf diesem Gerät.</string>
+    <string name="cluster_kube_server_menu">Kubernetes-API-Adresse…</string>
+    <string name="cluster_kube_server_set">API-Adresse: %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pods</string>
@@ -4745,6 +4747,9 @@
     <string name="read_progress_step_wait_idle">Warten auf die zweite Stichprobe</string>
     <string name="read_progress_step_scrape2">Zweite Metrik-Stichprobe</string>
     <string name="capacity_title">Kapazität</string>
+    <string name="kube_menu_explore">Erkunden</string>
+    <string name="kube_menu_health">Zustand</string>
+    <string name="kube_menu_installed">Hier installiert</string>
     <string name="capacity_intro">Freier Platz zählt Requests gegen Allocatable, wie der Scheduler; die Nutzung kommt von metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: der Verlust eines beliebigen Knotens lässt keinen Pod Pending</string>
     <string name="capacity_n_plus_one_short">Der Verlust von %1$s lässt %2$s Pods Pending</string>

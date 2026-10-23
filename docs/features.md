@@ -14,7 +14,7 @@ Part of the [Ichor documentation](../README.md#documentation).
   `kubectl get pods` status (a pod that cannot pull its image says why: not found, pull limit,
   pull secret, certificate, network, and what to do) and delete one so its controller starts a new one, or only those of
   a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector), or clean up a
-  namespace's dead pods in one tap (Completed, Evicted, CrashLoopBackOff, ImagePullBackOff…, as k9s's `z`
+  namespace's dead pods in one tap from the Pods tab (Completed, Evicted, CrashLoopBackOff, ImagePullBackOff…, as k9s's `z`
   picks them, with a preview to uncheck any first; the sweep runs in the background with a progress
   notification or Live Activity, Stop, and a result when it ends); list CronJobs
   with their schedule, next run and recent runs, and run one now (`kubectl create job --from`,
@@ -35,9 +35,11 @@ Part of the [Ichor documentation](../README.md#documentation).
   policies), follow a pod's log and
   port-forward to it on the phone (127.0.0.1 only); see what gives LoadBalancer Services their
   address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
-  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig. On a Talos
-  cluster the Kubernetes screen's ⋯ menu also leads to Data services and, when the cluster runs
-  them, to the cert-manager and CAST AI lists (any of them can be moved to the bar).
+  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig. Reach the API through another address (a port forward, a load
+  balancer, a public name) from the cluster's row in Manage clusters, on this device only. On a Talos
+  cluster the Kubernetes screen's ⋯ menu reads in three sections (Explore, Health, Installed here) and also leads to
+  Capacity, Data services and, when the cluster runs them, the cert-manager and CAST AI lists (any
+  of them can be moved to the bar).
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. A sync,

@@ -5,6 +5,13 @@ import IchorCore
 protocol BarActionLook {
     var title: Text { get }
     var systemImage: String { get }
+    /// The menu section the action is in, shown under its name in the editor; nil: a menu
+    /// without sections.
+    var groupTitle: Text? { get }
+}
+
+extension BarActionLook {
+    var groupTitle: Text? { nil }
 }
 
 /// The toolbar section of a screen's editor (Android's actionBarItems): its icons, a line, then
@@ -75,7 +82,15 @@ private struct BarRow<Action: BarActionLook>: View {
 
     var body: some View {
         HStack {
-            Label { action.title } icon: { Image(systemName: action.systemImage) }
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    action.title
+                    // Which section of the menu it is in: the menu sorts by them.
+                    if inMenu, let group = action.groupTitle {
+                        group.font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            } icon: { Image(systemName: action.systemImage) }
             Spacer()
             if inMenu {
                 Button(action: toBar) { Image(systemName: "arrow.up.circle") }

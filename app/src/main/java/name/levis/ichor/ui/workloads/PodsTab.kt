@@ -23,6 +23,9 @@ import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.CleaningServices
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -156,6 +159,25 @@ internal fun PodActionDialogs(actions: PodActionState, deletions: PodDeletions) 
 }
 
 /**
+ * Clean up dead pods (k9s sanitize) for [namespace] (null: every namespace), on the tab it acts
+ * on: greyed with the reason when the credentials may not delete pods there. The sheet it opens
+ * lists the pods first and refuses the sweep on the demo.
+ */
+@Composable
+private fun CleanUpChip(namespace: String?, onCleanUp: () -> Unit) {
+    val denial = rememberKubeDenial(KubeAction.SANITIZE_PODS, namespace.orEmpty())
+    Column(Modifier.padding(horizontal = 16.dp)) {
+        AssistChip(
+            onClick = onCleanUp,
+            enabled = denial == null,
+            label = { Text(stringResource(R.string.sanitize_title)) },
+            leadingIcon = { Icon(Icons.Outlined.CleaningServices, contentDescription = null, Modifier.size(AssistChipDefaults.IconSize)) },
+        )
+        KubeDenialNote(denial)
+    }
+}
+
+/**
  * The pods of the scope's namespace (every namespace by default) with the status `kubectl get
  * pods` shows, unhealthy ones first once every page is loaded, their logs, and a delete action
  * so a controller starts a fresh one. [focusKey]: the pod whose logs to open once listed (a
@@ -172,6 +194,8 @@ fun PodsTab(
     focusKey: String? = null,
     onFocused: () -> Unit = {},
     pullLinks: PodPullLinks? = null,
+    /** Opens Clean up dead pods for the scope's namespace; null: no such control here. */
+    onCleanUp: (() -> Unit)? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -213,6 +237,7 @@ fun PodsTab(
         if (sweep != null && sweeping) PodSweepBanner(sweep, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         KubeDenialNote(rememberKubeDenial(KubeAction.DELETE_POD, selected.orEmpty()), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
+        if (onCleanUp != null) CleanUpChip(selected, onCleanUp)
         if (top != null) TopSortChips(sort, { sort = it })
         val refresh: () -> Unit = {
             vm.refresh()
