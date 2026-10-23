@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.settings
 
 import name.levis.ichor.setPrivacyMask
-import name.levis.ichor.setAuditEvents
 import name.levis.ichor.setOfflineCache
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -77,23 +76,7 @@ fun PrivacySection(app: TalosApp) {
         }
     }
     RemoteAppIconsSetting(app)
-    AuditEventsSetting(app)
     OfflineCacheSetting(app)
-}
-
-/** Opt-in: a Kubernetes Event (reason IchorAction) on each object the app changes. */
-@Composable
-private fun AuditEventsSetting(app: TalosApp) {
-    val enabled by app.uiPreferences.auditEvents.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.settings_audit_events), style = MaterialTheme.typography.titleMedium)
-                MutedText(stringResource(R.string.settings_audit_events_desc))
-            }
-            Switch(checked = enabled, onCheckedChange = app::setAuditEvents, modifier = Modifier.padding(start = 12.dp))
-        }
-    }
 }
 
 /** Opt-in: icons the app does not bundle are downloaded by their public name only. */

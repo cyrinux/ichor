@@ -45,6 +45,38 @@ public func settingWatched(_ on: Bool, for context: ContextSummary, contexts: [C
     return unwatched.subtracting(ofCluster + [context.fingerprint])
 }
 
+/// Whether `context`'s cluster is in `members` (by fingerprint): a per-cluster setting that is
+/// off by default, on once any of its contexts is.
+public func clusterFlagged(_ context: ContextSummary, contexts: [ContextSummary], members: Set<String>) -> Bool {
+    let key = monitorClusterKey(context)
+    return members.contains(context.fingerprint)
+        || contexts.contains { monitorClusterKey($0) == key && members.contains($0.fingerprint) }
+}
+
+/// `members` once `context`'s cluster is in it (`on`: every context of the cluster) or not (none).
+public func settingClusterFlag(_ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
+                               members: Set<String>) -> Set<String> {
+    guard !context.fingerprint.isEmpty else { return members }
+    let key = monitorClusterKey(context)
+    let ofCluster = (contexts.filter { monitorClusterKey($0) == key }.map(\.fingerprint) + [context.fingerprint])
+        .filter { !$0.isEmpty }
+    return on ? members.union(ofCluster) : members.subtracting(ofCluster)
+}
+
+/// `members` (by fingerprint) widened to every context of each cluster one of them is of, and
+/// narrowed to `contexts`: a context added to a cluster later gets its setting, as Go keys it.
+public func wholeClusters(_ members: Set<String>, contexts: [ContextSummary]) -> Set<String> {
+    let keys = Set(contexts.filter { members.contains($0.fingerprint) }.map(monitorClusterKey))
+    return Set(contexts.filter { keys.contains(monitorClusterKey($0)) && !$0.fingerprint.isEmpty }.map(\.fingerprint))
+}
+
+/// The clusters that record actions after the update from the app-wide switch: every cluster
+/// but the demo when it was on (`legacyOn`), none when it was off or never set.
+public func seededAuditEventClusters(legacyOn: Bool?, contexts: [ContextSummary]) -> Set<String> {
+    guard legacyOn == true else { return [] }
+    return Set(contexts.filter { !$0.demo && !$0.fingerprint.isEmpty }.map(\.fingerprint))
+}
+
 /// The contexts a background run checks: one per cluster (clusterContexts), but not the
 /// clusters turned off.
 public func monitoredContexts(_ contexts: [ContextSummary], active: String?, unwatched: Set<String>) -> [ContextSummary] {

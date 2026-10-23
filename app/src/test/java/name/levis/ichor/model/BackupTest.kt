@@ -182,6 +182,31 @@ class BackupTest {
     }
 
     @Test
+    fun recordActionsTravelsPerCluster() {
+        val payload = BackupPayload(
+            format = BACKUP_FORMAT_SETTINGS,
+            clusters = backupClusters(
+                listOf("on", "off"), emptyMap(), emptyMap(), emptySet(), emptyMap(), emptyMap(), auditEvents = setOf("on", "gone"),
+            ),
+        )
+        val decoded = TalosJson.decodeFromString(BackupPayload.serializer(), TalosJson.encodeToString(BackupPayload.serializer(), payload))
+
+        assertEquals(setOf("on"), restoredClusters(decoded.clusters, listOf("on", "off")).auditEvents)
+        assertEquals(emptySet<String>(), restoredClusters(decoded.clusters, listOf("off")).auditEvents)
+    }
+
+    @Test
+    fun anOlderBackupRestoresWithoutRecordingActions() {
+        val payload = TalosJson.decodeFromString(
+            BackupPayload.serializer(),
+            """{"format":3,"talosconfig":"","clusters":{"aaaa":{"name":"Home","vpnOnly":true}}}""",
+        )
+        val restored = restoredClusters(payload.clusters, listOf("aaaa"))
+        assertEquals(setOf("aaaa"), restored.vpnOnly)
+        assertEquals(emptySet<String>(), restored.auditEvents)
+    }
+
+    @Test
     fun olderBackupHasNoKubeAuth() {
         val payload = TalosJson.decodeFromString(BackupPayload.serializer(), """{"format":2,"talosconfig":"","kubeconfig":"kind: Config"}""")
         assertNull(payload.kubeAuth)

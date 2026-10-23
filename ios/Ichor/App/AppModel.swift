@@ -126,6 +126,11 @@ final class AppModel {
     // Internal, not private(set): AppModel+Settings.swift sets it.
     var monitorUnwatched: Set<String>
 
+    /// The clusters that record actions ("Record actions in the cluster": a Kubernetes Event on
+    /// each object the app changes there), by context fingerprint; off by default.
+    // Internal, not private(set): AppModel+Settings.swift sets it.
+    var auditEventClusters: Set<String>
+
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
     }
@@ -184,6 +189,7 @@ final class AppModel {
         clusterRepos = ClusterRepoStore.decode(UserDefaults.standard.data(forKey: ClusterRepoStore.key))
         proposals = ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
         monitorUnwatched = Set(UserDefaults.standard.stringArray(forKey: BackgroundMonitor.unwatchedKey) ?? [])
+        auditEventClusters = Set(UserDefaults.standard.stringArray(forKey: AuditEventKeys.clusters) ?? [])
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
         // The background monitor saved the proposals' states (merged, closed).
         NotificationCenter.default.addObserver(forName: .proposalsChanged, object: nil, queue: .main) { [weak self] _ in

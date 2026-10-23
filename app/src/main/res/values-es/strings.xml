@@ -1973,7 +1973,6 @@
     <string name="settings_offline_cache">Conservar el último estado conocido</string>
     <string name="settings_offline_cache_desc">Guarda en este teléfono, cifrados, los últimos datos recibidos de cada clúster, para seguir mostrándolos cuando no se pueda acceder a él. Se conservan 24 horas y nunca se incluyen en copias de seguridad.</string>
     <string name="settings_audit_events">Registrar las acciones en el clúster</string>
-    <string name="settings_audit_events_desc">Escribe además un Event de Kubernetes (motivo IchorAction) en cada objeto que la app cambia, para que el propio historial del clúster muestre lo que hizo el teléfono: kubectl get events, las cronologías de Argo CD o Lens. Solo para objetos de Kubernetes: los reinicios de nodos y los cambios de Talos no envían nada. Mejor esfuerzo, nunca bloquea una acción.</string>
     <string name="settings_startup_trace">Tiempos de arranque en logcat</string>
     <string name="settings_startup_trace_summary">Registra cuánto tarda cada paso de un arranque en frío (configuración, conexión al clúster, primer nodo, pantalla de inicio), para un informe de error: adb logcat -s Ichor.Startup. Solo duraciones y recuentos, nunca un nombre de clúster ni una dirección. Se queda en el teléfono.</string>
     <string name="about_icon_credits">Iconos de aplicaciones: Dashboard Icons (Apache 2.0) y selfh.st/icons (CC BY 4.0). Los nombres y logotipos de las aplicaciones son marcas de sus propietarios.</string>

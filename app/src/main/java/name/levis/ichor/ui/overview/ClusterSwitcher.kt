@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.EventAvailable
 import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Key
@@ -259,6 +260,8 @@ fun ClusterSheet(
     onActivity: ((ContextSummary) -> Unit)? = null,
     unwatched: Set<String> = emptySet(),
     onWatch: ((ContextSummary, Boolean) -> Unit)? = null,
+    auditEvents: Set<String> = emptySet(),
+    onAuditEvents: ((ContextSummary, Boolean) -> Unit)? = null,
     onRepository: ((ContextSummary) -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
@@ -295,6 +298,9 @@ fun ClusterSheet(
                     onVpnOnly = { on: Boolean -> onVpnOnly(context, on) }.takeIf { context.fingerprint.isNotBlank() },
                     watched = context.fingerprint !in unwatched,
                     onWatch = onWatch?.let { set -> { on: Boolean -> set(context, on) } }?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
+                    recordsActions = context.fingerprint in auditEvents,
+                    onRecordActions = onAuditEvents?.let { set -> { on: Boolean -> set(context, on) } }
+                        ?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
                     onRemove = { removing = context },
                     // Not in screenshot mode (the endpoints shown are fake), nor for the demo, nor for a
                     // cluster added from a kubeconfig (its server is no Talos endpoint).
@@ -403,6 +409,8 @@ private fun ClusterRow(
     onVpnOnly: ((Boolean) -> Unit)?,
     watched: Boolean,
     onWatch: ((Boolean) -> Unit)?,
+    recordsActions: Boolean,
+    onRecordActions: ((Boolean) -> Unit)?,
     onRemove: () -> Unit,
     onEndpoints: (() -> Unit)?,
     signInNeeded: Boolean,
@@ -458,6 +466,8 @@ private fun ClusterRow(
                 onVpnOnly = onVpnOnly,
                 watched = watched,
                 onWatch = onWatch,
+                recordsActions = recordsActions,
+                onRecordActions = onRecordActions,
                 onEndpoints = onEndpoints,
                 account = account,
                 onActivity = onActivity,
@@ -486,6 +496,8 @@ private fun ClusterRowMenu(
     onVpnOnly: ((Boolean) -> Unit)?,
     watched: Boolean,
     onWatch: ((Boolean) -> Unit)?,
+    recordsActions: Boolean,
+    onRecordActions: ((Boolean) -> Unit)?,
     onEndpoints: (() -> Unit)?,
     account: Pair<Int, () -> Unit>?,
     onActivity: (() -> Unit)?,
@@ -531,6 +543,15 @@ private fun ClusterRowMenu(
                     leadingIcon = { Icon(Icons.Outlined.NotificationsActive, contentDescription = null) },
                     trailingIcon = { Checkbox(checked = watched, onCheckedChange = null) },
                     onClick = { toggle(!watched) },
+                )
+            }
+            onRecordActions?.let { toggle ->
+                // Off by default: a Kubernetes Event on each object the app changes in this cluster.
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.settings_audit_events)) },
+                    leadingIcon = { Icon(Icons.Outlined.EventAvailable, contentDescription = null) },
+                    trailingIcon = { Checkbox(checked = recordsActions, onCheckedChange = null) },
+                    onClick = { toggle(!recordsActions) },
                 )
             }
             onEndpoints?.let {

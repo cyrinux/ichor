@@ -2083,7 +2083,6 @@
     <string name="settings_offline_cache">Зберігати останній відомий стан</string>
     <string name="settings_offline_cache_desc">Зберігає на цьому телефоні в зашифрованому вигляді останні дані, отримані від кожного кластера, щоб показувати їх, коли кластер недосяжний. Зберігаються 24 години, ніколи не потрапляють у резервні копії.</string>
     <string name="settings_audit_events">Записувати дії в кластері</string>
-    <string name="settings_audit_events_desc">Також записує Kubernetes Event (причина IchorAction) на кожен об’єкт, який змінює застосунок, щоб історія самого кластера показувала, що зробив телефон: kubectl get events, хронології Argo CD чи Lens. Лише для об’єктів Kubernetes: перезавантаження вузлів і зміни Talos нічого не надсилають. За можливості, ніколи не блокує дію.</string>
     <string name="settings_startup_trace">Час запуску в logcat</string>
     <string name="settings_startup_trace_summary">Записує, скільки триває кожен крок холодного запуску (конфігурація, підключення до кластера, перший вузол, головний екран), для звіту про помилку: adb logcat -s Ichor.Startup. Лише тривалості й кількості, ніколи назва кластера чи адреса. Залишається на телефоні.</string>
     <string name="about_icon_credits">Значки застосунків: Dashboard Icons (Apache 2.0) і selfh.st/icons (CC BY 4.0). Назви й логотипи застосунків є торговими марками їхніх власників.</string>

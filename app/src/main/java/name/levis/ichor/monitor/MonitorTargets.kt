@@ -15,6 +15,13 @@ fun clusterFingerprints(summary: ConfigSummary, context: ContextSummary): List<S
 }
 
 /**
+ * [members] (by fingerprint) widened to every context of each cluster one of them is of, and
+ * narrowed to the contexts of [summary]: a context added to a cluster later gets its setting.
+ */
+fun wholeClusters(members: Set<String>, summary: ConfigSummary): Set<String> =
+    summary.contexts.filter { it.fingerprint in members }.flatMap { clusterFingerprints(summary, it) }.toSet()
+
+/**
  * The contexts a background check reads: one per cluster, the [active] one when it is of that
  * cluster, else its first. A cluster any context of which is [unwatched] (by fingerprint) is
  * left out, and so is the demo unless it is on screen.

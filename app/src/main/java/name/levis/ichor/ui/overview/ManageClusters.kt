@@ -4,6 +4,7 @@ import name.levis.ichor.selectCluster
 import name.levis.ichor.renameCluster
 import name.levis.ichor.setVpnOnly
 import name.levis.ichor.setWatched
+import name.levis.ichor.setAuditEvents
 import name.levis.ichor.setKubeAccess
 import name.levis.ichor.removeCluster
 import android.widget.Toast
@@ -51,6 +52,7 @@ fun ManageClustersSheet(
     val app = context.applicationContext as TalosApp
     val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
     val unwatched by app.unwatchedClusters.fingerprints.collectAsStateWithLifecycle()
+    val auditEvents by app.auditEventClusters.fingerprints.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var account by remember { mutableStateOf<ContextSummary?>(null) }
@@ -109,6 +111,8 @@ fun ManageClustersSheet(
         removingNames = removingNames,
         unwatched = unwatched,
         onWatch = app::setWatched,
+        auditEvents = auditEvents,
+        onAuditEvents = app::setAuditEvents,
         onRepository = { repository = it },
     )
 

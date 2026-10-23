@@ -182,8 +182,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   of its own, or a file with `${...}` substitutions, is edited by hand.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
-  some pods could not be deleted) or failed. Optionally
-  (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a
+  some pods could not be deleted) or failed. Optionally, per cluster (Clusters → the cluster's
+  menu → Record actions in the cluster, off by default), each Kubernetes object the app changes there also gets a
   Kubernetes Event, reason `IchorAction`, so the cluster's own history shows what the phone
   did (`kubectl get events`, the Argo CD timeline); node reboots and Talos changes have no
   object to attach it to and send nothing.

@@ -68,6 +68,8 @@ class BackupManager(
     private val proposals: ProposalsStore? = null,
     /** The imported plugins (format 5); null leaves them out. */
     private val plugins: PluginRepository? = null,
+    /** The clusters that record actions; null leaves them out. */
+    private val auditEvents: AuditEventClusters? = null,
 ) {
     /**
      * The backup file of the stored config and settings, sealed as [seal] says (the app's format,
@@ -112,6 +114,7 @@ class BackupManager(
                     kubeServers.servers.value,
                     kubeAccess.links.value,
                     clusterRepos.repos.value,
+                    auditEvents?.fingerprints?.value.orEmpty(),
                 ),
                 kubeAuth = backupKubeAuth(signInKeys(stored.summary.contexts), kubeAuth.all(), Ichorgo::kubeAuthForBackup),
                 // The real scope only (pinScope with screenshot mode off): masked pins hold made-up names.
@@ -172,6 +175,7 @@ class BackupManager(
         fingerprints.forEach { fp ->
             names.set(fp, restored.names[fp].orEmpty())
             vpnOnly.set(fp, fp in restored.vpnOnly)
+            auditEvents?.set(fp, fp in restored.auditEvents)
             // Checked like a typed one: an address the Go core refuses is dropped.
             kubeServers.set(fp, restored.kubeServers[fp]?.let { runCatching { Ichorgo.normalizeKubeServer(it) }.getOrNull() }.orEmpty())
             kubeAccess.set(fp, restored.kubeAccess[fp])

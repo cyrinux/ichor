@@ -10,7 +10,8 @@ import (
 
 // Optionally, each Kubernetes object the app changes also gets a Kubernetes Event (reason
 // IchorAction) telling what the phone did, so the cluster's own history shows it: `kubectl
-// get events`, the Argo CD or Lens timelines. Off unless SetAuditEvents(true). Best effort:
+// get events`, the Argo CD or Lens timelines. Per cluster: only on the clusters
+// SetAuditEventClusters names, off everywhere else (and until called). Best effort:
 // an Event that cannot be written (RBAC on events, namespace gone) never fails the action and
 // is not retried. Only actions on a namespaced Kubernetes object get one: node reboots and
 // Talos changes have no object to attach it to.
@@ -24,21 +25,90 @@ const (
 )
 
 var (
-	auditEvents atomic.Bool
+	// auditEventClusters holds the fingerprints of the clusters that record actions. The set
+	// is never changed in place: SetAuditEventClusters swaps in a new one.
+	auditEventClusters atomic.Pointer[map[string]struct{}]
 	// auditEventPosted is called once an Event was sent or given up (tests wait on it).
 	auditEventPosted func()
 )
 
-// SetAuditEvents turns the Kubernetes Events on the objects the app changes on or off (off
-// until called). The apps call it at start with the saved setting and when it changes.
-func SetAuditEvents(enabled bool) { auditEvents.Store(enabled) }
+// SetAuditEventClusters names the clusters whose changed objects get a Kubernetes Event: their
+// context fingerprints (ContextSummary.fingerprint, every context of the cluster), one per
+// line; "" turns the Events off everywhere. The apps call it at start with the saved choice
+// and after each change, with the whole set.
+func SetAuditEventClusters(fingerprints string) {
+	set := map[string]struct{}{}
 
-// auditEventWanted says whether entry e gets a Kubernetes Event: the setting is on, the
-// cluster is real, and the action touched a namespaced object ("Kind/name").
-func auditEventWanted(e auditEntry) bool {
+	for _, f := range strings.Split(fingerprints, "\n") {
+		if f = strings.TrimSpace(f); f != "" {
+			set[f] = struct{}{}
+		}
+	}
+
+	auditEventClusters.Store(&set)
+}
+
+// auditEventsSomewhere says whether at least one cluster records actions.
+func auditEventsSomewhere() bool {
+	set := auditEventClusters.Load()
+
+	return set != nil && len(*set) > 0
+}
+
+// auditEventWanted says whether entry e, on the cluster with that context fingerprint, gets a
+// Kubernetes Event: the cluster records actions, it is real, and the action touched a
+// namespaced object ("Kind/name").
+func auditEventWanted(e auditEntry, fingerprint string) bool {
 	kind, name, ok := strings.Cut(e.Object, "/")
+	if e.Demo || e.Namespace == "" || !ok || kind == "" || name == "" || fingerprint == "" {
+		return false
+	}
 
-	return auditEvents.Load() && !e.Demo && e.Namespace != "" && ok && kind != "" && name != ""
+	set := auditEventClusters.Load()
+	if set == nil {
+		return false
+	}
+
+	_, on := (*set)[fingerprint]
+
+	return on
+}
+
+// auditClusterFingerprint is the fingerprint of the context an action ran on, as the apps key
+// their per-cluster settings: a Talos context's (contextFingerprint) or a kubeconfig context's
+// (kubeFingerprint), told apart by the config, never by the name alone. contextName is the
+// unmasked name; "" is the config's current context. "" when the context is unknown.
+func auditClusterFingerprint(configYAML, contextName string) string {
+	if configYAML == "" {
+		return ""
+	}
+
+	if isKubeconfig(configYAML) {
+		doc, err := loadKubeconfigDoc(configYAML)
+		if err != nil {
+			return ""
+		}
+
+		if contextName == "" {
+			contextName = doc.currentName()
+		}
+
+		ctx, ok := doc.context(contextName)
+		if !ok {
+			return ""
+		}
+
+		cluster, _ := doc.cluster(ctx.Context.Cluster)
+
+		return kubeFingerprint(contextName, cluster)
+	}
+
+	name, ctx, err := resolveContext(configYAML, contextName)
+	if err != nil {
+		return ""
+	}
+
+	return contextFingerprint(name, ctx)
 }
 
 // postAuditEvent writes the Event for e in the background, on the cluster the action ran on.

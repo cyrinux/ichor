@@ -118,11 +118,12 @@ extension AppModel {
     /// Restored names (all of them) and colors (the others keep the one just assigned) of the stored clusters.
     func restoreClusterSettings(names: [String: String], colors: [String: Int], kubeServers servers: [String: String],
                                 vpnOnly restoredVpnOnly: Set<String> = [], kubeAccess links: [String: String] = [:],
-                                repos: [String: ClusterRepo] = [:]) {
+                                repos: [String: ClusterRepo] = [:], auditEvents restoredAuditEvents: Set<String> = []) {
         storeColors(clusterColors.merging(colors) { _, new in new })
         storeNames(names)
         storeKubeServers(servers)
         storeVpnOnly(restoredVpnOnly)
+        storeAuditEventClusters(restoredAuditEvents)
         storeKubeAccess(links)
         storeClusterRepos(repos)
     }
@@ -313,6 +314,16 @@ extension AppModel {
         storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSkippedTalosUpdates(keepClusterNames(saved: skippedTalosUpdates, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        // The app-wide "Record actions" switch of older versions, once: on, every cluster keeps it.
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: AuditEventKeys.enabled) != nil {
+            let seeded = seededAuditEventClusters(legacyOn: defaults.bool(forKey: AuditEventKeys.enabled),
+                                                  contexts: newSummary.contexts)
+            defaults.removeObject(forKey: AuditEventKeys.enabled)
+            storeAuditEventClusters(auditEventClusters.union(seeded))
+        }
+        // Per cluster: a context added to a recording cluster records too; removed ones go.
+        storeAuditEventClusters(wholeClusters(auditEventClusters, contexts: newSummary.contexts))
         storeClusterRepos(ClusterRepoStore.keep(clusterRepos, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeProposals(ProposalsStore.keep(storedProposals, fingerprints: newSummary.contexts.map(\.fingerprint)))
         // Sign-ins and Kubernetes access links go with their clusters.

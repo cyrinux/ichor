@@ -91,6 +91,8 @@ data class BackupCluster(
     val kubeAccess: String? = null,
     /** The cluster's own Git repository (Settings → cluster → Cluster repository); never a token. */
     val repository: BackupClusterRepo? = null,
+    /** "Record actions in the cluster" (a Kubernetes Event per change); absent in older backups: off. */
+    val auditEvents: Boolean = false,
 )
 
 @Serializable
@@ -152,6 +154,7 @@ fun backupClusters(
     kubeServers: Map<String, String>,
     kubeAccess: Map<String, String> = emptyMap(),
     repos: Map<String, ClusterRepo> = emptyMap(),
+    auditEvents: Set<String> = emptySet(),
 ): Map<String, BackupCluster> = fingerprints.filter { it.isNotBlank() }.distinct().associateWith { fp ->
     BackupCluster(
         name = names[fp],
@@ -163,6 +166,7 @@ fun backupClusters(
         kubeServer = kubeServers[fp],
         kubeAccess = kubeAccess[fp],
         repository = repos[fp]?.let { BackupClusterRepo(it.repoURL, it.branch, it.talosDir, it.kubernetesDir) },
+        auditEvents = fp in auditEvents,
     )
 }
 
@@ -179,6 +183,8 @@ data class RestoredClusters(
     val kubeAccess: Map<String, String> = emptyMap(),
     /** Normalized; one without an address is dropped. */
     val repos: Map<String, ClusterRepo> = emptyMap(),
+    /** The clusters that record actions. */
+    val auditEvents: Set<String> = emptySet(),
 )
 
 /** [clusters] narrowed to [fingerprints] (the restored config's) and validated. */
@@ -199,6 +205,7 @@ fun restoredClusters(clusters: Map<String, BackupCluster>, fingerprints: List<St
         repos = known.mapNotNull { (fp, c) ->
             c.repository?.let { normalizeClusterRepo(ClusterRepo(it.repoURL, it.branch, it.talosDir, it.kubernetesDir)) }?.let { fp to it }
         }.toMap(),
+        auditEvents = known.filterValues { it.auditEvents }.keys,
     )
 }
 

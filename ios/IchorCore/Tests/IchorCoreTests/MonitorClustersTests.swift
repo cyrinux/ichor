@@ -36,6 +36,32 @@ final class MonitorClustersTests: XCTestCase {
         XCTAssertEqual(settingWatched(false, for: ContextSummary(name: "x"), contexts: contexts, unwatched: []), [])
     }
 
+    func testClusterFlagCoversEveryContextOfTheCluster() {
+        // On from one context: every context of its cluster records, the other clusters do not.
+        let on = settingClusterFlag(true, for: contexts[1], contexts: contexts, members: [])
+        XCTAssertEqual(on, ["fa", "fb"])
+        XCTAssertTrue(clusterFlagged(contexts[0], contexts: contexts, members: on))
+        XCTAssertFalse(clusterFlagged(contexts[2], contexts: contexts, members: on))
+        // Off from the other context clears both.
+        XCTAssertEqual(settingClusterFlag(false, for: contexts[0], contexts: contexts, members: on.union(["fc"])), ["fc"])
+        XCTAssertEqual(settingClusterFlag(true, for: ContextSummary(name: "x"), contexts: contexts, members: []), [])
+    }
+
+    func testWholeClustersReachAContextAddedLater() {
+        // "fa" was set before "fb", another context of the same cluster, was added.
+        XCTAssertEqual(wholeClusters(["fa"], contexts: contexts), ["fa", "fb"])
+        // A removed cluster's fingerprint goes; the other clusters are untouched.
+        XCTAssertEqual(wholeClusters(["fc", "gone"], contexts: contexts), ["fc"])
+        XCTAssertEqual(wholeClusters([], contexts: contexts), [])
+    }
+
+    func testSeededAuditEventClusters() {
+        let withDemo = contexts + [ContextSummary(name: "demo", fingerprint: "fz", demo: true), ContextSummary(name: "blank")]
+        XCTAssertEqual(seededAuditEventClusters(legacyOn: true, contexts: withDemo), ["fa", "fb", "fc", "fd"])
+        XCTAssertEqual(seededAuditEventClusters(legacyOn: false, contexts: withDemo), [])
+        XCTAssertEqual(seededAuditEventClusters(legacyOn: nil, contexts: withDemo), [])
+    }
+
     private func snapshot(_ context: String) -> ClusterSnapshot {
         ClusterSnapshot(context: context, takenAt: Date(timeIntervalSince1970: 1_000),
                         nodes: ["10.0.0.2": NodeState(hostname: "cp-1", health: .ready, reason: "")])

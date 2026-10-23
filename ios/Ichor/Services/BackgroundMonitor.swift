@@ -205,6 +205,7 @@ enum BackgroundMonitor {
     /// "unreachable" alert after a few runs in a row.
     static func check() async {
         TalosClient.applyStoredPrivacyMask() // also set at launch; keeps this path self-contained
+        TalosClient.applyStoredAuditEvents()
         // Both stores, as the app lists them: the saved position counts kubeconfig clusters too.
         let stored = StoredConfigs.load()
         let parsed = await stored.parsed()

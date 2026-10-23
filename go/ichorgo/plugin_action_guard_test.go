@@ -101,7 +101,7 @@ func TestChangedSinceChecked(t *testing.T) {
 // TestKubePluginActionParamsCap: params over 16 KiB are refused and recorded by size only.
 func TestKubePluginActionParamsCap(t *testing.T) {
 	withDataDir(t)
-	SetAuditEvents(false)
+	SetAuditEventClusters("")
 	usePlugins(t, "actions.yaml")
 	noKubeDial(t)
 

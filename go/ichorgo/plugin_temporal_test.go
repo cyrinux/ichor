@@ -224,7 +224,7 @@ func TestTemporalSchedulePause(t *testing.T) {
 	}{{"pauseSchedule", "hourly", true}, {"unpauseSchedule", "nightly", false}} {
 		t.Run(c.action, func(t *testing.T) {
 			withDataDir(t)
-			SetAuditEvents(false)
+			SetAuditEventClusters("")
 			useBuiltinPlugin(t, "temporal-operator", tpNow)
 
 			path := tpOperator + "namespaces/shop/temporalschedules/" + c.name

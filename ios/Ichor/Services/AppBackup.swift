@@ -43,7 +43,8 @@ enum AppBackup {
                 vpnOnly: model.vpnOnly,
                 wakeOnLan: WakeOnLanStore.shared.allTargets,
                 kubeAccess: model.kubeAccess,
-                repos: model.clusterRepos
+                repos: model.clusterRepos,
+                auditEvents: model.auditEventClusters
             ),
             kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints),
             // iOS pins nothing in screenshot mode: the stored pins are all of the real scope.
@@ -103,7 +104,8 @@ enum AppBackup {
             }
         }
         model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers,
-                                     vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess, repos: restored.repos)
+                                     vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess, repos: restored.repos,
+                                     auditEvents: restored.auditEvents)
         // After the configs: the sign-ins of the kubeconfig and Omni clusters restored.
         KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.signInFingerprints))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)
