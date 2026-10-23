@@ -6,6 +6,8 @@ import IchorCore
 struct SupportSection: View {
     @Environment(AppModel.self) private var model
     @AppStorage(StartupTrace.defaultsKey) private var startupTrace = false
+    /// The bug forms in the in-app browser (SafariView says why not a Link).
+    @State private var browsing: URL?
 
     var body: some View {
         Section {
@@ -40,7 +42,7 @@ struct SupportSection: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Link(destination: IntegrationLinks.reportBug) { Label("Report a bug", systemImage: "ladybug") }
+            Button { browsing = IntegrationLinks.reportBug } label: { Label("Report a bug", systemImage: "ladybug") }
             Toggle(isOn: $startupTrace) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Startup timing in the log")
@@ -53,5 +55,6 @@ struct SupportSection: View {
         } header: {
             Text("Support")
         }
+        .safariSheet($browsing)
     }
 }

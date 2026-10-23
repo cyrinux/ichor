@@ -62,7 +62,7 @@ fun SupportSection(summary: ContextSummary?, onSupportBundle: () -> Unit, onActi
         }
     }
     val context = LocalContext.current
-    OutlinedButton(onClick = { openUrl(context, REPORT_BUG_URL) }, modifier = Modifier.fillMaxWidth()) {
+    OutlinedButton(onClick = { openInBrowser(context, REPORT_BUG_URL) }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.settings_report_bug))
     }
     StartupTraceSetting(context.applicationContext as TalosApp)

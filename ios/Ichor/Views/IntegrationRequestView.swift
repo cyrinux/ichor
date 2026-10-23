@@ -7,6 +7,8 @@ import IchorCore
 struct IntegrationRequestView: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<IntegrationReport> = .loading
+    /// The GitHub page shown in the in-app browser (SafariView says why not openURL).
+    @State private var browsing: URL?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { report in
@@ -21,9 +23,9 @@ struct IntegrationRequestView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                ForEach(report.families) { IntegrationFamilySection(family: $0) }
+                ForEach(report.families) { IntegrationFamilySection(family: $0, browsing: $browsing) }
                 Section {
-                    Link(destination: IntegrationLinks.newRequest) {
+                    Button { browsing = IntegrationLinks.newRequest } label: {
                         Label("Suggest something else", systemImage: "plus.bubble")
                     }
                 } footer: {
@@ -37,6 +39,7 @@ struct IntegrationRequestView: View {
         }
         .navigationTitle("Request an integration")
         .navigationBarTitleDisplayMode(.inline)
+        .safariSheet($browsing)
         .task { await load() }
     }
 
@@ -50,9 +53,9 @@ struct IntegrationRequestView: View {
 /// request itself.
 private struct IntegrationFamilySection: View {
     let family: IntegrationFamily
+    @Binding var browsing: URL?
     @State private var picked: Set<String> = []
     @State private var error: String?
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
         Section {
@@ -77,7 +80,7 @@ private struct IntegrationFamilySection: View {
             }
             HStack {
                 Button("Search existing") {
-                    if let url = TalosClient.integrationSearchURL(repo: IntegrationLinks.repo, family: family.id) { openURL(url) }
+                    browsing = TalosClient.integrationSearchURL(repo: IntegrationLinks.repo, family: family.id)
                 }
                 .buttonStyle(.bordered)
                 Spacer()
@@ -99,7 +102,7 @@ private struct IntegrationFamilySection: View {
         do {
             let url = try await TalosClient.integrationIssueURL(repo: IntegrationLinks.repo, family: family.picking(picked), app: IntegrationLinks.app)
             error = nil
-            if let url { openURL(url) }
+            browsing = url
         } catch {
             self.error = error.localizedDescription
         }

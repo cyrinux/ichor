@@ -1,5 +1,4 @@
 import SwiftUI
-import SafariServices
 import UniformTypeIdentifiers
 import IchorCore
 
@@ -82,9 +81,7 @@ struct PortForwardView: View {
         .themedBackground()
         .navigationTitle(Text("Port forward"))
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $browsing.isPresent()) {
-            if let browsing { SafariView(url: browsing).ignoresSafeArea() }
-        }
+        .safariSheet($browsing)
         .messageAlert($message)
         .task(id: kubeNamespacesKey(model)) { await loadPorts() }
         // Runs while a port is forwarded and the screen shown: cancelling it stops the forward.
@@ -208,15 +205,4 @@ struct PortForwardView: View {
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: text]], options: [.localOnly: true])
         message = String(localized: "Copied.")
     }
-}
-
-/// The in-app browser: the app stays in the foreground, so the forward keeps running.
-private struct SafariView: UIViewControllerRepresentable {
-    let url: URL
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        SFSafariViewController(url: url)
-    }
-
-    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
