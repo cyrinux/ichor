@@ -24,6 +24,9 @@ struct KubernetesView: View {
         /// Every kind the API server serves (the resource browser).
         case resources
         case helm
+        case storage
+        case services
+        case jobs
         /// The cluster's events kept live.
         case events
         /// Kyverno's admission policies (`policies` is the network ones).
@@ -125,7 +128,6 @@ struct KubernetesView: View {
         case .share: sharedTab != nil
         case .flows: cilium?.installed == true
         case .apiAddress: editable != nil
-        case .cleanUpPods: tab == .pods
         case .crossplane: operators.crossplane
         case .tailscale: operators.tailscale
         case .argoRollouts: operators.argoRollouts
@@ -154,6 +156,9 @@ struct KubernetesView: View {
         case .flows: netScreen = .flows(HubbleFilter())
         case .resources: netScreen = .resources
         case .helm: netScreen = .helm
+        case .storage: netScreen = .storage
+        case .services: netScreen = .services
+        case .jobs: netScreen = .jobs
         case .events: netScreen = .events
         case .admissionPolicies: netScreen = .admissionPolicies
         case .autoscaling: netScreen = .autoscaling
@@ -164,8 +169,6 @@ struct KubernetesView: View {
         case .clusterLifecycle: netScreen = .clusterLifecycle
         case .dataServices: netScreen = .dataServices(kind: nil, solo: false)
         case .certManager, .castai: netScreen = .dataServices(kind: action.dataServiceKind, solo: true)
-        // The namespace listed; every namespace when none is picked.
-        case .cleanUpPods: sanitizing = true
         case .apiAddress:
             serverInput = model.client?.kubeServer ?? ""
             editingServer = true
@@ -181,7 +184,9 @@ struct KubernetesView: View {
         Group {
             switch tab {
             case .workloads: WorkloadsList(list: workloads, control: scopeControl, query: query, focus: focus)
-            case .pods: PodsList(list: pods, control: scopeControl, query: query, onFlows: podFlows, focus: focus)
+            // Clean up dead pods for the namespace listed (every namespace when none is picked).
+            case .pods: PodsList(list: pods, control: scopeControl, query: query, onFlows: podFlows, focus: focus,
+                                 onCleanUp: { sanitizing = true })
             case .cronJobs: CronJobsList(list: cronJobs, control: scopeControl, query: query, focus: focus)
             case .network: NetPerfView(session: netPerf)
             }
@@ -196,8 +201,15 @@ struct KubernetesView: View {
                 // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
                 ForEach(bar.icons.filter(offered)) { action in barButton(action) }
                 Menu {
+                    // In sections (Explore, Health, Installed here); the saved order holds inside each.
                     let menu = bar.menu.filter(offered)
-                    ForEach(menu) { action in barButton(action) }
+                    ForEach(groupedMenu(menu)) { section in
+                        Section {
+                            ForEach(section.actions) { action in barButton(action) }
+                        } header: {
+                            section.group.title
+                        }
+                    }
                     if !menu.isEmpty { Divider() }
                     Button { customizingBar = true } label: { Label("Customize top bar", systemImage: "pencil") }
                 } label: {
@@ -232,6 +244,9 @@ struct KubernetesView: View {
             case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)
             case .resources: KubeBrowserView()
             case .helm: HelmReleasesView()
+            case .storage: KubeStorageView()
+            case .services: KubeServicesView()
+            case .jobs: KubeJobsView()
             case .events: KubeLiveEventsView()
             case .admissionPolicies: PoliciesView()
             case .autoscaling: AutoscalingView()
@@ -522,7 +537,20 @@ private struct WorkloadRow: View {
     }
 }
 
+extension KubernetesActionGroup {
+    /// The section's title in the Kubernetes screen's menu and the bar editor.
+    var title: Text {
+        switch self {
+        case .explore: Text("Explore")
+        case .health: Text("Health")
+        case .installed: Text("Installed here")
+        }
+    }
+}
+
 extension KubernetesAction: BarActionLook {
+    var groupTitle: Text? { group.title }
+
     var systemImage: String {
         switch self {
         case .checkup: "stethoscope"
@@ -532,13 +560,16 @@ extension KubernetesAction: BarActionLook {
         case .flows: "point.3.filled.connected.trianglepath.dotted"
         case .resources: "square.grid.3x3"
         case .helm: "shippingbox"
+        // As the Kubernetes home shows them.
+        case .storage: "externaldrive"
+        case .services: "network"
+        case .jobs: "checklist"
         case .events: "list.bullet.rectangle"
         case .apiAddress: "server.rack"
         case .capacity: "gauge.with.dots.needle.33percent"
         case .admissionPolicies: "checkmark.shield"
         case .autoscaling: "arrow.up.and.down"
         case .virtualMachines: "desktopcomputer"
-        case .cleanUpPods: "sparkles"
         case .crossplane: "square.stack.3d.up"
         case .tailscale: "network.badge.shield.half.filled"
         case .argoRollouts: "arrow.triangle.branch"
@@ -557,13 +588,15 @@ extension KubernetesAction: BarActionLook {
         case .flows: Text("Live flows")
         case .resources: Text("Resources")
         case .helm: Text("Helm releases")
+        case .storage: Text("Storage")
+        case .services: Text("Services")
+        case .jobs: Text("Jobs")
         case .events: Text("Kubernetes events")
         case .apiAddress: Text("Kubernetes API address")
         case .capacity: Text(verbatim: CapacityText.capacityTitle)
         case .admissionPolicies: Text("Policies")
         case .autoscaling: Text("Autoscaling")
         case .virtualMachines: Text("Virtual machines")
-        case .cleanUpPods: Text("Clean up dead pods")
         case .crossplane: Text("Crossplane")
         case .tailscale: Text("Tailscale")
         case .argoRollouts: Text("Argo Rollouts")

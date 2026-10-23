@@ -86,6 +86,7 @@ fun KubernetesScreen(
     onNetworkPolicies: () -> Unit,
     onApiHealth: () -> Unit,
     onCheckup: () -> Unit,
+    onCapacity: () -> Unit,
     onFlows: (namespace: String?, pod: String?) -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
@@ -206,7 +207,7 @@ fun KubernetesScreen(
                                 KubernetesAction.POLICIES -> onPolicies()
                                 KubernetesAction.AUTOSCALING -> onAutoscaling()
                                 KubernetesAction.VIRTUAL_MACHINES -> onVirtualMachines()
-                                KubernetesAction.CLEAN_UP_PODS -> sanitizing = true
+                                KubernetesAction.CAPACITY -> onCapacity()
                                 KubernetesAction.CROSSPLANE -> onCrossplane()
                                 KubernetesAction.TAILSCALE -> onTailscale()
                                 KubernetesAction.ARGO_ROLLOUTS -> onArgoRollouts()
@@ -223,7 +224,6 @@ fun KubernetesScreen(
                                 KubernetesAction.SHARE -> tab < ShareTarget.KUBE_TABS.size
                                 KubernetesAction.FLOWS -> hasFlows
                                 KubernetesAction.API_ADDRESS -> fingerprint != null
-                                KubernetesAction.CLEAN_UP_PODS -> tab == 1
                                 KubernetesAction.CROSSPLANE -> hasCrossplane
                                 KubernetesAction.TAILSCALE -> hasTailscale
                                 KubernetesAction.ARGO_ROLLOUTS -> hasRollouts
@@ -234,13 +234,14 @@ fun KubernetesScreen(
                                 else -> true
                             }
                         },
+                        groups = kubernetesActionGroups,
                     )
                 },
             )
         },
     ) { padding ->
         if (customizing) {
-            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding))
+            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding), groups = kubernetesActionGroups)
             return@Scaffold
         }
         Column(Modifier.pageContent(padding).fillMaxSize()) {
@@ -262,6 +263,7 @@ fun KubernetesScreen(
                         focusKey = focusKey(page),
                         onFocused = onFocused,
                         pullLinks = pullLinks,
+                        onCleanUp = { sanitizing = true },
                     )
                     2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey(page), onFocused = onFocused)
                     else -> NetPerfTab(netPerf)

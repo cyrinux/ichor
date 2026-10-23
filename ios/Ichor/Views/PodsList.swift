@@ -13,6 +13,8 @@ struct PodsList: View {
     var onFlows: ((KubePod) -> Void)?
     /// A share link's pod: its logs open once listed.
     @Binding var focus: String?
+    /// Opens Clean up dead pods for the namespace listed; nil: no such row.
+    var onCleanUp: (() -> Void)?
 
     @Environment(AppModel.self) private var model
     @State private var actions = PodActions()
@@ -29,6 +31,15 @@ struct PodsList: View {
             let shown = filtered.sortedByUsage(sort) { top[$0.id] }
             List {
                 KubeDeniedSection(actions: [.deletePod], namespace: selected ?? "")
+                // On the tab it acts on; greyed with the reason when the credentials may not
+                // delete pods here. The sheet lists the pods first and refuses the demo.
+                if let onCleanUp {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Button(action: onCleanUp) { Label("Clean up dead pods", systemImage: "sparkles") }
+                            .kubeGated(.sanitizePods)
+                        KubeDeniedNote(.sanitizePods)
+                    }
+                }
                 if !top.isEmpty {
                     TopSortPicker(sort: $sort).listRowSeparator(.hidden)
                 }
