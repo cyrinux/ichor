@@ -65,13 +65,10 @@ struct KubernetesView: View {
     @State private var cronJobs = PagedList<KubeCronJob>(base: "cronjobs") { client, namespace, token in
         try await client.cronJobsPage(namespace: namespace, token: token)
     }
-    @State private var editingServer = false
     @AppStorage(KubernetesBar.storageKey) private var barText = ""
     @State private var customizingBar = false
     /// The pods tab's "Clean up dead pods" sheet.
     @State private var sanitizing = false
-    @State private var serverInput = ""
-    @State private var serverError: String?
     /// App-wide: leaving the screen keeps a running network test.
     private var netPerf: NetPerfJob { .shared }
     /// Read once on open: Live flows needs Cilium, or Calico with Whisker.
@@ -127,7 +124,6 @@ struct KubernetesView: View {
         switch action {
         case .share: sharedTab != nil
         case .flows: cilium?.installed == true
-        case .apiAddress: editable != nil
         case .crossplane: operators.crossplane
         case .tailscale: operators.tailscale
         case .argoRollouts: operators.argoRollouts
@@ -169,15 +165,7 @@ struct KubernetesView: View {
         case .clusterLifecycle: netScreen = .clusterLifecycle
         case .dataServices: netScreen = .dataServices(kind: nil, solo: false)
         case .certManager, .castai: netScreen = .dataServices(kind: action.dataServiceKind, solo: true)
-        case .apiAddress:
-            serverInput = model.client?.kubeServer ?? ""
-            editingServer = true
         }
-    }
-
-    /// The cluster whose API address can be set: not the demo, not in screenshot mode.
-    private var editable: ContextSummary? {
-        model.activeSummary.flatMap { $0.demo || $0.fingerprint.isEmpty || model.privacyMask ? nil : $0 }
     }
 
     var body: some View {
@@ -224,17 +212,6 @@ struct KubernetesView: View {
                 Task { await pods.refresh(model: model) }
             }
         }
-        .alert("Kubernetes API address", isPresented: $editingServer) {
-            TextField(text: $serverInput, prompt: Text(verbatim: "k8s.example.com:6443")) { Text("Address") }
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            Button("OK") { Task { await saveServer() } }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.")
-        }
-        .messageAlert($serverError)
         .navigationDestination(item: $netScreen) { screen in
             switch screen {
             case .checkup: CheckupView()
@@ -287,7 +264,6 @@ struct KubernetesView: View {
         .searchable(text: $query, prompt: tab == .cronJobs ? Text("Name, schedule or image") : Text("Name, kind or image"))
         .navigationTitle(Text(verbatim: "Kubernetes"))
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: model.privacyMask) { _, masked in if masked { editingServer = false } }
     }
 
     /// The cluster whose scope is kept on the device: not the demo, not in screenshot mode
@@ -329,15 +305,6 @@ struct KubernetesView: View {
     private var podFlows: ((KubePod) -> Void)? {
         guard cilium?.installed == true else { return nil }
         return { pod in netScreen = .flows(HubbleFilter(namespace: pod.namespace, pod: pod.name)) }
-    }
-
-    private func saveServer() async {
-        guard let context = editable else { return }
-        do {
-            model.setKubeServer(try await TalosClient.normalizeKubeServer(serverInput), for: context)
-        } catch {
-            serverError = error.localizedDescription
-        }
     }
 }
 
@@ -565,7 +532,6 @@ extension KubernetesAction: BarActionLook {
         case .services: "network"
         case .jobs: "checklist"
         case .events: "list.bullet.rectangle"
-        case .apiAddress: "server.rack"
         case .capacity: "gauge.with.dots.needle.33percent"
         case .admissionPolicies: "checkmark.shield"
         case .autoscaling: "arrow.up.and.down"
@@ -592,7 +558,6 @@ extension KubernetesAction: BarActionLook {
         case .services: Text("Services")
         case .jobs: Text("Jobs")
         case .events: Text("Kubernetes events")
-        case .apiAddress: Text("Kubernetes API address")
         case .capacity: Text(verbatim: CapacityText.capacityTitle)
         case .admissionPolicies: Text("Policies")
         case .autoscaling: Text("Autoscaling")

@@ -34,8 +34,12 @@ enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, ALERTS, HELM,
 /** The Kubernetes home's app-bar actions; one bar for every cluster added from a kubeconfig. */
 typealias KubeHomeBar = ActionBar<KubeHomeAction>
 
-/** What the Kubernetes screen's app bar offers: the screens it leads to, its share link and the API address. */
-enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS,
+/**
+ * What the Kubernetes screen's app bar offers: the screens it leads to and its share link. The
+ * API address was here: it is set from the cluster's row in Manage clusters now, and a saved
+ * bar drops it.
+ */
+enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS,
     /** Kyverno's admission policies; last, so the saved and default bars keep their icons. */
     POLICIES,
     /** What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs. */
@@ -70,8 +74,7 @@ val KubernetesAction.group: KubernetesActionGroup
         KubernetesAction.RESOURCES, KubernetesAction.HELM, KubernetesAction.STORAGE, KubernetesAction.SERVICES,
         KubernetesAction.JOBS, KubernetesAction.EVENTS, KubernetesAction.SHARE,
         -> KubernetesActionGroup.EXPLORE
-        // The API address is a setting of this phone; it sits next to API health until it leaves the bar.
-        KubernetesAction.CHECKUP, KubernetesAction.CAPACITY, KubernetesAction.API_HEALTH, KubernetesAction.API_ADDRESS,
+        KubernetesAction.CHECKUP, KubernetesAction.CAPACITY, KubernetesAction.API_HEALTH,
         KubernetesAction.NETWORK_POLICIES, KubernetesAction.FLOWS,
         -> KubernetesActionGroup.HEALTH
         KubernetesAction.POLICIES, KubernetesAction.AUTOSCALING, KubernetesAction.VIRTUAL_MACHINES, KubernetesAction.CROSSPLANE,

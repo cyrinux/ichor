@@ -2218,6 +2218,8 @@
     <string name="kube_server_title">Адреса Kubernetes API</string>
     <string name="kube_server_label">Адреса</string>
     <string name="kube_server_hint">Використовується замість адреси з kubeconfig, який видає Talos, наприклад переадресація порту, балансувальник навантаження або публічне ім’я: хост, хост:порт або https URL. Без порту використовується порт із kubeconfig. Сертифікат і далі перевіряється за власною адресою кластера. Залиште порожнім, щоб знову використовувати адресу з kubeconfig. Лише на цьому пристрої.</string>
+    <string name="cluster_kube_server_menu">Адреса Kubernetes API…</string>
+    <string name="cluster_kube_server_set">Адреса API: %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Поди</string>

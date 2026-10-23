@@ -2084,6 +2084,8 @@
     <string name="kube_server_title">Kubernetes-API-Adresse</string>
     <string name="kube_server_label">Adresse</string>
     <string name="kube_server_hint">Wird statt der Adresse in der von Talos ausgestellten kubeconfig verwendet, z. B. eine Portweiterleitung, ein Load Balancer oder ein öffentlicher Name: Host, Host:Port oder eine https-URL. Ohne Port wird der aus der kubeconfig verwendet. Das Zertifikat wird weiterhin gegen die eigene Adresse des Clusters geprüft. Leer lassen, um wieder die der kubeconfig zu verwenden. Nur auf diesem Gerät.</string>
+    <string name="cluster_kube_server_menu">Kubernetes-API-Adresse…</string>
+    <string name="cluster_kube_server_set">API-Adresse: %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pods</string>

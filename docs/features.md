@@ -34,7 +34,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   policies), follow a pod's log and
   port-forward to it on the phone (127.0.0.1 only); see what gives LoadBalancer Services their
   address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
-  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig. On a Talos
+  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig. Reach the API through another address (a port forward, a load
+  balancer, a public name) from the cluster's row in Manage clusters, on this device only. On a Talos
   cluster the Kubernetes screen's ⋯ menu reads in three sections (Explore, Health, Installed here) and also leads to
   Capacity, Data services and, when the cluster runs them, the cert-manager and CAST AI lists (any
   of them can be moved to the bar).
