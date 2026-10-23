@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EventAvailable
 import androidx.compose.material.icons.outlined.FolderCopy
@@ -58,6 +59,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -105,6 +107,7 @@ import name.levis.ichor.ui.components.cloudDetail
 import name.levis.ichor.ui.components.clusterGroupTitle
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.workloads.KubeServerDialog
 import name.levis.ichor.util.daysUntil
 
 /** Horizontal drag past which the header switches cluster. */
@@ -263,8 +266,13 @@ fun ClusterSheet(
     auditEvents: Set<String> = emptySet(),
     onAuditEvents: ((ContextSummary, Boolean) -> Unit)? = null,
     onRepository: ((ContextSummary) -> Unit)? = null,
+    /** The Kubernetes API address set on this device per fingerprint, instead of the kubeconfig's. */
+    kubeServers: Map<String, String> = emptyMap(),
+    /** Saves a cluster's API address ("" to use the kubeconfig's again); null: not offered. */
+    onKubeServer: ((ContextSummary, String) -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
+    var addressing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
     var coloring by remember { mutableStateOf<ContextSummary?>(null) }
     val contexts = config.summary.contexts
@@ -311,6 +319,10 @@ fun ClusterSheet(
                     onActivity = onActivity?.let { open -> { open(context) } },
                     // The demo's repository is built in.
                     onRepository = onRepository?.let { open -> { open(context) } }?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
+                    // Not in screenshot mode (the dialog shows the real address), nor for the demo.
+                    kubeServer = kubeServers[context.fingerprint]?.takeIf { it.isNotEmpty() && !labels.masked },
+                    onKubeServer = { addressing = context }
+                        .takeIf { onKubeServer != null && context.fingerprint.isNotBlank() && !context.demo && !labels.masked },
                 )
             }
             if (groups == null) {
@@ -339,6 +351,20 @@ fun ClusterSheet(
                 Text(stringResource(R.string.clusters_add))
             }
         }
+    }
+
+    addressing?.let { context ->
+        // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
+        LaunchedEffect(labels.masked) { if (labels.masked) addressing = null }
+        val saved = kubeServers[context.fingerprint].orEmpty()
+        KubeServerDialog(
+            saved = saved,
+            onSave = { server ->
+                addressing = null
+                if (server != saved) onKubeServer?.invoke(context, server)
+            },
+            onDismiss = { addressing = null },
+        )
     }
 
     removing?.let { context ->
@@ -418,6 +444,9 @@ private fun ClusterRow(
     beingRemoved: Boolean,
     onActivity: (() -> Unit)?,
     onRepository: (() -> Unit)?,
+    /** The API address set on this device, shown under the endpoints; null: the kubeconfig's. */
+    kubeServer: String?,
+    onKubeServer: (() -> Unit)?,
 ) {
     val label = labels.of(context)
     ListItem(
@@ -444,6 +473,7 @@ private fun ClusterRow(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+                kubeServer?.let { Text(stringResource(R.string.cluster_kube_server_set, it), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 // Which cluster needs a new talosconfig soon, without having to open each.
                 if (context.certNotAfter > 0 && daysUntil(context.certNotAfter) <= CERT_WARN_DAYS) {
                     Text(
@@ -472,6 +502,7 @@ private fun ClusterRow(
                 account = account,
                 onActivity = onActivity,
                 onRepository = onRepository,
+                onKubeServer = onKubeServer,
                 onRemove = onRemove,
             )
         },
@@ -502,6 +533,7 @@ private fun ClusterRowMenu(
     account: Pair<Int, () -> Unit>?,
     onActivity: (() -> Unit)?,
     onRepository: (() -> Unit)?,
+    onKubeServer: (() -> Unit)?,
     onRemove: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -558,6 +590,14 @@ private fun ClusterRowMenu(
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.common_label_endpoints)) },
                     leadingIcon = { Icon(Icons.Outlined.Router, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
+            // Next to the endpoints: both say how this phone reaches the cluster.
+            onKubeServer?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.cluster_kube_server_menu)) },
+                    leadingIcon = { Icon(Icons.Outlined.Dns, contentDescription = null) },
                     onClick = item(it),
                 )
             }

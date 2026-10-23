@@ -85,6 +85,8 @@ struct ClustersView: View {
     @State private var editingEndpoints: ContextSummary?
     /// The cluster whose repository sheet is open.
     @State private var editingRepo: ContextSummary?
+    /// The cluster whose Kubernetes API address is being set.
+    @State private var editingServer: ContextSummary?
     /// The cluster whose action audit log is open.
     @State private var activityOf: String?
     @State private var scanning = false
@@ -133,6 +135,7 @@ struct ClustersView: View {
         }
         .endpointTools(editing: $editingEndpoints, scanning: $scanning)
         .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
+        .kubeServerAlert(for: $editingServer)
         .sheet(item: $editingRepo) { context in
             ClusterRepoSheet(context: context, label: model.labels.of(context), saved: model.clusterRepos[context.fingerprint])
         }
@@ -214,6 +217,13 @@ struct ClustersView: View {
                         Text([context.endpoints.first, context.localizedAccessLabel].compactMap { $0 }.joined(separator: " · "))
                             .font(.caption)
                             .foregroundStyle(Color.secondary)
+                        // Set on this device instead of the kubeconfig's; hidden in screenshot mode.
+                        if !model.privacyMask, let server = model.kubeServers[context.fingerprint] {
+                            Text("API address: \(server)")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                                .lineLimit(1)
+                        }
                         if let kube = model.kubeAccessTarget(of: context) {
                             Text("Kubernetes through \(model.labels.of(kube))")
                                 .font(.caption)
@@ -275,6 +285,11 @@ struct ClustersView: View {
         // only (a kubeconfig cluster's server comes with its kubeconfig).
         if !model.labels.masked && !context.demo && !context.isKube {
             Button { editingEndpoints = context } label: { Label("Edit endpoints", systemImage: "point.3.connected.trianglepath.dotted") }
+        }
+        // Next to the endpoints: both say how this phone reaches the cluster. Not in screenshot
+        // mode (the field shows the real address), nor for the demo.
+        if !model.labels.masked && !model.privacyMask && !context.demo && !context.fingerprint.isEmpty {
+            Button { editingServer = context } label: { Label("Kubernetes API address…", systemImage: "server.rack") }
         }
         if !model.labels.masked && !context.fingerprint.isEmpty {
             Button { startRenaming(context) } label: { Label("Rename", systemImage: "pencil") }

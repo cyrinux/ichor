@@ -1,6 +1,5 @@
 package name.levis.ichor.model
 
-import name.levis.ichor.model.KubernetesAction.API_ADDRESS
 import name.levis.ichor.model.KubernetesAction.ARGO_ROLLOUTS
 import name.levis.ichor.model.KubernetesAction.AUTOSCALING
 import name.levis.ichor.model.KubernetesAction.API_HEALTH
@@ -37,7 +36,7 @@ class KubernetesBarTest {
     fun defaultKeepsThreeIconsSoTheTitleFits() {
         val bar = KubernetesAction.bar.default
         assertEquals(listOf(CHECKUP, NETWORK_POLICIES, SHARE), bar.icons)
-        assertEquals(listOf(API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS, POLICIES, AUTOSCALING, VIRTUAL_MACHINES, CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE, DATA_SERVICES, CERT_MANAGER, CASTAI, CAPACITY), bar.menu)
+        assertEquals(listOf(API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, POLICIES, AUTOSCALING, VIRTUAL_MACHINES, CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE, DATA_SERVICES, CERT_MANAGER, CASTAI, CAPACITY), bar.menu)
         assertTrue(bar.isDefault)
     }
 
@@ -45,10 +44,10 @@ class KubernetesBarTest {
     @Test
     fun theSameActionsAsIos() {
         assertEquals(
-            "CHECKUP,NETWORK_POLICIES,SHARE,API_HEALTH,FLOWS,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,API_ADDRESS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY",
+            "CHECKUP,NETWORK_POLICIES,SHARE,API_HEALTH,FLOWS,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY",
             KubernetesAction.entries.joinToString(",") { it.name },
         )
-        assertEquals(23, KubernetesAction.entries.size)
+        assertEquals(22, KubernetesAction.entries.size)
     }
 
     @Test
@@ -61,12 +60,22 @@ class KubernetesBarTest {
         assertEquals(KubernetesAction.entries.toSet(), saved.order.toSet())
     }
 
+    /** The API address is set from the cluster's row now: a bar saved with it drops it, nothing else moves. */
+    @Test
+    fun aBarSavedWithTheApiAddressDropsIt() {
+        val saved = KubernetesAction.bar.parse("CHECKUP,API_ADDRESS|SHARE,API_ADDRESS,RESOURCES")
+        assertEquals(listOf(CHECKUP), saved.icons)
+        assertFalse(saved.encode().contains("API_ADDRESS"))
+        assertEquals(listOf(SHARE, RESOURCES), saved.menu.take(2))
+        assertEquals(KubernetesAction.entries.toSet(), saved.order.toSet())
+    }
+
     @Test
     fun theMenuReadsInSectionsAndASavedOrderHoldsInside() {
         val default = groupedMenu(KubernetesAction.bar.default.menu)
         assertEquals(listOf(EXPLORE, HEALTH, INSTALLED), default.map { it.first })
         assertEquals(listOf(RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS), default[0].second)
-        assertEquals(listOf(API_HEALTH, FLOWS, API_ADDRESS, CAPACITY), default[1].second)
+        assertEquals(listOf(API_HEALTH, FLOWS, CAPACITY), default[1].second)
         // Events moved before Resources by the user: still in Explore, still first there.
         val saved = KubernetesAction.bar.parse("CHECKUP|EVENTS,CROSSPLANE,RESOURCES")
         assertEquals(listOf(EVENTS, RESOURCES), groupedMenu(saved.menu).first { it.first == EXPLORE }.second.take(2))
@@ -104,7 +113,7 @@ class KubernetesBarTest {
     @Test
     fun keptApartFromTheOverviewsBar() {
         val bar = KubernetesAction.bar.default.toBar(FLOWS).toMenu(CHECKUP)
-        assertEquals("NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,API_ADDRESS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY", bar.encode())
+        assertEquals("NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY", bar.encode())
         assertEquals(bar, KubernetesAction.bar.parse(bar.encode()))
         assertFalse(bar.isDefault)
         // Another screen's names are unknown here: none of them is taken.

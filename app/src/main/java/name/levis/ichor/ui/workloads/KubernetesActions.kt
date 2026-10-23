@@ -9,7 +9,6 @@ import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.DataUsage
 import androidx.compose.material.icons.outlined.Dataset
-import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.HealthAndSafety
@@ -47,7 +46,6 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.SERVICES -> Icons.Outlined.Lan
     KubernetesAction.JOBS -> Icons.Outlined.TaskAlt
     KubernetesAction.EVENTS -> Icons.Outlined.Timeline
-    KubernetesAction.API_ADDRESS -> Icons.Outlined.Dns
     KubernetesAction.POLICIES -> Icons.Outlined.Gavel
     KubernetesAction.AUTOSCALING -> Icons.Outlined.Speed
     KubernetesAction.VIRTUAL_MACHINES -> Icons.Outlined.Computer
@@ -97,7 +95,6 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.SERVICES -> R.string.kube_services_title
             KubernetesAction.JOBS -> R.string.kube_jobs_title
             KubernetesAction.EVENTS -> R.string.kube_events_stream_title
-            KubernetesAction.API_ADDRESS -> R.string.kube_server_title
             KubernetesAction.POLICIES -> R.string.kpol_title
             KubernetesAction.AUTOSCALING -> R.string.autoscaling_title
             KubernetesAction.VIRTUAL_MACHINES -> R.string.vm_title

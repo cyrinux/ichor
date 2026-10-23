@@ -30,8 +30,9 @@ public enum OverviewAction: String, BarAction {
     public static let defaultIcons = 4
 }
 
-/// What the Kubernetes screen's toolbar offers: the screens it leads to, its share link and the
-/// API address. Raw values are Android's `KubernetesAction` names.
+/// What the Kubernetes screen's toolbar offers: the screens it leads to and its share link (the
+/// API address is set from the cluster's row now; a saved bar drops it). Raw values are Android's
+/// `KubernetesAction` names.
 public enum KubernetesAction: String, BarAction {
     case checkup = "CHECKUP"
     case networkPolicies = "NETWORK_POLICIES"
@@ -46,7 +47,6 @@ public enum KubernetesAction: String, BarAction {
     case jobs = "JOBS"
     /// The cluster's events kept live.
     case events = "EVENTS"
-    case apiAddress = "API_ADDRESS"
     /// Kyverno's admission policies (the screens' `policies` are the network ones).
     case admissionPolicies = "POLICIES"
     /// What scales the cluster: HPAs, KEDA, VPA, Karpenter.
@@ -75,8 +75,7 @@ public enum KubernetesAction: String, BarAction {
     public var group: KubernetesActionGroup {
         switch self {
         case .resources, .helm, .storage, .services, .jobs, .events, .share: .explore
-        // The API address is a setting of this phone; it sits next to API health until it leaves the bar.
-        case .checkup, .capacity, .apiHealth, .apiAddress, .networkPolicies, .flows: .health
+        case .checkup, .capacity, .apiHealth, .networkPolicies, .flows: .health
         case .admissionPolicies, .autoscaling, .virtualMachines, .crossplane, .tailscale, .argoRollouts,
              .clusterLifecycle, .dataServices, .certManager, .castai: .installed
         }
