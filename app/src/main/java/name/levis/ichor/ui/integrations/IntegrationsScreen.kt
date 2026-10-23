@@ -43,7 +43,7 @@ import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.settings.openUrl
+import name.levis.ichor.ui.settings.openInBrowser
 import name.levis.ichor.ui.components.pageContent
 
 /**
@@ -102,15 +102,15 @@ private fun Report(report: IntegrationReport, picked: Set<String>, vm: Integrati
                 family,
                 picked,
                 onToggle = vm::toggle,
-                onSearch = { openUrl(context, vm.searchUrl(family)) },
-                onRequest = { openUrl(context, vm.issueUrl(family)) },
+                onSearch = { openInBrowser(context, vm.searchUrl(family)) },
+                onRequest = { openInBrowser(context, vm.issueUrl(family)) },
             )
         }
         if (report.supported.isNotEmpty()) {
             item { MutedText(stringResource(R.string.integrations_supported, report.supported.joinToString(", "))) }
         }
         item {
-            OutlinedButton(onClick = { openUrl(context, INTEGRATION_FORM_URL) }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = { openInBrowser(context, INTEGRATION_FORM_URL) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.integrations_other))
             }
         }

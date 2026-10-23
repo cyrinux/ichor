@@ -16,6 +16,15 @@
     <!-- Self-update from GitHub releases (the user still confirms each install). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- openInBrowser finds the default browser, so a GitHub issue form opens there rather
+         than in the GitHub app, which drops the form. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 
     <application
         android:name=".TalosApp"
