@@ -51,11 +51,51 @@ extension TalosClient {
         }
     }
 
-    /// Deletes `names` (newline-separated "namespace/name" from the preview, see
-    /// `sanitizeNames`), going on past a failure. The demo refuses it.
-    func sanitize(namespace: String, names: String) async throws -> KubeSanitizeResult {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeSanitize(config, context, kubeServer, namespace, names, $0)
+    /// Starts deleting `names` (newline-separated "namespace/name" from the preview, see
+    /// `sanitizeNames`) in the background, going on past a failure. The stream finishes after
+    /// `done`; `stop` ends it after the pod being deleted. The demo refuses it, through `done`.
+    func startSanitize(namespace: String, names: String) -> (events: AsyncStream<PodSweepEvent>, stop: @Sendable () -> Void) {
+        let (stream, continuation) = AsyncStream.makeStream(of: PodSweepEvent.self)
+        let bridge = PodSweepBridge(
+            progress: { continuation.yield(.progress($0)) },
+            done: {
+                continuation.yield(.done($0, error: $1))
+                continuation.finish()
+            }
+        )
+        let run = IchorgoStartKubeSanitize(kubeConfig, kubeContext, kubeAPIServer, namespace, names, bridge)
+        continuation.onTermination = { _ in
+            _ = bridge // keep the listener alive for the whole sweep
         }
+        return (stream, { run?.cancel() })
+    }
+}
+
+enum PodSweepEvent: Sendable {
+    case progress(PodSweepProgress)
+    /// The pods tried so far; `error` is nil unless the sweep was refused, could not run or
+    /// ran out of time.
+    case done(KubeSanitizeResult, error: String?)
+}
+
+/// Receives Go's sweep callbacks (on Go's threads) and hands them over decoded.
+private final class PodSweepBridge: NSObject, IchorgoKubeSanitizeListenerProtocol, @unchecked Sendable {
+    private let progress: @Sendable (PodSweepProgress) -> Void
+    private let done: @Sendable (KubeSanitizeResult, String?) -> Void
+
+    init(progress: @escaping @Sendable (PodSweepProgress) -> Void,
+         done: @escaping @Sendable (KubeSanitizeResult, String?) -> Void) {
+        self.progress = progress
+        self.done = done
+    }
+
+    func onProgress(_ json: String?) {
+        guard let json, let decoded = try? TalosJSON.decode(PodSweepProgress.self, from: json) else { return }
+        progress(decoded)
+    }
+
+    func onDone(_ resultJSON: String?, errMessage: String?) {
+        let result = (try? TalosJSON.decode(KubeSanitizeResult.self, from: resultJSON ?? "")) ?? KubeSanitizeResult()
+        done(result, errMessage.nonEmpty)
     }
 }

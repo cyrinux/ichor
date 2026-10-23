@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.KubePermissions
 import name.levis.ichor.data.RunbookManager
 import name.levis.ichor.data.RunbookRepository
+import name.levis.ichor.data.PodSweepManager
 import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.ClusterRepoStore
 import name.levis.ichor.data.StagedEdits
@@ -309,6 +310,8 @@ class TalosApp : Application() {
     val runbookRepository by lazy { RunbookRepository(goCall) }
     /** The runbook running or last run, app-wide; OperationService keeps the app alive while it runs. */
     val runbookManager by lazy { RunbookManager(runbookRepository::start, onStarted = { OperationService.start(this, OperationKind.RUNBOOK) }) }
+    /** The "Clean up dead pods" sweep running or last run, app-wide; OperationService keeps the app alive while it runs. */
+    val podSweepManager by lazy { PodSweepManager(kubeRepository::startSanitize, onStarted = { OperationService.start(this, OperationKind.POD_SWEEP) }) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     /** The Talos release each cluster's update card was skipped for. */
     val skippedTalosUpdates by lazy { SkippedTalosUpdates(getSharedPreferences(SkippedTalosUpdates.FILE, Context.MODE_PRIVATE)) }

@@ -5,6 +5,7 @@ import name.levis.ichor.data.ArgoSyncRunState
 import name.levis.ichor.data.ClusterUpgradeRunState
 import name.levis.ichor.data.FluxReconcileRunState
 import name.levis.ichor.data.NetPerfRunState
+import name.levis.ichor.data.PodSweepRun
 import name.levis.ichor.data.RolloutRunState
 import name.levis.ichor.data.ConfigMultiRunState
 import name.levis.ichor.data.ConfigTryRunState
@@ -42,6 +43,7 @@ import name.levis.ichor.model.MultiConfigProgress
 import name.levis.ichor.model.UpgradeProgress
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OperationPresenterTest {
@@ -250,5 +252,38 @@ class OperationPresenterTest {
     fun aStepPastTheEndStaysOnTheBar() {
         assertEquals(OperationProgress(5, 5), OperationProgress.step(7, 5))
         assertEquals(OperationProgress.INDETERMINATE, OperationProgress.step(1, 0))
+    }
+
+    @Test
+    fun theNotificationCountsThePodsAndOffersStop() {
+        val run = PodSweepRun("admin@test", "web", total = 140, done = 12)
+        val n = PodSweepPresenter.progress(run)
+        assertEquals(res(R.string.pod_sweep_notification_title, raw("web")), n.title)
+        assertEquals(res(R.string.pod_sweep_progress, "12", "140"), n.text)
+        assertEquals(OperationProgress(12, 140), n.progress)
+        assertEquals(listOf(OperationAction.STOP), n.actions)
+
+        val stopping = PodSweepPresenter.progress(run.copy(stopping = true))
+        assertEquals(res(R.string.pod_sweep_stopping), stopping.text)
+        assertTrue(stopping.actions.isEmpty())
+
+        // Every namespace: worded, not "".
+        assertEquals(res(R.string.pod_sweep_notification_title, res(R.string.pod_sweep_every_namespace)), PodSweepPresenter.progress(run.copy(namespace = "")).title)
+    }
+
+    @Test
+    fun theResultSaysHowManyWentAndHowManyCouldNot() {
+        val ended = PodSweepRun("admin@test", "web", total = 3, done = 3, deleted = 3, running = false)
+        assertEquals(res(R.string.pod_sweep_done, raw("web")), PodSweepPresenter.result(ended).title)
+        assertEquals(res(R.string.pod_sweep_result, "3"), PodSweepPresenter.result(ended).text)
+
+        val partial = ended.copy(deleted = 2, failedCount = 1)
+        assertEquals(res(R.string.pod_sweep_result_failed, "2", "1"), PodSweepPresenter.result(partial).text)
+
+        assertEquals(res(R.string.pod_sweep_stopped, raw("web")), PodSweepPresenter.result(ended.copy(stopped = true)).title)
+
+        val failed = PodSweepPresenter.result(ended.copy(error = "forbidden"))
+        assertEquals(res(R.string.pod_sweep_failed, raw("web")), failed.title)
+        assertEquals(raw("forbidden"), failed.text)
     }
 }

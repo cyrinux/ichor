@@ -120,6 +120,7 @@ enum class OperationKind(
     ROLLOUT(0x0b96, 0x0b97, R.string.rollout_notification_public, R.string.rollout_notification_result_public, DeepLink.WORKLOAD),
     NETPERF(0x0b98, 0x0b99, R.string.netperf_notification_public, R.string.netperf_notification_result_public, DeepLink.NETPERF),
     RUNBOOK(0x0b9a, 0x0b9b, R.string.runbook_notification_public, R.string.runbook_notification_result_public, DeepLink.RUNBOOK),
+    POD_SWEEP(0x0b9c, 0x0b9d, R.string.pod_sweep_notification_public, R.string.pod_sweep_notification_result_public, null),
     ;
 
     companion object {

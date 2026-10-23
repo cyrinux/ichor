@@ -336,6 +336,17 @@ func (l maskedImageScanListener) OnDone(reportJSON string, errMessage string) {
 	l.ImageScanListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
 }
 
+// maskedKubeSanitizeListener masks a pod sweep's progress, result and error.
+type maskedKubeSanitizeListener struct{ KubeSanitizeListener }
+
+func (l maskedKubeSanitizeListener) OnProgress(json string) {
+	l.KubeSanitizeListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedKubeSanitizeListener) OnDone(resultJSON string, errMessage string) {
+	l.KubeSanitizeListener.OnDone(privacy.mask(resultJSON), privacy.maskPlain(errMessage))
+}
+
 // maskedEtcdFixListener masks the NOSPACE fix's progress and error.
 type maskedEtcdFixListener struct{ EtcdFixListener }
 

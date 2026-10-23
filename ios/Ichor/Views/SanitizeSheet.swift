@@ -4,14 +4,14 @@ import IchorCore
 /// Clean up dead pods, like k9s's `z`: the pods of `namespace` ("" for every namespace) whose
 /// status is Completed, Pending, CrashLoopBackOff, Error, ImagePullBackOff, Evicted... grouped by
 /// status, each checked but a Pending one younger than two minutes, then one plain confirm with
-/// the count deletes exactly the checked ones (their owners recreate theirs).
+/// the count starts deleting exactly the checked ones in the background (PodSweepJob, followed
+/// by its Live Activity) and closes the sheet. Opened while that sweep runs, it shows how far
+/// it is with Stop; once it ended, how many went and the pods it could not delete.
 struct SanitizeSheet: View {
     let namespace: String
-    /// Called after a sweep deleted something: the pods list loads again.
-    let onDeleted: () -> Void
 
     var body: some View {
-        SanitizeContent(namespace: namespace, onDeleted: onDeleted)
+        SanitizeContent(namespace: namespace)
             // What the credentials may do there: the delete button reads it.
             .loadsKubeActionAccess(namespace: namespace)
     }
@@ -19,37 +19,64 @@ struct SanitizeSheet: View {
 
 private struct SanitizeContent: View {
     let namespace: String
-    let onDeleted: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
     @State private var preview: LoadState<KubeSanitizePreview> = .loading
     @State private var selected: Set<String> = []
     @State private var confirming = false
-    @State private var deleting = false
     @State private var failure: String?
-    @State private var failed: [SanitizeFailure] = []
-    /// How many the last sweep deleted, shown with the ones it could not.
-    @State private var deletedCount = 0
+
+    private var job: PodSweepJob { PodSweepJob.shared }
+    /// This namespace's sweep in the cluster on screen, running or the last one.
+    private var sweep: PodSweepState? { job.sweep(context: model.activeContext, namespace: namespace) }
 
     var body: some View {
         NavigationStack {
-            LoadStateView(state: preview, retry: loadPreview) { preview in
-                content(preview)
+            Group {
+                if let sweep, sweep.running {
+                    progress(sweep)
+                } else {
+                    LoadStateView(state: preview, retry: loadPreview) { preview in
+                        content(preview)
+                    }
+                }
             }
             .navigationTitle(Text("Clean up dead pods"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(deleting) }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             }
             .task { await loadPreview() }
+            // What is still dead once the sweep ended.
+            .onChange(of: sweep?.running) { was, now in
+                if was == true, now == false { Task { await loadPreview() } }
+            }
         }
-        .interactiveDismissDisabled(deleting)
+    }
+
+    /// The running sweep: "12 of 140 pods", a bar, and Stop.
+    private func progress(_ sweep: PodSweepState) -> some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(verbatim: PodSweepJob.step(sweep))
+                    ProgressView(value: sweep.fraction)
+                }
+                .accessibilityElement(children: .combine)
+            } footer: {
+                Text("Keeps going while the app is open or shortly after.")
+            }
+            Section {
+                Button("Stop", role: .destructive) { job.stop() }
+                    .disabled(sweep.stopping)
+            }
+        }
     }
 
     @ViewBuilder
     private func content(_ preview: KubeSanitizePreview) -> some View {
-        if preview.pods.isEmpty {
+        if preview.pods.isEmpty && sweep == nil {
             ContentUnavailableView {
                 Label("Nothing to clean up", systemImage: "checkmark.circle")
             } description: {
@@ -70,6 +97,7 @@ private struct SanitizeContent: View {
             Section {
                 subtitle.font(.footnote).foregroundStyle(.secondary)
             }
+            if let sweep { outcome(sweep) }
             if preview.truncated {
                 Section {
                     Label {
@@ -86,7 +114,6 @@ private struct SanitizeContent: View {
                         Toggle(isOn: checked(pod)) {
                             SanitizeRow(pod: pod, showNamespace: namespace.isEmpty)
                         }
-                        .disabled(deleting)
                     }
                 } header: {
                     HStack {
@@ -96,45 +123,55 @@ private struct SanitizeContent: View {
                     }
                 }
             }
-            if !failed.isEmpty {
+            if !preview.pods.isEmpty {
                 Section {
-                    ForEach(failed, id: \.self) { failure in
-                        Text("Could not delete \(failure.name): \(failure.error)")
-                            .font(.caption)
-                            .foregroundStyle(.statusBad)
-                            .textSelection(.enabled)
+                    if let failure {
+                        Label {
+                            Text(verbatim: failure).textSelection(.enabled)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                        }
+                        .foregroundStyle(.statusBad)
                     }
-                } header: {
-                    Text("\(deletedCount) pods deleted")
-                }
-            }
-            Section {
-                if let failure {
-                    Label {
-                        Text(verbatim: failure).textSelection(.enabled)
-                    } icon: {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                    }
-                    .foregroundStyle(.statusBad)
-                }
-                KubeDeniedNote(.sanitizePods)
-                Button(role: .destructive) {
-                    confirming = true
-                } label: {
-                    HStack {
-                        if deleting { ProgressView() }
+                    KubeDeniedNote(.sanitizePods)
+                    Button(role: .destructive) {
+                        confirming = true
+                    } label: {
                         Text("Delete \(count) pods")
                     }
+                    .disabled(count == 0)
+                    .kubeGated(.sanitizePods)
                 }
-                .disabled(deleting || count == 0)
-                .kubeGated(.sanitizePods)
             }
         }
         .confirmationDialog(String(localized: "Delete \(count) pods?"), isPresented: $confirming, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { Task { await sweep(preview) } }
+            Button("Delete", role: .destructive) { start(preview) }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Pods a controller owns come back as new ones; the others are gone for good.")
+        }
+    }
+
+    /// How the last sweep went: its error, or how many went and each pod it could not delete.
+    @ViewBuilder
+    private func outcome(_ sweep: PodSweepState) -> some View {
+        Section {
+            if let error = sweep.error {
+                Text(verbatim: error)
+                    .font(.caption)
+                    .foregroundStyle(.statusBad)
+                    .textSelection(.enabled)
+            } else {
+                Text(verbatim: PodSweepJob.result(sweep))
+            }
+            ForEach(sweep.failures, id: \.self) { failure in
+                Text("Could not delete \(failure.name): \(failure.error)")
+                    .font(.caption)
+                    .foregroundStyle(.statusBad)
+                    .textSelection(.enabled)
+            }
+        } header: {
+            Text(verbatim: PodSweepJob.title(sweep))
         }
     }
 
@@ -165,28 +202,17 @@ private struct SanitizeContent: View {
         preview = fetched
     }
 
-    /// Deletes the checked pods; closes when each went, else lists the ones that did not and
-    /// reads the preview again.
-    private func sweep(_ preview: KubeSanitizePreview) async {
-        guard let client = model.client, !deleting else { return }
+    /// Starts deleting the checked pods in the background and closes the sheet; refused while
+    /// another sweep runs.
+    private func start(_ preview: KubeSanitizePreview) {
+        guard let client = model.client else { return }
         let names = sanitizeNames(preview.pods, selected: selected)
         guard !names.isEmpty else { return }
-        deleting = true
-        defer { deleting = false }
         failure = nil
-        failed = []
-        do {
-            let result = try await client.sanitize(namespace: namespace, names: names)
-            if result.deleted > 0 { onDeleted() }
-            if result.failed.isEmpty {
-                dismiss()
-                return
-            }
-            failed = result.failed
-            deletedCount = result.deleted
-            await loadPreview()
-        } catch {
-            failure = error.localizedDescription
+        if job.start(client: client, context: model.activeContext, namespace: namespace, names: names) {
+            dismiss()
+        } else {
+            failure = String(localized: "A dead pod cleanup is already running")
         }
     }
 }

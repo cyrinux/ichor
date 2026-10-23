@@ -208,9 +208,7 @@ struct KubernetesView: View {
         }
         .sheet(isPresented: $customizingBar) { ActionBarEditorSheet(KubernetesAction.self) }
         .sheet(isPresented: $sanitizing) {
-            SanitizeSheet(namespace: scopeControl.scope.namespace ?? "") {
-                Task { await pods.refresh(model: model) }
-            }
+            SanitizeSheet(namespace: scopeControl.scope.namespace ?? "")
         }
         .alert("Kubernetes API address", isPresented: $editingServer) {
             TextField(text: $serverInput, prompt: Text(verbatim: "k8s.example.com:6443")) { Text("Address") }

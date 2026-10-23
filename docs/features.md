@@ -15,7 +15,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   pull secret, certificate, network, and what to do) and delete one so its controller starts a new one, or only those of
   a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector), or clean up a
   namespace's dead pods in one tap (Completed, Evicted, CrashLoopBackOff, ImagePullBackOff…, as k9s's `z`
-  picks them, with a preview to uncheck any first); list CronJobs
+  picks them, with a preview to uncheck any first; the sweep runs in the background with a progress
+  notification or Live Activity, Stop, and a result when it ends); list CronJobs
   with their schedule, next run and recent runs, and run one now (`kubectl create job --from`,
   with an icon and a title of your choice, see [CronJobs](kubernetes.md#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](network.md#network-test));

@@ -5342,10 +5342,6 @@
         <item quantity="one">%1$d Pod löschen?</item>
         <item quantity="other">%1$d Pods löschen?</item>
     </plurals>
-    <plurals name="sanitize_done">
-        <item quantity="one">%1$d Pod gelöscht</item>
-        <item quantity="other">%1$d Pods gelöscht</item>
-    </plurals>
     <!-- CRD plugins: the generic screen's chrome (labels come translated from the plugin) -->
     <string name="plugin_screen_title">Plugin</string>
     <string name="plugin_errors_title">Nicht alles konnte gelesen werden:</string>
@@ -5579,4 +5575,18 @@
     <string name="monitor_proposal_closed">Dein Pull-Request #%1$s wurde geschlossen</string>
     <string name="proposals_merged_ago">Gemergt %1$s</string>
     <string name="proposals_closed_ago">Geschlossen %1$s</string>
+    <string name="pod_sweep_notification_public">Tote Pods werden aufgeräumt</string>
+    <string name="pod_sweep_notification_result_public">Aufräumen toter Pods beendet</string>
+    <string name="pod_sweep_notification_title">Tote Pods werden aufgeräumt · %1$s</string>
+    <string name="pod_sweep_every_namespace">alle Namespaces</string>
+    <string name="pod_sweep_progress">%1$s von %2$s Pods</string>
+    <string name="pod_sweep_stopping">Stoppt nach dem aktuellen Pod…</string>
+    <string name="pod_sweep_done">Tote Pods aufgeräumt · %1$s</string>
+    <string name="pod_sweep_stopped">Aufräumen toter Pods gestoppt · %1$s</string>
+    <string name="pod_sweep_failed">Aufräumen toter Pods fehlgeschlagen · %1$s</string>
+    <string name="pod_sweep_result">Gelöscht: %1$s</string>
+    <string name="pod_sweep_result_failed">Gelöscht: %1$s · nicht gelöscht: %2$s</string>
+    <string name="pod_sweep_started">Läuft im Hintergrund: in der Benachrichtigung verfolgen</string>
+    <string name="pod_sweep_busy">Ein Aufräumen toter Pods läuft bereits</string>
+    <string name="pod_sweep_background">Läuft im Hintergrund weiter: dieses Blatt kann geschlossen werden.</string>
 </resources>

@@ -23,6 +23,8 @@ final class OperationActivityTests: XCTestCase {
         XCTAssertEqual(OperationButton.offered(for: .fluxReconcile), [.stopFollowing])
         XCTAssertEqual(OperationButton.offered(for: .rollout), [.stopFollowing])
         XCTAssertEqual(OperationButton.offered(for: .netPerf), [.stop])
+        XCTAssertEqual(OperationButton.offered(for: .podSweep), [.stop])
+        XCTAssertEqual(OperationButton.offered(for: .podSweep, stopping: true), [])
         XCTAssertEqual(OperationButton.offered(for: .argoSync, stopping: true), [])
     }
 
@@ -33,7 +35,7 @@ final class OperationActivityTests: XCTestCase {
         XCTAssertFalse(OperationButton.pause.opensApp(for: .clusterUpgrade, locked: true))
         // No screen to open: the button stays a button.
         XCTAssertFalse(OperationButton.stop.opensApp(for: .imagePull, locked: true))
-        XCTAssertEqual(OperationKind.allCases.filter { !$0.hasScreen }, [.configMulti, .imagePull, .imageScan])
+        XCTAssertEqual(OperationKind.allCases.filter { !$0.hasScreen }, [.configMulti, .imagePull, .imageScan, .podSweep])
     }
 
     func testABarOnlyWhereTheCoreCounts() {
