@@ -2762,8 +2762,6 @@
     <string name="argo_sync_confirm_dry_run">Dry Run</string>
     <string name="argo_opt_prune">Prune</string>
     <string name="argo_opt_prune_desc">Löscht Ressourcen, die nicht mehr in Git sind.</string>
-    <string name="argo_opt_dry_run">Dry Run</string>
-    <string name="argo_opt_dry_run_desc">Prüft, ohne etwas zu ändern.</string>
     <string name="argo_opt_force">Force</string>
     <string name="argo_opt_force_desc">Löscht Ressourcen, die sich nicht aktualisieren lassen, und erstellt sie neu.</string>
     <string name="argo_opt_out_of_sync_only">Nur OutOfSync anwenden</string>
@@ -2772,6 +2770,8 @@
     <string name="argo_opt_server_side_desc">Der API-Server führt die Änderungen zusammen.</string>
     <string name="argo_opt_replace">Replace</string>
     <string name="argo_opt_replace_desc">Ersetzt Ressourcen, statt sie anzuwenden.</string>
+    <string name="argo_sync_options">Optionen</string>
+    <string name="argo_sync_options_none">Alle aus</string>
     <string name="argo_prune_none">Nichts würde gelöscht.</string>
     <string name="argo_action_failed">Fehlgeschlagen: %1$s</string>
     <string name="argo_action_failed_some">%1$d von %2$d fehlgeschlagen: %3$s</string>

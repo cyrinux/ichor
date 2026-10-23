@@ -2770,8 +2770,6 @@
     <string name="argo_sync_confirm_dry_run">Dry run</string>
     <string name="argo_opt_prune">Prune</string>
     <string name="argo_opt_prune_desc">Elimina le risorse non più presenti in Git.</string>
-    <string name="argo_opt_dry_run">Dry run</string>
-    <string name="argo_opt_dry_run_desc">Verifica senza modificare nulla.</string>
     <string name="argo_opt_force">Force</string>
     <string name="argo_opt_force_desc">Elimina e ricrea le risorse che non si possono aggiornare.</string>
     <string name="argo_opt_out_of_sync_only">Applica solo OutOfSync</string>
@@ -2780,6 +2778,8 @@
     <string name="argo_opt_server_side_desc">Lascia che il server API unisca le modifiche.</string>
     <string name="argo_opt_replace">Replace</string>
     <string name="argo_opt_replace_desc">Sostituisce le risorse invece di applicarle.</string>
+    <string name="argo_sync_options">Opzioni</string>
+    <string name="argo_sync_options_none">Tutte disattivate</string>
     <string name="argo_prune_none">Non verrebbe eliminato nulla.</string>
     <string name="argo_action_failed">Non riuscito: %1$s</string>
     <string name="argo_action_failed_some">%1$d su %2$d non riusciti: %3$s</string>

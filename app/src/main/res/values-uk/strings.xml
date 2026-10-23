@@ -2928,8 +2928,6 @@
     <string name="argo_sync_confirm_dry_run">Dry run</string>
     <string name="argo_opt_prune">Prune</string>
     <string name="argo_opt_prune_desc">Видаляє ресурси, яких уже немає в Git.</string>
-    <string name="argo_opt_dry_run">Dry run</string>
-    <string name="argo_opt_dry_run_desc">Перевіряє, нічого не змінюючи.</string>
     <string name="argo_opt_force">Force</string>
     <string name="argo_opt_force_desc">Видаляє й створює заново ресурси, які не вдається оновити.</string>
     <string name="argo_opt_out_of_sync_only">Застосувати лише OutOfSync</string>
@@ -2938,6 +2936,8 @@
     <string name="argo_opt_server_side_desc">Зміни об’єднує API-сервер.</string>
     <string name="argo_opt_replace">Replace</string>
     <string name="argo_opt_replace_desc">Замінює ресурси замість застосування.</string>
+    <string name="argo_sync_options">Параметри</string>
+    <string name="argo_sync_options_none">Усі вимкнено</string>
     <string name="argo_prune_none">Нічого не буде видалено.</string>
     <string name="argo_action_failed">Помилка: %1$s</string>
     <string name="argo_action_failed_some">%1$d з %2$d не вдалося: %3$s</string>
