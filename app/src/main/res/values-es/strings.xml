@@ -4753,6 +4753,9 @@
     <string name="read_progress_step_wait_idle">Espera de la segunda muestra</string>
     <string name="read_progress_step_scrape2">Segunda muestra de métricas</string>
     <string name="capacity_title">Capacidad</string>
+    <string name="kube_menu_explore">Explorar</string>
+    <string name="kube_menu_health">Salud</string>
+    <string name="kube_menu_installed">Instalado aquí</string>
     <string name="capacity_intro">El espacio libre cuenta las requests frente a lo asignable, como el scheduler; el uso viene de metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: perder cualquier nodo no deja ningún pod Pending</string>
     <string name="capacity_n_plus_one_short">Perder %1$s deja %2$s pods Pending</string>

@@ -150,6 +150,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onCheckup = { nav.navigate(Routes.CHECKUP) },
+                onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
                 onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },

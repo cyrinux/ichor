@@ -40,21 +40,20 @@ public enum KubernetesAction: String, BarAction {
     case flows = "FLOWS"
     case resources = "RESOURCES"
     case helm = "HELM"
+    /// Volumes and claims, services and jobs, as the Kubernetes home lists them.
+    case storage = "STORAGE"
+    case services = "SERVICES"
+    case jobs = "JOBS"
     /// The cluster's events kept live.
     case events = "EVENTS"
     case apiAddress = "API_ADDRESS"
-    /// Free room per node, workloads by priority, and what losing a node costs; last, so the
-    /// default icons stay.
-    case capacity = "CAPACITY"
-    /// Kyverno's admission policies (the screens' `policies` are the network ones); last too.
+    /// Kyverno's admission policies (the screens' `policies` are the network ones).
     case admissionPolicies = "POLICIES"
-    /// What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs.
+    /// What scales the cluster: HPAs, KEDA, VPA, Karpenter.
     case autoscaling = "AUTOSCALING"
-    /// KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs.
+    /// KubeVirt (and Harvester) virtual machines. Clean up dead pods was here: it is a control of
+    /// the Pods tab now, and a saved bar drops it.
     case virtualMachines = "VIRTUAL_MACHINES"
-    /// Clean up the listed namespace's dead pods (k9s sanitize), on the pods tab; last, so the
-    /// saved bars keep theirs.
-    case cleanUpPods = "CLEAN_UP_PODS"
     /// Crossplane, the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal, each
     /// offered when the cluster runs it (as on the Kubernetes home); last, so the saved bars keep theirs.
     case crossplane = "CROSSPLANE"
@@ -68,6 +67,20 @@ public enum KubernetesAction: String, BarAction {
     case dataServices = "DATA_SERVICES"
     case certManager = "CERT_MANAGER"
     case castai = "CASTAI"
+    /// Free room per node, workloads by priority, and what losing a node costs; last. The order
+    /// is Android's, name for name (KubernetesBarTests.testTheSameActionsAsAndroid).
+    case capacity = "CAPACITY"
+
+    /// Which section of the menu the action is in: a property of the action, whatever the saved bar.
+    public var group: KubernetesActionGroup {
+        switch self {
+        case .resources, .helm, .storage, .services, .jobs, .events, .share: .explore
+        // The API address is a setting of this phone; it sits next to API health until it leaves the bar.
+        case .checkup, .capacity, .apiHealth, .apiAddress, .networkPolicies, .flows: .health
+        case .admissionPolicies, .autoscaling, .virtualMachines, .crossplane, .tailscale, .argoRollouts,
+             .clusterLifecycle, .dataServices, .certManager, .castai: .installed
+        }
+    }
 
     /// The system read with Data services an action opens alone; nil for the others.
     public var dataServiceKind: DataServiceKind? {
@@ -81,6 +94,27 @@ public enum KubernetesAction: String, BarAction {
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"
     public static let defaultIcons = 3
+}
+
+/// The sections of the Kubernetes screen's menu, in their order.
+public enum KubernetesActionGroup: CaseIterable, Sendable {
+    case explore, health, installed
+}
+
+/// One section of the Kubernetes screen's menu and its actions, in the saved order.
+public struct KubernetesMenuSection: Identifiable, Equatable, Sendable {
+    public let group: KubernetesActionGroup
+    public let actions: [KubernetesAction]
+    public var id: KubernetesActionGroup { group }
+}
+
+/// `menu` in sections, in section order; inside a section the saved order holds. Empty
+/// sections are left out.
+public func groupedMenu(_ menu: [KubernetesAction]) -> [KubernetesMenuSection] {
+    KubernetesActionGroup.allCases.compactMap { group in
+        let actions = menu.filter { $0.group == group }
+        return actions.isEmpty ? nil : KubernetesMenuSection(group: group, actions: actions)
+    }
 }
 
 /// The screens the Kubernetes home's toolbar leads to (a cluster added from a kubeconfig): the

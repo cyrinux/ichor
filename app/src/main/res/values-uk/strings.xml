@@ -4983,6 +4983,9 @@
     <string name="read_progress_step_wait_idle">Очікування другої вибірки</string>
     <string name="read_progress_step_scrape2">Друга вибірка метрик</string>
     <string name="capacity_title">Ємність</string>
+    <string name="kube_menu_explore">Огляд</string>
+    <string name="kube_menu_health">Стан</string>
+    <string name="kube_menu_installed">Встановлено тут</string>
     <string name="capacity_intro">Вільне місце рахує requests щодо allocatable, як планувальник; використання надходить із metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: втрата будь-якого вузла не залишає подів у Pending</string>
     <string name="capacity_n_plus_one_short">Втрата %1$s залишає %2$s подів у Pending</string>
