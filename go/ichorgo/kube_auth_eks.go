@@ -185,6 +185,8 @@ func (m *eksMethod) credentials(ctx context.Context, state kubeAuthState) (awsCr
 		return c, state, nil
 	}
 
+	cached := state.session("ssoAccess")
+
 	token, state, err := m.ssoAccessToken(ctx, state)
 	if err != nil {
 		return awsCredentials{}, state, err
@@ -195,7 +197,20 @@ func (m *eksMethod) credentials(ctx context.Context, state kubeAuthState) (awsCr
 		return awsCredentials{}, state, signInRequired(authEKS, "choose an account and role")
 	}
 
-	return m.ssoRoleCredentials(ctx, token, state)
+	creds, next, err := m.ssoRoleCredentials(ctx, token, state)
+
+	// A cached access token AWS no longer takes (revoked, or the phone's clock off): renewed
+	// once with the refresh token before asking to sign in again.
+	var needSignIn *errSignInRequired
+	if cached != "" && token == cached && errors.As(err, &needSignIn) {
+		if token, next, err = m.ssoAccessToken(ctx, next); err != nil {
+			return awsCredentials{}, next, err
+		}
+
+		return m.ssoRoleCredentials(ctx, token, next)
+	}
+
+	return creds, next, err
 }
 
 // sessionCredentials reads cached credentials stored under prefix, if still valid a while.
@@ -228,17 +243,41 @@ func (m *eksMethod) ssoAccessToken(ctx context.Context, state kubeAuthState) (st
 
 	var t awsSSOToken
 
-	err := m.postJSON(ctx, awsSSOOIDCEndpoint(state.secret(awsFieldSSORegion))+"/token", map[string]any{
+	status, err := m.postJSONStatus(ctx, awsSSOOIDCEndpoint(state.secret(awsFieldSSORegion))+"/token", map[string]any{
 		"clientId": state.session("ssoClientId"), "clientSecret": state.session("ssoClientSecret"),
 		"grantType": "refresh_token", "refreshToken": state.session("ssoRefresh"),
 	}, &t)
-	if err != nil || t.AccessToken == "" {
+
+	// Only AWS refusing the refresh token ends the session; the phone off its network or VPN,
+	// a timeout or AWS failing is an error to retry, the refresh token kept for the next try.
+	switch {
+	case err != nil:
+		return "", state, fmt.Errorf("renew the IAM Identity Center token: %w", err)
+	case awsSessionOver(t.Error):
 		cleared := state.withSession(map[string]string{"ssoRefresh": "", "ssoAccess": ""})
 
-		return "", cleared, signInRequired(authEKS, cmpOr(t.Description, t.Error, errText(err)))
+		return "", cleared, signInRequired(authEKS, awsSessionEnded)
+	case status >= http.StatusInternalServerError:
+		return "", state, fmt.Errorf("renew the IAM Identity Center token: AWS answered %d", status)
+	case t.AccessToken == "":
+		return "", state, fmt.Errorf("renew the IAM Identity Center token: %s", cmpOr(t.Description, t.Error, "AWS answered "+strconv.Itoa(status)))
 	}
 
 	return t.AccessToken, m.withSSOToken(state, t), nil
+}
+
+// awsSessionEnded is why a new sign-in is needed once AWS refuses the refresh token.
+const awsSessionEnded = "your IAM Identity Center session ended; its length is set by your administrator"
+
+// awsSessionOver reports whether a CreateToken error code means the sign-in is over (the
+// refresh token expired or was revoked, the client registration too), not a failure to retry.
+func awsSessionOver(code string) bool {
+	switch code {
+	case "expired_token", "invalid_grant", "invalid_client", "unauthorized_client", "access_denied":
+		return true
+	default:
+		return false
+	}
 }
 
 type awsSSOToken struct {
@@ -347,21 +386,26 @@ func (m *eksMethod) assumedRole(ctx context.Context, base awsCredentials, state 
 }
 
 func (m *eksMethod) postJSON(ctx context.Context, endpoint string, body any, out any) error {
+	_, err := m.postJSONStatus(ctx, endpoint, body, out)
+
+	return err
+}
+
+// postJSONStatus is postJSON with the HTTP status of the answer (0 when there was none).
+func (m *eksMethod) postJSONStatus(ctx context.Context, endpoint string, body any, out any) (int, error) {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(data))
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
-	_, err = m.doJSON(req, out)
-
-	return err
+	return m.doJSON(req, out)
 }
 
 // doJSON decodes the answer whatever its status (AWS sends errors as JSON too).
