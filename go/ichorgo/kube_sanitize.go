@@ -41,9 +41,12 @@ type sanitizeFailure struct {
 	Error string `json:"error"`
 }
 
+// sanitizeResult: Stopped means the sweep ended (Cancel, or its time ran out) before every
+// pod was tried; Deleted and Failed are then the pods tried so far.
 type sanitizeResult struct {
 	Deleted int               `json:"deleted"`
 	Failed  []sanitizeFailure `json:"failed"`
+	Stopped bool              `json:"stopped"`
 }
 
 // sanitizeNow is the clock pod ages are read with.
@@ -121,43 +124,25 @@ func sanitizeCandidate(obj podObject, now time.Time) (sanitizePod, bool) {
 // from KubeSanitizePreview, each like `kubectl delete pod` with its own grace period. With
 // a namespace, every pod must be in it; a malformed or out-of-scope line refuses the whole
 // sweep before anything is deleted. A pod that cannot be deleted does not stop the others:
-// {"deleted":n,"failed":[{name,error}]}. One audit entry for the sweep: ok when every pod
-// went, partial ("k of n pods not deleted") when some did not, failed when the sweep was
-// refused or could not run; a partial sweep still returns its result with a nil error.
-// Refused in the demo.
-// Needs delete on pods. kubeServer: see KubePods.
+// {"deleted":n,"failed":[{name,error}],"stopped":false}. One audit entry for the sweep: ok
+// when every pod went, partial ("k of n pods not deleted") when some did not, failed when
+// the sweep was refused or could not run; a partial sweep still returns its result with a
+// nil error. StartKubeSanitize is the same sweep in the background, as the apps run it.
+// Refused in the demo. Needs delete on pods. kubeServer: see KubePods.
 func KubeSanitize(configYAML, contextName, kubeServer, namespace, names string) (out string, err error) {
 	defer maskResult(&out, &err)
 	defer clearPartial(&err)
 
 	contextName = unmaskContext(configYAML, contextName)
-	namespace = privacy.revealNamespace(strings.TrimSpace(namespace))
-	pods, parseErr := sanitizeTargets(namespace, names)
 
-	defer recordAction(&err, configYAML, contextName, auditAction{
-		Server: kubeServer, Action: "sanitize-pods", Namespace: namespace,
-		Object: fmt.Sprintf("Pod×%d", len(pods)), Params: fmt.Sprintf("pods=%d", len(pods)),
-	})
-
-	if parseErr != nil {
-		return "", parseErr
-	}
-
-	res := sanitizeResult{Failed: []sanitizeFailure{}}
-
-	err = kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		res = deletePods(ctx, k, pods)
-
-		return nil
-	})
-	if err != nil {
+	res, err := sweepPods(context.Background(), kubeSweep{configYAML, contextName, kubeServer, namespace, names}, func(sanitizeProgress) {})
+	if _, partial := err.(partialOutcome); err != nil && !partial {
 		return "", err
 	}
 
-	out, err = toJSON(res)
-	if err == nil && len(res.Failed) > 0 {
-		// Only once the sweep ran: recordAction sees the partial marker, clearPartial drops it.
-		err = partialOutcome{fmt.Sprintf("%d of %d pods not deleted", len(res.Failed), len(pods))}
+	out, encErr := toJSON(res)
+	if encErr != nil {
+		return "", encErr
 	}
 
 	return out, err
@@ -214,26 +199,45 @@ func sanitizeTargets(namespace, names string) ([]podRef, error) {
 	return pods, nil
 }
 
-// deletePods deletes each pod, carrying on past the ones that fail.
-func deletePods(ctx context.Context, k *kubeClient, pods []podRef) sanitizeResult {
+// deletePods deletes each pod in turn, carrying on past the ones that fail, and reports
+// after every pod. It stops between two pods once ctx is done, never in the middle of one.
+func deletePods(ctx context.Context, k *kubeClient, pods []podRef, emit func(sanitizeProgress)) sanitizeResult {
 	res := sanitizeResult{Failed: []sanitizeFailure{}}
 
-	for _, p := range pods {
-		err := k.do(ctx, http.MethodDelete, podPath(p.namespace, p.name), "", nil, nil)
-		if err == nil {
+	for i, p := range pods {
+		if ctx.Err() != nil {
+			res.Stopped = true
+
+			break
+		}
+
+		if err := deletePod(ctx, k, p); err != nil {
+			res.Failed = append(res.Failed, sanitizeFailure{Name: p.namespace + "/" + p.name, Error: err.Error()})
+		} else {
 			res.Deleted++
-
-			continue
 		}
 
-		if kubeCode(err) == http.StatusNotFound {
-			err = errors.New("the pod no longer exists")
-		}
-
-		res.Failed = append(res.Failed, sanitizeFailure{Name: p.namespace + "/" + p.name, Error: kubeMutationError(err).Error()})
+		emit(sanitizeProgress{Done: i + 1, Total: len(pods), Name: p.namespace + "/" + p.name, Failed: len(res.Failed)})
 	}
 
 	return res
+}
+
+// deletePod deletes p within its own call budget: a Stop arriving meanwhile lets it finish.
+func deletePod(ctx context.Context, k *kubeClient, p podRef) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), callTimeout)
+	defer cancel()
+
+	err := k.do(ctx, http.MethodDelete, podPath(p.namespace, p.name), "", nil, nil)
+	if err == nil {
+		return nil
+	}
+
+	if kubeCode(err) == http.StatusNotFound {
+		return errors.New("the pod no longer exists")
+	}
+
+	return kubeMutationError(err)
 }
 
 // demoSanitizePreview is what the demo inventory's sanitize would delete in namespace.

@@ -5597,12 +5597,6 @@
         <item quantity="many">Видалити %1$d подів?</item>
         <item quantity="other">Видалити %1$d поду?</item>
     </plurals>
-    <plurals name="sanitize_done">
-        <item quantity="one">Видалено %1$d под</item>
-        <item quantity="few">Видалено %1$d поди</item>
-        <item quantity="many">Видалено %1$d подів</item>
-        <item quantity="other">Видалено %1$d поду</item>
-    </plurals>
     <!-- CRD plugins: the generic screen's chrome (labels come translated from the plugin) -->
     <string name="plugin_screen_title">Плагін</string>
     <string name="plugin_errors_title">Не все вдалося прочитати:</string>
@@ -5836,4 +5830,18 @@
     <string name="monitor_proposal_closed">Ваш pull request #%1$s закрито</string>
     <string name="proposals_merged_ago">Злито %1$s</string>
     <string name="proposals_closed_ago">Закрито %1$s</string>
+    <string name="pod_sweep_notification_public">Прибирання мертвих подів</string>
+    <string name="pod_sweep_notification_result_public">Прибирання мертвих подів завершено</string>
+    <string name="pod_sweep_notification_title">Прибирання мертвих подів · %1$s</string>
+    <string name="pod_sweep_every_namespace">усі простори імен</string>
+    <string name="pod_sweep_progress">%1$s з %2$s подів</string>
+    <string name="pod_sweep_stopping">Зупинка після поточного пода…</string>
+    <string name="pod_sweep_done">Мертві поди прибрано · %1$s</string>
+    <string name="pod_sweep_stopped">Прибирання мертвих подів зупинено · %1$s</string>
+    <string name="pod_sweep_failed">Не вдалося прибрати мертві поди · %1$s</string>
+    <string name="pod_sweep_result">Видалено: %1$s</string>
+    <string name="pod_sweep_result_failed">Видалено: %1$s · не видалено: %2$s</string>
+    <string name="pod_sweep_started">Прибирання у фоні: стежте за ним у сповіщенні</string>
+    <string name="pod_sweep_busy">Прибирання мертвих подів уже триває</string>
+    <string name="pod_sweep_background">Триває у фоні: цю панель можна закрити.</string>
 </resources>

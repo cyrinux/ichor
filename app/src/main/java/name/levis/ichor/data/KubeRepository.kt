@@ -1,6 +1,7 @@
 package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
@@ -32,6 +33,7 @@ import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
 import name.levis.ichor.model.KubeSanitizePreview
 import name.levis.ichor.model.KubeSanitizeResult
+import name.levis.ichor.model.PodSweepProgress
 import name.levis.ichor.model.KubeWatchEvent
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
@@ -50,7 +52,9 @@ import name.levis.ichor.model.SELECTED_PODS_PAGE
 import name.levis.ichor.model.SupportedIntegrations
 import name.levis.ichor.model.WorkloadRef
 import name.levis.ichor.model.toGoJson
+import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichorgo.KubeSanitizeListener
 
 /**
  * The Kubernetes side of the active cluster, Talos or kubeconfig alike: workloads, pods,
@@ -338,9 +342,34 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(KubeSanitizePreview.serializer(), Ichorgo.kubeSanitizePreview(cfg, ctx, server, namespace))
     }
 
-    /** Deletes the pods [names] (newline-separated "namespace/name" from the preview) of [namespace]; refused in the demo. */
-    suspend fun sanitize(namespace: String, names: String): KubeSanitizeResult = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubeSanitizeResult.serializer(), Ichorgo.kubeSanitize(cfg, ctx, server, namespace, names))
+    /**
+     * Starts deleting the pods [names] (newline-separated "namespace/name" from the preview) of
+     * [namespace] in the background, for [PodSweepManager]; a refusal (the demo) comes as
+     * [PodSweepEvent.Done] with its error.
+     */
+    fun startSanitize(namespace: String, names: String): PodSweepHandle {
+        val target = go.kubeTarget()
+        val events = Channel<PodSweepEvent>(Channel.UNLIMITED) // never drop the final event
+        val run = Ichorgo.startKubeSanitize(
+            target.yaml,
+            target.context,
+            target.server,
+            namespace,
+            names,
+            object : KubeSanitizeListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(PodSweepProgress.serializer(), json) }
+                        .onSuccess { events.trySend(PodSweepEvent.Progress(it)) }
+                }
+
+                override fun onDone(resultJSON: String, errMessage: String) {
+                    val result = runCatching { TalosJson.decodeFromString(KubeSanitizeResult.serializer(), resultJSON) }.getOrElse { KubeSanitizeResult() }
+                    events.trySend(PodSweepEvent.Done(result, errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    events.close()
+                }
+            },
+        )
+        return PodSweepHandle(events, run::cancel)
     }
 
     /** Deletes an `ichor-netperf-*` namespace a network test left behind (os:admin); the core refuses any other. */

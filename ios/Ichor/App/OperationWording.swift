@@ -65,6 +65,7 @@ extension OperationKind {
         case .rollout: String(localized: "Rollout restart")
         case .netPerf: String(localized: "Network test")
         case .runbook: String(localized: "Runbook")
+        case .podSweep: String(localized: "Cleaning up dead pods")
         }
     }
 }

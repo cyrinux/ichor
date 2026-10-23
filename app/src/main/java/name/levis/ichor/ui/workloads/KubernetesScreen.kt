@@ -167,7 +167,9 @@ fun KubernetesScreen(
     val share = rememberShareLink()
     // The pods tab's "Clean up dead pods", for the namespace listed.
     var sanitizing by rememberSaveable { mutableStateOf(false) }
-    if (sanitizing) SanitizeSheet(scope.scope.namespace, app.kubeRepository, onSwept = { pods.refresh() }, onDismiss = { sanitizing = false })
+    if (sanitizing) {
+        SanitizeSheet(scope.scope.namespace, app.kubeRepository, app.podSweepManager, config?.activeContext.orEmpty(), onDismiss = { sanitizing = false })
+    }
 
     Scaffold(
         topBar = {

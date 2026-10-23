@@ -577,7 +577,7 @@ struct MainNavigation: View {
         case .runbook:
             guard let run = RunbookJob.shared.run else { return nil }
             return Route.runbookRun(id: run.id)
-        case .configMulti, .imagePull, .imageScan:
+        case .configMulti, .imagePull, .imageScan, .podSweep:
             return nil
         }
     }

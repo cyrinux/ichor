@@ -208,9 +208,7 @@ struct KubernetesView: View {
         }
         .sheet(isPresented: $customizingBar) { ActionBarEditorSheet(KubernetesAction.self) }
         .sheet(isPresented: $sanitizing) {
-            SanitizeSheet(namespace: scopeControl.scope.namespace ?? "") {
-                Task { await pods.refresh(model: model) }
-            }
+            SanitizeSheet(namespace: scopeControl.scope.namespace ?? "")
         }
         .navigationDestination(item: $netScreen) { screen in
             switch screen {

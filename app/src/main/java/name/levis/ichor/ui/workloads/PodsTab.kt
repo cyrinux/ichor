@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import name.levis.ichor.TalosApp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -202,6 +203,17 @@ fun PodsTab(
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     val actions = remember { PodActionState() }
     PodActionDialogs(actions, vm.deletions)
+    // This cluster's dead-pod sweep: how far it is above the list, a reload once it ended.
+    val talos = LocalContext.current.applicationContext as TalosApp
+    val config by talos.configRepository.config.collectAsStateWithLifecycle()
+    val current by talos.podSweepManager.current.collectAsStateWithLifecycle()
+    val sweep = current?.takeIf { it.cluster == config?.activeContext }
+    val sweeping = sweep?.running == true
+    var sweptWhileShown by remember { mutableStateOf(sweeping) }
+    LaunchedEffect(sweeping) {
+        if (sweptWhileShown && !sweeping) vm.refresh()
+        sweptWhileShown = sweeping
+    }
     var sort by rememberSaveable { mutableStateOf(TopSort.NAME) }
     var topGeneration by remember { mutableIntStateOf(0) }
     val listed = (state as? UiState.Loaded)?.data?.items
@@ -222,6 +234,7 @@ fun PodsTab(
         val usage = remember(top) { top?.byKey.orEmpty() }
         val rows = remember(filtered, sort, usage) { filtered.sortedByUsage(sort) { usage[it.key] } }
         PagedProgress(progress)
+        if (sweep != null && sweeping) PodSweepBanner(sweep, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         KubeDenialNote(rememberKubeDenial(KubeAction.DELETE_POD, selected.orEmpty()), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
         if (onCleanUp != null) CleanUpChip(selected, onCleanUp)

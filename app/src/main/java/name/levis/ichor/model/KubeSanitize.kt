@@ -39,11 +39,25 @@ data class SanitizePod(
     }
 }
 
-/** The outcome of the sweep (Go `KubeSanitize`): how many went, and each that could not. */
+/**
+ * The outcome of the sweep (Go `StartKubeSanitize`): how many went, and each that could not;
+ * [stopped]: ended by Stop before every pod was tried.
+ */
 @Serializable
 data class KubeSanitizeResult(
     val deleted: Int = 0,
     val failed: List<SanitizeFailure> = emptyList(),
+    val stopped: Boolean = false,
+)
+
+/** How far a running sweep is: [done] pods tried of [total], [failed] of them not deleted; [name] the last one. */
+@Serializable
+data class PodSweepProgress(
+    val done: Int = 0,
+    val total: Int = 0,
+    val name: String = "",
+    val failed: Int = 0,
+    val at: Long = 0,
 )
 
 /** A pod the sweep could not delete: its "namespace/name" and why. */

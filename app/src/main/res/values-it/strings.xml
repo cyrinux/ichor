@@ -5356,10 +5356,6 @@
         <item quantity="one">Eliminare %1$d pod?</item>
         <item quantity="other">Eliminare %1$d pod?</item>
     </plurals>
-    <plurals name="sanitize_done">
-        <item quantity="one">%1$d pod eliminato</item>
-        <item quantity="other">%1$d pod eliminati</item>
-    </plurals>
     <!-- CRD plugins: the generic screen's chrome (labels come translated from the plugin) -->
     <string name="plugin_screen_title">Plugin</string>
     <string name="plugin_errors_title">Non è stato possibile leggere tutto:</string>
@@ -5593,4 +5589,18 @@
     <string name="monitor_proposal_closed">La tua pull request #%1$s è stata chiusa</string>
     <string name="proposals_merged_ago">Unita %1$s</string>
     <string name="proposals_closed_ago">Chiusa %1$s</string>
+    <string name="pod_sweep_notification_public">Pulizia dei pod morti</string>
+    <string name="pod_sweep_notification_result_public">Pulizia dei pod morti terminata</string>
+    <string name="pod_sweep_notification_title">Pulizia dei pod morti · %1$s</string>
+    <string name="pod_sweep_every_namespace">tutti i namespace</string>
+    <string name="pod_sweep_progress">%1$s di %2$s pod</string>
+    <string name="pod_sweep_stopping">Arresto dopo il pod corrente…</string>
+    <string name="pod_sweep_done">Pod morti ripuliti · %1$s</string>
+    <string name="pod_sweep_stopped">Pulizia dei pod morti interrotta · %1$s</string>
+    <string name="pod_sweep_failed">Pulizia dei pod morti non riuscita · %1$s</string>
+    <string name="pod_sweep_result">Eliminati: %1$s</string>
+    <string name="pod_sweep_result_failed">Eliminati: %1$s · non eliminati: %2$s</string>
+    <string name="pod_sweep_started">Pulizia in background: seguila nella notifica</string>
+    <string name="pod_sweep_busy">Una pulizia dei pod morti è già in corso</string>
+    <string name="pod_sweep_background">Continua in background: questo pannello si può chiudere.</string>
 </resources>

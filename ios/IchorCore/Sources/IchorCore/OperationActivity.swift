@@ -12,6 +12,8 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
     case argoSync, fluxReconcile, rollout, netPerf
     /// A runbook's ordered steps (docs/runbooks.md).
     case runbook
+    /// "Clean up dead pods": a namespace's dead pods deleted one after another.
+    case podSweep
 
     /// The in-app link that opens the run's screen (ichor://open?op=…).
     public var link: URL { URL(string: "ichor://open?op=\(rawValue)")! }
@@ -26,10 +28,11 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
     }
 
     /// Its run shows on a screen of its own, which the activity opens; a config rollout, an
-    /// image pull and an image scan show in a sheet or a section instead (the app as it was).
+    /// image pull, an image scan and a pod sweep show in a sheet or a section instead (the app
+    /// as it was).
     public var hasScreen: Bool {
         switch self {
-        case .configMulti, .imagePull, .imageScan: false
+        case .configMulti, .imagePull, .imageScan, .podSweep: false
         default: true
         }
     }
@@ -50,6 +53,7 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
         case .rollout: "arrow.counterclockwise.circle"
         case .netPerf: "speedometer"
         case .runbook: "list.bullet.rectangle"
+        case .podSweep: "sparkles"
         }
     }
 }
@@ -89,7 +93,7 @@ public enum OperationButton: String, Codable, Hashable, Sendable, CaseIterable {
         switch kind {
         case .upgrade, .join, .fluxReconcile, .rollout: return [.stopFollowing]
         case .argoSync: return [.terminate]
-        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan, .netPerf, .runbook: return [.stop]
+        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan, .netPerf, .runbook, .podSweep: return [.stop]
         case .clusterUpgrade: return paused ? [.resume, .abort] : [.pause, .abort]
         case .configTry: return waiting ? [.keep, .revert] : []
         }

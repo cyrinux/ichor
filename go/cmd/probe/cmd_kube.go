@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -557,7 +558,23 @@ func probeSanitize(e env) (string, error) {
 		names = append(names, pod.Namespace+"/"+pod.Name)
 	}
 
-	return ichorgo.KubeSanitize(e.cfg, e.context, e.kubeServer, namespace, strings.Join(names, "\n"))
+	l := sweepProbe{done: make(chan [2]string, 1)}
+	ichorgo.StartKubeSanitize(e.cfg, e.context, e.kubeServer, namespace, strings.Join(names, "\n"), l)
+
+	res := <-l.done
+	if res[1] != "" {
+		return "", errors.New(res[1])
+	}
+
+	return res[0], nil
+}
+
+// sweepProbe prints a pod sweep's progress, then hands over its result and error.
+type sweepProbe struct{ done chan [2]string }
+
+func (s sweepProbe) OnProgress(json string) { fmt.Println(json) }
+func (s sweepProbe) OnDone(resultJSON, errMessage string) {
+	s.done <- [2]string{resultJSON, errMessage}
 }
 
 // probeSearch reads the context's overview, pods and workloads the way the apps cache them,

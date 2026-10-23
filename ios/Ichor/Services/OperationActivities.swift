@@ -116,6 +116,7 @@ enum OperationActivities {
         case (.rollout, .stopFollowing): RolloutJob.shared.stopFollowing()
         case (.netPerf, .stop): NetPerfJob.shared.stop()
         case (.runbook, .stop): RunbookJob.shared.stop()
+        case (.podSweep, .stop): PodSweepJob.shared.stop()
         default: break
         }
     }
@@ -131,7 +132,7 @@ enum OperationActivities {
             (.upgrade, upgrade()), (.maintenance, maintenance()), (.configTry, configTry()), (.configMulti, configMulti()),
             (.clusterUpgrade, clusterUpgrade()), (.k8sUpgrade, k8sUpgrade()), (.imagePull, imagePull()), (.join, join()),
             (.imageScan, imageScan()), (.argoSync, argoSync()), (.fluxReconcile, fluxReconcile()), (.rollout, rollout()),
-            (.netPerf, netPerf()), (.runbook, runbook()),
+            (.netPerf, netPerf()), (.runbook, runbook()), (.podSweep, podSweep()),
         ]
         let locked = lockEnabled
         let screenshot = screenshotMode

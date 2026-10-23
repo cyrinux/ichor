@@ -23,6 +23,12 @@ struct PodsList: View {
     @State private var topRefreshes = 0
     @State private var sort = TopSort.name
 
+    /// This cluster's dead-pod sweep, running or the last one.
+    private var sweep: PodSweepState? {
+        guard let state = PodSweepJob.shared.state, state.context == model.activeContext else { return nil }
+        return state
+    }
+
     var body: some View {
         KubeListFrame(control: control, list: list, query: query, namespaces: podNamespaces) { load in
             let selected = control.scope.namespace
@@ -30,6 +36,7 @@ struct PodsList: View {
             let filtered = filterPods(load.items, namespace: selected, query: query, sorted: load.done, searchImages: load.detailed)
             let shown = filtered.sortedByUsage(sort) { top[$0.id] }
             List {
+                if let sweep, sweep.running { PodSweepRow(sweep: sweep) }
                 KubeDeniedSection(actions: [.deletePod], namespace: selected ?? "")
                 // On the tab it acts on; greyed with the reason when the credentials may not
                 // delete pods here. The sheet lists the pods first and refuses the demo.
@@ -74,11 +81,30 @@ struct PodsList: View {
             }
         }
         .podActions(actions) { await list.refresh(model: model) }
+        // The pods a sweep deleted go from the list once it ended.
+        .onChange(of: sweep?.running) { was, now in
+            if was == true, now == false { Task { await list.refresh(model: model) } }
+        }
         .task(id: list.loadedItems.map(\.id)) {
             guard let focus, let pod = list.loadedItems.first(where: { $0.id == focus }) else { return }
             actions.logsPod = pod
             self.focus = nil
         }
+    }
+}
+
+/// A dead-pod sweep running above the pods: where, how far, a bar.
+private struct PodSweepRow: View {
+    let sweep: PodSweepState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: PodSweepJob.title(sweep)).font(.subheadline)
+            Text(verbatim: PodSweepJob.step(sweep)).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+            ProgressView(value: sweep.fraction)
+        }
+        .accessibilityElement(children: .combine)
+        .listRowSeparator(.hidden)
     }
 }
 

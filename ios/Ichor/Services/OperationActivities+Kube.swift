@@ -2,7 +2,8 @@ import Foundation
 import IchorCore
 
 /// The Kubernetes-side runs' Live Activities: an Argo CD sync ("wave 2/4 · 12/30 resources",
-/// Terminate), a Flux reconcile and a rollout restart (Stop following), a network test (Stop).
+/// Terminate), a Flux reconcile and a rollout restart (Stop following), a network test and a
+/// pod sweep (Stop).
 extension OperationActivities {
     static func argoSync() -> OperationContent? {
         guard let run = GitOpsOperationJob.shared.argo else { return nil }
@@ -48,6 +49,19 @@ extension OperationActivities {
         let count = operationCount(index: run.results.count, total: run.setup.steps)
         return OperationContent(title: title, step: NetPerfJob.step(run), done: count?.done, total: count?.total,
                                 buttons: OperationButton.offered(for: .netPerf, stopping: run.stopping))
+    }
+
+    /// "Clean up dead pods": "12 of 140 pods", Stop; how many went once it ended.
+    static func podSweep() -> OperationContent? {
+        guard let state = PodSweepJob.shared.state else { return nil }
+        let title = PodSweepJob.title(state)
+        if !state.running {
+            if let error = state.error { return OperationContent(title: title, step: error, phase: .failed) }
+            return OperationContent(title: title, step: PodSweepJob.result(state), phase: state.stopped ? .stopped : .succeeded)
+        }
+        let count = operationCount(index: state.done, total: state.total)
+        return OperationContent(title: title, step: PodSweepJob.step(state), done: count?.done, total: count?.total,
+                                buttons: OperationButton.offered(for: .podSweep, stopping: state.stopping))
     }
 
     /// A runbook: "Step 2 of 3 · scale-down", "Waiting for you" while a destructive step waits
