@@ -223,6 +223,31 @@ func TestRunbookStopsAtTheFirstFailure(t *testing.T) {
 	}
 }
 
+// TestRunbookDocExamples loads every YAML block of docs/runbooks.md, so that each example
+// there can be imported as written.
+func TestRunbookDocExamples(t *testing.T) {
+	doc, err := os.ReadFile("../../docs/runbooks.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blocks := strings.Split(string(doc), "```yaml\n")[1:]
+	if len(blocks) < 5 {
+		t.Fatalf("docs/runbooks.md has %d YAML examples, want at least 5", len(blocks))
+	}
+
+	for i, block := range blocks {
+		src, _, ok := strings.Cut(block, "```")
+		if !ok {
+			t.Fatalf("YAML block #%d is not closed", i+1)
+		}
+
+		if _, err := loadRunbook(src); err != nil {
+			t.Errorf("YAML block #%d: %v\n%s", i+1, err, src)
+		}
+	}
+}
+
 func TestRunbookLoadErrorsNameTheStep(t *testing.T) {
 	good := readRunbookFixture(t, "scale-and-restart.yaml")
 

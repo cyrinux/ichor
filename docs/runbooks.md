@@ -67,6 +67,9 @@ only (an address or hostname of the talosconfig).
 
 ## Examples
 
+Every example below is checked by the Go tests (`TestRunbookDocExamples`): copy one, change
+the namespaces, names and node addresses to yours, and import it.
+
 Pause ingestion, compact, resume:
 
 ```yaml
@@ -86,4 +89,95 @@ name: Reboot worker 1
 steps:
   - {id: snapshot, action: etcdSnapshot, target: {node: 10.5.0.2}}
   - {id: reboot, action: nodeMaintenance, target: {node: 10.5.0.5}, params: {action: reboot}}
+```
+
+Restart every part of an app after a Secret or ConfigMap changed, in block style. `kind`
+picks the workload type; a Deployment needs none:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Roll the shop after a config change
+description: Picks up the new database password.
+steps:
+  - id: restart-db
+    action: rolloutRestart
+    target: {kind: StatefulSet, namespace: demo-shop, name: postgres}
+  - id: restart-api
+    action: rolloutRestart
+    target: {namespace: demo-shop, name: ingest-api}
+  - id: restart-agents
+    action: rolloutRestart
+    target: {kind: DaemonSet, namespace: monitoring, name: node-exporter}
+```
+
+Deploy from Git now rather than at the next poll: Flux fetches the repository then applies
+the Kustomization, and Argo CD syncs its Application. Each step waits until it is done:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Deploy from Git now
+steps:
+  - {id: fetch, action: fluxReconcile, target: {kind: GitRepository, namespace: flux-system, name: flux-system}}
+  - {id: apply, action: fluxReconcile, target: {namespace: flux-system, name: apps}}
+  - {id: chart, action: fluxReconcile, target: {kind: HelmRelease, namespace: monitoring, name: kube-prometheus-stack}}
+  - {id: sync-shop, action: argoSync, target: {namespace: argocd, name: demo-shop}}
+```
+
+Keep the CronJobs quiet during a maintenance window, then resume them; a separate runbook
+for each half, since a runbook has no wait:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Start of maintenance window
+steps:
+  - {id: snapshot, action: etcdSnapshot, target: {node: 10.5.0.2}}
+  - {id: pause-backup, action: suspendCronJob, target: {namespace: demo-shop, name: db-backup}}
+  - {id: pause-compaction, action: suspendCronJob, target: {namespace: demo-shop, name: store-compaction}}
+  - {id: stop-ingest, action: scale, target: {namespace: demo-shop, name: ingest-api}, params: {replicas: 0}}
+```
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: End of maintenance window
+steps:
+  - {id: start-ingest, action: scale, target: {namespace: demo-shop, name: ingest-api}, params: {replicas: 2}}
+  - {id: resume-compaction, action: suspendCronJob, target: {namespace: demo-shop, name: store-compaction}, params: {suspend: false}}
+  - {id: resume-backup, action: suspendCronJob, target: {namespace: demo-shop, name: db-backup}, params: {suspend: false}}
+  - {id: backup-now, action: triggerCronJob, target: {namespace: demo-shop, name: db-backup}}
+```
+
+Reboot the workers one after the other, each drained first and back Ready before the next.
+`includeBare` lets the drain evict pods no controller recreates; `acknowledge` confirms the
+reboot checks the Maintenance screen would ask you to confirm (it never overrides a blocker
+such as a lost etcd quorum). `continueOnError` on the first two lets the run reach the next
+worker if one fails:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Rolling reboot of the workers
+steps:
+  - {id: snapshot, action: etcdSnapshot, target: {node: 10.5.0.2}}
+  - {id: worker-1, action: nodeMaintenance, target: {node: worker-1}, params: {acknowledge: true, includeBare: true}, continueOnError: true}
+  - {id: worker-2, action: nodeMaintenance, target: {node: worker-2}, params: {acknowledge: true, includeBare: true}, continueOnError: true}
+  - {id: worker-3, action: nodeMaintenance, target: {node: worker-3}, params: {acknowledge: true, includeBare: true}}
+```
+
+Power a node off for a hardware swap, after draining it (it comes back when you power it
+on):
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Power off worker 2 for a disk swap
+steps:
+  - {id: drain-and-shutdown, action: nodeMaintenance, target: {node: 10.5.0.6}, params: {action: shutdown}}
+```
+
+Recover a node that no longer answers a normal reboot, without draining it (`powercycle`
+asks the machine to power cycle; `force` skips the graceful shutdown):
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Hard reboot of a stuck node
+steps:
+  - {id: power-cycle, action: nodeReboot, target: {node: 10.5.0.7}, params: {mode: powercycle}}
 ```
