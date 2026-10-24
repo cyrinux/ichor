@@ -41,6 +41,13 @@ extension AppModel {
         return summary?.context(named: name)
     }
 
+    /// Whether the API address set for `context` is the one its Kubernetes calls use: not
+    /// through Omni (its kube proxy), nor for a Talos cluster linked to a kubeconfig cluster
+    /// (that one's is).
+    func usesOwnKubeServer(_ context: ContextSummary) -> Bool {
+        !context.omni && kubeAccessTarget(of: context) == nil
+    }
+
     /// Points the Kubernetes calls of the Talos cluster `talos` at the kubeconfig cluster
     /// `kube` (nil: back to the Talos admin kubeconfig); its screens reload.
     func setKubeAccess(_ kube: ContextSummary?, for talos: ContextSummary) {

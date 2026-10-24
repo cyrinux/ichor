@@ -218,7 +218,7 @@ struct ClustersView: View {
                             .font(.caption)
                             .foregroundStyle(Color.secondary)
                         // Set on this device instead of the kubeconfig's; hidden in screenshot mode.
-                        if !model.privacyMask, let server = model.kubeServers[context.fingerprint] {
+                        if !model.privacyMask, model.usesOwnKubeServer(context), let server = model.kubeServers[context.fingerprint] {
                             Text("API address: \(server)")
                                 .font(.caption)
                                 .foregroundStyle(Color.secondary)
@@ -287,8 +287,9 @@ struct ClustersView: View {
             Button { editingEndpoints = context } label: { Label("Edit endpoints", systemImage: "point.3.connected.trianglepath.dotted") }
         }
         // Next to the endpoints: both say how this phone reaches the cluster. Not in screenshot
-        // mode (the field shows the real address), nor for the demo.
-        if !model.labels.masked && !model.privacyMask && !context.demo && !context.fingerprint.isEmpty {
+        // mode (the field shows the real address), nor for the demo, nor where the calls do not
+        // use it (Omni, a linked Kubernetes access).
+        if !model.labels.masked && !model.privacyMask && !context.demo && !context.fingerprint.isEmpty && model.usesOwnKubeServer(context) {
             Button { editingServer = context } label: { Label("Kubernetes API address…", systemImage: "server.rack") }
         }
         if !model.labels.masked && !context.fingerprint.isEmpty {

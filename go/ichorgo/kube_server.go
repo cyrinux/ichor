@@ -12,7 +12,7 @@ import (
 )
 
 // NormalizeKubeServer checks a Kubernetes API server address the user typed to use instead
-// of the one in the kubeconfig Talos issues (a port forward, a load balancer, a public name)
+// of the one in the cluster's kubeconfig (a port forward, a load balancer, a public name)
 // and returns it as an https URL: "host", "host:port" and "https://host[:port][/path]" are
 // accepted. Without a port, the kubeconfig's one is used. Blank: "" (no override).
 func NormalizeKubeServer(input string) (out string, err error) {
