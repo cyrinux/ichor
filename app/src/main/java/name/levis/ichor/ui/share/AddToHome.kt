@@ -25,8 +25,8 @@ import name.levis.ichor.ui.components.TooltipIconButton
 /**
  * Pins a home screen shortcut to a screen of the cluster on screen (the target, shown as the
  * label, blank for the cluster's own screen), in the cluster's color and named after it; a
- * toast when the launcher refuses. Null
- * while no cluster is on screen (nothing to link to).
+ * toast when the launcher refuses. Null while no cluster is on screen (nothing to link to) or
+ * when the user turned the feature off in Settings.
  */
 @Composable
 fun rememberAddToHome(): ((ShareTarget, String) -> Unit)? {
@@ -36,6 +36,8 @@ fun rememberAddToHome(): ((ShareTarget, String) -> Unit)? {
     val colors by app.clusterColors.colors.collectAsStateWithLifecycle()
     val names by app.clusterNames.names.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
+    val enabled by app.uiPreferences.addToHome.collectAsStateWithLifecycle()
+    if (!enabled) return null
     val active = config?.activeSummary?.takeIf { it.clusterId.isNotBlank() } ?: return null
     val cluster = ClusterLabels(names, mask.enabled).of(active)
     val color = colors.seedOf(active)

@@ -71,6 +71,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _liveClusterStats = MutableStateFlow(prefs.getBoolean(KEY_LIVE_CLUSTER_STATS, true))
     val liveClusterStats: StateFlow<Boolean> = _liveClusterStats.asStateFlow()
 
+    /** Shows the "Add to home screen" buttons and menu entries; on by default. */
+    private val _addToHome = MutableStateFlow(prefs.getBoolean(KEY_ADD_TO_HOME, true))
+    val addToHome: StateFlow<Boolean> = _addToHome.asStateFlow()
+
     /**
      * Downloads icons the app does not bundle from jsDelivr (Dashboard Icons). Off by default:
      * a third-party request, even if only the public icon name is sent.
@@ -174,6 +178,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
     fun setLiveClusterStats(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_LIVE_CLUSTER_STATS, enabled).apply()
         _liveClusterStats.value = enabled
+    }
+
+    fun setAddToHome(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ADD_TO_HOME, enabled).apply()
+        _addToHome.value = enabled
     }
 
     fun setRemoteAppIcons(enabled: Boolean) {
@@ -285,6 +294,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_PRIVACY_MASK = "privacy_mask"
         private const val KEY_PRIVACY_WORDS = "privacy_mask_words"
         private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
+        private const val KEY_ADD_TO_HOME = "add_to_home"
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_AUDIT_EVENTS = "audit_events"
         private const val KEY_STARTUP_TRACE = "startup_trace"

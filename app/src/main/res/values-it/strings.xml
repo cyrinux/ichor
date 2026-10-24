@@ -474,6 +474,8 @@
     <string name="settings_language_system">Predefinita di sistema</string>
     <string name="settings_live_cluster_stats">Uso del cluster in tempo reale</string>
     <string name="settings_live_cluster_stats_desc">Aggiorna CPU e memoria della panoramica ogni pochi secondi mentre è aperta. Disattiva per risparmiare dati mobili e batteria.</string>
+    <string name="settings_add_to_home">Pulsanti «Aggiungi alla schermata Home»</string>
+    <string name="settings_add_to_home_desc">Mostra un pulsante nelle schermate e nei menu per fissare una scorciatoia nella schermata Home.</string>
     <string name="settings_section_security">Sicurezza</string>
     <string name="settings_auth_needs_lock">Configura prima un\'impronta o un blocco schermo (PIN, sequenza, password) su questo dispositivo.</string>
     <string name="settings_auth_enable_lock">Attiva blocco app</string>
