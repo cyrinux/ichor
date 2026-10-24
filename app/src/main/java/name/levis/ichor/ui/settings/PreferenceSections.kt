@@ -62,6 +62,22 @@ fun AppearanceSection(prefs: UiPreferences) {
     }
     LanguageSetting(prefs)
     LiveClusterStatsSetting(prefs)
+    AddToHomeSetting(prefs)
+}
+
+/** The "Add to home screen" buttons on screens and menus: on by default, off to declutter the bars. */
+@Composable
+private fun AddToHomeSetting(prefs: UiPreferences) {
+    val enabled by prefs.addToHome.collectAsStateWithLifecycle()
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_add_to_home), style = MaterialTheme.typography.titleMedium)
+                MutedText(stringResource(R.string.settings_add_to_home_desc))
+            }
+            Switch(checked = enabled, onCheckedChange = prefs::setAddToHome, modifier = Modifier.padding(start = 12.dp))
+        }
+    }
 }
 
 /** Live CPU and memory on the overview: on by default, off to spare data and battery. */

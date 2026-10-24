@@ -470,6 +470,8 @@
     <string name="settings_language_system">System default</string>
     <string name="settings_live_cluster_stats">Live cluster usage</string>
     <string name="settings_live_cluster_stats_desc">Refresh CPU and memory on the overview every few seconds while it is open. Turn off to save mobile data and battery.</string>
+    <string name="settings_add_to_home">Add to home screen buttons</string>
+    <string name="settings_add_to_home_desc">Show a button on screens and in menus to pin a shortcut to them on the home screen.</string>
     <string name="settings_section_security">Security</string>
     <string name="settings_auth_needs_lock">Set up a fingerprint or a screen lock (PIN, pattern, password) on this device first.</string>
     <string name="settings_auth_enable_lock">Enable app lock</string>

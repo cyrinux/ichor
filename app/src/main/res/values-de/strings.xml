@@ -467,6 +467,8 @@
     <string name="settings_language_system">Systemstandard</string>
     <string name="settings_live_cluster_stats">Live-Clusterauslastung</string>
     <string name="settings_live_cluster_stats_desc">Aktualisiert CPU und Speicher in der Übersicht alle paar Sekunden, solange sie geöffnet ist. Ausschalten spart mobile Daten und Akku.</string>
+    <string name="settings_add_to_home">Schaltflächen „Zum Startbildschirm hinzufügen“</string>
+    <string name="settings_add_to_home_desc">Zeigt auf Bildschirmen und in Menüs eine Schaltfläche, um eine Verknüpfung auf dem Startbildschirm anzuheften.</string>
     <string name="settings_section_security">Sicherheit</string>
     <string name="settings_auth_needs_lock">Richte zuerst einen Fingerabdruck oder eine Displaysperre (PIN, Muster, Passwort) auf diesem Gerät ein.</string>
     <string name="settings_auth_enable_lock">App-Sperre aktivieren</string>

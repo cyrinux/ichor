@@ -521,6 +521,8 @@
     <string name="settings_language_system">Системна</string>
     <string name="settings_live_cluster_stats">Навантаження кластера наживо</string>
     <string name="settings_live_cluster_stats_desc">Оновлює CPU і пам\'ять в огляді кожні кілька секунд, поки він відкритий. Вимкніть, щоб заощадити мобільні дані й батарею.</string>
+    <string name="settings_add_to_home">Кнопки «Додати на головний екран»</string>
+    <string name="settings_add_to_home_desc">Показує на екранах і в меню кнопку, щоб закріпити ярлик на головному екрані.</string>
     <string name="settings_section_security">Безпека</string>
     <string name="settings_auth_needs_lock">Спочатку налаштуйте на цьому пристрої відбиток пальця або блокування екрана (PIN-код, ключ, пароль).</string>
     <string name="settings_auth_enable_lock">Увімкнути блокування застосунку</string>

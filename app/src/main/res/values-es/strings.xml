@@ -474,6 +474,8 @@
     <string name="settings_language_system">Predeterminado del sistema</string>
     <string name="settings_live_cluster_stats">Uso del clúster en directo</string>
     <string name="settings_live_cluster_stats_desc">Actualiza la CPU y la memoria de la vista general cada pocos segundos mientras está abierta. Desactívalo para ahorrar datos móviles y batería.</string>
+    <string name="settings_add_to_home">Botones «Añadir a la pantalla de inicio»</string>
+    <string name="settings_add_to_home_desc">Muestra un botón en las pantallas y en los menús para fijar un acceso directo en la pantalla de inicio.</string>
     <string name="settings_section_security">Seguridad</string>
     <string name="settings_auth_needs_lock">Primero configura una huella digital o un bloqueo de pantalla (PIN, patrón, contraseña) en este dispositivo.</string>
     <string name="settings_auth_enable_lock">Activar bloqueo de la aplicación</string>

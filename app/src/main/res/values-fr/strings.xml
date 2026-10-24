@@ -474,6 +474,8 @@
     <string name="settings_language_system">Langue du système</string>
     <string name="settings_live_cluster_stats">Utilisation du cluster en direct</string>
     <string name="settings_live_cluster_stats_desc">Actualise le CPU et la mémoire de la vue d\'ensemble toutes les quelques secondes tant qu\'elle est ouverte. Désactivez pour économiser données mobiles et batterie.</string>
+    <string name="settings_add_to_home">Boutons « Ajouter à l\'écran d\'accueil »</string>
+    <string name="settings_add_to_home_desc">Affiche un bouton sur les écrans et dans les menus pour en épingler un raccourci sur l\'écran d\'accueil.</string>
     <string name="settings_section_security">Sécurité</string>
     <string name="settings_auth_needs_lock">Configurez d\'abord une empreinte ou un verrouillage d\'écran (code, schéma, mot de passe) sur cet appareil.</string>
     <string name="settings_auth_enable_lock">Activer le verrouillage de l\'app</string>
