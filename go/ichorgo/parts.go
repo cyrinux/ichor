@@ -56,17 +56,29 @@ var smbiosPlaceholders = []string{
 	"system serial number", "not specified", "unknown", "none", "0123456789", "n/a", "oem",
 }
 
+// virtualNeedles name the hypervisors and cloud platforms that report virtual hardware, matched
+// as whole words of the manufacturer or model: a virtual part has no vendor and no spare.
+var virtualNeedles = []string{
+	"virtual", "qemu", "kvm", "bochs", "vmware", "vbox", "virtualbox", "innotek", "xen",
+	"hvm domu", "virtio", "parallels", "amazon ec2", "google compute engine", "persistentdisk",
+	"openstack", "droplet",
+}
+
+// nonWord splits a manufacturer or model into words for the virtual check.
+var nonWord = regexp.MustCompile(`[^a-z0-9]+`)
+
 // PartsLookupLink is the site page for one part of a node (kind system, memory or disk) with
 // its manufacturer, model (the system product, the module's part number or the disk model)
-// and serial in the fragment, or "" when there is nothing to look up: an unknown kind, or
-// neither a model nor a serial (firmware fillers count as blank). Opened in the browser,
-// built from what the hardware screen already shows.
+// and serial in the fragment, or "" when there is nothing to look up: an unknown kind, a
+// virtual part (VIRTUAL-DISK, QEMU, VMware...), or neither a model nor a serial (firmware
+// fillers count as blank). Opened in the browser, built from what the hardware screen already
+// shows.
 func PartsLookupLink(kind, manufacturer, model, serial string) string {
 	if !slices.Contains(partsKinds, kind) {
 		return ""
 	}
 	manufacturer, model, serial = partsField(manufacturer), partsField(model), partsField(serial)
-	if model == "" && serial == "" {
+	if (model == "" && serial == "") || isVirtualPart(manufacturer, model) {
 		return ""
 	}
 	q := url.Values{}
@@ -91,6 +103,18 @@ func partsField(s string) string {
 	}
 
 	return s
+}
+
+// isVirtualPart reports a part a hypervisor or a cloud made up, by its manufacturer or model.
+func isVirtualPart(manufacturer, model string) bool {
+	words := " " + nonWord.ReplaceAllString(strings.ToLower(manufacturer+" "+model), " ") + " "
+	for _, n := range virtualNeedles {
+		if strings.Contains(words, " "+n+" ") {
+			return true
+		}
+	}
+
+	return false
 }
 
 // isSMBIOSPlaceholder reports a value the firmware filled in for want of a real one: blank,
