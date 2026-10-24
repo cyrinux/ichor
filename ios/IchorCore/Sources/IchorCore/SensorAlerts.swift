@@ -63,7 +63,8 @@ public let sensorMargin = 5.0
 public let sensorHysteresis = 3.0
 
 /// A sensor issue's stored value, "severity|hot|hostname|label|celsius|limit" (running hot) or
-/// "severity|throttled|hostname||0.0|0.0", split up.
+/// "severity|throttled|hostname|label|celsius|0.0" (throttled, with its hottest sensor; "||0.0" on a
+/// node without any, as before it was kept), split up.
 public struct SensorIssue: Equatable, Sendable {
     public static let hot = "hot"
     public static let throttledKind = "throttled"
@@ -141,7 +142,8 @@ public func sensorIssuesOf(_ health: ClusterSensorHealth, threshold: Int, known:
         }
         if node.throttled {
             out["\(node.node)|\(SensorIssue.throttledKind)"] =
-                SensorIssue(severity: dataWarning, kind: SensorIssue.throttledKind, hostname: hostname).value
+                SensorIssue(severity: dataWarning, kind: SensorIssue.throttledKind, hostname: hostname,
+                            label: node.hottest?.label ?? "", celsius: node.hottest?.celsius ?? 0).value
         }
     }
     return out
@@ -156,6 +158,7 @@ public func knownSensorIssues(_ previous: ClusterSnapshot?, context: String) -> 
 /// English title of a sensor issue, or of its end.
 func sensorTitle(_ issue: SensorIssue, problem: Bool) -> String {
     switch (issue.isThrottled, problem) {
+    case (true, true) where issue.celsius > 0: "\(issue.hostname) is throttled (\(celsiusText(issue.celsius)) °C)"
     case (true, true): "\(issue.hostname) is throttled"
     case (true, false): "\(issue.hostname) no longer throttled"
     case (false, true): "\(issue.hostname) runs hot (\(celsiusText(issue.celsius)) °C)"

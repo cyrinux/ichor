@@ -4353,6 +4353,7 @@
     <string name="monitor_sensor_hot">%1$s chauffe (%2$s °C)</string>
     <string name="monitor_sensor_hot_ok">%1$s revenu à une température normale</string>
     <string name="monitor_sensor_throttled">%1$s est bridé</string>
+    <string name="monitor_sensor_throttled_temp">%1$s est bridé (%2$s °C)</string>
     <string name="monitor_sensor_throttled_ok">%1$s n\'est plus bridé</string>
     <string name="monitor_sensor_hot_text">%1$s, alerte à %2$s °C</string>
     <string name="monitor_sensor_throttled_text">Ses cœurs tournent bien en dessous de leur vitesse : vérifiez son refroidissement.</string>

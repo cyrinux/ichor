@@ -96,6 +96,18 @@ fun ShareTarget.kubeNodeName(nodes: Collection<String>): String? =
     addr.ifEmpty { host }.takeIf { (target == ShareTarget.NODE || target == ShareTarget.STORAGE) && it.isNotEmpty() && it in nodes }
 
 /**
+ * The node a Talos storage or hardware link names (a disk or temperature alert) when the
+ * overview cannot tell (not read, or without it): its address, only when it is one of the
+ * nodes [context]'s config targets (its nodes, else its endpoints), so a link still cannot
+ * point the app's Talos calls at another address. Null for any other link.
+ */
+fun ShareTarget.configuredNode(context: ContextSummary?): String? {
+    if (target != ShareTarget.STORAGE && target != ShareTarget.HARDWARE) return null
+    val targets = context?.let { it.nodes.ifEmpty { it.endpoints } }.orEmpty()
+    return addr.takeIf { it.isNotEmpty() && it in targets }
+}
+
+/**
  * What the Kubernetes screen opens for the link: its tab, and the item to show (a workload,
  * pod or CronJob), or null for a target that is not on that screen.
  */

@@ -103,6 +103,18 @@ class SensorAlertsTest {
     }
 
     @Test
+    fun aThrottledNodeKeepsItsHottestReading() {
+        val throttled = sensorIssuesOf(health(worker(91.0, throttled = true)), SENSOR_THRESHOLD_AUTO)
+        val detail = SensorDetail.parse(throttled.getValue("192.0.2.20|throttled"))
+        assertEquals("Package id 0", detail.label)
+        assertEquals(91.0, detail.celsius, 0.0)
+        // A node without sensors, and a value stored before the reading was kept: none.
+        val bare = NodeSensorHealth("192.0.2.20", "worker-1", throttled = true)
+        assertEquals(0.0, SensorDetail.parse(sensorIssuesOf(health(bare), SENSOR_THRESHOLD_AUTO).getValue("192.0.2.20|throttled")).celsius, 0.0)
+        assertEquals(0.0, SensorDetail.parse("warning|throttled|worker-1||0.0|0.0").celsius, 0.0)
+    }
+
+    @Test
     fun notWatchedForgetsTheIssues() {
         val hot = sensorIssuesOf(health(worker(99.0)), SENSOR_THRESHOLD_AUTO)
         val off = evaluate(snap(hot), snap(null, watched = false), now)

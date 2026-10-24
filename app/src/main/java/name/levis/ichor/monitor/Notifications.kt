@@ -198,10 +198,12 @@ private fun pluginAlertText(context: Context, alert: Alert): String {
     return context.getString(R.string.monitor_data_text, issue.detail.ifEmpty { plugin }, severity)
 }
 
-/** "worker-1 runs hot (88.0 °C)", "worker-1 is throttled", or the cleared forms, from a [SensorDetail]. */
+/** "worker-1 runs hot (88.0 °C)", "worker-1 is throttled (91.0 °C)", or the cleared forms, from a [SensorDetail]. */
 private fun sensorAlertTitle(context: Context, alert: Alert): String {
     val d = SensorDetail.parse(alert.detail)
     return when {
+        // Without a reading (a node without sensors, or an alert stored before it was kept): no value.
+        d.throttled && alert.problem && d.celsius > 0 -> context.getString(R.string.monitor_sensor_throttled_temp, d.hostname, celsius(d.celsius))
         d.throttled && alert.problem -> context.getString(R.string.monitor_sensor_throttled, d.hostname)
         d.throttled -> context.getString(R.string.monitor_sensor_throttled_ok, d.hostname)
         alert.problem -> context.getString(R.string.monitor_sensor_hot, d.hostname, celsius(d.celsius))

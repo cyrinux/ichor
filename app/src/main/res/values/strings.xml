@@ -4356,6 +4356,7 @@
     <string name="monitor_sensor_hot">%1$s runs hot (%2$s °C)</string>
     <string name="monitor_sensor_hot_ok">%1$s back to a normal temperature</string>
     <string name="monitor_sensor_throttled">%1$s is throttled</string>
+    <string name="monitor_sensor_throttled_temp">%1$s is throttled (%2$s °C)</string>
     <string name="monitor_sensor_throttled_ok">%1$s no longer throttled</string>
     <string name="monitor_sensor_hot_text">%1$s, alert at %2$s °C</string>
     <string name="monitor_sensor_throttled_text">Its cores run well below their speed: check its cooling.</string>

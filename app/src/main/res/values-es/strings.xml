@@ -4353,6 +4353,7 @@
     <string name="monitor_sensor_hot">%1$s se calienta (%2$s °C)</string>
     <string name="monitor_sensor_hot_ok">%1$s vuelve a una temperatura normal</string>
     <string name="monitor_sensor_throttled">%1$s está limitado</string>
+    <string name="monitor_sensor_throttled_temp">%1$s está limitado (%2$s °C)</string>
     <string name="monitor_sensor_throttled_ok">%1$s ya no está limitado</string>
     <string name="monitor_sensor_hot_text">%1$s, aviso a %2$s °C</string>
     <string name="monitor_sensor_throttled_text">Sus núcleos van muy por debajo de su velocidad: revisa la refrigeración.</string>

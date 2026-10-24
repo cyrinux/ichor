@@ -4345,6 +4345,7 @@
     <string name="monitor_sensor_hot">%1$s läuft heiß (%2$s °C)</string>
     <string name="monitor_sensor_hot_ok">%1$s wieder bei normaler Temperatur</string>
     <string name="monitor_sensor_throttled">%1$s wird gedrosselt</string>
+    <string name="monitor_sensor_throttled_temp">%1$s wird gedrosselt (%2$s °C)</string>
     <string name="monitor_sensor_throttled_ok">%1$s nicht mehr gedrosselt</string>
     <string name="monitor_sensor_hot_text">%1$s, Warnung ab %2$s °C</string>
     <string name="monitor_sensor_throttled_text">Seine Kerne laufen deutlich unter ihrem Takt: prüfe die Kühlung.</string>
