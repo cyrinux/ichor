@@ -33735,6 +33735,47 @@
         }
       }
     },
+    "%@ is throttled (%@ °C)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is throttled (%2$@ °C)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ est bridé (%2$@ °C)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ está limitado (%2$@ °C)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ wird gedrosselt (%2$@ °C)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ è limitato (%2$@ °C)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ пригальмовується (%2$@ °C)"
+          }
+        }
+      }
+    },
     "%@ no longer throttled" : {
       "extractionState" : "manual",
       "localizations" : {

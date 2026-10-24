@@ -4553,6 +4553,7 @@
     <string name="monitor_sensor_hot">%1$s перегрівається (%2$s °C)</string>
     <string name="monitor_sensor_hot_ok">%1$s знову має нормальну температуру</string>
     <string name="monitor_sensor_throttled">%1$s пригальмовується</string>
+    <string name="monitor_sensor_throttled_temp">%1$s пригальмовується (%2$s °C)</string>
     <string name="monitor_sensor_throttled_ok">%1$s більше не пригальмовується</string>
     <string name="monitor_sensor_hot_text">%1$s, сповіщення за %2$s °C</string>
     <string name="monitor_sensor_throttled_text">Його ядра працюють значно нижче своєї частоти: перевірте охолодження.</string>

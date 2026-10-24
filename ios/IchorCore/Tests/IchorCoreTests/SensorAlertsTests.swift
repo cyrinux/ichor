@@ -69,7 +69,16 @@ final class SensorAlertsTests: XCTestCase {
         let once = evaluate(previous: snap([:]), current: snap(throttled), now: now)
         XCTAssertTrue(once.alerts.isEmpty)
         let twice = evaluate(previous: once.next, current: snap(throttled), now: now)
-        XCTAssertEqual(twice.alerts.map(\.title), ["worker-1 is throttled"])
+        XCTAssertEqual(twice.alerts.map(\.title), ["worker-1 is throttled (60.0 °C)"])
+    }
+
+    func testAThrottledNodeWithoutAReadingHasNoValue() {
+        let bare = SensorNode(node: "192.0.2.20", hostname: "worker-1", throttled: true)
+        let issue = SensorIssue(value: sensorIssuesOf(health(bare), threshold: sensorThresholdAuto)["192.0.2.20|throttled"]!)
+        XCTAssertEqual(issue.celsius, 0)
+        XCTAssertEqual(sensorTitle(issue, problem: true), "worker-1 is throttled")
+        // A value stored before the reading was kept.
+        XCTAssertEqual(sensorTitle(SensorIssue(value: "warning|throttled|worker-1||0.0|0.0"), problem: true), "worker-1 is throttled")
     }
 
     func testOldSnapshotsDecodeWithoutTheSensorFields() throws {

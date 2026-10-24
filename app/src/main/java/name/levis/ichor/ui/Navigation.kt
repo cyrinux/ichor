@@ -31,6 +31,7 @@ import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.configuredNode
 import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.kubeNodeName
@@ -471,7 +472,12 @@ private suspend fun ShareTarget.kubeNodeRoute(app: TalosApp): String? {
     return kubeNodeName(names)?.let { Routes.kubeNodes(null, query = it) }
 }
 
-/** The cluster's node the link names, by address or hostname; null when it is none of its. */
+/**
+ * The cluster's node the link names, by address or hostname; null when it is none of its. When
+ * the overview does not have it (it could not be read, say right after a cold start from a
+ * notification), a storage or hardware link to a node of the context's config still opens.
+ */
 private suspend fun ShareTarget.clusterNode(app: TalosApp): NodeOverview? =
     runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
         ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
+        ?: configuredNode(app.configRepository.config.value?.activeSummary)?.let { NodeOverview(it, host.ifEmpty { it }, reachable = false) }

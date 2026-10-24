@@ -202,7 +202,10 @@ extension BackgroundMonitor {
         let host = issue.hostname
         if issue.isThrottled {
             guard alert.problem else { return (String(localized: "\(host) no longer throttled"), String(localized: "Node temperatures")) }
-            return (String(localized: "\(host) is throttled"), String(localized: "Its cores run well below their speed: check its cooling."))
+            let text = String(localized: "Its cores run well below their speed: check its cooling.")
+            // Without a reading (a node without sensors, or an alert stored before it was kept): no value.
+            guard issue.celsius > 0 else { return (String(localized: "\(host) is throttled"), text) }
+            return (String(localized: "\(host) is throttled (\(celsiusText(issue.celsius)) °C)"), text)
         }
         guard alert.problem else { return (String(localized: "\(host) back to a normal temperature"), String(localized: "Node temperatures")) }
         return (String(localized: "\(host) runs hot (\(celsiusText(issue.celsius)) °C)"),
