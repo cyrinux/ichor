@@ -4,9 +4,9 @@ on:
   # Website-only changes (pages.yml's paths) build nothing here.
   push:
     branches: [main]
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-plugins.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-reference.py", ".github/workflows/pages.yml"]
   pull_request:
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-plugins.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-reference.py", ".github/workflows/pages.yml"]
   # Tags: release.yml calls this, then publishes the release once with all files.
   # Artifacts are only uploaded then (github.ref is the caller's tag); pushes and PRs
   # just build.

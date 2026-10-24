@@ -42,7 +42,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.userMessage
 
-// docs/plugins.md, published by the website workflow (scripts/site-plugins.py).
+// docs/plugins.md, published by the website workflow (scripts/site-reference.py).
 private const val PLUGIN_DOCS_URL = "https://cyrinux.github.io/ichor/plugins/"
 
 /**

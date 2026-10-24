@@ -5778,6 +5778,7 @@
     <string name="runbooks_menu">Ранбуки…</string>
     <string name="runbooks_title">Ранбуки</string>
     <string name="runbooks_import">Імпортувати ранбук</string>
+    <string name="runbooks_help">Ранбук — це файл YAML зі списком дій застосунку, що виконуються по черзі: schemaVersion, name і від 1 до 50 steps. Кожен крок має id, action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), target і свої params.\n\nІмпортуйте ранбук кнопкою +, вставивши його, з файлу або за посиланням https: спершу показується його план, нічого не виконується. Торкніться ранбука, щоб побачити план і запустити його; кожен руйнівний крок просить підтвердження перед виконанням. Довге натискання видаляє його.\n\nДокументація описує кожну дію, її ціль і параметри, з прикладами.</string>
     <string name="runbooks_empty">Для цього кластера ще немає ранбуків. Імпортуйте один: упорядкований список дій застосунку в YAML.</string>
     <string name="runbooks_counts">Кроків: %1$s · руйнівних: %2$s</string>
     <string name="runbooks_problem">Неможливо запустити: %1$s</string>

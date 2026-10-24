@@ -67,6 +67,9 @@ const val CRONJOBS_DOCS_URL = "${ICHOR_WEBSITE_URL}#cronjobs"
 /** The website's section on Argo CD: an app's own icon. */
 const val ARGOCD_DOCS_URL = "${ICHOR_WEBSITE_URL}#argocd"
 
+/** The website's runbook reference (docs/runbooks.md, published by scripts/site-reference.py). */
+const val RUNBOOKS_DOCS_URL = "${ICHOR_WEBSITE_URL}runbooks/"
+
 /** A muted line closing a list, whose (i) tells how a resource names its own icon ([text]). */
 @Composable
 fun CustomIconHint(text: String, link: String, modifier: Modifier = Modifier) {
