@@ -5528,6 +5528,7 @@
     <string name="runbooks_menu">Runbooks…</string>
     <string name="runbooks_title">Runbooks</string>
     <string name="runbooks_import">Runbook importieren</string>
+    <string name="runbooks_help">Ein Runbook ist eine YAML-Datei mit Aktionen der App, die der Reihe nach laufen: ein schemaVersion, ein name und 1 bis 50 steps. Jeder Schritt hat eine id, eine action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), ein target und seine params.\n\nImportiere eines mit + durch Einfügen, aus einer Datei oder über einen https-Link: Zuerst erscheint sein Plan, nichts wird ausgeführt. Tippe auf ein Runbook, um seinen Plan zu sehen und es auszuführen; jeder destruktive Schritt fragt vorher nach. Langes Drücken entfernt es.\n\nDie Dokumentation beschreibt jede Aktion, ihr Ziel und ihre Parameter, mit Beispielen.</string>
     <string name="runbooks_empty">Noch kein Runbook für diesen Cluster. Importiere eines: eine geordnete Liste der App-Aktionen, in YAML.</string>
     <string name="runbooks_counts">%1$s Schritte · %2$s destruktiv</string>
     <string name="runbooks_problem">Kann nicht ausgeführt werden: %1$s</string>

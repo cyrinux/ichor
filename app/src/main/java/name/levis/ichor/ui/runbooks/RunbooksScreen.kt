@@ -34,15 +34,18 @@ import name.levis.ichor.model.RunbookItem
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.InfoHint
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.RUNBOOKS_DOCS_URL
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.userMessage
 
 /**
  * The runbooks kept for the cluster on screen: each with its step and destructive counts;
- * a tap opens its plan, a long press removes it, + imports one.
+ * a tap opens its plan, a long press removes it, + imports one, (i) explains the format and
+ * links to its documentation.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -75,6 +78,7 @@ fun RunbooksScreen(onBack: () -> Unit, onOpen: (id: String) -> Unit) {
                 title = { Text(stringResource(R.string.runbooks_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    InfoHint(stringResource(R.string.runbooks_title), stringResource(R.string.runbooks_help), link = RUNBOOKS_DOCS_URL)
                     TooltipIconButton(Icons.Outlined.Add, stringResource(R.string.runbooks_import), enabled = scope != null, onClick = { importing = true })
                 },
             )

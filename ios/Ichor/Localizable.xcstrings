@@ -1884,6 +1884,41 @@
         }
       }
     },
+    "A runbook is a YAML file that lists this app's own actions, run in order: a schemaVersion, a name and 1 to 50 steps. Each step has an id, an action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), a target and its params.\n\nImport one by pasting it, from a file or from an https link: its plan shows first and nothing runs. Tap a runbook to see its plan and run it; every destructive step asks before it runs. Swipe one to remove it.\n\nThe documentation lists every action, its target and parameters, with examples." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un runbook est un fichier YAML qui liste des actions de l'app, exécutées dans l'ordre : un schemaVersion, un name et de 1 à 50 steps. Chaque étape a un id, une action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), une target et ses params.\n\nImportez-en un en le collant, depuis un fichier ou un lien https : son plan s'affiche d'abord et rien n'est exécuté. Touchez un runbook pour voir son plan et le lancer ; chaque étape destructive demande confirmation avant de s'exécuter. Balayez-le pour le supprimer.\n\nLa documentation décrit chaque action, sa cible et ses paramètres, avec des exemples."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un runbook es un archivo YAML que enumera acciones de la app, ejecutadas en orden: un schemaVersion, un name y de 1 a 50 steps. Cada paso tiene un id, una action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), un target y sus params.\n\nImporta uno pegándolo, desde un archivo o desde un enlace https: primero se muestra su plan y no se ejecuta nada. Toca un runbook para ver su plan y ejecutarlo; cada paso destructivo pide confirmación antes de ejecutarse. Desliza uno para eliminarlo.\n\nLa documentación describe cada acción, su destino y sus parámetros, con ejemplos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Runbook ist eine YAML-Datei mit Aktionen der App, die der Reihe nach laufen: ein schemaVersion, ein name und 1 bis 50 steps. Jeder Schritt hat eine id, eine action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), ein target und seine params.\n\nImportiere eines durch Einfügen, aus einer Datei oder über einen https-Link: Zuerst erscheint sein Plan, nichts wird ausgeführt. Tippe auf ein Runbook, um seinen Plan zu sehen und es auszuführen; jeder destruktive Schritt fragt vorher nach. Wische über eines, um es zu entfernen.\n\nDie Dokumentation beschreibt jede Aktion, ihr Ziel und ihre Parameter, mit Beispielen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un runbook è un file YAML che elenca azioni dell'app, eseguite in ordine: uno schemaVersion, un name e da 1 a 50 steps. Ogni passo ha un id, una action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), un target e i suoi params.\n\nImportane uno incollandolo, da un file o da un link https: prima viene mostrato il piano e non viene eseguito nulla. Tocca un runbook per vederne il piano ed eseguirlo; ogni passo distruttivo chiede conferma prima di partire. Scorri su uno per rimuoverlo.\n\nLa documentazione descrive ogni azione, il suo target e i parametri, con esempi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ранбук — це файл YAML зі списком дій застосунку, що виконуються по черзі: schemaVersion, name і від 1 до 50 steps. Кожен крок має id, action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), target і свої params.\n\nІмпортуйте ранбук, вставивши його, з файлу або за посиланням https: спершу показується його план, нічого не виконується. Торкніться ранбука, щоб побачити план і запустити його; кожен руйнівний крок просить підтвердження перед виконанням. Проведіть по ранбуку, щоб видалити його.\n\nДокументація описує кожну дію, її ціль і параметри, з прикладами."
+          }
+        }
+      }
+    },
     "Keep runbook" : {
       "extractionState" : "manual",
       "localizations" : {

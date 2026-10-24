@@ -151,12 +151,12 @@ i18n-check:
 site *args:
     python3 scripts/site-i18n.py {{ args }}
 
-# The plugin reference page (docs/plugins/index.html, git-ignored) from docs/plugins.md, as CI
-# writes it before publishing; the Markdown package goes in a venv under .cache/.
-site-plugins:
+# The reference pages (docs/plugins/ and docs/runbooks/, git-ignored) from their Markdown, as
+# CI writes them before publishing; the Markdown package goes in a venv under .cache/.
+site-reference:
     test -x .cache/site-venv/bin/python || python3 -m venv .cache/site-venv
     .cache/site-venv/bin/python -c "import markdown" 2>/dev/null || .cache/site-venv/bin/pip install --quiet markdown==3.8.2
-    .cache/site-venv/bin/python scripts/site-plugins.py
+    .cache/site-venv/bin/python scripts/site-reference.py
 
 # Refresh the bundled app-inventory icons from go/ichorgo/appcatalog.json (needs network
 # and ImageMagick). `just app-icons --check` only validates the catalog and the bundle.

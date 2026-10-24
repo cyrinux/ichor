@@ -3,8 +3,9 @@ import IchorCore
 
 /// The cluster's runbooks (docs/runbooks.md), from the cluster menu's "Runbooks…": each one's
 /// name, description, steps and how many are destructive. A tap opens its plan; Import brings
-/// one by paste, file or link (its plan shown first, never run on import); a swipe removes one.
-/// Same screen as Android's RunbooksScreen.kt.
+/// one by paste, file or link (its plan shown first, never run on import); a swipe removes one;
+/// the (i) explains the format and links to its documentation. Same screen as Android's
+/// RunbooksScreen.kt.
 struct RunbooksView: View {
     @Binding var path: [Route]
     @Environment(AppModel.self) private var model
@@ -12,6 +13,10 @@ struct RunbooksView: View {
     @State private var importing = false
     @State private var loading = true
     @State private var failure: String?
+
+    /// docs/runbooks.md, published by the website workflow (scripts/site-reference.py).
+    private static let docs = URL(string: "https://cyrinux.github.io/ichor/runbooks/")!
+    private static let help: LocalizedStringKey = "A runbook is a YAML file that lists this app's own actions, run in order: a schemaVersion, a name and 1 to 50 steps. Each step has an id, an action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), a target and its params.\n\nImport one by pasting it, from a file or from an https link: its plan shows first and nothing runs. Tap a runbook to see its plan and run it; every destructive step asks before it runs. Swipe one to remove it.\n\nThe documentation lists every action, its target and parameters, with examples."
 
     private var fingerprint: String { model.activeSummary?.fingerprint ?? "" }
 
@@ -48,6 +53,9 @@ struct RunbooksView: View {
         .overlay { if loading && store.list(for: fingerprint).isEmpty { ProgressView() } }
         .navigationTitle("Runbooks")
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                InfoHint("Runbooks", Self.help, link: Self.docs)
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button { importing = true } label: {
                     Label("Import runbook", systemImage: "square.and.arrow.down")
