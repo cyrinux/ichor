@@ -24,7 +24,8 @@ import name.levis.ichorgo.Ichorgo
  * "Find spare parts" for one part ([kind] system, memory or disk): opens the Ichor site's parts
  * page in the browser with the part's maker, model and serial after the #, where the vendor's
  * page and a web search are one tap away. The app contacts no vendor. Nothing when the part
- * has neither a model nor a serial (firmware fillers count as blank).
+ * is virtual (VIRTUAL-DISK, QEMU, VMware...) or has neither a model nor a serial (firmware
+ * fillers count as blank).
  */
 @Composable
 internal fun FindPartsButton(kind: String, manufacturer: String, model: String, serial: String) {

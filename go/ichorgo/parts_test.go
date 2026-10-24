@@ -37,6 +37,7 @@ func TestPartsLookupLink(t *testing.T) {
 		{"hp server", "system", "HP", "ProLiant DL360 Gen10", "CZJ1234ABC", "hpe", "ProLiant DL360 Gen10", "CZJ1234ABC"},
 		{"unknown maker", "system", "Ichor", "Demo server", "DEMO-001", "other", "Demo server", "DEMO-001"},
 		{"a serial alone is worth a search", "disk", "", "", "ZC1ABCDE", "other", "", "ZC1ABCDE"},
+		{"virtual only as a whole word", "system", "Xenonics", "Virtualizer 3000", "VZ123", "other", "Virtualizer 3000", "VZ123"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -64,6 +65,15 @@ func TestPartsLookupLinkNothingToLookUp(t *testing.T) {
 		{"only zeros and repeats", "system", "System manufacturer", "System Product Name", "0000000"},
 		{"blank", "disk", "", "  ", ""},
 		{"a cpu has no lookup", "cpu", "Intel", "Xeon E-2236", "ABC1234"},
+		{"virtual disk", "disk", "", "VIRTUAL-DISK", "1234ABCD"},
+		{"qemu disk", "disk", "", "QEMU HARDDISK", "QM00001"},
+		{"hyper-v disk", "disk", "Msft", "Virtual Disk", "60022480ABCD"},
+		{"virtualbox disk", "disk", "", "VBOX HARDDISK", "VB1234-5678"},
+		{"qemu machine", "system", "QEMU", "Standard PC (Q35 + ICH9, 2009)", "ABC1234"},
+		{"vmware machine", "system", "VMware, Inc.", "VMware7,1", "VMware-42 1a 2b"},
+		{"hyper-v machine", "system", "Microsoft Corporation", "Virtual Machine", "1234-5678"},
+		{"cloud machine", "system", "Amazon EC2", "m5.large", "ec2abcd"},
+		{"qemu memory", "memory", "QEMU", "RAM", "ABC1234"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

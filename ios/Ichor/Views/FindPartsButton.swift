@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// "Find spare parts" for one part of a node: opens the Ichor site's parts page in the browser,
-/// where the vendor's page and a web search are one tap away. Nothing without a link (a part
-/// with neither a model nor a serial).
+/// where the vendor's page and a web search are one tap away. Nothing without a link (a virtual
+/// part, or one with neither a model nor a serial).
 struct FindPartsButton: View {
     let url: URL?
 
