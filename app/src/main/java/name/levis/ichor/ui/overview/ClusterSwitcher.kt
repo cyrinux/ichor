@@ -84,6 +84,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.adjacentContext
+import name.levis.ichor.data.usesOwnKubeServer
 import name.levis.ichor.model.CLUSTER_NAME_MAX
 import name.levis.ichor.model.CLUSTER_SEEDS
 import name.levis.ichor.model.ClusterGroup
@@ -319,10 +320,11 @@ fun ClusterSheet(
                     onActivity = onActivity?.let { open -> { open(context) } },
                     // The demo's repository is built in.
                     onRepository = onRepository?.let { open -> { open(context) } }?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
-                    // Not in screenshot mode (the dialog shows the real address), nor for the demo.
-                    kubeServer = kubeServers[context.fingerprint]?.takeIf { it.isNotEmpty() && !labels.masked },
+                    // Not in screenshot mode (the dialog shows the real address), nor for the demo, nor
+                    // where the calls do not use it (Omni, a linked Kubernetes access).
+                    kubeServer = kubeServers[context.fingerprint]?.takeIf { it.isNotEmpty() && !labels.masked && context.usesOwnKubeServer },
                     onKubeServer = { addressing = context }
-                        .takeIf { onKubeServer != null && context.fingerprint.isNotBlank() && !context.demo && !labels.masked },
+                        .takeIf { onKubeServer != null && context.fingerprint.isNotBlank() && !context.demo && !labels.masked && context.usesOwnKubeServer },
                 )
             }
             if (groups == null) {

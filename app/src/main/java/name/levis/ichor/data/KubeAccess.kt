@@ -3,6 +3,7 @@ package name.levis.ichor.data
 import android.content.SharedPreferences
 import kotlinx.coroutines.flow.StateFlow
 import name.levis.ichor.model.ConfigSummary
+import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.isKube
 
 /**
@@ -47,6 +48,13 @@ internal fun withKubeAccess(summary: ConfigSummary, links: Map<String, String>):
         },
     )
 }
+
+/**
+ * Whether the API address set for this cluster is the one its Kubernetes calls use: not through
+ * Omni (its kube proxy), nor for a Talos cluster linked to a kubeconfig cluster (that one's is,
+ * see [kubeTarget]). [kubeAccess] is set only for a valid link, as [withKubeAccess] does.
+ */
+val ContextSummary.usesOwnKubeServer: Boolean get() = !omni && kubeAccess.isEmpty()
 
 /** Where a Kubernetes call of the cluster on screen goes: a config, its context, the API address set by the user ("" for the config's). */
 data class KubeTarget(val yaml: String, val context: String, val server: String) {

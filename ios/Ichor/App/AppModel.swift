@@ -90,7 +90,7 @@ final class AppModel {
     private(set) var clusterNames: [String: String]
 
     /// The Kubernetes API address the user set for clusters, by context fingerprint, to use
-    /// instead of the one in the kubeconfig Talos issues (checked by TalosClient.normalizeKubeServer).
+    /// instead of the one in the cluster's kubeconfig (checked by TalosClient.normalizeKubeServer).
     private(set) var kubeServers: [String: String]
 
     /// The Kubernetes access of Talos clusters (K5): Talos fingerprint → fingerprint of the
