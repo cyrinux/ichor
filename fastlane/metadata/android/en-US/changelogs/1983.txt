@@ -1,0 +1,6 @@
+• Clean up dead pods runs in the background with progress and a result
+• The Kubernetes API address is set from the cluster's row in Manage clusters
+• The Kubernetes menu reads in sections, and Clean up dead pods moves to the Pods tab
+• "Record actions in the cluster" is set per cluster, and a cluster that had it on keeps it
+• The Argo CD sync sheet keeps Sync in reach
+• An EKS cluster no longer asks to sign in again when renewing its Identity Center token fails on the network
