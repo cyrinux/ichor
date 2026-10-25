@@ -96,6 +96,14 @@ func (c *configCache) get(text string) *parsedConfig {
 	return p
 }
 
+// reset forgets every parsed config: what a parse derives (the fingerprints) changed.
+func (c *configCache) reset() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.entries = nil
+}
+
 // contentHash is the key of a config text: the hex SHA-256 of its bytes. ConfigDigest hands
 // the same value to the apps.
 func contentHash(text string) string {
