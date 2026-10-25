@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.argocd
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +19,7 @@ import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.ViewAgenda
-import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
@@ -25,6 +27,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -213,12 +217,24 @@ private fun SelectButton(selecting: Boolean, onSelecting: (Boolean) -> Unit, ena
 private fun GroupByMenu(groupBy: ArgoGroupBy, onGroupBy: (ArgoGroupBy) -> Unit, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
-        AssistChip(
+        // Same height, corners and outline as the search field beside it, so the row reads as one.
+        OutlinedButton(
             onClick = { open = true },
-            label = { Text(stringResource(groupBy.label)) },
-            leadingIcon = { Icon(Icons.Outlined.ViewAgenda, contentDescription = stringResource(R.string.argo_group_by), modifier = Modifier.size(18.dp)) },
-            trailingIcon = { Icon(Icons.Outlined.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp)) },
-        )
+            shape = OutlinedTextFieldDefaults.shape,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            contentPadding = PaddingValues(start = 12.dp, end = 4.dp),
+            modifier = Modifier.heightIn(min = OutlinedTextFieldDefaults.MinHeight),
+        ) {
+            Icon(
+                Icons.Outlined.ViewAgenda,
+                contentDescription = stringResource(R.string.argo_group_by),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(stringResource(groupBy.label), style = MaterialTheme.typography.bodyLarge, maxLines = 1, modifier = Modifier.padding(start = 8.dp))
+            Icon(Icons.Outlined.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             ArgoGroupBy.entries.forEach { g ->
                 DropdownMenuItem(text = { Text(stringResource(g.label)) }, onClick = { onGroupBy(g); open = false })
