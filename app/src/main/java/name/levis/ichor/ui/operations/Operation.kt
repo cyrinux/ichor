@@ -121,6 +121,7 @@ enum class OperationKind(
     NETPERF(0x0b98, 0x0b99, R.string.netperf_notification_public, R.string.netperf_notification_result_public, DeepLink.NETPERF),
     RUNBOOK(0x0b9a, 0x0b9b, R.string.runbook_notification_public, R.string.runbook_notification_result_public, DeepLink.RUNBOOK),
     POD_SWEEP(0x0b9c, 0x0b9d, R.string.pod_sweep_notification_public, R.string.pod_sweep_notification_result_public, null),
+    CA_ROTATION(0x0b9e, 0x0b9f, R.string.ca_rotate_notification_public, R.string.ca_rotate_notification_result_public, DeepLink.CA_ROTATION),
     ;
 
     companion object {

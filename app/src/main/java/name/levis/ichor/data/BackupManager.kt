@@ -31,6 +31,8 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichorgo.Ichorgo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 
 /**
  * What a restore changed that the screen on display has to act on; [plugins] when the backup
@@ -124,6 +126,7 @@ class BackupManager(
                 secrets = if (includeSecrets) secrets() else null,
                 proposals = kept,
                 plugins = imported,
+                fingerprintLineage = backupFingerprintLineage(),
             )
             val json = TalosJson.encodeToString(BackupPayload.serializer(), payload)
             backupCall {
@@ -163,6 +166,8 @@ class BackupManager(
         // The config first: on failure nothing else changed. Screenshot mode comes after it,
         // its re-parse then reads the restored config (applied before, it could race the write).
         // Both stores in one go: a backup without a kubeconfig removes the clusters added from one.
+        // Before the config is parsed: a cluster whose CA was rotated keeps its fingerprint.
+        restoreFingerprintLineage(payload.fingerprintLineage)
         configs.replace(payload.talosconfig, payload.kubeconfig.orEmpty(), payload.activeContextIndex)
         val summary = configs.config.value?.summary ?: throw NoConfigException()
         val fingerprints = summary.contexts.map { it.fingerprint }
@@ -273,3 +278,16 @@ internal fun backupException(message: String): LocalizedException? = when {
     message.startsWith(Ichorgo.BackupErrNeedsIdentity) -> LocalizedException(UiText.Res(R.string.backup_err_needs_identity))
     else -> null
 }
+
+/** This device's fingerprint lineage for a backup, null when no CA was rotated. Best effort. */
+private fun backupFingerprintLineage(): Map<String, String>? = runCatching {
+    TalosJson.decodeFromString(LINEAGE, Ichorgo.fingerprintLineageExport())
+}.getOrNull()?.takeIf { it.isNotEmpty() }
+
+/** Merges a backup's fingerprint lineage into this device's. Best effort: at worst a rotated cluster's options are not matched. */
+private fun restoreFingerprintLineage(lineage: Map<String, String>?) {
+    if (lineage.isNullOrEmpty()) return
+    runCatching { Ichorgo.fingerprintLineageImport(TalosJson.encodeToString(LINEAGE, lineage)) }
+}
+
+private val LINEAGE = MapSerializer(String.serializer(), String.serializer())

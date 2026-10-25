@@ -72,7 +72,7 @@ enum class DeepLink {
     ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH,
 
     // A followed run's notification (OperationService): the screen it shows on.
-    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE, ARGO_APP, FLUX_APP, WORKLOAD, NETPERF, RUNBOOK;
+    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE, ARGO_APP, FLUX_APP, WORKLOAD, NETPERF, RUNBOOK, CA_ROTATION;
 
     companion object {
         /** The screen an EXTRA_OPEN value names; null for anything else. */
@@ -243,6 +243,9 @@ fun Navigation(
             }
             DeepLink.RUNBOOK -> if (!startWithImport && app.runbookManager.current.value != null) {
                 nav.navigate(Routes.RUNBOOK_RUN) { launchSingleTop = true }
+            }
+            DeepLink.CA_ROTATION -> if (!startWithImport && app.caRotationManager.current.value != null) {
+                nav.navigate(Routes.ROTATE_CA) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()

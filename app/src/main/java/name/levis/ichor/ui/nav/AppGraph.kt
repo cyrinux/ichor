@@ -100,6 +100,7 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
 private fun settingsActions(nav: NavHostController, app: TalosApp) = SettingsActions(
     onReimport = { nav.navigate(Routes.IMPORT) },
     onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+    onRotateCA = { nav.navigate(Routes.ROTATE_CA) },
     onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
     onActivity = { nav.navigate(Routes.activity()) },
     onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },

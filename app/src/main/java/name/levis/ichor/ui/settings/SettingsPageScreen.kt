@@ -37,6 +37,7 @@ import name.levis.ichor.ui.components.pageContent
 class SettingsActions(
     val onReimport: () -> Unit,
     val onIssueConfig: () -> Unit,
+    val onRotateCA: () -> Unit,
     val onSupportBundle: () -> Unit,
     val onActivity: () -> Unit,
     val onIntegrations: () -> Unit,
@@ -80,7 +81,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
             SettingsPage.KUBERNETES ->
                 summary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(stores.talos, stores.appLock, it) }
             SettingsPage.CLUSTERS ->
-                ClustersSection(stores.configs, actions.onReimport, actions.onIssueConfig, actions.onCleared)
+                ClustersSection(stores.configs, actions.onReimport, actions.onIssueConfig, actions.onRotateCA, actions.onCleared)
             SettingsPage.SUPPORT ->
                 SupportSection(summary, actions.onSupportBundle, actions.onActivity, actions.onIntegrations)
             SettingsPage.ABOUT -> {

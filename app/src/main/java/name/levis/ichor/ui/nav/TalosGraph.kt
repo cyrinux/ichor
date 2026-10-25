@@ -32,6 +32,7 @@ import name.levis.ichor.ui.hardware.HardwareScreen
 import name.levis.ichor.ui.health.HealthScreen
 import name.levis.ichor.ui.images.ImagesScreen
 import name.levis.ichor.ui.issueconfig.IssueConfigScreen
+import name.levis.ichor.ui.rotateca.RotateCAScreen
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubespan.KubeSpanScreen
@@ -240,6 +241,15 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         )
     }
     composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.ROTATE_CA) {
+        RotateCAScreen(
+            onBack = { nav.popBackStack() },
+            onIssueConfig = {
+                nav.popBackStack()
+                nav.navigate(Routes.ISSUE_CONFIG)
+            },
+        )
+    }
     composable(
         Routes.LOGS,
         arguments = listOf(
