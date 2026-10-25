@@ -23,6 +23,7 @@ func blockHash(c byte) string { return strings.Repeat(string(c), 64) }
 type fakeGarageAPI struct {
 	t       *testing.T
 	answers map[string]string
+	status  string // GetClusterStatus answer; empty: two nodes without a role
 	mu      sync.Mutex
 	calls   []string
 }
@@ -32,7 +33,9 @@ func (f *fakeGarageAPI) run(_ context.Context, namespace, pod, container string,
 		f.t.Errorf("exec target %s/%s/%s", namespace, pod, container)
 	}
 
-	if slices.Equal(argv, garageCommands.status) {
+	if slices.Equal(argv, garageCommands.status) && f.status != "" {
+		return []byte(f.status), nil, nil
+	} else if slices.Equal(argv, garageCommands.status) {
 		return []byte(`{"nodes":[{"id":"` + nodeA + `","hostname":"garage-a"},{"id":"` + nodeB + `","hostname":"garage-b"}]}`), nil, nil
 	}
 
@@ -163,6 +166,62 @@ func TestReadGarageBlockReport(t *testing.T) {
 
 	if got := report.retry[nodeB]; !slices.Equal(got, []string{blockHash('3')}) {
 		t.Errorf("retry: %v", report.retry)
+	}
+}
+
+// With the layout known, each node lists its own errors: a node whose list is too large
+// to read keeps its error, the others still count, and nothing reads as unreachable.
+func TestReadGarageBlockReportByNode(t *testing.T) {
+	role := `"role":{"zone":"z","tags":[]}`
+	f := &fakeGarageAPI{t: t, status: `{"nodes":[{"id":"` + nodeA + `","hostname":"garage-a",` + role + `},
+		{"id":"` + nodeB + `","hostname":"garage-b",` + role + `},{"id":"` + nodeC + `","hostname":"garage-c",` + role + `}]}`,
+		answers: map[string]string{
+			"ListBlockErrors " + nodeA:                     `{"success":{"` + nodeA + `":[{"blockHash":"` + blockHash('1') + `","refcount":0,"errorCount":3}]},"error":{}}`,
+			"ListBlockErrors " + nodeB:                     `{"success":{"` + nodeB + `":[{"blockHash":"` + blockHash('3') + `","refcount":0,"errorCount":5}]},"error":{}}`,
+			"ListWorkers *":                                `{"success":{"` + nodeA + `":[]},"error":{}}`,
+			"GetBlockInfo " + nodeA + " " + blockHash('1'): `{"success":{"` + nodeA + `":{"refcount":0,"versions":[]}},"error":{}}`,
+			"GetBlockInfo " + nodeB + " " + blockHash('3'): `{"success":{"` + nodeB + `":{"refcount":0,"versions":[]}},"error":{}}`,
+		}}
+
+	tooLarge := errors.New("exec output is larger than the app reads (32 MiB)")
+	run := func(ctx context.Context, namespace, pod, container string, argv []string) ([]byte, []byte, error) {
+		if len(argv) == 4 && argv[2] == "ListBlockErrors" && strings.Contains(argv[3], nodeC) {
+			return nil, nil, tooLarge
+		}
+
+		return f.run(ctx, namespace, pod, container, argv)
+	}
+
+	report, err := readGarageBlockReport(context.Background(), run, testGarageTarget)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if report.Errored != 2 || report.Retryable != 2 || report.unreachable || len(report.Nodes) != 3 {
+		t.Fatalf("report: %+v", report)
+	}
+
+	if f.called("ListBlockErrors *") != nil {
+		t.Errorf("asked every node at once: %v", f.called("ListBlockErrors"))
+	}
+
+	if c := report.Nodes[2]; c.ID != nodeC || c.Hostname != "garage-c" || !strings.Contains(c.Error, "larger than the app reads") {
+		t.Errorf("too large node: %+v", c)
+	}
+}
+
+func TestReadGarageBlockReportEveryNodeFails(t *testing.T) {
+	status := `{"nodes":[{"id":"` + nodeA + `","hostname":"garage-a","role":{"zone":"z","tags":[]}}]}`
+	run := func(_ context.Context, _, _, _ string, argv []string) ([]byte, []byte, error) {
+		if slices.Equal(argv, garageCommands.status) {
+			return []byte(status), nil, nil
+		}
+
+		return nil, nil, errors.New("exec refused")
+	}
+
+	if _, err := readGarageBlockReport(context.Background(), run, testGarageTarget); err == nil || !strings.Contains(err.Error(), "exec refused") {
+		t.Errorf("err: %v", err)
 	}
 }
 

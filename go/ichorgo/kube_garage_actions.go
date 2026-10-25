@@ -43,8 +43,8 @@ const (
 	garageImpactUnknown = "unknown"   // not looked up, or the lookup failed
 )
 
-// garageExecLimits let ListBlockErrors answer: some 170 bytes per block, and a cluster that
-// lost a node can have tens of thousands failing.
+// garageExecLimits let one node's ListBlockErrors answer: some 170 bytes per block, and a
+// node of a cluster that lost another can have tens of thousands failing.
 var garageExecLimits = execLimits{timeout: 50 * time.Second, maxOutput: 32 << 20}
 
 var (
@@ -293,16 +293,14 @@ func readGarageBlockReport(ctx context.Context, run execFunc, t garageTarget) (g
 	}
 
 	var (
-		errs    garageMulti[[]blockError]
 		workers garageMulti[[]struct {
 			Name string `json:"name"`
 		}]
-		statusOut           []byte
-		errsErr, workersErr error
-		wg                  sync.WaitGroup
+		statusOut  []byte
+		workersErr error
+		wg         sync.WaitGroup
 	)
 
-	wg.Go(func() { errs, errsErr = garageCall[[]blockError](ctx, run, t, "ListBlockErrors", "*", nil) })
 	wg.Go(func() {
 		workers, workersErr = garageCall[[]struct {
 			Name string `json:"name"`
@@ -311,8 +309,9 @@ func readGarageBlockReport(ctx context.Context, run execFunc, t garageTarget) (g
 	wg.Go(func() { statusOut, _ = garageRun(ctx, run, t, garageCommands.status) })
 	wg.Wait()
 
-	if errsErr != nil {
-		return garageBlockReport{}, errsErr
+	errs, listErrs, err := listGarageBlockErrors[blockError](ctx, run, t, statusOut)
+	if err != nil {
+		return garageBlockReport{}, err
 	}
 
 	report := garageBlockReport{Nodes: []garageBlockNode{}, retry: map[string][]string{}, unreachable: len(errs.Error) > 0 || workersErr != nil}
@@ -320,6 +319,12 @@ func readGarageBlockReport(ctx context.Context, run execFunc, t garageTarget) (g
 	hostnames := garageHostnames(statusOut)
 
 	for id, msg := range errs.Error {
+		report.Nodes = append(report.Nodes, garageBlockNode{ID: id, Hostname: hostnames[id], Error: msg, Blocks: []garageBlock{}})
+	}
+
+	// A node that answered but whose list the app could not read (too large, too slow) is
+	// reachable: it is shown with its error and does not hold the cluster-wide repairs.
+	for id, msg := range listErrs {
 		report.Nodes = append(report.Nodes, garageBlockNode{ID: id, Hostname: hostnames[id], Error: msg, Blocks: []garageBlock{}})
 	}
 
@@ -407,6 +412,59 @@ func readGarageBlockReport(ctx context.Context, run execFunc, t garageTarget) (g
 	}
 
 	return report, nil
+}
+
+// listGarageBlockErrors runs ListBlockErrors node by node: after a node is lost, the
+// cluster can have hundreds of thousands of blocks failing, more than one exec answer
+// holds. One node's list the app could not read lands in listErrs, the others still
+// count. Without the layout (GetClusterStatus failed) it asks every node at once.
+func listGarageBlockErrors[T any](ctx context.Context, run execFunc, t garageTarget, statusOut []byte) (garageMulti[[]T], map[string]string, error) {
+	var st garageClusterStatus
+	if json.Unmarshal(statusOut, &st) != nil {
+		st.Nodes = nil
+	}
+
+	var ids []string
+
+	for _, n := range st.Nodes {
+		if n.Role != nil && garageNodeIDPattern.MatchString(n.ID) {
+			ids = append(ids, n.ID)
+		}
+	}
+
+	if len(ids) == 0 {
+		out, err := garageCall[[]T](ctx, run, t, "ListBlockErrors", "*", nil)
+
+		return out, map[string]string{}, err
+	}
+
+	answers := make([]garageMulti[[]T], len(ids))
+	errs := make([]error, len(ids))
+
+	forEachLimit(ids, garageLookups, func(i int, id string) {
+		answers[i], errs[i] = garageCall[[]T](ctx, run, t, "ListBlockErrors", id, nil)
+	})
+
+	out := garageMulti[[]T]{Success: map[string][]T{}, Error: map[string]string{}}
+	listErrs := map[string]string{}
+
+	for i, id := range ids {
+		if errs[i] != nil {
+			listErrs[id] = errs[i].Error()
+
+			continue
+		}
+
+		maps.Copy(out.Success, answers[i].Success)
+		maps.Copy(out.Error, answers[i].Error)
+	}
+
+	// Every node failed the same way: the exec itself is broken, not one node's list.
+	if len(listErrs) == len(ids) {
+		return out, nil, errs[0]
+	}
+
+	return out, listErrs, nil
 }
 
 // lookupGarageBlock fills a block's references and impact from GetBlockInfo on its node.
