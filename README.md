@@ -33,7 +33,7 @@ tour** shows it again.
 - **Talos nodes:** status, services, resources, logs, events, etcd, live graphs, machine config
   with try mode, hardware, storage, KubeSpan, packet capture and a debug shell. Reboot, shut down
   or wake a node, upgrade Talos node by node or the whole cluster, upgrade Kubernetes, add,
-  replace, reset or wipe a node, recover etcd. Alerts when a node goes down.
+  replace, reset or wipe a node, recover etcd, rotate the Talos CA. Alerts when a node goes down.
 - **Any Kubernetes cluster:** workloads, pods, logs and shells, a browser of every object with
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling,
   policies, virtual machines, capacity, live events and Alertmanager, with RBAC checked before

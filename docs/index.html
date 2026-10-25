@@ -3469,6 +3469,17 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 <td class="role" translate="no">admin</td>
               </tr>
               <tr>
+                <td class="cmd" translate="no">talosctl rotate-ca</td>
+                <td class="what">
+                  <strong>Rotate the Talos CA</strong
+                  ><span
+                    >Every node trusts the new CA before the old one goes, and
+                    this phone's talosconfig follows on the way.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
                 <td class="cmd" translate="no">talosctl health</td>
                 <td class="what">
                   <strong>Cluster health check</strong

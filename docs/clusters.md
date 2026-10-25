@@ -38,6 +38,11 @@ date. When background alerts are on, the app notifies daily from 14 days before 
 renew, generate a new file and import it (Settings → Clusters & backup → Add a cluster): a cluster already
 imported, i.e. the same context name and CA, is updated in place.
 
+**Revoking:** a Talos client certificate cannot be revoked. To cut off every talosconfig issued
+so far (a lost phone, a leaked file), rotate the cluster CA from the phone (Settings → Clusters
+& backup → Rotate the cluster CA…, see [Safety](safety.md)), then issue new talosconfigs for the
+devices that keep access.
+
 ## Importing it
 
 Pick one of these:

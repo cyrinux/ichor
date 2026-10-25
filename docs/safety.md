@@ -45,6 +45,41 @@ Part of the [Ichor documentation](../README.md#documentation).
      from a laptop.
   5. **Wait for the new member:** the screen polls etcd until a new healthy voting member joins.
 
+- **Rotating the Talos CA (Settings → Clusters & backup → Rotate the cluster CA…, `os:admin`):**
+  replaces the CA that signs every Talos API certificate, in the order of
+  `talosctl rotate-ca --kubernetes=false`. Rotate it when a talosconfig leaked or a phone was
+  lost: a client certificate cannot be revoked any other way.
+  - **Plan first:** the current CA (subject, SHA-256, expiry) and every node the rotation patches:
+    each member cluster discovery lists, else the nodes the talosconfig names. A node that does
+    not answer, or runs Talos before 1.7 (no `machine.acceptedCAs`), blocks the rotation, since a
+    node left out would stop trusting the phone. Omni clusters are refused: Omni holds their CA.
+  - **Confirmation:** the context name, typed, and with the app lock on a fresh fingerprint/PIN.
+  - **The run, five steps, control planes first, every node checked after each one:**
+
+    | Step | What happens |
+    |---|---|
+    | Check every node | The plan is read again; every node must answer with the current certificate. |
+    | Accept the new CA | The new CA joins each node's accepted CAs (no reboot); every node must then answer a certificate of the new CA. |
+    | Store the new talosconfig | The phone stores a transition talosconfig (a new `os:admin` certificate, both CAs trusted) and tells the run it did. Nothing else changes until then. |
+    | Issue with the new CA | The new CA becomes the issuing one; the old one stays accepted. Every node must answer with the new CA alone. |
+    | Drop the old CA | The old CA leaves each node's accepted CAs; every node is checked once more, then the final talosconfig (the new CA only) is stored. |
+
+  - **Never locked out:** the phone's new talosconfig is stored before any node stops issuing
+    with the old CA, and the transition one trusts both. A run stopped at any step (Stop, a
+    failed check, the app killed) leaves the cluster with CAs that this phone's stored
+    talosconfig still reaches. A transition talosconfig that cannot be stored stops the run
+    before the issuing CA changes.
+  - **The cluster stays the same cluster:** its pins, colour, name, history and share links are
+    kept under the fingerprint it had before the rotation. Backups carry that link, so a restore
+    on another phone keeps them too.
+  - **Afterwards:** every other talosconfig (other devices, `talosctl` on a computer) stops working:
+    issue new ones from Issue talosconfig. Configs generated later from the old secrets bundle
+    (`talosctl gen config`) carry the old CA. The Kubernetes CA is not rotated: kubeconfig
+    identities keep working, and `talosctl rotate-ca --talos=false` rotates it from a computer.
+  - **In the background:** on Android the rotation goes on in a notification with Stop. On iOS it
+    runs while iOS allows; once suspended it waits, and the cluster keeps the CAs of that step.
+  - **Activity log:** recorded as `talos-ca-rotate` with the node count and the step reached, never a key.
+
 - **Container restart (node → Pods → a container's menu → Restart container…, `os:admin`):**
   `talosctl restart` without a reboot. A Talos system container (apid, trustd, an extension
   service) asks for the typed hostname; a Kubernetes container asks a plain confirm, as the
