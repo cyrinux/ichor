@@ -671,6 +671,11 @@ github:
         - anchore/scan-action
         - google-github-actions/auth # Play upload sign-in (release.yml), pinned by SHA
         - ruby/setup-ruby # fastlane for the Play upload (release.yml), pinned by SHA
+        # The Android toolchain composite action (.github/actions/android-toolchain), pinned by SHA;
+        # Plumber 0.7 follows local composite actions into the actions they use.
+        - cachix/install-nix-action
+        - nix-community/cache-nix-action
+        - gradle/actions
 
     # ===========================================
     # Container images must not use forbidden reference
