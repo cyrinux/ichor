@@ -119,7 +119,7 @@ func findGarageGroups(pods []dsPod) []garageGroup {
 		container := ""
 
 		for _, c := range p.Spec.Containers {
-			if id := catalog.identify(parseImageRef(c.Image)); id.app != nil && id.app.ID == "garage" {
+			if isGarageServerImage(catalog, parseImageRef(c.Image)) {
 				container = c.Name
 
 				break
@@ -151,6 +151,18 @@ func findGarageGroups(pods []dsPod) []garageGroup {
 	}
 
 	return groups
+}
+
+// isGarageServerImage tells the Garage server image from its companions: the catalog also
+// hands Garage a variant like khairul169/garage-webui, which has no /garage binary to exec.
+func isGarageServerImage(catalog *appCatalog, ref imageRef) bool {
+	if id := catalog.identify(ref); id.app == nil || id.app.ID != "garage" {
+		return false
+	}
+
+	name := strings.ReplaceAll(ref.Name(), "_", "-")
+
+	return name == "garage" || strings.HasSuffix(name, "-garage")
 }
 
 // readGarage reads every Garage cluster found among pods; nil when there is none. A pod
