@@ -14,6 +14,8 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
     case runbook
     /// "Clean up dead pods": a namespace's dead pods deleted one after another.
     case podSweep
+    /// A cluster's Talos API CA rotated, node by node, in five steps.
+    case caRotation
 
     /// The in-app link that opens the run's screen (ichor://open?op=…).
     public var link: URL { URL(string: "ichor://open?op=\(rawValue)")! }
@@ -54,6 +56,7 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
         case .netPerf: "speedometer"
         case .runbook: "list.bullet.rectangle"
         case .podSweep: "sparkles"
+        case .caRotation: "key.horizontal"
         }
     }
 }
@@ -93,7 +96,7 @@ public enum OperationButton: String, Codable, Hashable, Sendable, CaseIterable {
         switch kind {
         case .upgrade, .join, .fluxReconcile, .rollout: return [.stopFollowing]
         case .argoSync: return [.terminate]
-        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan, .netPerf, .runbook, .podSweep: return [.stop]
+        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan, .netPerf, .runbook, .podSweep, .caRotation: return [.stop]
         case .clusterUpgrade: return paused ? [.resume, .abort] : [.pause, .abort]
         case .configTry: return waiting ? [.keep, .revert] : []
         }

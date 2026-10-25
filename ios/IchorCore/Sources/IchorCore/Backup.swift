@@ -41,13 +41,18 @@ public struct BackupPayload: Codable, Equatable, Sendable {
     public var proposals: [String: [GitProposalRecord]]?
     /// The imported plugins, their files and flags (format 5; Go PluginUserExport).
     public var plugins: PluginBackup?
+    /// The fingerprints a Talos CA rotation derived, to the ones the clusters had before (Go
+    /// FingerprintLineageExport), so `clusters` still match once restored; nil when no CA was
+    /// rotated. Older apps ignore it.
+    public var fingerprintLineage: [String: String]?
 
     public init(
         format: Int = backupFormat, platform: String? = nil, createdAt: Int64? = nil, talosconfig: String,
         kubeconfig: String? = nil, activeContextIndex: Int? = nil, settings: BackupSettings? = nil,
         clusters: [String: BackupCluster]? = nil, kubeAuth: [String: String]? = nil,
         pins: [String: [Pin]]? = nil, gitHosts: [GitHost]? = nil, ai: BackupAI? = nil, secrets: BackupSecrets? = nil,
-        proposals: [String: [GitProposalRecord]]? = nil, plugins: PluginBackup? = nil
+        proposals: [String: [GitProposalRecord]]? = nil, plugins: PluginBackup? = nil,
+        fingerprintLineage: [String: String]? = nil
     ) {
         self.format = format
         self.platform = platform
@@ -64,11 +69,12 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         self.secrets = secrets
         self.proposals = proposals
         self.plugins = plugins
+        self.fingerprintLineage = fingerprintLineage
     }
 
     private enum CodingKeys: String, CodingKey {
         case format, platform, createdAt, talosconfig, kubeconfig, activeContextIndex, settings, clusters, kubeAuth
-        case pins, gitHosts, ai, secrets, proposals, plugins
+        case pins, gitHosts, ai, secrets, proposals, plugins, fingerprintLineage
     }
 
     // A format 2 payload may leave the talosconfig out (or null) when it only holds a kubeconfig.
@@ -90,6 +96,7 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         secrets = try c.decodeIfPresent(BackupSecrets.self, forKey: .secrets)
         proposals = try c.decodeIfPresent([String: [GitProposalRecord]].self, forKey: .proposals)
         plugins = try c.decodeIfPresent(PluginBackup.self, forKey: .plugins)
+        fingerprintLineage = try c.decodeIfPresent([String: String].self, forKey: .fingerprintLineage)
     }
 }
 
