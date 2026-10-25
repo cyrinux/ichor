@@ -428,6 +428,7 @@ func TestFindGarageGroups(t *testing.T) {
 		fakePod("storage", "garage-x2", "n2", true, ds, "garage", "dxflrs/amd64_garage:v2.3.0"),
 		fakePod("nas", "garage-nas-0", "n3", true, map[string]string{"app.kubernetes.io/name": "garage-nas"}, "garage", "dxflrs/garage:v2.3.0"),
 		fakePod("web", "nginx-1", "n1", true, nil, "nginx", "nginx:1.27"),
+		fakePod("storage", "garage-webui-0", "n1", true, map[string]string{"app.kubernetes.io/name": "garage-webui"}, "garage-webui", "khairul169/garage-webui:1.0.9"),
 	}
 
 	groups := findGarageGroups(pods)
