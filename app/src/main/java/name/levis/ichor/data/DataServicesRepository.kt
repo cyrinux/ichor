@@ -10,6 +10,7 @@ import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
+import name.levis.ichor.model.GarageLayout
 import name.levis.ichor.model.KubeGreenNamespace
 import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.model.LonghornAction
@@ -79,6 +80,44 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
     /** Launches the safe repairs for those blocks (os:admin); Garage runs them in the background. */
     suspend fun garageRepairBlocks(instance: GarageInstance): GarageRepairResult = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(GarageRepairResult.serializer(), Ichorgo.kubeGarageRepairBlocks(cfg, ctx, server, instance.namespace, instance.pod))
+    }
+
+    /** A Garage cluster's layout: roles, staged changes with their preview, version history (os:admin). Never cached. */
+    suspend fun garageLayout(instance: GarageInstance): GarageLayout = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageLayout(cfg, ctx, server, instance.namespace, instance.pod))
+    }
+
+    /**
+     * Stages a role for the Garage node [nodeId] (a full id): [zone], [capacity] in bytes unless
+     * [gateway], and [tags] (os:admin). Nothing moves until [garageApplyLayout]. Answers the layout
+     * with the staged change and its preview.
+     */
+    suspend fun garageStageRole(instance: GarageInstance, nodeId: String, zone: String, capacity: Long, gateway: Boolean, tags: List<String>): GarageLayout =
+        go.kube { cfg, ctx, server ->
+            TalosJson.decodeFromString(
+                GarageLayout.serializer(),
+                Ichorgo.kubeGarageStageRole(cfg, ctx, server, instance.namespace, instance.pod, nodeId, zone, capacity, gateway, TalosJson.encodeToString(tags)),
+            )
+        }
+
+    /** Stages the removal of the Garage node [nodeId] from the layout (os:admin). */
+    suspend fun garageStageRemoval(instance: GarageInstance, nodeId: String): GarageLayout = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageStageRemoval(cfg, ctx, server, instance.namespace, instance.pod, nodeId))
+    }
+
+    /** Stages the layout's zone redundancy: "maximum" or a number of zones (os:admin). */
+    suspend fun garageSetZoneRedundancy(instance: GarageInstance, value: String): GarageLayout = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageSetZoneRedundancy(cfg, ctx, server, instance.namespace, instance.pod, value))
+    }
+
+    /** Applies the staged layout changes as [version], the one the preview announced (os:admin); Garage refuses any other. */
+    suspend fun garageApplyLayout(instance: GarageInstance, version: Long): GarageLayout = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageApplyLayout(cfg, ctx, server, instance.namespace, instance.pod, version))
+    }
+
+    /** Drops every staged layout change (os:admin). */
+    suspend fun garageRevertLayout(instance: GarageInstance): GarageLayout = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageRevertLayout(cfg, ctx, server, instance.namespace, instance.pod))
     }
 
     /** Sets a node's resync tranquility (os:admin); [nodeId] is a Garage node ID, or "*" for every node. */

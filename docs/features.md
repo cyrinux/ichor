@@ -296,7 +296,13 @@ Part of the [Ichor documentation](../README.md#documentation).
   flags one that stopped refreshing, and whether its SecretStore or ClusterSecretStore can reach
   its backend; its target Secret is a link, by name only. When the garage-operator
   manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
-  next to the live Garage state. Integrations are declarative plugins; see
+  next to the live Garage state. Each Garage cluster's layout opens from its card: the roles
+  (zone, capacity or gateway, tags) with how much of each capacity the layout uses, the nodes
+  without a role, the version history with the nodes a draining version still waits on, and,
+  through Garage's own staging, a node added to the layout or its role changed or removed,
+  previewed (partitions moved, usable capacity) and applied by typing the new version number,
+  or reverted; the zone redundancy can be staged the same way. A layout the garage-operator
+  declares is shown read-only. Integrations are declarative plugins; see
   [docs/plugins.md](plugins.md). On Android and iOS, each plugin the cluster runs gets its tile
   in the Data services card and its own tab, drawn from the tree the Go core renders; a plugin
   of another kind (workloads, networking, policies…) is a tool in that family of the Kubernetes

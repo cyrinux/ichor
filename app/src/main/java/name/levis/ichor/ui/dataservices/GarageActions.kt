@@ -56,6 +56,10 @@ class GarageActions(
     private val onChanged: () -> Unit,
 ) {
     private val actions = KeyedActions<GarageActionResult>(scope)
+
+    /** The cluster layout: its sheet, the role editor, staging, apply and revert. */
+    val layout = GarageLayoutActions(scope, dataServices, onChanged)
+
     /** Keys ([tuningKey]) of the nodes whose tranquility change is in flight. */
     val tuning: StateFlow<Set<String>> get() = actions.busy
 
@@ -133,6 +137,28 @@ fun GarageResultToasts(results: Flow<GarageActionResult>) = ResultToasts(results
         is GarageActionResult.Repair -> r.error?.resolve(context)
             ?.let { context.getString(R.string.garage_repair_failed, it) to true }
             ?: (r.result!!.summary(context) to r.result.errors.isNotEmpty())
+    }
+}
+
+/** A toast for each outcome of the layout actions. */
+@Composable
+fun GarageLayoutResultToasts(results: Flow<GarageLayoutResult>) = ResultToasts(results) { context, r ->
+    when (r) {
+        is GarageLayoutResult.Staged -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_layout_stage_failed, r.node, it) to true }
+            ?: (context.getString(R.string.garage_layout_staged_done, r.node) to false)
+        is GarageLayoutResult.RemovalStaged -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_layout_stage_failed, r.node, it) to true }
+            ?: (context.getString(R.string.garage_layout_removal_done, r.node) to false)
+        is GarageLayoutResult.RedundancyStaged -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_layout_redundancy_failed, it) to true }
+            ?: (context.getString(R.string.garage_layout_redundancy_done) to false)
+        is GarageLayoutResult.Applied -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_layout_apply_failed, it) to true }
+            ?: ((listOf(context.getString(R.string.garage_layout_applied, r.version)) + r.messages).joinToString("\n") to false)
+        is GarageLayoutResult.Reverted -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_layout_revert_failed, it) to true }
+            ?: (context.getString(R.string.garage_layout_reverted) to false)
     }
 }
 
