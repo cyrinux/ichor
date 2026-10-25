@@ -141,6 +141,16 @@ extension TalosClient {
         }
     }
 
+    /// Lets a draining layout version stop waiting on the nodes that are down (os:admin): their acknowledgement
+    /// trackers move to `version`, the current one; allowMissingData moves every node's sync tracker too, giving up
+    /// the metadata only the dead nodes held. Throws when nothing moved.
+    func garageSkipDeadNodes(_ instance: GarageInstance, version: Int64, allowMissingData: Bool) async throws -> GarageLayout {
+        let (namespace, pod) = (instance.namespace, instance.pod)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageSkipDeadNodes(config, context, kubeServer, namespace, pod, version, allowMissingData, $0)
+        }
+    }
+
     /// Drops every staged layout change (os:admin).
     func garageRevertLayout(_ instance: GarageInstance) async throws -> GarageLayout {
         let (namespace, pod) = (instance.namespace, instance.pod)

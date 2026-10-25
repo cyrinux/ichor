@@ -2349,6 +2349,14 @@
     <string name="garage_role_tag_add">Aggiungi un tag</string>
     <string name="garage_role_tag_add_button">Aggiungi</string>
     <string name="garage_role_stage_text">Preparare non cambia ancora nulla: la scheda del layout mostra poi cosa sposterebbe l\'applicazione.</string>
+    <string name="garage_layout_skip">Salta i nodi morti…</string>
+    <string name="garage_layout_skip_title">Saltare i nodi morti di %1$s?</string>
+    <string name="garage_layout_skip_text">Il layout in svuotamento smette di attendere %1$s: Garage li considera come se avessero confermato la versione %2$d e la migrazione prosegue senza di loro. Non si può annullare; solo per nodi che non torneranno.</string>
+    <string name="garage_layout_skip_allow">Consenti dati mancanti</string>
+    <string name="garage_layout_skip_allow_text">Anche il tracker di sincronizzazione di ogni nodo avanza: i metadati che solo i nodi morti avevano sono persi per sempre.</string>
+    <string name="garage_layout_skip_confirm">Salta i nodi morti</string>
+    <string name="garage_layout_skipped">Nodi morti saltati: la migrazione del layout prosegue senza di loro.</string>
+    <string name="garage_layout_skip_failed">Impossibile saltare i nodi morti: %1$s</string>
     <string name="cnpg_empty">Nessun cluster Postgres.</string>
     <string name="cnpg_reason_no_instance">nessuna istanza attiva</string>
     <string name="cnpg_reason_failover">failover in corso</string>

@@ -159,6 +159,9 @@ fun GarageLayoutResultToasts(results: Flow<GarageLayoutResult>) = ResultToasts(r
         is GarageLayoutResult.Reverted -> r.error?.resolve(context)
             ?.let { context.getString(R.string.garage_layout_revert_failed, it) to true }
             ?: (context.getString(R.string.garage_layout_reverted) to false)
+        is GarageLayoutResult.Skipped -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_layout_skip_failed, it) to true }
+            ?: ((listOf(context.getString(R.string.garage_layout_skipped)) + r.messages).joinToString("\n") to false)
     }
 }
 

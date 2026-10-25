@@ -19,6 +19,8 @@ struct GarageLayoutView: View {
     @State private var removal: GarageLayoutNode?
     @State private var editing: GarageRoleTarget?
     @State private var redundancy = false
+    @State private var skipChoice = false
+    @State private var skip: SkipRequest?
     @State private var resultMessage: String?
 
     private var layout: GarageLayout? {
@@ -41,7 +43,7 @@ struct GarageLayoutView: View {
                 if layout.hasStaged { stagedSection(layout) }
                 rolesSection(layout)
                 if !layout.candidates.isEmpty { candidatesSection(layout) }
-                HistorySection(layout: layout)
+                HistorySection(layout: layout, onSkip: editable && layout.stuck ? { skipChoice = true } : nil)
             }
             .refreshable { await load() }
             .themedBackground()
@@ -93,7 +95,36 @@ struct GarageLayoutView: View {
         } message: { _ in
             Text("The removal is staged only: once the layout is applied, the node's data moves to the other nodes. You can revert it before then.")
         }
+        .confirmationDialog(Text("Skip the dead nodes?"), isPresented: $skipChoice, titleVisibility: .visible) {
+            Button("Skip dead nodes") { skip = SkipRequest(allowMissingData: false) }
+            Button("Skip and allow missing data", role: .destructive) { skip = SkipRequest(allowMissingData: true) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The draining layout stops waiting on the nodes that are down: Garage marks them as having acknowledged the current version, and the migration goes on without them. Allowing missing data also moves every node's sync tracker: metadata that only the dead nodes held is given up for good. There is no undo; use it only for nodes that will not come back.")
+        }
+        .sheet(item: $skip) { request in
+            if let layout {
+                HostnameConfirmationSheet(
+                    title: String(localized: "Skip the dead nodes of \(instance.name)?"),
+                    message: skipMessage(layout),
+                    hostname: instance.name,
+                    actionTitle: String(localized: "Skip dead nodes"),
+                    acknowledgments: request.allowMissingData ? [String(localized: "Metadata that only the dead nodes held is given up for good.")] : [],
+                    onConfirm: {
+                        skip = nil
+                        Task { await write(String(localized: "Dead nodes skipped: the layout migration goes on without them.")) {
+                            try await $0.garageSkipDeadNodes(instance, version: layout.version, allowMissingData: request.allowMissingData)
+                        } }
+                    }
+                )
+            }
+        }
         .messageAlert($resultMessage)
+    }
+
+    private func skipMessage(_ layout: GarageLayout) -> String {
+        let down = layout.trackers.filter { t in layout.node(t.id).map { !$0.up } ?? false }.map(\.label).joined(separator: ", ")
+        return String(localized: "The draining layout stops waiting on \(down.isEmpty ? "—" : down): Garage marks them as having acknowledged version \(layout.version), and the migration goes on without them. There is no undo; use it only for nodes that will not come back.")
     }
 
     private func applyMessage(_ layout: GarageLayout) -> String {
@@ -197,6 +228,13 @@ struct GarageLayoutView: View {
 /// The node whose role the editor sheet is opened on.
 struct GarageRoleTarget: Identifiable {
     let id: String
+}
+
+/// A skip of the dead nodes waiting for its typed confirmation.
+private struct SkipRequest: Identifiable {
+    let allowMissingData: Bool
+
+    var id: Bool { allowMissingData }
 }
 
 /// "maximum" or "2 zones".
@@ -324,9 +362,11 @@ private struct MemberRow: View {
     }
 }
 
-/// The versions, newest first, behind a disclosure; the trackers while several are live.
+/// The versions, newest first, behind a disclosure; the trackers while several are live, and,
+/// when a draining version waits on a node that is down, the way past it (`onSkip`).
 private struct HistorySection: View {
     let layout: GarageLayout
+    let onSkip: (() -> Void)?
 
     @State private var open = false
 
@@ -339,6 +379,9 @@ private struct HistorySection: View {
                     Text("A draining version waits on a node that is down (\(names)). Bring it back, or skip it with garage layout skip-dead-nodes.")
                         .font(.caption)
                         .foregroundStyle(.statusBad)
+                    if let onSkip {
+                        Button("Skip dead nodes…", role: .destructive, action: onSkip)
+                    }
                 }
                 ForEach(layout.versions) { version in
                     HStack {

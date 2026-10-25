@@ -2341,6 +2341,14 @@
     <string name="garage_role_tag_add">Tag hinzufügen</string>
     <string name="garage_role_tag_add_button">Hinzufügen</string>
     <string name="garage_role_stage_text">Vorbereiten ändert noch nichts: das Layout-Blatt zeigt dann, was das Anwenden verschieben würde.</string>
+    <string name="garage_layout_skip">Tote Knoten überspringen…</string>
+    <string name="garage_layout_skip_title">Tote Knoten von %1$s überspringen?</string>
+    <string name="garage_layout_skip_text">Das auslaufende Layout wartet nicht mehr auf %1$s: Garage behandelt sie als hätten sie Version %2$d bestätigt, und die Migration läuft ohne sie weiter. Nicht rückgängig zu machen; nur für Knoten, die nicht zurückkommen.</string>
+    <string name="garage_layout_skip_allow">Fehlende Daten zulassen</string>
+    <string name="garage_layout_skip_allow_text">Auch der Sync-Tracker jedes Knotens rückt vor: Metadaten, die nur die toten Knoten hielten, sind endgültig verloren.</string>
+    <string name="garage_layout_skip_confirm">Tote Knoten überspringen</string>
+    <string name="garage_layout_skipped">Tote Knoten übersprungen: die Layout-Migration läuft ohne sie weiter.</string>
+    <string name="garage_layout_skip_failed">Die toten Knoten konnten nicht übersprungen werden: %1$s</string>
     <string name="cnpg_empty">Keine Postgres-Cluster.</string>
     <string name="cnpg_reason_no_instance">keine Instanz läuft</string>
     <string name="cnpg_reason_failover">Failover läuft</string>
