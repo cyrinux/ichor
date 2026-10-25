@@ -2349,6 +2349,14 @@
     <string name="garage_role_tag_add">Añadir una etiqueta</string>
     <string name="garage_role_tag_add_button">Añadir</string>
     <string name="garage_role_stage_text">Preparar no cambia nada todavía: la hoja de distribución muestra después qué movería la aplicación.</string>
+    <string name="garage_layout_skip">Omitir los nodos muertos…</string>
+    <string name="garage_layout_skip_title">¿Omitir los nodos muertos de %1$s?</string>
+    <string name="garage_layout_skip_text">La distribución en drenaje deja de esperar a %1$s: Garage los da por haber confirmado la versión %2$d y la migración sigue sin ellos. No se puede deshacer; úselo solo con nodos que no volverán.</string>
+    <string name="garage_layout_skip_allow">Permitir datos faltantes</string>
+    <string name="garage_layout_skip_allow_text">El rastreador de sincronización de cada nodo también avanza: los metadatos que solo tenían los nodos muertos se pierden definitivamente.</string>
+    <string name="garage_layout_skip_confirm">Omitir los nodos muertos</string>
+    <string name="garage_layout_skipped">Nodos muertos omitidos: la migración de la distribución sigue sin ellos.</string>
+    <string name="garage_layout_skip_failed">No se pudieron omitir los nodos muertos: %1$s</string>
     <string name="cnpg_empty">Sin clústeres de Postgres.</string>
     <string name="cnpg_reason_no_instance">ninguna instancia activa</string>
     <string name="cnpg_reason_failover">conmutación por error en curso</string>

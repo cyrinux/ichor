@@ -2479,6 +2479,14 @@
     <string name="garage_role_tag_add">Додати тег</string>
     <string name="garage_role_tag_add_button">Додати</string>
     <string name="garage_role_stage_text">Підготовка ще нічого не змінює: далі аркуш розкладки покаже, що перемістить застосування.</string>
+    <string name="garage_layout_skip">Пропустити мертві вузли…</string>
+    <string name="garage_layout_skip_title">Пропустити мертві вузли %1$s?</string>
+    <string name="garage_layout_skip_text">Розкладка, що спорожнюється, перестає чекати на %1$s: Garage вважає, що вони підтвердили версію %2$d, і міграція триває без них. Скасувати неможливо; лише для вузлів, які не повернуться.</string>
+    <string name="garage_layout_skip_allow">Дозволити втрату даних</string>
+    <string name="garage_layout_skip_allow_text">Трекер синхронізації кожного вузла теж зсувається: метадані, які мали лише мертві вузли, втрачаються назавжди.</string>
+    <string name="garage_layout_skip_confirm">Пропустити мертві вузли</string>
+    <string name="garage_layout_skipped">Мертві вузли пропущено: міграція розкладки триває без них.</string>
+    <string name="garage_layout_skip_failed">Не вдалося пропустити мертві вузли: %1$s</string>
     <string name="cnpg_empty">Немає кластерів Postgres.</string>
     <string name="cnpg_reason_no_instance">жоден екземпляр не працює</string>
     <string name="cnpg_reason_failover">триває аварійне перемикання</string>

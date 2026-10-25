@@ -115,6 +115,15 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageApplyLayout(cfg, ctx, server, instance.namespace, instance.pod, version))
     }
 
+    /**
+     * Lets a draining layout version stop waiting on the nodes that are down (os:admin): their
+     * acknowledgement trackers move to [version], the current one. [allowMissingData] moves every
+     * node's sync tracker too, giving up the metadata only the dead nodes held. Throws when nothing moved.
+     */
+    suspend fun garageSkipDeadNodes(instance: GarageInstance, version: Long, allowMissingData: Boolean): GarageLayout = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageSkipDeadNodes(cfg, ctx, server, instance.namespace, instance.pod, version, allowMissingData))
+    }
+
     /** Drops every staged layout change (os:admin). */
     suspend fun garageRevertLayout(instance: GarageInstance): GarageLayout = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(GarageLayout.serializer(), Ichorgo.kubeGarageRevertLayout(cfg, ctx, server, instance.namespace, instance.pod))

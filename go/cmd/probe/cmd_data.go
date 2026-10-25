@@ -274,6 +274,15 @@ var dataCommands = []command{
 
 		return ichorgo.KubeGarageApplyLayout(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), version)
 	}},
+	{name: "garage-layout-skip", args: "NAMESPACE POD VERSION [allow-missing-data]", run: func(e env) (string, error) {
+		// garage-layout-skip NAMESPACE POD VERSION [allow-missing-data]: lets a draining layout stop waiting on dead nodes.
+		version, err := strconv.ParseInt(flag.Arg(3), 10, 64)
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.KubeGarageSkipDeadNodes(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), version, flag.Arg(4) == "allow-missing-data")
+	}},
 	{name: "garage-layout-revert", args: "NAMESPACE POD", run: func(e env) (string, error) {
 		// garage-layout-revert NAMESPACE POD: drops every staged layout change.
 		return ichorgo.KubeGarageRevertLayout(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))

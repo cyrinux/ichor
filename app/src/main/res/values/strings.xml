@@ -2348,6 +2348,14 @@
     <string name="garage_role_tag_add">Add a tag</string>
     <string name="garage_role_tag_add_button">Add</string>
     <string name="garage_role_stage_text">Staging changes nothing yet: the layout sheet then shows what applying would move.</string>
+    <string name="garage_layout_skip">Skip dead nodes…</string>
+    <string name="garage_layout_skip_title">Skip the dead nodes of %1$s?</string>
+    <string name="garage_layout_skip_text">The draining layout stops waiting on %1$s: Garage marks them as having acknowledged version %2$d, and the migration goes on without them. There is no undo; use it only for nodes that will not come back.</string>
+    <string name="garage_layout_skip_allow">Allow missing data</string>
+    <string name="garage_layout_skip_allow_text">Every node\'s sync tracker moves too: metadata that only the dead nodes held is given up for good.</string>
+    <string name="garage_layout_skip_confirm">Skip dead nodes</string>
+    <string name="garage_layout_skipped">Dead nodes skipped: the layout migration goes on without them.</string>
+    <string name="garage_layout_skip_failed">Could not skip the dead nodes: %1$s</string>
     <string name="cnpg_empty">No Postgres clusters.</string>
     <string name="cnpg_reason_no_instance">no instance running</string>
     <string name="cnpg_reason_failover">failing over</string>

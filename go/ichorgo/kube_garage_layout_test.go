@@ -353,3 +353,54 @@ func TestKubeGarageLayoutDemoAndGuards(t *testing.T) {
 		t.Error("bad pod name accepted")
 	}
 }
+
+func TestSkipGarageDeadNodes(t *testing.T) {
+	answers := garageLayoutAnswers()
+	answers["ClusterLayoutSkipDeadNodes"] = `{"ackUpdated":["` + nodeA + `"],"syncUpdated":[]}`
+	f := &fakeGarageLayoutAPI{t: t, answers: answers}
+
+	r, err := skipGarageDeadNodes(context.Background(), f.run, testGarageTarget, 12, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := f.called("ClusterLayoutSkipDeadNodes"); !slices.Equal(got, []string{`ClusterLayoutSkipDeadNodes {"allowMissingData":false,"version":12}`}) {
+		t.Errorf("request: %v", got)
+	}
+
+	// The node is named by its hostname, and the layout is read back.
+	if len(r.Messages) != 1 || r.Messages[0] != "Acknowledgement tracker moved to v12 for garage-a" || r.Version != 12 {
+		t.Errorf("report: %v (version %d)", r.Messages, r.Version)
+	}
+
+	// Nothing moved: an error, one for each flag, as Garage's CLI answers.
+	answers["ClusterLayoutSkipDeadNodes"] = `{"ackUpdated":[],"syncUpdated":[]}`
+	f = &fakeGarageLayoutAPI{t: t, answers: answers}
+
+	if _, err := skipGarageDeadNodes(context.Background(), f.run, testGarageTarget, 12, false); err == nil || !strings.Contains(err.Error(), "allowing missing data") {
+		t.Errorf("nothing done without the flag: %v", err)
+	}
+
+	if _, err := skipGarageDeadNodes(context.Background(), f.run, testGarageTarget, 12, true); err == nil || !strings.Contains(err.Error(), "nothing to skip") {
+		t.Errorf("nothing done with the flag: %v", err)
+	}
+
+	// Garage's refusal (one live version, a bad version number) reaches the caller.
+	f = &fakeGarageLayoutAPI{t: t, answers: answers, fail: map[string]string{"ClusterLayoutSkipDeadNodes": "BadRequest (400): Invalid version, you may use the following version numbers: 12"}}
+	if _, err := skipGarageDeadNodes(context.Background(), f.run, testGarageTarget, 3, true); err == nil || !strings.Contains(err.Error(), "Invalid version") {
+		t.Errorf("refusal lost: %v", err)
+	}
+
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := KubeGarageSkipDeadNodes(cfg, "", "", "garage", "garage-4kq7z", 12, false); !errors.Is(err, errDemoUnavailable) {
+		t.Errorf("demo: %v", err)
+	}
+
+	if _, err := KubeGarageSkipDeadNodes(cfg, "", "", "garage", "garage-4kq7z", 0, false); err == nil {
+		t.Error("version 0 accepted")
+	}
+}

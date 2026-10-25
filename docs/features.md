@@ -298,7 +298,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
   next to the live Garage state. Each Garage cluster's layout opens from its card: the roles
   (zone, capacity or gateway, tags) with how much of each capacity the layout uses, the nodes
-  without a role, the version history with the nodes a draining version still waits on, and,
+  without a role, the version history with the nodes a draining version still waits on (and,
+  typed confirmation given, the skip past nodes that will not come back, with or without the
+  metadata only they held), and,
   through Garage's own staging, a node added to the layout or its role changed or removed,
   previewed (partitions moved, usable capacity) and applied by typing the new version number,
   or reverted; the zone redundancy can be staged the same way. A layout the garage-operator

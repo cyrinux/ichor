@@ -31,6 +31,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -86,6 +87,7 @@ fun GarageLayoutSheet(state: GarageLayoutState, actions: GarageLayoutActions) {
     var confirmRevert by remember { mutableStateOf(false) }
     var confirmRemove by remember { mutableStateOf<GarageLayoutNode?>(null) }
     var redundancy by remember { mutableStateOf(false) }
+    var confirmSkip by remember { mutableStateOf(false) }
     val layout = state.layout
 
     if (confirmApply && layout != null && layout.hasStaged) {
@@ -111,6 +113,12 @@ fun GarageLayoutSheet(state: GarageLayoutState, actions: GarageLayoutActions) {
             confirmRemove = null
             actions.stageRemoval(state.instance, node.id, node.label)
         }, onDismiss = { confirmRemove = null })
+    }
+    if (confirmSkip && layout != null) {
+        SkipDeadNodesDialog(state, layout, onConfirm = { allowMissingData ->
+            confirmSkip = false
+            actions.skipDeadNodes(layout.version, allowMissingData)
+        }, onDismiss = { confirmSkip = false })
     }
     if (redundancy && layout != null) {
         ZoneRedundancyDialog(layout, onPick = {
@@ -173,7 +181,7 @@ fun GarageLayoutSheet(state: GarageLayoutState, actions: GarageLayoutActions) {
                     }
                 }
             }
-            item { History(layout) }
+            item { History(layout, onSkip = { confirmSkip = true }.takeIf { editable && !state.busy && layout.stuck }) }
         }
     }
 }
@@ -344,9 +352,12 @@ private fun CandidateRow(node: GarageLayoutNode, onAdd: (() -> Unit)?) {
     })
 }
 
-/** The versions, newest first, behind an expander; the trackers while several are live. */
+/**
+ * The versions, newest first, behind an expander; the trackers while several are live, and,
+ * when a draining version waits on a node that is down, the way past it ([onSkip]).
+ */
 @Composable
-private fun History(layout: GarageLayout) {
+private fun History(layout: GarageLayout, onSkip: (() -> Unit)?) {
     val colors = LocalStatusColors.current
     var open by rememberSaveable { mutableStateOf(layout.stuck) }
     Column {
@@ -364,6 +375,11 @@ private fun History(layout: GarageLayout) {
                 color = colors.bad,
                 modifier = Modifier.padding(bottom = 4.dp),
             )
+            if (onSkip != null) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onSkip) { Text(stringResource(R.string.garage_layout_skip), color = colors.bad) }
+                }
+            }
         }
         layout.versions.forEach { VersionRow(it) }
         if (layout.trackers.isNotEmpty()) {
@@ -393,6 +409,33 @@ private fun VersionRow(version: GarageLayoutVersion) {
             modifier = Modifier.weight(1f),
         )
         StatusPill(stringResource(label), color)
+    }
+}
+
+/**
+ * Skipping the dead nodes is irreversible and cluster-wide: the instance's name is typed. The
+ * switch adds the data-loss variant, which also moves every node's sync tracker.
+ */
+@Composable
+private fun SkipDeadNodesDialog(state: GarageLayoutState, layout: GarageLayout, onConfirm: (Boolean) -> Unit, onDismiss: () -> Unit) {
+    var allowMissingData by remember { mutableStateOf(false) }
+    val down = layout.trackers.filter { t -> layout.node(t.id)?.let { !it.up } == true }.map { it.label }
+    HostnameConfirmDialog(
+        title = stringResource(R.string.garage_layout_skip_title, state.instance.name),
+        hostname = state.instance.name,
+        confirmLabel = stringResource(R.string.garage_layout_skip_confirm),
+        onConfirm = { onConfirm(allowMissingData) },
+        onDismiss = onDismiss,
+        emphasized = allowMissingData,
+    ) {
+        Text(stringResource(R.string.garage_layout_skip_text, down.joinToString(", ").ifEmpty { "—" }, layout.version), style = MaterialTheme.typography.bodyMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Switch(checked = allowMissingData, onCheckedChange = { allowMissingData = it })
+            Text(stringResource(R.string.garage_layout_skip_allow), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        }
+        if (allowMissingData) {
+            Text(stringResource(R.string.garage_layout_skip_allow_text), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad)
+        }
     }
 }
 

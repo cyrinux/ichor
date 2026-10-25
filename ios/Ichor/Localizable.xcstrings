@@ -165170,6 +165170,321 @@
           }
         }
       }
+    },
+    "Skip dead nodes…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer les nœuds morts…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omitir los nodos muertos…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити мертві вузли…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tote Knoten überspringen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta i nodi morti…"
+          }
+        }
+      }
+    },
+    "Skip the dead nodes?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer les nœuds morts ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Omitir los nodos muertos?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити мертві вузли?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tote Knoten überspringen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltare i nodi morti?"
+          }
+        }
+      }
+    },
+    "Skip dead nodes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer les nœuds morts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omitir los nodos muertos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити мертві вузли"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tote Knoten überspringen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta i nodi morti"
+          }
+        }
+      }
+    },
+    "Skip and allow missing data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer en autorisant les données manquantes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omitir y permitir datos faltantes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити й дозволити втрату даних"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überspringen und fehlende Daten zulassen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta e consenti dati mancanti"
+          }
+        }
+      }
+    },
+    "The draining layout stops waiting on the nodes that are down: Garage marks them as having acknowledged the current version, and the migration goes on without them. Allowing missing data also moves every node's sync tracker: metadata that only the dead nodes held is given up for good. There is no undo; use it only for nodes that will not come back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La topologie en cours de vidage cesse d'attendre les nœuds hors service : Garage les considère comme ayant acquitté la version actuelle, et la migration continue sans eux. Autoriser les données manquantes avance aussi le suiveur de synchronisation de chaque nœud : les métadonnées que seuls les nœuds morts détenaient sont perdues définitivement. Sans retour possible ; réservez-le aux nœuds qui ne reviendront pas."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La distribución en drenaje deja de esperar a los nodos caídos: Garage los da por haber confirmado la versión actual y la migración sigue sin ellos. Permitir datos faltantes también avanza el rastreador de sincronización de cada nodo: los metadatos que solo tenían los nodos muertos se pierden definitivamente. No se puede deshacer; úselo solo con nodos que no volverán."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розкладка, що спорожнюється, перестає чекати на вимкнені вузли: Garage вважає, що вони підтвердили поточну версію, і міграція триває без них. Дозвіл на втрату даних також зсуває трекер синхронізації кожного вузла: метадані, які мали лише мертві вузли, втрачаються назавжди. Скасувати неможливо; лише для вузлів, які не повернуться."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das auslaufende Layout wartet nicht mehr auf die ausgefallenen Knoten: Garage behandelt sie als hätten sie die aktuelle Version bestätigt, und die Migration läuft ohne sie weiter. Fehlende Daten zulassen rückt auch den Sync-Tracker jedes Knotens vor: Metadaten, die nur die toten Knoten hielten, sind endgültig verloren. Nicht rückgängig zu machen; nur für Knoten, die nicht zurückkommen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il layout in svuotamento smette di attendere i nodi fermi: Garage li considera come se avessero confermato la versione attuale e la migrazione prosegue senza di loro. Consentire dati mancanti fa avanzare anche il tracker di sincronizzazione di ogni nodo: i metadati che solo i nodi morti avevano sono persi per sempre. Non si può annullare; solo per nodi che non torneranno."
+          }
+        }
+      }
+    },
+    "Skip the dead nodes of %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer les nœuds morts de %@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Omitir los nodos muertos de %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити мертві вузли %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tote Knoten von %@ überspringen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltare i nodi morti di %@?"
+          }
+        }
+      }
+    },
+    "Metadata that only the dead nodes held is given up for good." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les métadonnées que seuls les nœuds morts détenaient sont perdues définitivement."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los metadatos que solo tenían los nodos muertos se pierden definitivamente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Метадані, які мали лише мертві вузли, втрачаються назавжди."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metadaten, die nur die toten Knoten hielten, sind endgültig verloren."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I metadati che solo i nodi morti avevano sono persi per sempre."
+          }
+        }
+      }
+    },
+    "Dead nodes skipped: the layout migration goes on without them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nœuds morts passés : la migration de la topologie continue sans eux."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodos muertos omitidos: la migración de la distribución sigue sin ellos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мертві вузли пропущено: міграція розкладки триває без них."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tote Knoten übersprungen: die Layout-Migration läuft ohne sie weiter."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodi morti saltati: la migrazione del layout prosegue senza di loro."
+          }
+        }
+      }
+    },
+    "The draining layout stops waiting on %@: Garage marks them as having acknowledged version %lld, and the migration goes on without them. There is no undo; use it only for nodes that will not come back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La topologie en cours de vidage cesse d'attendre %@ : Garage les considère comme ayant acquitté la version %lld, et la migration continue sans eux. Sans retour possible ; réservez-le aux nœuds qui ne reviendront pas."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La distribución en drenaje deja de esperar a %@: Garage los da por haber confirmado la versión %lld y la migración sigue sin ellos. No se puede deshacer; úselo solo con nodos que no volverán."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розкладка, що спорожнюється, перестає чекати на %@: Garage вважає, що вони підтвердили версію %lld, і міграція триває без них. Скасувати неможливо; лише для вузлів, які не повернуться."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das auslaufende Layout wartet nicht mehr auf %@: Garage behandelt sie als hätten sie Version %lld bestätigt, und die Migration läuft ohne sie weiter. Nicht rückgängig zu machen; nur für Knoten, die nicht zurückkommen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il layout in svuotamento smette di attendere %@: Garage li considera come se avessero confermato la versione %lld e la migrazione prosegue senza di loro. Non si può annullare; solo per nodi che non torneranno."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

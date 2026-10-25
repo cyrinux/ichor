@@ -49,6 +49,7 @@ sealed interface GarageLayoutResult {
     data class RedundancyStaged(val value: String, val error: UiText?) : GarageLayoutResult
     data class Applied(val version: Long, val messages: List<String>, val error: UiText?) : GarageLayoutResult
     data class Reverted(val error: UiText?) : GarageLayoutResult
+    data class Skipped(val messages: List<String>, val error: UiText?) : GarageLayoutResult
 }
 
 /**
@@ -166,6 +167,14 @@ class GarageLayoutActions(
     fun revert() {
         val instance = _sheet.value?.instance ?: return
         write(instance, { dataServices.garageRevertLayout(instance) }) { GarageLayoutResult.Reverted(it) }
+    }
+
+    /** Lets the draining layout stop waiting on the dead nodes; [version] is the current layout version the sheet showed. */
+    fun skipDeadNodes(version: Long, allowMissingData: Boolean) {
+        val instance = _sheet.value?.instance ?: return
+        write(instance, { dataServices.garageSkipDeadNodes(instance, version, allowMissingData) }, after = onChanged) { layout, error ->
+            GarageLayoutResult.Skipped(layout?.messages.orEmpty(), error)
+        }
     }
 
     private fun write(instance: GarageInstance, action: suspend () -> GarageLayout, result: (UiText?) -> GarageLayoutResult) =

@@ -2349,6 +2349,14 @@
     <string name="garage_role_tag_add">Ajouter une étiquette</string>
     <string name="garage_role_tag_add_button">Ajouter</string>
     <string name="garage_role_stage_text">Préparer ne change encore rien : la feuille de topologie montre ensuite ce que l\'application déplacerait.</string>
+    <string name="garage_layout_skip">Passer les nœuds morts…</string>
+    <string name="garage_layout_skip_title">Passer les nœuds morts de %1$s ?</string>
+    <string name="garage_layout_skip_text">La topologie en cours de vidage cesse d\'attendre %1$s : Garage les considère comme ayant acquitté la version %2$d, et la migration continue sans eux. Sans retour possible ; réservez-le aux nœuds qui ne reviendront pas.</string>
+    <string name="garage_layout_skip_allow">Autoriser les données manquantes</string>
+    <string name="garage_layout_skip_allow_text">Le suiveur de synchronisation de chaque nœud avance aussi : les métadonnées que seuls les nœuds morts détenaient sont perdues définitivement.</string>
+    <string name="garage_layout_skip_confirm">Passer les nœuds morts</string>
+    <string name="garage_layout_skipped">Nœuds morts passés : la migration de la topologie continue sans eux.</string>
+    <string name="garage_layout_skip_failed">Impossible de passer les nœuds morts : %1$s</string>
     <string name="cnpg_empty">Aucun cluster Postgres.</string>
     <string name="cnpg_reason_no_instance">aucune instance active</string>
     <string name="cnpg_reason_failover">bascule en cours</string>
