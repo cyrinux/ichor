@@ -7,8 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/siderolabs/crypto/x509"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
+	"github.com/siderolabs/talos/pkg/machinery/config/generate/secrets"
+	secretsres "github.com/siderolabs/talos/pkg/machinery/resources/secrets"
 )
 
 func TestComputeCARotationPlanBlockers(t *testing.T) {
@@ -223,5 +227,56 @@ func TestFingerprintLineageKeepsContextFingerprint(t *testing.T) {
 
 	if contextFingerprint("c", before) != contextFingerprint("c", after) {
 		t.Fatal("the lineage must keep the fingerprint across the CA change")
+	}
+}
+
+func TestAgreeOnIssuingCA(t *testing.T) {
+	a := issuingCA{node: caRotationNode{Node: "10.0.0.1", Hostname: "cp-1"}, ca: &caRotationCA{Fingerprint: "aaaa"}, pem: []byte("A")}
+	b := issuingCA{node: caRotationNode{Node: "10.0.0.2", Hostname: "cp-2"}, ca: &caRotationCA{Fingerprint: "bbbb"}, pem: []byte("B")}
+
+	if ca, pem, problem := agreeOnIssuingCA([]issuingCA{a, a}); problem != "" || ca.Fingerprint != "aaaa" || string(pem) != "A" {
+		t.Fatalf("agreeing control planes: %v %q %q", ca, pem, problem)
+	}
+
+	if _, _, problem := agreeOnIssuingCA([]issuingCA{a, b}); !strings.Contains(problem, "different CAs") ||
+		!strings.Contains(problem, "cp-1 (10.0.0.1): aaaa") || !strings.Contains(problem, "cp-2 (10.0.0.2): bbbb") {
+		t.Fatalf("problem = %q", problem)
+	}
+
+	if _, _, problem := agreeOnIssuingCA(nil); problem != errNoControlPlane.Error() {
+		t.Fatalf("no control plane: %q", problem)
+	}
+
+	unreadable := issuingCA{node: b.node, problem: "the cluster's CA cannot be read: permission denied"}
+	if _, _, problem := agreeOnIssuingCA([]issuingCA{a, unreadable}); problem != unreadable.problem {
+		t.Fatalf("unreadable: %q", problem)
+	}
+}
+
+func TestTalosCARotationPlanHalfRotated(t *testing.T) {
+	f, cfg, _ := caCluster(t)
+
+	// cp-2 already issues with another CA, as after a rotation stopped during the swap.
+	other, err := secrets.NewTalosCA(time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root := secretsres.NewOSRoot(secretsres.OSRootID)
+	root.TypedSpec().IssuingCA = x509.NewCertificateAndKeyFromCertificateAuthority(other)
+	f.put(caControlPlane2, root)
+
+	out, err := TalosCARotationPlan(cfg, "fake")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var plan caRotationPlan
+	if err := json.Unmarshal([]byte(out), &plan); err != nil {
+		t.Fatal(err)
+	}
+
+	if plan.Ready || plan.CA != nil || !strings.Contains(strings.Join(plan.Blockers, " "), "different CAs") {
+		t.Fatalf("plan = %+v", plan)
 	}
 }

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"crypto/x509"
@@ -121,19 +122,62 @@ func gatherCARotation(ctx context.Context, s *session, name string) caRotationIn
 		in.nodes[i] = describeCARotationNode(ctx, s, n)
 	})
 
+	// Every control plane's issuing CA: they differ after a rotation stopped half-way.
+	var cps []caRotationNode
+
 	for _, n := range in.nodes {
 		if n.Reachable && n.Role == "controlplane" {
-			in.ca, in.caPEM, in.caErr = readIssuingCA(ctx, s, n.Node)
-
-			break
+			cps = append(cps, n)
 		}
 	}
 
-	if in.ca == nil && in.caErr == "" {
-		in.caErr = errNoControlPlane.Error()
-	}
+	issuing := make([]issuingCA, len(cps))
+
+	forEachNode(cps, func(i int, n caRotationNode) {
+		ca, crt, problem := readIssuingCA(ctx, s, n.Node)
+		issuing[i] = issuingCA{node: n, ca: ca, pem: crt, problem: problem}
+	})
+
+	in.ca, in.caPEM, in.caErr = agreeOnIssuingCA(issuing)
 
 	return in
+}
+
+// issuingCA is the CA one control plane issues certificates with.
+type issuingCA struct {
+	node    caRotationNode
+	ca      *caRotationCA
+	pem     []byte
+	problem string
+}
+
+// agreeOnIssuingCA is the CA every control plane issues with, or why there is none: no
+// control plane answered, one could not be read, or they issue with different CAs (a
+// rotation stopped while making the new CA the issuing one, which the phone cannot finish:
+// its next check would fail on the nodes still serving the other CA).
+func agreeOnIssuingCA(issuing []issuingCA) (*caRotationCA, []byte, string) {
+	if len(issuing) == 0 {
+		return nil, nil, errNoControlPlane.Error()
+	}
+
+	first := issuing[0]
+	if first.problem != "" {
+		return nil, nil, first.problem
+	}
+
+	for _, other := range issuing[1:] {
+		if other.problem != "" {
+			return nil, nil, other.problem
+		}
+
+		if !bytes.Equal(other.pem, first.pem) {
+			return nil, nil, fmt.Sprintf("the control planes issue with different CAs (%s: %s, %s: %s): a rotation stopped half-way. "+
+				"Finish it from a computer with talosctl rotate-ca, or put the same machine.ca back on every control plane",
+				caNodeLabel(first.node), first.ca.Fingerprint, caNodeLabel(other.node), other.ca.Fingerprint)
+		}
+	}
+
+	return first.ca, first.pem, ""
 }
 
 // caRotationTargets lists the nodes to patch: cluster discovery's members at the address the

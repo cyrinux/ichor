@@ -68,7 +68,9 @@ Part of the [Ichor documentation](../README.md#documentation).
     with the old CA, and the transition one trusts both. A run stopped at any step (Stop, a
     failed check, the app killed) leaves the cluster with CAs that this phone's stored
     talosconfig still reaches. A transition talosconfig that cannot be stored stops the run
-    before the issuing CA changes.
+    before the issuing CA changes. A run stopped while the new CA becomes the issuing one can
+    leave the control planes on different CAs: the plan then says so and blocks, and
+    `talosctl rotate-ca` finishes it from a computer.
   - **The cluster stays the same cluster:** its pins, colour, name, history and share links are
     kept under the fingerprint it had before the rotation. Backups carry that link, so a restore
     on another phone keeps them too.
