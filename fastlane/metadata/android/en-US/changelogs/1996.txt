@@ -1,0 +1,4 @@
+• (i) on the Runbooks screen explains the format and links to its reference
+• A throttling alert shows the node's temperature, and its tap opens the node's Hardware
+• The Kubernetes API address is offered only where the cluster's calls use it
+• Virtual parts (VIRTUAL-DISK, QEMU, VMware...) no longer offer to find spare parts
