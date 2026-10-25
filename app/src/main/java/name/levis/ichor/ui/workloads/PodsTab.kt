@@ -11,6 +11,8 @@ import name.levis.ichor.model.KubeTopPod
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -275,6 +277,7 @@ fun PodsTab(
  * cannot be pulled (with [pullLinks] to act on it), CPU and memory in use ([usage], from
  * metrics-server); logs, flows and delete actions.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PodRow(
     pod: KubePod,
@@ -298,14 +301,17 @@ internal fun PodRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(pod.status, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = pod.statusColor())
-                Text(stringResource(R.string.pods_ready_count, pod.ready, pod.containers), style = MaterialTheme.typography.labelSmall, color = muted)
+            // Wraps rather than squeezing: a long status (ContainerStatusUnknown) would otherwise
+            // leave the restarts a one-character column.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(pod.status, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = pod.statusColor(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.pods_ready_count, pod.ready, pod.containers), style = MaterialTheme.typography.labelSmall, color = muted, softWrap = false)
                 if (pod.restarts > 0) {
                     Text(
                         pluralStringResource(R.plurals.pods_restarts, pod.restarts, pod.restarts),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (pod.healthy) muted else LocalStatusColors.current.warn,
+                        softWrap = false,
                     )
                 }
             }
