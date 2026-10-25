@@ -120,6 +120,7 @@ fun DataServicesScreen(
     val pluginReload = PluginReload(scope = config?.activeContext to generation, bump = listOf(invalidations, refreshes))
     val pluginTabs = (plugins as? UiState.Loaded)?.data?.dataServicePlugins.orEmpty().filter { nativePluginRoute(it) == null }
     GarageResultToasts(vm.garage.results)
+    GarageLayoutResultToasts(vm.garage.layout.results)
     LonghornResultToasts(vm.longhorn.results)
     LonghornSalvageToasts(vm.longhorn.salvageResults)
     LonghornAttachmentToasts(vm.longhorn.attachmentResults)

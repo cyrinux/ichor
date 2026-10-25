@@ -99,6 +99,56 @@ extension TalosClient {
         }
     }
 
+    /// A Garage cluster's layout: roles, staged changes with their preview, version history (os:admin).
+    func garageLayout(_ instance: GarageInstance) async throws -> GarageLayout {
+        let (namespace, pod) = (instance.namespace, instance.pod)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageLayout(config, context, kubeServer, namespace, pod, $0)
+        }
+    }
+
+    /// Stages a role for a Garage node (full id): zone, capacity in bytes unless gateway, tags (os:admin).
+    /// Nothing moves until garageApplyLayout. Answers the layout with the staged change and its preview.
+    func garageStageRole(_ instance: GarageInstance, node: String, zone: String, capacity: Int64, gateway: Bool, tags: [String]) async throws -> GarageLayout {
+        let (namespace, pod) = (instance.namespace, instance.pod)
+        let tagsJSON = try String(decoding: JSONEncoder().encode(tags), as: UTF8.self)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageStageRole(config, context, kubeServer, namespace, pod, node, zone, capacity, gateway, tagsJSON, $0)
+        }
+    }
+
+    /// Stages the removal of a Garage node from the layout (os:admin).
+    func garageStageRemoval(_ instance: GarageInstance, node: String) async throws -> GarageLayout {
+        let (namespace, pod) = (instance.namespace, instance.pod)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageStageRemoval(config, context, kubeServer, namespace, pod, node, $0)
+        }
+    }
+
+    /// Stages the layout's zone redundancy: "maximum" or a number of zones (os:admin).
+    func garageSetZoneRedundancy(_ instance: GarageInstance, value: String) async throws -> GarageLayout {
+        let (namespace, pod) = (instance.namespace, instance.pod)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageSetZoneRedundancy(config, context, kubeServer, namespace, pod, value, $0)
+        }
+    }
+
+    /// Applies the staged layout changes as `version`, the one the preview announced (os:admin); Garage refuses any other.
+    func garageApplyLayout(_ instance: GarageInstance, version: Int64) async throws -> GarageLayout {
+        let (namespace, pod) = (instance.namespace, instance.pod)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageApplyLayout(config, context, kubeServer, namespace, pod, version, $0)
+        }
+    }
+
+    /// Drops every staged layout change (os:admin).
+    func garageRevertLayout(_ instance: GarageInstance) async throws -> GarageLayout {
+        let (namespace, pod) = (instance.namespace, instance.pod)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageRevertLayout(config, context, kubeServer, namespace, pod, $0)
+        }
+    }
+
     /// Sets the resync tranquility of a Garage node, full id or "*" (os:admin): 0 is full speed, 2 the default.
     func garageSetTranquility(_ instance: GarageInstance, node: String, value: Int) async throws {
         let (namespace, pod) = (instance.namespace, instance.pod)

@@ -1,7 +1,9 @@
 # Garage cluster layout from the app: design study
 
-Status: study, nothing implemented yet. Written against Garage `main-v2` (admin API spec
-v2.5.0) and the app as of October 2026.
+Status: phases 1 and 2 below are implemented (Go `kube_garage_layout.go`, Android
+`GarageLayoutSheet`/`GarageRoleSheet`, iOS `GarageLayoutView`/`GarageRoleSheet`); phase 3's
+skip-dead-nodes is not. Written against Garage `main-v2` (admin API spec v2.5.0) and the app
+as of October 2026.
 
 ## What the user should be able to do
 

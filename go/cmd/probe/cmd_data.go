@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
@@ -234,6 +235,48 @@ var dataCommands = []command{
 		}
 
 		return out, err
+	}},
+	{name: "garage-layout", args: "NAMESPACE POD", run: func(e env) (out string, err error) {
+		// garage-layout NAMESPACE POD: roles, staged changes with their preview, history (read-only).
+		out, err = ichorgo.KubeGarageLayout(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+
+		return out, err
+	}},
+	{name: "garage-layout-stage", args: "NAMESPACE POD GARAGENODE ZONE CAPACITY|gateway [TAG,...]", run: func(e env) (out string, err error) {
+		// garage-layout-stage NAMESPACE POD NODE_ID ZONE BYTES|gateway [TAG,...]: stages a role.
+		var capacity int64
+
+		gateway := flag.Arg(5) == "gateway"
+		if !gateway {
+			if capacity, err = strconv.ParseInt(flag.Arg(5), 10, 64); err != nil {
+				return "", err
+			}
+		}
+
+		tags, _ := json.Marshal(strings.FieldsFunc(flag.Arg(6), func(r rune) bool { return r == ',' }))
+
+		return ichorgo.KubeGarageStageRole(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), capacity, gateway, string(tags))
+	}},
+	{name: "garage-layout-remove", args: "NAMESPACE POD GARAGENODE", run: func(e env) (string, error) {
+		// garage-layout-remove NAMESPACE POD NODE_ID: stages the node's removal from the layout.
+		return ichorgo.KubeGarageStageRemoval(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "garage-layout-redundancy", args: "NAMESPACE POD maximum|N", run: func(e env) (string, error) {
+		// garage-layout-redundancy NAMESPACE POD maximum|N: stages the zone redundancy.
+		return ichorgo.KubeGarageSetZoneRedundancy(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "garage-layout-apply", args: "NAMESPACE POD VERSION", run: func(e env) (string, error) {
+		// garage-layout-apply NAMESPACE POD VERSION: applies the staged changes as that version.
+		version, err := strconv.ParseInt(flag.Arg(3), 10, 64)
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.KubeGarageApplyLayout(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), version)
+	}},
+	{name: "garage-layout-revert", args: "NAMESPACE POD", run: func(e env) (string, error) {
+		// garage-layout-revert NAMESPACE POD: drops every staged layout change.
+		return ichorgo.KubeGarageRevertLayout(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},
 	{name: "longhorn-snapshot", args: "NAMESPACE VOLUME ACTION [SNAPSHOT]", run: func(e env) (string, error) {
 		// longhorn-snapshot NAMESPACE VOLUME take|backup|delete [SNAPSHOT]; take needs none.

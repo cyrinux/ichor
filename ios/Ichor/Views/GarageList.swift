@@ -10,6 +10,8 @@ struct GarageList: View {
     @Environment(AppModel.self) private var model
     @State private var confirm: TranquilityRequest?
     @State private var setting: Set<String> = []
+    @State private var removal: RoleRemoval?
+    @State private var editing: RoleEdit?
     @State private var resultMessage: String?
 
     var body: some View {
@@ -19,7 +21,12 @@ struct GarageList: View {
                 OperatorSection(status: status)
             }
             ForEach(status.instances) { instance in
-                InstanceSection(instance: instance, setting: setting) { confirm = $0 }
+                // The operator declares the layout of the clusters it drives: the app shows it, the GarageNode objects change it.
+                let managed = status.clusters.contains { $0.instance == instance.label }
+                InstanceSection(instance: instance, setting: setting, managed: managed,
+                                onTranquility: { confirm = $0 },
+                                onEditRole: { editing = RoleEdit(instance: instance, nodeID: $0.nodeID) },
+                                onRemoveRole: { removal = RoleRemoval(instance: instance, node: $0) })
             }
         }
         .refreshable { await refresh() }
@@ -41,7 +48,29 @@ struct GarageList: View {
                 Text("The node goes back to Garage's default resync pace, lighter on disk and network IO.")
             }
         }
+        .confirmationDialog(removal.map { Text("Remove \($0.node.label) from the layout?") } ?? Text(""),
+                            isPresented: $removal.isPresent(), titleVisibility: .visible, presenting: removal) { request in
+            Button("Remove from layout", role: .destructive) { Task { await stageRemoval(request) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("The removal is staged only: once the layout is applied, the node's data moves to the other nodes. You can revert it before then.")
+        }
+        .sheet(item: $editing) { edit in
+            GarageRoleSheet(instance: edit.instance, nodeID: edit.nodeID, known: nil) { _ in
+                resultMessage = String(localized: "Role staged. Open the layout to apply it.")
+            }
+        }
         .messageAlert($resultMessage)
+    }
+
+    private func stageRemoval(_ request: RoleRemoval) async {
+        guard let client = model.client else { return }
+        do {
+            _ = try await client.garageStageRemoval(request.instance, node: request.node.nodeID)
+            resultMessage = String(localized: "\(request.node.label): removal staged. Open the layout to apply it.")
+        } catch {
+            resultMessage = String(localized: "Could not change the layout: \(error.localizedDescription)")
+        }
     }
 
     private func setTranquility(_ request: TranquilityRequest) async {
@@ -235,6 +264,22 @@ private struct OperatorRow: View {
     }
 }
 
+/// A node's removal from the layout waiting for confirmation.
+private struct RoleRemoval: Identifiable {
+    let instance: GarageInstance
+    let node: GarageNode
+
+    var id: String { "\(instance.id)|\(node.id)" }
+}
+
+/// The role editor opened on one node.
+private struct RoleEdit: Identifiable {
+    let instance: GarageInstance
+    let nodeID: String
+
+    var id: String { "\(instance.id)|\(nodeID)" }
+}
+
 /// A resync tranquility change asked for one Garage node: 0 is full speed, 2 Garage's default.
 private struct TranquilityRequest: Identifiable {
     let instance: GarageInstance
@@ -267,7 +312,14 @@ private struct TranquilityRequest: Identifiable {
 private struct InstanceSection: View {
     let instance: GarageInstance
     let setting: Set<String>
+    /// The garage-operator declares the layout: no role is edited from here.
+    let managed: Bool
     let onTranquility: (TranquilityRequest) -> Void
+    let onEditRole: (GarageNode) -> Void
+    let onRemoveRole: (GarageNode) -> Void
+
+    /// Actions run Garage's CLI in a ready pod, which only a full (cli-json) reading names.
+    private var actionable: Bool { instance.detailed && !instance.pod.isEmpty }
 
     var body: some View {
         Section {
@@ -320,16 +372,31 @@ private struct InstanceSection: View {
             } label: {
                 Text("Details")
             }
-            if instance.detailed && !instance.pod.isEmpty {
+            if actionable {
                 NavigationLink {
                     GarageBlockErrorsView(instance: instance)
                 } label: {
                     Label("Block errors", systemImage: "cube.transparent")
                 }
+                let members = instance.nodes.filter(\.storage).count
+                NavigationLink {
+                    GarageLayoutView(instance: instance, managed: managed)
+                } label: {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Layout v\(instance.layoutVersion)")
+                            Text("\(members) nodes in the layout").font(.caption).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "square.grid.3x3")
+                    }
+                }
             }
             ForEach(instance.nodes) { node in
                 let request = TranquilityRequest(instance: instance, node: node)
                 let busy = request.map { setting.contains($0.id) } ?? false
+                // A layout role is given to a connected node, changed or taken from a member; the operator's clusters keep theirs.
+                let editable = actionable && !managed && node.nodeID.count == 64 && (node.storage || node.up)
                 NodeRow(node: node, busy: busy)
                     .swipeActions(edge: .trailing) {
                         if let request, !busy {
@@ -340,6 +407,14 @@ private struct InstanceSection: View {
                     .contextMenu {
                         if let request, !busy {
                             Button { onTranquility(request) } label: { TranquilityLabel(fullSpeed: request.fullSpeed) }
+                        }
+                        if editable {
+                            Button { onEditRole(node) } label: {
+                                if node.storage { Label("Change role…", systemImage: "slider.horizontal.3") } else { Label("Add to layout…", systemImage: "plus.circle") }
+                            }
+                            if node.storage {
+                                Button(role: .destructive) { onRemoveRole(node) } label: { Label("Remove from layout", systemImage: "minus.circle") }
+                            }
                         }
                     }
             }
@@ -422,6 +497,7 @@ private struct NodeRow: View {
         }
         if !node.kubeNode.isEmpty { parts.append(String(localized: "on \(node.kubeNode)")) }
         if !node.zone.isEmpty { parts.append(String(localized: "zone \(node.zone)")) }
+        if !node.storage { parts.append(String(localized: "not in layout")) }
         if node.resyncErrors > 0 { parts.append(String(localized: "Blocks failing to resync") + " " + node.resyncErrors.formatted()) }
         if !node.statsError.isEmpty && node.up { parts.append(String(localized: "no statistics: \(node.statsError)")) }
         if node.tranquility == GarageTranquility.fullSpeed {
