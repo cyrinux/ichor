@@ -227,6 +227,7 @@ Every data type: **not collected**. Reasoning for the borderline cases:
 | `INTERNET`, `POST_NOTIFICATIONS` | No | |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | **Yes**, see [Foreground services](#foreground-services) | open debug shells |
 | `CAMERA` | No form; covered by the privacy policy | QR code import |
+| `RUN_USER_INITIATED_JOBS` | No foreground service declaration: it is not one | the on-device model download (Android 14+), a user-initiated data transfer job; recheck if the Console asks |
 | `REQUEST_INSTALL_PACKAGES` | No | removed from the Play build |
 | `<queries>` for `io.kubenav.kubenav` | No | a single named package, not `QUERY_ALL_PACKAGES` |
 
@@ -241,6 +242,10 @@ a terminal moves no data in the background. No other type fits a remote terminal
 WorkManager also merges `FOREGROUND_SERVICE` and its `SystemForegroundService`, without a
 `foregroundServiceType`; the background checks never run in the foreground, so it needs no
 declaration of its own.
+
+The on-device model download is not a foreground service either: a user-initiated data transfer
+job (Android 14+). v1.47.0 used WorkManager's foreground service with `dataSync` for it, and
+Play refused the upload until the foreground service declaration covered `dataSync`.
 
 **To do in the Console before the first release with it** (Play rejects or blocks the release
 without it):

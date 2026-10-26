@@ -146,25 +146,28 @@ server.
 
 ### Android
 
-A WorkManager worker (`ModelDownloadWorker`), since WorkManager is already a dependency and
-the monitor uses it:
+A user-initiated data transfer job (`ModelDownloadJob`, JobScheduler, Android 14+), which is
+what Google recommends for a network transfer the user asked for. v1.47.0 shipped a
+WorkManager worker in a `dataSync` foreground service instead, and Play refused the upload
+until the foreground service declaration covered `dataSync`; the job needs no foreground
+service. No Jetpack library schedules these jobs, hence JobScheduler, in its own namespace so
+its id cannot meet WorkManager's. Older Android versions get *Import a model file* only.
 
-- Constraints: `NetworkType.UNMETERED` by default, `CONNECTED` when the user allowed
-  mobile data; `setRequiresStorageNotLow(true)`, `setRequiresBatteryNotLow(true)`.
-  WorkManager then holds the work while the constraint is not met and restarts it when it
-  is, which gives rule 5 for free; the worker resumes from the `.part` file's length.
-- Inside the worker, before the first byte and on every network change (a
-  `ConnectivityManager.NetworkCallback` registered for the download's lifetime):
-  `isActiveNetworkMetered` (`LocalNetwork.kt` has the helper), `getRestrictBackgroundStatus()`
-  for Data Saver (`RESTRICT_BACKGROUND_STATUS_ENABLED` blocks on a metered network;
-  `WHITELISTED` allows with the warning), `NET_CAPABILITY_NOT_ROAMING` for roaming.
-  When a rule fails, the worker returns `retry()` with the reason stored for the UI, and
-  WorkManager waits for the next constraint change.
-- Long-running: `setForeground` with a progress notification (pause and cancel actions),
-  `foregroundServiceType="dataSync"` on WorkManager's foreground service and the
-  `FOREGROUND_SERVICE_DATA_SYNC` permission (the app's two services use `specialUse`; a
-  download is what `dataSync` is for and Play accepts it without a declaration). Android
-  14's 6-hour limit per day for `dataSync` is far above a download that takes minutes.
+- Constraints: `NETWORK_TYPE_UNMETERED` by default, `NETWORK_TYPE_NOT_ROAMING` when the user
+  allowed mobile data; `setRequiresStorageNotLow(true)`, `setRequiresBatteryNotLow(true)`,
+  the remaining bytes as the estimate, exponential backoff (the only policy these jobs take).
+  JobScheduler holds the job while the constraint is not met and restarts it when it is,
+  which gives rule 5 for free; the job resumes from the `.part` file's length.
+- Inside the job, before the first byte and every 16 MB: `isActiveNetworkMetered`,
+  `getRestrictBackgroundStatus()` for Data Saver (`RESTRICT_BACKGROUND_STATUS_ENABLED` blocks
+  on a metered network), `NET_CAPABILITY_NOT_ROAMING` for roaming. When a rule fails, the job
+  finishes asking to be rescheduled.
+- The job's notification (`setNotification`, updated at each percent) carries the progress
+  and Cancel. The system lists the job in its Task Manager; a Stop there ends the process
+  without `onStopJob`, so the screen re-reads the pending job, and the `.part` file stays
+  for the next tap.
+- The job must be scheduled while the app is on screen, which the Download tap is; the
+  system refuses it otherwise, shown as a failed download.
 - The HTTP loop is the updater's (`UpdateManager.download`: `HttpURLConnection`, 64 KB
   buffer, progress to a `StateFlow`), with `Range`, `If-Range`, the streamed digest and the
   byte cap set to the catalog's size plus a margin. Redirects from Hugging Face to its CDN

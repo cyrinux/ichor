@@ -33,20 +33,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.AiSettings
 import name.levis.ichor.localmodel.DownloadBlock
+import name.levis.ichor.localmodel.DownloadStatus
 import name.levis.ichor.localmodel.EngineStatus
 import name.levis.ichor.localmodel.IMPORTED_PREFIX
 import name.levis.ichor.localmodel.LlamaNative
 import name.levis.ichor.localmodel.LocalModelInfo
 import name.levis.ichor.localmodel.ModelDownloads
 import name.levis.ichor.localmodel.currentDownloadBlock
+import name.levis.ichor.localmodel.downloadSupported
 import name.levis.ichor.localmodel.formatModelSize
 import name.levis.ichor.localmodel.partialBytes
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -118,26 +118,30 @@ private fun ModelRow(title: String, detail: String, selected: Boolean, enabled: 
     }
 }
 
-/** The selected catalog model: on the phone, arriving, waiting for a network, or a Download button. */
+/**
+ * The selected catalog model: on the phone, arriving, waiting for a network, or a Download
+ * button (Android 14 and later: the download is a user-initiated data transfer job).
+ */
 @Composable
 private fun DownloadState(app: TalosApp, model: LocalModelInfo, changes: Int) {
     val context = LocalContext.current
     val store = app.localModels
     val uri = LocalUriHandler.current
-    val works by remember { WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(ModelDownloads.WORK) }
-        .collectAsStateWithLifecycle(emptyList())
-    val work = works.firstOrNull { ModelDownloads.TAG_PREFIX + model.id in it.tags }
+    val status by ModelDownloads.status.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { ModelDownloads.refresh(context) }
     // Not remembered across downloads: each one over mobile data is the user's explicit choice.
     var allowMetered by remember(model.id) { mutableStateOf(false) }
-    val ready = remember(changes, work?.state) { store.isReady(model.id) }
+    val ready = remember(changes, status) { store.isReady(model.id) }
+    val current = status
 
     when {
         ready -> {
             MutedText(stringResource(R.string.ai_local_ready, formatModelSize(model.bytes)))
             DeleteModel(app, model.id, null)
         }
-        work != null && work.state == WorkInfo.State.RUNNING -> {
-            val done = work.progress.getLong(ModelDownloads.KEY_DONE, partialBytes(store, model.id))
+        !downloadSupported() -> MutedText(stringResource(R.string.ai_local_download_needs_android_14))
+        current is DownloadStatus.Running && current.id == model.id -> {
+            val done = current.done
             val fraction = if (model.bytes > 0) (done.toFloat() / model.bytes).coerceIn(0f, 1f) else 0f
             LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
             MutedText(
@@ -145,14 +149,14 @@ private fun DownloadState(app: TalosApp, model: LocalModelInfo, changes: Int) {
             )
             TextButton(onClick = { ModelDownloads.cancel(context, store, model.id) }) { Text(stringResource(R.string.common_cancel)) }
         }
-        work != null && (work.state == WorkInfo.State.ENQUEUED || work.state == WorkInfo.State.BLOCKED) -> {
-            WaitingLine(ModelDownloads.TAG_METERED in work.tags)
+        current is DownloadStatus.Waiting && current.id == model.id -> {
+            WaitingLine(current.allowMetered)
             TextButton(onClick = { ModelDownloads.cancel(context, store, model.id) }) { Text(stringResource(R.string.common_cancel)) }
         }
         else -> {
-            if (work?.state == WorkInfo.State.FAILED) {
+            if (current is DownloadStatus.Failed && current.id == model.id) {
                 Text(
-                    stringResource(downloadErrorText(work.outputData.getString(ModelDownloads.KEY_ERROR))),
+                    stringResource(downloadErrorText(current.error)),
                     color = LocalStatusColors.current.bad,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -165,7 +169,7 @@ private fun DownloadState(app: TalosApp, model: LocalModelInfo, changes: Int) {
                 Switch(checked = allowMetered, onCheckedChange = { allowMetered = it }, modifier = Modifier.padding(start = 12.dp))
             }
             Button(
-                onClick = { ModelDownloads.start(context, model.id, allowMetered) },
+                onClick = { ModelDownloads.start(context, store, model.id, allowMetered) },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.ai_local_download, formatModelSize(model.bytes - partialBytes(store, model.id)))) }
             TextButton(onClick = { uri.openUri(model.licenseUrl) }) { Text(stringResource(R.string.ai_local_license, model.license)) }
@@ -173,7 +177,10 @@ private fun DownloadState(app: TalosApp, model: LocalModelInfo, changes: Int) {
     }
 }
 
-/** Why a queued download is not running, read again every few seconds (the network changes). */
+/**
+ * Why a queued download is not running, read again every few seconds (the network changes),
+ * along with the job itself (the system's Task Manager can stop it without telling the app).
+ */
 @Composable
 private fun WaitingLine(allowMetered: Boolean) {
     val context = LocalContext.current
@@ -181,6 +188,7 @@ private fun WaitingLine(allowMetered: Boolean) {
     LaunchedEffect(Unit) {
         while (true) {
             delay(3_000)
+            ModelDownloads.refresh(context)
             tick++
         }
     }

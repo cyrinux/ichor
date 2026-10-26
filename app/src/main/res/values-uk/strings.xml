@@ -1911,6 +1911,7 @@
     <string name="ai_local_needs_64bit">Моделі потрібен 64-бітний телефон.</string>
     <string name="ai_local_old_cpu">Процесор цього телефона застарий для моделі.</string>
     <string name="ai_local_no_catalog">Ця версія не пропонує моделей для завантаження. Натомість імпортуйте файл моделі (GGUF).</string>
+    <string name="ai_local_download_needs_android_14">Для завантаження моделі потрібен Android 14 або новіший. Натомість імпортуйте файл моделі (GGUF).</string>
     <string name="ai_local_model_detail">%1$s · %2$s</string>
     <string name="ai_local_needs_memory">Потрібен телефон із %1$s пам’яті</string>
     <string name="ai_local_imported">Імпортований файл</string>
