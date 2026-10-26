@@ -347,4 +347,5 @@ Part of the [Ichor documentation](../README.md#documentation).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
   over NFC or USB), which can also seal the stored configs so that nothing reads them without it.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and
-  how to fix it, or hand the question to an assistant app (see [AI diagnosis](ai.md#ai-diagnosis-optional)).
+  how to fix it, a model downloaded to the phone that answers without sending anything, or hand
+  the question to an assistant app (see [AI diagnosis](ai.md#ai-diagnosis-optional)).

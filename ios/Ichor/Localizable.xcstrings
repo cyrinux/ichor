@@ -166745,6 +166745,266 @@
           }
         }
       }
+    },
+    "This version offers no model to download. Import a model file (GGUF) instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cette version ne propose aucun modèle à télécharger. Importez plutôt un fichier de modèle (GGUF)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esta versión no ofrece ningún modelo para descargar. Importa un archivo de modelo (GGUF)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ця версія не пропонує моделей для завантаження. Натомість імпортуйте файл моделі (GGUF)." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Version bietet kein Modell zum Herunterladen. Importiere stattdessen eine Modelldatei (GGUF)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questa versione non offre modelli da scaricare. Importa invece un file di modello (GGUF)." } }
+      }
+    },
+    "Imported file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fichier importé" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Archivo importado" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Імпортований файл" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Importierte Datei" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "File importato" } }
+      }
+    },
+    "Import a model file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Importer un fichier de modèle" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Importar un archivo de modelo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Імпортувати файл моделі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modelldatei importieren" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Importa un file di modello" } }
+      }
+    },
+    "The model answers on the phone: nothing is sent. A download starts only when you tap, on Wi-Fi unless you allow mobile data, never in Low Data Mode. A small model is often wrong: check its answer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le modèle répond sur le téléphone : rien n’est envoyé. Un téléchargement ne démarre que quand vous appuyez, en Wi-Fi sauf si vous autorisez les données cellulaires, jamais en mode données réduites. Un petit modèle se trompe souvent : vérifiez sa réponse." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El modelo responde en el teléfono: no se envía nada. Una descarga solo empieza cuando tocas, por Wi-Fi salvo que permitas los datos móviles, nunca en el modo de datos reducidos. Un modelo pequeño se equivoca a menudo: comprueba su respuesta." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Модель відповідає на телефоні: нічого не надсилається. Завантаження починається лише після вашого натискання, через Wi-Fi, якщо не дозволено мобільні дані, ніколи в режимі низького трафіку. Мала модель часто помиляється: перевіряйте її відповідь." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Modell antwortet auf dem Telefon: Nichts wird gesendet. Ein Download beginnt nur auf deinen Tipp, über WLAN, außer du erlaubst mobile Daten, nie im Datensparmodus. Ein kleines Modell irrt sich oft: Prüfe seine Antwort." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il modello risponde sul telefono: non viene inviato nulla. Un download parte solo quando tocchi, in Wi-Fi a meno che tu non consenta i dati cellulare, mai in modalità Dati ridotti. Un modello piccolo sbaglia spesso: verifica la sua risposta." } }
+      }
+    },
+    "Needs a phone with more memory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Demande un téléphone avec plus de mémoire" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Necesita un teléfono con más memoria" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Потрібен телефон із більшим обсягом пам’яті" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Braucht ein Telefon mit mehr Speicher" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Richiede un telefono con più memoria" } }
+      }
+    },
+    "Downloading: %@ of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Téléchargement : %@ sur %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descargando: %@ de %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантаження: %@ з %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wird heruntergeladen: %@ von %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Download: %@ di %@" } }
+      }
+    },
+    "Waiting for Wi-Fi." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En attente du Wi-Fi." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando Wi-Fi." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Очікування Wi-Fi." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wartet auf WLAN." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In attesa del Wi-Fi." } }
+      }
+    },
+    "Paused: Low Data Mode is on." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En pause : le mode données réduites est activé." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "En pausa: el modo de datos reducidos está activado." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Призупинено: увімкнено режим низького трафіку." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pausiert: Der Datensparmodus ist an." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In pausa: la modalità Dati ridotti è attiva." } }
+      }
+    },
+    "Checking the file…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vérification du fichier…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobando el archivo…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перевірка файлу…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Datei wird geprüft…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Verifica del file…" } }
+      }
+    },
+    "On this phone (%@)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sur ce téléphone (%@)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "En este teléfono (%@)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "На цьому телефоні (%@)." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf diesem Telefon (%@)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Su questo telefono (%@)." } }
+      }
+    },
+    "Allow mobile data for this download" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Autoriser les données cellulaires pour ce téléchargement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Permitir datos móviles para esta descarga" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Дозволити мобільні дані для цього завантаження" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mobile Daten für diesen Download erlauben" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Consenti i dati cellulare per questo download" } }
+      }
+    },
+    "Off, the download waits for Wi-Fi. Never in Low Data Mode." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désactivé, le téléchargement attend le Wi-Fi. Jamais en mode données réduites." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desactivado, la descarga espera al Wi-Fi. Nunca en el modo de datos reducidos." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вимкнено: завантаження чекає на Wi-Fi. Ніколи в режимі низького трафіку." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aus: Der Download wartet auf WLAN. Nie im Datensparmodus." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Disattivato, il download attende il Wi-Fi. Mai in modalità Dati ridotti." } }
+      }
+    },
+    "Download (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Télécharger (%@)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descargar (%@)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажити (%@)" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Herunterladen (%@)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scarica (%@)" } }
+      }
+    },
+    "License: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Licence : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Licencia: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ліцензія: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lizenz: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Licenza: %@" } }
+      }
+    },
+    "Delete the model" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer le modèle" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar el modelo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалити модель" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell löschen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elimina il modello" } }
+      }
+    },
+    "The model file is removed from the phone. Getting it back means downloading it again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le fichier du modèle est retiré du téléphone. Pour le retrouver, il faudra le télécharger à nouveau." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El archivo del modelo se borra del teléfono. Para recuperarlo habrá que descargarlo de nuevo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Файл моделі буде видалено з телефона. Щоб повернути його, доведеться завантажити знову." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Modelldatei wird vom Telefon entfernt. Um sie zurückzubekommen, muss sie erneut heruntergeladen werden." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il file del modello viene rimosso dal telefono. Per riaverlo bisognerà scaricarlo di nuovo." } }
+      }
+    },
+    "To read the answer here, download or import a model in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pour lire la réponse ici, téléchargez ou importez un modèle dans les Réglages." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Para leer la respuesta aquí, descarga o importa un modelo en Ajustes." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Щоб прочитати відповідь тут, завантажте або імпортуйте модель у Налаштуваннях." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Um die Antwort hier zu lesen, lade in den Einstellungen ein Modell herunter oder importiere eines." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Per leggere la risposta qui, scarica o importa un modello nelle Impostazioni." } }
+      }
+    },
+    "This phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce téléphone" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este teléfono" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Цей телефон" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieses Telefon" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo telefono" } }
+      }
+    },
+    "the model on this phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "le modèle de ce téléphone" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "el modelo de este teléfono" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "модель на цьому телефоні" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "das Modell auf diesem Telefon" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "il modello su questo telefono" } }
+      }
+    },
+    "Reads the failed checks, node readiness and recent events with the model on this phone. Nothing leaves it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Analyse les vérifications en échec, l’état des nœuds et les événements récents avec le modèle de ce téléphone. Rien n’en sort." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Analiza las comprobaciones fallidas, el estado de los nodos y los eventos recientes con el modelo de este teléfono. Nada sale de él." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Аналізує невдалі перевірки, стан вузлів і недавні події моделлю на цьому телефоні. Нічого не виходить за його межі." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wertet die fehlgeschlagenen Prüfungen, die Bereitschaft der Knoten und die letzten Ereignisse mit dem Modell auf diesem Telefon aus. Nichts verlässt es." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Analizza i controlli non riusciti, lo stato dei nodi e gli eventi recenti con il modello su questo telefono. Nulla esce dal telefono." } }
+      }
+    },
+    "Your messages, the source’s metric names and the current panel stay on this phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vos messages, les noms de métriques de la source et le panneau en cours restent sur ce téléphone." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tus mensajes, los nombres de métricas de la fuente y el panel actual se quedan en este teléfono." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ваші повідомлення, назви метрик джерела й поточна панель залишаються на цьому телефоні." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deine Nachrichten, die Metriknamen der Quelle und das aktuelle Panel bleiben auf diesem Telefon." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "I tuoi messaggi, i nomi delle metriche della sorgente e il pannello corrente restano su questo telefono." } }
+      }
+    },
+    "This file name cannot be used." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce nom de fichier ne peut pas être utilisé." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este nombre de archivo no se puede usar." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Цю назву файлу не можна використати." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieser Dateiname kann nicht verwendet werden." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo nome di file non può essere usato." } }
+      }
+    },
+    "This is not a GGUF model file." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce n’est pas un fichier de modèle GGUF." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No es un archivo de modelo GGUF." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Це не файл моделі GGUF." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das ist keine GGUF-Modelldatei." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non è un file di modello GGUF." } }
+      }
+    },
+    "Not enough free space on the phone for this model." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas assez d’espace libre sur le téléphone pour ce modèle." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay espacio libre suficiente en el teléfono para este modelo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Недостатньо вільного місця на телефоні для цієї моделі." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht genug freier Speicher auf dem Telefon für dieses Modell." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Spazio libero insufficiente sul telefono per questo modello." } }
+      }
+    },
+    "The download failed. Try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le téléchargement a échoué. Réessayez." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La descarga ha fallado. Inténtalo de nuevo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вдалося завантажити. Спробуйте ще раз." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Download ist fehlgeschlagen. Versuche es erneut." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il download non è riuscito. Riprova." } }
+      }
+    },
+    "The downloaded file is not the expected one and was deleted. Try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le fichier téléchargé n’est pas celui attendu et a été supprimé. Réessayez." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El archivo descargado no es el esperado y se ha eliminado. Inténtalo de nuevo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажений файл не той, що очікувався, і його видалено. Спробуйте ще раз." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die heruntergeladene Datei ist nicht die erwartete und wurde gelöscht. Versuche es erneut." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il file scaricato non è quello previsto ed è stato eliminato. Riprova." } }
+      }
     }
   },
   "version" : "1.0"

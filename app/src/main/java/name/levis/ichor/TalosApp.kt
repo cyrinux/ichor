@@ -33,6 +33,8 @@ import name.levis.ichor.data.PublicIpRepository
 import name.levis.ichor.data.ChangelogRepository
 import name.levis.ichor.data.ClusterColors
 import name.levis.ichor.data.DiagnosisRepository
+import name.levis.ichor.localmodel.LocalModelHost
+import name.levis.ichor.localmodel.LocalModelStore
 import name.levis.ichor.data.MetricsChatRepository
 import name.levis.ichor.data.SecureStore
 import name.levis.ichor.data.KeystoreSealer
@@ -440,6 +442,10 @@ class TalosApp : Application() {
         )
     }
 
+    /** The model files of the "This phone" AI provider (downloaded or imported), and the engine that runs them. */
+    val localModels by lazy { LocalModelStore(this) }
+    val localModelHost by lazy { LocalModelHost(localModels, ProcessLifecycleOwner.get().lifecycleScope) }
+
     /** Passphrase-sealed backups of the config and settings, restorable on another device (Android or iOS). */
     val backupManager by lazy {
         BackupManager(
@@ -587,6 +593,8 @@ class TalosApp : Application() {
         // GKE's "Sign in with Google" (Play build with Play services): Google's SDK holds the
         // client, so no client ID here.
         if (googleNativeSignIn.available(this)) Ichorgo.setGoogleSignInClient("android", "")
+        // The on-device model: nothing is loaded until the user asks it a question.
+        if (BuildConfig.LOCAL_MODEL) Ichorgo.setLocalModel(localModelHost)
         launchSync()
         // Every cluster of the stored config gets a color of its own, as soon as it shows up.
         ProcessLifecycleOwner.get().lifecycleScope.launch {
@@ -647,9 +655,21 @@ class TalosApp : Application() {
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()
-            override fun onStop(owner: LifecycleOwner) = appLock.onBackground()
+            override fun onStop(owner: LifecycleOwner) {
+                appLock.onBackground()
+                // A model takes gigabytes: freed in the background, once an answer being written is done.
+                owner.lifecycleScope.launch(Dispatchers.IO) { localModelHost.unload() }
+            }
         })
         StartupTrace.markOnce("app.onCreate end")
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        // In the background and the system wants memory back: a loaded model goes at once.
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
+            ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) { localModelHost.release() }
+        }
     }
 
     /**

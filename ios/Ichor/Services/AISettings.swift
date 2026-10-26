@@ -37,6 +37,28 @@ final class AISettings {
         return perProvider[id] ?? AIProviderSettings()
     }
 
+    /// The model on the phone (Go's "device" provider): no key, no server.
+    static let deviceProvider = "device"
+
+    /// The selected provider runs on the phone.
+    var onPhone: Bool { provider?.id == Self.deviceProvider }
+
+    /// The model the provider uses: the one set, else its default.
+    var effectiveModel: String { current.model.isEmpty ? provider?.defaultModel ?? "" : current.model }
+
+    /// A question can be asked from the app now: with a key or a server, or, on the phone,
+    /// with the model's file there.
+    var canAsk: Bool {
+        guard onPhone else { return current.canAsk }
+        _ = ModelDownloads.shared.version
+        return LocalModelStore.shared.file(for: effectiveModel) != nil
+    }
+
+    /// Who answers, as the AI screens name it ("Ask %@", "Waiting for %@…").
+    var providerName: String {
+        onPhone ? String(localized: "the model on this phone") : provider?.name ?? ""
+    }
+
     /// The list comes from Go (no network); asked once.
     func loadProviders() async {
         guard providers.isEmpty, let listed = try? await TalosClient.aiProviders() else { return }

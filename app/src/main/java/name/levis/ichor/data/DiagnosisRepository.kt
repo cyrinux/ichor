@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -28,9 +29,13 @@ sealed interface AnswerEvent {
  */
 class DiagnosisRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
 
-    /** Providers and their default models, the same on Android and iOS. */
+    /**
+     * Providers and their default models, the same on Android and iOS; "This phone" only in a
+     * build with the on-device engine (it says on the phone itself when that cannot run it).
+     */
     val providers: List<AiProvider> by lazy {
         TalosJson.decodeFromString(ListSerializer(AiProvider.serializer()), Ichorgo.aiProviders())
+            .filter { it.id != AiSettings.DEVICE_PROVIDER || BuildConfig.LOCAL_MODEL }
     }
 
     /** The models the key can use, newest first; fails with a readable message on a bad key or URL. */

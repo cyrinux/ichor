@@ -5,13 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
 
 // The AI diagnosis sends a report about the cluster to a model the user chose, with their
 // own API key: Anthropic's Claude API, OpenAI's API, or any server speaking one of those
-// two protocols when a base URL is given (a gateway, a local model). It is off until the
+// two protocols when a base URL is given (a gateway, a local model). The "device" provider
+// keeps it on the phone instead: a model file run by the app itself (see ai_device.go). It is off until the
 // user turns it on, nothing is sent before they ask, and the key only passes through: it
 // is never stored, logged or put in an error message here.
 //
@@ -52,6 +54,8 @@ type aiProvider struct {
 var aiProviders = []aiProvider{
 	{ID: aiAnthropic, Name: "Anthropic (Claude)", DefaultModel: defaultAnthropicModel, KeyURL: "https://console.anthropic.com/settings/keys"},
 	{ID: aiOpenAI, Name: "OpenAI", DefaultModel: defaultOpenAIModel, KeyURL: "https://platform.openai.com/api-keys"},
+	// No key, no server: DefaultModel is filled in from the catalog (AIProviders).
+	{ID: aiDevice, Name: "This phone"},
 }
 
 type aiModel struct {
@@ -96,11 +100,24 @@ type chatMessage struct {
 }
 
 // AIProviders lists the providers the diagnosis can use, as JSON
-// [{"id","name","defaultModel","keyUrl"}], so both apps show the same defaults.
+// [{"id","name","defaultModel","keyUrl"}], so both apps show the same defaults. "device"
+// is listed in every build: an app without the engine leaves it out of its settings.
 func AIProviders() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(aiProviders)
+	return toJSON(listedProviders())
+}
+
+func listedProviders() []aiProvider {
+	out := slices.Clone(aiProviders)
+
+	for i := range out {
+		if out[i].ID == aiDevice {
+			out[i].DefaultModel = defaultLocalModel()
+		}
+	}
+
+	return out
 }
 
 // AIModels lists the models the key can use, newest first, as JSON [{"id","name"}], to pick
@@ -118,9 +135,12 @@ func AIModels(provider, apiKey, baseURL string) (out string, err error) {
 
 	var models []aiModel
 
-	if req.provider.ID == aiAnthropic {
+	switch req.provider.ID {
+	case aiDevice:
+		models = localModelList(req.model)
+	case aiAnthropic:
 		models, err = anthropicModels(ctx, req)
-	} else {
+	default:
 		models, err = openAIModels(ctx, req)
 	}
 
@@ -133,10 +153,11 @@ func AIModels(provider, apiKey, baseURL string) (out string, err error) {
 
 // newAIRequest validates what the user typed in the settings. An empty model means the
 // provider's default; the key may only be empty with a base URL (local servers need none).
+// The device provider takes neither: whatever is set for them is ignored.
 func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 	req := aiRequest{apiKey: strings.TrimSpace(apiKey), model: strings.TrimSpace(model)}
 
-	for _, p := range aiProviders {
+	for _, p := range listedProviders() {
 		if p.ID == provider {
 			req.provider = p
 		}
@@ -144,6 +165,19 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 
 	if req.provider.ID == "" {
 		return aiRequest{}, fmt.Errorf("unknown AI provider %q", provider)
+	}
+
+	if req.provider.ID == aiDevice {
+		req.apiKey = ""
+		if req.model == "" {
+			req.model = req.provider.DefaultModel
+		}
+
+		if req.model == "" {
+			return aiRequest{}, errors.New("no model on this phone yet: download or import one in Settings, AI diagnosis")
+		}
+
+		return req, nil
 	}
 
 	baseURL = strings.TrimSpace(baseURL)
@@ -174,11 +208,14 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 
 // streamAnswer asks the model and calls emit with each piece of the answer as it arrives.
 func streamAnswer(ctx context.Context, req aiRequest, emit func(string)) error {
-	if req.provider.ID == aiAnthropic {
+	switch req.provider.ID {
+	case aiDevice:
+		return streamDevice(ctx, req, emit)
+	case aiAnthropic:
 		return streamAnthropic(ctx, req, emit)
+	default:
+		return streamOpenAI(ctx, req, emit)
 	}
-
-	return streamOpenAI(ctx, req, emit)
 }
 
 // aiError turns a failed call into a short message for the UI. status is the HTTP status

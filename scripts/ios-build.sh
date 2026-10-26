@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Builds the iOS app on macOS (Xcode + xcodegen + Go):
-#   1. Ichorgo.xcframework from the Go core (gomobile, device + simulator);
+# Builds the iOS app on macOS (Xcode + xcodegen + Go + CMake):
+#   1. Ichorgo.xcframework from the Go core (gomobile, device + simulator), and llama.xcframework
+#      (the on-device model engine, llama.cpp);
 #   2. the core Swift package tests;
 #   3. the Xcode project (XcodeGen) and the app.
 #
@@ -72,6 +73,20 @@ go install tool
 rm -rf "$ROOT/ios/Frameworks/Ichorgo.xcframework"
 gomobile bind -target=ios,iossimulator -iosversion=17.0 -ldflags="-s -w" \
   -o "$ROOT/ios/Frameworks/Ichorgo.xcframework" ./ichorgo
+
+# The on-device model engine: llama.cpp's xcframework (Metal) at the release pinned in
+# native/llama-cpp.env, built once per commit into .cache/ (CI caches it), device + simulator.
+# shellcheck source=../native/llama-cpp.env
+source "$ROOT/native/llama-cpp.env"
+llama_fw="$ROOT/.cache/llama-xcframework-$LLAMA_COMMIT/llama.xcframework"
+if [[ ! -d "$llama_fw" ]]; then
+  llama_src="$("$ROOT/scripts/fetch-llama.sh")"
+  (cd "$llama_src" && ./build-xcframework.sh ios-sim ios-device)
+  mkdir -p "$(dirname "$llama_fw")"
+  cp -R "$llama_src/build-apple/llama.xcframework" "$llama_fw"
+fi
+rm -rf "$ROOT/ios/Frameworks/llama.xcframework"
+cp -R "$llama_fw" "$ROOT/ios/Frameworks/llama.xcframework"
 
 python3 "$ROOT/scripts/check-translations.py"
 if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 ]]; then

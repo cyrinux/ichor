@@ -29,6 +29,10 @@ struct IchorApp: App {
         if let clientID = Bundle.main.object(forInfoDictionaryKey: "GoogleSignInClientID") as? String, !clientID.isEmpty {
             IchorgoSetGoogleSignInClient("ios", clientID)
         }
+        // The on-device model: nothing is loaded until the user asks it a question.
+        IchorgoSetLocalModel(LocalModelHost.shared)
+        // A model download started before a relaunch goes on in its background session.
+        ModelDownloadSession.shared.resume()
         SupportBundleStore.removeStaleParts()
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()

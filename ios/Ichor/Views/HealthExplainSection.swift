@@ -85,18 +85,17 @@ struct HealthExplainSection: View {
             if explanation.running {
                 HStack {
                     ProgressView()
-                    Text("Waiting for \(ai.provider?.name ?? "")…")
+                    Text("Waiting for \(ai.providerName)…")
                     Spacer()
                     Button("Stop") { explanation.stop() }
                 }
-            } else if let provider = ai.provider, ai.current.canAsk {
+            } else if let provider = ai.provider, ai.canAsk {
                 Button("Explain with AI") {
                     guard let client = model.client else { return }
                     explanation.explain(client: client, lines: lines, failure: failure, ai: ai, provider: provider)
                 }
             } else {
-                Text("To read the answer here, add an API key in Settings.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                NotReadyHint(onPhone: ai.onPhone)
             }
             if !explanation.text.isEmpty {
                 Text(verbatim: explanation.text).textSelection(.enabled)
@@ -114,7 +113,9 @@ struct HealthExplainSection: View {
         } footer: {
             if !explanation.text.isEmpty {
                 Text("AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.")
-            } else if let provider = ai.provider, ai.current.canAsk {
+            } else if ai.onPhone, ai.canAsk {
+                Text("Reads the failed checks, node readiness and recent events with the model on this phone. Nothing leaves it.")
+            } else if let provider = ai.provider, ai.canAsk {
                 Text("Sends the failed checks, node readiness and recent events to \(provider.name).")
             }
         }

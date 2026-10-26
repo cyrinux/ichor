@@ -63,6 +63,8 @@ type PromChat struct {
 	target     kubeTarget
 	sourceJSON string
 	system     string
+	// systemSmall is system with fewer metric names, for the model on the phone.
+	systemSmall string
 
 	mu      sync.Mutex
 	busy    bool
@@ -96,11 +98,13 @@ func NewPromChat(configYAML, contextName, kubeServer, sourceJSON, metricNamesJSO
 	}
 
 	listed, dropped := promptMetricNames(names)
+	listedSmall, droppedSmall := promptMetricNamesCapped(names, promChatDeviceMaxMetricNames, promChatDeviceMaxMetricBytes)
 
 	return &PromChat{
-		target:     kubeTarget{configYAML, contextName, kubeServer},
-		sourceJSON: sourceJSON,
-		system:     promChatSystemPrompt(listed, dropped, current),
+		target:      kubeTarget{configYAML, contextName, kubeServer},
+		sourceJSON:  sourceJSON,
+		system:      promChatSystemPrompt(listed, dropped, current),
+		systemSmall: promChatSystemPrompt(listedSmall, droppedSmall, current),
 	}, nil
 }
 
@@ -122,7 +126,7 @@ func (c *PromChat) Turns() int {
 
 // Ask sends the operator's message, with the conversation so far, and streams the answer
 // to listener; a proposed panel is checked against the source first (see the file
-// comment). provider is "anthropic" or "openai"; an empty model means the provider's
+// comment). provider is "anthropic", "openai" or "device"; an empty model means the provider's
 // default, an empty baseURL its own API; language is the app's language tag ("fr").
 func (c *PromChat) Ask(provider, apiKey, model, baseURL, language, message string, listener PromChatListener) *DiagnosisRun {
 	listener = maskedPromChatListener{listener}
@@ -156,7 +160,12 @@ func (c *PromChat) ask(ctx context.Context, provider, apiKey, model, baseURL, la
 		return "", err.Error()
 	}
 
-	req.system = c.system + "\n\n" + promChatLanguageNote(language)
+	system := c.system
+	if req.provider.ID == aiDevice {
+		system = c.systemSmall
+	}
+
+	req.system = system + "\n\n" + promChatLanguageNote(language)
 
 	msgs := append(c.snapshot(), chatMessage{Role: "user", Content: neutralizeChatTags(message)})
 

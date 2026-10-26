@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.canAsk
+import name.levis.ichor.ui.diagnosis.aiTarget
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -46,10 +46,10 @@ fun HealthExplainCard(
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val settings by app.aiPreferences.settings.collectAsStateWithLifecycle()
-    val providerName = app.diagnosisRepository.providers.firstOrNull { it.id == settings.provider }?.name ?: settings.provider
+    val target = aiTarget(app, settings)
+    val providerName = target.name
     val language = LocalConfiguration.current.locales[0].language
-    // Read on every composition: the key may have been added in Settings a moment ago.
-    val askable = canAsk(app.aiPreferences.apiKey(settings.provider), settings.baseUrl)
+    val askable = target.askable
 
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -57,12 +57,18 @@ fun HealthExplainCard(
             when {
                 explain.running -> ExplainProgress(providerName, onStop)
                 askable -> {
-                    MutedText(stringResource(R.string.ai_health_explain_hint, providerName))
+                    MutedText(
+                        if (target.onPhone) {
+                            stringResource(R.string.ai_health_explain_hint_device)
+                        } else {
+                            stringResource(R.string.ai_health_explain_hint, providerName)
+                        },
+                    )
                     Button(onClick = { onExplain(language) }, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.ai_health_explain))
                     }
                 }
-                else -> MutedText(stringResource(R.string.ai_no_key))
+                else -> MutedText(stringResource(target.notReadyText))
             }
             ExplainAnswer(explain)
             OutlinedButton(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {

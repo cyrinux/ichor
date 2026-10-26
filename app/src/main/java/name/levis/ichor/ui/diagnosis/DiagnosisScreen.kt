@@ -40,7 +40,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.canAsk
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
@@ -82,11 +81,10 @@ fun DiagnosisScreen(
     val source = "$generation|${config?.activeContext}|$invalidations|${settings.anonymize}"
     LaunchedEffect(source) { vm.ensureCollected(source) }
 
-    val provider = app.diagnosisRepository.providers.firstOrNull { it.id == settings.provider }
-    val providerName = provider?.name ?: settings.provider
+    val target = aiTarget(app, settings)
+    val providerName = target.name
     val ready = report is UiState.Loaded
-    // Read on every composition: the key may have been added in Settings a moment ago.
-    val askable = canAsk(app.aiPreferences.apiKey(settings.provider), settings.baseUrl)
+    val askable = target.askable
 
     Scaffold(
         topBar = {
@@ -123,7 +121,7 @@ fun DiagnosisScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.ai_ask, providerName)) }
             } else {
-                MutedText(stringResource(R.string.ai_no_key))
+                MutedText(stringResource(target.notReadyText))
                 OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.overview_action_settings))
                 }

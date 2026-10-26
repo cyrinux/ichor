@@ -40,6 +40,9 @@ data class AiSettings(
 
     companion object {
         const val DEFAULT_PROVIDER = "anthropic"
+
+        /** The model on the phone (Go's "device" provider): no key, no server. */
+        const val DEVICE_PROVIDER = "device"
     }
 }
 

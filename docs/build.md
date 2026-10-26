@@ -10,6 +10,7 @@ wear/           Wear OS tile and complication (fed by the phone over the Data La
 core-widget/    status rules and phone-to-watch payload shared by app/ and wear/
 ios/            iOS: SwiftUI app (XcodeGen) + IchorCore Swift package
 go/ichorgo  Go core exposed to Kotlin and Swift (JSON in/out)
+native/llm      on-device model engine (llama.cpp behind a C API), shared by app/ and ios/
 go/cmd/probe    desktop CLI calling the same Go functions
 flake.nix       Nix build environment (default)
 build/          amd64 Docker toolchain (CI)
@@ -41,6 +42,14 @@ library is only in that build; the others get the no-op store in `app/src/foss`)
 - **Nix sandbox:** for the x86_64 SDK builds, `build.sh` exposes the binfmt qemu closure to the
   sandbox, which requires a trusted Nix user.
 - **Page size:** native libraries are linked with 16 KB page alignment, as Android 15+ requires.
+- **On-device model engine:** `build.sh` fetches the llama.cpp release pinned in
+  `native/llama-cpp.env` (`scripts/fetch-llama.sh`, checked by commit) and builds
+  `libichorllm.so` with the NDK and CMake for `arm64-v8a` and `x86_64` (`app/src/main/cpp`); the
+  check variant skips it. `ICHOR_LOCAL_MODEL=0 ./build.sh` leaves it out, and the app then hides
+  the "This phone" provider. On iOS, `scripts/ios-build.sh` builds `llama.xcframework` (Metal)
+  from the same commit, once per commit into `.cache/`.
+- **Downloadable models:** `go/ichorgo/local_models.json` lists them; `scripts/local-models.py`
+  pins each to its Hugging Face revision, size and SHA-256 (an unpinned entry is not offered).
 
 Go core only (fast, native):
 

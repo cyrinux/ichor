@@ -66,20 +66,19 @@ struct DiagnosisView: View {
             Section {
                 TextField("What is going wrong? (optional)", text: $note, axis: .vertical)
                     .lineLimit(1...4)
-                if let provider = ai.provider, ai.current.canAsk {
+                if let provider = ai.provider, ai.canAsk {
                     if asking != nil {
                         HStack {
                             ProgressView()
-                            Text("Waiting for \(provider.name)…")
+                            Text("Waiting for \(ai.providerName)…")
                             Spacer()
                             Button("Stop") { asking?.cancel() }
                         }
                     } else {
-                        Button("Ask \(provider.name)") { ask(report, provider: provider) }
+                        Button("Ask \(ai.providerName)") { ask(report, provider: provider) }
                     }
                 } else {
-                    Text("To read the answer here, add an API key in Settings.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                    NotReadyHint(onPhone: ai.onPhone)
                 }
                 SharePromptLink(report: report, note: note)
             } footer: {
