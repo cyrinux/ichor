@@ -50,6 +50,7 @@ reads those roles and explains up front when a feature needs more.
 | **Longhorn volume attach/detach** | `Kubeconfig`, then the Kubernetes API: get volumes/nodes, list nodes for preview, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Longhorn engine upgrade** | `Kubeconfig`, then the Kubernetes API: get volumes and settings, list engineimages and replicas, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
+| **Rotate the Talos API CA (`talosctl rotate-ca --kubernetes=false`)** | COSI `OSRoot` and `MachineConfig` (sensitive), `ApplyConfiguration` (no reboot), `Version` on every node | **`os:admin`** |
 
 Notes:
 

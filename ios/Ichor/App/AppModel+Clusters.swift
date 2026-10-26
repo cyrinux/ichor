@@ -179,9 +179,15 @@ extension AppModel {
     /// single-context talosconfig), keeping the other contexts and the active context. The
     /// result must parse, keep the same contexts and carry exactly the new certificate.
     func renewCredentials(with generated: String) async throws {
+        try await replaceCredentials(of: activeContext, with: generated)
+    }
+
+    /// renewCredentials for the context `context` whichever is on screen (a CA rotation that
+    /// went on while the user moved to another cluster); the context on screen stays.
+    func replaceCredentials(of context: String, with generated: String) async throws {
         try checkWritable()
         guard let current = yaml, let before = talosSummary else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
-        let context = activeContext
+        let onScreen = activeContext
         let patched = try await TalosClient.replaceContextCredentials(stored: current, generated: generated, context: context)
         let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
         let parsed = try await TalosClient.parse(patched)
@@ -192,7 +198,7 @@ extension AppModel {
             throw TalosError(message: String(localized: "The renewed talosconfig did not validate; the stored one is unchanged."))
         }
         try SecureConfigStore.save(Data(patched.utf8))
-        apply(talos: patched, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context, generation: generation)
+        apply(talos: patched, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: onScreen, generation: generation)
     }
 
     /// Adds discovered `nodes` (addresses) to the nodes of `contextName` (the active context by

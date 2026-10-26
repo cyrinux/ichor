@@ -8,6 +8,11 @@ Part of the [Ichor documentation](../README.md#documentation).
   the phone sends the magic packet itself, so it has to reach the node's network). The MACs of
   each node's network cards are recorded on the phone while it is up, so a node that goes down
   before it was set up can still be woken.
+- **Cluster CA:** rotate the Talos API CA (Settings → Clusters & backup → Rotate the cluster
+  CA…), like `talosctl rotate-ca --kubernetes=false`: a plan of every node first, then five steps
+  in which every node trusts both CAs until all of them trust the new one, and the phone's own
+  talosconfig is replaced on the way. Every talosconfig issued before stops working at the end,
+  so it is the way to cut off a lost phone or a leaked config. See [Safety](safety.md).
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`), then follow it live with its
   old and new pods (`kubectl rollout status`); list pods with their

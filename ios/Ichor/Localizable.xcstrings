@@ -1,6 +1,1266 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Rotate the Talos CA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouveler la CA Talos"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotar la CA de Talos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos-CA erneuern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruota la CA di Talos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заміна CA Talos"
+          }
+        }
+      }
+    },
+    "Rotate the Talos CA of “%@”?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouveler la CA Talos de « %@ » ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Rotar la CA de Talos de «%@»?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos-CA von „%@“ erneuern?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruotare la CA di Talos di «%@»?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити CA Talos кластера «%@»?"
+          }
+        }
+      }
+    },
+    "Each node’s machine config changes three times, without a reboot. This phone’s talosconfig is replaced on the way. Every other talosconfig for this cluster stops working at the end: issue new ones afterwards." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuration de chaque nœud change trois fois, sans redémarrage. Le talosconfig de ce téléphone est remplacé en route. Tous les autres talosconfig de ce cluster cessent de fonctionner à la fin : émettez-en de nouveaux ensuite."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración de cada nodo cambia tres veces, sin reiniciar. El talosconfig de este móvil se sustituye por el camino. Todos los demás talosconfig de este clúster dejan de funcionar al final: emite otros nuevos después."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Maschinenkonfiguration jedes Knotens ändert sich dreimal, ohne Neustart. Die talosconfig dieses Handys wird unterwegs ersetzt. Alle anderen talosconfigs dieses Clusters funktionieren am Ende nicht mehr: Stelle danach neue aus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configurazione di ogni nodo cambia tre volte, senza riavvio. Il talosconfig di questo telefono viene sostituito lungo il percorso. Tutti gli altri talosconfig di questo cluster smettono di funzionare alla fine: emettine di nuovi dopo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфігурація кожного вузла змінюється тричі, без перезавантаження. Talosconfig цього телефона замінюється в процесі. Усі інші talosconfig цього кластера наприкінці перестають працювати: потім видайте нові."
+          }
+        }
+      }
+    },
+    "Rotate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouveler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneuern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruota"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити"
+          }
+        }
+      }
+    },
+    "Stop the rotation?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter le renouvellement ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Detener la rotación?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneuerung anhalten?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fermare la rotazione?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити заміну?"
+          }
+        }
+      }
+    },
+    "It stops before its next step. The cluster keeps the CAs it has then, and this phone’s talosconfig keeps working. Rotate again later to finish." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il s’arrête avant l’étape suivante. Le cluster garde les CA qu’il a alors, et le talosconfig de ce téléphone continue de fonctionner. Renouvelez à nouveau plus tard pour terminer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se detiene antes del siguiente paso. El clúster conserva las CA que tenga entonces, y el talosconfig de este móvil sigue funcionando. Vuelve a rotar más tarde para terminar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie hält vor dem nächsten Schritt an. Der Cluster behält die CAs, die er dann hat, und die talosconfig dieses Handys funktioniert weiter. Erneuere später noch einmal, um abzuschließen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si ferma prima del passo successivo. Il cluster mantiene le CA che ha in quel momento e il talosconfig di questo telefono continua a funzionare. Ruota di nuovo più tardi per finire."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заміна зупиниться перед наступним кроком. Кластер збереже CA, які матиме на той момент, а talosconfig цього телефона працюватиме далі. Щоб завершити, повторіть заміну пізніше."
+          }
+        }
+      }
+    },
+    "A new CA replaces the one that signs every Talos API certificate, like talosctl rotate-ca --kubernetes=false. The nodes trust both CAs while it goes on, and this phone stores its new talosconfig before the old CA stops issuing, so nothing is cut off on the way. At the end every certificate of the old CA stops working, other devices’ talosconfigs included. The Kubernetes CA does not change." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une nouvelle CA remplace celle qui signe tous les certificats de l’API Talos, comme talosctl rotate-ca --kubernetes=false. Les nœuds font confiance aux deux CA pendant l’opération, et ce téléphone enregistre son nouveau talosconfig avant que l’ancienne CA cesse d’émettre : rien n’est coupé en route. À la fin, tous les certificats de l’ancienne CA cessent de fonctionner, y compris les talosconfig des autres appareils. La CA Kubernetes ne change pas."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una nueva CA sustituye a la que firma todos los certificados de la API de Talos, como talosctl rotate-ca --kubernetes=false. Los nodos confían en ambas CA mientras dura, y este móvil guarda su nuevo talosconfig antes de que la CA antigua deje de emitir, así que nada se corta por el camino. Al final, todos los certificados de la CA antigua dejan de funcionar, incluidos los talosconfig de otros dispositivos. La CA de Kubernetes no cambia."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine neue CA ersetzt die, die alle Zertifikate der Talos-API signiert, wie talosctl rotate-ca --kubernetes=false. Die Knoten vertrauen währenddessen beiden CAs, und dieses Handy speichert seine neue talosconfig, bevor die alte CA nicht mehr ausstellt: Unterwegs bricht nichts ab. Am Ende funktioniert kein Zertifikat der alten CA mehr, auch nicht die talosconfigs anderer Geräte. Die Kubernetes-CA ändert sich nicht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una nuova CA sostituisce quella che firma tutti i certificati dell’API di Talos, come talosctl rotate-ca --kubernetes=false. I nodi si fidano di entrambe le CA durante l’operazione, e questo telefono salva il nuovo talosconfig prima che la vecchia CA smetta di emettere: nulla si interrompe lungo il percorso. Alla fine ogni certificato della vecchia CA smette di funzionare, compresi i talosconfig degli altri dispositivi. La CA di Kubernetes non cambia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий CA замінює той, що підписує всі сертифікати Talos API, як talosctl rotate-ca --kubernetes=false. Поки триває заміна, вузли довіряють обом CA, а цей телефон зберігає новий talosconfig до того, як старий CA перестане видавати сертифікати, тож нічого не обривається. Наприкінці всі сертифікати старого CA перестають працювати, зокрема talosconfig інших пристроїв. CA Kubernetes не змінюється."
+          }
+        }
+      }
+    },
+    "Current CA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA actuelle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA actual"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle CA"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA attuale"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточний CA"
+          }
+        }
+      }
+    },
+    "SHA-256" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256"
+          }
+        }
+      }
+    },
+    "Valid until" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valide jusqu’au"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válida hasta"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gültig bis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valida fino al"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дійсний до"
+          }
+        }
+      }
+    },
+    "Nodes (%lld)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nœuds (%lld)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodos (%lld)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Knoten (%lld)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodi (%lld)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузли (%lld)"
+          }
+        }
+      }
+    },
+    "Every member cluster discovery lists" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les membres listés par la découverte du cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los miembros que lista el descubrimiento del clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Mitglieder, die die Cluster-Erkennung listet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti i membri elencati dal rilevamento del cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі учасники, яких показує виявлення кластера"
+          }
+        }
+      }
+    },
+    "The nodes this talosconfig names" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les nœuds nommés dans ce talosconfig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los nodos que nombra este talosconfig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Knoten, die diese talosconfig nennt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I nodi indicati in questo talosconfig"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузли, названі в цьому talosconfig"
+          }
+        }
+      }
+    },
+    "Before it can start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avant de pouvoir commencer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antes de poder empezar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevor es losgehen kann"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prima di poter iniziare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перш ніж почати"
+          }
+        }
+      }
+    },
+    "Good to know" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bon à savoir"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conviene saber"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gut zu wissen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da sapere"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Варто знати"
+          }
+        }
+      }
+    },
+    "Rotate the CA…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouveler la CA…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotar la CA…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA erneuern…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruota la CA…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити CA…"
+          }
+        }
+      }
+    },
+    "This rotation is of %@, not of the cluster on screen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce renouvellement concerne %@, pas le cluster affiché."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta rotación es de %@, no del clúster en pantalla."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Erneuerung betrifft %@, nicht den angezeigten Cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa rotazione riguarda %@, non il cluster sullo schermo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця заміна стосується %@, а не кластера на екрані."
+          }
+        }
+      }
+    },
+    "Rotating the CA of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouvellement de la CA de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotando la CA de %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA von %@ wird erneuert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotazione della CA di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заміна CA кластера %@"
+          }
+        }
+      }
+    },
+    "You can leave this screen: the rotation goes on in a notification." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous pouvez quitter cet écran : le renouvellement continue dans une notification."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes salir de esta pantalla: la rotación sigue en una notificación."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kannst diesen Bildschirm verlassen: Die Erneuerung läuft in einer Benachrichtigung weiter."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puoi lasciare questa schermata: la rotazione continua in una notifica."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Можна залишити цей екран: заміна триває у сповіщенні."
+          }
+        }
+      }
+    },
+    "Stopping before the next step…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêt avant l’étape suivante…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deteniendo antes del siguiente paso…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird vor dem nächsten Schritt angehalten…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arresto prima del passo successivo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинка перед наступним кроком…"
+          }
+        }
+      }
+    },
+    "This phone already stores a talosconfig that trusts both CAs, so it keeps reaching the cluster. Some nodes may issue with the new CA already: read the plan again, then rotate again to finish." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce téléphone enregistre déjà un talosconfig qui fait confiance aux deux CA : il continue d’atteindre le cluster. Certains nœuds émettent peut-être déjà avec la nouvelle CA : relisez le plan, puis renouvelez à nouveau pour terminer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este móvil ya guarda un talosconfig que confía en ambas CA, así que sigue llegando al clúster. Puede que algunos nodos ya emitan con la nueva CA: vuelve a leer el plan y rota de nuevo para terminar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Handy speichert bereits eine talosconfig, die beiden CAs vertraut, und erreicht den Cluster weiter. Manche Knoten stellen eventuell schon mit der neuen CA aus: Lies den Plan erneut und erneuere dann noch einmal, um abzuschließen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo telefono salva già un talosconfig che si fida di entrambe le CA, quindi continua a raggiungere il cluster. Alcuni nodi potrebbero già emettere con la nuova CA: rileggi il piano, poi ruota di nuovo per finire."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей телефон уже зберігає talosconfig, що довіряє обом CA, тож і далі має доступ до кластера. Деякі вузли можуть уже видавати сертифікати новим CA: перечитайте план, а потім повторіть заміну, щоб завершити."
+          }
+        }
+      }
+    },
+    "The issuing CA did not change and this phone’s talosconfig is the one it had. The nodes may also accept the new CA now: a new rotation starts over." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La CA émettrice n’a pas changé et le talosconfig de ce téléphone est celui d’avant. Les nœuds peuvent aussi accepter la nouvelle CA désormais : un nouveau renouvellement repart de zéro."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La CA emisora no cambió y el talosconfig de este móvil es el que tenía. Puede que los nodos acepten ya también la nueva CA: una nueva rotación empieza de cero."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ausstellende CA hat sich nicht geändert, und die talosconfig dieses Handys ist die bisherige. Die Knoten akzeptieren jetzt eventuell auch die neue CA: Eine neue Erneuerung beginnt von vorn."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La CA emittente non è cambiata e il talosconfig di questo telefono è quello di prima. Ora i nodi potrebbero accettare anche la nuova CA: una nuova rotazione riparte da capo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA, що видає сертифікати, не змінився, а talosconfig цього телефона — той самий, що й був. Вузли тепер можуть також приймати новий CA: нова заміна почнеться спочатку."
+          }
+        }
+      }
+    },
+    "CA rotated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA renouvelée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA rotada"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA erneuert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA ruotata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA замінено"
+          }
+        }
+      }
+    },
+    "Every node now trusts the new CA only, and this phone’s talosconfig uses it. Issue new talosconfigs for your other devices and for talosctl." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nœud ne fait plus confiance qu’à la nouvelle CA, et le talosconfig de ce téléphone l’utilise. Émettez de nouveaux talosconfig pour vos autres appareils et pour talosctl."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada nodo confía ya solo en la nueva CA, y el talosconfig de este móvil la usa. Emite nuevos talosconfig para tus otros dispositivos y para talosctl."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Knoten vertraut jetzt nur noch der neuen CA, und die talosconfig dieses Handys nutzt sie. Stelle neue talosconfigs für deine anderen Geräte und für talosctl aus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni nodo ora si fida solo della nuova CA, e il talosconfig di questo telefono la usa. Emetti nuovi talosconfig per gli altri dispositivi e per talosctl."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тепер кожен вузол довіряє лише новому CA, і talosconfig цього телефона його використовує. Видайте нові talosconfig для інших пристроїв і для talosctl."
+          }
+        }
+      }
+    },
+    "The final talosconfig could not be stored (%@). The one stored during the rotation keeps working." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le talosconfig final n’a pas pu être enregistré (%@). Celui enregistré pendant le renouvellement continue de fonctionner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo guardar el talosconfig final (%@). El que se guardó durante la rotación sigue funcionando."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die endgültige talosconfig konnte nicht gespeichert werden (%@). Die während der Erneuerung gespeicherte funktioniert weiter."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile salvare il talosconfig finale (%@). Quello salvato durante la rotazione continua a funzionare."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зберегти остаточний talosconfig (%@). Той, що збережено під час заміни, працює далі."
+          }
+        }
+      }
+    },
+    "Issue talosconfigs for other devices" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Émettre des talosconfig pour d’autres appareils"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emitir talosconfig para otros dispositivos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "talosconfigs für andere Geräte ausstellen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emetti talosconfig per altri dispositivi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видати talosconfig для інших пристроїв"
+          }
+        }
+      }
+    },
+    "Rotate the cluster CA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouveler la CA du cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotar la CA del clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA des Clusters erneuern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruota la CA del cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити CA кластера"
+          }
+        }
+      }
+    },
+    "Check every node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier chaque nœud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar cada nodo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeden Knoten prüfen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla ogni nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити кожен вузол"
+          }
+        }
+      }
+    },
+    "Accept the new CA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepter la nouvelle CA"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar la nueva CA"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue CA akzeptieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accetta la nuova CA"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прийняти новий CA"
+          }
+        }
+      }
+    },
+    "Store the new talosconfig on this phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer le nouveau talosconfig sur ce téléphone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar el nuevo talosconfig en este móvil"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue talosconfig auf diesem Handy speichern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva il nuovo talosconfig su questo telefono"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти новий talosconfig на цьому телефоні"
+          }
+        }
+      }
+    },
+    "Issue with the new CA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Émettre avec la nouvelle CA"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emitir con la nueva CA"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit der neuen CA ausstellen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emetti con la nuova CA"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видавати новим CA"
+          }
+        }
+      }
+    },
+    "Drop the old CA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer l’ancienne CA"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirar la CA antigua"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alte CA entfernen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi la vecchia CA"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прибрати старий CA"
+          }
+        }
+      }
+    },
+    "Rotate the cluster CA…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouveler la CA du cluster…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotar la CA del clúster…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA des Clusters erneuern…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruota la CA del cluster…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити CA кластера…"
+          }
+        }
+      }
+    },
+    "CA rotation of %@ stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouvellement de la CA de %@ arrêté"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotación de la CA de %@ detenida"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneuerung der CA von %@ angehalten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotazione della CA di %@ fermata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заміну CA кластера %@ зупинено"
+          }
+        }
+      }
+    },
+    "CA of %@ rotated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA de %@ renouvelée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA de %@ rotada"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA von %@ erneuert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA di %@ ruotata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CA кластера %@ замінено"
+          }
+        }
+      }
+    },
+    "Cluster CA rotation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouvellement de la CA du cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotación de la CA del clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneuerung der Cluster-CA"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotazione della CA del cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заміна CA кластера"
+          }
+        }
+      }
+    },
     "Cleaning up dead pods" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -435,6 +435,21 @@ func (l maskedJoinListener) OnDone(nodeAddress string, errMessage string) {
 	l.JoinListener.OnDone(nodeAddress, privacy.maskPlain(errMessage))
 }
 
+type maskedCARotationListener struct{ TalosCARotationListener }
+
+func (l maskedCARotationListener) OnProgress(json string) {
+	l.TalosCARotationListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedCARotationListener) OnTalosconfig(talosconfigYAML string, isFinal bool) {
+	// A credential the app stores: never masked.
+	l.TalosCARotationListener.OnTalosconfig(talosconfigYAML, isFinal)
+}
+
+func (l maskedCARotationListener) OnDone(errMessage string) {
+	l.TalosCARotationListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 type maskedArgoSyncListener struct{ ArgoSyncListener }
 
 func (l maskedArgoSyncListener) OnProgress(json string) {

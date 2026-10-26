@@ -1,9 +1,12 @@
 package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import name.levis.ichor.model.CARotationPlan
+import name.levis.ichor.model.CARotationProgress
 import name.levis.ichor.model.ClusterUpgradeCommand
 import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.CpReplacePlan
@@ -21,6 +24,8 @@ import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.NodeResetPlan
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.UpgradeExtensionCheck
+import name.levis.ichor.ui.goErrorText
+import name.levis.ichorgo.TalosCARotationListener
 import name.levis.ichorgo.ClusterUpgradeListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.K8sUpgradeListener
@@ -265,6 +270,40 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
         replacing: Boolean,
         stop: Flow<Any>,
     ): Flow<JoinEvent> = streams.joinNode(address, template, role, hostname, installDisk, staticAddress, replacing, stop)
+
+    /** What rotating the active context's Talos API CA would do (os:admin). Never cached. */
+    suspend fun caRotationPlan(): CARotationPlan = call { cfg, ctx ->
+        TalosJson.decodeFromString(CARotationPlan.serializer(), Ichorgo.talosCARotationPlan(cfg, ctx))
+    }
+
+    /**
+     * Starts rotating the active context's Talos API CA, for [CARotationManager]. The
+     * talosconfigs it hands over are credentials: they only go through the channel, never logged.
+     */
+    fun startCARotation(): CARotationHandle {
+        val stored = configs.forCall()
+        val events = Channel<CARotationEvent>(Channel.UNLIMITED) // never drop the final event
+        val run = Ichorgo.startTalosCARotation(
+            stored.yaml,
+            stored.activeContext,
+            object : TalosCARotationListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(CARotationProgress.serializer(), json) }
+                        .onSuccess { events.trySend(CARotationEvent.Progress(it)) }
+                }
+
+                override fun onTalosconfig(talosconfigYAML: String, isFinal: Boolean) {
+                    events.trySend(CARotationEvent.Talosconfig(talosconfigYAML, isFinal))
+                }
+
+                override fun onDone(errMessage: String) {
+                    events.trySend(CARotationEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    events.close()
+                }
+            },
+        )
+        return CARotationHandle(events, run::proceed, run::cancel)
+    }
 
     private suspend fun <T> call(block: (config: String, context: String) -> T): T = go.talos(block)
 

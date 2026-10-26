@@ -294,6 +294,7 @@ enum Route: Hashable {
     case apps(hostnames: [String: String], filter: AppFilter = .all)
     /// Issue a talosconfig (os:admin): renew this device's certificate, or one for another device.
     case issueConfig(renew: Bool)
+    case rotateCA
     /// AI diagnosis (optional, see AISettings); note: what the opening screen already knows.
     case diagnosis(note: String)
     /// The action audit log; cluster: a context name, "" for every cluster.
@@ -488,6 +489,7 @@ struct MainNavigation: View {
         case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
         case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
         case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
+        case .rotateCA: RotateCAView()
         case .activity(let cluster): ActivityLogView(cluster: cluster)
         case .search: SearchView { target in Task { await open(target) } }
         case .runbooks: RunbooksView(path: $path)
@@ -577,6 +579,8 @@ struct MainNavigation: View {
         case .runbook:
             guard let run = RunbookJob.shared.run else { return nil }
             return Route.runbookRun(id: run.id)
+        case .caRotation:
+            return CARotationJob.shared.state == nil ? nil : Route.rotateCA
         case .configMulti, .imagePull, .imageScan, .podSweep:
             return nil
         }

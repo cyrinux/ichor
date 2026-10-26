@@ -88,4 +88,7 @@ fun TalosApp.followedOperations(): List<FollowedOperation<*>> = listOf(
     FollowedOperation(OperationKind.POD_SWEEP, podSweepManager.current, PodSweepPresenter) { action ->
         if (action == OperationAction.STOP) podSweepManager.stop()
     },
+    FollowedOperation(OperationKind.CA_ROTATION, caRotationManager.current, CARotationPresenter) { action ->
+        if (action == OperationAction.STOP) caRotationManager.stop()
+    },
 )

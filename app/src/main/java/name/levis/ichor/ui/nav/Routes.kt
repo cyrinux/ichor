@@ -183,6 +183,7 @@ internal object Routes {
     const val HARDWARE = "hardware?addr={addr}&host={host}"
     const val IMAGES = "images?addr={addr}&host={host}"
     const val ISSUE_CONFIG = "issueconfig"
+    const val ROTATE_CA = "rotateca"
     const val CAPTURE = "capture?addr={addr}&host={host}&peer={peer}&peerHost={peerHost}"
     const val NET_TOOLS = "nettools?addr={addr}&host={host}"
     const val CAPTURES = "captures"

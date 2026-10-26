@@ -27,6 +27,8 @@ enum AppBackup {
         let proposals = backupProposals(model.proposals, fingerprints: fingerprints)
         // The imported plugins: format 5 only when there are some.
         let plugins = backupPlugins(try await TalosClient.exportPlugins())
+        // A cluster whose CA was rotated keeps its fingerprint where the backup is restored.
+        let lineage = await TalosClient.fingerprintLineage()
         let payload = BackupPayload(
             format: backupPayloadFormat(hasProposals: proposals != nil, hasPlugins: plugins != nil),
             platform: "ios",
@@ -54,7 +56,8 @@ enum AppBackup {
             secrets: backupSecrets(include: includeSecrets, aiKeys: aiBackup.keys,
                                    gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:]),
             proposals: proposals,
-            plugins: plugins
+            plugins: plugins,
+            fingerprintLineage: lineage
         )
         let json = try TalosJSON.encode(payload)
         switch format {
@@ -92,6 +95,8 @@ enum AppBackup {
             throw BackupError.invalidContent
         }
         let settings = payload.settings
+        // Before the configs are parsed: a cluster whose CA was rotated keeps its fingerprint.
+        await TalosClient.restoreFingerprintLineage(payload.fingerprintLineage)
         // Both configs first: on failure nothing else changed. The screenshot mode re-parses them after.
         try await model.replace(talos: restoredTalosconfig(payload), kube: restoredKubeconfig(payload),
                                 activeIndex: payload.activeContextIndex)

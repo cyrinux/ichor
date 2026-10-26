@@ -41,7 +41,7 @@ import name.levis.ichor.ui.node.HostnameConfirmDialog
  * issuing a config for another device (os:admin), back up / restore, and deleting every cluster.
  */
 @Composable
-fun ClustersSection(configs: ConfigRepository, onReimport: () -> Unit, onIssueConfig: () -> Unit, onCleared: () -> Unit) {
+fun ClustersSection(configs: ConfigRepository, onReimport: () -> Unit, onIssueConfig: () -> Unit, onRotateCA: () -> Unit, onCleared: () -> Unit) {
     val config by configs.config.collectAsStateWithLifecycle()
     // Keystore calls: read off the main thread, again only when the stored config changes.
     val keyProtection by produceState<KeyProtection?>(null, config) { value = withContext(Dispatchers.IO) { configs.keyProtection() } }
@@ -58,6 +58,10 @@ fun ClustersSection(configs: ConfigRepository, onReimport: () -> Unit, onIssueCo
             Text(stringResource(R.string.settings_issue_open))
         }
         issue.notice?.let { InfoNotice(it.text()) }
+        // Omni holds an Omni cluster's CA: Go refuses it with the reason, the button stays.
+        OutlinedButton(onClick = onRotateCA, enabled = issue.supported, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.settings_rotate_ca_open))
+        }
     }
     keyProtection?.let {
         InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))

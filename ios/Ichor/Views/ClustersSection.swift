@@ -19,6 +19,7 @@ struct ClustersSection: View {
             if model.allows(.issueConfig) {
                 NavigationLink("Renew my certificate…", value: Route.issueConfig(renew: true))
                 NavigationLink("Create a config for another device…", value: Route.issueConfig(renew: false))
+                NavigationLink("Rotate the cluster CA…", value: Route.rotateCA)
             }
             // Both stores go: with kubeconfig clusters stored, say so.
             Button(model.kubeYAML == nil ? LocalizedStringKey("Delete stored talosconfig") : "Delete all clusters", role: .destructive) {

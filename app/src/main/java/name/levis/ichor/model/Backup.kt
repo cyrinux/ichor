@@ -53,6 +53,12 @@ data class BackupPayload(
     val proposals: Map<String, List<GitProposalRecord>>? = null,
     /** The imported plugins (format 5, only when there are some): Ichorgo.pluginUserExport's answer. */
     val plugins: BackupPlugins? = null,
+    /**
+     * The fingerprints a Talos CA rotation derived, to the ones the clusters had before
+     * (Ichorgo.fingerprintLineageExport), so [clusters] still match once restored; only when a
+     * CA was rotated. Older apps ignore it.
+     */
+    val fingerprintLineage: Map<String, String>? = null,
 )
 
 @Serializable
