@@ -76,11 +76,12 @@ gomobile bind -target=ios,iossimulator -iosversion=17.0 -ldflags="-s -w" \
 
 # The on-device model engine: llama.cpp's xcframework (Metal) at the release pinned in
 # native/llama-cpp.env, built once per commit into .cache/ (CI caches it), device + simulator.
+# The source is fetched even when the framework is cached: the licenses below read it.
 # shellcheck source=../native/llama-cpp.env
 source "$ROOT/native/llama-cpp.env"
+llama_src="$("$ROOT/scripts/fetch-llama.sh")"
 llama_fw="$ROOT/.cache/llama-xcframework-$LLAMA_COMMIT/llama.xcframework"
 if [[ ! -d "$llama_fw" ]]; then
-  llama_src="$("$ROOT/scripts/fetch-llama.sh")"
   (cd "$llama_src" && ./build-xcframework.sh ios-sim ios-device)
   mkdir -p "$(dirname "$llama_fw")"
   cp -R "$llama_src/build-apple/llama.xcframework" "$llama_fw"
