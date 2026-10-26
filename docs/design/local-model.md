@@ -196,6 +196,8 @@ turned on, which some users keep off.
 
 ### C. An embedded engine with a downloaded model
 
+Planned in detail in [local-model-engine.md](local-model-engine.md).
+
 For the `foss` flavor, phones without a platform model, and the full report, the app can
 embed an inference engine and download a model on first use:
 
