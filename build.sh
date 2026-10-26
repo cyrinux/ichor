@@ -149,6 +149,7 @@ build_inside() {
     python3 "$ROOT/scripts/check-accessibility.py"
     python3 "$ROOT/scripts/check-file-length.py"
     python3 "$ROOT/scripts/site-i18n.py" --check
+    python3 "$ROOT/scripts/local-models.py" --check
     python3 -m unittest discover -s "$ROOT/scripts" -p 'test_*.py'
     unformatted="$(gofmt -l .)"
     [[ -z "$unformatted" ]] || { echo "gofmt needed:" >&2; echo "$unformatted" >&2; exit 1; }
