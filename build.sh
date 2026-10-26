@@ -8,6 +8,7 @@
 #   BUILDER=docker ./build.sh   # force the container toolchain
 #   IN_CONTAINER=1 ./build.sh   # tools already on PATH (CI runner using build/Dockerfile)
 #   ICHOR_SKIP_TESTS=1 ./build.sh debug   # no Go or Kotlin unit tests (CI: the check job runs them)
+#   ICHOR_LOCAL_MODEL=0 ./build.sh        # without the on-device model engine (llama.cpp)
 set -euo pipefail
 
 VARIANT="${1:-debug}"
@@ -61,6 +62,35 @@ use_native_ndk_linux_arm64() {
     chmod +x "$bin/$tool"
   done
   export ANDROID_NDK_HOME="$shadow"
+}
+
+# The on-device model engine (Settings → AI diagnosis → This phone): llama.cpp at the release
+# pinned in native/llama-cpp.env (scripts/fetch-llama.sh), built with the NDK into app/build/llm-jni/<abi>/
+# (app/src/main/cpp). 64-bit ABIs only: 32-bit phones lack the memory for a model.
+# ICHOR_LOCAL_MODEL=0 leaves it out, and the app then hides the provider.
+LLM_ABIS=(arm64-v8a x86_64)
+
+build_llm_jni() {
+  local src out abi build flags arch
+  src="$("$ROOT/scripts/fetch-llama.sh")"
+  out="$ROOT/app/build/llm-jni"
+  rm -rf "$out"
+  for abi in "${LLM_ABIS[@]}"; do
+    build="$ROOT/.cache/llm-build/$abi"
+    # The same bytes from any checkout: no source paths in the library.
+    flags="-ffile-prefix-map=$ROOT=. -ffile-prefix-map=$src=llama.cpp"
+    arch=()
+    # Dot-product instructions (every 64-bit phone with the memory for a model has them);
+    # the app checks the CPU before loading the library.
+    [[ "$abi" == arm64-v8a ]] && arch=(-DGGML_CPU_ARM_ARCH=armv8.2-a+dotprod)
+    cmake -S "$ROOT/app/src/main/cpp" -B "$build" -G Ninja \
+      -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+      -DANDROID_ABI="$abi" -DANDROID_PLATFORM=android-26 -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_C_FLAGS="$flags" -DCMAKE_CXX_FLAGS="$flags" -DLLAMA_SRC="$src" "${arch[@]}" >/dev/null
+    cmake --build "$build" --target ichorllm
+    mkdir -p "$out/$abi"
+    cp "$build/libichorllm.so" "$out/$abi/"
+  done
 }
 
 # The Go core as app/libs/ichorgo.aar, one library per ABI (see splits in app/build.gradle.kts),
@@ -143,8 +173,15 @@ build_inside() {
   # app/libs only holds this generated (gitignored) AAR, so a fresh checkout lacks it.
   mkdir -p "$ROOT/app/libs"
   bind_go_core
+  # The check job compiles and tests Kotlin only: the engine is not loaded by unit tests.
+  local gradle_props=()
+  if [[ "${ICHOR_LOCAL_MODEL:-1}" == 0 ]]; then
+    gradle_props=(-Pichor.localModel=false)
+  elif [[ "$VARIANT" != check ]]; then
+    build_llm_jni
+  fi
   cd "$ROOT"
-  gradle --no-daemon "${GRADLE_TASKS[@]}"
+  gradle --no-daemon "${gradle_props[@]}" "${GRADLE_TASKS[@]}"
   case "$VARIANT" in
     check) ;;
     play) find "$ROOT/app/build/outputs/bundle/play" -name '*.aab' -printf '%s\t%p\n' ;;
@@ -184,6 +221,6 @@ docker run --rm --platform linux/amd64 \
   -e GOMODCACHE=/cache/gomod -e GOCACHE=/cache/gobuild -e GRADLE_USER_HOME=/cache/gradle \
   -e GOFLAGS=-buildvcs=false \
   -e ICHOR_KEYSTORE -e ICHOR_KEYSTORE_PASSWORD -e ICHOR_KEY_ALIAS -e ICHOR_KEY_PASSWORD \
-  -e ICHOR_VERSION -e ICHOR_BUILD_NUMBER -e ICHOR_SKIP_TESTS \
+  -e ICHOR_VERSION -e ICHOR_BUILD_NUMBER -e ICHOR_SKIP_TESTS -e ICHOR_LOCAL_MODEL \
   -v "$ROOT:/src" -v "$ROOT/.cache:/cache" \
   "$IMAGE" bash -c 'mkdir -p /tmp/home && /src/build.sh '"$VARIANT"

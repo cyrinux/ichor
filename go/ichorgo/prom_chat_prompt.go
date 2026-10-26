@@ -43,6 +43,10 @@ const (
 	// every turn of the conversation sends it again.
 	promChatMaxMetricNames = 1500
 	promChatMaxMetricBytes = 40 << 10
+	// The model on the phone reads 8 192 tokens in all: the instructions and examples take
+	// about 2 500, the conversation and the answer need the rest.
+	promChatDeviceMaxMetricNames = 250
+	promChatDeviceMaxMetricBytes = 6 << 10
 
 	promChatMaxErrorLen = 1000
 )
@@ -74,6 +78,11 @@ func neutralizeChatTags(text string) string {
 // go, the usual families come first, and the rest is cut to the caps. dropped is how many
 // useful names did not fit.
 func promptMetricNames(names []string) (listed []string, dropped int) {
+	return promptMetricNamesCapped(names, promChatMaxMetricNames, promChatMaxMetricBytes)
+}
+
+// promptMetricNamesCapped is promptMetricNames with the caps given.
+func promptMetricNamesCapped(names []string, maxNames, maxBytes int) (listed []string, dropped int) {
 	useful := make([]string, 0, len(names))
 
 	for _, n := range names {
@@ -98,7 +107,7 @@ func promptMetricNames(names []string) (listed []string, dropped int) {
 
 	for i, n := range useful {
 		size += len(n) + 1
-		if i == promChatMaxMetricNames || size > promChatMaxMetricBytes {
+		if i == maxNames || size > maxBytes {
 			useful = useful[:i]
 
 			break

@@ -115,6 +115,19 @@ func (d *Diagnosis) systemPrompt(language string) string {
 	return diagnosisSystemPrompt(language, d.mask != nil)
 }
 
+// systemPromptFor is systemPrompt, shorter for the model on the phone.
+func (d *Diagnosis) systemPromptFor(provider, language string) string {
+	if provider != aiDevice {
+		return d.systemPrompt(language)
+	}
+
+	if d.kind == diagnosisHealth {
+		return healthExplainSystemPromptSmall(language, d.mask != nil)
+	}
+
+	return diagnosisSystemPromptSmall(language, d.mask != nil)
+}
+
 // Report is the text that would be sent, to show to the user first.
 func (d *Diagnosis) Report() string { return d.report }
 
@@ -133,8 +146,8 @@ func (d *Diagnosis) Prompt(language, note string) string {
 }
 
 // Ask sends the report and the user's optional note to the model and streams its answer
-// to listener. provider is "anthropic" or "openai"; an empty model means the provider's
-// default, an empty baseURL its own API.
+// to listener. provider is "anthropic", "openai" or "device"; an empty model means the
+// provider's default, an empty baseURL its own API.
 func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string, listener DiagnosisListener) *DiagnosisRun {
 	listener = maskedDiagnosisListener{listener}
 
@@ -160,7 +173,7 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 		return err.Error()
 	}
 
-	req.system = d.systemPrompt(language)
+	req.system = d.systemPromptFor(req.provider.ID, language)
 	req.user = diagnosisUserMessage(d.report, d.maskNote(note))
 
 	ctx, stop := context.WithCancel(ctx)
