@@ -31,8 +31,8 @@ and never contacts a model provider.
 - **This phone:** the third provider runs a model on the phone itself, with
   [llama.cpp](https://github.com/ggml-org/llama.cpp): no key, no server, and nothing leaves the
   phone. Pick a model in Settings → AI diagnosis → This phone and tap *Download*; the size is
-  shown on the button (Qwen3.5 4B, about 2.8 GB, for phones with 8 GB of memory or more on
-  Android and 12 GB on iPhone; Qwen3.5 2B, about 1.5 GB, for smaller ones). Or *Import a model
+  shown on the button (Qwen3.5 4B, about 3.0 GB, for phones with 8 GB of memory or more on
+  Android and 12 GB on iPhone; Qwen3.5 2B, about 1.4 GB, for smaller ones). Or *Import a model
   file* to use a GGUF file you already have, without the phone contacting Hugging Face at all.
   - **The download:** starts only when you tap. It runs on Wi-Fi, or another network that is
     not metered, unless you turn on *Allow mobile data for this download* (off again for the
