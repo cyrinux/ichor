@@ -77,8 +77,9 @@ build_llm_jni() {
   rm -rf "$out"
   for abi in "${LLM_ABIS[@]}"; do
     build="$ROOT/.cache/llm-build/$abi"
-    # The same bytes from any checkout: no source paths in the library.
-    flags="-ffile-prefix-map=$ROOT=. -ffile-prefix-map=$src=llama.cpp"
+    # The same bytes from any checkout: no source paths in the library. One section per
+    # function and datum, so the linker drops what the engine never calls (--gc-sections).
+    flags="-ffile-prefix-map=$ROOT=. -ffile-prefix-map=$src=llama.cpp -ffunction-sections -fdata-sections"
     arch=()
     # Dot-product instructions (every 64-bit phone with the memory for a model has them);
     # the app checks the CPU before loading the library.
@@ -90,6 +91,7 @@ build_llm_jni() {
     cmake --build "$build" --target ichorllm
     mkdir -p "$out/$abi"
     cp "$build/libichorllm.so" "$out/$abi/"
+    echo "libichorllm.so ($abi): $(wc -c <"$out/$abi/libichorllm.so") bytes"
   done
 }
 

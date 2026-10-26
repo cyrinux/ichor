@@ -36,6 +36,8 @@ target_link_libraries(ichorllm PRIVATE llama)
 set_target_properties(ichorllm PROPERTIES C_VISIBILITY_PRESET hidden CXX_VISIBILITY_PRESET hidden)
 target_link_options(ichorllm PRIVATE -Wl,--gc-sections -Wl,--exclude-libs,ALL)
 if(ANDROID)
-  # Android 15+ needs 16 KB page alignment, as for the Go core.
-  target_link_options(ichorllm PRIVATE -Wl,-z,max-page-size=16384)
+  # Android 15+ needs 16 KB page alignment, as for the Go core. --strip-all: the NDK compiles
+  # with debug info and Gradle cannot strip without an NDK of its own ("Unable to strip"), so
+  # the library is stripped when linked, like the Go core (-s -w); the JNI exports stay.
+  target_link_options(ichorllm PRIVATE -Wl,-z,max-page-size=16384 -Wl,--strip-all)
 endif()
