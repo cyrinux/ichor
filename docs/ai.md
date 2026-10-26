@@ -40,7 +40,10 @@ and never contacts a model provider.
     iOS's Low Data Mode is on: it pauses with the reason shown, and goes on where it stopped
     once the network allows it. The file comes from Hugging Face at a revision pinned in the
     app, and its size and SHA-256 are checked before it is used; a file that does not match is
-    deleted. Models are kept out of backups, and *Delete the model* frees the space.
+    deleted. Models are kept out of backups, and *Delete the model* frees the space. On
+    Android the download needs Android 14 or later, where it shows in the system's list of
+    active apps with its progress and Cancel in a notification; older versions offer *Import a
+    model file* only.
   - **The answers:** a 2 to 4 billion parameter model knows Kubernetes but little of Talos, and
     is often wrong. It gets shorter instructions with the Talos fixes spelled out, and reads
     8 192 tokens in all: the health check helper and the panel assistant fit, the full report of

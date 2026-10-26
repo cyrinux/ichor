@@ -1810,6 +1810,7 @@
     <string name="ai_local_needs_64bit">The model needs a 64-bit phone.</string>
     <string name="ai_local_old_cpu">This phone’s processor is too old to run the model.</string>
     <string name="ai_local_no_catalog">This version offers no model to download. Import a model file (GGUF) instead.</string>
+    <string name="ai_local_download_needs_android_14">Downloading a model needs Android 14 or later. Import a model file (GGUF) instead.</string>
     <string name="ai_local_model_detail">%1$s · %2$s</string>
     <string name="ai_local_needs_memory">Needs a phone with %1$s of memory</string>
     <string name="ai_local_imported">Imported file</string>

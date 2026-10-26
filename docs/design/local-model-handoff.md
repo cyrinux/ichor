@@ -80,6 +80,10 @@ it added 12.8 MB.
   or in Low Data Mode (iOS); resumes; space checked first, size and SHA-256 at the end. A Data
   Saver exemption the user gave Ichor allows mobile data without a warning (the plan wanted
   one).
+- **Android download is a user-initiated data transfer job** (Android 14+, JobScheduler), not
+  a foreground service: v1.47.0 used a `dataSync` foreground service and Play refused the
+  upload until the foreground service declaration covered it. Below Android 14 only *Import a
+  model file* is offered.
 - **iOS resume data** from a download allowed mobile data is reused only when the new
   download allows it too.
 - **Gemma left out**: its terms carry obligations for distributors; Qwen3.5 is Apache 2.0.

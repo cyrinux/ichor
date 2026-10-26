@@ -1803,6 +1803,7 @@
     <string name="ai_local_needs_64bit">Das Modell braucht ein 64-Bit-Telefon.</string>
     <string name="ai_local_old_cpu">Der Prozessor dieses Telefons ist für das Modell zu alt.</string>
     <string name="ai_local_no_catalog">Diese Version bietet kein Modell zum Herunterladen. Importiere stattdessen eine Modelldatei (GGUF).</string>
+    <string name="ai_local_download_needs_android_14">Das Herunterladen eines Modells erfordert Android 14 oder neuer. Importiere stattdessen eine Modelldatei (GGUF).</string>
     <string name="ai_local_model_detail">%1$s · %2$s</string>
     <string name="ai_local_needs_memory">Braucht ein Telefon mit %1$s Speicher</string>
     <string name="ai_local_imported">Importierte Datei</string>
