@@ -1,6 +1,11 @@
 # A model on the phone, option C: embedded engine with a downloaded model (plan)
 
-Status: plan, nothing implemented. Follows the study in [local-model.md](local-model.md)
+Status: implemented, with these differences from the plan: the llama.cpp pin lives in
+`native/llama-cpp.env`; the engine is one C++ file with a C API (`native/llm`) used by Android
+through JNI and by iOS through a bridging header; the iOS build always includes the engine (the
+build option is Android's `ICHOR_LOCAL_MODEL=0`); Data Saver's "exempted" state allows the
+download without a warning; the model catalog ships unpinned until `scripts/local-models.py`
+fills in the revisions and checksums. Phase 0 (measurements on phones) is still to do. Follows the study in [local-model.md](local-model.md)
 (option C). Written against the app as of October 2026: Go `ai.go`, `diagnose.go`,
 `prom_chat.go`; Android `AiSettings.kt`, `AiSection.kt`, `UpdateManager.kt`,
 `LocalNetwork.kt`, the monitor's WorkManager use; iOS `AISettings.swift`, `AISection.swift`,

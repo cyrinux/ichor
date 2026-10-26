@@ -199,6 +199,9 @@ Every data type: **not collected**. Reasoning for the borderline cases:
 
 - **Talosconfig, cluster state, logs** go only to servers the user owns and configured, not
   to the developer or a third party. They are not collected in Play's sense.
+- **AI model on the phone** (provider "This phone"): nothing is sent; the report is read on the
+  phone. Downloading a model fetches a public file from Hugging Face on the user's tap; no user
+  data goes with it. Nothing to declare.
 - **AI diagnosis**: transferred to a third party only on a specific user action (tapping Ask,
   after seeing the report), with a provider and key the user entered. Play exempts
   user-initiated transfers the user reasonably expects from the "shared" disclosure. The

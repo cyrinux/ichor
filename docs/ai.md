@@ -28,6 +28,27 @@ and never contacts a model provider.
   Messages API (`https://host`) or the OpenAI Chat Completions API (`http://host:11434/v1`).
   A server that needs no key may use plain HTTP; the report then crosses your network in
   clear, so keep that to a network you trust.
+- **This phone:** the third provider runs a model on the phone itself, with
+  [llama.cpp](https://github.com/ggml-org/llama.cpp): no key, no server, and nothing leaves the
+  phone. Pick a model in Settings → AI diagnosis → This phone and tap *Download*; the size is
+  shown on the button (Qwen3.5 4B, about 2.8 GB, for phones with 8 GB of memory or more on
+  Android and 12 GB on iPhone; Qwen3.5 2B, about 1.5 GB, for smaller ones). Or *Import a model
+  file* to use a GGUF file you already have, without the phone contacting Hugging Face at all.
+  - **The download:** starts only when you tap. It runs on Wi-Fi, or another network that is
+    not metered, unless you turn on *Allow mobile data for this download* (off again for the
+    next one). It never runs while roaming, nor on mobile data while Android's Data Saver or
+    iOS's Low Data Mode is on: it pauses with the reason shown, and goes on where it stopped
+    once the network allows it. The file comes from Hugging Face at a revision pinned in the
+    app, and its size and SHA-256 are checked before it is used; a file that does not match is
+    deleted. Models are kept out of backups, and *Delete the model* frees the space.
+  - **The answers:** a 2 to 4 billion parameter model knows Kubernetes but little of Talos, and
+    is often wrong. It gets shorter instructions with the Talos fixes spelled out, and reads
+    8 192 tokens in all: the health check helper and the panel assistant fit, the full report of
+    a cluster with many problems may not, and the app then says so (ask that one with another
+    provider, or share it). The first question loads the model (a few seconds); it is freed a
+    minute after the last answer, or when the app goes to the background.
+  - **Builds:** the engine is part of every build. `ICHOR_LOCAL_MODEL=0 ./build.sh` leaves it out
+    of the Android app, which then does not offer this provider.
 - **Without an API key:** *Share with an assistant app* hands the same question and report to
   the Claude, ChatGPT or Gemini app (or any app taking text) through the system share sheet.
 - **Check the answer:** a model can be wrong. Read a command before running it, especially one

@@ -111,6 +111,9 @@ time):
 - there is no backend, no analytics and no crash-reporting SDK on iOS (VisionKit and LocalAuthentication run on the device);
 - cluster data (talosconfig, logs, metrics, etcd snapshots) goes only to servers the user owns
   and configured;
+- **AI model on the phone** (provider "This phone"): the report is read on the phone and never
+  sent; downloading a model fetches a public file from Hugging Face on the user's tap, with no
+  user data;
 - **AI diagnosis**: off by default, sent only when the user taps Ask, after seeing the report,
   to a provider and API key the user entered (Anthropic, OpenAI…). The developer is not party
   to it and the provider is not the developer's partner. If App Review disagrees, answer
