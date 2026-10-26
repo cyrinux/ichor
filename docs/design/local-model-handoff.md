@@ -10,27 +10,25 @@ is [local-model.md](local-model.md) and the plan [local-model-engine.md](local-m
 - **Implemented**: the "This phone" AI provider on Android and iOS, the llama.cpp engine, the
   download with its network rules, model import, settings and screens, strings in six
   languages, docs, privacy policy and store notes. The details are in the PR description.
-- **Not usable for downloads yet**: the model catalog is not pinned (next section). Until it
-  is, the app offers only *Import a model file*.
+- **Catalog pinned** (2026-10-26): Qwen3.5 4B Q4_K_M (3.01 GB) and Qwen3.5 2B Q4_K_M
+  (1.40 GB), each to its Hugging Face revision, size and SHA-256; both download URLs were
+  checked against the resolve endpoint (size and LFS SHA-256 match). The app offers both
+  downloads and *Import a model file*.
 - **Never run on a phone**: no model has been loaded or asked a question yet (Phase 0 below).
 
 ## Next steps, in order
 
-1. **Pin the models.** From any machine that reaches huggingface.co, on this branch:
+1. **Pin the models.** Done. To move the catalog to a newer repository commit later:
 
    ```sh
-   python3 scripts/local-models.py          # fills revision, bytes, sha256
-   python3 scripts/local-models.py --check  # fails if an entry is still unpinned
+   python3 scripts/local-models.py --refresh   # re-pins every entry
+   python3 scripts/local-models.py --check     # fails if an entry is still unpinned
    cd go && go test ./ichorgo -run LocalModel
    ```
 
    Commit `go/ichorgo/local_models.json`. The script fails when a file is not in its
-   repository: the two file names (`bartowski/Qwen_Qwen3.5-4B-GGUF`,
-   `Qwen_Qwen3.5-4B-Q4_K_M.gguf`, and the 2B one) were written from search results and never
-   checked against Hugging Face. Fix the repo or file name in the JSON if it fails. The cloud
-   sessions that wrote this PR could not reach huggingface.co (proxy 403, also from a fresh
-   session after the domain was allowed, possibly in another environment or on a container
-   started before the change).
+   repository, so a wrong repo or file name in the JSON shows up here. huggingface.co must
+   be reachable (some cloud sessions got a proxy 403).
 2. **Phase 0 on real phones** (plan, "Phase 0"): install the debug APK on an 8 GB Android
    flagship, a 6 GB phone and an iPhone; download or import Qwen3.5 2B and 4B; ask the health
    helper, the panel assistant and the full diagnosis on the demo cluster and a real one.
