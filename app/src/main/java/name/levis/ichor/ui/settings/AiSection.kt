@@ -107,8 +107,12 @@ private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
                 selected = p.id == provider.id,
                 onClick = { prefs.update(settings.copy(provider = p.id)) },
                 shape = SegmentedButtonDefaults.itemShape(index, providers.size),
-            ) { Text(p.name) }
+            ) { Text(providerLabel(p)) }
         }
+    }
+    if (provider.id == AiSettings.DEVICE_PROVIDER) {
+        LocalModelSection(app, settings)
+        return
     }
     OutlinedTextField(
         value = apiKey,
@@ -194,3 +198,8 @@ private fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider
     }
     error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
 }
+
+/** A provider's name as the settings show it: "This phone" is translated, brands are not. */
+@Composable
+fun providerLabel(provider: AiProvider): String =
+    if (provider.id == AiSettings.DEVICE_PROVIDER) stringResource(R.string.ai_provider_device) else provider.name

@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.aboutlibraries.android)
 }
 
+// The on-device model engine is part of the build unless -Pichor.localModel=false
+// (ICHOR_LOCAL_MODEL=0 ./build.sh): see build_llm_jni in build.sh.
+val localModel = (findProperty("ichor.localModel") as String?)?.toBoolean() ?: true
+
 android {
     namespace = "name.levis.ichor"
     compileSdk = 37
@@ -29,6 +33,9 @@ android {
         buildConfigField("boolean", "DONATIONS", "true")
         // On in the Play build: features funded with Play in-app products (Settings → About).
         buildConfigField("boolean", "FEATURE_FUNDING", "false")
+        // The on-device model engine (libichorllm.so, built by build.sh): off with
+        // -Pichor.localModel=false, and the app then hides the "This phone" provider.
+        buildConfigField("boolean", "LOCAL_MODEL", localModel.toString())
     }
 
     // Release signing comes from env vars so CI (Forgejo) can inject secrets.
@@ -79,6 +86,8 @@ android {
     // libraries never reach their APKs.
     // src/foss/res tells them apart from the Play build on a home screen (name and icon).
     sourceSets {
+        // build.sh writes app/build/llm-jni/<abi>/libichorllm.so (absent in the check build).
+        if (localModel) getByName("main").jniLibs.directories.add("build/llm-jni")
         getByName("debug").kotlin.directories.add("src/foss/java")
         getByName("release").kotlin.directories.add("src/foss/java")
         getByName("debug").res.directories.add("src/foss/res")

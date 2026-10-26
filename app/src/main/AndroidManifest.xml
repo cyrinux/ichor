@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Wake-on-LAN: find the Wi-Fi/Ethernet network to broadcast the magic packet on. -->
@@ -13,6 +14,8 @@
          a Talos upgrade to its end while the app is in the background. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Downloading a model for the on-device AI diagnosis, which the user started. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Self-update from GitHub releases (the user still confirms each install). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -180,6 +183,13 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Follows the long operations the user started on their Talos or Kubernetes cluster while they switch apps or lock the screen, so they are not cut off midway: a Talos OS upgrade of one node or of every node one after the other (drain, install, reboot, wait for the node), a Kubernetes version upgrade, a node maintenance (cordon, drain, reboot), a new node joining the cluster, a machine configuration change tried on a node (which the node reverts by itself after 1 to 10 minutes unless kept from the notification) or applied to several nodes, a container image pull on the nodes, and a vulnerability scan of images in the cluster. Each shows its progress with Stop where possible; the service stops when they all end." />
         </service>
+
+        <!-- WorkManager's foreground service, for the model download (ModelDownloadWorker): a
+             file the user asked for, transferred once, which is what dataSync is for. -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
 
         <receiver
             android:name=".update.InstallResultReceiver"

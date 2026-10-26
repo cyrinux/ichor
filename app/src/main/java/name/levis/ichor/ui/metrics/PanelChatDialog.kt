@@ -53,7 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.canAsk
+import name.levis.ichor.ui.diagnosis.aiTarget
 import name.levis.ichor.model.PanelSuggestion
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.PromSource
@@ -88,9 +88,9 @@ fun PanelChatDialog(
     val state by vm.state.collectAsStateWithLifecycle()
     val settings by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val language = LocalConfiguration.current.locales[0].language
-    val providerName = app.diagnosisRepository.providers.firstOrNull { it.id == settings.provider }?.name ?: settings.provider
-    // Read on every composition: the key may have been added in Settings a moment ago.
-    val askable = canAsk(app.aiPreferences.apiKey(settings.provider), settings.baseUrl)
+    val target = aiTarget(app, settings)
+    val providerName = target.name
+    val askable = target.askable
     var input by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -147,7 +147,7 @@ fun PanelChatDialog(
                                 state.namesFailed -> MutedText(stringResource(R.string.metrics_ai_names_failed))
                             }
                             if (!askable) {
-                                MutedText(stringResource(R.string.ai_no_key))
+                                MutedText(stringResource(target.notReadyText))
                                 OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
                                     Text(stringResource(R.string.overview_action_settings))
                                 }
