@@ -38,7 +38,21 @@ jobs:
       - id: toolchain
         uses: ./.github/actions/ios-toolchain
 
+      # llama.xcframework (the on-device model engine) is built once per pinned llama.cpp
+      # release: restored here, saved by the test job on main like the other caches.
+      - id: llama
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/llama-xcframework-*
+          key: llama-xcframework-${{ runner.os }}-${{ hashFiles('native/llama-cpp.env') }}
+
       - run: scripts/ios-build.sh test
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.ref == 'refs/heads/main' && steps.llama.outputs.cache-hit != 'true'
+        with:
+          path: .cache/llama-xcframework-*
+          key: llama-xcframework-${{ runner.os }}-${{ hashFiles('native/llama-cpp.env') }}
 
       # The Apple Watch app and its complication (IchorWatch scheme), unsigned, for the watchOS
       # simulator: built, not embedded in the IPA yet.
@@ -89,6 +103,14 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/ios-toolchain
+
+      # llama.xcframework (the on-device model engine) is built once per pinned llama.cpp
+      # release: restored here, saved by the test job on main like the other caches.
+      - id: llama
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/llama-xcframework-*
+          key: llama-xcframework-${{ runner.os }}-${{ hashFiles('native/llama-cpp.env') }}
 
       - name: Unsigned IPA
         env:

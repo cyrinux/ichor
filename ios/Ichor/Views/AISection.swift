@@ -15,26 +15,18 @@ struct AISection: View {
             Toggle("AI diagnosis", isOn: $ai.enabled)
             if ai.enabled, let provider = ai.provider {
                 Picker("Provider", selection: Binding(get: { provider.id }, set: { ai.select($0) })) {
-                    ForEach(ai.providers) { Text(verbatim: $0.name).tag($0.id) }
+                    ForEach(ai.providers) { item in
+                        if item.id == AISettings.deviceProvider {
+                            Text("This phone").tag(item.id)
+                        } else {
+                            Text(verbatim: item.name).tag(item.id)
+                        }
+                    }
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    SecureField("API key", text: Binding(get: { ai.current.apiKey }, set: { ai.setAPIKey($0) }))
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Text("Stored encrypted on this device. Only needed to read the answer inside the app.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                if let url = URL(string: provider.keyUrl) {
-                    Link("Get an API key", destination: url)
-                }
-                modelRows(provider)
-                VStack(alignment: .leading, spacing: 4) {
-                    TextField("Server URL (optional)", text: Binding(get: { ai.current.baseURL }, set: { ai.setBaseURL($0) }))
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                    Text("Only for a gateway or a local model. Leave empty to use the provider’s own API.")
-                        .font(.caption).foregroundStyle(.secondary)
+                if ai.onPhone {
+                    LocalModelSection()
+                } else {
+                    keyRows(provider)
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Toggle("Hide names and addresses", isOn: $ai.anonymize)
@@ -52,6 +44,30 @@ struct AISection: View {
         .onChange(of: ai.provider?.id) { resetModels() }
         .onChange(of: ai.current.apiKey) { resetModels() }
         .onChange(of: ai.current.baseURL) { resetModels() }
+    }
+
+    /// The API key, the model and the server of a provider reached over the network.
+    @ViewBuilder
+    private func keyRows(_ provider: AIProvider) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            SecureField("API key", text: Binding(get: { ai.current.apiKey }, set: { ai.setAPIKey($0) }))
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            Text("Stored encrypted on this device. Only needed to read the answer inside the app.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        if let url = URL(string: provider.keyUrl) {
+            Link("Get an API key", destination: url)
+        }
+        modelRows(provider)
+        VStack(alignment: .leading, spacing: 4) {
+            TextField("Server URL (optional)", text: Binding(get: { ai.current.baseURL }, set: { ai.setBaseURL($0) }))
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .keyboardType(.URL)
+            Text("Only for a gateway or a local model. Leave empty to use the provider’s own API.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
     }
 
     /// The model id, typed or picked from the provider's list.

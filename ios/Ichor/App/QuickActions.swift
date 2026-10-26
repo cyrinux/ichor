@@ -60,6 +60,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         return configuration
     }
 
+    /// iOS relaunched the app for the model download's background session (ModelDownloadSession).
+    func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
+                     completionHandler: @escaping () -> Void) {
+        guard identifier == ModelDownloadSession.identifier else {
+            completionHandler()
+            return
+        }
+        ModelDownloadSession.backgroundCompletion = completionHandler
+        _ = ModelDownloadSession.shared
+    }
+
     /// iPhone: portrait, except while a wide screen holds landscape (OrientationLock); iPad: all.
     @MainActor
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {

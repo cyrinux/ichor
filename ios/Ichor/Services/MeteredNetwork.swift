@@ -16,4 +16,7 @@ final class MeteredNetwork: @unchecked Sendable {
         let path = monitor.currentPath
         return path.isExpensive || path.isConstrained
     }
+
+    /// The network right now (a model download tells expensive from constrained).
+    var path: NWPath { monitor.currentPath }
 }

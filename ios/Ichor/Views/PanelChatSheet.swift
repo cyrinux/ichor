@@ -117,7 +117,7 @@ struct PanelChatSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var input = ""
 
-    private var providerName: String { ai.provider?.name ?? "" }
+    private var providerName: String { ai.providerName }
 
     var body: some View {
         NavigationStack {
@@ -144,7 +144,7 @@ struct PanelChatSheet: View {
                 .onChange(of: model.messages) { proxy.scrollTo("bottom", anchor: .bottom) }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if ai.provider != nil, ai.current.canAsk { inputBar }
+                if ai.provider != nil, ai.canAsk { inputBar }
             }
             .navigationTitle("Panel assistant")
             .navigationBarTitleDisplayMode(.inline)
@@ -161,8 +161,13 @@ struct PanelChatSheet: View {
     }
 
     @ViewBuilder private var header: some View {
-        Text("Your messages, the source’s metric names and the current panel are sent to \(providerName) as they are.")
-            .font(.footnote).foregroundStyle(.secondary)
+        if ai.onPhone {
+            Text("Your messages, the source’s metric names and the current panel stay on this phone.")
+                .font(.footnote).foregroundStyle(.secondary)
+        } else {
+            Text("Your messages, the source’s metric names and the current panel are sent to \(providerName) as they are.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
         if let error = model.openError {
             Text(verbatim: error).foregroundStyle(.statusBad).font(.footnote)
         } else if !model.ready {
@@ -174,9 +179,8 @@ struct PanelChatSheet: View {
             Text("The metric names could not be read: the model will use the usual ones.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
-        if ai.provider == nil || !ai.current.canAsk {
-            Text("To read the answer here, add an API key in Settings.")
-                .font(.footnote).foregroundStyle(.secondary)
+        if ai.provider == nil || !ai.canAsk {
+            NotReadyHint(onPhone: ai.onPhone)
         } else if model.messages.isEmpty {
             Text("Describe the panel you want: what to show, grouped by what, over which range.")
         }
