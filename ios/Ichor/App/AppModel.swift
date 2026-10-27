@@ -202,7 +202,7 @@ final class AppModel {
         guard !vpnHeldBack else { return nil }
         let kubeServer = activeSummary.flatMap { kubeServers[$0.fingerprint] } ?? ""
         let link = kubeLink(for: activeSummary)
-        return config(for: activeSummary).map { TalosClient(config: $0, context: activeContext, kubeServer: kubeServer, kubeLink: link) }
+        return config(for: activeSummary).map { TalosClient(config: $0, context: activeContext, kubeServer: kubeServer, kubeLink: link, kubeOnly: activeIsKube) }
     }
 
     var activeSummary: ContextSummary? { summary?.context(named: activeContext) }

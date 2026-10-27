@@ -37,6 +37,14 @@ import name.levis.ichor.BuildConfig
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KUBE_NODES
+import name.levis.ichor.model.ARGO_CD_CATALOG_ID
+import name.levis.ichor.model.FLUX_CATALOG_ID
+import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.inventoryBadges
+import name.levis.ichor.ui.apps.AppsViewModel
+import name.levis.ichor.ui.share.ClusterPins
+import name.levis.ichor.ui.share.rememberClusterPins
 import name.levis.ichor.ui.components.rememberKubeTopNodes
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.KubeRepository
@@ -158,6 +166,10 @@ class KubeHomeNavigation(
     val onSearch: () -> Unit,
     /** The cluster's runbooks. */
     val onRunbooks: () -> Unit,
+    /** The apps screen, on those that need a look when [attention]. */
+    val onApps: (attention: Boolean) -> Unit,
+    /** Opens a pinned object's screen, like its share link. */
+    val onOpenTarget: (ShareTarget) -> Unit,
 )
 
 /**
@@ -182,6 +194,7 @@ fun KubeHomeScreen(
     rolloutsVm: name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel = viewModel(key = "overview-argo-rollouts", factory = factory { name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel(app.argoRolloutsRepository) }),
     alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
     pluginsVm: PluginDetectViewModel = viewModel(key = "overview-plugins", factory = factory { PluginDetectViewModel(app.pluginRepository) }),
+    appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
@@ -225,7 +238,13 @@ fun KubeHomeScreen(
         rolloutsVm.refresh(reset = true)
         alertsVm.load(gitopsKey)
         pluginsVm.load(gitopsKey, hints = "")
+        // The apps from the pods, as the Talos overview lists them from the nodes' containers.
+        appsVm.load(gitopsKey)
     }
+    val apps by appsVm.state.collectAsStateWithLifecycle()
+    // Credentials that may not list every pod: no apps card rather than an error that stays.
+    val appsShown = apps.takeIf { (it as? UiState.Loaded)?.data?.apps?.isNotEmpty() == true }
+    val pins = rememberClusterPins()
     val argo by argoVm.state.collectAsStateWithLifecycle()
     val flux by fluxVm.state.collectAsStateWithLifecycle()
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
@@ -247,6 +266,8 @@ fun KubeHomeScreen(
     val alertsShown = alerts.takeIf { it.alertmanagerFound }
     // Cards the cluster has nothing for, left out of the editor too; each offered until its answer came.
     val absentCards = setOfNotNull(
+        KubeHomeCard.PINNED.takeIf { pins?.pins.isNullOrEmpty() },
+        KubeHomeCard.APPS.takeIf { apps !is UiState.Loading && appsShown == null },
         KubeHomeCard.ARGO_CD.takeIf { argo is UiState.Loaded && argoShown == null },
         KubeHomeCard.FLUX.takeIf { flux is UiState.Loaded && fluxShown == null },
         KubeHomeCard.DATA_SERVICES.takeIf { dataServices is UiState.Loaded && dataShown == null },
@@ -347,6 +368,9 @@ fun KubeHomeScreen(
                     clusterLifecycle = lifecycleShown != null,
                     argoRollouts = rolloutsShown,
                     alerts = alertsShown,
+                    // A skeleton while the pods are listed, as on the Talos overview.
+                    apps = if (apps is UiState.Loading) apps else appsShown,
+                    pins = pins,
                     onNode = { nodeMenu = it },
                     nodesExpanded = nodesExpanded,
                     onToggleNodes = { app.uiPreferences.setNodesExpanded(!nodesExpanded) },
@@ -380,6 +404,9 @@ private fun KubeHomeList(
     clusterLifecycle: Boolean,
     argoRollouts: Boolean,
     alerts: UiState<AlertsOverview?>?,
+    /** The apps from the pods; null when the credentials may not list them. */
+    apps: UiState<Inventory>?,
+    pins: ClusterPins?,
     onNode: (KubeNodeInfo) -> Unit,
     nodesExpanded: Boolean,
     onToggleNodes: () -> Unit,
@@ -389,6 +416,9 @@ private fun KubeHomeList(
 ) {
     // The likely cause of the data services' problems: a node that is not ready.
     val downNodes = remember(nodes) { nodes?.notReadyNames().orEmpty() }
+    // The apps' icons on the data services and GitOps cards, as on the Talos overview.
+    val inventory = (apps as? UiState.Loaded)?.data
+    val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
     // Read again with every refresh of the list, once for the summary and the nodes cards.
     val top = rememberKubeTopNodes(nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() })
     LazyColumn(
@@ -411,6 +441,22 @@ private fun KubeHomeList(
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {
+                KubeHomeCard.PINNED -> if (pins != null && pins.pins.isNotEmpty()) item(key = card.name) {
+                    // No Talos nodes here: the pinned nodes show without their state.
+                    PinnedCard(
+                        pins.pins,
+                        PinnedData(emptyList(), (argo as? UiState.Loaded)?.data, (flux as? UiState.Loaded)?.data),
+                        onOpen = { nav.onOpenTarget(it.target) },
+                        onUnpin = { pins.toggle(it.target, it.label) },
+                        // Only on the title: a long press on a row offers Unpin.
+                        titleModifier = Modifier.longPressToCustomize(onCustomize),
+                    )
+                }
+                KubeHomeCard.APPS -> if (apps != null) item(key = card.name) {
+                    val argoData = (argo as? UiState.Loaded)?.data
+                    val badges = remember(argoData, inventory) { if (argoData != null && inventory != null) argoData.inventoryBadges(inventory.apps) else emptyMap() }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { AppsCard(apps, onOpen = { nav.onApps(false) }, argoBadges = badges, onAttention = { nav.onApps(true) }) }
+                }
                 KubeHomeCard.SUMMARY -> if (cluster != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeSummaryCard(name ?: cluster.name, cluster, nodes, top, onCheckup = nav.onCheckup, onCapacity = nav.onCapacity) }
                 }
@@ -422,14 +468,14 @@ private fun KubeHomeList(
                 }
                 KubeHomeCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {
-                        DataServicesCard(dataServices, hinted = emptyList(), apps = emptyMap(), onOpen = { nav.onDataServices(it, false) }, plugins = plugins.dataServicePlugins, onPlugin = nav.onPlugin, families = setOf(ServiceFamily.DATA))
+                        DataServicesCard(dataServices, hinted = emptyList(), apps = appsById, onOpen = { nav.onDataServices(it, false) }, plugins = plugins.dataServicePlugins, onPlugin = nav.onPlugin, families = setOf(ServiceFamily.DATA))
                     }
                 }
                 KubeHomeCard.ARGO_CD -> if (argo != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(argo, argoTile = null, downNodes = downNodes, onOpen = nav.onArgoCD) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(argo, argoTile = appsById[ARGO_CD_CATALOG_ID], downNodes = downNodes, onOpen = nav.onArgoCD) }
                 }
                 KubeHomeCard.FLUX -> if (flux != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(flux, fluxTile = null, onOpen = nav.onFlux) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(flux, fluxTile = appsById[FLUX_CATALOG_ID], onOpen = nav.onFlux) }
                 }
                 KubeHomeCard.ALERTS -> if (alerts != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(alerts, onOpen = nav.onAlerts) }

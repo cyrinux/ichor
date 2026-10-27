@@ -126,5 +126,7 @@ class OverviewScreenNavigation(
         onActivity = onActivity,
         onSearch = onSearch,
         onRunbooks = onRunbooks,
+        onApps = onApps,
+        onOpenTarget = onOpenTarget,
     )
 }

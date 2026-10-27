@@ -39,33 +39,6 @@ extension KubeHomeAction: BarActionLook {
     }
 }
 
-extension KubeHomeCard: CardLook {
-    var title: Text {
-        switch self {
-        case .summary: Text("Cluster summary")
-        case .nodes: Text("Nodes")
-        case .tools: Text("Kubernetes screens")
-        case .dataServices: Text("Data services")
-        case .argoCD: Text(verbatim: "Argo CD")
-        case .flux: Text(verbatim: "Flux")
-        case .alerts: Text("Alerts")
-        }
-    }
-
-    /// One line on what the section shows, so the editor's names need no guessing.
-    var detail: Text {
-        switch self {
-        case .summary: Text("API server, Kubernetes version, nodes ready and who the credentials are")
-        case .nodes: Text("Every node as Kubernetes lists it, with cordons and pressure")
-        case .tools: Text("Buttons to the Kubernetes screens these credentials can use")
-        case .dataServices: Text("Health of Longhorn, Garage and CloudNativePG")
-        case .argoCD: Text("Sync and health of the Argo CD apps, syncs in progress")
-        case .flux: Text("Ready, reconciling and failing Kustomizations and HelmReleases")
-        case .alerts: Text("Alertmanager alerts firing by severity, and those silenced")
-        }
-    }
-}
-
 /// The home of a cluster added from a kubeconfig, in place of the Talos overview: the API
 /// server and who the app is to it, its nodes as Kubernetes sees them (KubeNodes), the
 /// Kubernetes screens, and Argo CD, Flux and the data services (Longhorn, CloudNativePG...)
@@ -117,6 +90,8 @@ struct KubeHomeView: View {
     @State private var whoAmI: KubeWhoAmI?
     /// Node usage from metrics-server, by node name; empty without it (no bars then).
     @State private var top: [String: KubeTopNode] = [:]
+    /// The apps from the pods, as the Talos overview lists them; nil when the credentials may not list them.
+    @State private var inventory: LoadState<ClusterInventory>? = .loading
     /// Shared with the Talos overview: one choice of chips or full rows for every cluster.
     @AppStorage("overview.nodesExpanded") private var nodesExpanded = false
     /// The sections' order and those hidden, the toolbar's icons and menu: one arrangement for
@@ -248,6 +223,7 @@ struct KubeHomeView: View {
             alerts = nil
             whoAmI = nil
             top = [:]
+            inventory = .loading
         }
         // The screenshot mode switching: the Kubernetes screen pushed from here holds old names.
         .onChange(of: model.maskTransition) { _, switching in
@@ -266,24 +242,35 @@ struct KubeHomeView: View {
     @ViewBuilder
     private func section(_ card: KubeHomeCard, overview: KubeNodesOverview) -> some View {
         switch card {
+        case .pinned:
+            if !pins.isEmpty {
+                // No Talos nodes here: a pinned node shows without its state.
+                PinnedSection(pins: pins.pins, nodes: [], argo: argoStatus, flux: fluxStatus,
+                              masked: model.privacyMask, open: open,
+                              unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
+            }
         case .summary:
             summarySection(overview)
+        case .apps:
+            if let inventory {
+                AppsCard(state: inventory, hostnames: [:], argo: argoStatus, path: $path)
+            }
         case .nodes:
             nodesSection(overview)
         case .tools:
             toolsSection
         case .dataServices:
             if let dataServices {
-                DataServicesSection(state: dataServices, hints: "", apps: [:], downNodes: notReadyNodes(overview),
+                DataServicesSection(state: dataServices, hints: "", apps: inventoryApps, downNodes: notReadyNodes(overview),
                                     plugins: plugins.dataServicePlugins, families: [.data])
             }
         case .argoCD:
             if let argo {
-                ArgoSection(state: argo, app: nil, downNodes: notReadyNodes(overview))
+                ArgoSection(state: argo, app: inventoryApps[argoCDCatalogID], downNodes: notReadyNodes(overview))
             }
         case .flux:
             if let flux {
-                FluxSection(state: flux, app: nil, downNodes: notReadyNodes(overview))
+                FluxSection(state: flux, app: inventoryApps[fluxCatalogID], downNodes: notReadyNodes(overview))
             }
         case .alerts:
             if let alerts { AlertsSection(state: alerts) }
@@ -572,8 +559,56 @@ struct KubeHomeView: View {
     }
 
     /// Sections the cluster has nothing for, left out of the editor too; each offered until its answer came.
+    /// Best effort, as on the Talos overview: a first failure (credentials that may not list every
+    /// pod) hides the apps section; a failed refresh keeps the apps shown.
+    private func loadInventory(with client: TalosClient, id: String) async {
+        if case .loading? = inventory { inventory = model.seeded(LoadState<ClusterInventory>.loading, from: .inventory) }
+        let loaded: LoadState<ClusterInventory> = await .from { try await model.fetch(.inventory, with: client) }
+        guard id == loadID else { return }
+        switch (loaded, inventory) {
+        case (.loaded(let apps, _, _), _) where apps.apps.isEmpty: inventory = nil
+        case (.failed, .loaded?): inventory = inventory?.refreshed(with: loaded)
+        case (.failed, _): inventory = nil
+        default: inventory = loaded
+        }
+    }
+
+    /// The inventory's apps by catalog id, for the data services' and GitOps sections' icons.
+    private var inventoryApps: [String: InventoryApp] {
+        guard case .loaded(let apps, _, _)? = inventory else { return [:] }
+        return Dictionary(apps.apps.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    private var argoStatus: ArgoStatus? {
+        if case .loaded(let status, _, _)? = argo { return status }
+        return nil
+    }
+
+    private var fluxStatus: FluxStatus? {
+        if case .loaded(let status, _, _)? = flux { return status }
+        return nil
+    }
+
+    /// The fingerprint the cluster on screen keeps its pins under.
+    private var pinsFingerprint: String { model.activeSummary?.fingerprint ?? "" }
+
+    /// The screens pinned on the cluster on screen.
+    private var pins: PinList { PinStore.shared.pins(for: pinsFingerprint) }
+
+    /// Opens a pin's screen as its share link would; no node screen without Talos.
+    private func open(_ pin: Pin) {
+        guard pin.target.target != .node else { return }
+        let client = model.client
+        Task {
+            guard let route = await pin.target.route(client: client, kube: true) else { return }
+            path.append(route)
+        }
+    }
+
     private var absentCards: Set<KubeHomeCard> {
         var absent: Set<KubeHomeCard> = []
+        if pins.isEmpty { absent.insert(.pinned) }
+        if inventory == nil { absent.insert(.apps) }
         if case .loaded(let status, _, _)? = argo, !status.installed { absent.insert(.argoCD) }
         if case .loaded(let status, _, _)? = flux, !status.installed { absent.insert(.flux) }
         if case .loaded(let services, _, _)? = dataServices, services.detected.isEmpty, plugins.dataServicePlugins.isEmpty {
@@ -600,6 +635,7 @@ struct KubeHomeView: View {
         guard id == loadID else { return }
         state = state.refreshed(with: fetched)
         if case .loaded = fetched { fromMonitor = false }
+        await loadInventory(with: client, id: id)
         // Kept on a failed refresh; hidden when the API server cannot say (before 1.28).
         if let me = try? await client.kubeWhoAmI(), id == loadID { whoAmI = me }
         guard id == loadID else { return }

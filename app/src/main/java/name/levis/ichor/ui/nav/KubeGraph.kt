@@ -119,8 +119,11 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         AppsScreen(
             attention = entry.arguments?.getBoolean("attention") == true,
             onBack = { nav.popBackStack() },
-            // A pod's node, on its Pods tab.
-            onNode = { addr, host, _ -> nav.navigate(Routes.nodeTabs(addr, host, tab = 4)) },
+            // A pod's node, on its Pods tab; without Talos, the Kubernetes nodes on that one (they need the home below).
+            onNode = { addr, host, _ ->
+                if (app.configRepository.config.value?.activeIsKube != true) nav.navigate(Routes.nodeTabs(addr, host, tab = 4))
+                else if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) nav.navigate(Routes.kubeNodes(null, query = host))
+            },
             onArgoCD = { nav.navigate(Routes.ARGO_CD) },
             onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             onFlux = { nav.navigate(Routes.FLUX) },
