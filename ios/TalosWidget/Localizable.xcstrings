@@ -34,7 +34,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "告知 Ichor 上次后台检查在集群上看到的情况。未选择时：使用应用中打开的集群。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor の最新のバックグラウンドチェックでクラスターがどう見えたかを伝えます。未選択の場合：アプリで開いているクラスター。" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor の最新のバックグラウンドチェックでクラスターがどう見えたかを伝えます。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Informa o que a última verificação em segundo plano do Ichor viu em um cluster. Nenhum escolhido: o que está aberto no app." } }
       }
     },
     "Open cluster" : {
@@ -70,7 +71,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开集群" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターを開く" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir cluster" } }
       }
     },
     "Opens a cluster's overview in Ichor. None chosen: the one open in the app." : {
@@ -106,7 +108,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群概览。未选择时：使用应用中打开的集群。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor でクラスターの概要を開きます。未選択の場合：アプリで開いているクラスター。" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor でクラスターの概要を開きます。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre a visão geral de um cluster no Ichor. Nenhum escolhido: o que está aberto no app." } }
       }
     },
     "Run a checkup" : {
@@ -142,7 +145,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行检查" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "チェックを実行" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "チェックを実行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Executar uma verificação" } }
       }
     },
     "Opens the cluster checkup in Ichor. None chosen: the cluster open in the app." : {
@@ -178,7 +182,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群检查。未选择时：使用应用中打开的集群。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor でクラスターチェックを開きます。未選択の場合：アプリで開いているクラスター。" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor でクラスターチェックを開きます。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre a verificação do cluster no Ichor. Nenhum escolhido: o cluster aberto no app." } }
       }
     },
     "Opens the cluster open in Ichor." : {
@@ -214,7 +219,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Ichor 中当前打开的集群。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor で開いているクラスターを開きます。" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor で開いているクラスターを開きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre o cluster aberto no Ichor." } }
       }
     },
     "Opens the checkup of the cluster open in Ichor." : {
@@ -250,7 +256,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Ichor 中当前集群的检查。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor で開いているクラスターのチェックを開きます。" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor で開いているクラスターのチェックを開きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre a verificação do cluster aberto no Ichor." } }
       }
     },
     "Terminate" : {
@@ -287,7 +294,8 @@
             }
           },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终止" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "終了" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "終了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Encerrar" } }
       }
     },
     "Stop" : {
@@ -324,7 +332,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar" } }
       }
     },
     "Stop following" : {
@@ -361,7 +370,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止跟踪" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追跡を停止" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追跡を停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar de acompanhar" } }
       }
     },
     "Pause" : {
@@ -398,7 +408,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂停" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一時停止" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一時停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pausar" } }
       }
     },
     "Resume" : {
@@ -435,7 +446,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "继续" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "再開" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "再開" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Retomar" } }
       }
     },
     "Abort" : {
@@ -472,7 +484,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中止" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "中止" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "中止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abortar" } }
       }
     },
     "Keep" : {
@@ -509,7 +522,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保留" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "維持" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "維持" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Manter" } }
       }
     },
     "Revert now" : {
@@ -546,7 +560,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即还原" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今すぐ元に戻す" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今すぐ元に戻す" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reverter agora" } }
       }
     },
     "Cluster" : {
@@ -583,7 +598,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスター" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cluster" } }
       }
     },
     "The cluster this widget shows. None chosen: the one open in the app." : {
@@ -620,7 +636,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此小组件显示的集群。未选择时：使用应用中当前打开的集群。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このウィジェットに表示するクラスター。未選択の場合：アプリで開いているクラスター。" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このウィジェットに表示するクラスター。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O cluster que este widget mostra. Nenhum escolhido: o que está aberto no app." } }
       }
     },
     "%lld not ready" : {
@@ -747,7 +764,8 @@
           }
         },
         "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个未就绪" } } } } },
-        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が未準備" } } } } }
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が未準備" } } } } },
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld não pronto" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld não prontos" } } } } }
       }
     },
     "%lld unreachable" : {
@@ -874,7 +892,8 @@
           }
         },
         "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个无法访问" } } } } },
-        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が到達不能" } } } } }
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が到達不能" } } } } },
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessível" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessíveis" } } } } }
       }
     },
     "%lld/%lld ready" : {
@@ -911,7 +930,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 就绪" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld準備完了" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld準備完了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld prontos" } }
       }
     },
     "all ready" : {
@@ -948,7 +968,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部就绪" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべて準備完了" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべて準備完了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "todos prontos" } }
       }
     },
     "Cluster status" : {
@@ -985,7 +1006,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群状态" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターの状態" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターの状態" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Estado do cluster" } }
       }
     },
     "etcd: %lld alarms" : {
@@ -1112,7 +1134,8 @@
           }
         },
         "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld 条告警" } } } } },
-        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld件のアラーム" } } } } }
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld件のアラーム" } } } } },
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarme" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarmes" } } } } }
       }
     },
     "etcd: no alarms" : {
@@ -1149,7 +1172,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "etcd：无告警" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd：アラームなし" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd：アラームなし" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "etcd: nenhum alarme" } }
       }
     },
     "Nodes ready and etcd alarms from the last check." : {
@@ -1186,7 +1210,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次检查的节点就绪情况和 etcd 告警。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最後のチェックでの準備完了のノードと etcd アラーム。" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最後のチェックでの準備完了のノードと etcd アラーム。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nós prontos e alarmes do etcd da última verificação." } }
       }
     },
     "Open the app to set up" : {
@@ -1223,7 +1248,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开应用进行设置" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリを開いて設定してください" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリを開いて設定してください" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abra o app para configurar" } }
       }
     },
     "Updated %@" : {
@@ -1260,7 +1286,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@に更新" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@に更新" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizado %@" } }
       }
     }
   },
