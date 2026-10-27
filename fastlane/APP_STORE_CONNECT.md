@@ -1,6 +1,7 @@
 # App Store Connect: declarations and review answers
 
-Bundle `name.levis.ichor` (widget `name.levis.ichor.widget`, App Group `group.name.levis.ichor`).
+Bundle `name.levis.ichor` (widget `name.levis.ichor.widget`, share extension `name.levis.ichor.share`,
+App Group `group.name.levis.ichor`).
 This is the iOS counterpart of [PLAY_CONSOLE.md](PLAY_CONSOLE.md): what to request from Apple,
 and paste-in answers for the App Store Connect forms. The build and upload themselves are in the
 README (**iOS → App Store**): `scripts/ios-build.sh appstore`, run by `ios.yml` on `v*` tags.
@@ -14,9 +15,9 @@ README (**iOS → App Store**): `scripts/ios-build.sh appstore`, run by `ios.yml
 | `Info.plist` `NSLocalNetworkUsageDescription` | local network | nodes on the Wi-Fi network, network search, Wake-on-LAN |
 | `Info.plist` `UIBackgroundModes: fetch` + `BGTaskSchedulerPermittedIdentifiers` | background refresh | background alerts |
 | `Info.plist` `ITSAppUsesNonExemptEncryption` | encryption | see [Export compliance](#export-compliance-read-before-the-first-submission) |
-| entitlements `com.apple.security.application-groups` | App Group | the widget reads the last check |
+| entitlements `com.apple.security.application-groups` | App Group | the widget reads the last check; "Send to Ichor" leaves shared files for the app |
 | entitlements `com.apple.developer.networking.multicast` | **only with `ICHOR_IOS_MULTICAST=1`** | Wake-on-LAN broadcasts, see below |
-| `ios/Ichor/PrivacyInfo.xcprivacy`, `ios/TalosWidget/PrivacyInfo.xcprivacy` | privacy manifests | see [Privacy manifest](#privacy-manifest) |
+| `ios/Ichor/PrivacyInfo.xcprivacy`, `ios/TalosWidget/PrivacyInfo.xcprivacy`, `ios/IchorShare/PrivacyInfo.xcprivacy` | privacy manifests | see [Privacy manifest](#privacy-manifest) |
 
 The usage strings are translated in `ios/Ichor/*.lproj/InfoPlist.strings`.
 
@@ -24,8 +25,9 @@ The usage strings are translated in `ios/Ichor/*.lproj/InfoPlist.strings`.
 
 1. **Apple Developer Program** membership (paid), as an individual or an organization. The
    seller name shown on the store is the account holder's legal name.
-2. **Identifiers → App IDs**: register `name.levis.ichor` and `name.levis.ichor.widget`, both with
-   the **App Groups** capability, and the App Group `group.name.levis.ichor`, assigned to both.
+2. **Identifiers → App IDs**: register `name.levis.ichor`, `name.levis.ichor.widget` and
+   `name.levis.ichor.share`, each with the **App Groups** capability, and the App Group
+   `group.name.levis.ichor`, assigned to all three.
    Automatic signing (`scripts/ios-build.sh appstore`) creates the profiles; it cannot create
    restricted capabilities, hence this step.
 3. **Request the multicast entitlement** (next section). It is optional: without it, everything
@@ -127,13 +129,13 @@ the privacy policy names the providers.
 
 ## Privacy manifest
 
-`PrivacyInfo.xcprivacy` (app and widget) declares no tracking, no collected data, and the
+`PrivacyInfo.xcprivacy` (app, widget and share extension) declares no tracking, no collected data, and the
 *required reason* APIs the code uses, including the linked Go core:
 
 | Category | Reason | Used by |
 |---|---|---|
 | UserDefaults | `CA92.1` own settings, `1C8F.1` App Group | settings; widget snapshot |
-| File timestamp | `C617.1` files in the app container | captures, support bundles; Go `stat` |
+| File timestamp | `C617.1` files in the app container | captures, support bundles; Go `stat`; the shared files' dates in the App Group (share extension and app) |
 | System boot time | `35F9.1` elapsed time | the Go runtime's monotonic clock |
 
 `scripts/ios-build.sh ipa` fails if a manifest is missing from the bundle. If App Store Connect

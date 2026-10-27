@@ -81,6 +81,8 @@ struct IchorApp: App {
                     if phase == .background { ConfigTryJob.shared.didEnterBackground() }
                     if phase == .active { ConfigTryJob.shared.willEnterForeground() }
                     if phase == .active { ForegroundSignInRenewal.run(model: model) }
+                    // Files sent with "Send to Ichor" while the app was away.
+                    if phase == .active { IncomingConfig.receivePending() }
                     if phase == .background { ConfigMultiJob.shared.didEnterBackground() }
                 }
                 .preferredColorScheme(model.theme.colorScheme)
@@ -434,6 +436,7 @@ struct MainNavigation: View {
         }
         .messageAlert($freezeMessage)
         .messageAlert($linkMessage)
+        .restoresReceivedBackup()
     }
 
     /// A regular-width iPad: the clusters and sections in a sidebar beside the stack. Elsewhere

@@ -134,7 +134,8 @@ case "$MODE" in
     rm -rf build/ipa && mkdir -p build/ipa/Payload
     cp -R build/Build/Products/Release-iphoneos/Ichor.app build/ipa/Payload/
     # App Store Connect rejects uploads without them (ITMS-91053/91061); fail here first.
-    for manifest in Ichor.app/PrivacyInfo.xcprivacy Ichor.app/PlugIns/TalosWidget.appex/PrivacyInfo.xcprivacy; do
+    for manifest in Ichor.app/PrivacyInfo.xcprivacy Ichor.app/PlugIns/TalosWidget.appex/PrivacyInfo.xcprivacy \
+      Ichor.app/PlugIns/IchorShare.appex/PrivacyInfo.xcprivacy; do
       [[ -f "build/ipa/Payload/$manifest" ]] || { echo "missing privacy manifest: $manifest" >&2; exit 1; }
     done
     ipa="ichor-v${ICHOR_VERSION//+/-}-unsigned.ipa"
