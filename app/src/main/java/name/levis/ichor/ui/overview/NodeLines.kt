@@ -31,9 +31,12 @@ internal const val FEW_NODES = 4
  * The Nodes card's one pill: "1 unreachable" in red, else "2 not ready" in amber; none while
  * every node is ready. The summary card and this one are the only places that say it.
  */
-internal fun nodesPill(nodes: List<NodeOverview>): (@Composable () -> Unit)? {
-    val unreachable = nodes.count { it.status == NodeStatus.UNREACHABLE }
-    val notReady = nodes.count { it.status == NodeStatus.NOT_READY }
+internal fun nodesPill(nodes: List<NodeOverview>): (@Composable () -> Unit)? = nodesPillOf(nodes.map { it.status })
+
+/** The same pill from the nodes' statuses: a Kubernetes cluster has no unreachable ones. */
+internal fun nodesPillOf(statuses: List<NodeStatus>): (@Composable () -> Unit)? {
+    val unreachable = statuses.count { it == NodeStatus.UNREACHABLE }
+    val notReady = statuses.count { it == NodeStatus.NOT_READY }
     if (unreachable == 0 && notReady == 0) return null
     return { NodesPill(unreachable, notReady) }
 }
@@ -90,7 +93,7 @@ internal fun List<NodeGroup>.firstDegraded(): NodeOverview? =
 internal fun Modifier.degradedAnchor(node: NodeOverview, degraded: NodeOverview?): Modifier =
     if (node == degraded) tourAnchor(TourAnchor.DegradedNode) else this
 
-private val NodeStatus.serviceHealth: ServiceHealth
+internal val NodeStatus.serviceHealth: ServiceHealth
     get() = when (this) {
         NodeStatus.READY -> ServiceHealth.OK
         NodeStatus.ATTENTION, NodeStatus.NOT_READY -> ServiceHealth.WARNING

@@ -99,18 +99,27 @@ private struct NodeChip: View {
     let open: () -> Void
 
     var body: some View {
-        let status = node.status
-        let calm = status == .ready
         Button(action: open) {
-            HStack(spacing: 6) {
-                Circle().fill(status.color).frame(width: 8, height: 8)
-                Text(verbatim: node.hostname).font(.subheadline).lineLimit(1)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(calm ? Color.secondary.opacity(0.12) : status.color.opacity(0.16), in: Capsule())
+            NodeChipLabel(name: node.hostname, status: node.status)
         }
-        .foregroundStyle(calm ? Color.primary : status.color)
-        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(status.label)"))
+        .foregroundStyle(node.status == .ready ? Color.primary : node.status.color)
+        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(node.status.label)"))
+    }
+}
+
+/// A collapsed Nodes section's chip, Talos or Kubernetes: the status dot and `name` on a
+/// capsule tinted by a problem. The caller sets the foreground and wraps it (a button, a menu).
+struct NodeChipLabel: View {
+    let name: String
+    let status: NodeStatus
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle().fill(status.color).frame(width: 8, height: 8)
+            Text(verbatim: name).font(.subheadline).lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(status == .ready ? Color.secondary.opacity(0.12) : status.color.opacity(0.16), in: Capsule())
     }
 }
