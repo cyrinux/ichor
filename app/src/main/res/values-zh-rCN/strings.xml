@@ -79,7 +79,7 @@
     <string name="overview_unreachable_title">无法访问集群</string>
     <string name="overview_last_known_state">显示上次已知状态。</string>
     <string name="overview_seed_from_monitor">来自 %1$s 的后台检查（%2$s）</string>
-    <string name="overview_node_last_seen">最后在线 %1$s</string>
+    <string name="overview_node_last_seen">最后出现于 %1$s</string>
     <string name="overview_node_public_ip">公网 IP</string>
     <string name="overview_public_ip_detect">查找公网 IP</string>
     <string name="overview_public_ip_detect_title">查找公网 IP？</string>
@@ -202,7 +202,7 @@
     <string name="net_tools_no_answer">检查结束，未得到结果。</string>
     <string name="net_tools_share">分享结果</string>
     <string name="net_tools_share_title">从 %3$s 发起的 %1$s %2$s</string>
-    <string name="net_tools_ok">正常</string>
+    <string name="net_tools_ok">确定</string>
     <string name="net_tools_not_ok">有问题</string>
     <string name="net_tools_status">状态</string>
     <string name="net_tools_query_time">查询时间</string>
@@ -212,7 +212,7 @@
     <string name="net_tools_received">已接收</string>
     <string name="net_tools_loss">丢包</string>
     <string name="net_tools_rtt">最小 / 平均 / 最大</string>
-    <string name="net_tools_port_open">开放</string>
+    <string name="net_tools_port_open">打开</string>
     <string name="net_tools_port_closed">关闭或被过滤</string>
     <string name="net_tools_hops">跳数（%1$d）</string>
     <string name="net_tools_hop_silent">无响应</string>
@@ -253,8 +253,8 @@
     <string name="node_live_in">入站</string>
     <string name="node_live_out">出站</string>
     <string name="node_live_disk">磁盘</string>
-    <string name="node_live_read">读取</string>
-    <string name="node_live_write">写入</string>
+    <string name="node_live_read">读</string>
+    <string name="node_live_write">写</string>
     <string name="node_live_load">负载（1 分钟）</string>
     <string name="node_live_load_series">负载</string>
     <string name="node_live_chart_description">%1$s 图表</string>
@@ -275,7 +275,7 @@
     <string name="power_mode_powercycle_desc">正常停止后，由固件执行完整重启，而不是 kexec。</string>
     <string name="power_mode_force">强制</string>
     <string name="power_mode_force_desc">立即重启：不会停止 Pod 和服务。仅用于卡住的节点。</string>
-    <string name="power_requested">%1$s：已请求%2$s</string>
+    <string name="power_requested">%1$s：已请求 %2$s</string>
     <string name="power_auth_title">%1$s %2$s</string>
     <string name="power_confirm_title">%1$s %2$s？</string>
     <string name="power_controlplane_warning">控制平面节点：停机期间它会退出 etcd。请确保其他成员健康，否则集群可能失去法定人数。</string>
@@ -343,7 +343,7 @@
     <string name="kubespan_no_link_down">无链路断开</string>
     <string name="kubespan_status_off">关闭</string>
     <string name="kubespan_status_down_count">%1$d 条断开</string>
-    <string name="kubespan_status_up_count">%1$d/%2$d 条连通</string>
+    <string name="kubespan_status_up_count">%1$d/%2$d 在线</string>
     <string name="kubespan_peer_up">连通</string>
     <string name="kubespan_peer_down">断开</string>
     <string name="kubespan_peer_unknown">未知</string>
@@ -433,7 +433,7 @@
     <string name="tile_cluster_no_check">尚未检查</string>
     <string name="tile_cluster_no_cluster">无集群</string>
     <string name="shortcut_checkup_short">检查</string>
-    <string name="shortcut_checkup_long">运行集群检查</string>
+    <string name="shortcut_checkup_long">运行检查</string>
     <string name="settings_add_tile">将磁贴添加到快捷设置</string>
     <string name="shortcut_add_home">添加到主屏幕</string>
     <string name="shortcut_pin_unsupported">此启动器无法向主屏幕添加快捷方式</string>
@@ -715,7 +715,7 @@
     <string name="debug_connecting">正在连接…</string>
     <string name="debug_snippets">代码片段</string>
     <string name="debug_snippets_hint">点按即可运行。以 … 结尾的命令只会输入而不执行，以便你添加目标。</string>
-    <string name="debug_group_interfaces">网络接口</string>
+    <string name="debug_group_interfaces">接口</string>
     <string name="debug_group_control_plane">控制平面</string>
     <string name="debug_group_dns">DNS</string>
     <string name="debug_group_reachability">可达性</string>
@@ -812,7 +812,7 @@
         <item quantity="other">%1$d 个无法访问</item>
     </plurals>
     <string name="widget_all_ready">全部就绪</string>
-    <string name="widget_etcd_no_alarms">etcd：无警报</string>
+    <string name="widget_etcd_no_alarms">etcd：无告警</string>
     <plurals name="widget_etcd_alarms">
         <item quantity="other">etcd：%1$d 个警报</item>
     </plurals>
@@ -891,7 +891,7 @@
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Talos 在读取机器配置之前读取的启动时值。错误的值可能导致节点无法启动：仅在修复无法使用其配置启动的节点时才更改它们。</string>
     <string name="meta_not_loaded">节点尚未读取其 META 分区。</string>
-    <string name="meta_empty">无键。</string>
+    <string name="meta_empty">没有键。</string>
     <string name="meta_add">添加键…</string>
     <string name="meta_unknown_key">未知键</string>
     <string name="meta_copy">复制 %1$s 的值</string>
@@ -916,7 +916,7 @@
     <string name="meta_deleted">已删除 %1$s</string>
     <string name="machine_config_edit">编辑</string>
     <string name="machine_config_discard">放弃</string>
-    <string name="machine_config_discard_title">放弃你的更改？</string>
+    <string name="machine_config_discard_title">放弃更改？</string>
     <string name="machine_config_discard_text">编辑过的配置将丢失。节点不会被更改。</string>
     <string name="machine_config_review">查看更改</string>
     <string name="machine_config_editing_note">你正在编辑草稿：在你试用之前，任何内容都不会发送到节点。</string>
@@ -1007,7 +1007,7 @@
     <string name="machine_config_try_keeping">正在保留更改…</string>
     <string name="machine_config_try_reverting">正在回滚…</string>
     <string name="machine_config_keep">保留更改</string>
-    <string name="machine_config_revert_now">立即回滚</string>
+    <string name="machine_config_revert_now">立即还原</string>
     <string name="machine_config_try_leave_note">你可以离开此页面：倒计时会在通知中继续，并提供“保留”按钮。如果连接中断，节点会在倒计时结束时自动回滚。</string>
     <string name="config_try_notification_public">正在试用配置更改</string>
     <string name="config_try_notification_result_public">配置试用已结束</string>
@@ -1076,7 +1076,7 @@
     <string name="etcd_fix_step_recheck">重新读取 etcd</string>
     <string name="etcd_fix_member_pending">等待中</string>
     <string name="etcd_fix_member_running">正在整理碎片</string>
-    <string name="etcd_fix_member_done">完成</string>
+    <string name="etcd_fix_member_done">已完成</string>
     <string name="etcd_fix_member_failed">失败</string>
     <string name="etcd_fix_member_reclaimed">已释放 %1$s</string>
     <string name="etcd_fix_snapshot_saved">快照已保存为 %1$s。</string>
@@ -1355,7 +1355,7 @@
     <string name="capture_interface">接口</string>
     <string name="capture_loading_interfaces">正在加载接口…</string>
     <string name="capture_no_interfaces">未找到网络接口。</string>
-    <string name="capture_filter">过滤器</string>
+    <string name="capture_filter">筛选</string>
     <string name="capture_filter_hint">tcpdump 语法，例如 host 10.0.0.1；留空：所有流量</string>
     <string name="capture_filter_invalid">过滤器无效：%1$s</string>
     <string name="capture_preset_dns">DNS</string>
@@ -1448,7 +1448,7 @@
     <string name="upgrade_phase_requested">已请求</string>
     <string name="upgrade_phase_installing">正在安装</string>
     <string name="upgrade_phase_rebooting">正在重启</string>
-    <string name="upgrade_phase_waiting">正在等待节点</string>
+    <string name="upgrade_phase_waiting">等待节点</string>
     <string name="upgrade_phase_booted">已启动</string>
     <string name="upgrade_phase_done">完成</string>
     <string name="cluster_upgrade_title">升级集群</string>
@@ -1870,7 +1870,7 @@
     <string name="insights_tab_network">网络</string>
     <string name="insights_kind_status">节点</string>
     <string name="insights_kind_service">服务</string>
-    <string name="insights_kind_link">链路</string>
+    <string name="insights_kind_link">链接</string>
     <string name="insights_kind_metrics">指标</string>
     <string name="insights_kind_error">错误</string>
     <string name="insights_kind_recovered">已恢复</string>
@@ -1999,7 +1999,7 @@
     <string name="workloads_search">按名称、类型或镜像筛选</string>
     <string name="workloads_all_namespaces">所有命名空间</string>
     <string name="kube_scope_search">搜索命名空间</string>
-    <string name="kube_scope_typed_label">Namespace</string>
+    <string name="kube_scope_typed_label">命名空间</string>
     <string name="kube_scope_forbidden_hint">这些凭据无法列出命名空间：请输入要显示的命名空间。</string>
     <string name="kube_scope_apply">显示此命名空间</string>
     <string name="kube_paged_progress">%1$s / ~%2$s</string>
@@ -2045,7 +2045,7 @@
     <string name="cronjobs_state_succeeded">成功</string>
     <string name="cronjobs_state_failed">失败</string>
     <string name="cronjobs_state_never">从未运行</string>
-    <string name="cronjobs_suspended">已挂起</string>
+    <string name="cronjobs_suspended">已暂停</string>
     <string name="cronjobs_next_run">下次 %1$s</string>
     <string name="cronjobs_last_run">上次运行 %1$s</string>
     <string name="cronjobs_no_runs">没有保留的运行记录。</string>
@@ -2203,7 +2203,7 @@
     <string name="garage_tranquility_failed">无法更改 %1$s 的重新同步速度：%2$s</string>
     <string name="garage_operator_clusters">集群</string>
     <string name="garage_operator_buckets">存储桶</string>
-    <string name="garage_operator_keys">密钥</string>
+    <string name="garage_operator_keys">键</string>
     <string name="garage_operator_nodes">已声明的节点</string>
     <string name="garage_operator_truncated">部分条目未显示：集群中某类对象的数量超过了应用的列出上限。</string>
     <string name="garage_operator_tiers">存储 %1$d/%2$d · 网关 %3$d/%4$d</string>
@@ -2305,7 +2305,7 @@
     <string name="garage_role_zone_required">必须填写区域（单行，最多 64 个字符）。</string>
     <string name="garage_role_kind">角色</string>
     <string name="garage_role_storage">存储</string>
-    <string name="garage_role_gateway">网关</string>
+    <string name="garage_role_gateway">Gateway</string>
     <string name="garage_role_gateway_text">网关处理 S3 请求，不存储数据。</string>
     <string name="garage_role_capacity">容量</string>
     <string name="garage_role_capacity_invalid">请输入至少 1 KiB 的正数。</string>
@@ -2373,7 +2373,7 @@
     <string name="certmanager_renew_started">已请求续期 %1$s</string>
     <string name="certmanager_renew_failed">%1$s：%2$s</string>
     <string name="certmanager_issuing">正在签发</string>
-    <string name="certmanager_details_conditions">状况</string>
+    <string name="certmanager_details_conditions">状态条件</string>
     <string name="certmanager_details_requests">请求</string>
     <string name="certmanager_details_events">事件</string>
     <string name="certmanager_details_log">控制器日志</string>
@@ -2547,7 +2547,7 @@
     <string name="castai_plan_awaiting">等待批准</string>
     <string name="castai_plan_pending">等待中</string>
     <string name="castai_plan_running">运行中</string>
-    <string name="castai_plan_done">已完成</string>
+    <string name="castai_plan_done">完成</string>
     <string name="castai_plan_failed">失败</string>
     <string name="castai_plan_skipped">已跳过</string>
     <string name="castai_mode_full">完整</string>
@@ -2624,7 +2624,7 @@
     <string name="netperf_confirm_title">开始网络测试？</string>
     <string name="netperf_confirm_text">netperf Pod 将在临时命名空间中运行于 %1$s 和 %2$s。它们之间的链路会饱和约 %3$d 秒，之后删除该命名空间。</string>
     <string name="netperf_confirm_host">测试主机网络时，命名空间以 privileged Pod 安全级别创建。</string>
-    <string name="netperf_confirm">开始</string>
+    <string name="netperf_confirm">启动</string>
     <string name="netperf_summary">%1$s → %2$s · %3$d 秒</string>
     <string name="netperf_phase_preparing">正在准备测试命名空间…</string>
     <string name="netperf_phase_starting">正在 %1$s 上启动 netserver…</string>
@@ -2714,7 +2714,7 @@
     <string name="argo_search">筛选</string>
     <string name="argo_filter_attention">需要关注</string>
     <string name="argo_filter_out_of_sync">OutOfSync</string>
-    <string name="argo_filter_progressing">Progressing</string>
+    <string name="argo_filter_progressing">进行中</string>
     <string name="argo_filter_syncing">同步中</string>
     <string name="argo_filter_auto_sync_off">自动同步已关闭</string>
     <string name="argo_group_by">分组方式</string>
@@ -2738,7 +2738,7 @@
     <string name="argo_net_layer_internet">互联网</string>
     <string name="argo_net_layer_gateway">Gateway</string>
     <string name="argo_net_layer_routes">路由</string>
-    <string name="argo_net_layer_services">Service</string>
+    <string name="argo_net_layer_services">服务</string>
     <string name="argo_net_layer_pods">Pod</string>
     <string name="argo_net_layer_nodes">节点</string>
     <string name="argo_net_kind_host">主机</string>
@@ -2782,7 +2782,7 @@
     <string name="argo_chart">Chart</string>
     <string name="argo_path">路径</string>
     <string name="argo_open_link">打开</string>
-    <string name="argo_show_diff">查看差异</string>
+    <string name="argo_show_diff">显示差异</string>
     <string name="argo_diff_hint">立即同步会改变什么：在集群中比较，不做任何更改。</string>
     <string name="argo_diff_hint_out_of_sync">该应用未同步：运行同步前先查看同步会改变什么。</string>
     <string name="argo_diff_dry_run">Argo CD 最近一次比较的结果：实时状态与同步后的状态，通过 port-forward 从 Argo CD 缓存读取。没有在集群中运行任何内容，也没有做任何更改。Secret 的值已隐藏。</string>
@@ -2811,7 +2811,7 @@
     <string name="argo_rollback_owned">无法回滚：其所有者会重写此应用的 spec。</string>
     <string name="argo_app_gone">%1$s 已不在 Argo CD 中。</string>
     <string name="argo_sync_title">同步 %1$s</string>
-    <string name="argo_sync_changes">变更</string>
+    <string name="argo_sync_changes">更改</string>
     <string name="argo_sync_changes_loading">正在与 Argo CD 最近一次比较结果对比…</string>
     <string name="argo_sync_changes_none">不会有任何变更</string>
     <string name="argo_sync_changes_more">以及另外 %1$s 项</string>
@@ -2822,7 +2822,7 @@
     <string name="argo_sync_confirm_dry_run">Dry run</string>
     <string name="argo_opt_prune">Prune</string>
     <string name="argo_opt_prune_desc">删除 Git 中已不存在的资源。</string>
-    <string name="argo_opt_force">Force</string>
+    <string name="argo_opt_force">强制</string>
     <string name="argo_opt_force_desc">删除并重建无法更新的资源。</string>
     <string name="argo_opt_out_of_sync_only">仅应用 OutOfSync 资源</string>
     <string name="argo_opt_out_of_sync_only_desc">跳过已 Synced 的资源。</string>
@@ -2910,7 +2910,7 @@
     <string name="netpol_created">创建时间</string>
     <string name="netpol_selected_pods">选中的 Pod</string>
     <string name="netpol_no_pods">当前没有匹配的 Pod。</string>
-    <string name="netpol_more_pods">以及另外 %1$d 个</string>
+    <string name="netpol_more_pods">还有 %1$d 个</string>
     <string name="netpol_isolated">已隔离：仅允许以下规则。</string>
     <string name="netpol_deny_all">全部拒绝：没有任何规则放行流量。</string>
     <string name="netpol_not_restricted">不受限制。</string>
@@ -2939,7 +2939,7 @@
     <string name="flows_history_note_goldmane">历史记录仅覆盖 Goldmane 仍保留的范围；流量是 15 秒聚合，而非单个数据包。</string>
     <string name="flows_hubble_off_title">Hubble 已关闭</string>
     <string name="flows_hubble_off">实时流量来自 Hubble，它运行在每个 Cilium agent 中。在 Cilium 的 Helm values 中启用它（hubble.enabled: true）并重启 agent；无需 Hubble Relay 和 UI。</string>
-    <string name="flows_agent_live">实时</string>
+    <string name="flows_agent_live">现存</string>
     <string name="flows_agent_connecting">连接中</string>
     <string name="flows_agent_error">错误</string>
     <string name="flows_seen">已见 %1$d</string>
@@ -3028,7 +3028,7 @@
     <string name="metrics_mode_url">URL</string>
     <string name="metrics_proxy_hint">通过 Kubernetes API 服务代理，使用集群的管理员 kubeconfig 访问：无需额外凭据。</string>
     <string name="metrics_namespace">命名空间</string>
-    <string name="metrics_service">Service</string>
+    <string name="metrics_service">服务</string>
     <string name="metrics_port">端口</string>
     <string name="metrics_path_prefix">路径前缀（Mimir：/prometheus）</string>
     <string name="metrics_url">URL（例如 https://mimir.example.com/prometheus）</string>
@@ -3060,7 +3060,7 @@
     <string name="monitoring_rules">规则</string>
     <string name="monitoring_rule_counts">%1$s 个组，%2$s 条规则：%3$s 条触发中，%4$s 条待定，%5$s 条失败</string>
     <string name="monitoring_rules_truncated">仅列出前面的规则；计数涵盖全部规则。</string>
-    <string name="monitoring_rule_failing">%1$s 条失败</string>
+    <string name="monitoring_rule_failing">%1$s 个失败</string>
     <string name="monitoring_rule_firing">%1$s 条触发中</string>
     <string name="monitoring_rule_pending">%1$s 条待定</string>
     <string name="monitoring_rule_total">%1$s 条规则</string>
@@ -3136,7 +3136,7 @@
     <string name="pod_state_running">运行中</string>
     <string name="pod_state_starting">启动中</string>
     <string name="pod_state_stopped">已停止</string>
-    <string name="upgrade_step_done">已完成</string>
+    <string name="upgrade_step_done">完成</string>
     <string name="upgrade_step_current">进行中</string>
     <string name="upgrade_step_failed">失败</string>
     <string name="upgrade_step_pending">未开始</string>
@@ -3171,7 +3171,7 @@
     <string name="workloads_rollback_text">它在 %1$s 中的 Pod 会被运行 %2$s 的 Pod 替换，等同于 kubectl rollout undo。</string>
     <string name="workloads_rollback_failed">无法回滚 %1$s：%2$s</string>
     <string name="cronjobs_suspend">暂停</string>
-    <string name="cronjobs_resume">恢复</string>
+    <string name="cronjobs_resume">继续</string>
     <string name="cronjobs_suspend_title">暂停 %1$s？</string>
     <string name="cronjobs_resume_title">恢复 %1$s？</string>
     <string name="cronjobs_suspend_text">在恢复之前，%1$s 中不会按计划启动新的运行。正在运行的 Job 会继续。</string>
@@ -3271,7 +3271,7 @@
     <string name="flux_tab_sources">源</string>
     <string name="flux_no_sources">没有源。</string>
     <string name="flux_never_fetched">从未拉取</string>
-    <string name="flux_filter_failing">失败</string>
+    <string name="flux_filter_failing">故障</string>
     <string name="flux_filter_reconciling">协调中</string>
     <string name="flux_filter_suspended">已暂停</string>
     <string name="flux_filter_kustomizations">Kustomization</string>
@@ -3356,7 +3356,7 @@
     <string name="flux_needed_by">被依赖（%1$s）</string>
     <string name="flux_depends_on_missing">此集群中未找到</string>
     <string name="flux_failures">失败</string>
-    <string name="flux_conditions">条件</string>
+    <string name="flux_conditions">状态条件</string>
     <string name="flux_inventory">清单（%1$d）</string>
     <string name="flux_release_revision">#%1$d · %2$s</string>
     <string name="flux_app_version">应用 %1$s</string>
@@ -3365,7 +3365,7 @@
     <string name="flux_reconcile">协调</string>
     <string name="flux_reconcile_with_source">连同源一起协调</string>
     <string name="flux_suspend">暂停</string>
-    <string name="flux_resume">恢复</string>
+    <string name="flux_resume">继续</string>
     <string name="flux_force">强制升级</string>
     <string name="flux_reset">重置失败</string>
     <string name="flux_reconcile_title">协调 %1$s？</string>
@@ -3396,7 +3396,7 @@
     <plurals name="flux_diff_unchanged">
         <item quantity="other">%1$d 个未更改的对象</item>
     </plurals>
-    <string name="diff_change_created">已创建</string>
+    <string name="diff_change_created">创建时间</string>
     <string name="diff_change_changed">已更改</string>
     <string name="diff_change_deleted">已删除</string>
     <string name="diff_change_encrypted">已加密</string>
@@ -3454,7 +3454,7 @@
     <string name="argo_window_remove_title">删除此同步窗口？</string>
     <string name="argo_window_remove_text">此窗口不是 Ichor 创建的：它很可能来自 Git。Argo CD 可能在 %1$s 下次同步时将其恢复，因此也请在 Git 中删除。</string>
     <string name="argo_window_remove_text_unmanaged">此窗口不是 Ichor 创建的。要从项目 %1$s 中删除吗？</string>
-    <string name="argo_window_remove">删除</string>
+    <string name="argo_window_remove">移除</string>
     <string name="argo_windows_title">同步窗口</string>
     <string name="argo_windows_active">生效中</string>
     <string name="argo_windows_upcoming">即将开始</string>
@@ -3871,7 +3871,7 @@
     <string name="import_kube_title">选择要添加的集群</string>
     <string name="import_kube_none_importable">这些集群暂时都无法添加。</string>
     <string name="import_kube_server">服务器</string>
-    <string name="import_kube_auth">登录方式</string>
+    <string name="import_kube_auth">登录</string>
     <string name="import_kube_user">用户</string>
     <string name="import_kube_namespace">命名空间</string>
     <string name="import_kube_expires">凭据过期时间</string>
@@ -3996,7 +3996,7 @@
     <string name="kube_signin_needed_body">此集群使用 %1$s 登录。</string>
     <string name="kube_signin_not_signed_in">未登录</string>
     <string name="kube_signin_signed_in_until">已以 %1$s 身份登录，有效期至 %2$s</string>
-    <string name="kube_signin_signed_in_as">已以 %1$s 身份登录</string>
+    <string name="kube_signin_signed_in_as">已登录为 %1$s</string>
     <string name="kube_signin_signed_in_until_only">已登录，有效期至 %1$s</string>
     <string name="kube_signin_signed_in">已登录</string>
     <string name="kube_signin_account_title">%1$s 的登录</string>
@@ -4039,12 +4039,12 @@
     <string name="kb_no_kind_match">没有类型匹配“%1$s”。</string>
     <string name="kb_core_group">core</string>
     <string name="kb_namespaced">命名空间级</string>
-    <string name="kb_cluster_scoped">集群级</string>
+    <string name="kb_cluster_scoped">集群</string>
     <string name="kb_search_objects">搜索名称或列</string>
     <string name="kb_wide">更多列</string>
     <string name="kb_no_objects">这里没有此类型的对象。</string>
-    <string name="kb_no_object_match">没有匹配“%1$s”的内容。</string>
-    <string name="kb_deleting">删除中</string>
+    <string name="kb_no_object_match">没有与“%1$s”匹配的内容。</string>
+    <string name="kb_deleting">正在删除</string>
     <string name="kb_tab_yaml">YAML</string>
     <string name="kb_copy">复制</string>
     <string name="kb_copied">已复制</string>
@@ -4113,7 +4113,7 @@
     <string name="kb_forward_ports_failed">无法读取 Pod 的端口：手动输入一个。</string>
     <string name="kb_forward_no_ports">容器未声明任何 TCP 端口：手动输入一个。</string>
     <string name="kb_forward_port">Pod 端口</string>
-    <string name="kb_forward_start">开始</string>
+    <string name="kb_forward_start">启动</string>
     <string name="kb_forward_stop">停止</string>
     <string name="kb_forward_stopped">已停止。</string>
     <string name="kb_forward_failed">转发已结束：%1$s</string>
@@ -4278,12 +4278,12 @@
     <string name="kb_summary_health_bad">不健康</string>
     <string name="kb_summary_health_none">未报告健康状况</string>
     <string name="kb_summary_phase">阶段</string>
-    <string name="kb_summary_replicas">副本</string>
+    <string name="kb_summary_replicas">副本数</string>
     <string name="kb_summary_selector">选择器</string>
     <string name="kb_summary_image">镜像</string>
     <string name="kb_summary_node">节点</string>
     <string name="kb_summary_suspended">已暂停</string>
-    <string name="kb_summary_schedule">调度计划</string>
+    <string name="kb_summary_schedule">计划</string>
     <string name="kube_access_denied">你的账号无法在 %3$s 中对 %2$s 执行 %1$s</string>
     <string name="kube_access_denied_cluster">你的账号无法在整个集群范围内对 %2$s 执行 %1$s</string>
     <string name="mono_text_larger">增大文字</string>
@@ -4302,7 +4302,7 @@
     <string name="alerts_state_inhibited">已抑制</string>
     <string name="alerts_state_silenced_inhibited">已静默、已抑制</string>
     <string name="alerts_silence_active">生效中</string>
-    <string name="alerts_silence_pending">待生效</string>
+    <string name="alerts_silence_pending">等待中</string>
     <string name="alerts_silence_expired">已过期</string>
     <string name="alerts_started">开始时间</string>
     <string name="alerts_receivers">接收者</string>
@@ -4444,7 +4444,7 @@
     <string name="storage_kube_not_measured">未测量用量</string>
     <string name="storage_kube_pods">使用者：%1$s</string>
     <string name="storage_kube_open">在 %1$s 中打开</string>
-    <string name="kube_services_title">Service</string>
+    <string name="kube_services_title">服务</string>
     <string name="kube_services_search">搜索 Service、地址或路由</string>
     <string name="kube_services_empty">没有 Service。</string>
     <string name="kube_services_no_match">没有匹配的 Service。</string>
@@ -4480,7 +4480,7 @@
     <string name="imagescan_saved_title">扫描报告</string>
     <string name="imagescan_saved_link">所有扫描报告</string>
     <string name="imagescan_saved_empty">尚未保存此集群的扫描报告。已完成的扫描会在此手机上加密保存 90 天。</string>
-    <string name="imagescan_saved_forget">删除</string>
+    <string name="imagescan_saved_forget">忘记</string>
     <string name="imagescan_saved_clear">全部清除</string>
     <string name="imagescan_saved_clear_title">清除扫描报告？</string>
     <string name="imagescan_saved_clear_body">此手机上保存的此集群的所有扫描报告都将被删除。</string>
@@ -4548,12 +4548,12 @@
     <string name="history_forecast_critical_soon">1 天内达到严重</string>
     <string name="history_forecast_growing">每天增长约 %1$s %%</string>
     <string name="history_since_title">自你上次查看以来</string>
-    <string name="history_since_more">还有 %1$d 项</string>
+    <string name="history_since_more">另有 +%1$d 个</string>
     <string name="history_since_dismiss">知道了</string>
     <string name="incident_summary_menu">分享故障摘要…</string>
     <string name="incident_summary_title">故障摘要</string>
     <string name="incident_window_6h">过去 6 小时</string>
-    <string name="incident_window_24h">过去 24 小时</string>
+    <string name="incident_window_24h">最近 24 小时</string>
     <string name="incident_window_7d">过去 7 天</string>
     <string name="incident_hide_names">隐藏名称</string>
     <string name="incident_share">分享</string>
@@ -4596,7 +4596,7 @@
     <string name="cp_replace_step_wait">等待新成员</string>
     <string name="cp_replace_state_pending">等待中</string>
     <string name="cp_replace_state_ready">待执行</string>
-    <string name="cp_replace_state_done">已完成</string>
+    <string name="cp_replace_state_done">完成</string>
     <string name="cp_replace_state_skipped">已跳过</string>
     <string name="cp_replace_state_blocked">已阻塞</string>
     <string name="cp_replace_power_off">旧节点没有响应，因此无法从这里重置：如果它仍在运行，请自行关机。</string>
@@ -4647,7 +4647,7 @@
     <string name="etcd_recover_reading">正在读取快照…</string>
     <string name="etcd_recover_open_failed">无法打开所选文件</string>
     <string name="etcd_recover_clear">此快照未加密。</string>
-    <string name="etcd_recover_passphrase">密码短语</string>
+    <string name="etcd_recover_passphrase">口令</string>
     <string name="etcd_recover_needs_key">使用 age 密钥加密：粘贴其私钥（AGE-SECRET-KEY-1…）。私钥不会被保存。</string>
     <string name="etcd_recover_secret_key">age 私钥</string>
     <string name="etcd_recover_unsupported">此快照使用 YubiKey 或 SSH 密钥加密，手机无法打开：请先在电脑上解密，或使用密码短语或 age 密钥加密的快照。</string>
@@ -4684,7 +4684,7 @@
     <string name="join_node_intro">用 Talos ISO 启动新机器：它会在维护模式下等待，控制台会显示其 IP 地址。你的手机必须在同一网络中，或通过能访问它的 VPN 连接。</string>
     <string name="join_node_demo">在演示中，输入 demo 可查看示例节点。</string>
     <string name="join_node_address">节点地址</string>
-    <string name="join_node_inspect">检查</string>
+    <string name="join_node_inspect">查看</string>
     <string name="join_node_maintenance">维护模式</string>
     <string name="join_node_installed_pill">已安装</string>
     <string name="join_node_installed">%1$s 已安装：它要求客户端证书。只有从 ISO 启动且尚未安装的节点才能在此添加。</string>
@@ -4739,7 +4739,7 @@
     <string name="search_nothing_known">暂无已知内容：先打开一次集群</string>
     <string name="search_refresh_active">刷新当前集群</string>
     <string name="search_refresh_failed">无法刷新当前集群：显示其上次的内容</string>
-    <string name="search_last_seen">上次查看 %1$s</string>
+    <string name="search_last_seen">最后出现于 %1$s</string>
     <string name="search_offline_needed">在设置中开启“保留上次已知状态”，即可同时搜索你的其他集群</string>
     <string name="search_shown">显示 %2$d 个结果中的 %1$d 个</string>
     <string name="search_clear">清除</string>
@@ -4796,7 +4796,7 @@
     <string name="capacity_node_bars_no_usage">%1$s，内存 requests 百分之 %2$s</string>
     <string name="capacity_node_open">查看失去此节点的影响</string>
     <string name="capacity_overcommitted">内存 limits 超出节点容量</string>
-    <string name="capacity_requests">Requests</string>
+    <string name="capacity_requests">请求</string>
     <string name="capacity_usage">用量</string>
     <string name="capacity_node_free">剩余：%1$s CPU、%2$s 内存、%3$s 个 Pod 位</string>
     <string name="capacity_priority">优先级 %1$s</string>
@@ -5204,7 +5204,7 @@
     <string name="vm_migrate">迁移</string>
     <string name="vm_pause">暂停</string>
     <string name="vm_unpause">取消暂停</string>
-    <string name="vm_action_failed">%2$s 上的 %1$s 失败：%3$s</string>
+    <string name="vm_action_failed">%1$s 在 %2$s 上失败：%3$s</string>
     <string name="vm_action_requested">已为 %2$s 请求 %1$s</string>
     <string name="vm_force_stop_requested">已为 %1$s 请求强制停止</string>
     <string name="vm_migration_started">%1$s 的迁移已开始：%2$s</string>
@@ -5492,7 +5492,7 @@
     <string name="talos_writeback_live">在 Git 中提议节点的值</string>
     <string name="talos_writeback_live_desc">以拉取请求的形式，将节点当前运行的配置写入其在仓库中的文件。</string>
     <string name="proposals_title">提议</string>
-    <string name="proposals_open">已打开</string>
+    <string name="proposals_open">打开</string>
     <string name="proposals_draft">草稿</string>
     <string name="proposals_closed">已关闭</string>
     <string name="proposals_merged">已合并</string>
@@ -5576,7 +5576,7 @@
     <string name="runbook_run">运行</string>
     <string name="runbook_already_running">另一个运行手册正在运行。</string>
     <string name="runbook_none_running">没有正在运行的运行手册。</string>
-    <string name="runbook_step_of">第 %1$s / %2$s 步</string>
+    <string name="runbook_step_of">第 %1$s/%2$s 步</string>
     <string name="runbook_waiting">等待你的操作</string>
     <string name="runbook_state_pending">待执行</string>
     <string name="runbook_state_running">运行中</string>

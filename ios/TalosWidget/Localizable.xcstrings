@@ -33,7 +33,7 @@
             "value" : "Повідомляє, що побачила остання фонова перевірка Ichor у кластері. Якщо не вибрано: той, що відкритий у застосунку."
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示 Ichor 上次后台检查在某个集群上发现的情况。未选择时：使用应用中当前打开的集群。" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "告知 Ichor 上次后台检查在集群上看到的情况。未选择时：使用应用中打开的集群。" } }
       }
     },
     "Open cluster" : {
@@ -103,7 +103,7 @@
             "value" : "Відкриває огляд кластера в Ichor. Якщо не вибрано: той, що відкритий у застосунку."
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群概览。未选择时：使用应用中当前打开的集群。" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群概览。未选择时：使用应用中打开的集群。" } }
       }
     },
     "Run a checkup" : {
@@ -173,7 +173,7 @@
             "value" : "Відкриває перевірку кластера в Ichor. Якщо не вибрано: кластер, відкритий у застосунку."
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群检查。未选择时：使用应用中当前打开的集群。" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群检查。未选择时：使用应用中打开的集群。" } }
       }
     },
     "Opens the cluster open in Ichor." : {
