@@ -1,6 +1,6 @@
 package name.levis.ichor.ui.overview
 
-import name.levis.ichor.ui.components.rememberKubeTopNodes
+import name.levis.ichor.model.KubeTopNodes
 import name.levis.ichor.ui.components.NodeUsage
 import name.levis.ichor.model.KubeTopNode
 import androidx.compose.foundation.clickable
@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Button
@@ -38,7 +37,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ContextSummary
-import name.levis.ichor.model.clusterLogo
 import name.levis.ichor.model.KubeNodeInfo
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.NodeFilter
@@ -46,14 +44,10 @@ import name.levis.ichor.model.address
 import name.levis.ichor.model.byStatus
 import name.levis.ichor.model.healthy
 import name.levis.ichor.model.isDenseCluster
-import name.levis.ichor.model.readyCount
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
-import name.levis.ichor.ui.components.BundledLogo
-import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.rememberKubeWhoAmI
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.kubeauth.SignInAction
@@ -89,48 +83,6 @@ internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
 }
 
 /**
- * The cluster at a glance: its API server and version, how many nodes are ready, and who the
- * credentials are. [nodes] is null until the API server answered.
- */
-@Composable
-internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeNodesOverview?) {
-    Card(Modifier.fillMaxWidth()) {
-        SummaryIdentityBand(name, leading = { BundledLogo(clusterLogo(cluster), Modifier.padding(end = 8.dp).size(24.dp)) })
-        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val version = nodes?.serverVersion?.takeIf { it.isNotEmpty() }
-                MutedText(
-                    version?.let { stringResource(R.string.kube_home_version, it) } ?: stringResource(R.string.common_kind_kubernetes),
-                    modifier = Modifier.weight(1f),
-                )
-                nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() }?.let { KubeStatusPill(it) }
-            }
-            HorizontalDivider(Modifier.padding(vertical = 12.dp))
-            InfoRow(stringResource(R.string.import_kube_server), cluster.endpoints.joinToString("\n"), mono = true)
-            if (nodes != null && !nodes.forbidden) {
-                InfoRow(stringResource(R.string.overview_stat_nodes), "${nodes.readyCount}/${nodes.nodes.size}")
-            }
-            if (cluster.user.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_user), cluster.user)
-            // Who the API server takes the credentials for (an OIDC or cloud identity); hidden when it cannot say.
-            rememberKubeWhoAmI(cluster.name)?.let { who ->
-                InfoRow(stringResource(R.string.kube_whoami_user), listOf(who.user, who.groups.joinToString(", ")).filter { it.isNotEmpty() }.joinToString("\n"), mono = true)
-            }
-            if (cluster.certNotAfter > 0) InfoRow(stringResource(R.string.import_kube_expires), certExpiry(cluster.certNotAfter))
-        }
-    }
-}
-
-@Composable
-private fun KubeStatusPill(nodes: KubeNodesOverview) {
-    val colors = LocalStatusColors.current
-    when (nodes.readyCount) {
-        nodes.nodes.size -> StatusPill(stringResource(R.string.overview_status_healthy), colors.ok)
-        0 -> StatusPill(stringResource(R.string.overview_status_down), colors.bad)
-        else -> StatusPill(stringResource(R.string.overview_status_degraded), colors.warn)
-    }
-}
-
-/**
  * The nodes as Kubernetes sees them: roles, readiness, cordon, address, kubelet version,
  * pressure, and where the cloud put them (autoscaler pool, machine type, spot), those needing
  * attention first. A tap opens [onNode]'s actions (cordon, drain): there is no node detail
@@ -144,6 +96,8 @@ private fun KubeStatusPill(nodes: KubeNodesOverview) {
 @Composable
 internal fun KubeNodesCard(
     overview: KubeNodesOverview,
+    /** CPU and memory in use per node, from metrics-server; null without it. */
+    top: KubeTopNodes?,
     expanded: Boolean,
     onToggle: () -> Unit,
     onNode: (KubeNodeInfo) -> Unit,
@@ -176,8 +130,7 @@ internal fun KubeNodesCard(
             dense -> DenseKubeNodes(overview.nodes, onNode, onAllNodes)
             !expanded -> KubeNodesCompact(nodes, onNode)
             else -> {
-                // Read again with every refresh of the list; no bars without metrics-server.
-                val top = rememberKubeTopNodes(overview)
+                // No bars without metrics-server.
                 val usage = remember(top) { top?.byName.orEmpty() }
                 nodes.forEachIndexed { i, node ->
                     if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)

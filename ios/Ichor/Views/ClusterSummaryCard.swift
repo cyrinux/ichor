@@ -94,7 +94,7 @@ struct ClusterSummaryCard: View {
 }
 
 /// The parts with a muted "  ·  " between them.
-private func dotJoined(_ parts: [Text]) -> Text {
+func dotJoined(_ parts: [Text]) -> Text {
     parts.indices.reduce(Text(verbatim: "")) { text, i in
         text + Text(verbatim: i > 0 ? "  ·  " : "").foregroundStyle(.secondary) + parts[i]
     }
@@ -103,7 +103,7 @@ private func dotJoined(_ parts: [Text]) -> Text {
 /// Unknown capacity (older core, or no node said): a dash rather than a misleading 0.
 private let unknownValue = "—"
 
-private struct ClusterStatusPill: View {
+struct ClusterStatusPill: View {
     let status: ClusterStatus
 
     var body: some View {
