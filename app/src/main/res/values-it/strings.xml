@@ -4463,6 +4463,8 @@
     <string name="monitor_cluster_unreachable_text">Nessuna risposta da %1$s controlli di fila</string>
     <string name="monitor_cluster_reachable">Cluster di nuovo raggiungibile</string>
     <string name="monitor_cluster_reachable_text">Risponde di nuovo ai controlli in background</string>
+    <string name="kube_signin_renew_notification_title">Accedi di nuovo</string>
+    <string name="kube_signin_renew_notification_text">%1$s richiede un nuovo accesso prima del prossimo controllo.</string>
     <string name="monitor_unreachable">Cluster non raggiungibili</string>
     <string name="monitor_unreachable_desc">Avvisa una volta quando un cluster non ha risposto a diversi controlli di fila (nessun nodo, nessuna API o troppo lento), e una volta quando risponde di nuovo. Nel frattempo gli avvisi sui nodi tacciono.</string>
     <string name="monitor_unreachable_runs">Dopo %1$s controlli di fila</string>

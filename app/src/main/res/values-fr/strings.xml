@@ -4463,6 +4463,8 @@
     <string name="monitor_cluster_unreachable_text">Aucune réponse depuis %1$s vérifications de suite</string>
     <string name="monitor_cluster_reachable">Cluster de nouveau joignable</string>
     <string name="monitor_cluster_reachable_text">Il répond de nouveau aux vérifications en arrière-plan</string>
+    <string name="kube_signin_renew_notification_title">Reconnectez-vous</string>
+    <string name="kube_signin_renew_notification_text">%1$s vous demande de vous reconnecter avant sa prochaine vérification.</string>
     <string name="monitor_unreachable">Clusters injoignables</string>
     <string name="monitor_unreachable_desc">Prévient une fois quand un cluster n\'a pas répondu à plusieurs vérifications de suite (aucun nœud, aucune API, ou trop lent), et une fois quand il répond de nouveau. Les alertes de nœuds restent muettes entre-temps.</string>
     <string name="monitor_unreachable_runs">Après %1$s vérifications de suite</string>

@@ -654,7 +654,10 @@ class TalosApp : Application() {
         syncOfflineCache()
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) = appLock.onForeground()
+            override fun onStart(owner: LifecycleOwner) {
+                appLock.onForeground()
+                renewSignInsOnForeground(owner)
+            }
             override fun onStop(owner: LifecycleOwner) {
                 appLock.onBackground()
                 // A model takes gigabytes: freed in the background, once an answer being written is done.
@@ -662,6 +665,26 @@ class TalosApp : Application() {
             }
         })
         StartupTrace.markOnce("app.onCreate end")
+    }
+
+    /** When the sign-ins were last renewed on coming to the front, elapsed-realtime millis. */
+    private val lastSignInRenewal = java.util.concurrent.atomic.AtomicLong(-SIGN_IN_RENEW_INTERVAL_MS)
+
+    /**
+     * Renews every sign-in as the app comes to the front, at most every
+     * [SIGN_IN_RENEW_INTERVAL_MS]: the first screen finds a fresh token instead of paying the
+     * refresh, and a session the identity provider ended shows its banner at once.
+     */
+    private fun renewSignInsOnForeground(owner: LifecycleOwner) {
+        if (configRepository.config.value == null) return
+        val now = android.os.SystemClock.elapsedRealtime()
+        val last = lastSignInRenewal.get()
+        if (now - last < SIGN_IN_RENEW_INTERVAL_MS || !lastSignInRenewal.compareAndSet(last, now)) return
+        owner.lifecycleScope.launch(Dispatchers.IO) {
+            val renewals = runCatching { kubeAuthRepository.renewAll() }.getOrNull().orEmpty()
+            // What was loaded with the ended session goes: the screens reload and show the banner.
+            if (renewals.any { it.needsUser }) talosRepository.invalidate()
+        }
     }
 
     override fun onTrimMemory(level: Int) {
@@ -716,3 +739,6 @@ class TalosApp : Application() {
 
 /** AES-256: what Ichorgo.setDataDir takes. */
 private const val CORE_KEY_SIZE = 32
+
+/** How often coming to the front renews the sign-ins: 5 minutes. */
+private const val SIGN_IN_RENEW_INTERVAL_MS = 5 * 60 * 1000L

@@ -47,6 +47,26 @@ extension TalosClient {
         try await run { error -> Void in _ = talos ? IchorgoTalosSignOut(kube, context, error) : IchorgoKubeSignOut(kube, context, error) }
     }
 
+    /// Renews every signed-in cluster's token ahead of need (on foreground and before a
+    /// background check): an identity provider with an idle timeout keeps the session, and one
+    /// that ended it is found now. `kube` and `talos` are the stored configs ("" for none);
+    /// contexts never signed in are left out, Omni ones only reported.
+    static func renewSignIns(kube: String, talos: String) async throws -> [SignInRenewal] {
+        let json = try await run { IchorgoKubeRenewSignIns(kube, talos, $0) }
+        return try SignInRenewal.decodeList(json)
+    }
+
+    /// renewSignIns on the stored configs; nil when they or the sign-ins cannot be read now (a
+    /// locked device: every cluster would read as needing a sign-in) or the renewal failed.
+    static func renewStoredSignIns() async -> [SignInRenewal]? {
+        guard KubeAuthStore.shared.all() != nil else { return nil }
+        let stored = StoredConfigs.load()
+        let kube = stored.kube ?? ""
+        let talos = stored.talos ?? ""
+        guard !kube.isEmpty || !talos.isEmpty else { return [] }
+        return try? await renewSignIns(kube: kube, talos: talos)
+    }
+
     /// A stored auth state as a backup keeps it (no session); "" when nothing is left.
     static func authForBackup(_ state: String) -> String {
         var error: NSError?

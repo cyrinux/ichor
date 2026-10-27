@@ -4669,6 +4669,8 @@
     <string name="monitor_cluster_unreachable_text">Немає відповіді вже %1$s перевірок поспіль</string>
     <string name="monitor_cluster_reachable">Кластер знову доступний</string>
     <string name="monitor_cluster_reachable_text">Він знову відповідає на фонові перевірки</string>
+    <string name="kube_signin_renew_notification_title">Увійдіть знову</string>
+    <string name="kube_signin_renew_notification_text">%1$s потребує повторного входу перед наступною перевіркою.</string>
     <string name="monitor_unreachable">Недоступні кластери</string>
     <string name="monitor_unreachable_desc">Сповіщає один раз, коли кластер не відповів на кілька перевірок поспіль (жоден вузол, жоден API або надто повільно), і один раз, коли він знову відповідає. Тим часом сповіщення про вузли мовчать.</string>
     <string name="monitor_unreachable_runs">Після %1$s перевірок поспіль</string>

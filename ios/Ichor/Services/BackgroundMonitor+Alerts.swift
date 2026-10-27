@@ -55,6 +55,37 @@ extension BackgroundMonitor {
         }
     }
 
+    static let signInNotifiedKey = "monitor.signInNotified"
+
+    /// "Sign in again" once per watched cluster (of `contexts`) whose identity provider ended the
+    /// session, until it is signed in again (signInAlertPlan); a tap opens the cluster, where its
+    /// sign-in banner is.
+    static func postSignIns(_ renewals: [SignInRenewal], contexts: [ContextSummary], now: Date) async {
+        let notified = Set(UserDefaults.standard.stringArray(forKey: signInNotifiedKey) ?? [])
+        let plan = signInAlertPlan(renewals: renewals, contexts: contexts, notified: notified)
+        if plan.notified != notified { UserDefaults.standard.set(Array(plan.notified).sorted(), forKey: signInNotifiedKey) }
+        guard !plan.contexts.isEmpty else { return }
+        let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
+        let masked = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
+        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
+        let labels = ClusterLabels(names: names, masked: masked)
+        let snoozes = AlertSnoozeStore.current(now: now)
+        for context in plan.contexts {
+            let label = labels.of(context)
+            let alert = signInAlert(title: String(localized: "Sign in again"),
+                                    text: String(localized: "\(label) needs you to sign in again before its next check."))
+            guard !snoozes.notSnoozed([alert], cluster: context.fingerprint, now: now).isEmpty else { continue }
+            var target = ShareTarget.screen(.cluster)
+            target.cluster = context.clusterID
+            let link = context.clusterID.isEmpty ? nil : TalosClient.shareLink(for: target)
+            await post(alert, localized: (alert.title, alert.text), cluster: label,
+                       id: alertNotificationID(cluster: monitorClusterKey(context), alertKey: alert.key), link: link,
+                       actions: alertActions(key: alert.key, problem: alert.problem, canWake: false),
+                       info: [AlertNotificationActions.clusterKey: context.fingerprint, AlertNotificationActions.alertKey: alert.key],
+                       hideDetails: hide)
+        }
+    }
+
     /// Whether the node of a node alert can be woken: a Wake-on-LAN setting or a MAC seen.
     private static func canWake(_ alert: Alert, cluster: String) async -> Bool {
         guard alert.problem, !cluster.isEmpty, alert.key.hasPrefix("node:") else { return false }

@@ -4463,6 +4463,8 @@
     <string name="monitor_cluster_unreachable_text">Sin respuesta en %1$s comprobaciones seguidas</string>
     <string name="monitor_cluster_reachable">Clúster accesible de nuevo</string>
     <string name="monitor_cluster_reachable_text">Vuelve a responder a las comprobaciones en segundo plano</string>
+    <string name="kube_signin_renew_notification_title">Vuelve a iniciar sesión</string>
+    <string name="kube_signin_renew_notification_text">%1$s necesita que vuelvas a iniciar sesión antes de su próxima comprobación.</string>
     <string name="monitor_unreachable">Clústeres inaccesibles</string>
     <string name="monitor_unreachable_desc">Avisa una vez cuando un clúster no ha respondido en varias comprobaciones seguidas (ningún nodo, ninguna API o demasiado lento), y una vez cuando vuelve a responder. Mientras tanto, las alertas de nodos callan.</string>
     <string name="monitor_unreachable_runs">Tras %1$s comprobaciones seguidas</string>

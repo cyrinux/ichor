@@ -44,6 +44,8 @@ public func alertKind(key: String) -> String {
     case "unreachable": return "cluster"
     // A pull request opened from the phone, merged or closed: told as a GitOps alert.
     case "proposal": return "gitops"
+    // A sign-in the identity provider ended: told with the certificate and kubeconfig credentials.
+    case "signin": return "cert"
     default: return prefix
     }
 }

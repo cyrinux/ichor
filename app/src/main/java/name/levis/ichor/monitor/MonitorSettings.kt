@@ -96,6 +96,17 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _sensorsWatched.value = watched
     }
 
+    private val _signInNotified = MutableStateFlow(prefs.getStringSet(KEY_SIGN_IN_NOTIFIED, null)?.toSet().orEmpty())
+
+    /** The fingerprints of the clusters already told "sign in again", until each is signed in again. */
+    val signInNotified: StateFlow<Set<String>> = _signInNotified.asStateFlow()
+
+    fun setSignInNotified(fingerprints: Set<String>) {
+        if (fingerprints == _signInNotified.value) return
+        prefs.edit().putStringSet(KEY_SIGN_IN_NOTIFIED, fingerprints).apply()
+        _signInNotified.value = fingerprints
+    }
+
     private val _sensorThreshold = MutableStateFlow(sensorThresholdOf(prefs.getInt(KEY_SENSOR_THRESHOLD, SENSOR_THRESHOLD_AUTO)))
 
     /** [SENSOR_THRESHOLD_AUTO] (each sensor's own limit) or the °C every node is held to. */
@@ -221,6 +232,7 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_STORAGE_TREND = "storage_trend_alerts"
         private const val KEY_SENSORS = "sensors_watched"
         private const val KEY_SENSOR_THRESHOLD = "sensor_threshold"
+        private const val KEY_SIGN_IN_NOTIFIED = "sign_in_notified"
 
         /** Automatic, or a °C in [SENSOR_THRESHOLD_RANGE]. */
         fun sensorThresholdOf(value: Int): Int = if (value == SENSOR_THRESHOLD_AUTO) value else value.coerceIn(SENSOR_THRESHOLD_RANGE)
