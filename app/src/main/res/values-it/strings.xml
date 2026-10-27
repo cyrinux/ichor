@@ -460,6 +460,14 @@
     <string name="shortcut_cluster_removed">Questo cluster è stato rimosso</string>
     <string name="shortcut_search_short">Cerca</string>
     <string name="shortcut_search_long">Cerca nei cluster</string>
+    <string name="tile_cluster_label">Stato del cluster</string>
+    <string name="tile_cluster_subtitle_ready">Tutti i nodi pronti</string>
+    <string name="tile_cluster_subtitle_degraded">%1$d nodi pronti su %2$d</string>
+    <string name="tile_cluster_no_check">Non ancora controllato</string>
+    <string name="tile_cluster_no_cluster">Nessun cluster</string>
+    <string name="shortcut_checkup_short">Controllo</string>
+    <string name="shortcut_checkup_long">Avvia un controllo</string>
+    <string name="settings_add_tile">Aggiungi il riquadro alle Impostazioni rapide</string>
     <string name="shortcut_add_home">Aggiungi alla schermata Home</string>
     <string name="shortcut_pin_unsupported">Questo launcher non può aggiungere scorciatoie alla schermata Home</string>
 

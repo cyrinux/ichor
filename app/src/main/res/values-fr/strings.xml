@@ -460,6 +460,14 @@
     <string name="shortcut_cluster_removed">Ce cluster a été supprimé</string>
     <string name="shortcut_search_short">Rechercher</string>
     <string name="shortcut_search_long">Rechercher dans les clusters</string>
+    <string name="tile_cluster_label">Santé du cluster</string>
+    <string name="tile_cluster_subtitle_ready">Tous les nœuds sont prêts</string>
+    <string name="tile_cluster_subtitle_degraded">%1$d nœuds prêts sur %2$d</string>
+    <string name="tile_cluster_no_check">Pas encore vérifié</string>
+    <string name="tile_cluster_no_cluster">Aucun cluster</string>
+    <string name="shortcut_checkup_short">Bilan</string>
+    <string name="shortcut_checkup_long">Lancer un bilan</string>
+    <string name="settings_add_tile">Ajouter la tuile aux réglages rapides</string>
     <string name="shortcut_add_home">Ajouter à l\'écran d\'accueil</string>
     <string name="shortcut_pin_unsupported">Ce lanceur ne peut pas ajouter de raccourcis à l\'écran d\'accueil</string>
 

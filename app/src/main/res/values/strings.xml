@@ -455,6 +455,14 @@
     <string name="shortcut_cluster_removed">This cluster was removed</string>
     <string name="shortcut_search_short">Search</string>
     <string name="shortcut_search_long">Search clusters</string>
+    <string name="tile_cluster_label">Cluster health</string>
+    <string name="tile_cluster_subtitle_ready">All nodes ready</string>
+    <string name="tile_cluster_subtitle_degraded">%1$d of %2$d nodes ready</string>
+    <string name="tile_cluster_no_check">No check yet</string>
+    <string name="tile_cluster_no_cluster">No cluster</string>
+    <string name="shortcut_checkup_short">Checkup</string>
+    <string name="shortcut_checkup_long">Run a checkup</string>
+    <string name="settings_add_tile">Add the tile to Quick Settings</string>
     <string name="shortcut_add_home">Add to home screen</string>
     <string name="shortcut_pin_unsupported">This launcher can\'t add shortcuts to the home screen</string>
     <string name="shortcut_screen_label" translatable="false">%1$s · %2$s</string>

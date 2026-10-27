@@ -2,6 +2,7 @@ package name.levis.ichor
 
 import android.content.Context
 import android.content.Intent
+import android.service.quicksettings.TileService
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -241,6 +242,8 @@ private fun Intent.deepLink(): DeepLink? {
         "", "/" -> return DeepLink.DEMO
         "/kube" -> return DeepLink.DEMO_KUBE
     }
+    // A long press on the Quick Settings tile (see ClusterTileService).
+    if (action == TileService.ACTION_QS_TILE_PREFERENCES) return DeepLink.CHECKUP
     return DeepLink.named(getStringExtra(MainActivity.EXTRA_OPEN))
 }
 

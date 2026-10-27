@@ -286,7 +286,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   check's age once it is over an hour old). The phone sends them its last background check
   over the Wear OS Data Layer: counts and the cluster's name only (masked in screenshot mode), no
   talosconfig or kubeconfig on the watch. Google Play build only: the open-source APKs carry no
-  Google library, so they send nothing to a watch.
+  Google library, so they send nothing to a watch. On Android, a Quick Settings tile shows the
+  same: the cluster on screen and "All nodes ready" or "2 of 3 nodes ready" from the last check;
+  a tap opens the app, a long press its checkup (Settings → Monitoring adds it, Android 13+).
 - **Data services:** the storage, database and backup operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, Velero, Rook Ceph, CSI VolumeSnapshots, backup
   CronJobs) on one tabbed screen, each with its health and what needs a look. The other
@@ -343,7 +345,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   [website's form](https://cyrinux.github.io/ichor/#plugin-request) and the app's Request an
   integration open it prefilled.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
-  open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
+  open any of them straight from the app icon (long press: a shortcut / quick action per cluster,
+  with "Search clusters" and "Run a checkup" on Android).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
   over NFC or USB), which can also seal the stored configs so that nothing reads them without it.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and
