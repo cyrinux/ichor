@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
@@ -27,6 +28,11 @@ type fakeOmniAPI struct {
 	clusters []string
 	denyList bool
 	endpoint string // what the talosconfigs name
+
+	// The join config: the default token's ID and the kernel args given for it.
+	joinToken string
+	joinArgs  []string
+	denyJoin  bool
 }
 
 func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
@@ -59,6 +65,23 @@ func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
 		config := fmt.Sprintf("context: acme-%[1]s\ncontexts:\n    acme-%[1]s:\n        endpoints:\n            - %[2]s\n        auth:\n            siderov1:\n                identity: %[3]s\n        cluster: %[1]s\n", cluster[0], f.endpoint, testUserIdentity)
 		resp = protowire.AppendTag(resp, 1, protowire.BytesType)
 		resp = protowire.AppendString(resp, config)
+	case omniJoinConfigMethod:
+		if f.denyJoin {
+			return status.Error(codes.PermissionDenied, "no access")
+		}
+
+		token, _ := protoField(req, 2)
+		if string(token) != f.joinToken {
+			return status.Errorf(codes.NotFound, "join token %q", token)
+		}
+
+		for _, arg := range f.joinArgs {
+			resp = protowire.AppendTag(resp, 1, protowire.BytesType)
+			resp = protowire.AppendString(resp, arg)
+		}
+
+		resp = protowire.AppendTag(resp, 2, protowire.BytesType)
+		resp = protowire.AppendString(resp, "apiVersion: v1alpha1\nkind: SideroLinkConfig\n")
 	default:
 		_ = req
 
@@ -83,6 +106,24 @@ func sendRaw(stream grpc.ServerStream, msg []byte) error {
 	out.ProtoReflect().SetUnknown(msg)
 
 	return stream.SendMsg(out)
+}
+
+// Get is Omni's COSI state: the default join token, to a signed call.
+func (f *fakeOmniAPI) Get(ctx context.Context, req *v1alpha1.GetRequest) (*v1alpha1.GetResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	if err := message.NewGRPC(md, "/cosi.resource.State/Get").VerifySignature(f.key); err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if req.GetNamespace() != "default" || req.GetType() != omniDefaultJoinTokenType || req.GetId() != "default" || f.joinToken == "" {
+		return nil, status.Errorf(codes.NotFound, "%s/%s/%s", req.GetNamespace(), req.GetType(), req.GetId())
+	}
+
+	return &v1alpha1.GetResponse{Resource: &v1alpha1.Resource{
+		Metadata: &v1alpha1.Metadata{Namespace: "default", Type: req.GetType(), Id: "default"},
+		Spec:     &v1alpha1.Spec{YamlSpec: "tokenid: " + f.joinToken + "\n"},
+	}}, nil
 }
 
 // List is Omni's COSI state: the clusters, to a signed call.

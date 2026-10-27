@@ -64,4 +64,8 @@ func TestOmniLive(t *testing.T) {
 		kube, err := omniKubeconfig(ctx, cc, cl.Name)
 		t.Logf("Kubeconfig of a cluster: %d bytes, err %v", len(kube), err)
 	}
+
+	// The join arguments carry the join token: only their count is logged.
+	args, err := omniJoinKernelArgs(ctx, cfgCtx, signer)
+	t.Logf("GetMachineJoinConfig: %d kernel args, err %v", len(strings.Fields(args)), err)
 }
