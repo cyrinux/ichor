@@ -87,7 +87,6 @@ struct KubeHomeView: View {
     }
 
     @Environment(AppModel.self) private var model
-    @Environment(\.colorScheme) private var colorScheme
     @State private var state: LoadState<KubeNodesOverview> = .loading
     /// `state` is only what the last background check saw (a seed), until the cluster answers.
     @State private var fromMonitor = false
@@ -291,54 +290,24 @@ struct KubeHomeView: View {
         }
     }
 
+    /// The summary card, as on the Talos home, then its footer: the checkup and the capacity.
     private func summarySection(_ overview: KubeNodesOverview) -> some View {
         Section {
             if let ctx = model.activeSummary {
-                identityRow(ctx)
-                LabeledContent("API server", value: ctx.endpoints.first ?? "")
-                LabeledContent("Version", value: overview.serverVersion.isEmpty ? String(localized: "unknown") : overview.serverVersion)
-                if !overview.forbidden {
-                    LabeledContent("Nodes ready", value: "\(overview.readyCount)/\(overview.nodes.count)")
-                }
-                LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
+                KubeSummaryCard(name: model.activeLabel, context: ctx, overview: overview,
+                                usage: Array(top.values), whoAmI: whoAmI)
                 if ctx.usesKubeToken {
                     Button("How to create a service account") { showingServiceAccountHelp = true }
                 }
-                if let user = ctx.user, !user.isEmpty { LabeledContent("Signed in as", value: user) }
-                if let whoAmI, whoAmI.isKnown { whoAmIRow(whoAmI) }
-                if ctx.certNotAfter > 0 { LabeledContent("Expires", value: localizedCertExpiry(ctx.certNotAfter)) }
+                NavigationLink { CheckupView() } label: {
+                    toolLabel(KubeHomeAction.checkup)
+                }
+                NavigationLink(value: Route.capacity) {
+                    toolLabel(KubeHomeAction.capacity)
+                }
             }
         } header: {
             Text("Cluster")
-        }
-    }
-
-    /// The summary's identity area, as on the Talos home: the provider logo and the cluster's
-    /// name on the cluster's container color, recomputed on every render so a switch or a hue
-    /// edit shows at once. The rows under it stay neutral.
-    private func identityRow(_ ctx: ContextSummary) -> some View {
-        HStack(alignment: .center, spacing: 8) {
-            // Decorative: the name says it.
-            BundledLogo(name: clusterLogo(ctx))
-                .frame(width: 22, height: 22)
-                .accessibilityHidden(true)
-            Text(verbatim: model.activeLabel).font(.headline).lineLimit(1).accessibilityAddTraits(.isHeader)
-        }
-        .identityArea(model.summaryColors(for: colorScheme))
-    }
-
-    /// The user and groups the API server takes the credentials for (what RBAC decides on).
-    private func whoAmIRow(_ me: KubeWhoAmI) -> some View {
-        LabeledContent {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(verbatim: me.user).textSelection(.enabled)
-                if !me.groupsLine.isEmpty {
-                    Text(verbatim: me.groupsLine).font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            .multilineTextAlignment(.trailing)
-        } label: {
-            Text("Kubernetes user")
         }
     }
 

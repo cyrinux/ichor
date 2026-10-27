@@ -56,7 +56,7 @@ import kotlin.math.roundToInt
 /** Unknown capacity (older core, or no node said): a dash rather than a misleading 0. */
 private const val UNKNOWN = "—"
 
-private const val SEPARATOR = "  ·  "
+internal const val SUMMARY_SEPARATOR = "  ·  "
 
 /**
  * The cluster at a glance, above the nodes: its name and overall state, how many nodes on
@@ -116,13 +116,13 @@ fun ClusterSummaryCard(
 @Composable
 private fun Footer(onInsights: () -> Unit, onCapacity: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FooterButton(Icons.Outlined.Insights, stringResource(R.string.overview_action_insights), onInsights)
-        FooterButton(Icons.Outlined.Speed, stringResource(R.string.capacity_title), onCapacity)
+        SummaryFooterButton(Icons.Outlined.Insights, stringResource(R.string.overview_action_insights), onInsights)
+        SummaryFooterButton(Icons.Outlined.Speed, stringResource(R.string.capacity_title), onCapacity)
     }
 }
 
 @Composable
-private fun FooterButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+internal fun SummaryFooterButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     TextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(label, modifier = Modifier.padding(start = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -175,15 +175,15 @@ private fun headline(summary: ClusterSummary, trouble: Trouble?): AnnotatedStrin
     return buildAnnotatedString {
         append(pluralStringResource(R.plurals.overview_summary_nodes, summary.total, summary.total))
         if (trouble != null) {
-            append(SEPARATOR)
+            append(SUMMARY_SEPARATOR)
             withStyle(SpanStyle(color = trouble.color)) { append(trouble.text) }
         }
-        if (version != null) append(SEPARATOR + version)
+        if (version != null) append(SUMMARY_SEPARATOR + version)
     }
 }
 
 @Composable
-private fun ClusterStatusPill(status: ClusterStatus) {
+internal fun ClusterStatusPill(status: ClusterStatus) {
     val colors = LocalStatusColors.current
     when (status) {
         ClusterStatus.HEALTHY -> StatusPill(stringResource(R.string.overview_status_healthy), colors.ok)
@@ -197,7 +197,7 @@ private fun ClusterStatusPill(status: ClusterStatus) {
 private fun Breakdown(troubles: List<Trouble>) {
     Row(Modifier.padding(top = 6.dp)) {
         troubles.forEachIndexed { i, (text, color) ->
-            if (i > 0) MutedText(SEPARATOR)
+            if (i > 0) MutedText(SUMMARY_SEPARATOR)
             Text(text, style = MaterialTheme.typography.bodySmall, color = color)
         }
     }

@@ -37,6 +37,7 @@ import name.levis.ichor.BuildConfig
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KUBE_NODES
+import name.levis.ichor.ui.components.rememberKubeTopNodes
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.activeSummary
@@ -388,6 +389,8 @@ private fun KubeHomeList(
 ) {
     // The likely cause of the data services' problems: a node that is not ready.
     val downNodes = remember(nodes) { nodes?.notReadyNames().orEmpty() }
+    // Read again with every refresh of the list, once for the summary and the nodes cards.
+    val top = rememberKubeTopNodes(nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() })
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -409,10 +412,10 @@ private fun KubeHomeList(
         layout.visible.forEach { card ->
             when (card) {
                 KubeHomeCard.SUMMARY -> if (cluster != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeSummaryCard(name ?: cluster.name, cluster, nodes) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeSummaryCard(name ?: cluster.name, cluster, nodes, top, onCheckup = nav.onCheckup, onCapacity = nav.onCapacity) }
                 }
                 KubeHomeCard.NODES -> if (nodes != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, nodesExpanded, onToggleNodes, onNode, nav.onAllNodes) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, top, nodesExpanded, onToggleNodes, onNode, nav.onAllNodes) }
                 }
                 KubeHomeCard.TOOLS -> item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins.homeTiles, dataServices = toolServices) }
