@@ -1,10 +1,12 @@
 name: Flake update
 
 # Weekly, bumps flake.lock (nixpkgs and the dev shell's other inputs) in a pull request, as
-# Dependabot does for the other ecosystems: Dependabot has no Nix ecosystem. The workflow
-# token opens the PR, and a PR opened with it starts no workflow: close and reopen it to run
-# the Android and iOS checks (CONTRIBUTING.md, "Dependency bumps"). The Nix store cache is
-# keyed on flake.lock, so the first run after the merge rebuilds the Android SDK once.
+# Dependabot does for the other ecosystems: Dependabot has no Nix ecosystem. Plain `nix flake
+# update` and `gh`, so no action outside the trusted list runs with this token (.plumber.yaml).
+# The workflow token opens the PR, and a PR opened with it starts no workflow: close and
+# reopen it to run the Android and iOS checks (CONTRIBUTING.md, "Dependency bumps"). The Nix
+# store cache is keyed on flake.lock, so the first run after the merge rebuilds the Android
+# SDK once.
 on:
   schedule:
     - cron: "23 4 * * 1" # Mondays, 04:23 UTC
@@ -22,18 +24,46 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      # Labels the PR (and creates a missing label).
-      issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The action needs Nix with flakes; the same installer as the Android toolchain.
+      # The same installer as the Android toolchain.
       - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
-      - uses: DeterminateSystems/update-flake-lock@da03c0f078bc4b2c37ee4f7e072d34bf8f188bb3 # v29
-        with:
-          commit-msg: "build(deps): bump the Nix flake inputs"
-          pr-title: "build(deps): bump the Nix flake inputs"
-          pr-labels: |
-            dependencies
-            nix
+
+      - name: Update flake.lock
+        run: nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"
+
+      # One branch, refreshed each week while its PR is open.
+      - name: Open or refresh the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: deps/flake-update
+          TITLE: "build(deps): bump the Nix flake inputs"
+        run: |
+          if git diff --quiet -- flake.lock; then
+            echo "flake.lock is current."
+            exit 0
+          fi
+          {
+            echo "Weekly \`nix flake update\` (.github/workflows/flake-update.yml)."
+            echo
+            echo '```'
+            grep -E "Updated input|→|->" "$RUNNER_TEMP/update.log" || cat "$RUNNER_TEMP/update.log"
+            echo '```'
+            echo
+            echo "Opened with the workflow token, so no check started: close and reopen this PR to run them."
+          } >"$RUNNER_TEMP/body.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git commit -q -m "$TITLE" flake.lock
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=$auth" push --force origin "HEAD:refs/heads/$BRANCH"
+          open="$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$open" ]; then
+            # REST: `gh pr edit` also reads project data the workflow token cannot.
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/pulls/$open" -F "body=@$RUNNER_TEMP/body.md" >/dev/null
+          else
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md" --label dependencies
+          fi
