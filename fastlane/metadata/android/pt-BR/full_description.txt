@@ -1,0 +1,49 @@
+Qualquer cluster Kubernetes no seu celular, mais toda a camada Talos.
+
+O Ichor abre qualquer cluster Kubernetes a partir do kubeconfig: EKS, GKE, AKS, DigitalOcean, Rancher, Omni ou o seu próprio, com login via OIDC e provedores de nuvem. Cargas de trabalho, pods, logs, eventos, Argo CD e Flux, até onde o RBAC permitir.
+
+No Talos Linux ele desce até os nós: integridade dos nós, etcd, atualizações e a configuração da máquina. Ele fala com a API do Talos usando o cliente Go oficial, o mesmo código do talosctl, então contextos do talosconfig, mTLS e o proxy de endpoint para nó funcionam exatamente como na sua estação de trabalho.
+
+Traga seu próprio cluster: o app precisa de um kubeconfig ou talosconfig de um cluster que você opera. Ele não tem servidor nem conta própria.
+
+<b>O que você vê</b>
+• Visão geral do cluster: cada nó pronto, não pronto ou inacessível, com condições não atendidas, desvio de relógio e atualizações do Talos disponíveis
+• Serviços e logs: integridade dos serviços, logs de serviços e do kernel coloridos por nível, repetições agrupadas, acompanhamento ao vivo
+• Eventos: mudanças de serviços, fases de boot e mudanças de endereço à medida que acontecem
+• Gráficos ao vivo: CPU, memória, rede, disco e carga a cada dois segundos, e a lista de processos
+• Pods: contêineres agrupados por pod, com CPU e memória
+• Rede: interfaces, endereços, rotas, DNS, servidores de horário e conexões abertas
+• etcd: membros, líder, tamanho e alarmes, desfragmentação e snapshots
+• KubeSpan: os pares de cada nó, estado, último handshake e tráfego
+
+<b>O que você pode fazer, com o papel certo</b>
+• Iniciar, parar ou reiniciar um serviço
+• Reiniciar (normal, ciclo de energia ou forçado) ou desligar um nó, depois de digitar o hostname para confirmar
+• Capturar pacotes ao vivo e salvar um .pcap para o Wireshark
+• Atualizar o Talos um nó por vez, recusado se o etcd perderia o quórum
+• Executar a verificação de integridade do cluster, ler e editar a configuração da máquina (testada com reversão automática), abrir um shell de depuração
+• Emitir um talosconfig, renovar o certificado deste celular, exportar um kubeconfig
+
+<b>Seu celular tem apenas o acesso que você concede</b>
+Gere um talosconfig dedicado ao celular: os:reader é o padrão recomendado. O app lê os papéis do certificado e só oferece o que eles permitem. A configuração é criptografada com uma chave guardada no Android Keystore e excluída dos backups. Importe-a de um arquivo, colando o texto ou escaneando um QR code.
+
+<b>Sempre saiba em qual cluster você está</b>
+Importe vários clusters e deslize entre eles. Cada um tem sua própria cor e o app inteiro a adota, então uma reinicialização nunca atinge o cluster errado.
+
+<b>Alertas e widget</b>
+Verificações em segundo plano avisam quando um nó cai ou quando o certificado do celular está prestes a expirar, e um widget na tela inicial mostra o cluster num relance.
+
+<b>Privacidade e segurança</b>
+• Bloqueio opcional por impressão digital ou PIN, ao abrir e antes de cada reinicialização, desligamento e exportação de kubeconfig
+• O modo captura de tela substitui endereços e nomes de nós por substitutos
+• As notificações na tela de bloqueio ficam genéricas enquanto o bloqueio do app está ativo
+• Sem anúncios, sem rastreamento, sem conta
+
+<b>Diagnóstico por IA opcional</b>
+Desativado por padrão e oculto até você ativá-lo. Ele monta um relatório do estado do cluster e o mostra a você; só quando você toca em Perguntar ele é enviado à Anthropic (Claude), à OpenAI ou ao seu próprio servidor compatível, com sua própria chave de API. Nomes de nós, endereços e o domínio são anonimizados por padrão. Sem chave de API, você pode passar o relatório para um app de assistente pelo menu de compartilhamento.
+
+Gratuito e de código aberto (Apache-2.0): https://github.com/cyrinux/ichor
+
+Disponível em inglês, francês, alemão, espanhol, italiano, ucraniano, chinês simplificado, japonês e português do Brasil.
+
+O Ichor é um projeto independente da comunidade, sem afiliação com a Sidero Labs nem endossado por ela. Talos é uma marca registrada da Sidero Labs, Inc.

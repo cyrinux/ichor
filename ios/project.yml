@@ -2,7 +2,7 @@
 name: Ichor
 options:
   bundleIdPrefix: name.levis
-  # English is the development language; the other regions (fr, es, uk, de, it, zh-Hans, ja) come from the
+  # English is the development language; the other regions (fr, es, uk, de, it, zh-Hans, ja, pt-BR) come from the
   # *.lproj folders (InfoPlist.strings) and the String Catalogs (Localizable.xcstrings).
   developmentLanguage: en
   deploymentTarget:
@@ -99,7 +99,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # Declaring the localizations lets iOS offer a per-app language in the Settings app.
         CFBundleDevelopmentRegion: en
-        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja]
+        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja, pt-BR]
         UILaunchScreen: {}
         # Share links (ichor://open?…, see ShareLinks.swift); the scene delegate receives them.
         CFBundleURLTypes:
@@ -201,7 +201,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDevelopmentRegion: en
-        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja]
+        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja, pt-BR]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
 
@@ -231,7 +231,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDevelopmentRegion: en
-        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja]
+        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja, pt-BR]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
@@ -279,7 +279,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDevelopmentRegion: en
-        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja]
+        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja, pt-BR]
         WKApplication: true
         WKCompanionAppBundleIdentifier: name.levis.ichor
         # It only shows what the iPhone sends.
@@ -309,6 +309,6 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDevelopmentRegion: en
-        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja]
+        CFBundleLocalizations: [en, fr, es, uk, de, it, zh-Hans, ja, pt-BR]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension

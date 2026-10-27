@@ -27,6 +27,7 @@ object AppLocale {
         AppLanguage("it", "Italiano"),
         // The region picks values-zh-rCN (Simplified Chinese).
         AppLanguage("zh-CN", "简体中文"),
+        AppLanguage("pt-BR", "Português (Brasil)"),
         AppLanguage("ja", "日本語"),
     )
 

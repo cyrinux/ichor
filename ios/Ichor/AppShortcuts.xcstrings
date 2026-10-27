@@ -35,7 +35,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} 中我的集群状态如何" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でクラスターの状態は？" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でクラスターの状態は？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Qual é o estado do meu cluster no ${applicationName}" } }
       }
     },
     "What is the state of ${cluster} in ${applicationName}" : {
@@ -72,7 +73,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} 中 ${cluster} 的状态如何" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} の状態は？" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} の状態は？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Qual é o estado de ${cluster} no ${applicationName}" } }
       }
     },
     "Open my cluster in ${applicationName}" : {
@@ -109,7 +111,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开我的集群" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でクラスターを開く" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でクラスターを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir meu cluster no ${applicationName}" } }
       }
     },
     "Open ${cluster} in ${applicationName}" : {
@@ -146,7 +149,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开 ${cluster}" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} を開く" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} を開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir ${cluster} no ${applicationName}" } }
       }
     },
     "Run a checkup in ${applicationName}" : {
@@ -183,7 +187,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中运行检查" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でチェックを実行" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でチェックを実行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fazer uma verificação no ${applicationName}" } }
       }
     },
     "Run a checkup of ${cluster} in ${applicationName}" : {
@@ -220,7 +225,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中检查 ${cluster}" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} のチェックを実行" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} のチェックを実行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fazer uma verificação de ${cluster} no ${applicationName}" } }
       }
     },
     "Open ${applicationName}" : {
@@ -257,7 +263,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 ${applicationName}" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} を開く" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} を開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir ${applicationName}" } }
       }
     },
     "Open a link in ${applicationName}" : {
@@ -294,7 +301,8 @@
           }
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开链接" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でリンクを開く" } }
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でリンクを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir um link no ${applicationName}" } }
       }
     }
   },
