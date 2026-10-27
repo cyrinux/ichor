@@ -50,6 +50,7 @@ reads those roles and explains up front when a feature needs more.
 | **Longhorn volume attach/detach** | `Kubeconfig`, then the Kubernetes API: get volumes/nodes, list nodes for preview, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Longhorn engine upgrade** | `Kubeconfig`, then the Kubernetes API: get volumes and settings, list engineimages and replicas, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
+| **Boot a new machine: Image Factory ISO and iPXE links, `booter` command** | `Version`, COSI `MachineConfig` (the member's install image, for its schematic; with `os:reader` the default schematic is used, with a warning); on Omni, `GetMachineJoinConfig` for the join arguments (Omni's Operator role) | **`os:admin`** |
 | **Rotate the Talos API CA (`talosctl rotate-ca --kubernetes=false`)** | COSI `OSRoot` and `MachineConfig` (sensitive), `ApplyConfiguration` (no reboot), `Version` on every node | **`os:admin`** |
 
 Notes:

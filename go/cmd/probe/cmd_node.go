@@ -64,6 +64,20 @@ var nodeCommands = []command{
 
 		return "done: " + <-j.done, nil
 	}},
+	{name: "boot-media", args: "[TEMPLATE|-] [amd64|arm64|-] [secure-boot]", run: func(e env) (out string, err error) {
+		// Read-only: what boots a new machine of the cluster (Image Factory links, booter
+		// command, Omni's join arguments). The Omni arguments carry the join token.
+		template, arch := flag.Arg(1), flag.Arg(2)
+		if template == "-" {
+			template = ""
+		}
+
+		if arch == "-" {
+			arch = ""
+		}
+
+		return ichorgo.NodeBootMedia(e.cfg, e.context, template, arch, flag.Arg(3) == "secure-boot")
+	}},
 	{name: "upgrade-ext", args: "NODE IMAGE", run: func(e env) (out string, err error) {
 		// Read-only: the node's extensions against the Image Factory's list for IMAGE's version.
 		return ichorgo.UpgradeExtensionCheck(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
