@@ -335,6 +335,7 @@ internal fun OverviewTopBar(
                         onUpgradeCluster = { nav.onUpgradeCluster("") }.takeIf { stored.activeSummary?.allows(Feature.UPGRADE) == true },
                         onUpgradeKubernetes = nav.onUpgradeKubernetes.takeIf { stored.activeSummary?.allows(Feature.UPGRADE) == true },
                         onAddNode = nav.onAddNode.takeIf { stored.activeSummary?.let { !it.isKube && !it.omni } == true },
+                        onBootMedia = nav.onBootMedia.takeIf { stored.activeSummary?.isKube == false },
                         onRunbooks = nav.onRunbooks,
                     )
                 }

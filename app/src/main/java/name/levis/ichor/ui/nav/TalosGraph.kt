@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
@@ -41,6 +42,7 @@ import name.levis.ichor.ui.machineconfig.MachineConfigScreen
 import name.levis.ichor.ui.nettools.NetToolsScreen
 import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
 import name.levis.ichor.ui.upgrade.K8sUpgradeScreen
+import name.levis.ichor.ui.join.BootMediaScreen
 import name.levis.ichor.ui.join.JoinNodeScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
@@ -237,6 +239,20 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             onOpenNode = { addr, hostname, role ->
                 nav.popBackStack()
                 nav.navigate(Routes.node(addr, hostname, role))
+            },
+            onBootMedia = { nav.navigate(Routes.BOOT_MEDIA) { launchSingleTop = true } },
+        )
+    }
+    composable(Routes.BOOT_MEDIA) {
+        // Add a node takes a machine in maintenance mode; Omni adds its machines itself.
+        val omni = app.configRepository.config.value?.activeSummary?.omni == true
+        BootMediaScreen(
+            onBack = { nav.popBackStack() },
+            onAddNode = if (omni) null else {
+                {
+                    // Back to Add a node when it opened this screen, else a new one.
+                    if (!nav.popBackStack(Routes.JOIN_NODE, inclusive = false)) nav.navigate(Routes.JOIN_NODE)
+                }
             },
         )
     }

@@ -192,6 +192,7 @@ internal object Routes {
     const val CLUSTER_UPGRADE = "clusterupgrade?version={version}"
     const val K8S_UPGRADE = "k8supgrade"
     const val JOIN_NODE = "joinnode"
+    const val BOOT_MEDIA = "bootmedia"
     const val MAINTENANCE = "maintenance?addr={addr}&host={host}&drain={drain}"
     const val NODE_META = "nodemeta?addr={addr}&host={host}"
 
