@@ -256,7 +256,7 @@ func (m *eksMethod) ssoAccessToken(ctx context.Context, state kubeAuthState) (st
 	case awsSessionOver(t.Error):
 		cleared := state.withSession(map[string]string{"ssoRefresh": "", "ssoAccess": ""})
 
-		return "", cleared, signInRequired(authEKS, awsSessionEnded)
+		return "", cleared, signInRequired(authEKS, sessionEndedReason(authEKS, t.Error, "", cmpOr(t.Description, awsSessionEnded), state.SignedInAt))
 	case status >= http.StatusInternalServerError:
 		return "", state, fmt.Errorf("renew the IAM Identity Center token: AWS answered %d", status)
 	case t.AccessToken == "":
@@ -266,8 +266,10 @@ func (m *eksMethod) ssoAccessToken(ctx context.Context, state kubeAuthState) (st
 	return t.AccessToken, m.withSSOToken(state, t), nil
 }
 
-// awsSessionEnded is why a new sign-in is needed once AWS refuses the refresh token.
-const awsSessionEnded = "your IAM Identity Center session ended; its length is set by your administrator"
+// awsSessionEnded is why a new sign-in is needed once AWS refuses the refresh token with a
+// code sessionEndedReason has no sentence for (unauthorized_client, access_denied) and no
+// description.
+const awsSessionEnded = "Your IAM Identity Center session ended; its length is set by your administrator."
 
 // awsSessionOver reports whether a CreateToken error code means the sign-in is over (the
 // refresh token expired or was revoked, the client registration too), not a failure to retry.

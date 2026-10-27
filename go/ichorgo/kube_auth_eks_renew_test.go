@@ -173,7 +173,7 @@ func TestEKSRenewalFailureIsNotSignInAgain(t *testing.T) {
 				return
 			}
 
-			if needSignIn.reason != awsSessionEnded {
+			if needSignIn.reason != reasonEKSSession {
 				t.Errorf("reason %q", needSignIn.reason)
 			}
 

@@ -44,7 +44,7 @@ func googleOAuthMethod(state kubeAuthState) *oidcMethod {
 		clientID: state.secret(gcpFieldOAuthClientID), clientSecret: state.secret(gcpFieldOAuthClientSecret),
 		scopes: []string{"email", gcpScope}, useAccessToken: true,
 		listen: []string{"127.0.0.1:0"}, redirectHost: "127.0.0.1", tls: gcpOAuthTLS(), google: true,
-		redirectURI: state.secret(gcpFieldOAuthRedirectURL),
+		redirectURI: state.secret(gcpFieldOAuthRedirectURL), endedAs: gkeOwnClient,
 	}
 }
 

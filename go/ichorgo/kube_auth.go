@@ -43,6 +43,16 @@ type kubeAuthState struct {
 	User           string `json:"user,omitempty"`
 	Expires        int64  `json:"expires,omitempty"`
 	SessionExpires int64  `json:"sessionExpires,omitempty"`
+	// SignedInAt is when the user signed in (unix seconds, 0 unknown): kept across renewals,
+	// it says how long a session lasted once the provider ends it. Not in backups.
+	SignedInAt int64 `json:"signedInAt,omitempty"`
+}
+
+// signedNow is s marked as signed in now (a new sign-in, not a renewal).
+func (s kubeAuthState) signedNow() kubeAuthState {
+	s.SignedInAt = time.Now().Unix()
+
+	return s
 }
 
 func (s kubeAuthState) session(key string) string { return s.Session[key] }
@@ -378,6 +388,7 @@ type kubeSignInKind struct {
 	SignedIn       bool   `json:"signedIn"`
 	User           string `json:"user,omitempty"`
 	SessionExpires int64  `json:"sessionExpires,omitempty"`
+	SignedInAt     int64  `json:"signedInAt,omitempty"`
 	// Choices are the accounts and roles an IAM Identity Center sign-in may assume, when
 	// several: the user picks one and the app sends the four fields with it.
 	Choices []awsSSORole `json:"choices,omitempty"`
@@ -419,7 +430,7 @@ func KubeSignInInfo(storedYAML, contextName string) (out string, err error) {
 
 	state := kubeAuth.load(sc.key)
 	info.SignedIn = state.Method == sc.method.name() && (len(state.Session) > 0 || len(state.Secrets) > 0)
-	info.User, info.SessionExpires = state.User, state.SessionExpires
+	info.User, info.SessionExpires, info.SignedInAt = state.User, state.SessionExpires, state.SignedInAt
 
 	if r, ok := sc.method.(signInRemembers); ok && state.Method == sc.method.name() {
 		info.Values = pick(state.Secrets, r.rememberedFields()...)
@@ -496,6 +507,11 @@ func KubeSetCredentials(storedYAML, contextName, secretsJSON string) (err error)
 	}
 
 	updated.Method, updated.Expires = cm.name(), expiry.Unix()
+	// A session taken from a discovery's sign-in keeps that sign-in's time.
+	if updated.SignedInAt == 0 {
+		updated = updated.signedNow()
+	}
+
 	kubeAuth.forget(sc.key)
 	kubeAuth.save(sc.key, updated)
 	kubeClients.forgetConfig(storedYAML, contextName)

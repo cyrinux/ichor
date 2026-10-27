@@ -212,6 +212,7 @@ func withSignedInSession(stored, entered kubeAuthState) kubeAuthState {
 	out := withChosenRole(entered, chosen)
 	out.Session = stored.Session
 	out.SessionExpires = stored.SessionExpires
+	out.SignedInAt = stored.SignedInAt
 
 	return out.withSession(map[string]string{ssoRolesSession: ""})
 }

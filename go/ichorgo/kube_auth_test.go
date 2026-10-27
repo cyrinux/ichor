@@ -261,6 +261,12 @@ func TestOIDCSignInAndRefresh(t *testing.T) {
 		t.Fatalf("state %+v", state)
 	}
 
+	// The sign-in's time is kept, and shown with the sign-in.
+	signedInAt := state.SignedInAt
+	if time.Since(time.Unix(signedInAt, 0)) > time.Minute || !strings.Contains(info, fmt.Sprintf(`"signedInAt":%d`, signedInAt)) {
+		t.Errorf("signed in at %d, info %s", signedInAt, info)
+	}
+
 	if backup, _ := KubeAuthForBackup(mustJSON(t, state)); backup != "" {
 		t.Errorf("a session-only state is backed up: %s", backup)
 	}
@@ -285,6 +291,17 @@ func TestOIDCSignInAndRefresh(t *testing.T) {
 	grants := idp.grantList()
 	if len(grants) < 2 || grants[0] != "authorization_code" || grants[1] != "refresh_token" {
 		t.Fatalf("grants %v", grants)
+	}
+
+	// A renewal is not a new sign-in: its time stays.
+	store.mu.Lock()
+	for _, raw := range store.states {
+		_ = json.Unmarshal([]byte(raw), &state)
+	}
+	store.mu.Unlock()
+
+	if state.session("refresh") == "refresh-1" || state.SignedInAt != signedInAt {
+		t.Errorf("after renewal: refresh %q, signed in at %d (was %d)", state.session("refresh"), state.SignedInAt, signedInAt)
 	}
 
 	// A revoked refresh token: back to "sign in".

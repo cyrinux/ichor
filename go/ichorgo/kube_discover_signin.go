@@ -87,6 +87,7 @@ func runDiscoverSignIn(ctx context.Context, provider, secretsJSON string, listen
 	}
 
 	signed.Method = authGKE
+	signed = signed.signedNow()
 
 	discoverySignIn.mu.Lock()
 	defer discoverySignIn.mu.Unlock()
@@ -136,7 +137,7 @@ func withDiscoverySession(state kubeAuthState) kubeAuthState {
 		return state
 	}
 
-	out.Session, out.User, out.SessionExpires = maps.Clone(signed.Session), signed.User, signed.SessionExpires
+	out.Session, out.User, out.SessionExpires, out.SignedInAt = maps.Clone(signed.Session), signed.User, signed.SessionExpires, signed.SignedInAt
 
 	return out
 }

@@ -61,6 +61,8 @@ type oidcMethod struct {
 	scopesOnly bool
 	// authQuery is added to the authorization request.
 	authQuery url.Values
+	// endedAs names the sign-in in why its session ended (sessionEndedReason); "" is method.
+	endedAs string
 }
 
 func (m *oidcMethod) name() string { return m.method }
@@ -225,9 +227,14 @@ type oidcTokens struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int64  `json:"expires_in"`
-	Error        string `json:"error"`
-	Description  string `json:"error_description"`
-	Interval     int    `json:"interval"`
+	// RefreshExpiresIn is when the refresh token ends, in seconds (Keycloak): the session.
+	RefreshExpiresIn int64  `json:"refresh_expires_in"`
+	Error            string `json:"error"`
+	// Subtype is Google's error_subtype: invalid_rapt when its session control asks for a
+	// new sign-in.
+	Subtype     string `json:"error_subtype"`
+	Description string `json:"error_description"`
+	Interval    int    `json:"interval"`
 }
 
 func (m *oidcMethod) postForm(ctx context.Context, endpoint string, form url.Values, out any) (int, error) {
@@ -333,6 +340,10 @@ func (m *oidcMethod) session(state kubeAuthState, t oidcTokens, bearer string, e
 	out := state.withSession(map[string]string{"refresh": refresh, "bearer": bearer, "bearerExpiry": strconv.FormatInt(expiry.Unix(), 10)})
 	out.User = cmpOr(claims.Email, claims.Username, claims.Subject, state.User)
 
+	if t.RefreshExpiresIn > 0 {
+		out.SessionExpires = time.Now().Add(time.Duration(t.RefreshExpiresIn) * time.Second).Unix()
+	}
+
 	return out
 }
 
@@ -362,7 +373,9 @@ func (m *oidcMethod) mint(ctx context.Context, state kubeAuthState) (string, tim
 
 	if t.Error != "" {
 		// invalid_grant: the refresh token expired or was revoked.
-		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(m.method, cmpOr(t.Description, t.Error))
+		reason := sessionEndedReason(cmpOr(m.endedAs, m.method), t.Error, t.Subtype, t.Description, state.SignedInAt)
+
+		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(m.method, reason)
 	}
 
 	bearer, expiry, claims, err := m.bearer(t)
