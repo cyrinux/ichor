@@ -91,6 +91,7 @@ func runSignIn(ctx context.Context, storedYAML, contextName string, listener Sig
 	}
 
 	signed.Method = im.name()
+	signed = signed.signedNow()
 	kubeAuth.forget(sc.key)
 	kubeAuth.save(sc.key, signed)
 	kubeClients.forgetConfig(storedYAML, contextName)

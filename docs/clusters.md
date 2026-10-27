@@ -244,6 +244,20 @@ alerts are on. A session your provider ended (an IAM Identity Center session pas
 a revoked refresh token) is announced once with a "Sign in again" notification; the phone
 being offline is not taken for one.
 
+### How long a sign-in lasts
+
+When a provider ends a sign-in, the cluster's banner says why, who sets the session's length,
+and how long ago you signed in:
+
+- **IAM Identity Center (EKS):** your AWS administrator sets the session's length, 8 hours by
+  default and up to 90 days.
+- **Google (GKE):** a sign-in does not expire by itself. It ends when your Workspace's Google
+  Cloud session control asks for a new one (1 to 24 hours), after 7 days while your
+  organisation's OAuth client is in Testing, or when it is revoked or unused for six months.
+  A workforce identity session lasts what its pool allows (1 hour by default).
+- **OIDC (Keycloak, Dex, Entra ID…):** the provider's idle and maximum session times apply.
+  Keycloak tells the app when the session ends, and the sign-in sheet shows it.
+
 ## Omni clusters
 
 A cluster managed by [Sidero Omni](https://omni.siderolabs.com/) is reached through Omni, which

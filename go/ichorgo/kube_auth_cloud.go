@@ -63,12 +63,16 @@ func cloudJSON(req *http.Request, out any) error {
 		var e struct {
 			Message     string `json:"message"`
 			Error       string `json:"error"`
+			Subtype     string `json:"error_subtype"`
 			Description string `json:"error_description"`
 		}
 
 		_ = json.Unmarshal(data, &e) //nolint:errcheck
 
-		return &cloudHTTPError{status: resp.StatusCode, code: e.Error, message: cmpOr(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode))}
+		return &cloudHTTPError{
+			status: resp.StatusCode, code: e.Error, subtype: e.Subtype,
+			message: cmpOr(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode)),
+		}
 	}
 
 	return json.Unmarshal(data, out)
@@ -76,8 +80,10 @@ func cloudJSON(req *http.Request, out any) error {
 
 type cloudHTTPError struct {
 	status int
-	// code is the OAuth error code ("invalid_grant"), when the answer has one.
+	// code is the OAuth error code ("invalid_grant"), when the answer has one; subtype its
+	// error_subtype (Google: invalid_rapt).
 	code    string
+	subtype string
 	message string
 }
 

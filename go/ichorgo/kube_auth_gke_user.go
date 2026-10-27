@@ -154,15 +154,7 @@ func mintForGoogleUser(ctx context.Context, state kubeAuthState) (string, time.T
 	t, err := refreshGoogleToken(ctx, creds)
 	if err != nil {
 		if oauthInvalidGrant(err) || unauthorized(err) {
-			hint := creds.renewHint()
-			switch {
-			case state.secret(gcpFieldGcloudSignIn) != "":
-				hint = gcpGcloudRenewHint
-			case state.secret(gcpFieldLoginConfig) != "":
-				hint = gcpWorkforceSignInHint
-			}
-
-			return "", time.Time{}, state, signInRequired(authGKE, hint)
+			return "", time.Time{}, state, signInRequired(authGKE, googleUserEnded(err, state, creds))
 		}
 
 		return "", time.Time{}, state, fmt.Errorf("get a Google token: %w", err)
@@ -184,6 +176,37 @@ func mintForGoogleUser(ctx context.Context, state kubeAuthState) (string, time.T
 	}
 
 	return t.AccessToken, expiry, state, nil
+}
+
+// googleUserEnded is why Google refused the user credentials (err), then how to get working
+// ones again.
+func googleUserEnded(err error, state kubeAuthState, creds gcpUserCredentials) string {
+	hint := creds.renewHint()
+
+	switch {
+	case state.secret(gcpFieldGcloudSignIn) != "":
+		hint = gcpGcloudRenewHint
+	case state.secret(gcpFieldLoginConfig) != "":
+		hint = gcpWorkforceSignInHint
+	}
+
+	source := authGKE
+	if creds.workforce() || state.secret(gcpFieldLoginConfig) != "" {
+		source = gkeWorkforce
+	}
+
+	var e *cloudHTTPError
+
+	_ = errors.As(err, &e)
+
+	code, subtype := "", ""
+	if e != nil {
+		code, subtype = e.code, e.subtype
+	}
+
+	why := endedWhy(source, code, subtype, "", state.SignedInAt)
+
+	return joinSentences(why, "To sign in again: "+hint+".", signedInAgo(state.SignedInAt, time.Now()))
 }
 
 // refreshGoogleToken is the refresh token grant of creds: at Google's token endpoint with the
