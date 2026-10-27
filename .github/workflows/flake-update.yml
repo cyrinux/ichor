@@ -65,5 +65,10 @@ jobs:
             # REST: `gh pr edit` also reads project data the workflow token cannot.
             gh api -X PATCH "repos/$GITHUB_REPOSITORY/pulls/$open" -F "body=@$RUNNER_TEMP/body.md" >/dev/null
           else
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md" --label dependencies
+            # Refused unless Settings → Actions → General allows GitHub Actions to create pull
+            # requests: the branch is pushed, the PR is then opened by hand.
+            if ! gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md" --label dependencies; then
+              echo "::error::GitHub Actions may not open pull requests in this repository. Open it from https://github.com/$GITHUB_REPOSITORY/compare/main...$BRANCH, or allow it in Settings > Actions > General (\"Allow GitHub Actions to create and approve pull requests\")."
+              exit 1
+            fi
           fi

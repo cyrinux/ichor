@@ -118,8 +118,11 @@ Bumps arrive as pull requests, once a week per ecosystem:
 - **Dependabot** (`.github/dependabot.yml`): the GitHub Actions (SHA and version comment),
   the Android libraries and Gradle plugins in groups, and the Go modules (minor and patch
   together, majors one by one).
-- **Flake update** (`.github/workflows/flake-update.yml`): `flake.lock`. The workflow token
-  opens that PR, and such a PR starts no workflow: close and reopen it to run the checks.
+- **Flake update** (`.github/workflows/flake-update.yml`): `flake.lock`, on the
+  `deps/flake-update` branch. The workflow opens the PR only when Settings → Actions → General
+  allows GitHub Actions to create pull requests; otherwise the run fails with the link to open
+  it by hand. A PR the workflow token opens starts no workflow: close and reopen it to run the
+  checks.
 
 A bump PR is merged only when the Android and iOS workflows are green on it. A Go bump that
 needs `go mod tidy` fails its check and is finished by hand. Two things are bumped by hand
