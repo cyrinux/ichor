@@ -224,6 +224,13 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   - **Going back:** there is no undo; returning to the previous version is another upgrade.
 - **Adding a node from the phone (overview menu → Add a node…, os:admin):** boot the new machine
   from the Talos ISO and type the address its console shows.
+  - **Booting it (overview menu → Boot a new machine…):** the phone cannot serve a network boot
+    itself (DHCP and TFTP need privileged ports), so it shows what does, for the cluster's Talos
+    version and Image Factory schematic: the `siderolabs/booter` command (docker or podman) for a
+    Linux laptop of the machine's network, the ISO, the iPXE URL, and the kernel, initramfs and
+    command line for a PXE server of your own. Each has Copy, Share and a QR code. On an Omni
+    cluster it adds the join kernel arguments, which carry the join token (hidden in privacy
+    mode).
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

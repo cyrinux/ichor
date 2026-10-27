@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import name.levis.ichor.model.BootMedia
 import name.levis.ichor.model.CARotationPlan
 import name.levis.ichor.model.CARotationProgress
 import name.levis.ichor.model.ClusterUpgradeCommand
@@ -243,6 +244,15 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun maintenanceNodeInspect(address: String): MaintenanceInspection = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(MaintenanceInspection.serializer(), Ichorgo.maintenanceNodeInspect(address, 0L))
+    }
+
+    /**
+     * What boots a new machine of the active cluster: [template]'s (or the first member's, "")
+     * version and schematic, the Image Factory links and the booter command, for [arch] ("" for
+     * the template's). Never cached: on Omni it carries the join token.
+     */
+    suspend fun nodeBootMedia(template: String, arch: String, secureBoot: Boolean): BootMedia = call { cfg, ctx ->
+        TalosJson.decodeFromString(BootMedia.serializer(), Ichorgo.nodeBootMedia(cfg, ctx, template, arch, secureBoot))
     }
 
     /** A new node's config from [template]'s, redacted (never cached; the full one only goes to the node). */

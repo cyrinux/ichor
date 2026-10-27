@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -99,6 +100,8 @@ class JoinNodeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewMo
 fun JoinNodeScreen(
     onBack: () -> Unit,
     onOpenNode: (address: String, hostname: String, role: String) -> Unit,
+    /** "Boot a new machine…": the ISO, iPXE link and booter command that get it to maintenance mode. */
+    onBootMedia: () -> Unit,
     vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.nodeLifecycleRepository) }),
     configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
 ) {
@@ -125,6 +128,7 @@ fun JoinNodeScreen(
         ) {
             SectionTitle(stringResource(R.string.join_node_step_inspect))
             MutedText(stringResource(R.string.join_node_intro))
+            TextButton(onClick = onBootMedia) { Text(stringResource(R.string.boot_media_link)) }
             if (config?.activeSummary?.isDemo == true) InfoNotice(stringResource(R.string.join_node_demo))
             AddressField(address, onAddress = vm::type, onInspect = vm::inspect, busy = inspection == UiState.Loading)
             when (val state = inspection) {
