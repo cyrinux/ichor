@@ -59,6 +59,8 @@ struct TalosClient: Sendable {
     /// A Talos cluster whose Kubernetes calls go through a stored kubeconfig context (K5), nil
     /// for the admin kubeconfig Talos issues. See kubeConfig.
     var kubeLink: KubeLink?
+    /// A cluster added from a kubeconfig: no Talos API, what Talos would read comes from Kubernetes (the apps).
+    var kubeOnly = false
 
     static func parse(_ yaml: String) async throws -> ConfigSummary {
         try await json { IchorgoParseConfig(yaml, $0) }

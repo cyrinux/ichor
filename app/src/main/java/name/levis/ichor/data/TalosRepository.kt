@@ -73,6 +73,7 @@ import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.collectOverview
 import name.levis.ichor.model.overviewTargets
 import name.levis.ichor.model.outage
+import name.levis.ichor.model.isKube
 
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
 
@@ -393,9 +394,16 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(ListSerializer(SystemImage.serializer()), Ichorgo.talosSystemImages(cfg, ctx, node))
     }
 
-    /** The apps running in the cluster. One container listing per node: on demand, never polled. */
+    /**
+     * The apps running in the cluster. One container listing per node: on demand, never polled.
+     * A cluster added from a kubeconfig has no Talos API: its pods, listed once, say the same.
+     */
     suspend fun inventory(): Inventory = remember(INVENTORY) {
-        call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx)) }
+        if (configs.config.value?.activeSummary?.isKube == true) {
+            go.kube { cfg, ctx, server -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.kubeInventory(cfg, ctx, server)) }
+        } else {
+            call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx)) }
+        }
     }
 
     /**

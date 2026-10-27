@@ -34,12 +34,15 @@ enum class OverviewCard : HomeCard {
 }
 
 /**
- * The cards of the Kubernetes home (a cluster added from a kubeconfig): the API server and the
- * credentials, the nodes as Kubernetes lists them, the Kubernetes screens, and the operators
- * (and the Alertmanager) found on the cluster.
+ * The cards of the Kubernetes home (a cluster added from a kubeconfig), as the Talos overview's
+ * where they can be: the objects pinned, the cluster at a glance, the apps (from the pods), the
+ * nodes as Kubernetes lists them, the Kubernetes screens, and the operators (and the
+ * Alertmanager) found on the cluster.
  */
 enum class KubeHomeCard : HomeCard {
+    PINNED,
     SUMMARY,
+    APPS,
     NODES,
     TOOLS,
     DATA_SERVICES,
@@ -48,9 +51,10 @@ enum class KubeHomeCard : HomeCard {
     ALERTS,
     ;
 
-    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
+    // The apps too: credentials that may not list every pod have no inventory to show.
+    override val whenDetected: Boolean get() = this == PINNED || this == APPS || this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
 
-    override val leadsWhenNew: Boolean get() = false
+    override val leadsWhenNew: Boolean get() = this == PINNED
 
     companion object {
         val layout = CardLayoutKind(entries)

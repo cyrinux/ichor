@@ -34,11 +34,14 @@ public enum OverviewCard: String, HomeCard {
     public var leadsWhenNew: Bool { self == .pinned || self == .talosUpdate }
 }
 
-/// The sections of the Kubernetes home (a cluster added from a kubeconfig): the API server and
-/// the credentials, the nodes as Kubernetes lists them, the Kubernetes screens, and the operators
-/// found on the cluster. Raw values are Android's `KubeHomeCard` names.
+/// The sections of the Kubernetes home (a cluster added from a kubeconfig), as the Talos
+/// overview's where they can be: the objects pinned, the cluster at a glance, the apps (from the
+/// pods), the nodes as Kubernetes lists them, the Kubernetes screens, and the operators found on
+/// the cluster. Raw values are Android's `KubeHomeCard` names.
 public enum KubeHomeCard: String, HomeCard {
+    case pinned = "PINNED"
     case summary = "SUMMARY"
+    case apps = "APPS"
     case nodes = "NODES"
     case tools = "TOOLS"
     case dataServices = "DATA_SERVICES"
@@ -50,9 +53,10 @@ public enum KubeHomeCard: String, HomeCard {
     public var id: String { rawValue }
     public static let layoutStorageKey = "kubeHome.layout"
 
-    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
+    // The apps too: credentials that may not list every pod have no inventory to show.
+    public var whenDetected: Bool { self == .pinned || self == .apps || self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
 
-    public var leadsWhenNew: Bool { false }
+    public var leadsWhenNew: Bool { self == .pinned }
 }
 
 /// A home's sections in the order chosen, and those hidden. Every section is in `order`
