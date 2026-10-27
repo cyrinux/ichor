@@ -34,6 +34,7 @@ import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.seedOf
+import name.levis.ichor.ui.nav.LocalClusterRail
 import name.levis.ichor.ui.components.ClusterLogo
 import name.levis.ichor.ui.incident.IncidentSummarySheet
 
@@ -93,7 +94,8 @@ fun ClusterMenu(
                 )
             }
         } else {
-            if (contexts.size > 1) {
+            // On a tablet the rail lists the clusters: one way to switch, not two.
+            if (contexts.size > 1 && !LocalClusterRail.current) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.clusters_switch)) },
                     leadingIcon = { Icon(Icons.Outlined.SwapHoriz, contentDescription = null) },

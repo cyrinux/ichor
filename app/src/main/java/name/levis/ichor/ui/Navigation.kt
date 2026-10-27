@@ -52,6 +52,7 @@ import name.levis.ichor.ui.overview.OverviewScreenNavigation
 import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.ui.nav.Routes
+import name.levis.ichor.ui.nav.WithClusterRail
 import name.levis.ichor.ui.nav.appGraph
 import name.levis.ichor.ui.nav.gitOpsGraph
 import name.levis.ichor.ui.settings.SettingsPage
@@ -275,7 +276,8 @@ fun Navigation(
         val start = if (app.configRepository.config.value != null) Routes.OVERVIEW else Routes.IMPORT
         nav.rebuildAfterMaskSwitch(start)
     }
-    Box(Modifier.fillMaxSize()) {
+    // On a tablet, the clusters and the cluster's sections in a rail beside the screens.
+    WithClusterRail(nav, app) { Box(Modifier.fillMaxSize()) {
         NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW, modifier = Modifier.fillMaxSize()) {
             talosGraph(nav, app, kubeLinks)
             kubeGraph(nav, app, kubeLinks)
@@ -379,7 +381,7 @@ fun Navigation(
             }
         }
         if (maskSwitching) MaskSwitchingPlaceholder()
-    }
+    } }
 
     // Its dialogs are windows over the lock screen: kept for after the unlock.
     val locked by app.appLock.locked.collectAsStateWithLifecycle()
