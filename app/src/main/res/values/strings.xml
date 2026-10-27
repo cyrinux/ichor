@@ -435,6 +435,7 @@
 
     <!-- Clusters -->
     <string name="clusters_title">Clusters</string>
+    <string name="rail_clusters">Clusters</string>
     <string name="clusters_switch">Switch cluster</string>
     <string name="clusters_manage">Manage clusters…</string>
     <string name="clusters_add">Add a cluster</string>

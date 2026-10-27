@@ -266,7 +266,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   its cards in two columns under the cluster summary, and the nodes list and the Argo CD and
   Flux apps open their node or app side by side with the list. Kubernetes nodes open beside
   their list too, with cordon, drain, taints and labels and the debug shell at the top of the
-  node. On a phone the app stays
+  node. A rail on the left lists your clusters and the cluster's sections (overview, nodes,
+  alerts, Kubernetes, Argo CD, Flux, data services, activity, search, settings) beside the
+  screen, as the iPad sidebar does; a narrower window keeps the phone navigation. On a phone the app stays
   in portrait, except logs, shells, charts, YAML, diffs, source files and maps, which rotate to
   landscape and use the width.
 - **iPad:** the overview shows its cards in two columns on a full or wide window, and the nodes

@@ -433,6 +433,7 @@
 
     <!-- Clusters -->
     <string name="clusters_title">Cluster</string>
+    <string name="rail_clusters">Cluster</string>
     <string name="clusters_switch">Cluster wechseln</string>
     <string name="clusters_manage">Cluster verwalten…</string>
     <string name="clusters_add">Cluster hinzufügen</string>
