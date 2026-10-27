@@ -121,7 +121,7 @@ There is no self-update on iOS, where sideloaded apps are reinstalled with Sidel
 
 ## Languages
 
-The app is available in English, French, Spanish, Ukrainian, German, Italian and Simplified Chinese.
+The app is available in English, French, Spanish, Ukrainian, German, Italian, Simplified Chinese and Japanese.
 
 - **Android:** pick a language in Settings → Appearance → Language. On Android 13+, the
   system's per-app language settings work too.
@@ -131,7 +131,7 @@ When you add or change a UI string, translate it in every language:
 
 | Platform | English source | Translations |
 |---|---|---|
-| Android | `app/src/main/res/values/strings.xml` | `values-{fr,es,uk,de,it,zh-rCN}/strings.xml` |
+| Android | `app/src/main/res/values/strings.xml` | `values-{fr,es,uk,de,it,zh-rCN,ja}/strings.xml` |
 | iOS | `ios/**/Localizable.xcstrings` | the same catalogs (String Catalogs) |
 
 Then run:

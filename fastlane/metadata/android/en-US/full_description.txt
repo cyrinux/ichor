@@ -44,6 +44,6 @@ Off by default, and hidden until you turn it on. It builds a report of the clust
 
 Free and open source (Apache-2.0): https://github.com/cyrinux/ichor
 
-Available in English, French, German, Spanish, Italian, Ukrainian and Simplified Chinese.
+Available in English, French, German, Spanish, Italian, Ukrainian, Simplified Chinese and Japanese.
 
 Ichor is an independent community project, not affiliated with or endorsed by Sidero Labs. Talos is a trademark of Sidero Labs, Inc.

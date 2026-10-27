@@ -34,7 +34,8 @@
             "value" : "Час очікування вичерпано"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タイムアウト" } }
       }
     },
     "Connection refused" : {
@@ -70,7 +71,8 @@
             "value" : "З’єднання відхилено"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接被拒绝" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接被拒绝" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続が拒否されました" } }
       }
     },
     "Host not found" : {
@@ -106,7 +108,8 @@
             "value" : "Хост не знайдено"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "找不到主机" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "找不到主机" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ホストが見つかりません" } }
       }
     },
     "TLS error" : {
@@ -142,7 +145,8 @@
             "value" : "Помилка TLS"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "TLS 错误" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "TLS 错误" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "TLS エラー" } }
       }
     },
     "%@ ago" : {
@@ -178,7 +182,8 @@
             "value" : "%@ тому"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@前" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@前" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@前" } }
       }
     },
     "%lld not ready" : {
@@ -304,7 +309,8 @@
             }
           }
         },
-        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个未就绪" } } } } }
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个未就绪" } } } } },
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が未準備" } } } } }
       }
     },
     "%lld unreachable" : {
@@ -430,7 +436,8 @@
             }
           }
         },
-        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个无法访问" } } } } }
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个无法访问" } } } } },
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が到達不能" } } } } }
       }
     },
     "%lld/%lld ready" : {
@@ -466,7 +473,8 @@
             "value" : "%lld/%lld готові"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 就绪" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 就绪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld準備完了" } }
       }
     },
     "Cluster health" : {
@@ -502,7 +510,8 @@
             "value" : "Стан кластера"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群健康状况" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群健康状况" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターのヘルス" } }
       }
     },
     "Clusters" : {
@@ -538,7 +547,8 @@
             "value" : "Кластери"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスター" } }
       }
     },
     "Last check %@" : {
@@ -574,7 +584,8 @@
             "value" : "Остання перевірка %@"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次检查 %@" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次检查 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最終チェック %@" } }
       }
     },
     "No check yet" : {
@@ -610,7 +621,8 @@
             "value" : "Ще не перевірено"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未检查" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未检查" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "まだチェックしていません" } }
       }
     },
     "Node %lld" : {
@@ -646,7 +658,8 @@
             "value" : "Вузол %lld"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点 %lld" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点 %lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノード%lld" } }
       }
     },
     "Not ready" : {
@@ -682,7 +695,8 @@
             "value" : "Не готовий"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未就绪" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未就绪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未準備" } }
       }
     },
     "Open Ichor on your iPhone and turn on background checks." : {
@@ -718,7 +732,8 @@
             "value" : "Відкрийте Ichor на iPhone та увімкніть фонові перевірки."
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 并开启后台检查。" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 并开启后台检查。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "iPhone で Ichor を開き、バックグラウンドチェックをオンにしてください。" } }
       }
     },
     "Open Ichor on your iPhone to refresh." : {
@@ -754,7 +769,8 @@
             "value" : "Відкрийте Ichor на iPhone, щоб оновити."
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 以刷新。" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 以刷新。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新するには iPhone で Ichor を開いてください。" } }
       }
     },
     "Ready" : {
@@ -790,7 +806,8 @@
             "value" : "Готовий"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "就绪" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "就绪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "準備完了" } }
       }
     },
     "The open cluster's nodes and etcd alarms from your iPhone's last check." : {
@@ -826,7 +843,8 @@
             "value" : "Вузли й тривоги etcd відкритого кластера з останньої перевірки iPhone."
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iPhone 上次检查时当前集群的节点和 etcd 告警。" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iPhone 上次检查时当前集群的节点和 etcd 告警。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "iPhone の最後のチェックによる、開いているクラスターのノードと etcd アラーム。" } }
       }
     },
     "Unreachable" : {
@@ -862,7 +880,8 @@
             "value" : "Недоступний"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法访问" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法访问" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "到達不能" } }
       }
     },
     "Updated %@" : {
@@ -898,7 +917,8 @@
             "value" : "Оновлено о %@"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@に更新" } }
       }
     },
     "all ready" : {
@@ -934,7 +954,8 @@
             "value" : "усі готові"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部就绪" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部就绪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべて準備完了" } }
       }
     },
     "etcd: %lld alarms" : {
@@ -1060,7 +1081,8 @@
             }
           }
         },
-        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld 条告警" } } } } }
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld 条告警" } } } } },
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld件のアラーム" } } } } }
       }
     },
     "etcd: no alarms" : {
@@ -1096,7 +1118,8 @@
             "value" : "etcd: без тривог"
           }
         },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "etcd：无告警" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "etcd：无告警" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd：アラームなし" } }
       }
     }
   },
