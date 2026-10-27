@@ -36,7 +36,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "タイムアウト" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tempo esgotado" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tempo esgotado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тайм-аут" } }
       }
     },
     "Connection refused" : {
@@ -74,7 +75,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接被拒绝" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続が拒否されました" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conexão recusada" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conexão recusada" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Соединение отклонено" } }
       }
     },
     "Host not found" : {
@@ -112,7 +114,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "找不到主机" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "ホストが見つかりません" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Host não encontrado" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Host não encontrado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Хост не найден" } }
       }
     },
     "TLS error" : {
@@ -150,7 +153,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "TLS 错误" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "TLS エラー" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Erro de TLS" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Erro de TLS" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ошибка TLS" } }
       }
     },
     "%@ ago" : {
@@ -188,7 +192,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@前" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@前" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "há %@" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "há %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ назад" } }
       }
     },
     "%lld not ready" : {
@@ -316,7 +321,8 @@
         },
         "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个未就绪" } } } } },
         "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が未準備" } } } } },
-        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld não pronto" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld não prontos" } } } } }
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld não pronto" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld não prontos" } } } } },
+        "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готов" } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готовы" } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готовы" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готовы" } } } } }
       }
     },
     "%lld unreachable" : {
@@ -444,7 +450,8 @@
         },
         "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个无法访问" } } } } },
         "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が到達不能" } } } } },
-        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessível" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessíveis" } } } } }
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessível" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessíveis" } } } } },
+        "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступен" } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступны" } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступны" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступны" } } } } }
       }
     },
     "%lld/%lld ready" : {
@@ -482,7 +489,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 就绪" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld準備完了" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld prontos" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld prontos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld готовы" } }
       }
     },
     "Cluster health" : {
@@ -520,7 +528,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群健康状况" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターのヘルス" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Integridade do cluster" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Integridade do cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Состояние кластера" } }
       }
     },
     "Clusters" : {
@@ -558,7 +567,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスター" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Clusters" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Clusters" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластеры" } }
       }
     },
     "Last check %@" : {
@@ -596,7 +606,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次检查 %@" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "最終チェック %@" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Última verificação %@" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Última verificação %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Последняя проверка %@" } }
       }
     },
     "No check yet" : {
@@ -634,7 +645,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未检查" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "まだチェックしていません" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma verificação ainda" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma verificação ainda" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ещё не проверялся" } }
       }
     },
     "Node %lld" : {
@@ -672,7 +684,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点 %lld" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノード%lld" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nó %lld" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nó %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Узел %lld" } }
       }
     },
     "Not ready" : {
@@ -710,7 +723,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未就绪" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "未準備" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não pronto" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não pronto" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не готов" } }
       }
     },
     "Open Ichor on your iPhone and turn on background checks." : {
@@ -748,7 +762,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 并开启后台检查。" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "iPhone で Ichor を開き、バックグラウンドチェックをオンにしてください。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abra o Ichor no seu iPhone e ative as verificações em segundo plano." } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abra o Ichor no seu iPhone e ative as verificações em segundo plano." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Откройте Ichor на iPhone и включите фоновые проверки." } }
       }
     },
     "Open Ichor on your iPhone to refresh." : {
@@ -786,7 +801,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 以刷新。" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新するには iPhone で Ichor を開いてください。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abra o Ichor no seu iPhone para atualizar." } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abra o Ichor no seu iPhone para atualizar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Откройте Ichor на iPhone, чтобы обновить." } }
       }
     },
     "Ready" : {
@@ -824,7 +840,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "就绪" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "準備完了" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pronto" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pronto" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Готов" } }
       }
     },
     "The open cluster's nodes and etcd alarms from your iPhone's last check." : {
@@ -862,7 +879,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iPhone 上次检查时当前集群的节点和 etcd 告警。" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "iPhone の最後のチェックによる、開いているクラスターのノードと etcd アラーム。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Os nós e alarmes do etcd do cluster aberto, segundo a última verificação do seu iPhone." } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Os nós e alarmes do etcd do cluster aberto, segundo a última verificação do seu iPhone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Узлы и сигналы etcd открытого кластера по последней проверке на вашем iPhone." } }
       }
     },
     "Unreachable" : {
@@ -900,7 +918,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法访问" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "到達不能" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Inacessível" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Inacessível" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Недоступен" } }
       }
     },
     "Updated %@" : {
@@ -938,7 +957,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@に更新" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizado %@" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizado %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновлено %@" } }
       }
     },
     "all ready" : {
@@ -976,7 +996,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部就绪" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべて準備完了" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "todos prontos" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "todos prontos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "все готовы" } }
       }
     },
     "etcd: %lld alarms" : {
@@ -1104,7 +1125,8 @@
         },
         "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld 条告警" } } } } },
         "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld件のアラーム" } } } } },
-        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarme" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarmes" } } } } }
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarme" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarmes" } } } } },
+        "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигнал" } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигнала" } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигналов" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигнала" } } } } }
       }
     },
     "etcd: no alarms" : {
@@ -1142,7 +1164,8 @@
         },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "etcd：无告警" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd：アラームなし" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "etcd: nenhum alarme" } }
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "etcd: nenhum alarme" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "etcd: нет сигналов" } }
       }
     }
   },
