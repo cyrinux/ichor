@@ -32,7 +32,8 @@
             "state": "translated",
             "value": "Готово"
           }
-        }
+        },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "完成" } }
       }
     },
     "Ichor takes Talos and Kubernetes configs and Ichor backups.": {
@@ -66,7 +67,8 @@
             "state": "translated",
             "value": "Ichor приймає конфігурації Talos і Kubernetes та резервні копії Ichor."
           }
-        }
+        },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Ichor 接受 Talos 和 Kubernetes 配置以及 Ichor 备份。" } }
       }
     },
     "Saved. Open Ichor to import it.": {
@@ -100,7 +102,8 @@
             "state": "translated",
             "value": "Збережено. Відкрийте Ichor, щоб імпортувати."
           }
-        }
+        },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "已保存。打开 Ichor 即可导入。" } }
       }
     },
     "Send to Ichor": {
@@ -134,7 +137,8 @@
             "state": "translated",
             "value": "Надіслати в Ichor"
           }
-        }
+        },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "发送到 Ichor" } }
       }
     },
     "The file could not be saved.": {
@@ -168,7 +172,8 @@
             "state": "translated",
             "value": "Не вдалося зберегти файл."
           }
-        }
+        },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "无法保存该文件。" } }
       }
     },
     "This file is too large for a config or a backup.": {
@@ -202,7 +207,8 @@
             "state": "translated",
             "value": "Цей файл завеликий для конфігурації чи резервної копії."
           }
-        }
+        },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "此文件过大，不可能是配置或备份。" } }
       }
     }
   },

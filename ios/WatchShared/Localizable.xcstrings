@@ -33,7 +33,8 @@
             "state" : "translated",
             "value" : "Час очікування вичерпано"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时" } }
       }
     },
     "Connection refused" : {
@@ -68,7 +69,8 @@
             "state" : "translated",
             "value" : "З’єднання відхилено"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接被拒绝" } }
       }
     },
     "Host not found" : {
@@ -103,7 +105,8 @@
             "state" : "translated",
             "value" : "Хост не знайдено"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "找不到主机" } }
       }
     },
     "TLS error" : {
@@ -138,7 +141,8 @@
             "state" : "translated",
             "value" : "Помилка TLS"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "TLS 错误" } }
       }
     },
     "%@ ago" : {
@@ -173,7 +177,8 @@
             "state" : "translated",
             "value" : "%@ тому"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@前" } }
       }
     },
     "%lld not ready" : {
@@ -298,7 +303,8 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个未就绪" } } } } }
       }
     },
     "%lld unreachable" : {
@@ -423,7 +429,8 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个无法访问" } } } } }
       }
     },
     "%lld/%lld ready" : {
@@ -458,7 +465,8 @@
             "state" : "translated",
             "value" : "%lld/%lld готові"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 就绪" } }
       }
     },
     "Cluster health" : {
@@ -493,7 +501,8 @@
             "state" : "translated",
             "value" : "Стан кластера"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群健康状况" } }
       }
     },
     "Clusters" : {
@@ -528,7 +537,8 @@
             "state" : "translated",
             "value" : "Кластери"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群" } }
       }
     },
     "Last check %@" : {
@@ -563,7 +573,8 @@
             "state" : "translated",
             "value" : "Остання перевірка %@"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次检查 %@" } }
       }
     },
     "No check yet" : {
@@ -598,7 +609,8 @@
             "state" : "translated",
             "value" : "Ще не перевірено"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未检查" } }
       }
     },
     "Node %lld" : {
@@ -633,7 +645,8 @@
             "state" : "translated",
             "value" : "Вузол %lld"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点 %lld" } }
       }
     },
     "Not ready" : {
@@ -668,7 +681,8 @@
             "state" : "translated",
             "value" : "Не готовий"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未就绪" } }
       }
     },
     "Open Ichor on your iPhone and turn on background checks." : {
@@ -703,7 +717,8 @@
             "state" : "translated",
             "value" : "Відкрийте Ichor на iPhone та увімкніть фонові перевірки."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 并开启后台检查。" } }
       }
     },
     "Open Ichor on your iPhone to refresh." : {
@@ -738,7 +753,8 @@
             "state" : "translated",
             "value" : "Відкрийте Ichor на iPhone, щоб оновити."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上打开 Ichor 以刷新。" } }
       }
     },
     "Ready" : {
@@ -773,7 +789,8 @@
             "state" : "translated",
             "value" : "Готовий"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "就绪" } }
       }
     },
     "The open cluster's nodes and etcd alarms from your iPhone's last check." : {
@@ -808,7 +825,8 @@
             "state" : "translated",
             "value" : "Вузли й тривоги etcd відкритого кластера з останньої перевірки iPhone."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iPhone 上次检查时当前集群的节点和 etcd 告警。" } }
       }
     },
     "Unreachable" : {
@@ -843,7 +861,8 @@
             "state" : "translated",
             "value" : "Недоступний"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法访问" } }
       }
     },
     "Updated %@" : {
@@ -878,7 +897,8 @@
             "state" : "translated",
             "value" : "Оновлено о %@"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } }
       }
     },
     "all ready" : {
@@ -913,7 +933,8 @@
             "state" : "translated",
             "value" : "усі готові"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部就绪" } }
       }
     },
     "etcd: %lld alarms" : {
@@ -1038,7 +1059,8 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld 条告警" } } } } }
       }
     },
     "etcd: no alarms" : {
@@ -1073,7 +1095,8 @@
             "state" : "translated",
             "value" : "etcd: без тривог"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "etcd：无告警" } }
       }
     }
   },

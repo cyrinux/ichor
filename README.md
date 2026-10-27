@@ -121,17 +121,17 @@ There is no self-update on iOS, where sideloaded apps are reinstalled with Sidel
 
 ## Languages
 
-The app is available in English, French, Spanish, Ukrainian, German and Italian.
+The app is available in English, French, Spanish, Ukrainian, German, Italian and Simplified Chinese.
 
 - **Android:** pick a language in Settings → Appearance → Language. On Android 13+, the
   system's per-app language settings work too.
 - **iOS:** iOS sets the app's language in the Settings app; the app's Language row opens it.
 
-When you add or change a UI string, translate it in all six languages:
+When you add or change a UI string, translate it in every language:
 
 | Platform | English source | Translations |
 |---|---|---|
-| Android | `app/src/main/res/values/strings.xml` | `values-{fr,es,uk,de,it}/strings.xml` |
+| Android | `app/src/main/res/values/strings.xml` | `values-{fr,es,uk,de,it,zh-rCN}/strings.xml` |
 | iOS | `ios/**/Localizable.xcstrings` | the same catalogs (String Catalogs) |
 
 Then run:
@@ -140,9 +140,10 @@ Then run:
 just i18n-check   # also part of `just check` and the iOS CI build
 ```
 
-It fails on a missing translation, or when placeholders (`%1$s`, `%@`, `%lld`) differ from
-English. It also fails on an Android key that no code or resource reads: delete it in all six
-files.
+It fails on a missing translation, when placeholders (`%1$s`, `%@`, `%lld`) differ from
+English, or when a plural lacks one of its language's categories (Russian needs `few` and
+`many`, Chinese only `other`). It also fails on an Android key that no code or resource reads:
+delete it in every language's file.
 
 ## Support the project
 

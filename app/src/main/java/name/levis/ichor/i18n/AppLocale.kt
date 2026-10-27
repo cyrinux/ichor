@@ -25,12 +25,14 @@ object AppLocale {
         AppLanguage("uk", "Українська"),
         AppLanguage("de", "Deutsch"),
         AppLanguage("it", "Italiano"),
+        // The region picks values-zh-rCN (Simplified Chinese).
+        AppLanguage("zh-CN", "简体中文"),
     )
 
     /** Normalizes a stored or system tag to a supported one, or [SYSTEM]. */
     fun normalize(tag: String?): String {
         val language = tag?.substringBefore(',')?.let { Locale.forLanguageTag(it).language }.orEmpty()
-        return languages.firstOrNull { it.tag == language }?.tag ?: SYSTEM
+        return languages.firstOrNull { Locale.forLanguageTag(it.tag).language == language }?.tag ?: SYSTEM
     }
 
     /** Whether Android manages per-app languages itself (API 33+). */

@@ -33,7 +33,8 @@
             "state" : "translated",
             "value" : "Який стан мого кластера в ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} 中我的集群状态如何" } }
       }
     },
     "What is the state of ${cluster} in ${applicationName}" : {
@@ -68,7 +69,8 @@
             "state" : "translated",
             "value" : "Який стан ${cluster} в ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} 中 ${cluster} 的状态如何" } }
       }
     },
     "Open my cluster in ${applicationName}" : {
@@ -103,7 +105,8 @@
             "state" : "translated",
             "value" : "Відкрити мій кластер у ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开我的集群" } }
       }
     },
     "Open ${cluster} in ${applicationName}" : {
@@ -138,7 +141,8 @@
             "state" : "translated",
             "value" : "Відкрити ${cluster} у ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开 ${cluster}" } }
       }
     },
     "Run a checkup in ${applicationName}" : {
@@ -173,7 +177,8 @@
             "state" : "translated",
             "value" : "Запустити перевірку в ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中运行检查" } }
       }
     },
     "Run a checkup of ${cluster} in ${applicationName}" : {
@@ -208,7 +213,8 @@
             "state" : "translated",
             "value" : "Запустити перевірку ${cluster} в ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中检查 ${cluster}" } }
       }
     },
     "Open ${applicationName}" : {
@@ -243,7 +249,8 @@
             "state" : "translated",
             "value" : "Відкрити ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 ${applicationName}" } }
       }
     },
     "Open a link in ${applicationName}" : {
@@ -278,7 +285,8 @@
             "state" : "translated",
             "value" : "Відкрити посилання в ${applicationName}"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开链接" } }
       }
     }
   },
