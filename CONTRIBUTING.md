@@ -111,6 +111,22 @@ Fixed so far (the first `verify` run, on v1.41.0):
 - `assets/changelog.json`: `generated_at` is the commit's time (or `SOURCE_DATE_EPOCH`), not the clock's
   (`scripts/changelog.py`).
 
+## Dependency bumps
+
+Bumps arrive as pull requests, once a week per ecosystem:
+
+- **Dependabot** (`.github/dependabot.yml`): the GitHub Actions (SHA and version comment),
+  the Android libraries and Gradle plugins in groups, and the Go modules (minor and patch
+  together, majors one by one).
+- **Flake update** (`.github/workflows/flake-update.yml`): `flake.lock`. The workflow token
+  opens that PR, and such a PR starts no workflow: close and reopen it to run the checks.
+
+A bump PR is merged only when the Android and iOS workflows are green on it. A Go bump that
+needs `go mod tidy` fails its check and is finished by hand. Two things are bumped by hand
+only: the Talos machinery (`github.com/siderolabs/*`, which follows the Talos versions the
+clusters run) and the Swift packages in `ios/project.yml` (pinned with `exactVersion`;
+Dependabot reads `Package.swift` only).
+
 ## Plugin requests
 
 The "Plugin request from a CRD" issue form (`.github/ISSUE_TEMPLATE/crd-request.yml`) labels its
