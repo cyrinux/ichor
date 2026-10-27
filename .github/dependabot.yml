@@ -9,3 +9,40 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+
+  # The Android app's libraries and Gradle plugins (gradle/libs.versions.toml). One PR per
+  # group a week; a dependency joins the first group it matches, and the exclusions keep the
+  # groups apart. Merged only when the Android and iOS workflows are green on it.
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      kotlin-compose:
+        patterns: ["org.jetbrains.kotlin*", "androidx.compose*"]
+      androidx:
+        patterns: ["androidx.*"]
+        exclude-patterns: ["androidx.compose*"]
+      gradle-plugins:
+        patterns: ["com.android.*", "*.gradle.plugin"]
+        exclude-patterns: ["org.jetbrains.kotlin*"]
+      gradle-other:
+        patterns: ["*"]
+        exclude-patterns: ["org.jetbrains.kotlin*", "androidx.*", "com.android.*", "*.gradle.plugin"]
+
+  # The Go core's modules (go/go.mod): minor and patch bumps together, majors one by one.
+  # The Talos machinery (github.com/siderolabs/*) follows the Talos versions the clusters run,
+  # so it is bumped by hand. A bump that needs `go mod tidy` fails the check and is finished by
+  # hand.
+  - package-ecosystem: gomod
+    directory: "/go"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "github.com/siderolabs/*"
+    groups:
+      go:
+        patterns: ["*"]
+        update-types: [minor, patch]

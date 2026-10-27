@@ -1,0 +1,39 @@
+name: Flake update
+
+# Weekly, bumps flake.lock (nixpkgs and the dev shell's other inputs) in a pull request, as
+# Dependabot does for the other ecosystems: Dependabot has no Nix ecosystem. The workflow
+# token opens the PR, and a PR opened with it starts no workflow: close and reopen it to run
+# the Android and iOS checks (CONTRIBUTING.md, "Dependency bumps"). The Nix store cache is
+# keyed on flake.lock, so the first run after the merge rebuilds the Android SDK once.
+on:
+  schedule:
+    - cron: "23 4 * * 1" # Mondays, 04:23 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: flake-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      # Labels the PR (and creates a missing label).
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The action needs Nix with flakes; the same installer as the Android toolchain.
+      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
+      - uses: DeterminateSystems/update-flake-lock@da03c0f078bc4b2c37ee4f7e072d34bf8f188bb3 # v29
+        with:
+          commit-msg: "build(deps): bump the Nix flake inputs"
+          pr-title: "build(deps): bump the Nix flake inputs"
+          pr-labels: |
+            dependencies
+            nix

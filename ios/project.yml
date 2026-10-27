@@ -27,7 +27,9 @@ packages:
   # talks CTAP2 to the key itself (Apache-2.0).
   YubiKit:
     url: https://github.com/Yubico/yubikit-swift
-    from: 1.4.0
+    exactVersion: 1.4.0
+  # Swift packages are pinned exactly and bumped by hand: Dependabot reads Package.swift only,
+  # and these are declared here (CONTRIBUTING.md, "Dependency bumps").
 targets:
   Ichor:
     type: application
