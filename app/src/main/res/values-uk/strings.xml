@@ -507,6 +507,14 @@
     <string name="shortcut_cluster_removed">Цей кластер видалено</string>
     <string name="shortcut_search_short">Пошук</string>
     <string name="shortcut_search_long">Пошук у кластерах</string>
+    <string name="tile_cluster_label">Стан кластера</string>
+    <string name="tile_cluster_subtitle_ready">Усі вузли готові</string>
+    <string name="tile_cluster_subtitle_degraded">Готово вузлів: %1$d з %2$d</string>
+    <string name="tile_cluster_no_check">Ще не перевірено</string>
+    <string name="tile_cluster_no_cluster">Немає кластера</string>
+    <string name="shortcut_checkup_short">Перевірка</string>
+    <string name="shortcut_checkup_long">Запустити перевірку</string>
+    <string name="settings_add_tile">Додати плитку до швидких налаштувань</string>
     <string name="shortcut_add_home">Додати на головний екран</string>
     <string name="shortcut_pin_unsupported">Цей лаунчер не може додавати ярлики на головний екран</string>
 

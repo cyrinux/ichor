@@ -460,6 +460,14 @@
     <string name="shortcut_cluster_removed">Este clúster se ha eliminado</string>
     <string name="shortcut_search_short">Buscar</string>
     <string name="shortcut_search_long">Buscar en los clústeres</string>
+    <string name="tile_cluster_label">Estado del clúster</string>
+    <string name="tile_cluster_subtitle_ready">Todos los nodos listos</string>
+    <string name="tile_cluster_subtitle_degraded">%1$d de %2$d nodos listos</string>
+    <string name="tile_cluster_no_check">Aún sin comprobar</string>
+    <string name="tile_cluster_no_cluster">Ningún clúster</string>
+    <string name="shortcut_checkup_short">Chequeo</string>
+    <string name="shortcut_checkup_long">Hacer un chequeo</string>
+    <string name="settings_add_tile">Añadir el botón a Ajustes rápidos</string>
     <string name="shortcut_add_home">Añadir a la pantalla de inicio</string>
     <string name="shortcut_pin_unsupported">Este launcher no puede añadir accesos directos a la pantalla de inicio</string>
 

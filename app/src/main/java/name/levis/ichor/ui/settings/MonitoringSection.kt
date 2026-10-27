@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.settings
 
+import name.levis.ichor.quicksettings.ClusterTileService
 import name.levis.ichor.R
 import androidx.compose.ui.res.stringResource
 import android.Manifest
@@ -249,6 +250,13 @@ fun MonitoringSection(app: TalosApp) {
                 }
             }
             MutedText(stringResource(R.string.monitor_widget_hint))
+            // The Quick Settings tile shows the same snapshot; below Android 13 it is added from the shade's editor.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val context = LocalContext.current
+                OutlinedButton(onClick = { ClusterTileService.requestAdd(context) }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.settings_add_tile))
+                }
+            }
             OutlinedButton(onClick = { app.launchSync(runNow = true) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.common_check_now))
             }

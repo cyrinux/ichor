@@ -76,6 +76,7 @@ import name.levis.ichor.widget.ClusterWidget
 import name.levis.ichor.widget.WidgetClusters
 import name.levis.ichor.ui.apps.AppIconLoader
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.quicksettings.ClusterTileService
 import name.levis.ichor.monitor.AlertActionToken
 import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
@@ -392,9 +393,11 @@ class TalosApp : Application() {
 
     /**
      * Sends the Wear OS tile what the widget shows, with the same names (masked in screenshot
-     * mode). A no-op in the open-source builds and without Google Play services.
+     * mode), and redraws the Quick Settings tile from it. The watch part is a no-op in the
+     * open-source builds and without Google Play services.
      */
     fun syncWear() {
+        ClusterTileService.refresh(this)
         val stored = configRepository.config.value
         val payload = wearPayload(
             monitorStore.state.value,

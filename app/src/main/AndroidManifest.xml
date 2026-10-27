@@ -118,6 +118,11 @@
                 <data android:mimeType="text/yaml" />
                 <data android:mimeType="text/x-yaml" />
             </intent-filter>
+            <!-- A long press on the Quick Settings tile: the checkup of the cluster on screen
+                 (MainActivity maps this action to DeepLink.CHECKUP). -->
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -157,6 +162,23 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/capture_paths" />
         </provider>
+
+        <!-- The Quick Settings tile: the cluster on screen and its health from the last
+             background check (quicksettings/ClusterTileService). Active: it redraws when asked
+             (TalosApp.syncWear, after each check), not on every shade pull. -->
+        <service
+            android:name=".quicksettings.ClusterTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_ichor"
+            android:label="@string/tile_cluster_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="true" />
+        </service>
 
         <!-- A debug shell is an interactive terminal on a node: no other foreground service
              type fits it, and it runs only while the user keeps a shell open. -->
