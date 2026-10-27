@@ -52,8 +52,8 @@ struct AlertsView: View {
             if !resolved {
                 SkeletonView()
             } else if source != nil {
-                VStack(spacing: 0) {
-                    switch tab {
+                SwipeTabPager(tabs: [Tab.alerts, .silences], selection: $tab) { shown in
+                    switch shown {
                     case .alerts: alertsList
                     case .silences: silencesList
                     }

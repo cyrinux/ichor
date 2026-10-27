@@ -33,17 +33,16 @@ private struct InsightsContent: View {
         }.pickerStyle(.segmented)
     }
     var body: some View {
-        Group {
-            if tab == 2 {
-                VStack(spacing: 0) {
-                    picker.padding(.horizontal)
+        VStack(spacing: 0) {
+            picker.padding(.horizontal).padding(.bottom, 8)
+            SwipeTabPager(tabs: [0, 1, 2], selection: $tab) { shown in
+                if shown == 2 {
                     NetPerfView(session: netPerf)
-                }
-            } else {
-                List {
-                    picker
-                    if let error = session.error { Text(verbatim: error).foregroundStyle(.statusBad) }
-                    if tab == 0 { drift } else { recorder }
+                } else {
+                    List {
+                        if let error = session.error { Text(verbatim: error).foregroundStyle(.statusBad) }
+                        if shown == 0 { drift } else { recorder }
+                    }
                 }
             }
         }

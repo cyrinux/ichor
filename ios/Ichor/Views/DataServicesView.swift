@@ -61,8 +61,8 @@ struct DataServicesView: View {
                 }
             } else {
                 let tab = Self.tab(in: tabs, selected: selected)
-                Group {
-                    switch tab {
+                SwipeTabPager(tabs: tabs, selection: Binding(get: { tab }, set: { selected = $0.id })) { shown in
+                    switch shown {
                     case .native(let kind): nativeList(kind, services)
                     case .plugin(let id, _):
                         PluginList(pluginID: id, reload: pluginReload).id(id)

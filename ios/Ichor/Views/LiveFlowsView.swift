@@ -67,7 +67,8 @@ struct LiveFlowsView: View {
     var body: some View {
         Group {
             if cilium.hubble {
-                flowList
+                // Each tab is the whole list (filter, status, its section); the stream is the screen's.
+                SwipeTabPager(tabs: [Tab.drops, .flows], selection: $tab) { flowList($0) }
                     .safeAreaInset(edge: .top) { tabBar }
             } else if cilium.isCalico {
                 ContentUnavailableView {
@@ -112,13 +113,13 @@ struct LiveFlowsView: View {
         .background(.bar)
     }
 
-    private var flowList: some View {
+    private func flowList(_ shown: Tab) -> some View {
         List {
             filterSection
             HubbleStatusSection(snapshot: follower.snapshot, buffer: cilium.buffer, calico: cilium.isCalico, error: follower.error,
                                 connecting: follower.active && follower.snapshot == nil) { attempt += 1 }
             if let snapshot = follower.snapshot {
-                switch tab {
+                switch shown {
                 case .drops:
                     Section {
                         if snapshot.drops.isEmpty {

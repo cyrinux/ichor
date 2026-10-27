@@ -87,8 +87,10 @@ name is taken by another cluster is added as `name-1`). To switch cluster:
 - **Android:** swipe the overview's top bar left or right, or tap its title for the list.
 - **iOS:** swipe the row of dots under the overview's title, or tap it for the list.
 
-On Android, screens with tabs (node, Kubernetes, data services, Flux, network, KubeSpan,
-insights, flows) also switch tab with a sideways swipe on their content.
+Screens with tabs (node, Kubernetes, data services, Flux, alerts, KubeSpan, insights,
+flows, and the network screen on Android) also switch tab with a sideways swipe on their
+content. On iOS, a node's Live and Cgroups tabs, whose charts scrub sideways, change tab
+only from the picker.
 
 The list is also where a cluster is removed (its credentials are deleted from the device) and
 where its color is chosen. Each cluster gets a color of its own, and the app's palette (light,
