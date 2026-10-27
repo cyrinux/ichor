@@ -169,8 +169,8 @@ struct KubernetesView: View {
     }
 
     var body: some View {
-        Group {
-            switch tab {
+        SwipeTabPager(tabs: [Tab.workloads, .pods, .cronJobs, .network], selection: $tab) { shown in
+            switch shown {
             case .workloads: WorkloadsList(list: workloads, control: scopeControl, query: query, focus: focus)
             // Clean up dead pods for the namespace listed (every namespace when none is picked).
             case .pods: PodsList(list: pods, control: scopeControl, query: query, onFlows: podFlows, focus: focus,

@@ -76,7 +76,7 @@ struct ProcessesView: View {
                 ContentUnavailableView.search(text: query)
             }
         }
-        .searchable(text: $query, prompt: Text("Command or arguments"))
+        .searchableOnCurrentTab(text: $query, prompt: Text("Command or arguments"))
         .themedBackground()
         // Polls only while visible: the task is cancelled when the tab or screen goes away.
         .task {

@@ -106,8 +106,8 @@ struct FluxView: View {
                                        description: Text("No Flux Kustomizations or HelmReleases were found in this cluster."))
                     .themedBackground()
             } else {
-                Group {
-                    switch tab {
+                SwipeTabPager(tabs: [Tab.apps, .sources], selection: $tab) { shown in
+                    switch shown {
                     case .apps:
                         FluxAppsList(status: status, filter: $filter, query: query, downNodes: downNodes, busy: busy, refresh: load,
                                      act: act)

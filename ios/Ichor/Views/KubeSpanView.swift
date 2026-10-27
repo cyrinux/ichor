@@ -27,22 +27,7 @@ struct KubeSpanView: View {
             .pickerStyle(.segmented)
             .padding()
 
-            switch tab {
-            case .map:
-                LoadStateView(state: map, retry: loadMap) { topology in
-                    KubeSpanMapTab(topology: topology, netPerf: netPerf, refresh: loadMap, openNode: open)
-                }
-                .task { if case .loading = map { await loadMap() } }
-            case .peers:
-                LoadStateView(state: peers, retry: loadPeers) { overview in
-                    KubeSpanPeersList(overview: overview, hostnames: hostnames, diag: diag) { node, peer in
-                        openedPeer = OpenedPeer(node: node, peer: peer)
-                    }
-                        .refreshable { await loadPeers() }
-                        .themedBackground()
-                }
-                .task { if case .loading = peers { await loadPeers() } }
-            }
+            SwipeTabPager(tabs: [Tab.map, .peers], selection: $tab) { page($0) }
         }
         .navigationTitle(Text(verbatim: "KubeSpan"))
         .navigationBarTitleDisplayMode(.inline)
@@ -57,6 +42,26 @@ struct KubeSpanView: View {
                 // The same saved tests as the network test screens: their speeds show on the links.
                 netPerf.loadHistory(scope: "\(cluster)-\(model.privacyStorageKey)")
             }
+        }
+    }
+
+    @ViewBuilder
+    private func page(_ shown: Tab) -> some View {
+        switch shown {
+        case .map:
+            LoadStateView(state: map, retry: loadMap) { topology in
+                KubeSpanMapTab(topology: topology, netPerf: netPerf, refresh: loadMap, openNode: open)
+            }
+            .task { if case .loading = map { await loadMap() } }
+        case .peers:
+            LoadStateView(state: peers, retry: loadPeers) { overview in
+                KubeSpanPeersList(overview: overview, hostnames: hostnames, diag: diag) { node, peer in
+                    openedPeer = OpenedPeer(node: node, peer: peer)
+                }
+                    .refreshable { await loadPeers() }
+                    .themedBackground()
+            }
+            .task { if case .loading = peers { await loadPeers() } }
         }
     }
 

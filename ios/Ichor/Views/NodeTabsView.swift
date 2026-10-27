@@ -50,8 +50,7 @@ struct NodeTabsView: View {
     var body: some View {
         VStack(spacing: 0) {
             Picker("View", selection: $tab) {
-                // Cgroups (a copy of /sys/fs/cgroup) only exists for admin configs.
-                ForEach(Tab.allCases.filter { $0 != .cgroups || model.allows(.cgroups) }, id: \.self) { Text($0.label).tag($0) }
+                ForEach(shownTabs, id: \.self) { Text($0.label).tag($0) }
             }
             .pickerStyle(.segmented)
             .padding()
@@ -62,35 +61,8 @@ struct NodeTabsView: View {
                     .padding(.bottom, 8)
             }
 
-            // A role change (another config) can leave the hidden Cgroups tab selected.
-            switch (tab == .cgroups && !model.allows(.cgroups)) ? Tab.services : tab {
-            case .services:
-                LoadStateView(state: services, retry: loadServices) { list in
-                    List(list) { svc in serviceRow(svc) }
-                    .refreshable { await loadServices() }
-                    .themedBackground()
-                }
-                .task { if case .loading = services { await loadServices() } }
-            case .resources:
-                LoadStateView(state: resources, retry: loadResources) {
-                    ResourcesList(resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil,
-                                  memory: history?.memory(of: ref.address) ?? [], window: historyWindow) { tab = .cgroups }
-                }
-                    .refreshable { await loadResources() }
-                    .task { if case .loading = resources { await loadResources() } }
-            case .live:
-                LiveView(node: ref.address, stats: live)
-            case .processes:
-                FeatureGated(support: support(.processes)) {
-                    ProcessesView(node: ref.address, monitor: processes)
-                }
-            case .pods:
-                FeatureGated(support: support(.containers)) {
-                    PodsView(node: ref.address, hostname: ref.hostname, monitor: pods, restartSupport: support(.containerRestart))
-                }
-            case .cgroups:
-                CgroupsView(node: ref.address, monitor: cgroups)
-            }
+            // Swiped like the Android pager; the Live and Cgroups charts scrub sideways instead.
+            SwipeTabPager(tabs: shownTabs, selection: shownTab, fixed: [.live, .cgroups]) { page($0) }
         }
         .navigationTitle(ref.hostname)
         .navigationBarTitleDisplayMode(.inline)
@@ -130,6 +102,46 @@ struct NodeTabsView: View {
         }
         .alert(resultMessage ?? "", isPresented: $resultMessage.isPresent()) {
             Button("OK") {}
+        }
+    }
+
+    /// Cgroups (a copy of /sys/fs/cgroup) only exists for admin configs.
+    private var shownTabs: [Tab] { Tab.allCases.filter { $0 != .cgroups || model.allows(.cgroups) } }
+
+    /// A role change (another config) can leave the hidden Cgroups tab selected: Services then.
+    private var shownTab: Binding<Tab> {
+        Binding(get: { shownTabs.contains(tab) ? tab : .services }, set: { tab = $0 })
+    }
+
+    @ViewBuilder
+    private func page(_ shown: Tab) -> some View {
+        switch shown {
+        case .services:
+            LoadStateView(state: services, retry: loadServices) { list in
+                List(list) { svc in serviceRow(svc) }
+                .refreshable { await loadServices() }
+                .themedBackground()
+            }
+            .task { if case .loading = services { await loadServices() } }
+        case .resources:
+            LoadStateView(state: resources, retry: loadResources) {
+                ResourcesList(resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil,
+                              memory: history?.memory(of: ref.address) ?? [], window: historyWindow) { tab = .cgroups }
+            }
+                .refreshable { await loadResources() }
+                .task { if case .loading = resources { await loadResources() } }
+        case .live:
+            LiveView(node: ref.address, stats: live)
+        case .processes:
+            FeatureGated(support: support(.processes)) {
+                ProcessesView(node: ref.address, monitor: processes)
+            }
+        case .pods:
+            FeatureGated(support: support(.containers)) {
+                PodsView(node: ref.address, hostname: ref.hostname, monitor: pods, restartSupport: support(.containerRestart))
+            }
+        case .cgroups:
+            CgroupsView(node: ref.address, monitor: cgroups)
         }
     }
 

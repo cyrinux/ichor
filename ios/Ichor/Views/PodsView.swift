@@ -101,7 +101,7 @@ struct PodsView: View {
                 }
             }
         }
-        .searchable(text: $query, prompt: Text("Namespace, pod, container or image"))
+        .searchableOnCurrentTab(text: $query, prompt: Text("Namespace, pod, container or image"))
         .sheet(item: $systemRestart) { container in
             HostnameConfirmationSheet(
                 title: confirmationTitle(container),
