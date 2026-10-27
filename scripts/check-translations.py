@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LANGUAGES = ["fr", "es", "uk", "de", "it", "zh-Hans"]
+LANGUAGES = ["fr", "es", "uk", "de", "it", "zh-Hans", "ja"]
 # The Android resource folder of a language when it differs from values-<code>.
 ANDROID_DIRS = {"zh-Hans": "values-zh-rCN", "pt-BR": "values-pt-rBR"}
 # CLDR plural categories per language: (required, allowed). "many" is CLDR's for large numbers
