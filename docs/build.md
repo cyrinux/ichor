@@ -60,6 +60,15 @@ go run ./cmd/probe overview   # also: services NODE, resources NODE, logs NODE S
 go run ./cmd/probe -config ../talosconfig-phone overview   # test a role-limited config
 ```
 
+## Layouts in other languages
+
+Debug builds carry Android's pseudo-locales: in Developer options → Language, pick
+**English (XA)** (every string longer and accented, so a clipped or hard-coded text shows) or
+**Arabic (XB)** (right to left: the layout mirrors, the AutoMirrored icons flip). Walk the
+overview, a node, Kubernetes and Settings. On iOS, the scheme's Run → Options → App Language
+offers **Right-to-Left Pseudolanguage** and **Double-Length Pseudolanguage** for the same walk
+in the Simulator.
+
 ## iOS
 
 The iOS app (`ios/`) reuses the same Go core, built as `Ichorgo.xcframework` with

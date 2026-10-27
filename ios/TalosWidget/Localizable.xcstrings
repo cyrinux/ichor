@@ -32,7 +32,8 @@
             "state" : "translated",
             "value" : "Повідомляє, що побачила остання фонова перевірка Ichor у кластері. Якщо не вибрано: той, що відкритий у застосунку."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示 Ichor 上次后台检查在某个集群上发现的情况。未选择时：使用应用中当前打开的集群。" } }
       }
     },
     "Open cluster" : {
@@ -66,7 +67,8 @@
             "state" : "translated",
             "value" : "Відкрити кластер"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开集群" } }
       }
     },
     "Opens a cluster's overview in Ichor. None chosen: the one open in the app." : {
@@ -100,7 +102,8 @@
             "state" : "translated",
             "value" : "Відкриває огляд кластера в Ichor. Якщо не вибрано: той, що відкритий у застосунку."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群概览。未选择时：使用应用中当前打开的集群。" } }
       }
     },
     "Run a checkup" : {
@@ -134,7 +137,8 @@
             "state" : "translated",
             "value" : "Запустити перевірку"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行检查" } }
       }
     },
     "Opens the cluster checkup in Ichor. None chosen: the cluster open in the app." : {
@@ -168,7 +172,8 @@
             "state" : "translated",
             "value" : "Відкриває перевірку кластера в Ichor. Якщо не вибрано: кластер, відкритий у застосунку."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群检查。未选择时：使用应用中当前打开的集群。" } }
       }
     },
     "Opens the cluster open in Ichor." : {
@@ -202,7 +207,8 @@
             "state" : "translated",
             "value" : "Відкриває кластер, відкритий в Ichor."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Ichor 中当前打开的集群。" } }
       }
     },
     "Opens the checkup of the cluster open in Ichor." : {
@@ -236,7 +242,8 @@
             "state" : "translated",
             "value" : "Відкриває перевірку кластера, відкритого в Ichor."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Ichor 中当前集群的检查。" } }
       }
     },
     "Terminate" : {
@@ -271,7 +278,8 @@
               "state" : "translated",
               "value" : "Зупинити"
             }
-          }
+          },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终止" } }
       }
     },
     "Stop" : {
@@ -306,7 +314,8 @@
             "state" : "translated",
             "value" : "Зупинити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止" } }
       }
     },
     "Stop following" : {
@@ -341,7 +350,8 @@
             "state" : "translated",
             "value" : "Припинити стеження"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止跟踪" } }
       }
     },
     "Pause" : {
@@ -376,7 +386,8 @@
             "state" : "translated",
             "value" : "Призупинити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂停" } }
       }
     },
     "Resume" : {
@@ -411,7 +422,8 @@
             "state" : "translated",
             "value" : "Продовжити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "继续" } }
       }
     },
     "Abort" : {
@@ -446,7 +458,8 @@
             "state" : "translated",
             "value" : "Перервати"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中止" } }
       }
     },
     "Keep" : {
@@ -481,7 +494,8 @@
             "state" : "translated",
             "value" : "Залишити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保留" } }
       }
     },
     "Revert now" : {
@@ -516,7 +530,8 @@
             "state" : "translated",
             "value" : "Відкотити зараз"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即还原" } }
       }
     },
     "Cluster" : {
@@ -551,7 +566,8 @@
             "state" : "translated",
             "value" : "Кластер"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群" } }
       }
     },
     "The cluster this widget shows. None chosen: the one open in the app." : {
@@ -586,7 +602,8 @@
             "state" : "translated",
             "value" : "Кластер, який показує цей віджет. Якщо не вибрано — відкритий у застосунку."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此小组件显示的集群。未选择时：使用应用中当前打开的集群。" } }
       }
     },
     "%lld not ready" : {
@@ -711,7 +728,8 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个未就绪" } } } } }
       }
     },
     "%lld unreachable" : {
@@ -836,7 +854,8 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个无法访问" } } } } }
       }
     },
     "%lld/%lld ready" : {
@@ -871,7 +890,8 @@
             "state" : "translated",
             "value" : "%lld/%lld готові"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 就绪" } }
       }
     },
     "all ready" : {
@@ -906,7 +926,8 @@
             "state" : "translated",
             "value" : "усі готові"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部就绪" } }
       }
     },
     "Cluster status" : {
@@ -941,7 +962,8 @@
             "state" : "translated",
             "value" : "Стан кластера"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群状态" } }
       }
     },
     "etcd: %lld alarms" : {
@@ -1066,7 +1088,8 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld 条告警" } } } } }
       }
     },
     "etcd: no alarms" : {
@@ -1101,7 +1124,8 @@
             "state" : "translated",
             "value" : "etcd: без тривог"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "etcd：无告警" } }
       }
     },
     "Nodes ready and etcd alarms from the last check." : {
@@ -1136,7 +1160,8 @@
             "state" : "translated",
             "value" : "Готові вузли й сигнали тривоги etcd з останньої перевірки."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次检查的节点就绪情况和 etcd 告警。" } }
       }
     },
     "Open the app to set up" : {
@@ -1171,7 +1196,8 @@
             "state" : "translated",
             "value" : "Відкрийте застосунок для налаштування"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开应用进行设置" } }
       }
     },
     "Updated %@" : {
@@ -1206,7 +1232,8 @@
             "state" : "translated",
             "value" : "Оновлено о %@"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } }
       }
     }
   },

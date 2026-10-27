@@ -55,6 +55,8 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".foss"
+            // en-XA (long accented text) and ar-XB (right to left) in Developer options: docs/build.md.
+            isPseudoLocalesEnabled = true
         }
         release {
             applicationIdSuffix = ".foss"

@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 STRINGS = ROOT / "docs-i18n"
 PAGES = ["index.html", "privacy.html"]
-LANGUAGES = ["fr", "es", "uk", "de", "it"]
+LANGUAGES = ["fr", "es", "uk", "de", "it", "zh-Hans"]
 SITE = "https://cyrinux.github.io/ichor/"
 
 # A string unit: one of these with no UNIT or CONTAINER element inside.

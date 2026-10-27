@@ -34,5 +34,24 @@ class ConflictMarkerTest(unittest.TestCase):
         self.assertEqual(check.conflict_markers(text), [])
 
 
+class PluralCategoryTest(unittest.TestCase):
+    def test_a_language_s_own_categories_pass(self):
+        self.assertIsNone(check.plural_problem("ru", {"one", "few", "many", "other"}))
+        self.assertIsNone(check.plural_problem("ja", {"other"}))
+        self.assertIsNone(check.plural_problem("fr", {"one", "many", "other"}))
+        self.assertIsNone(check.plural_problem("fr", {"one", "other"}))
+
+    def test_a_missing_category_fails(self):
+        self.assertIn("few", check.plural_problem("ru", {"one", "other"}))
+
+    def test_a_category_the_language_lacks_fails(self):
+        self.assertIn("one", check.plural_problem("zh-Hans", {"one", "other"}))
+        self.assertIn("many", check.plural_problem("de", {"one", "many", "other"}))
+
+    def test_every_language_has_its_categories(self):
+        for lang in ["en"] + check.LANGUAGES:
+            self.assertIn(lang, check.PLURALS)
+
+
 if __name__ == "__main__":
     unittest.main()

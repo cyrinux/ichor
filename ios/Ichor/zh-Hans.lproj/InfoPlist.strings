@@ -1,0 +1,5 @@
+/* Permission prompts (keys of Info.plist, see project.yml). */
+"NSCameraUsageDescription" = "扫描 talosconfig 二维码以导入。";
+"NSFaceIDUsageDescription" = "解锁 Ichor，并确认重启或关机。";
+"NSLocalNetworkUsageDescription" = "访问此网络上你的集群节点，在其中搜索节点，并通过 Wake-on-LAN 唤醒它们。";
+"NFCReaderUsageDescription" = "读取你的安全密钥以解锁 Ichor。";
