@@ -35,7 +35,8 @@
         },
         "zh-Hans": { "stringUnit": { "state": "translated", "value": "完成" } },
         "ja": { "stringUnit": { "state": "translated", "value": "完了" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Concluído" } }
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Concluído" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Готово" } }
       }
     },
     "Ichor takes Talos and Kubernetes configs and Ichor backups.": {
@@ -72,7 +73,8 @@
         },
         "zh-Hans": { "stringUnit": { "state": "translated", "value": "Ichor 接受 Talos 和 Kubernetes 配置以及 Ichor 备份。" } },
         "ja": { "stringUnit": { "state": "translated", "value": "Ichor は Talos と Kubernetes の構成ファイル、および Ichor のバックアップを受け付けます。" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "O Ichor aceita configurações do Talos e do Kubernetes e backups do Ichor." } }
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "O Ichor aceita configurações do Talos e do Kubernetes e backups do Ichor." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Ichor принимает конфигурации Talos и Kubernetes и резервные копии Ichor." } }
       }
     },
     "Saved. Open Ichor to import it.": {
@@ -109,7 +111,8 @@
         },
         "zh-Hans": { "stringUnit": { "state": "translated", "value": "已保存。打开 Ichor 即可导入。" } },
         "ja": { "stringUnit": { "state": "translated", "value": "保存しました。Ichor を開いてインポートしてください。" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Salvo. Abra o Ichor para importá-lo." } }
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Salvo. Abra o Ichor para importá-lo." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Сохранено. Откройте Ichor, чтобы импортировать." } }
       }
     },
     "Send to Ichor": {
@@ -146,7 +149,8 @@
         },
         "zh-Hans": { "stringUnit": { "state": "translated", "value": "发送到 Ichor" } },
         "ja": { "stringUnit": { "state": "translated", "value": "Ichor に送信" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Enviar para o Ichor" } }
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Enviar para o Ichor" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Отправить в Ichor" } }
       }
     },
     "The file could not be saved.": {
@@ -183,7 +187,8 @@
         },
         "zh-Hans": { "stringUnit": { "state": "translated", "value": "无法保存该文件。" } },
         "ja": { "stringUnit": { "state": "translated", "value": "ファイルを保存できませんでした。" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Não foi possível salvar o arquivo." } }
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Não foi possível salvar o arquivo." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Не удалось сохранить файл." } }
       }
     },
     "This file is too large for a config or a backup.": {
@@ -220,7 +225,8 @@
         },
         "zh-Hans": { "stringUnit": { "state": "translated", "value": "此文件过大，不可能是配置或备份。" } },
         "ja": { "stringUnit": { "state": "translated", "value": "このファイルは構成ファイルやバックアップとしては大きすぎます。" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Este arquivo é grande demais para uma configuração ou um backup." } }
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Este arquivo é grande demais para uma configuração ou um backup." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Этот файл слишком велик для конфигурации или резервной копии." } }
       }
     }
   },

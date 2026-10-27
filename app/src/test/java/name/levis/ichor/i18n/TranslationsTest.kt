@@ -11,7 +11,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 class TranslationsTest {
 
     private val res = File("src/main/res")
-    private val languages = listOf("fr", "es", "uk", "de", "it", "zh-rCN", "ja", "pt-rBR")
+    private val languages = listOf("fr", "es", "uk", "de", "it", "zh-rCN", "ja", "pt-rBR", "ru")
 
     /** One `<string>` (single text) or `<plurals>` (one text per quantity). */
     private data class Entry(val texts: Map<String, String>) {
@@ -90,9 +90,11 @@ class TranslationsTest {
     }
 
     @Test
-    fun ukrainianPluralsHaveAllQuantities() {
-        load("values-uk").filterValues { it.isPlural }.forEach { (name, entry) ->
-            assertTrue("values-uk/$name: ${entry.texts.keys}", entry.texts.keys.containsAll(listOf("one", "few", "many", "other")))
+    fun ukrainianAndRussianPluralsHaveAllQuantities() {
+        listOf("values-uk", "values-ru").forEach { dir ->
+            load(dir).filterValues { it.isPlural }.forEach { (name, entry) ->
+                assertTrue("$dir/$name: ${entry.texts.keys}", entry.texts.keys.containsAll(listOf("one", "few", "many", "other")))
+            }
         }
     }
 
