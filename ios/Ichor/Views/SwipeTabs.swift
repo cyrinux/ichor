@@ -30,6 +30,8 @@ struct SwipeTabPager<Tab: Hashable, Page: View>: View {
             LazyHStack(spacing: 0) {
                 ForEach(tabs, id: \.self) { tab in
                     page(tab)
+                        // scrollDisabled is inherited: a fixed tab's own lists still scroll.
+                        .scrollDisabled(false)
                         .environment(\.swipeTabIsCurrent, tab == selection)
                         .containerRelativeFrame([.horizontal, .vertical])
                         .id(tab)
