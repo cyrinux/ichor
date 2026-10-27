@@ -25,6 +25,16 @@ var kubeCommands = []command{
 		return out, err
 	}},
 	{name: "search", args: "QUERY", run: probeSearch},
+	{name: "renew-signins", args: "", run: func(e env) (string, error) {
+		// renew-signins: renews every signed-in context like the apps on foreground and before a
+		// background check. The probe's sign-ins live for one run: a kubeconfig reports the
+		// contexts it signs in itself, a talosconfig its Omni contexts.
+		if ichorgo.IsKubeconfig(e.cfg) {
+			return ichorgo.KubeRenewSignIns(e.cfg, "")
+		}
+
+		return ichorgo.KubeRenewSignIns("", e.cfg)
+	}},
 	{name: "discover", args: "PROVIDER SECRETS_JSON", noConfig: true, run: probeDiscover},
 	{name: "workloads", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeWorkloads(e.cfg, e.context, e.kubeServer)

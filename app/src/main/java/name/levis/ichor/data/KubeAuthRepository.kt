@@ -15,6 +15,7 @@ import name.levis.ichor.model.isKube
 import name.levis.ichor.model.SignInDiscoveredResult
 import name.levis.ichor.model.SignInFailure
 import name.levis.ichor.model.SignInProgress
+import name.levis.ichor.model.SignInRenewal
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichorgo.Ichorgo
@@ -182,6 +183,18 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
 
     /** How far the running [signInDiscovered] got. */
     fun signInProgress(): SignInProgress = TalosJson.decodeFromString(SignInProgress.serializer(), Ichorgo.signInProgress())
+
+    /**
+     * Renews every signed-in cluster's token ahead of need (on foreground and before a
+     * background check): an identity provider with an idle timeout keeps the session, and one
+     * that ended it is found now. Contexts never signed in are left out; Omni ones are only
+     * reported. Empty without a stored config.
+     */
+    suspend fun renewAll(): List<SignInRenewal> = withContext(Dispatchers.IO) {
+        val stored = configs.config.value ?: return@withContext emptyList()
+        if (stored.kubeYaml.isBlank() && stored.talosYaml.isBlank()) return@withContext emptyList()
+        TalosJson.decodeFromString(ListSerializer(SignInRenewal.serializer()), Ichorgo.kubeRenewSignIns(stored.kubeYaml, stored.talosYaml))
+    }
 
     /** Whether [context] is a talosconfig context (Omni signs those in); names are unique across both configs. */
     private fun isTalos(context: String): Boolean =

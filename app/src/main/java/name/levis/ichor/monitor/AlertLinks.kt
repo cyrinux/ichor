@@ -28,7 +28,9 @@ val Alert.channel: AlertChannel
         -> AlertChannel.CLUSTER
         AlertKind.DATA_PROBLEM, AlertKind.DATA_OK, AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> AlertChannel.DATA
         AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK, AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED -> AlertChannel.GITOPS
-        AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED, AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED -> AlertChannel.CERTS
+        AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED, AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED,
+        AlertKind.SIGN_IN_REQUIRED,
+        -> AlertChannel.CERTS
     }
 
 /**
@@ -40,8 +42,10 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
         ShareTarget(target = ShareTarget.NODE, addr = key.substringAfter(':'), host = subject)
     AlertKind.ETCD_ALARM -> ShareTarget.screen(ShareTarget.ETCD)
     AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED -> null
-    AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED, AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE ->
-        ShareTarget.screen(ShareTarget.CLUSTER)
+    // The cluster's home, where its sign-in banner is.
+    AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED, AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE,
+    AlertKind.SIGN_IN_REQUIRED,
+    -> ShareTarget.screen(ShareTarget.CLUSTER)
     AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> {
         val system = detail.substringBefore('|')
         ShareTarget.dataServices(DataServiceKind.entries.firstOrNull { it.alertSystem == system }?.catalogId.orEmpty())

@@ -23,6 +23,8 @@ enum class AlertKind {
     PLUGIN_PROBLEM, PLUGIN_OK,
     /** A pull request opened from the phone was merged, or closed without it ([Alert.detail]: a [ProposalDetail]). */
     PROPOSAL_MERGED, PROPOSAL_CLOSED,
+    /** The identity provider ended the cluster's sign-in ([Alert.subject]: the cluster's name). */
+    SIGN_IN_REQUIRED,
 }
 
 /**

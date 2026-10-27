@@ -238,6 +238,12 @@ Sign-in tokens and entered keys are sealed on the device like the configs. Backu
 keys you entered but not the tokens of a sign-in: after a restore, those clusters ask to sign
 in again.
 
+Sign-ins are renewed when the app opens and before each background check, so an identity
+provider that ends idle sessions (Keycloak's "SSO Session Idle", for one) keeps yours while
+alerts are on. A session your provider ended (an IAM Identity Center session past its length,
+a revoked refresh token) is announced once with a "Sign in again" notification; the phone
+being offline is not taken for one.
+
 ## Omni clusters
 
 A cluster managed by [Sidero Omni](https://omni.siderolabs.com/) is reached through Omni, which

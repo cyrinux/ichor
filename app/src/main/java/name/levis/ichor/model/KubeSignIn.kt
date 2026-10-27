@@ -296,3 +296,43 @@ fun importedContextNames(
         .toSet()
     return after.filter { it !in before || it in replaced }
 }
+
+/**
+ * One cluster's proactive renewal (go/ichorgo/kube_auth_renew.go, KubeRenewSignIns): [kind]
+ * "kube" or "talos" (an Omni context, reported only), [status] one of the STATUS_ constants.
+ */
+@Serializable
+data class SignInRenewal(
+    val context: String = "",
+    val kind: String = "",
+    val method: String = "",
+    val status: String = "",
+    /** The current token's end and when a new sign-in will be needed, unix seconds; 0 when unknown. */
+    val expires: Long = 0,
+    val sessionExpires: Long = 0,
+    val reason: String = "",
+) {
+    /** The identity provider ended the session: only the user can sign in again. */
+    val signInRequired: Boolean get() = status == STATUS_SIGN_IN_REQUIRED
+
+    /**
+     * [signInRequired], but not Sign in with Google's hour-long token, which the app renews
+     * itself with Google's SDK on the cluster's screen ([REASON_GOOGLE_NATIVE]).
+     */
+    val needsUser: Boolean get() = signInRequired && reason != REASON_GOOGLE_NATIVE
+
+    /** Signed in and usable; [STATUS_ERROR] (offline, provider down) says nothing either way. */
+    val signedIn: Boolean get() = status == STATUS_VALID || status == STATUS_RENEWED
+
+    companion object {
+        const val STATUS_VALID = "valid"
+        const val STATUS_RENEWED = "renewed"
+        const val STATUS_SIGN_IN_REQUIRED = "signInRequired"
+        const val STATUS_ERROR = "error"
+        const val KIND_KUBE = "kube"
+        const val KIND_TALOS = "talos"
+
+        /** go/ichorgo/kube_auth_gke_native.go gcpNativeRenewReason. */
+        const val REASON_GOOGLE_NATIVE = "google-native"
+    }
+}

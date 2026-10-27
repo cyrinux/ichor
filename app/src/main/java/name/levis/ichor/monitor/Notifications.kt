@@ -177,6 +177,7 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertTitle(context, alert)
     AlertKind.PROPOSAL_MERGED -> context.getString(R.string.monitor_proposal_merged, ProposalDetail.parse(alert.detail).number)
     AlertKind.PROPOSAL_CLOSED -> context.getString(R.string.monitor_proposal_closed, ProposalDetail.parse(alert.detail).number)
+    AlertKind.SIGN_IN_REQUIRED -> context.getString(R.string.kube_signin_renew_notification_title)
 }
 
 /** "kube-green: demo-lab/weekend", or "… is healthy again": the plugin's name and its finding's own title. */
@@ -380,4 +381,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     // The request's own title, unmasked: left out in screenshot mode.
     AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED ->
         if ((context.applicationContext as? name.levis.ichor.TalosApp)?.uiPreferences?.privacyMask?.value?.enabled == true) "" else alert.subject
+    AlertKind.SIGN_IN_REQUIRED -> context.getString(R.string.kube_signin_renew_notification_text, alert.subject)
 }

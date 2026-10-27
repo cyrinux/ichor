@@ -222,6 +222,9 @@ enum BackgroundMonitor {
         // A Talos cluster without an endpoint yet cannot be checked: the widget stops showing what
         // it showed (Android's clearSnapshot).
         for context in contexts where context.needsEndpoint { snapshots[monitorClusterKey(context)] = nil }
+        // Renewed first, so the reads use fresh tokens and an idle-timeout session is kept alive;
+        // nil on a locked device (the sign-ins cannot be read), when nothing is told either.
+        let signIns = await TalosClient.renewStoredSignIns()
         // Read in monitorOrder (CYR-190): the clusters that missed the last run (a miss counted in
         // the reachability map) first; with the app in front ("Check now"), the cluster on screen last.
         let lastFailed = Set(reachability().filter { $0.value.misses > 0 }.keys)
@@ -278,6 +281,7 @@ enum BackgroundMonitor {
         guard alertsEnabled else { return }
         await post(outcomes, now: now)
         await postProposals(proposals, now: now)
+        if let signIns { await postSignIns(signIns, contexts: contexts, now: now) }
     }
 
     /// One record per cluster read (or not answering) in each one's sealed ring. A track not read

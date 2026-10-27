@@ -4455,6 +4455,8 @@
     <string name="monitor_cluster_unreachable_text">Seit %1$s Prüfungen in Folge keine Antwort</string>
     <string name="monitor_cluster_reachable">Cluster wieder erreichbar</string>
     <string name="monitor_cluster_reachable_text">Er antwortet wieder auf die Prüfungen im Hintergrund</string>
+    <string name="kube_signin_renew_notification_title">Erneut anmelden</string>
+    <string name="kube_signin_renew_notification_text">%1$s braucht eine neue Anmeldung vor der nächsten Prüfung.</string>
     <string name="monitor_unreachable">Nicht erreichbare Cluster</string>
     <string name="monitor_unreachable_desc">Benachrichtigt dich einmal, wenn ein Cluster mehrere Prüfungen in Folge nicht geantwortet hat (kein Node, keine API oder zu langsam), und einmal, wenn er wieder antwortet. Node-Warnungen bleiben so lange stumm.</string>
     <string name="monitor_unreachable_runs">Nach %1$s Prüfungen in Folge</string>

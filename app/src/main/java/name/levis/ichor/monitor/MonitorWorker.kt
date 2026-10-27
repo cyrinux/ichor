@@ -63,6 +63,10 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val before = store.state.value
         // Screenshot mode fakes every name the checks read: no history from those.
         val maskedBefore = app.uiPreferences.privacyMask.value.enabled
+        // Renewed first, so the reads use fresh tokens and an idle-timeout session is kept alive.
+        val labels = ClusterLabels(app.clusterNames.names.value, maskedBefore)
+        val watched = monitoredContexts(stored.summary, stored.activeContext, app.unwatchedClusters.fingerprints.value)
+        val signIns = renewSignIns(app, watched) { labels.of(it) }
         val reads = readAll(app, stored, before, now)
         val evaluated = monitorRun(
             before,
@@ -95,7 +99,8 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         if (store.alertsEnabled.value) {
             // Snoozed from their notification: nothing, problem or resolved, until it is over.
             app.alertSnoozes.prune(now)
-            (run.alerts + proposals).forEach { post(app, it, now) }
+            (run.alerts + proposals + signIns.alerts).forEach { post(app, it, now) }
+            store.setSignInNotified(signIns.notified)
         }
         ClusterWidget().updateAll(applicationContext)
         app.syncWear()

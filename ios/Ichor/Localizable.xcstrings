@@ -167005,6 +167005,74 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Die heruntergeladene Datei ist nicht die erwartete und wurde gelöscht. Versuche es erneut." } },
         "it" : { "stringUnit" : { "state" : "translated", "value" : "Il file scaricato non è quello previsto ed è stato eliminato. Riprova." } }
       }
+    },
+    "Sign in again" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnectez-vous"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a iniciar sesión"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut anmelden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi di nuovo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увійдіть знову"
+          }
+        }
+      }
+    },
+    "%@ needs you to sign in again before its next check." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ vous demande de vous reconnecter avant sa prochaine vérification."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ necesita que vuelvas a iniciar sesión antes de su próxima comprobación."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ braucht eine neue Anmeldung vor der nächsten Prüfung."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ richiede un nuovo accesso prima del prossimo controllo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ потребує повторного входу перед наступною перевіркою."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
