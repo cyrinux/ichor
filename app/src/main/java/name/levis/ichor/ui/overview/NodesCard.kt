@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ExpandLess
@@ -29,7 +27,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -187,35 +184,8 @@ private fun NodeChips(
 }
 
 @Composable
-private fun NodeChip(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit, onLive: () -> Unit) {
-    val liveLabel = stringResource(R.string.overview_action_live_graphs)
-    val status = statusLabel(node.status)
-    val color = statusColor(node.status)
-    // A problem tints the whole chip, not just its dot: the collapsed card has no row to spell it out.
-    val calm = node.status == NodeStatus.READY
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = if (calm) MaterialTheme.colorScheme.surfaceVariant else color.copy(alpha = 0.16f),
-        contentColor = if (calm) MaterialTheme.colorScheme.onSurfaceVariant else color,
-        modifier = Modifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick,
-            onLongClickLabel = stringResource(R.string.overview_node_actions),
-        ).semantics(mergeDescendants = true) {
-            contentDescription = "${node.hostname}, $status"
-            customActions = listOf(CustomAccessibilityAction(liveLabel) { onLive(); true })
-        },
-    ) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(8.dp).background(color, CircleShape))
-            Spacer(Modifier.width(6.dp))
-            Text(node.hostname, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (node.cordoned) {
-                Text(" · " + stringResource(R.string.kube_node_cordoned), style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
-    }
-}
+private fun NodeChip(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit, onLive: () -> Unit) =
+    NodeStatusChip(node.hostname, node.status, node.cordoned, onClick, onLongClick, onLive)
 
 @Composable
 private fun NodeRow(

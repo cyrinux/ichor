@@ -197,6 +197,8 @@ fun KubeHomeScreen(
     // Long-press a card to arrange them: order, hide, show again; the app bar's actions too.
     val layout by app.uiPreferences.kubeHomeLayout.collectAsStateWithLifecycle()
     val bar by app.uiPreferences.kubeHomeBar.collectAsStateWithLifecycle()
+    // Shared with the Talos home: one choice of compact or full nodes for every cluster.
+    val nodesExpanded by app.uiPreferences.nodesExpanded.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = customizing) { customizing = false }
     val customize = rememberCustomizeTrigger { customizing = true }
@@ -345,6 +347,8 @@ fun KubeHomeScreen(
                     argoRollouts = rolloutsShown,
                     alerts = alertsShown,
                     onNode = { nodeMenu = it },
+                    nodesExpanded = nodesExpanded,
+                    onToggleNodes = { app.uiPreferences.setNodesExpanded(!nodesExpanded) },
                     nav = nav,
                     layout = layout,
                     onCustomize = customize,
@@ -376,6 +380,8 @@ private fun KubeHomeList(
     argoRollouts: Boolean,
     alerts: UiState<AlertsOverview?>?,
     onNode: (KubeNodeInfo) -> Unit,
+    nodesExpanded: Boolean,
+    onToggleNodes: () -> Unit,
     nav: KubeHomeNavigation,
     layout: KubeHomeLayout,
     onCustomize: () -> Unit,
@@ -406,7 +412,7 @@ private fun KubeHomeList(
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeSummaryCard(name ?: cluster.name, cluster, nodes) }
                 }
                 KubeHomeCard.NODES -> if (nodes != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, onNode, nav.onAllNodes) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, nodesExpanded, onToggleNodes, onNode, nav.onAllNodes) }
                 }
                 KubeHomeCard.TOOLS -> item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins.homeTiles, dataServices = toolServices) }

@@ -4,6 +4,13 @@ import name.levis.ichor.ui.components.rememberKubeTopNodes
 import name.levis.ichor.ui.components.NodeUsage
 import name.levis.ichor.model.KubeTopNode
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.ui.res.pluralStringResource
+import name.levis.ichor.model.status
+import name.levis.ichor.ui.components.SectionHeader
+import name.levis.ichor.ui.components.expandable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -19,7 +26,6 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -128,39 +134,48 @@ private fun KubeStatusPill(nodes: KubeNodesOverview) {
  * The nodes as Kubernetes sees them: roles, readiness, cordon, address, kubelet version,
  * pressure, and where the cloud put them (autoscaler pool, machine type, spot), those needing
  * attention first. A tap opens [onNode]'s actions (cordon, drain): there is no node detail
- * screen, it reads the node through Talos. Past NODE_DENSE_THRESHOLD nodes the card turns
- * dense (see DenseKubeNodes) and the title opens the Kubernetes nodes screen ([onAllNodes]):
- * a card holding hundreds of rows defeats the home. Credentials that may not list nodes get a
- * note instead; the rest of the home still works.
+ * screen, it reads the node through Talos. Like the Talos home's NodesCard, collapsed (the
+ * default, [expanded] shared with it) a dense row per node up to FEW_NODES, else a chip per
+ * node; expanded, a full row per node with its usage. The header toggles between the two. Past
+ * NODE_DENSE_THRESHOLD nodes the card turns dense (see DenseKubeNodes) and the title opens the
+ * Kubernetes nodes screen ([onAllNodes]): a card holding hundreds of rows defeats the home.
+ * Credentials that may not list nodes get a note instead; the rest of the home still works.
  */
 @Composable
-internal fun KubeNodesCard(overview: KubeNodesOverview, onNode: (KubeNodeInfo) -> Unit, onAllNodes: (NodeFilter?) -> Unit) {
-    val dense = isDenseCluster(overview.nodes.size)
-    Card(Modifier.fillMaxWidth()) {
-        Row(
-            (if (dense) Modifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.overview_nodes_open_all)) { onAllNodes(null) } else Modifier)
-                .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.common_label_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            if (!overview.forbidden) {
-                Text(overview.nodes.size.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (dense) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp),
-                )
-            }
-        }
+internal fun KubeNodesCard(
+    overview: KubeNodesOverview,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onNode: (KubeNodeInfo) -> Unit,
+    onAllNodes: (NodeFilter?) -> Unit,
+) {
+    val total = overview.nodes.size
+    val dense = isDenseCluster(total)
+    val listed = !overview.forbidden && total > 0
+    val nodes = remember(overview) { overview.nodes.byStatus().flatMap { it.nodes } }
+    Card(Modifier.fillMaxWidth().animateContentSize()) {
+        SectionHeader(
+            stringResource(R.string.overview_stat_nodes),
+            when {
+                dense -> Modifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.overview_nodes_open_all)) { onAllNodes(null) }
+                listed -> Modifier.expandable(expanded, onToggle = onToggle)
+                else -> Modifier
+            }.padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
+            subtitle = if (overview.forbidden) null else pluralStringResource(R.plurals.overview_summary_nodes, total, total),
+            pill = if (listed) nodesPillOf(nodes.map { it.status }) else null,
+            chevron = when {
+                dense -> Icons.AutoMirrored.Outlined.KeyboardArrowRight
+                !listed -> null
+                expanded -> Icons.Outlined.ExpandLess
+                else -> Icons.Outlined.ExpandMore
+            },
+        )
         when {
             overview.forbidden -> MutedText(stringResource(R.string.kube_home_nodes_forbidden), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
             overview.nodes.isEmpty() -> MutedText(stringResource(R.string.kube_home_no_nodes), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
             dense -> DenseKubeNodes(overview.nodes, onNode, onAllNodes)
+            !expanded -> KubeNodesCompact(nodes, onNode)
             else -> {
-                val nodes = remember(overview) { overview.nodes.byStatus().flatMap { it.nodes } }
                 // Read again with every refresh of the list; no bars without metrics-server.
                 val top = rememberKubeTopNodes(overview)
                 val usage = remember(top) { top?.byName.orEmpty() }

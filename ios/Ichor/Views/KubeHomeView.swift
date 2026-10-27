@@ -118,6 +118,8 @@ struct KubeHomeView: View {
     @State private var whoAmI: KubeWhoAmI?
     /// Node usage from metrics-server, by node name; empty without it (no bars then).
     @State private var top: [String: KubeTopNode] = [:]
+    /// Shared with the Talos overview: one choice of chips or full rows for every cluster.
+    @AppStorage("overview.nodesExpanded") private var nodesExpanded = false
     /// The sections' order and those hidden, the toolbar's icons and menu: one arrangement for
     /// every cluster added from a kubeconfig, changed in HomeEditorSheet (same saved form as Android).
     @AppStorage(KubeHomeLayout.storageKey) private var layoutText = ""
@@ -340,7 +342,8 @@ struct KubeHomeView: View {
         }
     }
 
-    /// The nodes grouped by status, the worst first; past nodeDenseThreshold a dot per node
+    /// The nodes grouped by status, the worst first, as the Talos overview: collapsed (the
+    /// default) a chip per node, expanded a full row; past nodeDenseThreshold a dot per node
     /// (DenseKubeNodes) and the header opens the Kubernetes nodes screen: a section holding
     /// hundreds of rows defeats the home.
     private func nodesSection(_ overview: KubeNodesOverview) -> some View {
@@ -351,6 +354,21 @@ struct KubeHomeView: View {
                     .font(.callout).foregroundStyle(.secondary)
             } else if dense {
                 DenseKubeNodes(nodes: overview.nodes, path: $path, cordoning: $cordoning)
+            } else if !nodesExpanded {
+                ChipFlow(spacing: 8) {
+                    ForEach(overview.nodes.byStatus.flatMap(\.nodes)) { node in
+                        // No node screen without Talos: the chip offers the node's actions.
+                        Menu {
+                            KubeNodeMenu(node: node, path: $path, cordoning: $cordoning)
+                        } label: {
+                            NodeChipLabel(name: node.name, status: node.status)
+                        }
+                        .foregroundStyle(node.status == .ready ? Color.primary : node.status.color)
+                        .accessibilityLabel(Text(verbatim: "\(node.name), \(node.status.label)"))
+                    }
+                }
+                .buttonStyle(.borderless)
+                .padding(.vertical, 4)
             } else {
                 ForEach(overview.nodes.byStatus.flatMap(\.nodes)) { node in
                     KubeNodeActionRow(node: node, path: $path, cordoning: $cordoning, usage: top[node.name])
@@ -366,6 +384,12 @@ struct KubeHomeView: View {
                         Image(systemName: "chevron.right")
                     }
                     .accessibilityLabel(Text("Show all nodes"))
+                }
+                if !dense && !overview.forbidden && !overview.nodes.isEmpty {
+                    Button { withAnimation { nodesExpanded.toggle() } } label: {
+                        Image(systemName: nodesExpanded ? "chevron.up" : "chevron.down")
+                    }
+                    .accessibilityLabel(nodesExpanded ? Text("Show less") : Text("Show all"))
                 }
             }
         }
