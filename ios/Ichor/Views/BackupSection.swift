@@ -144,6 +144,64 @@ struct RestoreBackupButton: View {
     }
 }
 
+/// A backup sent to Ichor (the share extension, "Open with"; IncomingConfig): asks first when
+/// clusters are stored, since a restore replaces them, then its passphrase, as "Restore a
+/// backup…" does. Waits for the app lock.
+private struct ReceivedBackupRestore: ViewModifier {
+    @Environment(AppModel.self) private var model
+    @State private var confirming: PickedBackup?
+    @State private var picked: PickedBackup?
+    /// Said once the passphrase sheet is gone (an alert does not show while it closes).
+    @State private var restored: String?
+    @State private var message: String?
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { take(NotificationRouter.shared.pendingBackup) }
+            .onChange(of: NotificationRouter.shared.pendingBackup) { _, data in take(data) }
+            .onChange(of: model.lock.locked) { _, locked in
+                if !locked { take(NotificationRouter.shared.pendingBackup) }
+            }
+            .alert("Restore a backup", isPresented: $confirming.isPresent(), presenting: confirming) { backup in
+                Button("Restore", role: .destructive) { picked = backup }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("Restoring replaces every cluster and setting on this device with those of the backup.")
+            }
+            .sheet(item: $picked, onDismiss: {
+                message = restored
+                restored = nil
+            }) { backup in
+                UnlockBackupSheet(file: backup.data) { note in
+                    restored = [String(localized: "Backup restored."), note].compactMap { $0 }.joined(separator: " ")
+                    picked = nil
+                }
+            }
+            .messageAlert($message)
+    }
+
+    private func take(_ data: Data?) {
+        guard let data, !model.lock.locked else { return }
+        NotificationRouter.shared.pendingBackup = nil
+        Task {
+            // Sealed for age keys only: it cannot open here.
+            if await AppBackup.needsIdentity(data) {
+                message = BackupError.needsIdentity.localizedDescription
+                return
+            }
+            let backup = PickedBackup(data: data)
+            if model.hasConfig { confirming = backup } else { picked = backup }
+        }
+    }
+}
+
+extension View {
+    /// Offers to restore a backup sent to Ichor (NotificationRouter.pendingBackup).
+    func restoresReceivedBackup() -> some View {
+        modifier(ReceivedBackupRestore())
+    }
+}
+
 private struct PickedBackup: Identifiable {
     let id = UUID()
     let data: Data

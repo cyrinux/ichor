@@ -49,6 +49,9 @@ Pick one of these:
 
 - **File:** `adb push talosconfig-phone /sdcard/Download/`, then choose it in the app.
 - **Paste:** paste the YAML.
+- **Share:** send the file from Files, Mail or a chat app. On Android, pick Ichor in the share
+  sheet. On iOS, pick **Send to Ichor**, then open Ichor: the import preview shows it (a backup
+  goes to the restore screen instead). "Open with" Ichor works too.
 - **QR code:** run `qrencode -r talosconfig-phone -o talosconfig.png` and scan it. This works
   for configs up to about 2.9 KB. A larger one (a kubeconfig with an embedded certificate)
   usually fits compressed; the app expands it:

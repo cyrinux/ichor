@@ -57,6 +57,8 @@ targets:
       - framework: Frameworks/llama.xcframework
         embed: true
       - target: TalosWidget
+      # "Send to Ichor" in the share sheet.
+      - target: IchorShare
       # Not embedded yet (IchorWatch below): the App Store path for a watch app (its bundle IDs'
       # profiles, watch screenshots) is unverified. Embedding it is `- target: IchorWatch` here
       # (XcodeGen puts a watchOS app dependency in "Embed Watch Content", Ichor.app/Watch).
@@ -128,19 +130,36 @@ targets:
         NSSupportsLiveActivities: true
         NSSupportsLiveActivitiesFrequentUpdates: false
         BGTaskSchedulerPermittedIdentifiers: [name.levis.ichor.refresh]
-        # "Open with", the share sheet and AirDrop: YAML files (talosconfigs, kubeconfigs) and
-        # *.kubeconfig land in the import preview (IncomingConfig.swift). A copy, not in place.
+        # "Open with" and AirDrop: YAML files (talosconfigs, kubeconfigs) and *.kubeconfig land
+        # in the import preview, backups in the restore flow (IncomingConfig.swift). A copy, not
+        # in place. The share sheet's "Send to Ichor" is the IchorShare extension.
         CFBundleDocumentTypes:
           - CFBundleTypeName: Talos or Kubernetes config
             CFBundleTypeRole: Viewer
             LSHandlerRank: Alternate
             LSItemContentTypes: [public.yaml, name.levis.ichor.kubeconfig]
+          - CFBundleTypeName: Ichor backup
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [name.levis.ichor.backup, name.levis.ichor.agebackup]
+        # Declared so the share extension's activation rule can name them (a type made from an
+        # extension alone is dynamic and cannot be matched).
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: name.levis.ichor.kubeconfig
             UTTypeDescription: Kubernetes config
             UTTypeConformsTo: [public.yaml]
             UTTypeTagSpecification:
               public.filename-extension: [kubeconfig]
+          - UTTypeIdentifier: name.levis.ichor.backup
+            UTTypeDescription: Ichor backup
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [ichorbackup]
+          - UTTypeIdentifier: name.levis.ichor.agebackup
+            UTTypeDescription: age encrypted file
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [age]
         LSSupportsOpeningDocumentsInPlace: false
         # The ceiling: the app delegate narrows it to portrait outside the wide screens (Orientation.swift).
         UISupportedInterfaceOrientations:
@@ -183,6 +202,47 @@ targets:
         CFBundleLocalizations: [en, fr, es, uk, de, it]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+
+  # "Send to Ichor" in the share sheet: copies a shared config or backup into the App Group's
+  # incoming/ folder, which the app takes on its next activation (IncomingConfig.receivePending);
+  # a share extension cannot open its app. Strings: IchorShare/Localizable.xcstrings, the name
+  # in IchorShare/*.lproj/InfoPlist.strings.
+  IchorShare:
+    type: app-extension
+    platform: iOS
+    sources: [IchorShare]
+    dependencies:
+      - package: IchorCore
+      - sdk: UniformTypeIdentifiers.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: name.levis.ichor.share
+        GENERATE_INFOPLIST_FILE: NO
+    entitlements:
+      path: IchorShare/IchorShare.entitlements
+      properties:
+        com.apple.security.application-groups: [group.name.levis.ichor]
+    info:
+      path: IchorShare/Info.plist
+      properties:
+        CFBundleDisplayName: Send to Ichor
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, fr, es, uk, de, it]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            # One file: a YAML config, a .kubeconfig, a backup, or a file without a type (a
+            # kubeconfig named "config"). A PDF or an image does not offer "Send to Ichor".
+            NSExtensionActivationRule: >-
+              SUBQUERY (extensionItems, $extensionItem, SUBQUERY ($extensionItem.attachments, $attachment,
+              ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.yaml"
+              OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "name.levis.ichor.kubeconfig"
+              OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "name.levis.ichor.backup"
+              OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "name.levis.ichor.agebackup"
+              OR ANY $attachment.registeredTypeIdentifiers == "public.data").@count == 1).@count == 1
 
   # Apple Watch app (CYR-339), read-only: the clusters and nodes of the iPhone's last background
   # check, sent over WatchConnectivity (Ichor/Services/WatchLink.swift); no config on the watch.

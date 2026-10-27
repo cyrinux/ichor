@@ -46,6 +46,9 @@ final class NotificationRouter {
 
     /// A config file opened with Ichor (IncomingConfig): its text, for the import preview.
     var pendingImportText: String?
+
+    /// A backup sent to Ichor (IncomingConfig): its bytes, for the restore flow.
+    var pendingBackup: Data?
 }
 
 /// The screen a GitOps alert leads to.
