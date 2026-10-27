@@ -151,6 +151,8 @@ private struct ReceivedBackupRestore: ViewModifier {
     @Environment(AppModel.self) private var model
     @State private var confirming: PickedBackup?
     @State private var picked: PickedBackup?
+    /// Said once the passphrase sheet is gone (an alert does not show while it closes).
+    @State private var restored: String?
     @State private var message: String?
 
     func body(content: Content) -> some View {
@@ -166,10 +168,13 @@ private struct ReceivedBackupRestore: ViewModifier {
             } message: { _ in
                 Text("Restoring replaces every cluster and setting on this device with those of the backup.")
             }
-            .sheet(item: $picked) { backup in
+            .sheet(item: $picked, onDismiss: {
+                message = restored
+                restored = nil
+            }) { backup in
                 UnlockBackupSheet(file: backup.data) { note in
+                    restored = [String(localized: "Backup restored."), note].compactMap { $0 }.joined(separator: " ")
                     picked = nil
-                    message = [String(localized: "Backup restored."), note].compactMap { $0 }.joined(separator: " ")
                 }
             }
             .messageAlert($message)

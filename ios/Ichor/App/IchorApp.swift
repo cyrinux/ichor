@@ -57,6 +57,9 @@ struct IchorApp: App {
                 .environment(gitHosts)
                 .environment(stagedEdits)
                 .task { support.onLaunch() }
+                // Files sent with "Send to Ichor" while the app was closed (scenePhase's first
+                // .active may come before the root's onChange is attached).
+                .task { IncomingConfig.receivePending() }
                 // A share link or a config file while the app runs (the scene delegate takes them at launch).
                 .onOpenURL { url in
                     if url.isFileURL { IncomingConfig.receive(url) }
@@ -171,7 +174,9 @@ struct RootView: View {
             // Fail closed: neither store is shown while one cannot be read.
             ConfigUnreadableView()
         } else if !model.hasConfig {
+            // A backup sent to a new phone lands here: restored without asking.
             NavigationStack { ImportView() }
+                .restoresReceivedBackup()
         } else if !model.lock.enabled && AppLockState.required(for: model.summary?.contexts ?? []) {
             // Right after the first import, or on updating from an optional lock.
             LockOnboardingView()
