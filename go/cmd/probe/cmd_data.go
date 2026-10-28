@@ -159,6 +159,21 @@ var dataCommands = []command{
 		// REQUESTSJSON: [{"repoURL":"https://github.com/example-org/fork","number":1}], 20 at most.
 		return ichorgo.GitForgeRequestStates(flag.Arg(1), flag.Arg(2))
 	}},
+	{name: "updates-lookup", args: "TARGETSJSON [AUTHJSON|@CONFIGJSON]", noConfig: true, run: func(env) (string, error) {
+		// Newer versions of images and charts from their registries; no cluster. AUTHJSON is a
+		// Docker config.json ({"auths":…}, optional "helm":{"username","password"}), inline or @file.
+		auth := flag.Arg(2)
+		if path, ok := strings.CutPrefix(auth, "@"); ok {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return "", err
+			}
+
+			auth = string(content)
+		}
+
+		return ichorgo.UpdateCandidates(flag.Arg(1), auth)
+	}},
 	{name: "gitops-revision-runs", args: "TOOL KIND NAMESPACE NAME SHA", run: func(e env) (string, error) {
 		return ichorgo.GitOpsRevisionRuns(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5))
 	}},
