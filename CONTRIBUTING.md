@@ -6,7 +6,7 @@ an issue first so we can agree on the approach before you spend time on it.
 ## Before you open a pull request
 
 - Run `./build.sh check` (gofmt, vet, staticcheck, the Go tests under the race detector,
-  govulncheck, Kotlin unit tests); CI runs the same. On a host whose ThreadSanitizer refuses
+  govulncheck, Kotlin unit tests, Android Lint); CI runs the same. On a host whose ThreadSanitizer refuses
   the address space (some arm64 kernels) the Go tests run without `-race`, with a warning;
   CI always races.
 - The demo-mode smoke test (`DemoSmokeTest`, CI job `ui-smoke`) walks the demo cluster on an
@@ -15,6 +15,13 @@ an issue first so we can agree on the approach before you spend time on it.
 - A govulncheck finding (`just vuln`) means a known vulnerability is reachable from the Go
   core: bump the module (or the Go toolchain for a standard library one). If the call path
   is not reachable in practice, say why in the PR with `govulncheck -show verbose ./...`.
+- Android Lint (`:app:lintDebug`, `:wear:lintDebug`) runs against `app/lint-baseline.xml` and
+  `wear/lint-baseline.xml`, the findings known when it was turned on: only a new one fails, with
+  its file and line in the log and the report in `app/build/reports/lint-results-debug.html`
+  (a CI artifact when the check fails). Fix the finding; a pull request must not grow a
+  baseline (`git diff --stat '*/lint-baseline.xml'` shows nothing). To refresh one on purpose
+  (an AGP bump that renames checks, a category emptied), delete it, run the check twice (the
+  first run writes it and stops) and review the diff in the PR.
 - No source file over 800 lines (`just length-check`); split it by domain instead.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app

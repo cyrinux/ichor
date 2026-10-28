@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Wake-on-LAN: find the Wi-Fi/Ethernet network to broadcast the magic packet on. -->
@@ -206,11 +207,13 @@
                 android:value="Follows the long operations the user started on their Talos or Kubernetes cluster while they switch apps or lock the screen, so they are not cut off midway: a Talos OS upgrade of one node or of every node one after the other (drain, install, reboot, wait for the node), a Kubernetes version upgrade, a node maintenance (cordon, drain, reboot), a new node joining the cluster, a machine configuration change tried on a node (which the node reverts by itself after 1 to 10 minutes unless kept from the notification) or applied to several nodes, a container image pull on the nodes, and a vulnerability scan of images in the cluster. Each shows its progress with Stop where possible; the service stops when they all end." />
         </service>
 
-        <!-- The model download the user started: a user-initiated data transfer job. -->
+        <!-- The model download the user started: a user-initiated data transfer job, Android 14+
+             only (downloadSupported(); the job is never scheduled below). -->
         <service
             android:name=".localmodel.ModelDownloadJob"
             android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false" />
+            android:exported="false"
+            tools:targetApi="34" />
 
         <!-- Cancel on the model download's notification. -->
         <receiver

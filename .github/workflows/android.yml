@@ -31,7 +31,7 @@ permissions:
 # (auto-release.yml reads main's conclusions).
 jobs:
   check:
-    name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests)
+    name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests, Lint)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,6 +51,16 @@ jobs:
           save: "true"
 
       - run: ./build.sh check
+
+      # A new Lint finding fails the check: the reports say which, with the code around it.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: lint-reports
+          path: |
+            app/build/reports/lint-results-debug.*
+            wear/build/reports/lint-results-debug.*
+          if-no-files-found: ignore
 
       # The Go cache is written here only, on main: pull requests read it, so the cache does
       # not fill with one entry per push. The entry it replaces is deleted right after.
