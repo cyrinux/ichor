@@ -38,7 +38,9 @@ fun currentDownloadBlock(context: Context, allowMetered: Boolean): DownloadBlock
     return downloadBlock(
         connected = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true,
         metered = cm.isActiveNetworkMetered,
-        roaming = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING) == false,
+        // NOT_ROAMING exists from Android 9; before, every network would read as roaming.
+        roaming = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+            caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING) == false,
         dataSaver = cm.restrictBackgroundStatus,
         allowMetered = allowMetered,
     )

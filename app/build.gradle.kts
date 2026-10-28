@@ -133,6 +133,23 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Full Lint in `./build.sh check` (:app:lintDebug, the open-source sources): the findings
+    // recorded in lint-baseline.xml are known, any new one fails the check (CONTRIBUTING.md,
+    // "Checks"). Warnings stay warnings; errors fail.
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+        warningsAsErrors = false
+        checkDependencies = false
+        disable += listOf(
+            // "--" in the strings is a command-line flag (`--roles os:reader`), never a dash.
+            "TypographyDashes",
+            // Its dictionary flags product and protocol names in translations (Garage, Magic
+            // Packet, age1 keys); the translation checks own spelling.
+            "Typos",
+        )
+    }
 }
 
 // The licenses screen. Gradle dependencies are collected automatically; the Go core's modules

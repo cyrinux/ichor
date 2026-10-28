@@ -22,7 +22,8 @@ case "$VARIANT" in
   release) GRADLE_TASKS=(assembleRelease) ;;
   play) GRADLE_TASKS=(bundlePlay) ;;
   # Also assembles the Wear OS app (tile and complication): its manifest and resources are checked.
-  check) GRADLE_TASKS=(testDebugUnitTest :wear:assembleDebug) ;;
+  # Lint runs once, on the debug build of each app (lint-baseline.xml holds the known findings).
+  check) GRADLE_TASKS=(testDebugUnitTest :app:lintDebug :wear:lintDebug :wear:assembleDebug) ;;
   # The app and its instrumentation test, installed on an emulator by android.yml's ui-smoke.
   smoke) GRADLE_TASKS=(:app:assembleDebug :app:assembleDebugAndroidTest) ;;
   *) echo "unknown variant: $VARIANT (debug|release|play|check|smoke)" >&2; exit 2 ;;

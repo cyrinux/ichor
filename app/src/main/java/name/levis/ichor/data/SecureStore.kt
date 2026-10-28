@@ -291,7 +291,7 @@ class SecureStore internal constructor(
             // The file opened with oldAlias: a key under newAlias is left from a move cut short.
             keys.delete(newAlias)
             beforeStep(RekeyStep.GENERATE)
-            val key = retrying(delays, pause, retryOn = { it !is StrongBoxUnavailableException }) {
+            val key = retrying(delays, pause, retryOn = { !isStrongBoxRefusal(it) }) {
                 keys.generate(newAlias, strongBox = true).also(::probe)
             }
             beforeStep(RekeyStep.WRITE_NEXT)
@@ -408,7 +408,7 @@ internal suspend fun <K> strongBoxOrTee(
 ): K {
     if (strongBox == null) return tee()
     val chipFailure = try {
-        return retrying(delays, pause, retryOn = { it !is StrongBoxUnavailableException }) { strongBox() }
+        return retrying(delays, pause, retryOn = { !isStrongBoxRefusal(it) }) { strongBox() }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -443,7 +443,7 @@ internal fun <K> chipKeyOrTee(
             return generate(true)
         } catch (e: java.security.ProviderException) {
             // Unsupported parameters: no point in waiting (checked like strongBoxOrTee does).
-            if (e is StrongBoxUnavailableException) break
+            if (isStrongBoxRefusal(e)) break
             // UNKNOWN_ERROR while the chip's connection is down: it reconnects in seconds.
             delays.getOrNull(attempt)?.let(pause)
         }
@@ -458,6 +458,13 @@ class KeystoreUnavailableException(cause: Exception) : LocalizedException(UiText
         initCause(cause)
     }
 }
+
+/**
+ * The chip refused the key's parameters ([StrongBoxUnavailableException]): no point in trying
+ * again. The class exists from Android 9, where StrongBox starts; before, nothing throws it.
+ */
+internal fun isStrongBoxRefusal(e: Throwable): Boolean =
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && e is StrongBoxUnavailableException
 
 fun hasStrongBox(pm: PackageManager): Boolean =
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && pm.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
