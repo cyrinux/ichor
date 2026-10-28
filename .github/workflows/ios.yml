@@ -48,6 +48,14 @@ jobs:
 
       - run: scripts/ios-build.sh test
 
+      # The demo-mode smoke test's result bundle (screens, element trees, logs) when it fails.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: ios-ui-tests
+          path: ios/build/ui-tests.xcresult
+          retention-days: 7
+
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.ref == 'refs/heads/main' && steps.llama.outputs.cache-hit != 'true'
         with:

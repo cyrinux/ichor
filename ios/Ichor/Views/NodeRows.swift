@@ -20,6 +20,7 @@ struct NodeListRow: View {
             if node.reachable {
                 // Beside the Nodes list on an iPad, pushed everywhere else.
                 ListDetailLink(value: Route.node(ref), pick: ref) { row }
+                    .accessibilityIdentifier(SmokeID.node)
             } else {
                 row
             }

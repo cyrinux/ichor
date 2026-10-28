@@ -233,6 +233,7 @@ private struct SnapshotList: View {
                 LogListRows(content: content, texts: document.texts, expanded: $expanded)
             }
             .listStyle(.plain)
+            .accessibilityIdentifier(SmokeID.logLines)
             .scalableMonoText(.logs)
             .themedBackground()
             .modifier(LevelBar(display: $display, counts: content.counts))
@@ -282,6 +283,7 @@ struct FollowList: View {
                 .onAppear { pinned = true }
             }
             .listStyle(.plain)
+            .accessibilityIdentifier(SmokeID.logLines)
             .scalableMonoText(.logs)
             .themedBackground()
             .modifier(LevelBar(display: $display, counts: content.counts))

@@ -128,6 +128,14 @@ fi
 case "$MODE" in
   test)
     xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Debug -destination 'generic/platform=iOS Simulator' build
+    # The demo-mode smoke test (IchorUITests) on the runner's first iPhone simulator: picked by
+    # name from simctl, since the image's models change. Its result bundle is
+    # build/ui-tests.xcresult (uploaded by ios.yml on failure).
+    sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')
+    [[ -n "$sim" ]] || { echo "no iPhone simulator available" >&2; exit 1; }
+    rm -rf build/ui-tests.xcresult
+    xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Debug -destination "id=$sim" \
+      -only-testing:IchorUITests -resultBundlePath build/ui-tests.xcresult test
     ;;
   ipa)
     xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Release -destination 'generic/platform=iOS' build

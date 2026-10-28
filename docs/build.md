@@ -191,3 +191,9 @@ The same demo is the fixture of the **smoke test** (`app/src/androidTest/.../Dem
 CI job `ui-smoke`). With an x86_64 AVD (API 34) running, `./build.sh smoke` builds the
 debug APK and the test APK, then `scripts/ui-smoke.sh` installs both and runs the test. It
 fails when a test does, and keeps the output in `app/build/reports/ui-smoke.txt`.
+
+On iOS the twin is `ios/IchorUITests/DemoSmokeTests.swift` (CI job "Core tests and simulator
+build"). On a Mac, `scripts/ios-build.sh test` runs it on the first available iPhone simulator
+after the build and writes `ios/build/ui-tests.xcresult`; in Xcode it is the Ichor scheme's
+test action (⌘U). The launch environment `ICHOR_UI_TEST=demo` (or `demo-kube`) adds the demo at
+launch and hides the tour (`ios/Ichor/App/UITestLaunch.swift`).

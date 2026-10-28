@@ -116,6 +116,7 @@ struct NodeInspectSection: View {
     var body: some View {
         Section("Inspect") {
             NodeHubButton(title: String(localized: "Kernel log"), systemImage: "terminal") { open = .kernelLog }
+                .accessibilityIdentifier(SmokeID.kernelLog)
             NodeHubButton(title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events)) {
                 open = .events
             }

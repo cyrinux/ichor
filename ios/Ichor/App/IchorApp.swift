@@ -169,7 +169,11 @@ struct RootView: View {
     @ViewBuilder
     private var content: some View {
         if !model.loaded {
-            ProgressView().task { await model.load() }
+            ProgressView().task {
+                await model.load()
+                // A UI test's demo (nothing in a real launch).
+                await UITestLaunch.prepare(model)
+            }
         } else if !model.unreadable.isEmpty {
             // Fail closed: neither store is shown while one cannot be read.
             ConfigUnreadableView()
