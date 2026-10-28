@@ -32,10 +32,8 @@ class OverviewScreenNavigation(
     /** Every node to the version given ("": the newest stable release). */
     val onUpgradeCluster: (String) -> Unit,
     val onUpgradeKubernetes: () -> Unit,
-    /** "Add a node…": a machine in maintenance mode, booted from the Talos ISO. */
+    /** "Add a node…": boot a new machine, then join it from maintenance mode (Omni: boot media only). */
     val onAddNode: () -> Unit,
-    /** "Boot a new machine…": the booter command, ISO and iPXE links that start a new node. */
-    val onBootMedia: () -> Unit,
     val onDiagnose: () -> Unit,
     val onAddCluster: () -> Unit,
     val onClustersCleared: () -> Unit,

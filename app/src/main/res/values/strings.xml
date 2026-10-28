@@ -4812,10 +4812,10 @@
     <string name="join_node_step_inspect">1. Inspect the new node</string>
     <string name="join_node_intro">Boot the new machine from the Talos ISO: it waits in maintenance mode and its console shows its IP address. Your phone must be on the same network, or on a VPN that reaches it.</string>
     <string name="join_node_demo">In the demo, type demo to see a sample node.</string>
-    <string name="boot_media_menu">Boot a new machine…</string>
     <string name="boot_media_title">Boot a new machine</string>
     <string name="boot_media_intro">Your phone cannot serve a network boot itself. Start the new machine with one of these: it then waits in maintenance mode, and Add a node takes it from there.</string>
-    <string name="boot_media_link">No boot media yet? Boot a new machine…</string>
+    <string name="join_node_boot_card_title">No machine yet? Boot a new machine</string>
+    <string name="join_node_boot_card_body">The booter command, the ISO and the iPXE link; the machine then waits in maintenance mode</string>
     <string name="boot_media_target">Talos %1$s</string>
     <string name="boot_media_schematic_member">Schematic of %1$s</string>
     <string name="boot_media_schematic_default">Image Factory default schematic, without extensions</string>
@@ -4833,6 +4833,7 @@
     <string name="boot_media_qr">QR code of %1$s</string>
     <string name="boot_media_qr_too_large">Too long for a QR code: use Copy or Share.</string>
     <string name="boot_media_machine_up">The machine is up: add it</string>
+    <string name="boot_media_omni_next">Omni adds the machine once it boots with these arguments</string>
     <string name="join_node_address">Node address</string>
     <string name="join_node_inspect">Inspect</string>
     <string name="join_node_maintenance">Maintenance mode</string>

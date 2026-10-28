@@ -223,8 +223,10 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     starting again continues with the others.
   - **Going back:** there is no undo; returning to the previous version is another upgrade.
 - **Adding a node from the phone (overview menu → Add a node…, os:admin):** boot the new machine
-  from the Talos ISO and type the address its console shows.
-  - **Booting it (overview menu → Boot a new machine…):** the phone cannot serve a network boot
+  from the Talos ISO and type the address its console shows. "Add a node…" is the one entry for
+  growing a Talos cluster; on an Omni cluster it opens the boot media directly, and Omni adds the
+  machine once it boots with the join arguments.
+  - **Booting it (Add a node… → No machine yet? Boot a new machine):** the phone cannot serve a network boot
     itself (DHCP and TFTP need privileged ports), so it shows what does, for the cluster's Talos
     version and Image Factory schematic: the `siderolabs/booter` command (docker or podman) for a
     Linux laptop of the machine's network, the ISO, the iPXE URL, and the kernel, initramfs and

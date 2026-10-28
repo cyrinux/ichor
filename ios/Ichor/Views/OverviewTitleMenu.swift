@@ -34,12 +34,8 @@ struct OverviewTitleMenu: View {
                 Label("Upgrade Kubernetes…", systemImage: "shippingbox")
             }
         }
+        // On Omni, Add a node opens the boot media: Omni joins the machine itself.
         if let context = model.activeSummary, !context.isKube {
-            Button { path.append(.bootMedia) } label: {
-                Label("Boot a new machine…", systemImage: "opticaldiscdrive")
-            }
-        }
-        if let context = model.activeSummary, !context.isKube, !context.omni {
             Button { path.append(.joinNode) } label: {
                 Label("Add a node…", systemImage: "plus.circle")
             }

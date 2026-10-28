@@ -36,6 +36,10 @@ struct BootMediaView: View {
                 Section {
                     Button("The machine is up: add it") { addNode() }
                 }
+            } else if model.activeSummary?.omni == true {
+                Section {
+                    Text("Omni adds the machine once it boots with these arguments").note()
+                }
             }
         }
         .navigationTitle("Boot a new machine")

@@ -4805,10 +4805,10 @@
     <string name="join_node_step_inspect">1. Inspecionar o novo nó</string>
     <string name="join_node_intro">Inicialize a nova máquina com a ISO do Talos: ela aguarda em modo de manutenção e o console mostra o endereço IP. Seu telefone precisa estar na mesma rede ou em uma VPN que a alcance.</string>
     <string name="join_node_demo">Na demonstração, digite demo para ver um nó de exemplo.</string>
-    <string name="boot_media_menu">Inicializar uma nova máquina…</string>
     <string name="boot_media_title">Inicializar uma nova máquina</string>
     <string name="boot_media_intro">Seu telefone não consegue servir uma inicialização pela rede. Inicialize a nova máquina com uma destas opções: ela então aguarda em modo de manutenção e Adicionar um nó continua a partir daí.</string>
-    <string name="boot_media_link">Ainda sem mídia de inicialização? Inicializar uma nova máquina…</string>
+    <string name="join_node_boot_card_title">Ainda sem máquina? Inicializar uma nova máquina</string>
+    <string name="join_node_boot_card_body">O comando booter, a ISO e o link iPXE; depois a máquina aguarda em modo de manutenção</string>
     <string name="boot_media_target">Talos %1$s</string>
     <string name="boot_media_schematic_member">Schematic de %1$s</string>
     <string name="boot_media_schematic_default">Schematic padrão da Image Factory, sem extensões</string>
@@ -4826,6 +4826,7 @@
     <string name="boot_media_qr">Código QR de %1$s</string>
     <string name="boot_media_qr_too_large">Longo demais para um código QR: use Copiar ou Compartilhar.</string>
     <string name="boot_media_machine_up">A máquina iniciou: adicioná-la</string>
+    <string name="boot_media_omni_next">O Omni adiciona a máquina assim que ela inicializa com estes argumentos</string>
     <string name="join_node_address">Endereço do nó</string>
     <string name="join_node_inspect">Inspecionar</string>
     <string name="join_node_maintenance">Modo de manutenção</string>

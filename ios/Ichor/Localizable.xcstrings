@@ -1,61 +1,179 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Boot a new machine…" : {
+    "No machine yet? Boot a new machine" : {
       "extractionState" : "manual",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Démarrer une nouvelle machine…"
+            "value" : "Pas encore de machine ? Démarrer une nouvelle machine"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arrancar una máquina nueva…"
+            "value" : "¿Aún sin máquina? Arrancar una máquina nueva"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neue Maschine starten…"
+            "value" : "Noch keine Maschine? Neue Maschine starten"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avvia una nuova macchina…"
+            "value" : "Nessuna macchina? Avvia una nuova macchina"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Завантажити нову машину…"
+            "value" : "Ще немає машини? Завантажити нову машину"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启动新机器…"
+            "value" : "还没有机器？启动新机器"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新しいマシンを起動…"
+            "value" : "まだマシンがありませんか？新しいマシンを起動"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inicializar uma nova máquina…"
+            "value" : "Ainda sem máquina? Inicializar uma nova máquina"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Загрузить новую машину…"
+            "value" : "Ещё нет машины? Загрузить новую машину"
+          }
+        }
+      }
+    },
+    "The booter command, the ISO and the iPXE link; the machine then waits in maintenance mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La commande booter, l'ISO et le lien iPXE ; la machine attend ensuite en mode maintenance"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El comando booter, la ISO y el enlace iPXE; después la máquina espera en modo de mantenimiento"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Booter-Befehl, das ISO und der iPXE-Link; die Maschine wartet danach im Wartungsmodus"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il comando booter, la ISO e il link iPXE; poi la macchina attende in modalità manutenzione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команда booter, ISO і посилання iPXE; потім машина чекає в режимі обслуговування"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "booter 命令、ISO 和 iPXE 链接；之后机器在维护模式中等待"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "booter コマンド、ISO、iPXE リンク。その後マシンはメンテナンスモードで待機します"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O comando booter, a ISO e o link iPXE; depois a máquina aguarda em modo de manutenção"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команда booter, ISO и ссылка iPXE; затем машина ждёт в режиме обслуживания"
+          }
+        }
+      }
+    },
+    "Omni adds the machine once it boots with these arguments" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni ajoute la machine dès qu'elle démarre avec ces arguments"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni añade la máquina en cuanto arranca con estos argumentos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni fügt die Maschine hinzu, sobald sie mit diesen Argumenten startet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni aggiunge la macchina appena si avvia con questi argomenti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni додасть машину, щойно вона завантажиться з цими аргументами"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "机器以这些参数启动后，Omni 会添加它"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このパラメータで起動すると、Omni がマシンを追加します"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Omni adiciona a máquina assim que ela inicializa com estes argumentos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni добавит машину, как только она загрузится с этими аргументами"
           }
         }
       }
@@ -174,65 +292,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Телефон сам не может раздавать сетевую загрузку. Запустите новую машину одним из этих способов: затем она ждёт в режиме обслуживания, а «Добавить узел» продолжает с этого места."
-          }
-        }
-      }
-    },
-    "No boot media yet? Boot a new machine…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pas encore de support de démarrage ? Démarrer une nouvelle machine…"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Aún sin medio de arranque? Arrancar una máquina nueva…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch kein Startmedium? Neue Maschine starten…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessun supporto di avvio? Avvia una nuova macchina…"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ще немає завантажувального носія? Завантажити нову машину…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "还没有启动介质？启动新机器…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "起動メディアがまだありませんか？新しいマシンを起動…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ainda sem mídia de inicialização? Inicializar uma nova máquina…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ещё нет загрузочного носителя? Загрузить новую машину…"
           }
         }
       }

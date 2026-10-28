@@ -4683,10 +4683,10 @@
     <string name="join_node_step_inspect">1. 新しいノードを調査</string>
     <string name="join_node_intro">新しいマシンを Talos ISO から起動してください。メンテナンスモードで待機し、コンソールに IP アドレスが表示されます。スマートフォンが同じネットワーク上、またはそこに到達できる VPN 上にある必要があります。</string>
     <string name="join_node_demo">デモでは demo と入力するとサンプルのノードが表示されます。</string>
-    <string name="boot_media_menu">新しいマシンを起動…</string>
     <string name="boot_media_title">新しいマシンを起動</string>
     <string name="boot_media_intro">スマートフォン自体はネットワークブートを提供できません。以下のいずれかで新しいマシンを起動してください。その後メンテナンスモードで待機し、「ノードを追加」で続行します。</string>
-    <string name="boot_media_link">起動メディアがまだありませんか？新しいマシンを起動…</string>
+    <string name="join_node_boot_card_title">まだマシンがありませんか？新しいマシンを起動</string>
+    <string name="join_node_boot_card_body">booter コマンド、ISO、iPXE リンク。その後マシンはメンテナンスモードで待機します</string>
     <string name="boot_media_target">Talos %1$s</string>
     <string name="boot_media_schematic_member">%1$s の schematic</string>
     <string name="boot_media_schematic_default">Image Factory の既定 schematic（拡張なし）</string>
@@ -4704,6 +4704,7 @@
     <string name="boot_media_qr">%1$s の QR コード</string>
     <string name="boot_media_qr_too_large">QR コードには長すぎます。コピーまたは共有を使ってください。</string>
     <string name="boot_media_machine_up">マシンが起動しました：追加する</string>
+    <string name="boot_media_omni_next">このパラメータで起動すると、Omni がマシンを追加します</string>
     <string name="join_node_address">ノードのアドレス</string>
     <string name="join_node_inspect">調査</string>
     <string name="join_node_maintenance">メンテナンスモード</string>

@@ -227,7 +227,7 @@ enum Route: Hashable {
     case k8sUpgrade
     /// "Add a node…": a node in maintenance mode, booted from the Talos ISO.
     case joinNode
-    /// "Boot a new machine…": the booter command, ISO and iPXE links that start a new node.
+    /// Step 0 of Add a node (and all of it on Omni): the booter command, ISO and iPXE links that start a new node.
     case bootMedia
     /// Node hub opened on its cordon / uncordon confirmation (from a row's menu).
     case nodeCordon(NodeRef)
@@ -472,7 +472,9 @@ struct MainNavigation: View {
         case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
         case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
         case .k8sUpgrade: K8sUpgradePlanView()
-        case .joinNode: JoinNodeView(path: $path)
+        case .joinNode:
+            // Omni joins the machine itself: Add a node is only its boot media there.
+            if model.activeSummary?.omni == true { BootMediaView(path: $path) } else { JoinNodeView(path: $path) }
         case .bootMedia: BootMediaView(path: $path)
         case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
         case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab)

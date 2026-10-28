@@ -89,7 +89,8 @@ class BootMediaViewModel(private val lifecycle: NodeLifecycleRepository) : ViewM
 /**
  * "Boot a new machine…": the phone cannot serve a network boot (privileged ports), so it hands
  * over what does: the booter command for a laptop of the machine's network, the ISO, the iPXE
- * URL, and on Omni the join arguments. [onAddNode] continues with the machine in maintenance mode.
+ * URL, and on Omni the join arguments. [onAddNode] continues with the machine in maintenance mode;
+ * null on Omni, which adds the machine itself once it boots.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,8 +130,10 @@ fun BootMediaScreen(
                     MediaCards(state.data)
                 }
             }
-            onAddNode?.let { add ->
-                Button(onClick = add, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
+            if (onAddNode != null) {
+                Button(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
+            } else {
+                InfoNotice(stringResource(R.string.boot_media_omni_next))
             }
         }
     }

@@ -15,9 +15,17 @@ struct JoinNodeView: View {
     var body: some View {
         List {
             Section {
+                NavigationLink(value: Route.bootMedia) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No machine yet? Boot a new machine")
+                        Text("The booter command, the ISO and the iPXE link; the machine then waits in maintenance mode")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Section {
                 Text("Boot the new machine from the Talos ISO: it waits in maintenance mode and its console shows its IP address. Your phone must be on the same network, or on a VPN that reaches it.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Button("No boot media yet? Boot a new machine…") { path.append(.bootMedia) }
                 if model.activeSummary?.demo == true {
                     Text("In the demo, type demo to see a sample node.").note()
                 }
