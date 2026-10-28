@@ -353,7 +353,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   add a node, runbooks), then share it (incident summary, link).
 - **Search clusters:** every cluster's last-known nodes, pods, workloads, CronJobs and GitOps
   apps, and every screen of the cluster on screen: type "upgrade", "etcd", "alert set" or a
-  node's name and "hard" to open it.
+  node's name and "hard" to open it. With nothing typed it lists the nodes, workloads and
+  GitOps apps opened lately (20, on this phone only, never in screenshot mode) and the recent
+  searches.
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
   over NFC or USB), which can also seal the stored configs so that nothing reads them without it.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and

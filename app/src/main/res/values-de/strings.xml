@@ -4878,6 +4878,8 @@
     <string name="search_empty">Keine Ergebnisse für „%1$s“</string>
     <string name="search_group_screens">Bildschirme</string>
     <string name="search_show_all">Alle anzeigen</string>
+    <string name="search_recent_targets">Zuletzt geöffnet</string>
+    <string name="search_recent_targets_remove">Aus „Zuletzt geöffnet“ entfernen</string>
     <string name="search_nothing_known">Noch nichts bekannt: öffne einen Cluster einmal</string>
     <string name="search_refresh_active">Aktiven Cluster aktualisieren</string>
     <string name="search_refresh_failed">Aktiver Cluster konnte nicht aktualisiert werden: zuletzt Gezeigtes wird angezeigt</string>

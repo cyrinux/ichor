@@ -20,6 +20,9 @@ import name.levis.ichor.model.KubeHomeBar
 import name.levis.ichor.model.KubeHomeCard
 import name.levis.ichor.model.KubeHomeLayout
 import name.levis.ichor.model.ImageScanner
+import name.levis.ichor.model.RecentTarget
+import name.levis.ichor.model.RecentTargets
+import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.withRecent
 
 enum class ThemeMode(@StringRes val label: Int) {
@@ -141,6 +144,13 @@ class UiPreferences(private val prefs: SharedPreferences) {
     )
     val recentSearches: StateFlow<List<String>> = _recentSearches.asStateFlow()
 
+    /**
+     * The objects opened lately, newest first (the search's "Recently opened"); dropped with
+     * the recent searches, and never recorded in screenshot mode (labels are stored as shown).
+     */
+    private val _recentTargets = MutableStateFlow(RecentTargets.parse(prefs.getString(KEY_RECENT_TARGETS, null)))
+    val recentTargets: StateFlow<List<RecentTarget>> = _recentTargets.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -260,7 +270,24 @@ class UiPreferences(private val prefs: SharedPreferences) {
 
     fun removeRecentSearch(query: String) = setRecentSearches(_recentSearches.value - query)
 
-    fun clearRecentSearches() = setRecentSearches(emptyList())
+    fun clearRecentSearches() {
+        setRecentSearches(emptyList())
+        setRecentTargets(emptyList())
+    }
+
+    /** Records [target], shown as [label] and [detail], as opened now; nothing in screenshot mode. */
+    fun addRecentTarget(target: ShareTarget, label: String, detail: String = "") {
+        if (_privacyMask.value.enabled) return
+        setRecentTargets(RecentTargets.adding(_recentTargets.value, RecentTarget(target, label, detail, System.currentTimeMillis())))
+    }
+
+    fun removeRecentTarget(target: ShareTarget) = setRecentTargets(RecentTargets.removing(_recentTargets.value, target))
+
+    private fun setRecentTargets(recent: List<RecentTarget>) {
+        if (recent == _recentTargets.value) return
+        prefs.edit().putString(KEY_RECENT_TARGETS, RecentTargets.encode(recent)).apply()
+        _recentTargets.value = recent
+    }
 
     private fun setRecentSearches(queries: List<String>) {
         if (queries == _recentSearches.value) return
@@ -310,6 +337,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_KUBE_OBJECT_BAR = "kube_object_bar"
         private const val KEY_MONO_TEXT_SCALE = "mono_text_scale_"
         private const val KEY_RECENT_SEARCHES = "recent_searches"
+        private const val KEY_RECENT_TARGETS = "recent_targets"
         private const val KEY_TOUR_PENDING = "demo_tour_pending"
         private const val KEY_TOUR_OFFERED = "demo_tour_offered"
 

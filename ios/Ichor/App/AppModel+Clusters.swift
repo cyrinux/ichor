@@ -254,6 +254,7 @@ extension AppModel {
         SecureConfigStore.delete()
         LastKnownStore.wipe()
         SearchRecents.clear()
+        RecentTargetStore.shared.clear()
         PinStore.shared.wipe() // they name the clusters' nodes and objects
         PublicIPStore.wipe()
         MetricsStore.keep(fingerprints: []) // their credentials go with the config

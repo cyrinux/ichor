@@ -81,7 +81,10 @@ struct ArgoCDView: View {
             if !showsPick { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.argoCD)) } }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(for: ArgoAppRoute.self) { ArgoAppView(namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes) }
+        .navigationDestination(for: ArgoAppRoute.self) {
+            ArgoAppView(namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes)
+                .recordsOpened(.argoApp(namespace: $0.namespace, name: $0.name), label: $0.name, detail: $0.namespace)
+        }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
         .onAppear { covered = false }
         .onDisappear { covered = true }

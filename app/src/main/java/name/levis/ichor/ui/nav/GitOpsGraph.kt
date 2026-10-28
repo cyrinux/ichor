@@ -8,6 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.decodeQuickEdit
 import name.levis.ichor.model.encodeQuickEdit
 import name.levis.ichor.ui.argocd.ArgoAppScreen
@@ -51,6 +52,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
     ) { entry ->
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
+        RecordOpened(app, ShareTarget.argoApp(ns, name).takeIf { name.isNotEmpty() }, name, ns)
         ArgoAppScreen(
             namespace = ns,
             name = name,
@@ -106,6 +108,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         val kind = entry.arguments?.getString("kind").orEmpty()
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
+        RecordOpened(app, ShareTarget.fluxApp(kind, ns, name).takeIf { name.isNotEmpty() }, name, ns)
         FluxAppScreen(
             kind = kind,
             namespace = ns,

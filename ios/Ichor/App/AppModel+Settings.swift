@@ -220,6 +220,7 @@ extension AppModel {
         // Its poll stops recording: the overview starts a new one with the new generation.
         ClusterLiveStore.shared.forget()
         SearchRecents.clear()
+        RecentTargetStore.shared.clear()
         forgetFeatures()
     }
 

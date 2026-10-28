@@ -19,6 +19,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.shareTarget
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.ui.workloads.PodPullLinks
 import name.levis.ichor.model.kubeFocus
@@ -141,14 +142,16 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         ),
     ) { entry ->
         val args = entry.arguments
+        val focus = KubeFocus(
+            args?.getInt("tab") ?: 0,
+            args?.getString("key").orEmpty(),
+            args?.getString("ns").orEmpty(),
+            args?.getString("name").orEmpty(),
+        )
+        RecordOpened(app, focus.shareTarget(), focus.name, focus.namespace)
         CompositionLocalProvider(LocalKubeLinks provides kubeLinks) {
             name.levis.ichor.ui.workloads.KubernetesScreen(
-                focus = KubeFocus(
-                    args?.getInt("tab") ?: 0,
-                    args?.getString("key").orEmpty(),
-                    args?.getString("ns").orEmpty(),
-                    args?.getString("name").orEmpty(),
-                ),
+                focus = focus,
                 onBack = { nav.popBackStack() },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
