@@ -229,32 +229,15 @@ struct OverviewKubeTools: View {
         }
     }
 
-    /// A refused or failed read keeps what was shown.
     private func loadOperators() async {
         guard let client = model.client else { return }
-        async let crossplane = LoadState<Crossplane>.from { try await client.crossplane() }
-        async let tailscale = LoadState<Tailscale>.from { try await client.tailscale() }
-        async let lifecycle = LoadState<ClusterLifecycle>.from { try await client.clusterLifecycle() }
-        async let rollouts = LoadState<ArgoRolloutsStatus>.from { try await client.argoRollouts() }
-        var next = operators
-        if case .loaded(let value, _, _) = await crossplane { next.crossplane = value.installed }
-        if case .loaded(let value, _, _) = await tailscale { next.tailscale = value.installed }
-        if case .loaded(let value, _, _) = await lifecycle { next.clusterLifecycle = value.installed }
-        if case .loaded(let value, _, _) = await rollouts { next.argoRollouts = value.installed }
+        let found = await KubeOperators.read(with: client)
         guard !Task.isCancelled else { return }
-        operators = next
+        operators = found
     }
 
     private var loaded: DataServices? {
         if case .loaded(let services, _, _) = dataServices { return services }
         return nil
     }
-}
-
-/// The operators whose screens the Talos overview's Kubernetes screens offer: those the cluster runs.
-private struct KubeOperators {
-    var crossplane = false
-    var tailscale = false
-    var clusterLifecycle = false
-    var argoRollouts = false
 }
