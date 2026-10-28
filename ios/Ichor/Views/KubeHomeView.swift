@@ -351,155 +351,19 @@ struct KubeHomeView: View {
         }
     }
 
-    /// The Kubernetes screens that work with these credentials alone, in the families Android
-    /// groups them in. Native rows: the cluster color only tints the icon tile, never the label,
-    /// and says nothing about health.
-    @ViewBuilder
+    /// The Kubernetes screens, with those of the operators the cluster runs.
     private var toolsSection: some View {
-        Section {
-            NavigationLink(value: Route.workloads) {
-                toolLabel(KubeHomeAction.workloads)
-            }
-            NavigationLink { KubeJobsView() } label: {
-                toolLabel(Text("Jobs"), systemImage: "checklist")
-            }
-            NavigationLink { HelmReleasesView() } label: {
-                toolLabel(KubeHomeAction.helm)
-            }
-            NavigationLink { AutoscalingView() } label: {
-                toolLabel(Text("Autoscaling"), systemImage: "arrow.up.and.down")
-            }
-            NavigationLink { VirtualMachinesView() } label: {
-                toolLabel(Text("Virtual machines"), systemImage: "desktopcomputer")
-            }
-            // Only when the cluster serves Argo Rollouts; a refused read (no access) stays quiet.
-            if case .loaded(let rollouts, _, _) = argoRollouts, rollouts.installed {
-                NavigationLink { ArgoRolloutsView() } label: {
-                    toolLabel(Text("Argo Rollouts"), systemImage: "arrow.triangle.branch")
-                }
-            }
-            serviceTools(.workloads)
-            pluginTools(.workloads)
-        } header: {
-            Text("Workloads")
-        }
-        Section {
-            NavigationLink { KubeServicesView() } label: {
-                toolLabel(Text("Services"), systemImage: "network")
-            }
-            NavigationLink { NetPoliciesView() } label: {
-                toolLabel(KubeHomeAction.networkPolicies)
-            }
-            NavigationLink { KubeLoadBalancingView() } label: {
-                toolLabel(Text(LoadBalancingText.title), systemImage: "point.3.connected.trianglepath.dotted")
-            }
-            // Only when the cluster runs the Tailscale operator: the read answers "not installed" quickly.
-            if tailscale != nil {
-                NavigationLink { TailscaleView() } label: {
-                    toolLabel(Text("Tailscale"), systemImage: "network.badge.shield.half.filled")
-                }
-            }
-            serviceTools(.networking)
-            pluginTools(.networking)
-        } header: {
-            Text("Networking")
-        }
-        Section {
-            NavigationLink { KubeStorageView() } label: {
-                toolLabel(Text("Storage"), systemImage: "externaldrive")
-            }
-            NavigationLink(value: Route.dataServices(hints: "", downNodes: loadedNotReadyNodes)) {
-                toolLabel(KubeHomeAction.dataServices)
-            }
-        } header: {
-            Text("Storage")
-        }
-        // Certificates and secrets: only the systems and plugins that join it, shown when one does.
-        if !(toolServices?.detected(.security) ?? []).isEmpty || plugins.homeTiles.contains(where: { $0.toolFamily == .security }) {
-            Section {
-                serviceTools(.security)
-                pluginTools(.security)
-            } header: {
-                Text("Security")
-            }
-        }
-        Section {
-            NavigationLink { KubeLiveEventsView() } label: {
-                toolLabel(Text("Kubernetes events"), systemImage: "list.bullet.rectangle")
-            }
-            NavigationLink(value: Route.metrics) {
-                toolLabel(KubeHomeAction.metrics)
-            }
-            NavigationLink { CheckupView() } label: {
-                toolLabel(KubeHomeAction.checkup)
-            }
-            NavigationLink(value: Route.capacity) {
-                toolLabel(KubeHomeAction.capacity)
-            }
-            NavigationLink { ApiHealthView() } label: {
-                toolLabel(KubeHomeAction.apiHealth)
-            }
-            NavigationLink { PoliciesView() } label: {
-                toolLabel(Text("Policies"), systemImage: "checkmark.shield")
-            }
-            NavigationLink(value: Route.alerts) {
-                toolLabel(KubeHomeAction.alerts)
-            }
-        } header: {
-            Text("Observe")
-        }
-        Section {
-            NavigationLink { KubeBrowserView() } label: {
-                toolLabel(KubeHomeAction.resources)
-            }
-            // Only when the cluster runs Crossplane: the read answers "not installed" quickly.
-            if crossplane != nil {
-                NavigationLink { CrossplaneView() } label: {
-                    toolLabel(Text("Crossplane"), systemImage: "square.stack.3d.up")
-                }
-            }
-            // Only on a management cluster running Cluster API or Sidero Metal.
-            if clusterLifecycle != nil {
-                NavigationLink { ClusterLifecycleView() } label: {
-                    toolLabel(Text("Cluster lifecycle"), systemImage: "server.rack")
-                }
-            }
-            ClusterRepoToolLink {
-                toolLabel(Text("Repository"), systemImage: "folder.badge.gearshape")
-            }
-            pluginTools(.browse)
-        } header: {
-            Text("Browse")
-        }
+        KubeToolsSections(
+            services: toolServices, plugins: plugins.homeTiles, downNodes: loadedNotReadyNodes,
+            crossplane: crossplane != nil, tailscale: tailscale != nil, clusterLifecycle: clusterLifecycle != nil,
+            argoRollouts: rolloutsInstalled
+        )
     }
 
-    /// The systems read with Data services that `family` files (ExternalDNS, cert-manager, CAST
-    /// AI…): each opens alone, with a dot when it needs a look.
-    @ViewBuilder
-    private func serviceTools(_ family: ServiceFamily) -> some View {
-        if let services = toolServices {
-            ForEach(services.detected(family)) { kind in
-                NavigationLink(value: Route.dataServices(hints: "", downNodes: loadedNotReadyNodes, kind: kind, solo: true)) {
-                    HStack {
-                        toolLabel(Text(verbatim: kind.title), systemImage: kind.symbol)
-                        if let summary = services.summary(kind), summary.attention > 0 {
-                            Spacer()
-                            HealthDot(health: summary.health)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /// The active plugins of other categories than Data services joining a family of tools:
-    /// each opens its native screen, or its own.
-    private func pluginTools(_ family: PluginToolFamily) -> some View {
-        ForEach(plugins.homeTiles.filter { $0.toolFamily == family }) { item in
-            PluginTileLink(item: item) {
-                toolLabel(Text(verbatim: item.name), systemImage: "puzzlepiece.extension")
-            }
-        }
+    /// The cluster serves Argo Rollouts; a refused read (no access) stays quiet.
+    private var rolloutsInstalled: Bool {
+        if case .loaded(let rollouts, _, _) = argoRollouts { return rollouts.installed }
+        return false
     }
 
     /// A screen row named and drawn as in the toolbar and its editor.
@@ -508,11 +372,7 @@ struct KubeHomeView: View {
     }
 
     private func toolLabel(_ title: Text, systemImage: String) -> some View {
-        Label {
-            title.foregroundStyle(.primary)
-        } icon: {
-            KubeToolIcon(systemImage: systemImage, accent: model.accent)
-        }
+        KubeToolLabel(title: title, systemImage: systemImage)
     }
 
     private func open(_ action: KubeHomeAction) {

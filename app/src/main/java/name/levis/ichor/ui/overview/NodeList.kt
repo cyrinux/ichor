@@ -75,6 +75,10 @@ internal class OverviewCardData(
     val flux: UiState<FluxStatus>?,
     val alerts: UiState<AlertsOverview?>?,
     val pins: ClusterPins?,
+    /** The role may use the Kubernetes API: the Kubernetes screens card shows. */
+    val kubeTools: Boolean,
+    /** The active CRD plugins outside Data services, tools on that card. */
+    val toolPlugins: List<PluginDetectItem>,
 )
 
 /** What the role may do on the overview's nodes. */
@@ -216,6 +220,7 @@ internal fun NodeList(
             when (it) {
                 OverviewCard.TALOS_UPDATE -> talosUpdate != null
                 OverviewCard.PINNED -> cards.pins?.pins?.isNotEmpty() == true
+                OverviewCard.TOOLS -> cards.kubeTools
                 else -> true
             }
         }
@@ -327,6 +332,12 @@ private fun OverviewItems.overviewCard(
         }
         OverviewCard.ALERTS -> if (cards.alerts != null) item(key = card.name) {
             Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(cards.alerts, nav.onAlerts) }
+        }
+        OverviewCard.TOOLS -> if (cards.kubeTools) item(key = card.name) {
+            // The operators' screens (Crossplane, Tailscale...) stay out: the overview does not look for them.
+            Box(Modifier.longPressToCustomize(onCustomize)) {
+                KubeToolsCard(nav.kubeHome(), plugins = cards.toolPlugins, dataServices = (cards.dataServices as? UiState.Loaded)?.data)
+            }
         }
         OverviewCard.TIME_DRIFT -> item(key = card.name) {
             Box(Modifier.longPressToCustomize(onCustomize)) {
