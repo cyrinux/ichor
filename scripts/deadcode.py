@@ -18,7 +18,8 @@ ROOT = Path(__file__).resolve().parent.parent
 GO = ROOT / "go"
 PACKAGE = GO / "ichorgo"
 ROOTS = PACKAGE / "zz_mobile_roots_test.go"
-# The version go.mod pins for golang.org/x/tools, used when deadcode is not installed.
+# go/go.mod lists deadcode as a tool (`go tool deadcode`, version pinned there); a checkout from
+# before that falls back to an installed binary, then to this version.
 DEADCODE = "golang.org/x/tools/cmd/deadcode@v0.51.0"
 
 FUNC = re.compile(r"^func (?:\(\w+ \*?(\w+)\) )?([A-Z]\w*)\(", re.MULTILINE)
@@ -52,7 +53,13 @@ def mobile_roots() -> list[str]:
     return sorted(roots)
 
 
+def has_tool_directive() -> bool:
+    return re.search(r"^\s*golang\.org/x/tools/cmd/deadcode\s*$", (GO / "go.mod").read_text(), re.MULTILINE) is not None
+
+
 def deadcode_command() -> list[str]:
+    if has_tool_directive():
+        return ["go", "tool", "deadcode"]
     found = shutil.which("deadcode")
     if not found:
         gobin = subprocess.run(["go", "env", "GOBIN"], capture_output=True, text=True, cwd=GO).stdout.strip()

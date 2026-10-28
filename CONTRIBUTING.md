@@ -5,10 +5,15 @@ an issue first so we can agree on the approach before you spend time on it.
 
 ## Before you open a pull request
 
-- Run `./build.sh check` (gofmt, vet, staticcheck, the Go tests under the race detector,
-  govulncheck, Kotlin unit tests, Android Lint); CI runs the same. On a host whose ThreadSanitizer refuses
-  the address space (some arm64 kernels) the Go tests run without `-race`, with a warning;
-  CI always races.
+- Run `./build.sh check` (gofmt, vet, staticcheck, dead code, the Go tests under the race
+  detector, govulncheck, Kotlin unit tests, Android Lint); CI runs the same. On a host whose
+  ThreadSanitizer refuses the address space (some arm64 kernels) the Go tests run without
+  `-race`, with a warning; CI always races.
+- Dead code (`just deadcode`, `scripts/deadcode.py` with `go tool deadcode`, pinned in
+  `go/go.mod`): a Go function that neither a Go test nor the apps reach fails the check. The
+  apps' gomobile calls count as callers by themselves (`Ichorgo.fooBar(` in Kotlin,
+  `IchorgoFooBar(` in Swift, `.fooBar(` on a handle), so a new facade function needs no
+  allowlist: call it from an app or a test in the same pull request, or delete it.
 - The demo-mode smoke test (`DemoSmokeTest`, CI job `ui-smoke`) walks the demo cluster on an
   emulator; it runs on CI only (see docs/build.md to run it on an AVD). When a screen's anchor
   moves, move its test tag (`ui/components/SmokeTags.kt`), not the test's waits.
