@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Layers
@@ -60,10 +59,8 @@ fun ClusterMenu(
     onUpgradeCluster: (() -> Unit)? = null,
     /** "Upgrade Kubernetes…": null when the role cannot upgrade (or the cluster has no Talos). */
     onUpgradeKubernetes: (() -> Unit)? = null,
-    /** "Add a node…": null for a cluster without the Talos API (or one Omni manages). */
+    /** "Add a node…": null for a cluster without the Talos API (on Omni it opens the boot media). */
     onAddNode: (() -> Unit)? = null,
-    /** "Boot a new machine…": null for a cluster without the Talos API. */
-    onBootMedia: (() -> Unit)? = null,
     /** "Runbooks…": the cluster's own ordered lists of actions. */
     onRunbooks: (() -> Unit)? = null,
 ) {
@@ -139,16 +136,6 @@ fun ClusterMenu(
                     onClick = {
                         onDismiss()
                         upgrade()
-                    },
-                )
-            }
-            onBootMedia?.let { open ->
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.boot_media_menu)) },
-                    leadingIcon = { Icon(Icons.Outlined.Album, contentDescription = null) },
-                    onClick = {
-                        onDismiss()
-                        open()
                     },
                 )
             }

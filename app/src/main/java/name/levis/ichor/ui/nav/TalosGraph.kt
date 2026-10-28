@@ -234,14 +234,19 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     }
     composable(Routes.K8S_UPGRADE) { K8sUpgradeScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.JOIN_NODE) {
-        JoinNodeScreen(
-            onBack = { nav.popBackStack() },
-            onOpenNode = { addr, hostname, role ->
-                nav.popBackStack()
-                nav.navigate(Routes.node(addr, hostname, role))
-            },
-            onBootMedia = { nav.navigate(Routes.BOOT_MEDIA) { launchSingleTop = true } },
-        )
+        // Omni joins the machine itself: Add a node is only its boot media there.
+        if (app.configRepository.config.value?.activeSummary?.omni == true) {
+            BootMediaScreen(onBack = { nav.popBackStack() }, onAddNode = null)
+        } else {
+            JoinNodeScreen(
+                onBack = { nav.popBackStack() },
+                onOpenNode = { addr, hostname, role ->
+                    nav.popBackStack()
+                    nav.navigate(Routes.node(addr, hostname, role))
+                },
+                onBootMedia = { nav.navigate(Routes.BOOT_MEDIA) { launchSingleTop = true } },
+            )
+        }
     }
     composable(Routes.BOOT_MEDIA) {
         // Add a node takes a machine in maintenance mode; Omni adds its machines itself.

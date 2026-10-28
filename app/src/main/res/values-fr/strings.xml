@@ -4809,10 +4809,10 @@
     <string name="join_node_step_inspect">1. Inspecter le nouveau nœud</string>
     <string name="join_node_intro">Démarrez la nouvelle machine sur l\'ISO Talos : elle attend en mode maintenance et sa console affiche son adresse IP. Votre téléphone doit être sur le même réseau, ou sur un VPN qui l\'atteint.</string>
     <string name="join_node_demo">Dans la démo, tapez demo pour voir un nœud d\'exemple.</string>
-    <string name="boot_media_menu">Démarrer une nouvelle machine…</string>
     <string name="boot_media_title">Démarrer une nouvelle machine</string>
     <string name="boot_media_intro">Votre téléphone ne peut pas servir lui-même un démarrage réseau. Démarrez la nouvelle machine avec l\'un de ces moyens : elle attend ensuite en mode maintenance, et Ajouter un nœud prend le relais.</string>
-    <string name="boot_media_link">Pas encore de support de démarrage ? Démarrer une nouvelle machine…</string>
+    <string name="join_node_boot_card_title">Pas encore de machine ? Démarrer une nouvelle machine</string>
+    <string name="join_node_boot_card_body">La commande booter, l\'ISO et le lien iPXE ; la machine attend ensuite en mode maintenance</string>
     <string name="boot_media_target">Talos %1$s</string>
     <string name="boot_media_schematic_member">Schematic de %1$s</string>
     <string name="boot_media_schematic_default">Schematic par défaut de l\'Image Factory, sans extensions</string>
@@ -4830,6 +4830,7 @@
     <string name="boot_media_qr">QR code de %1$s</string>
     <string name="boot_media_qr_too_large">Trop long pour un QR code : utilisez Copier ou Partager.</string>
     <string name="boot_media_machine_up">La machine a démarré : l\'ajouter</string>
+    <string name="boot_media_omni_next">Omni ajoute la machine dès qu\'elle démarre avec ces arguments</string>
     <string name="join_node_address">Adresse du nœud</string>
     <string name="join_node_inspect">Inspecter</string>
     <string name="join_node_maintenance">Mode maintenance</string>

@@ -5045,10 +5045,10 @@
     <string name="join_node_step_inspect">1. Перевірити новий вузол</string>
     <string name="join_node_intro">Завантажте нову машину з ISO Talos: вона чекає в режимі обслуговування, а її консоль показує її IP-адресу. Телефон має бути в тій самій мережі або у VPN, що до неї дістається.</string>
     <string name="join_node_demo">У демо введіть demo, щоб побачити приклад вузла.</string>
-    <string name="boot_media_menu">Завантажити нову машину…</string>
     <string name="boot_media_title">Завантажити нову машину</string>
     <string name="boot_media_intro">Телефон не може сам роздавати мережеве завантаження. Запустіть нову машину одним із цих способів: далі вона чекає в режимі обслуговування, а «Додати вузол» продовжує звідти.</string>
-    <string name="boot_media_link">Ще немає завантажувального носія? Завантажити нову машину…</string>
+    <string name="join_node_boot_card_title">Ще немає машини? Завантажити нову машину</string>
+    <string name="join_node_boot_card_body">Команда booter, ISO і посилання iPXE; потім машина чекає в режимі обслуговування</string>
     <string name="boot_media_target">Talos %1$s</string>
     <string name="boot_media_schematic_member">Schematic вузла %1$s</string>
     <string name="boot_media_schematic_default">Типовий schematic Image Factory, без розширень</string>
@@ -5066,6 +5066,7 @@
     <string name="boot_media_qr">QR-код: %1$s</string>
     <string name="boot_media_qr_too_large">Задовго для QR-коду: скористайтеся «Копіювати» або «Поділитися».</string>
     <string name="boot_media_machine_up">Машина запустилася: додати її</string>
+    <string name="boot_media_omni_next">Omni додасть машину, щойно вона завантажиться з цими аргументами</string>
     <string name="join_node_address">Адреса вузла</string>
     <string name="join_node_inspect">Перевірити</string>
     <string name="join_node_maintenance">Режим обслуговування</string>

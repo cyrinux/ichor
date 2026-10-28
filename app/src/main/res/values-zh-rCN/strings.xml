@@ -4683,10 +4683,10 @@
     <string name="join_node_step_inspect">1. 检查新节点</string>
     <string name="join_node_intro">用 Talos ISO 启动新机器：它会在维护模式下等待，控制台会显示其 IP 地址。你的手机必须在同一网络中，或通过能访问它的 VPN 连接。</string>
     <string name="join_node_demo">在演示中，输入 demo 可查看示例节点。</string>
-    <string name="boot_media_menu">启动新机器…</string>
     <string name="boot_media_title">启动新机器</string>
     <string name="boot_media_intro">手机本身无法提供网络启动。请用以下任一方式启动新机器：它随后会在维护模式下等待，再由“添加节点”继续。</string>
-    <string name="boot_media_link">还没有启动介质？启动新机器…</string>
+    <string name="join_node_boot_card_title">还没有机器？启动新机器</string>
+    <string name="join_node_boot_card_body">booter 命令、ISO 和 iPXE 链接；之后机器在维护模式中等待</string>
     <string name="boot_media_target">Talos %1$s</string>
     <string name="boot_media_schematic_member">%1$s 的 schematic</string>
     <string name="boot_media_schematic_default">Image Factory 默认 schematic，不含扩展</string>
@@ -4704,6 +4704,7 @@
     <string name="boot_media_qr">%1$s 的二维码</string>
     <string name="boot_media_qr_too_large">内容过长，无法生成二维码：请使用复制或分享。</string>
     <string name="boot_media_machine_up">机器已启动：添加它</string>
+    <string name="boot_media_omni_next">机器以这些参数启动后，Omni 会添加它</string>
     <string name="join_node_address">节点地址</string>
     <string name="join_node_inspect">查看</string>
     <string name="join_node_maintenance">维护模式</string>

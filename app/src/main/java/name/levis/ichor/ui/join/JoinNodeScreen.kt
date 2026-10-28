@@ -10,14 +10,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -90,6 +92,24 @@ class JoinNodeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewMo
     }
 }
 
+/** Step 0: no machine in maintenance mode yet; opens the booter command, ISO and iPXE link. */
+@Composable
+private fun BootMachineCard(onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.join_node_boot_card_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                MutedText(stringResource(R.string.join_node_boot_card_body))
+            }
+            Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
 /**
  * "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
  * its console shows and see its version, disks and links; then make its config from a member's;
@@ -126,9 +146,9 @@ fun JoinNodeScreen(
             Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            BootMachineCard(onBootMedia)
             SectionTitle(stringResource(R.string.join_node_step_inspect))
             MutedText(stringResource(R.string.join_node_intro))
-            TextButton(onClick = onBootMedia) { Text(stringResource(R.string.boot_media_link)) }
             if (config?.activeSummary?.isDemo == true) InfoNotice(stringResource(R.string.join_node_demo))
             AddressField(address, onAddress = vm::type, onInspect = vm::inspect, busy = inspection == UiState.Loading)
             when (val state = inspection) {
