@@ -171,6 +171,11 @@ app-icons *args:
 test:
     cd go && go test ./...
 
+# Rewrite the facade contract fixtures (go/ichorgo/testdata/contract) after changing one of
+# their Go types, then fix the Kotlin and Swift models the app tests point at.
+contract-update:
+    cd go && go test ./ichorgo -run TestContractFixtures -update-contract -count=1
+
 # Run the Go core against a real cluster, e.g. `just probe overview`,
 # `just probe logs 10.0.0.2 kubelet`, `just probe -config talosconfig-phone etcd`.
 # Plugin files (plugin-validate, plugin-lint, plugin-render, plugin-from-crd) are relative to where just runs.
