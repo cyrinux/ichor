@@ -174,6 +174,11 @@ var dataCommands = []command{
 
 		return ichorgo.UpdateCandidates(flag.Arg(1), auth)
 	}},
+	{name: "cluster-updates", args: "[HOSTJSON] [OPTIONSJSON]", run: func(e env) (string, error) {
+		// The cluster's images and charts with their newer versions; HOSTJSON with an
+		// OPTIONSJSON {"repoURL"} also looks for a dependency bot in that repository.
+		return ichorgo.ClusterUpdates(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "gitops-revision-runs", args: "TOOL KIND NAMESPACE NAME SHA", run: func(e env) (string, error) {
 		return ichorgo.GitOpsRevisionRuns(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5))
 	}},
