@@ -43,6 +43,7 @@ struct BootMediaView: View {
             }
         }
         .navigationTitle("Boot a new machine")
+        .clusterScreenTitle(Text("Boot a new machine"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
     }

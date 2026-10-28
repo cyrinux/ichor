@@ -54,6 +54,7 @@ struct ArgoAppView: View {
         }
         .gitOpsPolling(key: model.argoKey, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
         .navigationTitle(Text(verbatim: name))
+        .clusterScreenTitle(Text(verbatim: name))
         .toolbar {
             ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .argoApp(namespace: namespace, name: name)) }
             ToolbarItem(placement: .primaryAction) { PinButton(target: .argoApp(namespace: namespace, name: name), label: name) }

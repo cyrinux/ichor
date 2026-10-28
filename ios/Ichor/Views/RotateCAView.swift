@@ -26,6 +26,7 @@ struct RotateCAView: View {
         }
         .themedBackground()
         .navigationTitle("Rotate the Talos CA")
+        .clusterScreenTitle(Text("Rotate the Talos CA"))
         .navigationBarTitleDisplayMode(.inline)
         .task { if job.state == nil { await load() } }
         .sheet(isPresented: $confirming) {

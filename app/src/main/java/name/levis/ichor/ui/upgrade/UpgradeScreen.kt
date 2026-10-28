@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.upgrade
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,13 +36,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -212,12 +213,7 @@ fun UpgradeScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.upgrade_title))
-                        Text(hostname, style = MaterialTheme.typography.labelMedium)
-                    }
-                },
+                title = { ClusterScreenTitle(stringResource(R.string.upgrade_title), hostname) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (following == null) {

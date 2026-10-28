@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.argocd
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.AddToHomeButton
@@ -26,12 +29,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -129,7 +130,7 @@ fun ArgoAppScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text(name) },
+                title = { ClusterScreenTitle(name) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     PinButton(ShareTarget.argoApp(namespace, name), name)

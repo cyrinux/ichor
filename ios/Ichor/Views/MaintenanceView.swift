@@ -30,6 +30,7 @@ struct MaintenanceView: View {
             }
         }
         .navigationTitle(draining ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)"))
+        .clusterScreenTitle(Text(verbatim: draining ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)")))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             if draining { action = .none }

@@ -67,6 +67,7 @@ struct MachineConfigView: View {
             }
         }
         .navigationTitle("Machine config")
+        .clusterScreenTitle(Text("Machine config"))
         .navigationBarTitleDisplayMode(.inline)
         // Leaving would drop the draft: Discard is the way out.
         .navigationBarBackButtonHidden(draft != nil)

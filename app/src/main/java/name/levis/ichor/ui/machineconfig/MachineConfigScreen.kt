@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.machineconfig
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterTitleSubline
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
@@ -38,13 +41,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -245,7 +246,7 @@ fun MachineConfigScreen(
                                 },
                             ),
                         )
-                        Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
+                        ClusterTitleSubline(hostname)
                         // The repository file the draft comes from, while it is reviewed and tried.
                         if (patch != null && (editor.editing || run != null || applying != null)) {
                             Text(
