@@ -531,7 +531,7 @@ struct MainNavigation: View {
         case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
         case .rotateCA: RotateCAView()
         case .activity(let cluster): ActivityLogView(cluster: cluster)
-        case .search: SearchView { target in Task { await open(target) } }
+        case .search: SearchView(open: { target in Task { await open(target) } }, openRoute: { path.append($0) })
         case .runbooks: RunbooksView(path: $path)
         case .runbookPlan(let id): RunbookPlanView(id: id, path: $path)
         case .runbookRun(let id): RunbookRunView(id: id, path: $path)

@@ -4,15 +4,19 @@ import IchorCore
 /// Every cluster's nodes, pods, workloads, CronJobs, Argo CD and Flux apps, as last seen: the
 /// query ranked by the Go core over what the phone keeps, grouped by cluster (the active one
 /// first). A result switches to its cluster and opens its screen through `open`, the share-link
-/// routing. Typing never calls a cluster; "Refresh active cluster" does.
+/// routing; a screen of the active cluster (the Screens section) is pushed through
+/// `openRoute`. Typing never calls a cluster; "Refresh active cluster" does.
 struct SearchView: View {
     /// Opens a result's screen on its cluster (MainNavigation's share-target opening).
     let open: (ShareTarget) -> Void
+    /// Pushes a screen of the active cluster.
+    let openRoute: (Route) -> Void
 
     @Environment(AppModel.self) private var model
     @State private var store = SearchStore()
     @State private var text = ""
     @State private var presented = false
+    @State private var allScreens = false
 
     var body: some View {
         List {
@@ -38,6 +42,7 @@ struct SearchView: View {
             if text.trimmingCharacters(in: .whitespaces).isEmpty {
                 recentSection
             } else {
+                screensSection
                 resultSections
             }
         }
@@ -48,7 +53,11 @@ struct SearchView: View {
                     prompt: Text("Pods, workloads, nodes, apps…"))
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
-        .onChange(of: text) { _, value in store.search(value) }
+        .onChange(of: text) { _, value in
+            allScreens = false
+            store.search(value)
+        }
+        .onChange(of: store.nodes) { store.setCatalog(catalog.map(\.entry)) }
         .onSubmit(of: .search) { store.remember(text) }
         .toolbar {
             if canRefresh {
@@ -67,6 +76,7 @@ struct SearchView: View {
         }
         .task {
             await store.build(model: model)
+            store.setCatalog(catalog.map(\.entry))
             presented = true
         }
     }
@@ -91,6 +101,42 @@ struct SearchView: View {
                     .swipeActions {
                         Button("Remove", role: .destructive) { store.forget(query) }
                     }
+                }
+            }
+        }
+    }
+
+    /// The active cluster's screens, its nodes' included.
+    private var catalog: [ScreenSpec] { screenCatalog(model: model, nodes: store.nodes) }
+
+    /// The matching screens above the clusters' objects: 5, then "Show all"; absent with none.
+    @ViewBuilder
+    private var screensSection: some View {
+        let specs = Dictionary(catalog.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let rows = store.screens.results.filter { specs[$0.id] != nil }
+        if !rows.isEmpty {
+            Section("Screens") {
+                ForEach(allScreens ? rows : Array(rows.prefix(5))) { match in
+                    if let spec = specs[match.id] {
+                        Button {
+                            store.remember(text)
+                            openRoute(spec.route)
+                        } label: {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(verbatim: match.title)
+                                    Text(verbatim: match.subtitle.isEmpty ? match.section : match.subtitle)
+                                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                }
+                            } icon: {
+                                Image(systemName: spec.systemImage)
+                            }
+                        }
+                        .foregroundStyle(.primary)
+                    }
+                }
+                if !allScreens, rows.count > 5 {
+                    Button("Show all") { allScreens = true }
                 }
             }
         }
@@ -121,7 +167,7 @@ struct SearchView: View {
             ProgressView()
         } else if store.nothingKnown {
             ContentUnavailableView("Nothing known yet: open a cluster once", systemImage: "magnifyingglass")
-        } else if typing, store.results.results.isEmpty {
+        } else if typing, store.results.results.isEmpty, store.screens.results.isEmpty {
             ContentUnavailableView.search(text: text)
         }
     }
