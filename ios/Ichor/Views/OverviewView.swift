@@ -28,6 +28,8 @@ struct OverviewView: View {
     /// The active CRD plugins of Data services (kube-green...), asked with the same hints; their
     /// lines join the card. Empty until they answer, or when they cannot be asked.
     @State private var dataPlugins: [PluginDetectItem] = []
+    /// The other active CRD plugins, tools of the Kubernetes screens section.
+    @State private var toolPlugins: [PluginDetectItem] = []
     /// The installed plugins (no cluster call, see PluginCatalogCache): those of Data services
     /// (Rook, MariaDB...) hint the card too.
     @State private var pluginCatalog = PluginCatalog()
@@ -141,6 +143,7 @@ struct OverviewView: View {
             inventory = .loading
             dataServices = nil
             dataPlugins = []
+            toolPlugins = []
             argo = nil
             flux = nil
             alerts = nil
@@ -158,6 +161,7 @@ struct OverviewView: View {
             inventory = .loading
             dataServices = nil
             dataPlugins = []
+            toolPlugins = []
             argo = nil
             flux = nil
             alerts = nil
@@ -378,6 +382,8 @@ struct OverviewView: View {
             TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
         case .alerts:
             if let alerts { AlertsSection(state: alerts) }
+        case .tools:
+            OverviewKubeTools(dataServices: dataServices, plugins: toolPlugins, downNodes: overview.downHostnames)
         }
     }
 
@@ -727,6 +733,7 @@ struct OverviewView: View {
         guard model.allows(.workloads), !hints.isEmpty else {
             dataServices = nil
             dataPlugins = []
+            toolPlugins = []
             return
         }
         dataHints = hints
@@ -737,7 +744,7 @@ struct OverviewView: View {
         guard id == loadID else { return }
         dataServices = (dataServices ?? .loading).refreshed(with: loaded)
         // A failed ask keeps the lines shown.
-        if case .loaded(let detect, _, _) = plugins { dataPlugins = detect.dataServicePlugins }
+        if case .loaded(let detect, _, _) = plugins { (dataPlugins, toolPlugins) = (detect.dataServicePlugins, detect.homeTiles) }
     }
 
     /// Only for roles that may use the Kubernetes API, and clusters with an Alertmanager (searched
@@ -765,6 +772,7 @@ struct OverviewView: View {
     private var absentCards: Set<OverviewCard> {
         // Known before the inventory: no pins, no Alertmanager.
         var known: Set<OverviewCard> = pins.isEmpty ? [.pinned] : []
+        if !model.allows(.workloads) { known.insert(.tools) }
         if !model.allows(.workloads) || AlertsStore.shared.absent(for: model.alertsKey) { known.insert(.alerts) }
         guard case .loaded(let apps, _, _) = inventory else { return known }
         let kubernetes = model.allows(.workloads)

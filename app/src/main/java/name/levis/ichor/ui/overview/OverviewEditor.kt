@@ -116,6 +116,7 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
         OverviewCard.NODES -> R.string.overview_stat_nodes
         OverviewCard.TIME_DRIFT -> R.string.time_drift_title
         OverviewCard.ALERTS -> R.string.alerts_title
+        OverviewCard.TOOLS -> R.string.kube_home_card_tools
     },
 )
 
@@ -133,6 +134,7 @@ fun overviewCardDescription(card: OverviewCard): String = stringResource(
         OverviewCard.NODES -> R.string.overview_card_desc_nodes
         OverviewCard.TIME_DRIFT -> R.string.overview_card_desc_time_drift
         OverviewCard.ALERTS -> R.string.overview_card_desc_alerts
+        OverviewCard.TOOLS -> R.string.kube_home_card_desc_tools
     },
 )
 

@@ -146,7 +146,9 @@ internal fun rememberOverviewCards(
     }
     val flux by fluxVm.state.collectAsStateWithLifecycle()
     // The Alertmanager: no inventory hint, it is looked for among the Services (a quick list).
-    val alertsAllowed = config?.activeSummary?.allows(Feature.WORKLOADS) == true
+    // The Kubernetes screens card too: both need the role to use the Kubernetes API.
+    val kubernetes = config?.activeSummary?.allows(Feature.WORKLOADS) == true
+    val alertsAllowed = kubernetes
     LaunchedEffect(config?.activeContext, generation, invalidations, alertsAllowed) {
         if (alertsAllowed) alertsVm.load(listOf(config?.activeContext, generation, invalidations)) else alertsVm.forget()
     }
@@ -154,7 +156,10 @@ internal fun rememberOverviewCards(
     val alertsShown = alerts.takeIf { alertsAllowed && it.alertmanagerFound }
     // The objects pinned on this cluster (kept apart while screenshot mode is on).
     val pins = rememberClusterPins()
-    val absentCards = setOfNotNull(OverviewCard.PINNED.takeIf { pins?.pins.isNullOrEmpty() }) + if (apps is UiState.Loaded) setOfNotNull(
+    val absentCards = setOfNotNull(
+        OverviewCard.PINNED.takeIf { pins?.pins.isNullOrEmpty() },
+        OverviewCard.TOOLS.takeIf { !kubernetes },
+    ) + if (apps is UiState.Loaded) setOfNotNull(
         OverviewCard.DATA_SERVICES.takeIf { dataHints.isEmpty() },
         OverviewCard.ARGO_CD.takeIf { !argoHinted },
         OverviewCard.FLUX.takeIf { !fluxHinted },
@@ -170,6 +175,8 @@ internal fun rememberOverviewCards(
             flux = flux.takeIf { fluxHinted },
             alerts = alertsShown,
             pins = pins,
+            kubeTools = kubernetes,
+            toolPlugins = (plugins as? UiState.Loaded)?.data?.homeTiles.orEmpty(),
         ),
         argoHinted = argoHinted,
         fluxHinted = fluxHinted,

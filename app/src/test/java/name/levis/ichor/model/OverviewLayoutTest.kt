@@ -10,6 +10,7 @@ import name.levis.ichor.model.OverviewCard.PINNED
 import name.levis.ichor.model.OverviewCard.SUMMARY
 import name.levis.ichor.model.OverviewCard.TALOS_UPDATE
 import name.levis.ichor.model.OverviewCard.TIME_DRIFT
+import name.levis.ichor.model.OverviewCard.TOOLS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,17 +19,17 @@ import org.junit.Test
 class OverviewLayoutTest {
 
     @Test
-    fun defaultShowsEveryCardInOrder() {
+    fun defaultShowsEveryCardInOrderButTheKubernetesScreens() {
         val layout = OverviewCard.layout.default
-        assertEquals(OverviewCard.entries, layout.visible)
-        assertTrue(layout.hiddenCards.isEmpty())
+        assertEquals(OverviewCard.entries - TOOLS, layout.visible)
+        assertEquals(listOf(TOOLS), layout.hiddenCards)
         assertTrue(layout.isDefault)
     }
 
     @Test
     fun encodeRoundTrips() {
         val layout = OverviewCard.layout.default.move(7, 0).hide(APPS)
-        assertEquals("NODES,PINNED,TALOS_UPDATE,SUMMARY,-APPS,DATA_SERVICES,ARGO_CD,FLUX,TIME_DRIFT,ALERTS", layout.encode())
+        assertEquals("NODES,PINNED,TALOS_UPDATE,SUMMARY,-APPS,DATA_SERVICES,ARGO_CD,FLUX,TIME_DRIFT,ALERTS,-TOOLS", layout.encode())
         assertEquals(layout, OverviewCard.layout.parse(layout.encode()))
     }
 
@@ -42,8 +43,8 @@ class OverviewLayoutTest {
     @Test
     fun parseSkipsUnknownAndRepeatedAndAppendsMissing() {
         val layout = OverviewCard.layout.parse("TIME_DRIFT, -NODES,GONE,TIME_DRIFT,-NODES")
-        assertEquals(listOf(PINNED, TALOS_UPDATE, TIME_DRIFT, NODES, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), layout.order)
-        assertEquals(setOf(NODES), layout.hidden)
+        assertEquals(listOf(PINNED, TALOS_UPDATE, TIME_DRIFT, NODES, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS, TOOLS), layout.order)
+        assertEquals(setOf(NODES, TOOLS), layout.hidden)
         assertEquals(listOf(PINNED, TALOS_UPDATE, TIME_DRIFT, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), layout.visible)
     }
 
@@ -56,18 +57,18 @@ class OverviewLayoutTest {
         // Once saved with it, it stays where it was put.
         val placed = OverviewCard.layout.parse("SUMMARY,-TALOS_UPDATE,NODES")
         assertEquals(listOf(PINNED, SUMMARY, TALOS_UPDATE, NODES), placed.order.take(4))
-        assertEquals(setOf(TALOS_UPDATE), placed.hidden)
+        assertEquals(setOf(TALOS_UPDATE, TOOLS), placed.hidden)
     }
 
     @Test
     fun aLayoutSavedBeforeThePinnedCardKeepsItsFormAndGetsItFirst() {
         val saved = OverviewCard.layout.parse("SUMMARY,-APPS,NODES,TALOS_UPDATE")
         assertEquals(listOf(PINNED, SUMMARY, APPS, NODES, TALOS_UPDATE), saved.order.take(5))
-        assertEquals(setOf(APPS), saved.hidden)
+        assertEquals(setOf(APPS, TOOLS), saved.hidden)
         // Saved again, the card is one more name of the same form.
         assertEquals("PINNED,SUMMARY,-APPS,NODES,TALOS_UPDATE,", saved.encode().substringBefore("DATA_SERVICES"))
         val moved = OverviewCard.layout.parse("SUMMARY,-PINNED,NODES")
-        assertEquals(setOf(PINNED), moved.hidden)
+        assertEquals(setOf(PINNED, TOOLS), moved.hidden)
         assertEquals(listOf(TALOS_UPDATE, SUMMARY, PINNED, NODES), moved.order.take(4))
     }
 
@@ -77,7 +78,7 @@ class OverviewLayoutTest {
         // Shown: PINNED, TALOS_UPDATE, SUMMARY, DATA_SERVICES, ARGO_CD, FLUX, NODES, TIME_DRIFT, ALERTS
         val moved = layout.move(from = 6, to = 3)
         assertEquals(listOf(PINNED, TALOS_UPDATE, SUMMARY, NODES, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS), moved.visible)
-        assertEquals(listOf(APPS), moved.hiddenCards)
+        assertEquals(listOf(APPS, TOOLS), moved.hiddenCards)
     }
 
     @Test
@@ -85,11 +86,11 @@ class OverviewLayoutTest {
         val absent = setOf(DATA_SERVICES, FLUX)
         val layout = OverviewCard.layout.default.hide(ARGO_CD).hide(FLUX)
         assertEquals(listOf(PINNED, TALOS_UPDATE, SUMMARY, APPS, NODES, TIME_DRIFT, ALERTS), layout.visible(absent))
-        assertEquals(listOf(ARGO_CD), layout.hiddenCards(absent))
+        assertEquals(listOf(ARGO_CD, TOOLS), layout.hiddenCards(absent))
         // APPS (index 3 without DATA_SERVICES) after NODES: DATA_SERVICES stays fifth.
         val moved = layout.move(3, 4, absent)
         assertEquals(listOf(PINNED, TALOS_UPDATE, SUMMARY, NODES, DATA_SERVICES, APPS, TIME_DRIFT, ALERTS), moved.visible)
-        assertEquals(setOf(ARGO_CD, FLUX), moved.hidden)
+        assertEquals(setOf(ARGO_CD, FLUX, TOOLS), moved.hidden)
     }
 
     @Test
@@ -105,7 +106,7 @@ class OverviewLayoutTest {
         val layout = OverviewCard.layout.default.hide(SUMMARY).hide(NODES)
         val shown = layout.show(SUMMARY)
         assertEquals(listOf(PINNED, TALOS_UPDATE, APPS, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS, SUMMARY), shown.visible)
-        assertEquals(listOf(NODES), shown.hiddenCards)
+        assertEquals(listOf(NODES, TOOLS), shown.hiddenCards)
         assertEquals(shown, shown.show(APPS))
     }
 
@@ -113,6 +114,23 @@ class OverviewLayoutTest {
     fun hideAndShowBackIsNotDefaultUnlessSameOrder() {
         assertFalse(OverviewCard.layout.default.hide(SUMMARY).show(SUMMARY).isDefault)
         assertTrue(OverviewCard.layout.default.hide(ALERTS).show(ALERTS).isDefault)
+    }
+
+    @Test
+    fun aLayoutSavedBeforeTheKubernetesScreensCardKeepsItHidden() {
+        val saved = OverviewCard.layout.parse("SUMMARY,-APPS,NODES")
+        assertEquals(setOf(APPS, TOOLS), saved.hidden)
+        assertEquals(TOOLS, saved.order.last())
+        // Once shown, it is saved without the dash and stays shown.
+        val shown = saved.show(TOOLS)
+        assertEquals(TOOLS, shown.visible.last())
+        assertEquals(shown, OverviewCard.layout.parse(shown.encode()))
+    }
+
+    @Test
+    fun hiddenByDefaultCards() {
+        assertEquals(listOf(TOOLS), OverviewCard.entries.filter { it.hiddenByDefault })
+        assertTrue(KubeHomeCard.entries.none { it.hiddenByDefault })
     }
 
     @Test

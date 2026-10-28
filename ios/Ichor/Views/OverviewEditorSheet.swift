@@ -46,6 +46,7 @@ extension OverviewCard {
         case .nodes: Text("Nodes")
         case .timeDrift: Text("Clock drift")
         case .alerts: Text("Alerts")
+        case .tools: Text("Kubernetes screens")
         }
     }
 
@@ -62,6 +63,7 @@ extension OverviewCard {
         case .nodes: Text("Every node with its state")
         case .timeDrift: Text("Clock offset of each node against NTP")
         case .alerts: Text("Alertmanager alerts firing by severity, and those silenced")
+        case .tools: Text("Buttons to the Kubernetes screens these credentials can use")
         }
     }
 }
