@@ -99,6 +99,8 @@ struct KubeHomeView: View {
     @AppStorage(KubeHomeLayout.storageKey) private var layoutText = ""
     @AppStorage(KubeHomeBar.storageKey) private var barText = ""
     @State private var customizing = false
+    /// The incident summary sheet, from the cluster menu.
+    @State private var sharingIncident = false
     @State private var showingServiceAccountHelp = false
     /// "Since you last looked" (the history ring).
     @State private var look = HistoryLook()
@@ -134,26 +136,8 @@ struct KubeHomeView: View {
         .kubeCordonDialogs(cordoning: $cordoning, reload: load)
         // The node menus' cordon and drain are cluster-wide.
         .loadsKubeActionAccess(namespace: "")
-        .toolbarTitleMenu {
-            if (model.summary?.contexts.count ?? 0) > 1 {
-                Menu {
-                    ForEach(model.summary?.contexts ?? []) { context in
-                        Button { model.activeContext = context.name } label: {
-                            if context.name == model.activeContext {
-                                Label(model.labels.of(context), systemImage: "checkmark")
-                            } else {
-                                Text(model.labels.of(context))
-                            }
-                        }
-                    }
-                } label: {
-                    Label("Switch cluster", systemImage: "arrow.left.arrow.right")
-                }
-            }
-            Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
-            Button { path.append(.runbooks) } label: { Label("Runbooks…", systemImage: "list.bullet.rectangle") }
-            ShareLinkButton(target: .screen(.cluster))
-        }
+        // Shown by the title once it is inline (scrolled); before that, under ⋯ → Cluster.
+        .toolbarTitleMenu { ClusterTitleMenu(path: $path, shareIncident: { sharingIncident = true }) }
         .safeAreaInset(edge: .top, spacing: 0) {
             if (model.summary?.contexts.count ?? 0) > 1 {
                 ClusterBar { path.append(.clusters) }
@@ -183,6 +167,7 @@ struct KubeHomeView: View {
                         }
                     }
                     if !menu.isEmpty { Divider() }
+                    ClusterSubmenu(path: $path, shareIncident: { sharingIncident = true })
                     Button { customizing = true } label: { Label("Customize home", systemImage: "pencil") }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -194,6 +179,11 @@ struct KubeHomeView: View {
             HomeEditorSheet(KubeHomeCard.self, KubeHomeAction.self, title: "Customize home", absent: absentCards)
         }
         .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
+        .sheet(isPresented: $sharingIncident) {
+            if let context = model.activeSummary {
+                IncidentSummarySheet(context: context.name, cluster: monitorClusterKey(context))
+            }
+        }
         .navigationDestination(item: $screen) { screen in
             switch screen {
             case .resources: KubeBrowserView()
