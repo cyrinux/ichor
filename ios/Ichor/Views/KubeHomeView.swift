@@ -629,20 +629,3 @@ private struct KubeExpiryBanner: View {
         .foregroundStyle(days < 0 ? Color.red : Color.orange)
     }
 }
-
-/// A Kubernetes home row's icon: in the cluster's color on a faint tile of it, sized with the
-/// text. Decoration only, never a health signal: the row's label says what it opens.
-private struct KubeToolIcon: View {
-    let systemImage: String
-    let accent: Color
-    @ScaledMetric(relativeTo: .body) private var side: CGFloat = 28
-
-    var body: some View {
-        Image(systemName: systemImage)
-            .font(.callout.weight(.medium))
-            .foregroundStyle(accent)
-            .frame(width: side, height: side)
-            .background(accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            .accessibilityHidden(true)
-    }
-}
