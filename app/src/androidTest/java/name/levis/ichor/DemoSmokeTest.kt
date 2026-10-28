@@ -2,12 +2,16 @@ package name.levis.ichor
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.printToString
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -39,23 +43,39 @@ class DemoSmokeTest {
     @Test
     fun theTalosDemoOpensANodeAndItsKernelLog() {
         open("ichor://demo").use {
-            compose.waitUntilAtLeastOneExists(hasTestTag(SMOKE_NODE), TIMEOUT)
+            // The overview is a lazy list: the nodes card may be below the fold.
+            scrollTo(hasTestTag(SMOKE_NODE))
             compose.onAllNodes(hasTestTag(SMOKE_NODE))[0].performClick()
 
             val kernelLog = hasTestTag(smokeMenuTag(NodeMenuEntry.KERNEL_LOG))
-            compose.waitUntilAtLeastOneExists(hasScrollToNodeAction(), TIMEOUT)
-            compose.onAllNodes(hasScrollToNodeAction())[0].performScrollToNode(kernelLog)
+            scrollTo(kernelLog)
             compose.onNode(kernelLog).performClick()
 
-            compose.waitUntilAtLeastOneExists(hasTestTag(SMOKE_LOG_LINES), TIMEOUT)
+            waitFor(hasTestTag(SMOKE_LOG_LINES))
         }
     }
 
     @Test
     fun theKubernetesDemoOpensItsHome() {
         open("ichor://demo/kube").use {
-            compose.waitUntilAtLeastOneExists(hasTestTag(SMOKE_KUBE_HOME), TIMEOUT)
+            waitFor(hasTestTag(SMOKE_KUBE_HOME))
         }
+    }
+
+    /** Waits for [matcher]; on a timeout the failure carries the screen's semantics tree. */
+    private fun waitFor(matcher: SemanticsMatcher) {
+        try {
+            compose.waitUntilAtLeastOneExists(matcher, TIMEOUT)
+        } catch (e: ComposeTimeoutException) {
+            throw AssertionError("${e.message}\non screen:\n" + compose.onRoot(useUnmergedTree = true).printToString(), e)
+        }
+    }
+
+    /** Scrolls the first scrollable list until [matcher] is composed (a lazy list holds only what shows). */
+    private fun scrollTo(matcher: SemanticsMatcher) {
+        waitFor(hasScrollToNodeAction())
+        compose.onAllNodes(hasScrollToNodeAction())[0].performScrollToNode(matcher)
+        waitFor(matcher)
     }
 
     private companion object {

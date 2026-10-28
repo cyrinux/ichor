@@ -128,20 +128,17 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
-        with:
-          api-level: 34
-          arch: x86_64
-          target: aosp_atd
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          disable-animations: true
-          script: ./scripts/ui-smoke.sh
+      # The runner's own Android SDK boots it (no third-party action): API 34 aosp_atd x86_64.
+      - name: Run the smoke test on an emulator
+        run: scripts/ci-emulator.sh scripts/ui-smoke.sh
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: ui-smoke-report
-          path: app/build/reports/ui-smoke.txt
+          path: |
+            app/build/reports/ui-smoke.txt
+            ${{ runner.temp }}/emulator.log
           if-no-files-found: ignore
 
   release:
