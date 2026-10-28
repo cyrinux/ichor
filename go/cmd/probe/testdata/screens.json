@@ -1,0 +1,12 @@
+{
+  "screens": [
+    {"id": "etcd", "title": "etcd", "subtitle": "Members, alarms, snapshots", "keywords": ["members", "alarm", "snapshot"], "section": "Cluster"},
+    {"id": "health", "title": "Health check", "section": "Cluster"},
+    {"id": "upgrade-cluster", "title": "Upgrade cluster", "section": "Operate"},
+    {"id": "upgrade-kubernetes", "title": "Upgrade Kubernetes", "section": "Operate"},
+    {"id": "join-node", "title": "Add a node", "section": "Operate"},
+    {"id": "runbooks", "title": "Runbooks", "section": "Operate"},
+    {"id": "settings/alerts", "title": "Settings → Alerts", "section": "Settings"},
+    {"id": "node/node-a/hardware", "title": "node-a → Hardware", "subtitle": "Disks, CPU, memory", "section": "node-a"}
+  ]
+}
