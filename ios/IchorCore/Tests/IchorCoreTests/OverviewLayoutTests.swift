@@ -36,7 +36,7 @@ final class OverviewLayoutTests: XCTestCase {
         // Once saved with it, it stays where it was put.
         let placed = OverviewLayout.parse("SUMMARY,-TALOS_UPDATE,NODES")
         XCTAssertEqual(Array(placed.order.prefix(4)), [.pinned, .summary, .talosUpdate, .nodes])
-        XCTAssertEqual(placed.hidden, [.talosUpdate])
+        XCTAssertEqual(placed.hidden, [.talosUpdate, .tools])
     }
 
     func testALayoutSavedBeforePinsPutsThePinnedCardFirst() {
