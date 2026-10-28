@@ -19,6 +19,20 @@ def release(*sections, published_at="2026-10-01T18:25:00+00:00"):
     }
 
 
+class MarkdownTest(unittest.TestCase):
+    def test_headings_and_bullets_in_section_order(self):
+        text = discord_notes.markdown(release(("new", ["Backups", "Insights"]), ("fixed", ["Layout"])))
+        self.assertEqual(text, "### New\n- Backups\n- Insights\n\n### Fixed\n- Layout")
+
+    def test_empty_sections_are_skipped_and_an_empty_release_gets_the_fallback(self):
+        self.assertEqual(discord_notes.markdown(release(("new", []), ("fixed", ["Layout"]))), "### Fixed\n- Layout")
+        self.assertEqual(discord_notes.markdown(release()), discord_notes.FALLBACK)
+
+    def test_not_capped_like_discord(self):
+        items = [f"Item number {i} " + "x" * 80 for i in range(100)]
+        self.assertEqual(discord_notes.markdown(release(("new", items))).count("\n- "), 100)
+
+
 class DescribeTest(unittest.TestCase):
     def test_headings_and_bullets_in_section_order(self):
         text = discord_notes.describe(release(("new", ["Backups", "Insights"]), ("fixed", ["Layout"])))

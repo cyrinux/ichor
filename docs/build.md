@@ -155,6 +155,15 @@ Both run on pushes to `main` and on pull requests. Release APKs are named
 the updater ignores unsigned ones. On a `v*` tag (`just release-tag 0.1.0`,
 then `git push origin v0.1.0`), they attach the release APK and the IPA to the GitHub release.
 
+`release.yml` creates that release as a **draft**, with the tag's changelog entry as its notes
+(`scripts/discord-notes.py --markdown`). Its `verify` job rebuilds the arm64 APK from the tag
+and compares it with the drafted one; only then does `promote` publish the draft, and the
+Discord announcement follows. A draft is invisible to the self-updater and to the app's
+changelog, so a release that fails verification never reaches anyone. When `verify` fails,
+download the run's `reproducibility-differences` artifact, then either delete the draft and
+the tag and tag again once fixed, or, if the difference is understood, publish it by hand:
+`gh release edit v0.1.0 --draft=false --latest`.
+
 To sign the release APK in CI, generate a key once and upload it as secrets of the `release`
 environment (Settings → Environments; restricted to `v*` tags, so pull requests never see them):
 

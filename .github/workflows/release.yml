@@ -110,6 +110,11 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # scripts/changelog.py reads the tags and history for the notes
+          persist-credentials: false
+
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: "*-release"
@@ -119,17 +124,21 @@ jobs:
       - name: List files
         run: ls -l dist
 
-      # The preinstalled gh CLI rather than a third-party action: nothing outside this
-      # repository and GitHub runs with the token that can write releases.
-      - name: Publish the release
+      # A draft: invisible to the self-updater and to "latest" (the app's changelog link) until
+      # the promote job publishes it, once verify has rebuilt the APK. The notes are the tag's
+      # changelog entry. The preinstalled gh CLI rather than a third-party action: nothing
+      # outside this repository and GitHub runs with the token that can write releases.
+      - name: Draft the release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "$TAG" --notes ""
+        run: |
+          scripts/discord-notes.py --markdown >"$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md"
 
-  # Rebuilds the published arm64 APK from the tag (unsigned, in the same Nix shell and with
+  # Rebuilds the drafted arm64 APK from the tag (unsigned, in the same Nix shell and with
   # the same Gradle heap as android.yml's release job) and compares it with the one just
-  # published, signatures stripped (scripts/verify-release.py). A difference fails the run
+  # drafted, signatures stripped (scripts/verify-release.py). A difference fails the run
   # with the differing entries attached: a packager rebuilding from the tag would get
   # another APK. It reads the caches the android job reads and saves none.
   verify:
@@ -159,13 +168,28 @@ jobs:
           path: ${{ runner.temp }}/differences.txt
           if-no-files-found: ignore
 
+  # Publishes the draft once the rebuild matched. When verify fails the draft stays: read the
+  # reproducibility-differences artifact, then delete the draft and tag (fix, tag again) or
+  # publish it by hand (`gh release edit vX.Y.Z --draft=false`) if the difference is understood.
+  promote:
+    needs: [verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+
   # Announces the release in the Discord #changelog channel through its webhook, once the
   # GitHub release exists so the title can link to it. The message is the release's entry
   # from scripts/changelog.py (scripts/discord-notes.py). Skipped until the
   # DISCORD_CHANGELOG_WEBHOOK secret of the `release` environment is set (channel settings >
   # Integrations > Webhooks > New Webhook > Copy Webhook URL).
   discord:
-    needs: [publish]
+    needs: [promote]
     runs-on: ubuntu-latest
     environment: release # DISCORD_CHANGELOG_WEBHOOK is an environment secret
     permissions:

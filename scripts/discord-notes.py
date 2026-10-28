@@ -7,9 +7,13 @@ section with a bullet per user-facing commit, within Discord's 4096 characters p
 description. release.yml posts it to the #changelog channel's webhook once the release is
 published. Mentions are disabled, so a commit subject can never ping anyone.
 
+With --markdown it prints the same entry as the GitHub release body instead (release.yml's
+publish job): "### Section" headings and "- " bullets, uncapped.
+
 Usage:
   scripts/discord-notes.py                      # JSON payload for the newest release, to stdout
   scripts/discord-notes.py --url URL            # link the title to the release page
+  scripts/discord-notes.py --markdown           # the GitHub release body, to stdout
 """
 
 import argparse
@@ -51,6 +55,15 @@ def describe(release):
     return "\n".join(kept)
 
 
+def markdown(release):
+    """The GitHub release body: the same sections as Discord, as markdown headings and bullets."""
+    blocks = [
+        "\n".join([f"### {section['title']}", *(f"- {item}" for item in section["items"])])
+        for section in release["sections"] if section["items"]
+    ]
+    return "\n\n".join(blocks) if blocks else FALLBACK
+
+
 def payload(release, url=None):
     embed = {
         "title": f"Ichor {release['version']}",
@@ -67,7 +80,11 @@ def payload(release, url=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--url", help="release page the title links to")
+    parser.add_argument("--markdown", action="store_true", help="print the GitHub release body instead")
     args = parser.parse_args()
+    if args.markdown:
+        print(markdown(newest_release()))
+        return
     print(json.dumps(payload(newest_release(), args.url), ensure_ascii=False))
 
 
