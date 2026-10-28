@@ -171,6 +171,8 @@ build_inside() {
     [[ -z "$unformatted" ]] || { echo "gofmt needed:" >&2; echo "$unformatted" >&2; exit 1; }
     go vet ./...
     staticcheck ./...
+    # No Go function that neither the Go tests nor the apps (through gomobile) reach.
+    python3 "$ROOT/scripts/deadcode.py"
     # = just plugin-check (just is not in the dev shell): every built-in plugin validates.
     go run ./cmd/probe plugin-validate plugin/builtin/*.yaml
     # Plugin drafts (crd-request.yml) are not embedded, but they must not rot red either.
