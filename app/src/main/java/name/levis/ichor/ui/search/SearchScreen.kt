@@ -53,6 +53,8 @@ import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.RecentTarget
+import name.levis.ichor.model.RecentTargets
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.ScreenMatch
 import name.levis.ichor.model.SearchGroup
@@ -90,6 +92,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
     val state by vm.state.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val recent by vm.recent.collectAsStateWithLifecycle()
+    val recentTargets by vm.recentTargets.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val refreshFailed by vm.refreshFailed.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
@@ -150,12 +153,23 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
             }
             when {
                 snapshot == null -> Unit
-                query.isBlank() -> RecentSearches(
-                    recent = recent,
-                    nothingKnown = snapshot.isEmpty,
-                    onPick = vm::setQuery,
-                    onForget = vm::forget,
-                )
+                query.isBlank() -> {
+                    // A removed cluster's objects are not offered; the active one's show no cluster.
+                    val contexts = config?.summary?.contexts.orEmpty()
+                    val opened = RecentTargets.known(recentTargets, contexts.map { it.clusterId }.filter { it.isNotEmpty() }.toSet())
+                    RecentSearches(
+                        recent = recent,
+                        opened = opened,
+                        nothingKnown = snapshot.isEmpty,
+                        clusterOf = { cluster ->
+                            if (cluster == active?.clusterId) null else contexts.firstOrNull { it.clusterId == cluster }?.let(labels::of)
+                        },
+                        onPick = vm::setQuery,
+                        onForget = vm::forget,
+                        onOpen = onOpen,
+                        onForgetTarget = vm::forgetTarget,
+                    )
+                }
                 // Typed but not yet ranked: the previous results stay until the new ones.
                 state.query.isBlank() -> Unit
                 state.results.results.isEmpty() && state.screens.results.isEmpty() -> EmptyText(
@@ -184,13 +198,24 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RecentSearches(recent: List<String>, nothingKnown: Boolean, onPick: (String) -> Unit, onForget: (String) -> Unit) {
-    if (recent.isEmpty()) {
+private fun RecentSearches(
+    recent: List<String>,
+    opened: List<RecentTarget>,
+    nothingKnown: Boolean,
+    clusterOf: (String) -> String?,
+    onPick: (String) -> Unit,
+    onForget: (String) -> Unit,
+    onOpen: (ShareTarget) -> Unit,
+    onForgetTarget: (ShareTarget) -> Unit,
+) {
+    if (recent.isEmpty() && opened.isEmpty()) {
         if (nothingKnown) EmptyText(stringResource(R.string.search_nothing_known))
         return
     }
     val removeLabel = stringResource(R.string.search_recent_remove)
     LazyColumn(Modifier.fillMaxSize()) {
+        recentlyOpened(opened, clusterOf, onOpen, onForgetTarget)
+        if (recent.isEmpty()) return@LazyColumn
         item { SectionTitle(stringResource(R.string.search_recent), Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         items(recent, key = { it }) { query ->
             ListItem(

@@ -31,7 +31,9 @@ import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubeScope
+import name.levis.ichor.model.RecentTarget
 import name.levis.ichor.model.ScreenEntry
+import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.ScreenMatches
 import name.levis.ichor.model.SearchResults
 import name.levis.ichor.model.eagerLimit
@@ -67,6 +69,9 @@ class SearchViewModel(
 
     val recent: StateFlow<List<String>> = prefs.recentSearches
 
+    /** The objects opened lately, newest first (shown while the query is blank). */
+    val recentTargets: StateFlow<List<RecentTarget>> = prefs.recentTargets
+
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
@@ -97,6 +102,8 @@ class SearchViewModel(
     fun remember(query: String = _query.value) = prefs.addRecentSearch(query)
 
     fun forget(query: String) = prefs.removeRecentSearch(query)
+
+    fun forgetTarget(target: ShareTarget) = prefs.removeRecentTarget(target)
 
     /**
      * Reads the active cluster's pods, workloads, CronJobs and GitOps apps again, then searches

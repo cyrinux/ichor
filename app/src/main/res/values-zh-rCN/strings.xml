@@ -4760,6 +4760,8 @@
     <string name="search_empty">没有“%1$s”的结果</string>
     <string name="search_group_screens">页面</string>
     <string name="search_show_all">显示全部</string>
+    <string name="search_recent_targets">最近打开</string>
+    <string name="search_recent_targets_remove">从最近打开中移除</string>
     <string name="search_nothing_known">暂无已知内容：先打开一次集群</string>
     <string name="search_refresh_active">刷新当前集群</string>
     <string name="search_refresh_failed">无法刷新当前集群：显示其上次的内容</string>

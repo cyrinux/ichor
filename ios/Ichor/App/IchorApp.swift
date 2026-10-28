@@ -467,8 +467,8 @@ struct MainNavigation: View {
     /// The screen of each route, for both shells.
     @ViewBuilder private func destination(_ route: Route) -> some View {
         switch route {
-        case .node(let ref): NodeDetailView(ref: ref)
-        case .nodeLive(let ref): NodeTabsView(ref: ref, initialTab: .live)
+        case .node(let ref): NodeDetailView(ref: ref).recordsOpened(.node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
+        case .nodeLive(let ref): NodeTabsView(ref: ref, initialTab: .live).recordsOpened(.node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
         case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
         case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
         case .k8sUpgrade: K8sUpgradePlanView()
@@ -477,7 +477,7 @@ struct MainNavigation: View {
             if model.activeSummary?.omni == true { BootMediaView(path: $path) } else { JoinNodeView(path: $path) }
         case .bootMedia: BootMediaView(path: $path)
         case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
-        case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab)
+        case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab).recordsOpened(.node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
         case .nodes(let filter, let nodes, let selected): NodesView(nodes: nodes, filter: filter, selected: selected, path: $path)
         case .kubeNodes(let filter, let nodes, let query): KubeNodesView(nodes: nodes, filter: filter, query: query, path: $path)
         case .logs(let node, let hostname, let service):
@@ -497,15 +497,19 @@ struct MainNavigation: View {
             ReplaceControlPlaneView(memberId: memberId, node: node, hostname: hostname)
         case .kubespan: KubeSpanView()
         case .workloads: KubernetesView()
-        case .kubernetes(let focus): KubernetesView(focus: focus)
+        case .kubernetes(let focus): KubernetesView(focus: focus).recordsOpened(focus.shareTarget, label: focus.name, detail: focus.namespace)
         case .networkTest: KubernetesView(networkTest: true)
         case .dataServices(let hints, let downNodes, let kind, let solo): DataServicesView(hints: hints, downNodes: downNodes, selected: kind, solo: solo)
         case .dataServicesPlugin(let hints, let downNodes, let plugin): DataServicesView(hints: hints, downNodes: downNodes, plugin: plugin)
         case .plugin(let id): PluginView(pluginID: id)
         case .argoCD(let downNodes, let selected): ArgoCDView(downNodes: downNodes, selected: selected)
         case .argoWindows: ArgoWindowsView()
-        case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])
-        case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
+        case .argoApp(let namespace, let name):
+            ArgoAppView(namespace: namespace, name: name, downNodes: [])
+                .recordsOpened(.argoApp(namespace: namespace, name: name), label: name, detail: namespace)
+        case .fluxApp(let kind, let namespace, let name):
+            FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
+                .recordsOpened(.fluxApp(kind: kind, namespace: namespace, name: name), label: name, detail: namespace)
         case .gitOpsSource(let source, let dir, let app): SourceBrowserView(source: source, dir: dir, app: app)
         case .gitOpsFile(let source, let path, let app): SourceFileView(source: source, path: path, app: app)
         case .flux(let downNodes, let selected): FluxView(downNodes: downNodes, selected: selected)

@@ -79,6 +79,7 @@ struct FluxView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: FluxAppRoute.self) {
             FluxAppView(kind: $0.kind, namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes)
+                .recordsOpened(.fluxApp(kind: $0.kind, namespace: $0.namespace, name: $0.name), label: $0.name, detail: $0.namespace)
         }
         .onAppear { covered = false }
         .onDisappear { covered = true }

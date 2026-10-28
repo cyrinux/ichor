@@ -40,6 +40,7 @@ struct SearchView: View {
                 }
             }
             if text.trimmingCharacters(in: .whitespaces).isEmpty {
+                openedSection
                 recentSection
             } else {
                 screensSection
@@ -85,6 +86,44 @@ struct SearchView: View {
     private var canRefresh: Bool {
         guard let context = model.activeSummary, !context.demo, model.client != nil else { return false }
         return !model.activeIsKube || model.allows(.workloads)
+    }
+
+    /// The objects opened lately, newest first, with their cluster when it is not the active
+    /// one; a removed cluster's are left out. A tap opens one again like a share link.
+    @ViewBuilder
+    private var openedSection: some View {
+        let contexts = model.summary?.contexts ?? []
+        let opened = RecentTargetStore.shared.list.known(clusterIDs: Set(contexts.map(\.clusterID).filter { !$0.isEmpty }))
+        if !opened.isEmpty {
+            Section("Recently opened") {
+                ForEach(opened) { recent in
+                    Button {
+                        open(recent.target)
+                    } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: recent.label).lineLimit(1)
+                                Text(verbatim: openedDetail(recent, contexts: contexts))
+                                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            }
+                        } icon: {
+                            Image(systemName: searchKindSymbol(recent.target.target.rawValue))
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    .swipeActions {
+                        Button("Remove", role: .destructive) { RecentTargetStore.shared.remove(recent.target) }
+                    }
+                }
+            }
+        }
+    }
+
+    /// "Pod · default", plus the cluster's name when it is not the one on screen.
+    private func openedDetail(_ recent: RecentTarget, contexts: [ContextSummary]) -> String {
+        let cluster = recent.target.cluster == model.activeSummary?.clusterID ? nil
+            : contexts.first { $0.clusterID == recent.target.cluster }.map { model.labels.of($0) }
+        return [searchKindName(recent.target.target.rawValue), recent.detail, cluster ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
     @ViewBuilder
@@ -165,7 +204,7 @@ struct SearchView: View {
         let typing = !text.trimmingCharacters(in: .whitespaces).isEmpty
         if store.building {
             ProgressView()
-        } else if store.nothingKnown {
+        } else if store.nothingKnown, RecentTargetStore.shared.list.targets.isEmpty {
             ContentUnavailableView("Nothing known yet: open a cluster once", systemImage: "magnifyingglass")
         } else if typing, store.results.results.isEmpty, store.screens.results.isEmpty {
             ContentUnavailableView.search(text: text)
@@ -184,7 +223,7 @@ private struct SearchResultRow: View {
                 Image(systemName: symbol)
                     .foregroundStyle(.tint)
                     .frame(width: 24)
-                    .accessibilityLabel(kindName)
+                    .accessibilityLabel(Text(searchKindName(result.kind)))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: result.name).font(.body)
                     Text(verbatim: subtitle).font(.caption).foregroundStyle(.secondary)
@@ -205,27 +244,31 @@ private struct SearchResultRow: View {
         result.namespace.isEmpty ? result.detail : "\(result.detail) · \(result.namespace)"
     }
 
-    private var symbol: String {
-        switch result.kind {
-        case "node": "server.rack"
-        case "pod": "cube"
-        case "workload": "square.stack.3d.up"
-        case "cronjob": "clock.arrow.circlepath"
-        case "argo-app": "arrow.triangle.2.circlepath"
-        case "flux-app": "arrow.triangle.branch"
-        default: "questionmark.square"
-        }
-    }
+    private var symbol: String { searchKindSymbol(result.kind) }
+}
 
-    private var kindName: Text {
-        switch result.kind {
-        case "node": Text("Node")
-        case "pod": Text("Pod")
-        case "workload": Text("Workload")
-        case "cronjob": Text("CronJob")
-        case "argo-app": Text("Argo CD app")
-        case "flux-app": Text("Flux app")
-        default: Text(verbatim: result.kind)
-        }
+/// The SF Symbol of a result's or a recently opened object's kind (a share target's name).
+func searchKindSymbol(_ kind: String) -> String {
+    switch kind {
+    case "node": "server.rack"
+    case "pod": "cube"
+    case "workload": "square.stack.3d.up"
+    case "cronjob": "clock.arrow.circlepath"
+    case "argo-app": "arrow.triangle.2.circlepath"
+    case "flux-app": "arrow.triangle.branch"
+    default: "questionmark.square"
+    }
+}
+
+/// The localised name of a result's or a recently opened object's kind.
+func searchKindName(_ kind: String) -> String {
+    switch kind {
+    case "node": String(localized: "Node")
+    case "pod": String(localized: "Pod")
+    case "workload": String(localized: "Workload")
+    case "cronjob": String(localized: "CronJob")
+    case "argo-app": String(localized: "Argo CD app")
+    case "flux-app": String(localized: "Flux app")
+    default: kind
     }
 }

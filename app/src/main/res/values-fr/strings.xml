@@ -4886,6 +4886,8 @@
     <string name="search_empty">Aucun résultat pour « %1$s »</string>
     <string name="search_group_screens">Écrans</string>
     <string name="search_show_all">Tout afficher</string>
+    <string name="search_recent_targets">Ouverts récemment</string>
+    <string name="search_recent_targets_remove">Retirer des éléments ouverts récemment</string>
     <string name="search_nothing_known">Rien de connu pour l\'instant : ouvrez un cluster une fois</string>
     <string name="search_refresh_active">Actualiser le cluster actif</string>
     <string name="search_refresh_failed">Impossible d\'actualiser le cluster actif : affichage de son dernier état</string>

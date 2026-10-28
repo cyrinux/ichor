@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.PatchPrefill
@@ -85,6 +86,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     ) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()
         val host = entry.arguments?.getString("host") ?: addr
+        RecordOpened(app, ShareTarget.node(addr, host, 0), host)
         NodeDetailScreen(
             node = addr,
             hostname = host,

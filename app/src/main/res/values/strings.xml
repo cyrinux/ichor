@@ -4892,6 +4892,8 @@
     <string name="search_empty">No results for “%1$s”</string>
     <string name="search_group_screens">Screens</string>
     <string name="search_show_all">Show all</string>
+    <string name="search_recent_targets">Recently opened</string>
+    <string name="search_recent_targets_remove">Remove from recently opened</string>
     <string name="search_nothing_known">Nothing known yet: open a cluster once</string>
     <string name="search_refresh_active">Refresh active cluster</string>
     <string name="search_refresh_failed">Could not refresh the active cluster: showing what it last showed</string>
