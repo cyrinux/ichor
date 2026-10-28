@@ -103,9 +103,10 @@ The Android app updates itself from this repository's GitHub releases (Settings 
 - **When it checks:** once a day, or when you tap "Check now".
 - **What it downloads:** the signed APK for the phone's ABI, after you confirm.
 - **Verification before installing:**
-  1. the SHA-256 checksum GitHub publishes for the file;
+  1. the SHA-256 checksum GitHub publishes for the file; a release without one is refused;
   2. the package name;
-  3. that it is signed with exactly the installed app's key.
+  3. that it is signed with exactly the installed app's key, or with a key rotated from it
+     (APK signature scheme v3 lineage, Android 9+).
 - **Installing:** Android shows its own confirmation, and asks once to allow
   "Install unknown apps" for Ichor.
 

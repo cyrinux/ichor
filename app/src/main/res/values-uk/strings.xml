@@ -682,6 +682,8 @@
     <string name="update_err_download_http">Не вдалося завантажити: HTTP %1$d</string>
     <string name="update_err_too_large">Оновлення має неочікувано великий розмір</string>
     <string name="update_err_checksum">Контрольна сума не збігається: завантажений файл змінено або пошкоджено</string>
+    <string name="update_err_no_checksum">Випуск не має контрольної суми; оновлення не встановлено.</string>
+    <string name="settings_support_data_store_off">Журнал дій та імена вузлів не зберігаються: %1$s</string>
     <string name="update_err_not_apk">Завантажений файл не є дійсним APK</string>
     <string name="update_err_other_app">Цей APK належить іншому застосунку (%1$s)</string>
     <string name="update_err_signature">APK не підписано ключем цього застосунку; встановлення скасовано</string>

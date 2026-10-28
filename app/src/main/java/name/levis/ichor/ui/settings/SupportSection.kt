@@ -40,6 +40,9 @@ private val REPORT_BUG_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/ne
 @Composable
 fun SupportSection(summary: ContextSummary?, onSupportBundle: () -> Unit, onActivity: () -> Unit, onIntegrations: () -> Unit) {
     SectionTitle(stringResource(R.string.settings_section_support))
+    // The core could not open its encrypted store: say so rather than lose the log quietly.
+    val dataStoreProblem by (LocalContext.current.applicationContext as TalosApp).dataStoreProblem.collectAsStateWithLifecycle()
+    dataStoreProblem?.let { InfoNotice(stringResource(R.string.settings_support_data_store_off, it)) }
     // `talosctl support` reads logs and resources of every chosen node (any role).
     if (summary?.allows(Feature.SUPPORT_BUNDLE) == true) {
         MutedText(stringResource(R.string.settings_support_bundle_desc))

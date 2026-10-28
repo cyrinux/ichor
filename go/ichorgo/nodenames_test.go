@@ -2,6 +2,8 @@ package ichorgo
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -182,5 +184,51 @@ func TestMergeKnownNodesRenamedNode(t *testing.T) {
 
 	if got["fp"]["10.0.0.2"].Hostname != "new" {
 		t.Errorf("hostname = %q, want the one the node says now", got["fp"]["10.0.0.2"].Hostname)
+	}
+}
+
+func TestSetDataDirRejects(t *testing.T) {
+	t.Cleanup(func() { _ = SetDataDir("", nil) })
+
+	dir := t.TempDir()
+	tests := []struct {
+		name       string
+		dir        string
+		key        []byte
+		wantErr    error
+		persisting bool
+		reason     string
+	}{
+		{name: "empty dir", dir: "", key: testDataKey, wantErr: errDataDirEmpty, reason: "no data directory"},
+		{name: "short key", dir: dir, key: bytes.Repeat([]byte{1}, 16), wantErr: errDataKeySize, reason: "data key must be 32 bytes, got 16"},
+		{name: "no key", dir: dir, key: nil, wantErr: errDataKeySize, reason: "data key must be 32 bytes, got 0"},
+		{name: "32-byte key", dir: dir, key: testDataKey, persisting: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := SetDataDir(tt.dir, tt.key)
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("SetDataDir err = %v, want %v", err, tt.wantErr)
+			}
+
+			raw, err := DataStoreStatus()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var status dataStoreStatus
+			if err := json.Unmarshal([]byte(raw), &status); err != nil {
+				t.Fatal(err)
+			}
+
+			if status.Persisting != tt.persisting || status.Reason != tt.reason {
+				t.Errorf("status = %+v, want persisting %v, reason %q", status, tt.persisting, tt.reason)
+			}
+
+			if tt.persisting && status.Dir != filepath.Base(dir) {
+				t.Errorf("dir = %q, want only its last element %q", status.Dir, filepath.Base(dir))
+			}
+		})
 	}
 }

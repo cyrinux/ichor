@@ -141,9 +141,22 @@ struct TalosClient: Sendable {
 
     /// Where Go remembers node names, so a node that is down still shows its hostname.
     /// Device-only: excluded from backup, encrypted with `dataKey()`. Call before any other Go call.
+    /// When it fails (no folder, no key from the Keychain), nothing is saved across launches
+    /// and `dataStoreStatus()` says why, for Settings → Support.
     static func setDataDirectory() {
-        guard let url = try? AppSupport.excludedFolder("core") else { return }
-        IchorgoSetDataDir(url.path, dataKey())
+        var error: NSError?
+        // No folder: an empty directory, so the core records why nothing is saved.
+        let path = (try? AppSupport.excludedFolder("core"))?.path ?? ""
+        _ = IchorgoSetDataDir(path, dataKey(), &error)
+        if let error { StartupTrace.markOnce("core data store off", detail: error.localizedDescription) }
+    }
+
+    /// Whether the action log and the node names are being saved (see setDataDirectory).
+    static func dataStoreStatus() -> DataStoreStatus? {
+        var error: NSError?
+        let json = IchorgoDataStoreStatus(&error)
+        guard error == nil else { return nil }
+        return try? TalosJSON.decode(DataStoreStatus.self, from: json)
     }
 
     private static let dataKeyAccount = "core-data-key"

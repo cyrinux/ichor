@@ -620,6 +620,8 @@
     <string name="update_err_download_http">Falha no download: HTTP %1$d</string>
     <string name="update_err_too_large">A atualização é inesperadamente grande</string>
     <string name="update_err_checksum">Checksum não confere: o download foi alterado ou corrompido</string>
+    <string name="update_err_no_checksum">A versão não tem checksum; a atualização não foi instalada.</string>
+    <string name="settings_support_data_store_off">O registro de ações e os nomes dos nós não estão sendo salvos: %1$s</string>
     <string name="update_err_not_apk">O arquivo baixado não é um APK válido</string>
     <string name="update_err_other_app">O APK é de outro app (%1$s)</string>
     <string name="update_err_signature">O APK não está assinado com a chave deste app; instalação recusada</string>

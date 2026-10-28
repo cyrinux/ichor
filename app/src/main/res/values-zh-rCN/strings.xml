@@ -589,6 +589,8 @@
     <string name="update_err_download_http">下载失败：HTTP %1$d</string>
     <string name="update_err_too_large">更新文件异常大</string>
     <string name="update_err_checksum">校验和不匹配：下载内容已被篡改或损坏</string>
+    <string name="update_err_no_checksum">该版本没有校验和，未安装更新。</string>
+    <string name="settings_support_data_store_off">操作日志和节点名称未被保存：%1$s</string>
     <string name="update_err_not_apk">下载的文件不是有效的 APK</string>
     <string name="update_err_other_app">此 APK 属于其他应用（%1$s）</string>
     <string name="update_err_signature">此 APK 未使用本应用的密钥签名；已拒绝安装</string>

@@ -623,6 +623,8 @@
     <string name="update_err_download_http">Download failed: HTTP %1$d</string>
     <string name="update_err_too_large">Update is unexpectedly large</string>
     <string name="update_err_checksum">Checksum mismatch: the download was altered or corrupted</string>
+    <string name="update_err_no_checksum">The release has no checksum; the update was not installed.</string>
+    <string name="settings_support_data_store_off">Action log and node names are not being saved: %1$s</string>
     <string name="update_err_not_apk">The downloaded file is not a valid APK</string>
     <string name="update_err_other_app">The APK is for another app (%1$s)</string>
     <string name="update_err_signature">The APK is not signed with this app\'s key; refusing to install</string>

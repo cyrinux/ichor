@@ -627,6 +627,8 @@
     <string name="update_err_download_http">Échec du téléchargement&#160;: HTTP %1$d</string>
     <string name="update_err_too_large">La mise à jour est anormalement volumineuse</string>
     <string name="update_err_checksum">Somme de contrôle incorrecte&#160;: le téléchargement a été modifié ou corrompu</string>
+    <string name="update_err_no_checksum">La version n’a pas de somme de contrôle ; la mise à jour n’a pas été installée.</string>
+    <string name="settings_support_data_store_off">Le journal des actions et les noms des nœuds ne sont pas enregistrés : %1$s</string>
     <string name="update_err_not_apk">Le fichier téléchargé n\'est pas un APK valide</string>
     <string name="update_err_other_app">L\'APK est destiné à une autre app (%1$s)</string>
     <string name="update_err_signature">L\'APK n\'est pas signé avec la clé de cette app&#160;; installation refusée</string>

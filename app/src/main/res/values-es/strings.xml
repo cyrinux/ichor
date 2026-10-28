@@ -627,6 +627,8 @@
     <string name="update_err_download_http">Error de descarga: HTTP %1$d</string>
     <string name="update_err_too_large">La actualización es inesperadamente grande</string>
     <string name="update_err_checksum">La suma de comprobación no coincide: la descarga se ha alterado o está dañada</string>
+    <string name="update_err_no_checksum">La versión no tiene suma de comprobación; la actualización no se instaló.</string>
+    <string name="settings_support_data_store_off">El registro de acciones y los nombres de nodos no se están guardando: %1$s</string>
     <string name="update_err_not_apk">El archivo descargado no es un APK válido</string>
     <string name="update_err_other_app">El APK es de otra aplicación (%1$s)</string>
     <string name="update_err_signature">El APK no está firmado con la clave de esta aplicación; se rechaza la instalación</string>

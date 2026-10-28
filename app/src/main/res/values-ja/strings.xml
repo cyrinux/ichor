@@ -589,6 +589,8 @@
     <string name="update_err_download_http">ダウンロードに失敗しました：HTTP %1$d</string>
     <string name="update_err_too_large">アップデートのサイズが想定外に大きすぎます</string>
     <string name="update_err_checksum">チェックサムが一致しません。ダウンロードが改ざんされたか破損しています</string>
+    <string name="update_err_no_checksum">リリースにチェックサムがないため、アップデートはインストールされませんでした。</string>
+    <string name="settings_support_data_store_off">操作ログとノード名は保存されていません: %1$s</string>
     <string name="update_err_not_apk">ダウンロードしたファイルは有効な APK ではありません</string>
     <string name="update_err_other_app">この APK は別のアプリ用です（%1$s）</string>
     <string name="update_err_signature">この APK はこのアプリのキーで署名されていないため、インストールを拒否しました</string>

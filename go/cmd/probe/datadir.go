@@ -40,7 +40,5 @@ func setDataDir(dir string) error {
 		return errors.New(path + " is not a 32-byte key")
 	}
 
-	ichorgo.SetDataDir(dir, key)
-
-	return nil
+	return ichorgo.SetDataDir(dir, key)
 }

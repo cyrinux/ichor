@@ -627,6 +627,8 @@
     <string name="update_err_download_http">Download non riuscito: HTTP %1$d</string>
     <string name="update_err_too_large">L\'aggiornamento è insolitamente grande</string>
     <string name="update_err_checksum">Checksum non corrispondente: il download è stato alterato o è danneggiato</string>
+    <string name="update_err_no_checksum">La versione non ha un checksum; l’aggiornamento non è stato installato.</string>
+    <string name="settings_support_data_store_off">Il registro delle azioni e i nomi dei nodi non vengono salvati: %1$s</string>
     <string name="update_err_not_apk">Il file scaricato non è un APK valido</string>
     <string name="update_err_other_app">L\'APK è per un\'altra app (%1$s)</string>
     <string name="update_err_signature">L\'APK non è firmato con la chiave di questa app; installazione rifiutata</string>

@@ -682,6 +682,8 @@
     <string name="update_err_download_http">Ошибка загрузки: HTTP %1$d</string>
     <string name="update_err_too_large">Обновление неожиданно большое</string>
     <string name="update_err_checksum">Контрольная сумма не совпадает: загруженный файл изменён или повреждён</string>
+    <string name="update_err_no_checksum">У выпуска нет контрольной суммы; обновление не установлено.</string>
+    <string name="settings_support_data_store_off">Журнал действий и имена узлов не сохраняются: %1$s</string>
     <string name="update_err_not_apk">Загруженный файл не является корректным APK</string>
     <string name="update_err_other_app">APK предназначен для другого приложения (%1$s)</string>
     <string name="update_err_signature">APK не подписан ключом этого приложения; установка отклонена</string>
