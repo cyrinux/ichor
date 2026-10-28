@@ -1,0 +1,204 @@
+{
+  "answered": 5,
+  "apps": [
+    {
+      "category": "devops",
+      "containers": 2,
+      "drift": false,
+      "icon": "argo-cd",
+      "id": "argo-cd",
+      "images": [
+        {
+          "containers": 2,
+          "repo": "quay.io/argoproj/argocd",
+          "tag": "v3.4.5"
+        }
+      ],
+      "known": true,
+      "memory": 688914432,
+      "name": "Argo CD",
+      "namespaces": [
+        "argocd"
+      ],
+      "nodes": [
+        "192.0.2.20",
+        "192.0.2.21"
+      ],
+      "pods": [
+        {
+          "containers": [
+            {
+              "image": "quay.io/argoproj/argocd:v3.4.5",
+              "memory": 325058560,
+              "name": "application-controller",
+              "status": "CONTAINER_RUNNING"
+            }
+          ],
+          "namespace": "argocd",
+          "node": "192.0.2.20",
+          "pod": "argocd-application-controller-0"
+        },
+        {
+          "containers": [
+            {
+              "image": "quay.io/argoproj/argocd:v3.4.5",
+              "memory": 363855872,
+              "name": "server",
+              "status": "CONTAINER_RUNNING"
+            }
+          ],
+          "namespace": "argocd",
+          "node": "192.0.2.21",
+          "pod": "argocd-server-6b9d-k2v8n"
+        }
+      ],
+      "running": 2,
+      "system": false,
+      "unpinned": false,
+      "version": "v3.4.5"
+    },
+    {
+      "category": "security",
+      "containers": 2,
+      "drift": false,
+      "icon": "cert-manager",
+      "id": "cert-manager",
+      "images": [
+        {
+          "containers": 1,
+          "repo": "quay.io/jetstack/cert-manager-cainjector",
+          "tag": "v1.18.2"
+        },
+        {
+          "containers": 1,
+          "repo": "quay.io/jetstack/cert-manager-controller",
+          "tag": "v1.18.2"
+        }
+      ],
+      "known": true,
+      "memory": 466616320,
+      "name": "cert-manager",
+      "namespaces": [
+        "cert-manager"
+      ],
+      "nodes": [
+        "192.0.2.20",
+        "192.0.2.21"
+      ],
+      "pods": [
+        {
+          "containers": [
+            {
+              "image": "quay.io/jetstack/cert-manager-controller:v1.18.2",
+              "memory": 413138944,
+              "name": "cert-manager-controller",
+              "status": "CONTAINER_RUNNING"
+            }
+          ],
+          "namespace": "cert-manager",
+          "node": "192.0.2.20",
+          "pod": "cert-manager-7b5d-9kq2w"
+        },
+        {
+          "containers": [
+            {
+              "image": "quay.io/jetstack/cert-manager-cainjector:v1.18.2",
+              "memory": 53477376,
+              "name": "cert-manager-cainjector",
+              "status": "CONTAINER_RUNNING"
+            }
+          ],
+          "namespace": "cert-manager",
+          "node": "192.0.2.21",
+          "pod": "cert-manager-cainjector-5c9-tt7x2"
+        }
+      ],
+      "running": 2,
+      "system": false,
+      "unpinned": false,
+      "version": "v1.18.2"
+    },
+    {
+      "category": "networking",
+      "containers": 3,
+      "drift": true,
+      "icon": "cilium",
+      "id": "cilium",
+      "images": [
+        {
+          "containers": 1,
+          "repo": "quay.io/cilium/cilium",
+          "tag": "v1.18.1"
+        },
+        {
+          "containers": 1,
+          "repo": "quay.io/cilium/cilium",
+          "tag": "v1.18.2"
+        },
+        {
+          "containers": 1,
+          "repo": "quay.io/cilium/operator-generic",
+          "tag": "v1.18.2"
+        }
+      ],
+      "known": true,
+      "memory": 890241024,
+      "name": "Cilium",
+      "namespaces": [
+        "kube-system"
+      ],
+      "nodes": [
+        "192.0.2.10",
+        "192.0.2.20",
+        "192.0.2.21"
+      ],
+      "pods": [
+        {
+          "containers": [
+            {
+              "image": "quay.io/cilium/cilium:v1.18.2",
+              "memory": 257949696,
+              "name": "cilium-agent",
+              "status": "CONTAINER_RUNNING"
+            }
+          ],
+          "namespace": "kube-system",
+          "node": "192.0.2.20",
+          "pod": "cilium-8h2kd"
+        },
+        {
+          "containers": [
+            {
+              "image": "quay.io/cilium/operator-generic:v1.18.2",
+              "memory": 335544320,
+              "name": "cilium-operator",
+              "status": "CONTAINER_RUNNING"
+            }
+          ],
+          "namespace": "kube-system",
+          "node": "192.0.2.10",
+          "pod": "cilium-operator-5d8f-l2v9q"
+        },
+        {
+          "containers": [
+            {
+              "image": "quay.io/cilium/cilium:v1.18.1",
+              "memory": 296747008,
+              "name": "cilium-agent",
+              "status": "CONTAINER_RUNNING"
+            }
+          ],
+          "namespace": "kube-system",
+          "node": "192.0.2.21",
+          "pod": "cilium-p9x7c"
+        }
+      ],
+      "running": 3,
+      "system": false,
+      "unpinned": false,
+      "version": "v1.18.1"
+    }
+  ],
+  "at": 1767323045000,
+  "nodes": 5
+}

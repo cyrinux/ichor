@@ -1,0 +1,109 @@
+{
+  "nodes": [
+    {
+      "down": 0,
+      "enabled": true,
+      "node": "192.0.2.10",
+      "peers": [
+        {
+          "endpoint": "192.0.2.11:51820",
+          "label": "demo-cp-2",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-2",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "endpoint": "198.51.100.20:51820",
+          "label": "demo-cp-3",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-3",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "endpoint": "192.0.2.20:51820",
+          "label": "demo-worker-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-worker-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        }
+      ],
+      "up": 4
+    },
+    {
+      "down": 0,
+      "enabled": true,
+      "node": "192.0.2.11",
+      "peers": [
+        {
+          "endpoint": "192.0.2.10:51820",
+          "label": "demo-cp-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "endpoint": "198.51.100.20:51820",
+          "label": "demo-cp-3",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-3",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "endpoint": "192.0.2.20:51820",
+          "label": "demo-worker-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-worker-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        }
+      ],
+      "up": 4
+    },
+    {
+      "down": 0,
+      "enabled": true,
+      "node": "192.0.2.12",
+      "peers": [
+        {
+          "endpoint": "198.51.100.10:51820",
+          "label": "demo-cp-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "endpoint": "198.51.100.10:51820",
+          "label": "demo-cp-2",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-2",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "endpoint": "198.51.100.10:51820",
+          "label": "demo-worker-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-worker-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        }
+      ],
+      "up": 4
+    }
+  ]
+}

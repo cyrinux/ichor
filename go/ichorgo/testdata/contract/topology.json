@@ -1,0 +1,160 @@
+{
+  "links": [
+    {
+      "a": "demo-cp-1",
+      "b": "demo-cp-2",
+      "sides": [
+        {
+          "endpoint": "192.0.2.11:51820",
+          "from": "demo-cp-1",
+          "lastHandshake": 1767323045,
+          "private": false,
+          "rx": 1048576,
+          "state": "up",
+          "to": "demo-cp-2",
+          "tx": 524288
+        },
+        {
+          "endpoint": "192.0.2.10:51820",
+          "from": "demo-cp-2",
+          "lastHandshake": 1767323045,
+          "private": false,
+          "rx": 1048576,
+          "state": "up",
+          "to": "demo-cp-1",
+          "tx": 524288
+        }
+      ],
+      "state": "up"
+    },
+    {
+      "a": "demo-cp-1",
+      "b": "demo-cp-3",
+      "sides": [
+        {
+          "endpoint": "198.51.100.20:51820",
+          "from": "demo-cp-1",
+          "lastHandshake": 1767323045,
+          "private": false,
+          "rx": 1048576,
+          "state": "up",
+          "to": "demo-cp-3",
+          "tx": 524288
+        },
+        {
+          "endpoint": "198.51.100.10:51820",
+          "from": "demo-cp-3",
+          "lastHandshake": 1767323045,
+          "private": false,
+          "rx": 1048576,
+          "state": "up",
+          "to": "demo-cp-1",
+          "tx": 524288
+        }
+      ],
+      "state": "up"
+    },
+    {
+      "a": "demo-cp-1",
+      "b": "demo-worker-1",
+      "sides": [
+        {
+          "endpoint": "192.0.2.20:51820",
+          "from": "demo-cp-1",
+          "lastHandshake": 1767323045,
+          "private": false,
+          "rx": 1048576,
+          "state": "up",
+          "to": "demo-worker-1",
+          "tx": 524288
+        },
+        {
+          "endpoint": "192.0.2.10:51820",
+          "from": "demo-worker-1",
+          "lastHandshake": 1767323045,
+          "private": false,
+          "rx": 1048576,
+          "state": "up",
+          "to": "demo-cp-1",
+          "tx": 524288
+        }
+      ],
+      "state": "up"
+    }
+  ],
+  "nodes": [
+    {
+      "addresses": [
+        "192.0.2.10"
+      ],
+      "country": "FR",
+      "hostname": "demo-cp-1",
+      "id": "demo-cp-1",
+      "kubespan": true,
+      "node": "192.0.2.10",
+      "queried": true,
+      "role": "controlplane",
+      "site": "site-1",
+      "zone": "fr-par-1"
+    },
+    {
+      "addresses": [
+        "192.0.2.11"
+      ],
+      "country": "FR",
+      "hostname": "demo-cp-2",
+      "id": "demo-cp-2",
+      "kubespan": true,
+      "node": "192.0.2.11",
+      "queried": true,
+      "role": "controlplane",
+      "site": "site-1",
+      "zone": "fr-par-1"
+    },
+    {
+      "addresses": [
+        "192.0.2.12"
+      ],
+      "country": "NL",
+      "hostname": "demo-cp-3",
+      "id": "demo-cp-3",
+      "kubespan": true,
+      "node": "192.0.2.12",
+      "queried": true,
+      "role": "controlplane",
+      "site": "site-2",
+      "zone": "nl-ams-1"
+    }
+  ],
+  "sites": [
+    {
+      "country": "FR",
+      "id": "site-1",
+      "kind": "zone",
+      "label": "fr-par-1",
+      "nodes": [
+        "demo-cp-1",
+        "demo-cp-2",
+        "demo-worker-1"
+      ]
+    },
+    {
+      "country": "NL",
+      "id": "site-2",
+      "kind": "zone",
+      "label": "nl-ams-1",
+      "nodes": [
+        "demo-cp-3"
+      ]
+    },
+    {
+      "country": "DE",
+      "id": "site-3",
+      "kind": "zone",
+      "label": "fsn1-dc14",
+      "nodes": [
+        "demo-worker-2"
+      ]
+    }
+  ]
+}

@@ -21,6 +21,17 @@ contexts. New transport or pure-logic code goes in its own package under `go/<do
 `go/internal/httpx`, the one outbound HTTP client), with its tests next to it; `ichorgo`
 imports it and keeps a thin wrapper per entry point.
 
+## Facade contract
+
+The apps decode the Go core's JSON with their own Kotlin and Swift types, leniently, so a
+renamed Go json tag would compile everywhere and show a default value. The golden fixtures in
+`go/ichorgo/testdata/contract/` (written from the demo data by `contract_test.go`) guard the
+responses the apps read most: `go test` fails when one of those Go types changes, and the app
+tests (`ContractTest.kt`, `ContractTests.swift`) fail when Go writes a key a model does not
+read. When you change one of those types, run `just contract-update`, then fix the Kotlin and
+Swift models the red tests point at. A new fixture needs a row in both app tests
+(`scripts/check-contract.py` checks it in `./build.sh check`).
+
 ## Confirming risky actions
 
 Do the same on Android and iOS:

@@ -1,0 +1,55 @@
+{
+  "pods": [
+    {
+      "containerNames": null,
+      "containers": 1,
+      "created": 1767323045000,
+      "healthy": true,
+      "images": [
+        "nginx:1.27"
+      ],
+      "lastTermination": "",
+      "name": "hello-ichor-7d9c5-abcde",
+      "namespace": "demo",
+      "node": "demo-worker-1",
+      "owner": "ReplicaSet/hello-ichor-7d9c5",
+      "ready": 1,
+      "restarts": 0,
+      "status": "Running"
+    },
+    {
+      "containerNames": null,
+      "containers": 1,
+      "created": 1767323045000,
+      "healthy": true,
+      "images": [
+        "nginx:1.27"
+      ],
+      "lastTermination": "",
+      "name": "hello-ichor-7d9c5-fghij",
+      "namespace": "demo",
+      "node": "demo-worker-2",
+      "owner": "ReplicaSet/hello-ichor-7d9c5",
+      "ready": 1,
+      "restarts": 0,
+      "status": "Running"
+    },
+    {
+      "containerNames": null,
+      "containers": 1,
+      "created": 1767323045000,
+      "healthy": true,
+      "images": [
+        "nginx:1.27"
+      ],
+      "lastTermination": "",
+      "name": "hello-ichor-7d9c5-klmno",
+      "namespace": "demo",
+      "node": "demo-worker-1",
+      "owner": "ReplicaSet/hello-ichor-7d9c5",
+      "ready": 1,
+      "restarts": 0,
+      "status": "Running"
+    }
+  ]
+}

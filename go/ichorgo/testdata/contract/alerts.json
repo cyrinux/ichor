@@ -1,0 +1,131 @@
+{
+  "counts": {
+    "critical": 1,
+    "info": 1,
+    "other": 0,
+    "suppressed": 1,
+    "warning": 2
+  },
+  "groups": [
+    {
+      "active": 1,
+      "alertname": "NodeFilesystemAlmostOutOfSpace",
+      "alerts": [
+        {
+          "alertname": "NodeFilesystemAlmostOutOfSpace",
+          "annotations": {
+            "description": "Filesystem on /dev/sda5 at demo-worker-1 has only 3.8% available space left.",
+            "runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutofspace",
+            "summary": "Filesystem has less than 5% space left."
+          },
+          "description": "Filesystem on /dev/sda5 at demo-worker-1 has only 3.8% available space left.",
+          "endsAt": 1767323045000,
+          "fingerprint": "a1c3e5f7a9b1c3d5",
+          "generatorURL": "http://prometheus.demo.invalid/graph",
+          "inhibitedBy": [],
+          "labels": {
+            "alertname": "NodeFilesystemAlmostOutOfSpace",
+            "device": "/dev/sda5",
+            "instance": "demo-worker-1",
+            "job": "node-exporter",
+            "mountpoint": "/var",
+            "namespace": "monitoring",
+            "severity": "critical"
+          },
+          "receivers": [
+            "oncall-pager",
+            "team-chat"
+          ],
+          "runbookURL": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutofspace",
+          "severity": "critical",
+          "silencedBy": [],
+          "startsAt": 1767323045000,
+          "state": "active",
+          "summary": "Filesystem has less than 5% space left.",
+          "updatedAt": 1767323045000
+        }
+      ],
+      "count": 1,
+      "severity": "critical"
+    },
+    {
+      "active": 1,
+      "alertname": "KubeDeploymentReplicasMismatch",
+      "alerts": [
+        {
+          "alertname": "KubeDeploymentReplicasMismatch",
+          "annotations": {
+            "description": "Deployment demo/worker has not matched the expected number of replicas for longer than 15 minutes.",
+            "runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubedeploymentreplicasmismatch",
+            "summary": "Deployment has not matched the expected number of replicas."
+          },
+          "description": "Deployment demo/worker has not matched the expected number of replicas for longer than 15 minutes.",
+          "endsAt": 1767323045000,
+          "fingerprint": "c3e5a7b9d1f3a5c7",
+          "generatorURL": "http://prometheus.demo.invalid/graph",
+          "inhibitedBy": [],
+          "labels": {
+            "alertname": "KubeDeploymentReplicasMismatch",
+            "deployment": "worker",
+            "job": "kube-state-metrics",
+            "namespace": "demo",
+            "severity": "warning"
+          },
+          "receivers": [
+            "team-chat"
+          ],
+          "runbookURL": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubedeploymentreplicasmismatch",
+          "severity": "warning",
+          "silencedBy": [],
+          "startsAt": 1767323045000,
+          "state": "active",
+          "summary": "Deployment has not matched the expected number of replicas.",
+          "updatedAt": 1767323045000
+        }
+      ],
+      "count": 1,
+      "severity": "warning"
+    },
+    {
+      "active": 1,
+      "alertname": "KubePodCrashLooping",
+      "alerts": [
+        {
+          "alertname": "KubePodCrashLooping",
+          "annotations": {
+            "description": "Pod demo/worker-6f4b8-uvwxy (worker) is in waiting state (reason: \"CrashLoopBackOff\").",
+            "runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubepodcrashlooping",
+            "summary": "Pod is crash looping."
+          },
+          "description": "Pod demo/worker-6f4b8-uvwxy (worker) is in waiting state (reason: \"CrashLoopBackOff\").",
+          "endsAt": 1767323045000,
+          "fingerprint": "b2d4f6a8c0e2f4a6",
+          "generatorURL": "http://prometheus.demo.invalid/graph",
+          "inhibitedBy": [],
+          "labels": {
+            "alertname": "KubePodCrashLooping",
+            "container": "worker",
+            "job": "kube-state-metrics",
+            "namespace": "demo",
+            "pod": "worker-6f4b8-uvwxy",
+            "severity": "warning"
+          },
+          "receivers": [
+            "team-chat"
+          ],
+          "runbookURL": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubepodcrashlooping",
+          "severity": "warning",
+          "silencedBy": [],
+          "startsAt": 1767323045000,
+          "state": "active",
+          "summary": "Pod is crash looping.",
+          "updatedAt": 1767323045000
+        }
+      ],
+      "count": 1,
+      "severity": "warning"
+    }
+  ],
+  "total": 5,
+  "truncated": false
+}

@@ -1,0 +1,69 @@
+{
+  "workloads": [
+    {
+      "autoscaler": {
+        "by": "hpa",
+        "current": 3,
+        "desired": 3,
+        "max": 5,
+        "min": 1,
+        "name": "hello-ichor",
+        "paused": false,
+        "state": "ok"
+      },
+      "available": 3,
+      "created": 1767323045000,
+      "desired": 3,
+      "images": [
+        "nginx:1.27"
+      ],
+      "kind": "Deployment",
+      "name": "hello-ichor",
+      "namespace": "demo",
+      "ready": 3,
+      "restartedAt": 1767323045000,
+      "state": "ready",
+      "updated": 3
+    },
+    {
+      "autoscaler": {
+        "by": "keda",
+        "current": 2,
+        "desired": 2,
+        "max": 10,
+        "min": 0,
+        "name": "worker-so",
+        "paused": true,
+        "state": "paused"
+      },
+      "available": 1,
+      "created": 1767323045000,
+      "desired": 2,
+      "images": [
+        "busybox:1.37"
+      ],
+      "kind": "Deployment",
+      "name": "worker",
+      "namespace": "demo",
+      "ready": 1,
+      "restartedAt": 0,
+      "state": "degraded",
+      "updated": 2
+    },
+    {
+      "available": 1,
+      "created": 1767323045000,
+      "desired": 1,
+      "images": [
+        "postgres:17"
+      ],
+      "kind": "StatefulSet",
+      "name": "postgres",
+      "namespace": "demo",
+      "ready": 1,
+      "restartedAt": 0,
+      "state": "ready",
+      "updated": 1
+    }
+  ]
+}
