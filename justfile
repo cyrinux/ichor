@@ -137,6 +137,10 @@ a11y-check:
 length-check:
     python3 scripts/check-file-length.py
 
+# Every Play listing text (title, descriptions, release notes) within Google Play's limits.
+play-listing-check:
+    python3 scripts/check-play-listing.py
+
 # Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS,
 # every iOS key with a placeholder formatted with its arguments, every Android key read
 # somewhere, and every website string in docs-i18n/.
