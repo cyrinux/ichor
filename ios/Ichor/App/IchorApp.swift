@@ -151,7 +151,16 @@ struct RootView: View {
             }
             // The "tap your security key" prompt, over the lock screen or whatever asked for a check.
             SecurityKeyPromptHost()
+            // A UI test whose demo could not be added says why (never set in a real launch).
+            if let failure = UITestLaunch.shared.failure {
+                Text(verbatim: failure)
+                    .padding()
+                    .background(.red.opacity(0.85))
+                    .accessibilityIdentifier(SmokeID.launchError)
+            }
         }
+        // A UI test's demo, once the configs are loaded (nothing in a real launch).
+        .task { await UITestLaunch.shared.prepare(model) }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .background: model.didEnterBackground()
@@ -169,11 +178,7 @@ struct RootView: View {
     @ViewBuilder
     private var content: some View {
         if !model.loaded {
-            ProgressView().task {
-                await model.load()
-                // A UI test's demo (nothing in a real launch).
-                await UITestLaunch.prepare(model)
-            }
+            ProgressView().task { await model.load() }
         } else if !model.unreadable.isEmpty {
             // Fail closed: neither store is shown while one cannot be read.
             ConfigUnreadableView()
