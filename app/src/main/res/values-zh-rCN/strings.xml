@@ -647,7 +647,7 @@
 
     <!-- Import -->
     <string name="import_title">添加集群</string>
-    <string name="import_help">如何创建 talosconfig</string>
+    <string name="import_help">如何添加集群</string>
     <string name="import_tab_file">文件</string>
     <string name="import_tab_paste">粘贴</string>
     <string name="import_tab_qr">二维码</string>
@@ -667,7 +667,7 @@
     <string name="import_name_taken">此名称已被使用。</string>
     <string name="import_name_replace">替换 %1$s（同一集群）</string>
     <string name="import_import">导入</string>
-    <string name="import_camera_needed">扫描 talosconfig 二维码需要相机权限。</string>
+    <string name="import_camera_needed">扫描配置二维码需要相机权限。</string>
     <string name="import_grant_camera">授予相机权限</string>
     <string name="qr_parts_progress">已扫描 %1$d / %2$d 个二维码</string>
     <string name="qr_parts_still_missing">缺少：%1$s</string>
@@ -679,7 +679,7 @@
     <string name="qr_parts_invalid">这些二维码无法组成配置。请重新开始并再次扫描。</string>
 
     <!-- Help: creating a talosconfig -->
-    <string name="help_title">为此手机创建 talosconfig</string>
+    <string name="help_title">如何添加集群</string>
     <string name="help_intro">生成一个专用身份，而不是复制你的管理员 ~/.talos/config：如果手机丢失，其证书只授予你所选的权限，并且会自动过期。</string>
     <string name="help_role_reader">只读</string>
     <string name="help_role_reader_desc">仅监控：概览、服务、资源、日志、etcd、KubeSpan、实时图表、告警。推荐手机使用。</string>
@@ -689,7 +689,6 @@
     <string name="help_role_admin_desc">全部功能，包括集群健康检查、导出 kubeconfig 和调试 Shell。请像对待笔记本电脑一样对待这部手机。</string>
     <string name="help_step1">1. 在工作站上，于一个控制平面节点上签发证书：</string>
     <string name="help_step2">2. 列出应用中要显示的所有节点：</string>
-    <string name="help_step3">3. 将其传到手机上，然后在此处导入：</string>
     <string name="help_step_qr">或将其显示为二维码，并使用二维码标签页：</string>
     <string name="help_cleanup">之后删除 Download 中的副本（以及所有二维码图片）：其中包含私钥。应用会将其加密存储在硬件支持的存储中。</string>
     <string name="help_got_it">知道了</string>
@@ -3905,7 +3904,17 @@
     <string name="help_kube_title">通过 kubeconfig</string>
     <string name="help_kube_body">包含客户端证书或令牌的 kubeconfig 也可以使用：此时应用显示该集群的 Kubernetes 部分（工作负载、节点、Argo CD、Flux…），不含 Talos。</string>
     <string name="help_kube_flatten">将其变为自包含（证书内联，仅保留当前上下文），然后像 talosconfig 一样传输：</string>
-    <string name="help_kube_later">云登录（EKS、GKE、OIDC…）将在后续版本中提供。</string>
+    <string name="help_cloud_title">从云账号添加</string>
+    <string name="help_cloud_body">在添加界面点按提供商并登录：应用会列出该账号的集群，并添加你选择的集群。</string>
+    <string name="help_cloud_eks">EKS：IAM Identity Center 的起始 URL 及其区域，或访问密钥。</string>
+    <string name="help_cloud_gke">GKE：你的 Google 账号、gcloud 用户凭据、Workforce 登录配置或服务账号密钥。</string>
+    <string name="help_cloud_aks">AKS：服务主体（租户、订阅、客户端 ID 和密钥）。</string>
+    <string name="help_cloud_digitalocean">DigitalOcean：API 令牌。</string>
+    <string name="help_cloud_rancher">Rancher：服务器地址和 API 密钥。</string>
+    <string name="help_kube_signin">需要登录的集群（OIDC、EKS、GKE、AKS、DigitalOcean、Rancher）会在添加后提示登录。</string>
+    <string name="help_talos_title">为此手机创建 Talos 身份</string>
+    <string name="help_bring_title">将文件传到手机上</string>
+    <string name="help_bring_file">将其复制到“下载”，然后在此导入：</string>
     <string name="settings_kube_desc_imported">按导入时的原样导出此集群的 kubeconfig。任何拥有此文件的人都对该 Kubernetes 集群拥有相同的访问权限：请妥善保管。</string>
     <string name="kube_home_renew">为此集群导入新的 kubeconfig 以替换它们。</string>
     <string name="kube_home_version">Kubernetes %1$s</string>

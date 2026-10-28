@@ -647,7 +647,7 @@
 
     <!-- Import -->
     <string name="import_title">クラスターを追加</string>
-    <string name="import_help">talosconfig の作成方法</string>
+    <string name="import_help">クラスターの追加方法</string>
     <string name="import_tab_file">ファイル</string>
     <string name="import_tab_paste">貼り付け</string>
     <string name="import_tab_qr">QR コード</string>
@@ -667,7 +667,7 @@
     <string name="import_name_taken">この名前はすでに使用されています。</string>
     <string name="import_name_replace">%1$s を置き換え（同じクラスター）</string>
     <string name="import_import">インポート</string>
-    <string name="import_camera_needed">talosconfig の QR コードをスキャンするには、カメラの権限が必要です。</string>
+    <string name="import_camera_needed">設定の QR コードをスキャンするにはカメラへのアクセスが必要です。</string>
     <string name="import_grant_camera">カメラへのアクセスを許可</string>
     <string name="qr_parts_progress">%2$d個中%1$d個のコードをスキャン済み</string>
     <string name="qr_parts_still_missing">未スキャン：%1$s</string>
@@ -679,7 +679,7 @@
     <string name="qr_parts_invalid">これらのコードから構成を作成できません。最初からやり直し、もう一度スキャンしてください。</string>
 
     <!-- Help: creating a talosconfig -->
-    <string name="help_title">このスマートフォン用の talosconfig を作成</string>
+    <string name="help_title">クラスターの追加方法</string>
     <string name="help_intro">管理者用の ~/.talos/config をコピーするのではなく、専用の ID を生成してください。スマートフォンを紛失しても、その証明書には選択した権限しかなく、自動的に期限切れになります。</string>
     <string name="help_role_reader">読み取り専用</string>
     <string name="help_role_reader_desc">監視のみ：概要、サービス、リソース、ログ、etcd、KubeSpan、ライブグラフ、アラート。スマートフォンにはこちらを推奨します。</string>
@@ -689,7 +689,6 @@
     <string name="help_role_admin_desc">クラスターのヘルスチェック、kubeconfig のエクスポート、デバッグシェルを含むすべて。スマートフォンをノート PC と同様に扱ってください。</string>
     <string name="help_step1">1. ワークステーションで、コントロールプレーンノードの 1 つで証明書に署名します：</string>
     <string name="help_step2">2. アプリに表示するすべてのノードを列挙します：</string>
-    <string name="help_step3">3. スマートフォンに転送し、ここでインポートします：</string>
     <string name="help_step_qr">または QR コードとして表示し、QR タブを使用します：</string>
     <string name="help_cleanup">秘密鍵が含まれているため、後で Download 内のコピー（および QR 画像）を削除してください。アプリはハードウェア保護されたストレージに暗号化して保存します。</string>
     <string name="help_got_it">了解</string>
@@ -3905,7 +3904,17 @@
     <string name="help_kube_title">kubeconfig から</string>
     <string name="help_kube_body">クライアント証明書またはトークンを含む kubeconfig も使用できます。その場合、アプリは Talos なしで、そのクラスターの Kubernetes 側（ワークロード、ノード、Argo CD、Flux…）を表示します。</string>
     <string name="help_kube_flatten">自己完結型にして（証明書を埋め込み、現在のコンテキストのみ）、talosconfig と同じ方法で転送してください：</string>
-    <string name="help_kube_later">クラウドのサインイン（EKS、GKE、OIDC…）は今後のバージョンで対応予定です。</string>
+    <string name="help_cloud_title">クラウドアカウントから</string>
+    <string name="help_cloud_body">追加画面でプロバイダーをタップしてサインインすると、アカウントのクラスターが一覧表示され、選んだものが追加されます。</string>
+    <string name="help_cloud_eks">EKS: IAM Identity Center のスタート URL とそのリージョン、またはアクセスキー。</string>
+    <string name="help_cloud_gke">GKE: Google アカウント、gcloud のユーザー認証情報、Workforce のログイン構成、またはサービスアカウントキー。</string>
+    <string name="help_cloud_aks">AKS: サービスプリンシパル (テナント、サブスクリプション、クライアント ID とシークレット)。</string>
+    <string name="help_cloud_digitalocean">DigitalOcean: API トークン。</string>
+    <string name="help_cloud_rancher">Rancher: サーバーのアドレスと API キー。</string>
+    <string name="help_kube_signin">サインインが必要なクラスター (OIDC、EKS、GKE、AKS、DigitalOcean、Rancher) は、追加後にサインインを求めます。</string>
+    <string name="help_talos_title">この端末用の Talos ID</string>
+    <string name="help_bring_title">ファイルを端末に転送</string>
+    <string name="help_bring_file">Download にコピーしてから、ここでインポートします:</string>
     <string name="settings_kube_desc_imported">このクラスターの kubeconfig をインポート時のままエクスポートします。このファイルを持つ人は誰でも Kubernetes クラスターに同じアクセス権を持つため、厳重に管理してください。</string>
     <string name="kube_home_renew">置き換えるには、このクラスターの新しい kubeconfig をインポートしてください。</string>
     <string name="kube_home_version">Kubernetes %1$s</string>

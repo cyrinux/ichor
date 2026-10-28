@@ -80,7 +80,7 @@ struct ImportView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { showingHelp = true } label: { Image(systemName: "questionmark.circle") }
-                    .accessibilityLabel("How to create a talosconfig")
+                    .accessibilityLabel("How to add a cluster")
             }
         }
         .onDisappear { TalosClient.forgetDiscoverSignIn() }

@@ -1,3 +1,4 @@
+import AVFoundation
 import CoreImage
 import IchorCore
 import Ichorgo
@@ -23,12 +24,35 @@ struct QRScannerView: View {
                 }
                 .sensoryFeedback(.success, trigger: parts.successes)
                 .sensoryFeedback(.warning, trigger: parts.warnings)
+        } else if Self.cameraRefused {
+            // Camera turned off for the app: say so and open its settings page, like
+            // Android's "Grant camera access".
+            ContentUnavailableView {
+                Label("Scanner unavailable", systemImage: "qrcode.viewfinder")
+            } description: {
+                Text("Camera access is needed to scan a config QR code.")
+            } actions: {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
         } else {
             ContentUnavailableView(
                 "Scanner unavailable",
                 systemImage: "qrcode.viewfinder",
                 description: Text("Allow camera access in Settings, or use File / Paste.")
             )
+        }
+    }
+
+    /// The user denied the camera, or a profile restricts it (not: no camera, the Simulator).
+    private static var cameraRefused: Bool {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .denied, .restricted: true
+        default: false
         }
     }
 }

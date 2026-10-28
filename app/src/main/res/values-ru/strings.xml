@@ -740,7 +740,7 @@
 
     <!-- Import -->
     <string name="import_title">Добавить кластер</string>
-    <string name="import_help">Как создать talosconfig</string>
+    <string name="import_help">Как добавить кластер</string>
     <string name="import_tab_file">Файл</string>
     <string name="import_tab_paste">Вставить</string>
     <string name="import_tab_qr">QR-код</string>
@@ -760,7 +760,7 @@
     <string name="import_name_taken">Это имя уже используется.</string>
     <string name="import_name_replace">Заменить %1$s (тот же кластер)</string>
     <string name="import_import">Импортировать</string>
-    <string name="import_camera_needed">Для сканирования QR-кода talosconfig нужно разрешение на доступ к камере.</string>
+    <string name="import_camera_needed">Чтобы сканировать QR-код конфигурации, нужен доступ к камере.</string>
     <string name="import_grant_camera">Разрешить доступ к камере</string>
     <string name="qr_parts_progress">Отсканировано кодов: %1$d из %2$d</string>
     <string name="qr_parts_still_missing">Не хватает: %1$s</string>
@@ -772,7 +772,7 @@
     <string name="qr_parts_invalid">Эти коды не складываются в конфигурацию. Начните заново и отсканируйте их ещё раз.</string>
 
     <!-- Help: creating a talosconfig -->
-    <string name="help_title">Создание talosconfig для этого телефона</string>
+    <string name="help_title">Как добавить кластер</string>
     <string name="help_intro">Создайте отдельную идентичность вместо копирования вашего ~/.talos/config администратора: если телефон потеряется, его сертификат даёт только выбранные вами права и истекает сам.</string>
     <string name="help_role_reader">Только чтение</string>
     <string name="help_role_reader_desc">Только мониторинг: обзор, сервисы, ресурсы, журналы, etcd, KubeSpan, графики в реальном времени, оповещения. Рекомендуется для телефона.</string>
@@ -782,7 +782,6 @@
     <string name="help_role_admin_desc">Всё, включая проверку состояния кластера, экспорт kubeconfig и отладочные оболочки. Относитесь к телефону как к ноутбуку.</string>
     <string name="help_step1">1. На своём компьютере подпишите сертификат на одном узле control plane:</string>
     <string name="help_step2">2. Перечислите все узлы, которые должно показывать приложение:</string>
-    <string name="help_step3">3. Перенесите файл на телефон и импортируйте его здесь:</string>
     <string name="help_step_qr">или покажите его как QR-код и воспользуйтесь вкладкой QR:</string>
     <string name="help_cleanup">Затем удалите копию из Download (и все изображения QR): она содержит закрытый ключ. Приложение хранит его в зашифрованном виде в аппаратно защищённом хранилище.</string>
     <string name="help_got_it">Понятно</string>
@@ -4220,7 +4219,17 @@
     <string name="help_kube_title">Из kubeconfig</string>
     <string name="help_kube_body">Подойдёт и kubeconfig с клиентским сертификатом или токеном: тогда приложение покажет сторону Kubernetes этого кластера (рабочие нагрузки, узлы, Argo CD, Flux…), без Talos.</string>
     <string name="help_kube_flatten">Сделайте его самодостаточным (сертификаты встроены, только текущий контекст), затем перенесите его так же, как talosconfig:</string>
-    <string name="help_kube_later">Облачные способы входа (EKS, GKE, OIDC…) появятся в одной из следующих версий.</string>
+    <string name="help_cloud_title">Из облачной учётной записи</string>
+    <string name="help_cloud_body">Нажмите на провайдера на экране добавления и войдите: приложение покажет кластеры учётной записи и добавит выбранные.</string>
+    <string name="help_cloud_eks">EKS: стартовый URL IAM Identity Center и его регион или ключи доступа.</string>
+    <string name="help_cloud_gke">GKE: ваш аккаунт Google, учётные данные пользователя gcloud, конфигурация входа workforce или ключ сервисного аккаунта.</string>
+    <string name="help_cloud_aks">AKS: субъект-служба (тенант, подписка, ID клиента и секрет).</string>
+    <string name="help_cloud_digitalocean">DigitalOcean: токен API.</string>
+    <string name="help_cloud_rancher">Rancher: адрес сервера и ключ API.</string>
+    <string name="help_kube_signin">Кластер со входом (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) попросит войти после добавления.</string>
+    <string name="help_talos_title">Удостоверение Talos для этого телефона</string>
+    <string name="help_bring_title">Перенесите файл на телефон</string>
+    <string name="help_bring_file">Скопируйте его в Загрузки, затем импортируйте здесь:</string>
     <string name="settings_kube_desc_imported">Экспортировать kubeconfig этого кластера в том виде, в каком он был импортирован. У любого владельца этого файла тот же доступ к кластеру Kubernetes: храните его в тайне.</string>
     <string name="kube_home_renew">Импортируйте новый kubeconfig для этого кластера, чтобы заменить их.</string>
     <string name="kube_home_version">Kubernetes %1$s</string>

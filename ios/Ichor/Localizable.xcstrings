@@ -1,6 +1,714 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "How to add a cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comment ajouter un cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo añadir un clúster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як додати кластер"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So fügst du einen Cluster hinzu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come aggiungere un cluster"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如何添加集群"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラスターの追加方法"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como adicionar um cluster"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как добавить кластер"
+          }
+        }
+      }
+    },
+    "Camera access is needed to scan a config QR code." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'accès à l'appareil photo est nécessaire pour scanner le QR code d'une config."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita acceso a la cámara para escanear el código QR de una configuración."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб сканувати QR-код конфігурації, потрібен доступ до камери."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zum Scannen eines Konfigurations-QR-Codes ist Kamerazugriff nötig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serve l'accesso alla fotocamera per scansionare il codice QR di una configurazione."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扫描配置二维码需要相机权限。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定の QR コードをスキャンするにはカメラへのアクセスが必要です。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "É preciso acesso à câmera para ler o QR code de uma configuração."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы сканировать QR-код конфигурации, нужен доступ к камере."
+          }
+        }
+      }
+    },
+    "From a kubeconfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depuis un kubeconfig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desde un kubeconfig"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З kubeconfig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus einer kubeconfig"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da un kubeconfig"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 kubeconfig"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kubeconfig から"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partir de um kubeconfig"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Из kubeconfig"
+          }
+        }
+      }
+    },
+    "From a cloud account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depuis un compte cloud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desde una cuenta en la nube"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З хмарного облікового запису"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über ein Cloud-Konto"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da un account cloud"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从云账号添加"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラウドアカウントから"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partir de uma conta na nuvem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Из облачной учётной записи"
+          }
+        }
+      }
+    },
+    "Tap the provider on the add screen and sign in: the app lists the account's clusters and adds the ones you pick." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le fournisseur sur l'écran d'ajout et connectez-vous : l'app liste les clusters du compte et ajoute ceux que vous choisissez."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el proveedor en la pantalla de añadir e inicia sesión: la app lista los clústeres de la cuenta y añade los que elijas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться постачальника на екрані додавання й увійдіть: застосунок покаже кластери облікового запису й додасть вибрані."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf dem Hinzufügen-Bildschirm auf den Anbieter und melde dich an: Die App listet die Cluster des Kontos auf und fügt die ausgewählten hinzu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca il provider nella schermata di aggiunta e accedi: l'app elenca i cluster dell'account e aggiunge quelli che scegli."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在添加界面点按提供商并登录：应用会列出该账号的集群，并添加你选择的集群。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加画面でプロバイダーをタップしてサインインすると、アカウントのクラスターが一覧表示され、選んだものが追加されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no provedor na tela de adicionar e entre: o app lista os clusters da conta e adiciona os que você escolher."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите на провайдера на экране добавления и войдите: приложение покажет кластеры учётной записи и добавит выбранные."
+          }
+        }
+      }
+    },
+    "EKS: an IAM Identity Center start URL and its region, or access keys." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS : l'URL de démarrage IAM Identity Center et sa région, ou des clés d'accès."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS: la URL de inicio de IAM Identity Center y su región, o claves de acceso."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS: стартова URL-адреса IAM Identity Center і її регіон або ключі доступу."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS: die Start-URL von IAM Identity Center und ihre Region oder Zugriffsschlüssel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS: l'URL di avvio di IAM Identity Center e la sua regione, oppure chiavi di accesso."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS：IAM Identity Center 的起始 URL 及其区域，或访问密钥。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS: IAM Identity Center のスタート URL とそのリージョン、またはアクセスキー。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS: a URL de início do IAM Identity Center e sua região, ou chaves de acesso."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKS: стартовый URL IAM Identity Center и его регион или ключи доступа."
+          }
+        }
+      }
+    },
+    "GKE: your Google account, gcloud user credentials, a workforce login config or a service account key." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE : votre compte Google, des identifiants utilisateur gcloud, une configuration de connexion workforce ou une clé de compte de service."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE: tu cuenta de Google, credenciales de usuario de gcloud, una configuración de inicio de sesión de workforce o una clave de cuenta de servicio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE: ваш обліковий запис Google, облікові дані користувача gcloud, конфігурація входу workforce або ключ сервісного облікового запису."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE: dein Google-Konto, gcloud-Benutzeranmeldedaten, eine Workforce-Anmeldekonfiguration oder ein Dienstkontoschlüssel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE: il tuo account Google, credenziali utente gcloud, una configurazione di accesso workforce o una chiave di account di servizio."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE：你的 Google 账号、gcloud 用户凭据、Workforce 登录配置或服务账号密钥。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE: Google アカウント、gcloud のユーザー認証情報、Workforce のログイン構成、またはサービスアカウントキー。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE: sua conta Google, credenciais de usuário do gcloud, uma configuração de login de workforce ou uma chave de conta de serviço."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GKE: ваш аккаунт Google, учётные данные пользователя gcloud, конфигурация входа workforce или ключ сервисного аккаунта."
+          }
+        }
+      }
+    },
+    "AKS: a service principal (tenant, subscription, client ID and secret)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS : un principal de service (locataire, abonnement, ID client et secret)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS: una entidad de servicio (inquilino, suscripción, ID de cliente y secreto)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS: принципал служби (тенант, підписка, ID клієнта й секрет)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS: ein Dienstprinzipal (Mandant, Abonnement, Client-ID und Geheimnis)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS: un'entità servizio (tenant, sottoscrizione, ID client e segreto)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS：服务主体（租户、订阅、客户端 ID 和密钥）。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS: サービスプリンシパル (テナント、サブスクリプション、クライアント ID とシークレット)。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS: uma entidade de serviço (locatário, assinatura, ID do cliente e segredo)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AKS: субъект-служба (тенант, подписка, ID клиента и секрет)."
+          }
+        }
+      }
+    },
+    "DigitalOcean: an API token." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean : un jeton d'API."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean: un token de API."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean: токен API."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean: ein API-Token."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean: un token API."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean：API 令牌。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean: API トークン。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean: um token de API."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DigitalOcean: токен API."
+          }
+        }
+      }
+    },
+    "Rancher: the server address and an API key." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher : l'adresse du serveur et une clé d'API."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher: la dirección del servidor y una clave de API."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher: адреса сервера й ключ API."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher: die Serveradresse und ein API-Schlüssel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher: l'indirizzo del server e una chiave API."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher：服务器地址和 API 密钥。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher: サーバーのアドレスと API キー。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher: o endereço do servidor e uma chave de API."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rancher: адрес сервера и ключ API."
+          }
+        }
+      }
+    },
+    "A Talos identity for this phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une identité Talos pour ce téléphone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una identidad Talos para este teléfono"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентичність Talos для цього телефона"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Talos-Identität für dieses Telefon"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un'identità Talos per questo telefono"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为此手机创建 Talos 身份"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末用の Talos ID"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma identidade Talos para este celular"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удостоверение Talos для этого телефона"
+          }
+        }
+      }
+    },
+    "Bring the file to the phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transférer le fichier sur le téléphone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasa el archivo al teléfono"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перенесіть файл на телефон"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei aufs Telefon bringen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trasferisci il file sul telefono"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将文件传到手机上"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルを端末に転送"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leve o arquivo para o celular"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перенесите файл на телефон"
+          }
+        }
+      }
+    },
     "Action log and node names are not being saved: %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -75926,45 +76634,6 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "2. Перечислите все узлы, которые должно показывать приложение" } }
       }
     },
-    "3. Bring it to the phone" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Aufs Telefon bringen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Pásalo al teléfono"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Le transférer sur le téléphone"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Trasferiscilo sul telefono"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Перенесіть його на телефон"
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "3. 将其传到手机上" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "3. スマートフォンに転送" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "3. Leve-o para o telefone" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "3. Перенесите его на телефон" } }
-      }
-    },
     "30 days" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -82392,45 +83061,6 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "画面の収録中またはミラーリング中は非表示になります。" } },
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Oculto enquanto a tela é gravada ou espelhada." } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скрыто во время записи или трансляции экрана." } }
-      }
-    },
-    "How to create a talosconfig" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "So erstellst du eine talosconfig"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cómo crear un talosconfig"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comment créer un talosconfig"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Come creare un talosconfig"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Як створити talosconfig"
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "如何创建 talosconfig" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "talosconfig の作成方法" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Como criar um talosconfig" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Как создать talosconfig" } }
       }
     },
     "Identical consecutive events are shown once with a count." : {
@@ -157582,45 +158212,6 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "インポートされたままの、このクラスターの kubeconfig です。このファイルを持つ人は誰でも、それが付与するアクセス権を持ちます。外部に漏らさないでください。" } },
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O kubeconfig deste cluster, como foi importado. Quem tiver este arquivo tem o acesso que ele concede: mantenha-o privado." } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "kubeconfig этого кластера в том виде, в каком он был импортирован. Любой, у кого есть этот файл, получает предоставляемый им доступ: храните его в тайне." } }
-      }
-    },
-    "Any Kubernetes cluster: a kubeconfig" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tout cluster Kubernetes : un kubeconfig"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cualquier clúster Kubernetes: un kubeconfig"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Будь-який кластер Kubernetes: kubeconfig"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jeder Kubernetes-Cluster: eine kubeconfig"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Qualsiasi cluster Kubernetes: un kubeconfig"
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "任意 Kubernetes 集群：kubeconfig" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "任意の Kubernetes クラスター：kubeconfig" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Qualquer cluster Kubernetes: um kubeconfig" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Любой кластер Kubernetes: kubeconfig" } }
       }
     },
     "Keep only the cluster to add, with its certificates in the file:" : {

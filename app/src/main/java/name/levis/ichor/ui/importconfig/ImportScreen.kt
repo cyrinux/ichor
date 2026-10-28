@@ -106,7 +106,7 @@ fun ImportScreen(
         if (state is ImportState.Saved) onImported()
     }
 
-    if (showHelp) TalosconfigHelpDialog(onDismiss = { showHelp = false })
+    if (showHelp) AddClusterHelpDialog(onDismiss = { showHelp = false })
 
     Scaffold(
         topBar = {
