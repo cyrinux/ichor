@@ -25,4 +25,15 @@ echo "XCTMain([$(IFS=,; echo "${cases[*]}")])" >>"$main"
 # Sources in subfolders too (DataServices/...), in a stable order.
 mapfile -t sources < <(find Sources/IchorCore -name "*.swift" | sort)
 swiftc -o "$out/tests" "${sources[@]}" "$out"/*.swift 2>&1 | grep -v "glibc not found" || true
-"$out/tests"
+
+# A Swift runtime trap kills the whole binary, so the suites after it never run: name the
+# test it died in rather than leave a bare "Trace/breakpoint trap".
+status=0
+"$out/tests" 2>&1 | tee "$out/log" || status=${PIPESTATUS[0]}
+if [ "$status" -ne 0 ]; then
+  last="$(sed -nE "s/^Test Case '([^']+)' started.*/\1/p" "$out/log" | tail -1)"
+  if [ -n "$last" ] && ! grep -qE "^Test Case '$last' (passed|failed)" "$out/log"; then
+    echo "test-linux.sh: the test binary died (exit $status) in $last; later suites did not run." >&2
+  fi
+  exit "$status"
+fi

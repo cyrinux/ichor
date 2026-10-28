@@ -103,6 +103,7 @@ final class ImageScanTests: XCTestCase {
         let name = imageScanFilename(app: "Home Assistant / Core!", date: date, format: .cyclonedx)
         XCTAssertTrue(name.hasPrefix("home-assistant-core-vulnerabilities-"), name)
         XCTAssertTrue(name.hasSuffix(".cdx.json"), name)
+        XCTAssertNotNil(name.range(of: #"-vulnerabilities-19(69|70)[01][0-9][0-3][0-9]-[0-2][0-9][0-5][0-9]\.cdx\.json$"#, options: .regularExpression), name)
         XCTAssertEqual(imageScanFilename(app: "***", date: date, format: .csv).prefix(20), "app-vulnerabilities-")
     }
 

@@ -471,11 +471,13 @@ public func imageScanFilename(app: String, date: Date, format: ImageScanFormat) 
     var safe = String(app.lowercased().map { allowed.contains($0) ? $0 : "-" })
     while safe.contains("--") { safe = safe.replacingOccurrences(of: "--", with: "-") }
     safe = safe.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-    let stamp = DateFormatter()
-    stamp.locale = Locale(identifier: "en_US_POSIX")
-    stamp.timeZone = TimeZone.current
-    stamp.dateFormat = "yyyyMMdd-HHmm"
-    return "\(safe.isEmpty ? "app" : safe)-vulnerabilities-\(stamp.string(from: date)).\(format.fileExtension)"
+    // Calendar rather than a DateFormatter: swift-corelibs-foundation's formatter traps in some
+    // zones (WET), which cut the Linux test run short.
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone.current
+    let at = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+    let stamp = String(format: "%04d%02d%02d-%02d%02d", at.year ?? 0, at.month ?? 0, at.day ?? 0, at.hour ?? 0, at.minute ?? 0)
+    return "\(safe.isEmpty ? "app" : safe)-vulnerabilities-\(stamp).\(format.fileExtension)"
 }
 
 /// A scan report the core keeps on the phone (ImageScanHistory), newest first.
