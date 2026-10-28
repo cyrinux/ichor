@@ -17,6 +17,7 @@ struct JoinNodeView: View {
             Section {
                 Text("Boot the new machine from the Talos ISO: it waits in maintenance mode and its console shows its IP address. Your phone must be on the same network, or on a VPN that reaches it.")
                     .font(.footnote).foregroundStyle(.secondary)
+                Button("No boot media yet? Boot a new machine…") { path.append(.bootMedia) }
                 if model.activeSummary?.demo == true {
                     Text("In the demo, type demo to see a sample node.").note()
                 }

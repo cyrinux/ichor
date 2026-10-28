@@ -34,6 +34,11 @@ struct OverviewTitleMenu: View {
                 Label("Upgrade Kubernetes…", systemImage: "shippingbox")
             }
         }
+        if let context = model.activeSummary, !context.isKube {
+            Button { path.append(.bootMedia) } label: {
+                Label("Boot a new machine…", systemImage: "opticaldiscdrive")
+            }
+        }
         if let context = model.activeSummary, !context.isKube, !context.omni {
             Button { path.append(.joinNode) } label: {
                 Label("Add a node…", systemImage: "plus.circle")

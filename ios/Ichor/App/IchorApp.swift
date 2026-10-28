@@ -227,6 +227,8 @@ enum Route: Hashable {
     case k8sUpgrade
     /// "Add a node…": a node in maintenance mode, booted from the Talos ISO.
     case joinNode
+    /// "Boot a new machine…": the booter command, ISO and iPXE links that start a new node.
+    case bootMedia
     /// Node hub opened on its cordon / uncordon confirmation (from a row's menu).
     case nodeCordon(NodeRef)
     /// Node tabs opened on a tab (a hub row, a share link that names a tab).
@@ -471,6 +473,7 @@ struct MainNavigation: View {
         case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
         case .k8sUpgrade: K8sUpgradePlanView()
         case .joinNode: JoinNodeView(path: $path)
+        case .bootMedia: BootMediaView(path: $path)
         case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
         case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab)
         case .nodes(let filter, let nodes, let selected): NodesView(nodes: nodes, filter: filter, selected: selected, path: $path)
