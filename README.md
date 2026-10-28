@@ -38,7 +38,8 @@ tour** shows it again.
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling,
   policies, virtual machines, capacity, live events and Alertmanager, with RBAC checked before
   you tap. Clusters come from a kubeconfig or a cloud account: EKS, GKE, AKS, DigitalOcean,
-  Rancher, Omni, OIDC.
+  Rancher, Omni, OIDC. The `?` on the add screen says what each way in needs: a cloud
+  account, a kubeconfig or a Talos identity for the phone.
 - **GitOps:** Argo CD and Flux apps with the diff a sync would apply, Argo Rollouts, the files
   an app deploys at the revision the cluster runs, edits reviewed and opened as pull requests,
   and a cluster repository for Talos machine config patches.

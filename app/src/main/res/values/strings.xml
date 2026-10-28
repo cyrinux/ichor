@@ -681,7 +681,7 @@
 
     <!-- Import -->
     <string name="import_title">Add a cluster</string>
-    <string name="import_help">How to create a talosconfig</string>
+    <string name="import_help">How to add a cluster</string>
     <string name="import_tab_file">File</string>
     <string name="import_tab_paste">Paste</string>
     <string name="import_tab_qr">QR code</string>
@@ -701,7 +701,7 @@
     <string name="import_name_taken">This name is already used.</string>
     <string name="import_name_replace">Replace %1$s (same cluster)</string>
     <string name="import_import">Import</string>
-    <string name="import_camera_needed">Camera permission is needed to scan a talosconfig QR code.</string>
+    <string name="import_camera_needed">Camera access is needed to scan a config QR code.</string>
     <string name="import_grant_camera">Grant camera access</string>
     <string name="qr_parts_progress">%1$d of %2$d codes scanned</string>
     <string name="qr_parts_still_missing">Missing: %1$s</string>
@@ -713,7 +713,7 @@
     <string name="qr_parts_invalid">These codes do not make a config. Start over and scan them again.</string>
 
     <!-- Help: creating a talosconfig -->
-    <string name="help_title">Create a talosconfig for this phone</string>
+    <string name="help_title">How to add a cluster</string>
     <string name="help_intro">Generate a dedicated identity instead of copying your admin ~/.talos/config: if the phone is lost, its certificate only grants what you chose, and it expires on its own.</string>
     <string name="help_role_reader">Read-only</string>
     <string name="help_role_reader_desc">Monitoring only: overview, services, resources, logs, etcd, KubeSpan, live graphs, alerts. Recommended for a phone.</string>
@@ -723,7 +723,6 @@
     <string name="help_role_admin_desc">Everything, including the cluster health check, kubeconfig export and debug shells. Treat the phone like a laptop.</string>
     <string name="help_step1">1. On your workstation, sign a certificate on one control-plane node:</string>
     <string name="help_step2">2. List every node the app should show:</string>
-    <string name="help_step3">3. Bring it to the phone, then import it here:</string>
     <string name="help_step_qr">or show it as a QR code and use the QR tab:</string>
     <string name="help_cleanup">Delete the copy in Download (and any QR image) afterwards: it contains the private key. The app stores it encrypted in hardware-backed storage.</string>
     <string name="help_got_it">Got it</string>
@@ -4017,7 +4016,17 @@
     <string name="help_kube_title">From a kubeconfig</string>
     <string name="help_kube_body">A kubeconfig with a client certificate or a token works too: the app then shows that cluster\'s Kubernetes side (workloads, nodes, Argo CD, Flux…), without Talos.</string>
     <string name="help_kube_flatten">Make it self-contained (certificates inline, current context only), then bring it over like a talosconfig:</string>
-    <string name="help_kube_later">Cloud sign-ins (EKS, GKE, OIDC…) come in a later version.</string>
+    <string name="help_cloud_title">From a cloud account</string>
+    <string name="help_cloud_body">Tap the provider on the add screen and sign in: the app lists the account\'s clusters and adds the ones you pick.</string>
+    <string name="help_cloud_eks">EKS: an IAM Identity Center start URL and its region, or access keys.</string>
+    <string name="help_cloud_gke">GKE: your Google account, gcloud user credentials, a workforce login config or a service account key.</string>
+    <string name="help_cloud_aks">AKS: a service principal (tenant, subscription, client ID and secret).</string>
+    <string name="help_cloud_digitalocean">DigitalOcean: an API token.</string>
+    <string name="help_cloud_rancher">Rancher: the server address and an API key.</string>
+    <string name="help_kube_signin">A cluster that signs in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) asks for it once added.</string>
+    <string name="help_talos_title">A Talos identity for this phone</string>
+    <string name="help_bring_title">Bring the file to the phone</string>
+    <string name="help_bring_file">Copy it to Download, then import it here:</string>
     <string name="settings_kube_desc_imported">Export this cluster\'s kubeconfig, as it was imported. Anyone with this file has the same access to the Kubernetes cluster: keep it private.</string>
     <string name="kube_home_renew">Import a new kubeconfig for this cluster to replace them.</string>
     <string name="kube_home_version">Kubernetes %1$s</string>

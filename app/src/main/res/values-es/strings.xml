@@ -685,7 +685,7 @@
 
     <!-- Import -->
     <string name="import_title">Añadir un clúster</string>
-    <string name="import_help">Cómo crear un talosconfig</string>
+    <string name="import_help">Cómo añadir un clúster</string>
     <string name="import_tab_file">Archivo</string>
     <string name="import_tab_paste">Pegar</string>
     <string name="import_tab_qr">Código QR</string>
@@ -705,7 +705,7 @@
     <string name="import_name_taken">Este nombre ya está en uso.</string>
     <string name="import_name_replace">Reemplazar %1$s (mismo clúster)</string>
     <string name="import_import">Importar</string>
-    <string name="import_camera_needed">Se necesita permiso de cámara para escanear el código QR de un talosconfig.</string>
+    <string name="import_camera_needed">Se necesita acceso a la cámara para escanear el código QR de una configuración.</string>
     <string name="import_grant_camera">Permitir acceso a la cámara</string>
     <string name="qr_parts_progress">%1$d de %2$d códigos escaneados</string>
     <string name="qr_parts_still_missing">Faltan: %1$s</string>
@@ -717,7 +717,7 @@
     <string name="qr_parts_invalid">Estos códigos no forman una configuración. Empieza de nuevo y vuelve a escanearlos.</string>
 
     <!-- Help: creating a talosconfig -->
-    <string name="help_title">Crear un talosconfig para este teléfono</string>
+    <string name="help_title">Cómo añadir un clúster</string>
     <string name="help_intro">Genera una identidad dedicada en lugar de copiar tu ~/.talos/config de administrador: si pierdes el teléfono, su certificado solo concede lo que hayas elegido y caduca por sí solo.</string>
     <string name="help_role_reader">Solo lectura</string>
     <string name="help_role_reader_desc">Solo supervisión: resumen, servicios, recursos, registros, etcd, KubeSpan, gráficos en directo y alertas. Recomendado para un teléfono.</string>
@@ -727,7 +727,6 @@
     <string name="help_role_admin_desc">Todo, incluida la comprobación de estado del clúster, la exportación de kubeconfig y las shells de depuración. Trata el teléfono como un portátil.</string>
     <string name="help_step1">1. En tu equipo, firma un certificado en un nodo del plano de control:</string>
     <string name="help_step2">2. Indica todos los nodos que debe mostrar la aplicación:</string>
-    <string name="help_step3">3. Pásalo al teléfono e impórtalo aquí:</string>
     <string name="help_step_qr">o muéstralo como código QR y usa la pestaña QR:</string>
     <string name="help_cleanup">Después, elimina la copia de Descargas (y cualquier imagen QR): contiene la clave privada. La aplicación la guarda cifrada en almacenamiento respaldado por hardware.</string>
     <string name="help_got_it">Entendido</string>
@@ -4014,7 +4013,17 @@
     <string name="help_kube_title">Desde un kubeconfig</string>
     <string name="help_kube_body">Un kubeconfig con un certificado de cliente o un token también sirve: la app muestra entonces el lado Kubernetes de ese clúster (workloads, nodos, Argo CD, Flux…), sin Talos.</string>
     <string name="help_kube_flatten">Hazlo autónomo (certificados incluidos, solo el contexto actual) y pásalo como un talosconfig:</string>
-    <string name="help_kube_later">Los inicios de sesión en la nube (EKS, GKE, OIDC…) llegarán en una versión futura.</string>
+    <string name="help_cloud_title">Desde una cuenta en la nube</string>
+    <string name="help_cloud_body">Toca el proveedor en la pantalla de añadir e inicia sesión: la app lista los clústeres de la cuenta y añade los que elijas.</string>
+    <string name="help_cloud_eks">EKS: la URL de inicio de IAM Identity Center y su región, o claves de acceso.</string>
+    <string name="help_cloud_gke">GKE: tu cuenta de Google, credenciales de usuario de gcloud, una configuración de inicio de sesión de workforce o una clave de cuenta de servicio.</string>
+    <string name="help_cloud_aks">AKS: una entidad de servicio (inquilino, suscripción, ID de cliente y secreto).</string>
+    <string name="help_cloud_digitalocean">DigitalOcean: un token de API.</string>
+    <string name="help_cloud_rancher">Rancher: la dirección del servidor y una clave de API.</string>
+    <string name="help_kube_signin">Un clúster que requiere inicio de sesión (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) lo pide una vez añadido.</string>
+    <string name="help_talos_title">Una identidad Talos para este teléfono</string>
+    <string name="help_bring_title">Pasa el archivo al teléfono</string>
+    <string name="help_bring_file">Cópialo en Descargas y luego impórtalo aquí:</string>
     <string name="settings_kube_desc_imported">Exporta el kubeconfig de este clúster, tal como se importó. Quien tenga este archivo tiene el mismo acceso al clúster Kubernetes: mantenlo privado.</string>
     <string name="kube_home_renew">Importa un nuevo kubeconfig para este clúster para sustituirlas.</string>
     <string name="kube_home_version">Kubernetes %1$s</string>
