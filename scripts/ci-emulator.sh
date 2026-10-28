@@ -12,9 +12,14 @@ SDK="${ANDROID_HOME:?ANDROID_HOME is not set}"
 tools="$SDK/cmdline-tools/latest/bin"
 export PATH="$SDK/emulator:$SDK/platform-tools:$tools:$PATH"
 
-yes | sdkmanager --licenses >/dev/null || true
-sdkmanager --install emulator platform-tools "$IMAGE" >/dev/null
-echo no | avdmanager create avd --force -n smoke -k "$IMAGE" >/dev/null
+# One AVD directory for avdmanager and the emulator: they look in different defaults.
+export ANDROID_AVD_HOME="${RUNNER_TEMP:-/tmp}/avd"
+mkdir -p "$ANDROID_AVD_HOME"
+
+yes | sdkmanager --licenses >/dev/null 2>&1 || true
+sdkmanager --install emulator platform-tools "$IMAGE" | tail -3
+echo no | avdmanager create avd --force -n smoke -k "$IMAGE" -p "$ANDROID_AVD_HOME/smoke.avd"
+[[ -f "$ANDROID_AVD_HOME/smoke.ini" ]] || { echo "avdmanager made no smoke.ini in $ANDROID_AVD_HOME" >&2; ls -la "$ANDROID_AVD_HOME" >&2; exit 1; }
 
 emulator -avd smoke -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none \
   >"${RUNNER_TEMP:-/tmp}/emulator.log" 2>&1 &
