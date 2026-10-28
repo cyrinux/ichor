@@ -4,7 +4,8 @@ name: Flake update
 # Dependabot does for the other ecosystems: Dependabot has no Nix ecosystem. Plain `nix flake
 # update` and `gh`, so no action outside the trusted list runs with this token (.plumber.yaml).
 # The workflow token opens the PR, and a PR opened with it starts no workflow: close and
-# reopen it to run the Android and iOS checks (CONTRIBUTING.md, "Dependency bumps"). The Nix
+# reopen it to run the Android, iOS and dev-shell checks (CONTRIBUTING.md, "Dependency bumps";
+# dev-shells.yml catches a bump that breaks the aarch64 shells). The Nix
 # store cache is keyed on flake.lock, so the first run after the merge rebuilds the Android
 # SDK once.
 on:

@@ -2,8 +2,12 @@
   description = "Ichor: Android build environment";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  # Swift 6.3.3 on nixos-unstable (since 2026-10-27) has swiftc marked broken on aarch64-linux;
+  # the IchorCore Linux tests stay on the last revision with a working Swift (6.2.4) until it is
+  # fixed. A pinned revision: `nix flake update` leaves it where it is.
+  inputs.nixpkgs-swift.url = "github:NixOS/nixpkgs/494ce7fd23ff6a5dff39e1fb11e9b6f2ac74bf25";
 
-  outputs = { nixpkgs, ... }:
+  outputs = { nixpkgs, nixpkgs-swift, ... }:
     let
       nixpkgsConfig = {
         allowUnfree = true;
@@ -16,7 +20,19 @@
       # Android build-tools and the NDK only exist for x86_64 Linux. On aarch64 hosts they run
       # through binfmt emulation; everything else (Go, JDK, Gradle) stays native, because the
       # Go runtime is unreliable under qemu-user.
-      sdkPkgs = import nixpkgs { system = "x86_64-linux"; config = nixpkgsConfig; };
+      sdkPkgs = import nixpkgs {
+        system = "x86_64-linux";
+        config = nixpkgsConfig;
+        overlays = [ noI686SdkLibs ];
+      };
+      # androidenv's build-tools adds the i686 glibc, zlib and ncurses5 to autoPatchelf's inputs
+      # on x86_64. Build-tools 37 has no 32-bit host binary (its only 32-bit ELF files are the
+      # renderscript device libraries, which `autoPatchelf --no-recurse` never reads), and an
+      # aarch64 host emulating x86_64 cannot build i686 when the binary cache lacks it (ncurses5
+      # since 2026-10-27). Hand it the x86_64 libraries instead, on every host.
+      noI686SdkLibs = final: prev: {
+        pkgsi686Linux = prev.pkgsi686Linux // { inherit (final) glibc zlib ncurses5; };
+      };
       android = sdkPkgs.androidenv.composeAndroidPackages {
         platformVersions = [ "37" ];
         buildToolsVersions = [ buildToolsVersion ];
@@ -48,7 +64,7 @@
     in
     {
       devShells = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (system:
-        let pkgs = import nixpkgs { inherit system; };
+        let pkgs = import nixpkgs-swift { inherit system; };
         in {
           default = shellFor system;
           # Swift on Linux for the iOS core package tests (ios/IchorCore/test-linux.sh).
