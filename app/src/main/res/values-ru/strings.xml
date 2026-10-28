@@ -5124,6 +5124,8 @@
     <string name="search_recent">Недавние запросы</string>
     <string name="search_recent_remove">Удалить из недавних запросов</string>
     <string name="search_empty">Ничего не найдено по запросу «%1$s»</string>
+    <string name="search_group_screens">Экраны</string>
+    <string name="search_show_all">Показать все</string>
     <string name="search_nothing_known">Пока ничего не известно: откройте кластер хотя бы раз</string>
     <string name="search_refresh_active">Обновить активный кластер</string>
     <string name="search_refresh_failed">Не удалось обновить активный кластер: показано его последнее состояние</string>

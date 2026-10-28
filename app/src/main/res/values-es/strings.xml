@@ -4884,6 +4884,8 @@
     <string name="search_recent">Búsquedas recientes</string>
     <string name="search_recent_remove">Quitar de las búsquedas recientes</string>
     <string name="search_empty">Sin resultados para «%1$s»</string>
+    <string name="search_group_screens">Pantallas</string>
+    <string name="search_show_all">Mostrar todo</string>
     <string name="search_nothing_known">Aún no se conoce nada: abre un clúster una vez</string>
     <string name="search_refresh_active">Actualizar el clúster activo</string>
     <string name="search_refresh_failed">No se pudo actualizar el clúster activo: se muestra lo último que mostró</string>

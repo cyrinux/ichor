@@ -4758,6 +4758,8 @@
     <string name="search_recent">最近の検索</string>
     <string name="search_recent_remove">最近の検索から削除</string>
     <string name="search_empty">「%1$s」の結果はありません</string>
+    <string name="search_group_screens">画面</string>
+    <string name="search_show_all">すべて表示</string>
     <string name="search_nothing_known">まだ情報がありません。一度クラスターを開いてください</string>
     <string name="search_refresh_active">アクティブなクラスターを更新</string>
     <string name="search_refresh_failed">アクティブなクラスターを更新できませんでした。最後に表示された内容を表示しています</string>

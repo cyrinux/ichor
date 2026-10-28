@@ -351,6 +351,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   with "Search clusters" and "Run a checkup" on Android). The cluster menu (tap the title; on
   iOS also ⋯ → Cluster) is grouped: switch or manage the clusters, operate this one (upgrades,
   add a node, runbooks), then share it (incident summary, link).
+- **Search clusters:** every cluster's last-known nodes, pods, workloads, CronJobs and GitOps
+  apps, and every screen of the cluster on screen: type "upgrade", "etcd", "alert set" or a
+  node's name and "hard" to open it.
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
   over NFC or USB), which can also seal the stored configs so that nothing reads them without it.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and

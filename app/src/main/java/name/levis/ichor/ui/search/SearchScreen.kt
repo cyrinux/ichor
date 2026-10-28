@@ -34,7 +34,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -47,9 +49,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.isMeteredNetwork
+import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.ScreenMatch
 import name.levis.ichor.model.SearchGroup
 import name.levis.ichor.model.SearchResult
 import name.levis.ichor.model.ShareTarget
@@ -69,11 +74,12 @@ import name.levis.ichor.util.timeAgo
 /**
  * Search across clusters (U3): the nodes, pods, workloads, CronJobs, Argo CD and Flux apps
  * every cluster on the phone last showed, the active cluster first. A result opens like a
- * share link, on its cluster ([onOpen]). Typing never calls a cluster; the refresh action does.
+ * share link, on its cluster ([onOpen]); a screen of the active cluster opens by its route
+ * ([onOpenRoute]). Typing never calls a cluster; the refresh action does.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
+fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute: (String) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val vm: SearchViewModel = viewModel(
@@ -91,6 +97,10 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
     val active = config?.activeSummary
     // Reading pods and workloads needs a role allowed the Kubernetes API; the demo has its own.
     val canRefresh = active?.allows(Feature.WORKLOADS) == true && !active.isDemo
+    // The active cluster's screens; the nodes as its last overview listed them.
+    val nodes = remember(active, state.snapshot) { app.kubeRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes.orEmpty() }
+    val specs = remember(active, nodes) { active?.let { screenCatalog(it, nodes) }.orEmpty() }
+    LaunchedEffect(specs) { vm.setCatalog(screenEntries(specs, context::getString)) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
 
@@ -148,7 +158,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
                 )
                 // Typed but not yet ranked: the previous results stay until the new ones.
                 state.query.isBlank() -> Unit
-                state.results.results.isEmpty() -> EmptyText(
+                state.results.results.isEmpty() && state.screens.results.isEmpty() -> EmptyText(
                     if (snapshot.isEmpty) stringResource(R.string.search_nothing_known) else stringResource(R.string.search_empty, state.query.trim()),
                 )
                 else -> Results(
@@ -159,6 +169,12 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
                     onOpen = { target ->
                         vm.remember()
                         onOpen(target)
+                    },
+                    screens = state.screens.results,
+                    specs = remember(specs) { specs.associateBy { it.id } },
+                    onOpenRoute = { route ->
+                        vm.remember()
+                        onOpenRoute(route)
                     },
                 )
             }
@@ -197,9 +213,14 @@ private fun Results(
     total: Int,
     labelOf: (SearchGroup) -> String,
     onOpen: (ShareTarget) -> Unit,
+    screens: List<ScreenMatch>,
+    specs: Map<String, ScreenSpec>,
+    onOpenRoute: (String) -> Unit,
 ) {
     val now = remember(groups) { System.currentTimeMillis() }
+    var allScreens by remember(screens) { mutableStateOf(false) }
     LazyColumn(Modifier.fillMaxSize()) {
+        screensGroup(screens, specs, allScreens, onExpand = { allScreens = true }, onOpen = onOpenRoute)
         if (total > shown) {
             item { MutedText(stringResource(R.string.search_shown, shown, total), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
         }
