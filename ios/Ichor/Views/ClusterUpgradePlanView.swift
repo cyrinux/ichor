@@ -32,6 +32,7 @@ struct ClusterUpgradePlanView: View {
             }
         }
         .navigationTitle("Upgrade cluster")
+        .clusterScreenTitle(Text("Upgrade cluster"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .sheet(isPresented: $confirming) {

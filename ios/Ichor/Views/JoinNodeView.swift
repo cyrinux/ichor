@@ -67,6 +67,7 @@ struct JoinNodeView: View {
             inspection = nil
         }
         .navigationTitle("Add a node")
+        .clusterScreenTitle(Text("Add a node"))
         .navigationBarTitleDisplayMode(.inline)
     }
 

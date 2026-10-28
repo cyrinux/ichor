@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.etcd
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,11 +26,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -133,7 +134,7 @@ fun ReplaceControlPlaneScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.cp_replace_title)) }, navigationIcon = { BackButton(onBack) }) },
+        topBar = { TopAppBar(title = { ClusterScreenTitle(stringResource(R.string.cp_replace_title)) }, navigationIcon = { BackButton(onBack) }) },
     ) { padding ->
         when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.pageContent(padding))

@@ -49,6 +49,7 @@ struct UpgradeView: View {
             }
         }
         .navigationTitle(String(localized: "Upgrade · \(hostname)"))
+        .clusterScreenTitle(Text(verbatim: String(localized: "Upgrade · \(hostname)")))
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadPlan() }
         .task { await loadReleases() }

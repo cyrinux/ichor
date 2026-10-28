@@ -59,6 +59,7 @@ struct ReplaceControlPlaneView: View {
             .themedBackground()
         }
         .navigationTitle("Replace a control plane")
+        .clusterScreenTitle(Text("Replace a control plane"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .onDisappear { waitTask?.cancel() }

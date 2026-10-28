@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.join
 
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,10 +18,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.TalosApp
 import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.BootMedia
 import name.levis.ichor.model.bootArchitectures
@@ -99,20 +98,13 @@ fun BootMediaScreen(
     onAddNode: (() -> Unit)?,
     vm: BootMediaViewModel = viewModel(key = "boot-media", factory = factory { BootMediaViewModel(app.nodeLifecycleRepository) }),
 ) {
-    val app = LocalContext.current.applicationContext as TalosApp
-    val config by app.configRepository.config.collectAsStateWithLifecycle()
     val media by vm.media.collectAsStateWithLifecycle()
     val arch by vm.arch.collectAsStateWithLifecycle()
     val secureBoot by vm.secureBoot.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.boot_media_title))
-                        Text(config?.activeContext.orEmpty(), style = MaterialTheme.typography.labelMedium)
-                    }
-                },
+                title = { ClusterScreenTitle(stringResource(R.string.boot_media_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
         },

@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.flux
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.share.PinButton
@@ -21,15 +24,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -106,7 +106,7 @@ fun FluxAppScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text(name) },
+                title = { ClusterScreenTitle(name) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     PinButton(ShareTarget.fluxApp(kind, namespace, name), name)

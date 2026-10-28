@@ -32,6 +32,7 @@ struct K8sUpgradePlanView: View {
             }
         }
         .navigationTitle("Upgrade Kubernetes")
+        .clusterScreenTitle(Text("Upgrade Kubernetes"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .sheet(isPresented: $confirming) {

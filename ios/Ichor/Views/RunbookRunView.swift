@@ -38,6 +38,7 @@ struct RunbookRunView: View {
             }
         }
         .navigationTitle(run.map { Text(verbatim: $0.plan.name) } ?? Text("Runbook"))
+        .clusterScreenTitle(run.map { Text(verbatim: $0.plan.name) } ?? Text("Runbook"))
         .toolbar {
             if run?.running == true {
                 ToolbarItem(placement: .primaryAction) {
