@@ -9,6 +9,9 @@ an issue first so we can agree on the approach before you spend time on it.
   govulncheck, Kotlin unit tests); CI runs the same. On a host whose ThreadSanitizer refuses
   the address space (some arm64 kernels) the Go tests run without `-race`, with a warning;
   CI always races.
+- The demo-mode smoke test (`DemoSmokeTest`, CI job `ui-smoke`) walks the demo cluster on an
+  emulator; it runs on CI only (see docs/build.md to run it on an AVD). When a screen's anchor
+  moves, move its test tag (`ui/components/SmokeTags.kt`), not the test's waits.
 - A govulncheck finding (`just vuln`) means a known vulnerability is reachable from the Go
   core: bump the module (or the Go toolchain for a standard library one). If the call path
   is not reachable in practice, say why in the PR with `govulncheck -show verbose ./...`.

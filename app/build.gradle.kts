@@ -24,6 +24,8 @@ android {
         // From scripts/version.sh (exported by build.sh); fallbacks for IDE builds.
         versionCode = System.getenv("ICHOR_BUILD_NUMBER")?.toIntOrNull() ?: 1
         versionName = System.getenv("ICHOR_VERSION") ?: "0.0.0-unknown"
+        // The demo-mode smoke test (src/androidTest, run by the ui-smoke CI job).
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // GitHub repository the self-updater reads releases from (set by GitHub Actions).
         val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/ichor"
@@ -202,6 +204,14 @@ dependencies {
     // The Wear OS tile's Data Layer sync (src/play/.../wear); the open-source builds have none.
     "playImplementation"(libs.play.services.wearable)
     debugImplementation(libs.compose.ui.tooling)
+    // Hosts the Compose test rule's empty activity in debug builds only.
+    debugImplementation(libs.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
+
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
 }

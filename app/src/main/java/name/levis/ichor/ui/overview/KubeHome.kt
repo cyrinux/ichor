@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.components.SMOKE_KUBE_HOME
+import androidx.compose.ui.platform.testTag
 import name.levis.ichor.selectCluster
 import name.levis.ichor.ui.gitops.hasClusterRepo
 import androidx.activity.compose.BackHandler
@@ -275,6 +277,7 @@ fun KubeHomeScreen(
     )
 
     Scaffold(
+        modifier = Modifier.testTag(SMOKE_KUBE_HOME),
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
         topBar = {

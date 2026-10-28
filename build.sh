@@ -5,6 +5,7 @@
 #   ./build.sh release    # release APK (needs signing env, see app/build.gradle.kts)
 #   ./build.sh play       # Google Play App Bundle: release without self-update/donations
 #   ./build.sh check      # formatting, vet, staticcheck and all unit tests (Go + Kotlin), no APK
+#   ./build.sh smoke      # the debug APK and its demo-mode smoke test APK (CI job ui-smoke)
 #   BUILDER=docker ./build.sh   # force the container toolchain
 #   IN_CONTAINER=1 ./build.sh   # tools already on PATH (CI runner using build/Dockerfile)
 #   ICHOR_SKIP_TESTS=1 ./build.sh debug   # no Go or Kotlin unit tests (CI: the check job runs them)
@@ -22,7 +23,9 @@ case "$VARIANT" in
   play) GRADLE_TASKS=(bundlePlay) ;;
   # Also assembles the Wear OS app (tile and complication): its manifest and resources are checked.
   check) GRADLE_TASKS=(testDebugUnitTest :wear:assembleDebug) ;;
-  *) echo "unknown variant: $VARIANT (debug|release|play|check)" >&2; exit 2 ;;
+  # The app and its instrumentation test, installed on an emulator by android.yml's ui-smoke.
+  smoke) GRADLE_TASKS=(:app:assembleDebug :app:assembleDebugAndroidTest) ;;
+  *) echo "unknown variant: $VARIANT (debug|release|play|check|smoke)" >&2; exit 2 ;;
 esac
 # The CI build jobs skip the tests, which their check job runs once (see android.yml).
 if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 && "$VARIANT" == debug ]]; then
@@ -203,6 +206,7 @@ build_inside() {
   gradle --no-daemon "${gradle_props[@]}" "${GRADLE_TASKS[@]}"
   case "$VARIANT" in
     check) ;;
+    smoke) find "$ROOT/app/build/outputs/apk" -path '*debug*' -name '*.apk' -printf '%s\t%p\n' | sort -n ;;
     play) find "$ROOT/app/build/outputs/bundle/play" -name '*.aab' -printf '%s\t%p\n' ;;
     *) find "$ROOT/app/build/outputs/apk/$VARIANT" -name '*.apk' -printf '%s\t%p\n' | sort -n ;;
   esac

@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.logs
 
+import name.levis.ichor.ui.components.SMOKE_LOG_LINES
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -137,7 +139,7 @@ private fun LogBody(count: Int, header: Boolean, version: Any, view: LogView, li
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().testTag(SMOKE_LOG_LINES),
             ) {
                 if (header) {
                     item(key = "older") {
