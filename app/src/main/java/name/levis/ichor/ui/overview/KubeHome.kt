@@ -416,6 +416,8 @@ private fun KubeHomeList(
     layout: KubeHomeLayout,
     onCustomize: () -> Unit,
 ) {
+    // Offered once, after the first real cluster: first, above everything else.
+    val offerAlerts = rememberAlertsOffer(isDemo = cluster?.demo != false)
     // The likely cause of the data services' problems: a node that is not ready.
     val downNodes = remember(nodes) { nodes?.notReadyNames().orEmpty() }
     // The apps' icons on the data services and GitOps cards, as on the Talos overview.
@@ -428,6 +430,7 @@ private fun KubeHomeList(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
+        if (offerAlerts) item(key = "alerts-offer") { AlertsOfferCard() }
         if (cluster?.demo == true) item(key = "demo") {
             Card(Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)

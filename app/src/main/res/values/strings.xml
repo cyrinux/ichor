@@ -541,6 +541,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Alerts</string>
     <string name="monitor_notifications_blocked">Notifications are blocked for this app; allow them in Android settings.</string>
+    <string name="alerts_offer_title">Get paged when a node goes down</string>
+    <string name="alerts_offer_body">Ichor checks your clusters in the background and notifies you when a node, the API or a volume needs a look. Nothing leaves your phone.</string>
+    <string name="alerts_offer_turn_on">Turn on alerts</string>
+    <string name="alerts_offer_not_now">Not now</string>
+    <string name="alerts_offer_open_settings">Open notification settings</string>
     <string name="monitor_background_alerts">Background alerts</string>
     <string name="monitor_background_alerts_desc">Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within %1$d days. Silent while the cluster is unreachable (e.g. off VPN).</string>
     <string name="monitor_data_services">Watch data services</string>

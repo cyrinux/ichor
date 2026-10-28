@@ -592,6 +592,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Оповещения</string>
     <string name="monitor_notifications_blocked">Уведомления для этого приложения заблокированы; разрешите их в настройках Android.</string>
+    <string name="alerts_offer_title">Получайте уведомление, когда узел падает</string>
+    <string name="alerts_offer_body">Ichor проверяет ваши кластеры в фоне и уведомляет, когда узлу, API или тому нужно внимание. Ничего не покидает телефон.</string>
+    <string name="alerts_offer_turn_on">Включить оповещения</string>
+    <string name="alerts_offer_not_now">Не сейчас</string>
+    <string name="alerts_offer_open_settings">Открыть настройки уведомлений</string>
     <string name="monitor_background_alerts">Фоновые оповещения</string>
     <string name="monitor_background_alerts_desc">Уведомляет, когда узел перестаёт работать или восстанавливается, о новых сигналах etcd и ежедневно, если клиентский сертификат истекает в течение %1$d дн. Молчит, пока кластер недоступен (например, без VPN).</string>
     <string name="monitor_data_services">Следить за сервисами данных</string>

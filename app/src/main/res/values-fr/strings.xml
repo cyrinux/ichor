@@ -545,6 +545,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Alertes</string>
     <string name="monitor_notifications_blocked">Les notifications sont bloquées pour cette app&#160;; autorisez-les dans les paramètres Android.</string>
+    <string name="alerts_offer_title">Soyez prévenu quand un nœud tombe</string>
+    <string name="alerts_offer_body">Ichor vérifie vos clusters en arrière-plan et vous avertit quand un nœud, l’API ou un volume demande votre attention. Rien ne quitte votre téléphone.</string>
+    <string name="alerts_offer_turn_on">Activer les alertes</string>
+    <string name="alerts_offer_not_now">Plus tard</string>
+    <string name="alerts_offer_open_settings">Ouvrir les réglages des notifications</string>
     <string name="monitor_background_alerts">Alertes en arrière-plan</string>
     <string name="monitor_background_alerts_desc">Prévient quand un nœud tombe ou redevient disponible, lors de nouvelles alarmes etcd, et chaque jour quand le certificat client expire dans moins de %1$d jours. Silencieux tant que le cluster est injoignable (par exemple hors VPN).</string>
     <string name="monitor_data_services">Surveiller les services de données</string>

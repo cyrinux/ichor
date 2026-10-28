@@ -545,6 +545,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Alertas</string>
     <string name="monitor_notifications_blocked">Las notificaciones de esta aplicación están bloqueadas; permítelas en los ajustes de Android.</string>
+    <string name="alerts_offer_title">Recibe un aviso cuando un nodo cae</string>
+    <string name="alerts_offer_body">Ichor revisa tus clústeres en segundo plano y te avisa cuando un nodo, la API o un volumen necesitan atención. Nada sale de tu teléfono.</string>
+    <string name="alerts_offer_turn_on">Activar alertas</string>
+    <string name="alerts_offer_not_now">Ahora no</string>
+    <string name="alerts_offer_open_settings">Abrir ajustes de notificaciones</string>
     <string name="monitor_background_alerts">Alertas en segundo plano</string>
     <string name="monitor_background_alerts_desc">Avisa cuando un nodo cae o se recupera, ante nuevas alarmas de etcd y a diario cuando el certificado de cliente caduca en menos de %1$d días. Sin avisos mientras el clúster es inaccesible (p. ej., sin VPN).</string>
     <string name="monitor_data_services">Vigilar los servicios de datos</string>

@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import name.levis.ichor.model.isDemo
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -102,8 +103,14 @@ fun ImportScreen(
         onIncomingTaken()
     }
 
+    // The first real cluster on this phone: the home then offers background alerts, once.
+    val wasEmpty = remember { firstRun }
+    val talosApp = app()
     LaunchedEffect(state) {
-        if (state is ImportState.Saved) onImported()
+        if (state !is ImportState.Saved) return@LaunchedEffect
+        val contexts = talosApp.configRepository.config.value?.summary?.contexts.orEmpty()
+        if (wasEmpty && contexts.any { !it.isDemo }) talosApp.uiPreferences.offerAlertsOnce()
+        onImported()
     }
 
     if (showHelp) AddClusterHelpDialog(onDismiss = { showHelp = false })

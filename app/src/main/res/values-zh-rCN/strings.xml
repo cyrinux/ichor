@@ -511,6 +511,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">告警</string>
     <string name="monitor_notifications_blocked">此应用的通知已被屏蔽；请在 Android 设置中允许通知。</string>
+    <string name="alerts_offer_title">节点宕机时收到通知</string>
+    <string name="alerts_offer_body">Ichor 会在后台检查你的集群，并在节点、API 或卷需要关注时通知你。数据不会离开你的手机。</string>
+    <string name="alerts_offer_turn_on">开启提醒</string>
+    <string name="alerts_offer_not_now">以后再说</string>
+    <string name="alerts_offer_open_settings">打开通知设置</string>
     <string name="monitor_background_alerts">后台告警</string>
     <string name="monitor_background_alerts_desc">在节点宕机或恢复时、出现新的 etcd 警报时发出通知，并在客户端证书 %1$d 天内到期时每天提醒。集群无法访问时（例如未连接 VPN）保持静默。</string>
     <string name="monitor_data_services">监视数据服务</string>

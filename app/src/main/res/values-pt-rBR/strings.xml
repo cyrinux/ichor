@@ -538,6 +538,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Alertas</string>
     <string name="monitor_notifications_blocked">As notificações estão bloqueadas para este app; permita-as nas configurações do Android.</string>
+    <string name="alerts_offer_title">Seja avisado quando um nó cair</string>
+    <string name="alerts_offer_body">O Ichor verifica seus clusters em segundo plano e avisa quando um nó, a API ou um volume precisam de atenção. Nada sai do seu telefone.</string>
+    <string name="alerts_offer_turn_on">Ativar alertas</string>
+    <string name="alerts_offer_not_now">Agora não</string>
+    <string name="alerts_offer_open_settings">Abrir configurações de notificação</string>
     <string name="monitor_background_alerts">Alertas em segundo plano</string>
     <string name="monitor_background_alerts_desc">Notifica quando um nó cai ou se recupera, quando há novos alarmes do etcd e diariamente quando o certificado do cliente expira em menos de %1$d dias. Silencioso enquanto o cluster estiver inacessível (por exemplo, fora da VPN).</string>
     <string name="monitor_data_services">Monitorar serviços de dados</string>
