@@ -19,6 +19,12 @@ enum SearchRecents {
 @MainActor
 final class SearchStore {
     private(set) var results: SearchResults = .empty
+    /// The active cluster's screens that match the query (see screenCatalog).
+    private(set) var screens: ScreenMatches = .empty
+    /// The nodes the active cluster's overview lists, for its node screens.
+    private(set) var nodes: [NodeOverview] = []
+    /// The catalog the screens are ranked over, set by the view.
+    private var catalog: [ScreenEntry] = []
     private(set) var recent: [String] = SearchRecents.load()
     /// The blobs are being read from the phone.
     private(set) var building = true
@@ -44,8 +50,15 @@ final class SearchStore {
         entries = await Task.detached(priority: .userInitiated) {
             searchEntries(contexts: contexts, activeContext: active, read: { LastKnownStore.read(fingerprint: $0, key: $1) }, active: extra) + demo
         }.value
+        nodes = searchOverviewNodes(entries, context: active)
         nothingKnown = entries.isEmpty
         building = false
+        run(query, debounce: false)
+    }
+
+    /// The active cluster's screens, titles localised: ranked with the query from now on.
+    func setCatalog(_ screens: [ScreenEntry]) {
+        catalog = screens
         run(query, debounce: false)
     }
 
@@ -59,15 +72,20 @@ final class SearchStore {
         task?.cancel()
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty else {
             results = .empty
+            screens = .empty
             return
         }
         let entries = self.entries
+        let catalog = self.catalog
         task = Task {
             if debounce { try? await Task.sleep(for: .milliseconds(150)) }
             guard !Task.isCancelled else { return }
             let ranked = (try? await TalosClient.search(entries: entries, query: text)) ?? .empty
+            var matched = ScreenMatches.empty
+            if !catalog.isEmpty, let found = try? await TalosClient.searchScreens(entries: catalog, query: text) { matched = found }
             guard !Task.isCancelled else { return }
             results = ranked
+            screens = matched
         }
     }
 
