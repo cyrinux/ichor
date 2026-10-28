@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.node
 
+import name.levis.ichor.ui.components.SMOKE_NODE_SCREEN
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -228,7 +230,7 @@ fun NodeDetailScreen(
         val listState = rememberLazyListState()
         Box(Modifier.pageContent(padding).fillMaxSize()) {
             LazyColumn(
-                Modifier.fillMaxSize(),
+                Modifier.fillMaxSize().testTag(SMOKE_NODE_SCREEN),
                 state = listState,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),

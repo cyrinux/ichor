@@ -8,6 +8,9 @@ import name.levis.ichor.ui.node.NodeMenuEntry
 /** An overview node row (or chip). */
 const val SMOKE_NODE = "smoke-node"
 
+/** The node screen's list (its header and menu). */
+const val SMOKE_NODE_SCREEN = "smoke-node-screen"
+
 /** The log lines of a logs screen. */
 const val SMOKE_LOG_LINES = "smoke-log-lines"
 
