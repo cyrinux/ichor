@@ -5,7 +5,13 @@ an issue first so we can agree on the approach before you spend time on it.
 
 ## Before you open a pull request
 
-- Run `./build.sh check` (gofmt, vet, Go and Kotlin unit tests); CI runs the same.
+- Run `./build.sh check` (gofmt, vet, staticcheck, the Go tests under the race detector,
+  govulncheck, Kotlin unit tests); CI runs the same. On a host whose ThreadSanitizer refuses
+  the address space (some arm64 kernels) the Go tests run without `-race`, with a warning;
+  CI always races.
+- A govulncheck finding (`just vuln`) means a known vulnerability is reachable from the Go
+  core: bump the module (or the Go toolchain for a standard library one). If the call path
+  is not reachable in practice, say why in the PR with `govulncheck -show verbose ./...`.
 - No source file over 800 lines (`just length-check`); split it by domain instead.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app

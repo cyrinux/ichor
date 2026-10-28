@@ -32,6 +32,16 @@ fi
 # gomobile panics on linux/arm64 hosts although NDK r24+ keeps its (x86_64, emulated)
 # toolchain under prebuilt/linux-x86_64. Build it from a patched copy of the pinned module
 # (-overlay cannot touch GOMODCACHE files).
+# -race when this host's ThreadSanitizer runs: it refuses kernels with a 47-bit address space
+# (some arm64 machines), where the tests then run without it, said on stderr. CI (x86_64) races.
+race_flag() {
+  if go test -race -count=1 -run '^$' ./internal/httpx >/dev/null 2>&1; then
+    echo -race
+  else
+    echo "race detector unavailable on this host: go test without -race" >&2
+  fi
+}
+
 install_gomobile_linux_arm64() {
   local src copy="$ROOT/.cache/x-mobile"
   src="$(go list -m -f '{{.Dir}}' golang.org/x/mobile)"
@@ -165,6 +175,10 @@ build_inside() {
   fi
   if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 ]]; then
     echo "ICHOR_SKIP_TESTS=1: skipping go test"
+  elif [[ "$VARIANT" == "check" ]]; then
+    # The race detector on every test (cgo); govulncheck fails on a reachable known vulnerability.
+    go test $(race_flag) ./...
+    govulncheck ./...
   else
     go test ./...
   fi
