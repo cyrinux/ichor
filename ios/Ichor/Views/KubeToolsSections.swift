@@ -15,6 +15,9 @@ struct KubeToolsSections: View {
     var tailscale = false
     var clusterLifecycle = false
     var argoRollouts = false
+    /// Ran while shown, again with each new `refreshID` (on the first section only, so once).
+    var refreshID: Date?
+    var onRefresh: (() async -> Void)?
 
     var body: some View {
         Section {
@@ -44,6 +47,7 @@ struct KubeToolsSections: View {
         } header: {
             Text("Workloads")
         }
+        .task(id: refreshID) { await onRefresh?() }
         Section {
             NavigationLink { KubeServicesView() } label: {
                 toolLabel(Text("Services"), systemImage: "network")
@@ -206,21 +210,51 @@ private struct KubeToolIcon: View {
 }
 
 /// The Talos overview's Kubernetes screens, for roles that may use the Kubernetes API. The
-/// operators' screens (Crossplane, Tailscale...) stay out: the overview does not look for them.
+/// operators are asked only while it shows (the section is hidden by default), again with each
+/// overview load (`refreshID`); each answers "not installed" quickly.
 struct OverviewKubeTools: View {
     let dataServices: LoadState<DataServices>?
     let plugins: [PluginDetectItem]
     let downNodes: Set<String>
+    let refreshID: Date?
     @Environment(AppModel.self) private var model
+    @State private var operators = KubeOperators()
 
     var body: some View {
         if model.allows(.workloads) {
-            KubeToolsSections(services: loaded, plugins: plugins, downNodes: downNodes)
+            KubeToolsSections(services: loaded, plugins: plugins, downNodes: downNodes,
+                              crossplane: operators.crossplane, tailscale: operators.tailscale,
+                              clusterLifecycle: operators.clusterLifecycle, argoRollouts: operators.argoRollouts,
+                              refreshID: refreshID, onRefresh: loadOperators)
         }
+    }
+
+    /// A refused or failed read keeps what was shown.
+    private func loadOperators() async {
+        guard let client = model.client else { return }
+        async let crossplane = LoadState<Crossplane>.from { try await client.crossplane() }
+        async let tailscale = LoadState<Tailscale>.from { try await client.tailscale() }
+        async let lifecycle = LoadState<ClusterLifecycle>.from { try await client.clusterLifecycle() }
+        async let rollouts = LoadState<ArgoRolloutsStatus>.from { try await client.argoRollouts() }
+        var next = operators
+        if case .loaded(let value, _, _) = await crossplane { next.crossplane = value.installed }
+        if case .loaded(let value, _, _) = await tailscale { next.tailscale = value.installed }
+        if case .loaded(let value, _, _) = await lifecycle { next.clusterLifecycle = value.installed }
+        if case .loaded(let value, _, _) = await rollouts { next.argoRollouts = value.installed }
+        guard !Task.isCancelled else { return }
+        operators = next
     }
 
     private var loaded: DataServices? {
         if case .loaded(let services, _, _) = dataServices { return services }
         return nil
     }
+}
+
+/// The operators whose screens the Talos overview's Kubernetes screens offer: those the cluster runs.
+private struct KubeOperators {
+    var crossplane = false
+    var tailscale = false
+    var clusterLifecycle = false
+    var argoRollouts = false
 }

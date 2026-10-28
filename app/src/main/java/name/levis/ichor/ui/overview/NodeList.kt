@@ -79,6 +79,8 @@ internal class OverviewCardData(
     val kubeTools: Boolean,
     /** The active CRD plugins outside Data services, tools on that card. */
     val toolPlugins: List<PluginDetectItem>,
+    /** The operators the cluster runs, asked only while that card is shown. */
+    val operators: KubeOperators,
 )
 
 /** What the role may do on the overview's nodes. */
@@ -334,9 +336,17 @@ private fun OverviewItems.overviewCard(
             Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(cards.alerts, nav.onAlerts) }
         }
         OverviewCard.TOOLS -> if (cards.kubeTools) item(key = card.name) {
-            // The operators' screens (Crossplane, Tailscale...) stay out: the overview does not look for them.
+            val ops = cards.operators
             Box(Modifier.longPressToCustomize(onCustomize)) {
-                KubeToolsCard(nav.kubeHome(), plugins = cards.toolPlugins, dataServices = (cards.dataServices as? UiState.Loaded)?.data)
+                KubeToolsCard(
+                    nav.kubeHome(),
+                    crossplane = ops.crossplane,
+                    tailscale = ops.tailscale,
+                    clusterLifecycle = ops.clusterLifecycle,
+                    argoRollouts = ops.argoRollouts,
+                    plugins = cards.toolPlugins,
+                    dataServices = (cards.dataServices as? UiState.Loaded)?.data,
+                )
             }
         }
         OverviewCard.TIME_DRIFT -> item(key = card.name) {
