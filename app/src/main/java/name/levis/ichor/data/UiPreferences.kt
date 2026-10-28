@@ -163,6 +163,24 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _tourPending = MutableStateFlow(prefs.getBoolean(KEY_TOUR_PENDING, false))
     val tourPending: StateFlow<Boolean> = _tourPending.asStateFlow()
 
+    /**
+     * The home offers background alerts once (a card), after the first real cluster is added:
+     * pending until turned on or dismissed. Never for the demo.
+     */
+    private val _alertsOfferPending = MutableStateFlow(prefs.getBoolean(KEY_ALERTS_OFFER_PENDING, false))
+    val alertsOfferPending: StateFlow<Boolean> = _alertsOfferPending.asStateFlow()
+
+    /** Offers alerts the first time a real cluster is added; later imports do not bring it back. */
+    fun offerAlertsOnce() {
+        if (prefs.getBoolean(KEY_ALERTS_OFFERED, false)) return
+        setAlertsOfferPending(true)
+    }
+
+    fun setAlertsOfferPending(pending: Boolean) {
+        prefs.edit().putBoolean(KEY_ALERTS_OFFER_PENDING, pending).putBoolean(KEY_ALERTS_OFFERED, true).apply()
+        _alertsOfferPending.value = pending
+    }
+
     /** Shows the demo tour the first time a demo is added; later demos do not bring it back. */
     fun offerDemoTour() {
         if (prefs.getBoolean(KEY_TOUR_OFFERED, false)) return
@@ -340,6 +358,8 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_RECENT_TARGETS = "recent_targets"
         private const val KEY_TOUR_PENDING = "demo_tour_pending"
         private const val KEY_TOUR_OFFERED = "demo_tour_offered"
+        private const val KEY_ALERTS_OFFER_PENDING = "alerts_offer_pending"
+        private const val KEY_ALERTS_OFFERED = "alerts_offered"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

@@ -16,6 +16,8 @@ struct OverviewBannerSections: View {
     @Environment(SupportPrompt.self) private var support
 
     var body: some View {
+        // Offered once, after the first real cluster: first, above everything else.
+        AlertsOfferSection()
         if let lastKnownOutage {
             Section { LastKnownBanner(outage: lastKnownOutage, retry: retry) }
         }

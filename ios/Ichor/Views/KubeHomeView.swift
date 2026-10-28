@@ -108,6 +108,8 @@ struct KubeHomeView: View {
     var body: some View {
         LoadStateView(state: state, retry: load, fromMonitor: fromMonitor) { overview in
             List {
+                // Offered once, after the first real cluster: first, above everything else.
+                AlertsOfferSection()
                 if model.activeSummary?.demo == true {
                     Section {
                         Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")

@@ -511,6 +511,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">アラート</string>
     <string name="monitor_notifications_blocked">このアプリの通知はブロックされています。Android の設定で許可してください。</string>
+    <string name="alerts_offer_title">ノードが落ちたら通知を受け取る</string>
+    <string name="alerts_offer_body">Ichor はバックグラウンドでクラスターを確認し、ノード、API、ボリュームに確認が必要なときに通知します。データが端末の外に出ることはありません。</string>
+    <string name="alerts_offer_turn_on">アラートをオンにする</string>
+    <string name="alerts_offer_not_now">今はしない</string>
+    <string name="alerts_offer_open_settings">通知設定を開く</string>
     <string name="monitor_background_alerts">バックグラウンドアラート</string>
     <string name="monitor_background_alerts_desc">ノードのダウンや復旧、新しい etcd アラームを通知します。また、クライアント証明書の有効期限が%1$d日以内になると毎日通知します。クラスターに到達できない間（VPN 未接続時など）は通知しません。</string>
     <string name="monitor_data_services">データサービスを監視</string>

@@ -172,7 +172,10 @@ internal fun NodeList(
         if (twoColumns) gridState.scrollToItem(listState.firstVisibleItemIndex) else listState.scrollToItem(gridState.firstVisibleItemIndex)
         shownTwoColumns = twoColumns
     }
+    // Offered once, after the first real cluster: first, above everything else.
+    val offerAlerts = rememberAlertsOffer(isDemo = certificate?.isDemo != false)
     val content: OverviewItems.() -> Unit = {
+        if (offerAlerts) item(key = "alerts-offer", fullLine = true) { AlertsOfferCard() }
         outage?.let { item(fullLine = true) { LastKnownBanner(it, onRetry) } }
         if (certificate?.isDemo == true) item(fullLine = true) {
             Card(Modifier.fillMaxWidth()) {

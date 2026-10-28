@@ -22,6 +22,9 @@ struct ImportView: View {
     @State private var preview: Preview?
     @State private var error: String?
     @State private var busy = false
+    /// Whether the phone had no cluster when this screen opened: the first real one then makes
+    /// the home offer background alerts, once (AlertsOffer).
+    @State private var firstCluster: Bool?
     @State private var showingHelp = false
     /// The provider cloud discovery opens on, while its sheet is up.
     @State private var discovery: DiscoveryStart?
@@ -77,6 +80,7 @@ struct ImportView: View {
             }
         }
         .navigationTitle("Add a cluster")
+        .onAppear { if firstCluster == nil { firstCluster = model.summary?.contexts.isEmpty ?? true } }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { showingHelp = true } label: { Image(systemName: "questionmark.circle") }
@@ -332,12 +336,18 @@ struct ImportView: View {
         }
     }
 
+    /// After a real (not demo) save: the home offers background alerts when it was the first.
+    private func importedReal() {
+        if firstCluster == true, model.summary?.contexts.contains(where: { !$0.demo }) == true { AlertsOffer.offerOnce() }
+        onImported()
+    }
+
     private func save(_ yaml: String, replacingSameCluster: Bool = false) async {
         busy = true
         defer { busy = false }
         do {
             try await model.save(yaml: yaml, replacingSameCluster: replacingSameCluster)
-            onImported()
+            importedReal()
         } catch {
             self.error = error.localizedDescription
             preview = nil
@@ -362,14 +372,14 @@ struct ImportView: View {
             return
         }
         guard let found = discovered else {
-            onImported()
+            importedReal()
             return
         }
         discovered = nil
         let failures = await signInDiscovered(summary: summary, conflicts: conflicts, choices: choices, secrets: found.secrets)
         TalosClient.forgetDiscoverSignIn()
         if failures.isEmpty {
-            onImported()
+            importedReal()
         } else {
             // The clusters are added; those not signed in say so on their home.
             error = String(localized: "Clusters added. Some could not be signed in: \(failures.joined(separator: "; "))")

@@ -592,6 +592,11 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Сповіщення</string>
     <string name="monitor_notifications_blocked">Сповіщення для цього застосунку заблоковано; дозвольте їх у налаштуваннях Android.</string>
+    <string name="alerts_offer_title">Отримуйте сповіщення, коли вузол падає</string>
+    <string name="alerts_offer_body">Ichor перевіряє ваші кластери у фоні й сповіщає, коли вузлу, API або тому потрібна увага. Ніщо не залишає телефон.</string>
+    <string name="alerts_offer_turn_on">Увімкнути сповіщення</string>
+    <string name="alerts_offer_not_now">Не зараз</string>
+    <string name="alerts_offer_open_settings">Відкрити налаштування сповіщень</string>
     <string name="monitor_background_alerts">Фонові сповіщення</string>
     <string name="monitor_background_alerts_desc">Сповіщає, коли вузол перестає працювати чи відновлюється, про нові тривоги etcd і щодня, коли до закінчення клієнтського сертифіката лишається менше %1$d днів. Мовчить, поки кластер недоступний (наприклад, без VPN).</string>
     <string name="monitor_data_services">Стежити за сервісами даних</string>
