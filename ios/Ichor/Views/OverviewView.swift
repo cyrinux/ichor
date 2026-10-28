@@ -384,7 +384,7 @@ struct OverviewView: View {
         case .alerts:
             if let alerts { AlertsSection(state: alerts) }
         case .tools:
-            OverviewKubeTools(dataServices: dataServices, plugins: toolPlugins, downNodes: overview.downHostnames)
+            OverviewKubeTools(dataServices: dataServices, plugins: toolPlugins, downNodes: overview.downHostnames, refreshID: loadedAt)
         }
     }
 

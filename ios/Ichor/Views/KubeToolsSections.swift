@@ -15,6 +15,9 @@ struct KubeToolsSections: View {
     var tailscale = false
     var clusterLifecycle = false
     var argoRollouts = false
+    /// Ran while shown, again with each new `refreshID` (on the first section only, so once).
+    var refreshID: Date?
+    var onRefresh: (() async -> Void)?
 
     var body: some View {
         Section {
@@ -44,6 +47,7 @@ struct KubeToolsSections: View {
         } header: {
             Text("Workloads")
         }
+        .task(id: refreshID) { await onRefresh?() }
         Section {
             NavigationLink { KubeServicesView() } label: {
                 toolLabel(Text("Services"), systemImage: "network")
@@ -206,17 +210,30 @@ private struct KubeToolIcon: View {
 }
 
 /// The Talos overview's Kubernetes screens, for roles that may use the Kubernetes API. The
-/// operators' screens (Crossplane, Tailscale...) stay out: the overview does not look for them.
+/// operators are asked only while it shows (the section is hidden by default), again with each
+/// overview load (`refreshID`); each answers "not installed" quickly.
 struct OverviewKubeTools: View {
     let dataServices: LoadState<DataServices>?
     let plugins: [PluginDetectItem]
     let downNodes: Set<String>
+    let refreshID: Date?
     @Environment(AppModel.self) private var model
+    @State private var operators = KubeOperators()
 
     var body: some View {
         if model.allows(.workloads) {
-            KubeToolsSections(services: loaded, plugins: plugins, downNodes: downNodes)
+            KubeToolsSections(services: loaded, plugins: plugins, downNodes: downNodes,
+                              crossplane: operators.crossplane, tailscale: operators.tailscale,
+                              clusterLifecycle: operators.clusterLifecycle, argoRollouts: operators.argoRollouts,
+                              refreshID: refreshID, onRefresh: loadOperators)
         }
+    }
+
+    private func loadOperators() async {
+        guard let client = model.client else { return }
+        let found = await KubeOperators.read(with: client)
+        guard !Task.isCancelled else { return }
+        operators = found
     }
 
     private var loaded: DataServices? {

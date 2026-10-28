@@ -153,6 +153,12 @@ internal fun rememberOverviewCards(
     }
     val alerts by alertsVm.state.collectAsStateWithLifecycle()
     val alertsShown = alerts.takeIf { alertsAllowed && it.alertmanagerFound }
+    // The operators behind the Kubernetes screens card's conditional screens: only while it shows.
+    val layout by app.uiPreferences.overviewLayout.collectAsStateWithLifecycle()
+    val operators = rememberKubeOperators(
+        active = kubernetes && OverviewCard.TOOLS in layout.visible,
+        key = listOf(config?.activeContext, generation, invalidations),
+    )
     // The objects pinned on this cluster (kept apart while screenshot mode is on).
     val pins = rememberClusterPins()
     val absentCards = setOfNotNull(
@@ -176,6 +182,7 @@ internal fun rememberOverviewCards(
             pins = pins,
             kubeTools = kubernetes,
             toolPlugins = (plugins as? UiState.Loaded)?.data?.homeTiles.orEmpty(),
+            operators = operators,
         ),
         argoHinted = argoHinted,
         fluxHinted = fluxHinted,
