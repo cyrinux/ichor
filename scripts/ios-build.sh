@@ -130,11 +130,14 @@ case "$MODE" in
     xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Debug -destination 'generic/platform=iOS Simulator' build
     # The demo-mode smoke test (IchorUITests) on the runner's first iPhone simulator: picked by
     # name from simctl, since the image's models change. Its result bundle is
-    # build/ui-tests.xcresult (uploaded by ios.yml on failure).
+    # build/ui-tests.xcresult (uploaded by ios.yml on failure). Signed ad hoc, not unsigned: an
+    # unsigned app has no keychain entitlement in the simulator, so storing the demo's config
+    # fails (errSecMissingEntitlement, -34018); the simulator needs no team or profile for it.
     sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')
     [[ -n "$sim" ]] || { echo "no iPhone simulator available" >&2; exit 1; }
     rm -rf build/ui-tests.xcresult
-    xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Debug -destination "id=$sim" \
+    adhoc=(CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=)
+    xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" \
       -only-testing:IchorUITests -resultBundlePath build/ui-tests.xcresult test
     ;;
   ipa)
