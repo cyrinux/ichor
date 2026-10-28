@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.components.SMOKE_NODE
+import androidx.compose.ui.platform.testTag
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
@@ -177,7 +179,7 @@ private fun NodeChips(
     ) {
         nodes.forEach { node ->
             Box(Modifier.degradedAnchor(node, degraded)) {
-                NodeChip(node, onClick = { onNode(node) }, onLongClick = { onMore(node) }, onLive = { onLive(node) })
+                Box(Modifier.testTag(SMOKE_NODE)) { NodeChip(node, onClick = { onNode(node) }, onLongClick = { onMore(node) }, onLive = { onLive(node) }) }
             }
         }
     }
@@ -201,7 +203,7 @@ private fun NodeRow(
     val version = node.version.takeIf { it != sharedVersion }.orEmpty()
     // Opaque, so the swipe background only shows beside the row as it slides.
     Box(
-        Modifier.fillMaxWidth().background(background).combinedClickable(
+        Modifier.fillMaxWidth().testTag(SMOKE_NODE).background(background).combinedClickable(
             onClick = { if (node.reachable) onClick() },
             onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.overview_node_actions),

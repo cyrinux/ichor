@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.node
 
+import androidx.compose.foundation.layout.Box
+import name.levis.ichor.ui.components.smokeMenuTag
+import androidx.compose.ui.platform.testTag
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -100,20 +103,22 @@ internal fun LazyListScope.nodeSections(
                         enabled = entry !in busy && reachable,
                         dimmed = notice != null,
                         onClick = { onPick(entry) },
-                        modifier = modifier,
+                        modifier = modifier.testTag(smokeMenuTag(entry)),
                     )
                 }
             }
         } else {
             items(entries, key = { it.name }) { entry ->
                 val notice = entry.notice(features)
-                MenuRow(
-                    label = stringResource(entry.label(cordoned, kubePods)),
-                    icon = entry.icon,
-                    notice = notice,
-                    enabled = entry !in busy && notice == null,
-                    onClick = { onPick(entry) },
-                )
+                Box(Modifier.testTag(smokeMenuTag(entry))) {
+                    MenuRow(
+                        label = stringResource(entry.label(cordoned, kubePods)),
+                        icon = entry.icon,
+                        notice = notice,
+                        enabled = entry !in busy && notice == null,
+                        onClick = { onPick(entry) },
+                    )
+                }
             }
         }
     }

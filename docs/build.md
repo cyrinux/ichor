@@ -186,3 +186,8 @@ adb shell am force-stop name.levis.ichor
 adb shell am start -W -a android.intent.action.VIEW -d 'ichor://demo' -p name.levis.ichor
 adb shell am start -W -a android.intent.action.VIEW -d 'ichor://demo' -p name.levis.ichor
 ```
+
+The same demo is the fixture of the **smoke test** (`app/src/androidTest/.../DemoSmokeTest.kt`,
+CI job `ui-smoke`). With an x86_64 AVD (API 34) running, `./build.sh smoke` builds the
+debug APK and the test APK, then `scripts/ui-smoke.sh` installs both and runs the test. It
+fails when a test does, and keeps the output in `app/build/reports/ui-smoke.txt`.
