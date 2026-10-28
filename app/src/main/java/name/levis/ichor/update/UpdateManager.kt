@@ -162,7 +162,13 @@ class UpdateManager(
     }
 
     private fun verify(apk: File, info: UpdateInfo) {
-        info.sha256?.let { expected ->
+        // Fail closed: GitHub publishes every release asset's digest; without one nothing vouches
+        // for the download, so it is not installed (the signer check alone is not enough).
+        val expected = info.sha256 ?: run {
+            apk.delete()
+            throw LocalizedException(UiText.Res(R.string.update_err_no_checksum))
+        }
+        run {
             val actual = apk.inputStream().use { input ->
                 val digest = MessageDigest.getInstance("SHA-256")
                 val buffer = ByteArray(64 * 1024)
@@ -186,7 +192,7 @@ class UpdateManager(
             throw LocalizedException(UiText.Res(R.string.update_err_other_app, candidate.packageName))
         }
         val installed = pm.getPackageInfo(context.packageName, signatureFlags)
-        if (!sameSigners(installed.signerDigests(), candidate.signerDigests())) {
+        if (!sameSigners(installed.signerDigests(), candidate.signerDigests(), candidate.signerLineage())) {
             apk.delete()
             throw LocalizedException(UiText.Res(R.string.update_err_signature))
         }

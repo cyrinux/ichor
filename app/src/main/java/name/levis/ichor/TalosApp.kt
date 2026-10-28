@@ -141,7 +141,9 @@ import name.levis.ichor.shortcuts.ShortcutSpec
 import name.levis.ichor.shortcuts.clusterShortcutIds
 import name.levis.ichor.shortcuts.clusterShortcuts
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -333,6 +335,15 @@ class TalosApp : Application() {
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     /** The objects pinned to each cluster's overview. */
     val pinStore by lazy { PinStore(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
+    private val _dataStoreProblem = MutableStateFlow<String?>(null)
+
+    /**
+     * Why the core keeps nothing across launches (no data key from the Keystore, a key of the
+     * wrong size): the action log and the node names are then lost on restart. Null when they
+     * are saved. Shown in Settings → Support.
+     */
+    val dataStoreProblem: StateFlow<String?> = _dataStoreProblem.asStateFlow()
+
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
     val wakeOnLan by lazy {
@@ -591,7 +602,8 @@ class TalosApp : Application() {
         applyPrivacyMask(uiPreferences.privacyMask.value)
         applyAuditEventClusters()
         // Where Go remembers node names, so a node that is down still shows its hostname.
-        Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
+        _dataStoreProblem.value = runCatching { Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0)) }
+            .exceptionOrNull()?.let { it.message ?: it.javaClass.simpleName }
         StartupTrace.markOnce("app.goInit done")
         // GKE's "Sign in with Google" (Play build with Play services): Google's SDK holds the
         // client, so no client ID here.

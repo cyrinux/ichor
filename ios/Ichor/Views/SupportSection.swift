@@ -8,9 +8,16 @@ struct SupportSection: View {
     @AppStorage(StartupTrace.defaultsKey) private var startupTrace = false
     /// The bug forms in the in-app browser (SafariView says why not a Link).
     @State private var browsing: URL?
+    /// Why the action log and the node names are not saved (nil while they are).
+    @State private var dataStoreProblem: String?
 
     var body: some View {
         Section {
+            if let dataStoreProblem {
+                Label("Action log and node names are not being saved: \(dataStoreProblem)", systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
             if model.allows(.supportBundle) {
                 let support = model.clusterSupport(.supportBundle)
                 NavigationLink(value: Route.supportBundle) {
@@ -56,5 +63,6 @@ struct SupportSection: View {
             Text("Support")
         }
         .safariSheet($browsing)
+        .task { dataStoreProblem = TalosClient.dataStoreStatus()?.problem }
     }
 }
