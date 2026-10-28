@@ -23,7 +23,8 @@ final class ContractTests: XCTestCase {
         "cluster-overview": ContractTests.row(ClusterOverview.self) { XCTAssertEqual($0.context, "demo"); XCTAssertFalse($0.nodes.isEmpty) },
         "kube-pods": ContractTests.row(KubePageWire<KubePod>.self) { XCTAssertFalse($0.items.isEmpty) },
         "kube-workloads": ContractTests.row(KubeWorkloadList.self),
-        "kube-cronjobs": ContractTests.row(KubePageWire<KubeCronJob>.self) { XCTAssertFalse($0.items.isEmpty) },
+        // iOS shows no CronJob age yet (Android does): `created` is not read on purpose.
+        "kube-cronjobs": ContractTests.row(KubePageWire<KubeCronJob>.self, ignored: ["cronJobs[].created"]) { XCTAssertFalse($0.items.isEmpty) },
         "kube-nodes": ContractTests.row(KubeNodesOverview.self),
         "argocd": ContractTests.row(ArgoStatus.self),
         "flux": ContractTests.row(FluxStatus.self),
