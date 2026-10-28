@@ -348,7 +348,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   integration open it prefilled.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster,
-  with "Search clusters" and "Run a checkup" on Android).
+  with "Search clusters" and "Run a checkup" on Android). The cluster menu (tap the title; on
+  iOS also ⋯ → Cluster) is grouped: switch or manage the clusters, operate this one (upgrades,
+  add a node, runbooks), then share it (incident summary, link).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
   over NFC or USB), which can also seal the stored configs so that nothing reads them without it.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and

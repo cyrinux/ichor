@@ -66,8 +66,8 @@ struct OverviewView: View {
     var body: some View {
         content
         .navigationTitle(model.activeLabel)
-        // Shown by the title once it is inline (scrolled); the bar below is always there.
-        .toolbarTitleMenu { OverviewTitleMenu(path: $path, shareIncident: { sharingIncident = true }) }
+        // Shown by the title once it is inline (scrolled); before that, under ⋯ → Cluster.
+        .toolbarTitleMenu { ClusterTitleMenu(path: $path, shareIncident: { sharingIncident = true }) }
         .safeAreaInset(edge: .top, spacing: 0) {
             if (model.summary?.contexts.count ?? 0) > 1 {
                 ClusterBar { path.append(.clusters) }
@@ -310,6 +310,11 @@ struct OverviewView: View {
                     .disabled(!enabled(action))
                 }
                 if !menu.isEmpty { Divider() }
+                Menu {
+                    ClusterTitleMenu(path: $path, shareIncident: { sharingIncident = true })
+                } label: {
+                    Label("Cluster", systemImage: "externaldrive")
+                }
                 Button { customizing = true } label: { Label("Customize overview", systemImage: "pencil") }
             } label: {
                 Image(systemName: "ellipsis.circle")

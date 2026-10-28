@@ -295,7 +295,6 @@ fun KubeHomeScreen(
                                 onSelect = app::selectCluster,
                                 onManage = { showClusters = true },
                                 onDismiss = { clusterMenu = false },
-                                onSearch = nav.onSearch,
                                 onRunbooks = nav.onRunbooks,
                             )
                         }

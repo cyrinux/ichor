@@ -42,7 +42,6 @@ import name.levis.ichor.model.allows
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.model.hasArgoCD
 import name.levis.ichor.model.hasFlux
-import name.levis.ichor.model.isKube
 import name.levis.ichor.model.needsAttention
 import name.levis.ichor.model.outage
 import name.levis.ichor.ui.UiState
@@ -338,10 +337,9 @@ internal fun OverviewTopBar(
                         onSelect = app::selectCluster,
                         onManage = onManageClusters,
                         onDismiss = { onClusterMenu(false) },
-                        onSearch = nav.onSearch,
-                        onUpgradeCluster = { nav.onUpgradeCluster("") }.takeIf { stored.activeSummary?.allows(Feature.UPGRADE) == true },
-                        onUpgradeKubernetes = nav.onUpgradeKubernetes.takeIf { stored.activeSummary?.allows(Feature.UPGRADE) == true },
-                        onAddNode = nav.onAddNode.takeIf { stored.activeSummary?.isKube == false },
+                        onUpgradeCluster = { nav.onUpgradeCluster("") },
+                        onUpgradeKubernetes = nav.onUpgradeKubernetes,
+                        onAddNode = nav.onAddNode,
                         onRunbooks = nav.onRunbooks,
                     )
                 }
