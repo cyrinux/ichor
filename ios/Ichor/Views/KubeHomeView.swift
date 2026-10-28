@@ -167,11 +167,7 @@ struct KubeHomeView: View {
                         }
                     }
                     if !menu.isEmpty { Divider() }
-                    Menu {
-                        ClusterTitleMenu(path: $path, shareIncident: { sharingIncident = true })
-                    } label: {
-                        Label("Cluster", systemImage: "externaldrive")
-                    }
+                    ClusterSubmenu(path: $path, shareIncident: { sharingIncident = true })
                     Button { customizing = true } label: { Label("Customize home", systemImage: "pencil") }
                 } label: {
                     Image(systemName: "ellipsis.circle")

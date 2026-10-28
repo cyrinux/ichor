@@ -54,3 +54,17 @@ struct ClusterTitleMenu: View {
         }
     }
 }
+
+/// ⋯ → Cluster: the same menu, in reach before the large title collapses.
+struct ClusterSubmenu: View {
+    @Binding var path: [Route]
+    let shareIncident: () -> Void
+
+    var body: some View {
+        Menu {
+            ClusterTitleMenu(path: $path, shareIncident: shareIncident)
+        } label: {
+            Label("Cluster", systemImage: "externaldrive")
+        }
+    }
+}

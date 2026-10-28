@@ -310,11 +310,7 @@ struct OverviewView: View {
                     .disabled(!enabled(action))
                 }
                 if !menu.isEmpty { Divider() }
-                Menu {
-                    ClusterTitleMenu(path: $path, shareIncident: { sharingIncident = true })
-                } label: {
-                    Label("Cluster", systemImage: "externaldrive")
-                }
+                ClusterSubmenu(path: $path, shareIncident: { sharingIncident = true })
                 Button { customizing = true } label: { Label("Customize overview", systemImage: "pencil") }
             } label: {
                 Image(systemName: "ellipsis.circle")
