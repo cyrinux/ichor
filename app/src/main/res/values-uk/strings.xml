@@ -5120,6 +5120,8 @@
     <string name="search_recent">Нещодавні пошуки</string>
     <string name="search_recent_remove">Вилучити з нещодавніх пошуків</string>
     <string name="search_empty">Немає результатів для «%1$s»</string>
+    <string name="search_group_screens">Екрани</string>
+    <string name="search_show_all">Показати все</string>
     <string name="search_nothing_known">Поки нічого не відомо: відкрийте кластер хоча б раз</string>
     <string name="search_refresh_active">Оновити активний кластер</string>
     <string name="search_refresh_failed">Не вдалося оновити активний кластер: показано останній відомий стан</string>

@@ -4880,6 +4880,8 @@
     <string name="search_recent">Pesquisas recentes</string>
     <string name="search_recent_remove">Remover das pesquisas recentes</string>
     <string name="search_empty">Nenhum resultado para “%1$s”</string>
+    <string name="search_group_screens">Telas</string>
+    <string name="search_show_all">Mostrar tudo</string>
     <string name="search_nothing_known">Nada conhecido ainda: abra um cluster uma vez</string>
     <string name="search_refresh_active">Atualizar o cluster ativo</string>
     <string name="search_refresh_failed">Não foi possível atualizar o cluster ativo: mostrando o último estado exibido</string>

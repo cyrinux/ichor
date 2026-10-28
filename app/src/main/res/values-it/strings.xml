@@ -4884,6 +4884,8 @@
     <string name="search_recent">Ricerche recenti</string>
     <string name="search_recent_remove">Rimuovi dalle ricerche recenti</string>
     <string name="search_empty">Nessun risultato per «%1$s»</string>
+    <string name="search_group_screens">Schermate</string>
+    <string name="search_show_all">Mostra tutto</string>
     <string name="search_nothing_known">Ancora niente di noto: apri un cluster una volta</string>
     <string name="search_refresh_active">Aggiorna il cluster attivo</string>
     <string name="search_refresh_failed">Impossibile aggiornare il cluster attivo: mostra l\'ultimo stato visto</string>

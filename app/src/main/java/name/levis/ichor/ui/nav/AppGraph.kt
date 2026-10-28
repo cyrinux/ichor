@@ -34,7 +34,10 @@ import name.levis.ichor.ui.tour.replayDemoTour
  * search across clusters, whose results [openTarget] opens like share links.
  */
 internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks, openTarget: (ShareTarget) -> Unit) {
-    composable(Routes.SEARCH) { SearchScreen(onBack = { nav.popBackStack() }, onOpen = openTarget) }
+    composable(Routes.SEARCH) {
+        // A screen of the active cluster: opened over the search, so Back returns to it.
+        SearchScreen(onBack = { nav.popBackStack() }, onOpen = openTarget, onOpenRoute = { nav.navigate(it) { launchSingleTop = true } })
+    }
     composable(Routes.INSIGHTS) {
         name.levis.ichor.ui.insights.InsightsScreen(
             onBack = { nav.popBackStack() },
