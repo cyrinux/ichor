@@ -171,6 +171,15 @@ app-icons *args:
 test:
     cd go && go test ./...
 
+# The Go tests under the race detector (needs cgo; not on hosts whose ThreadSanitizer refuses
+# the address space, see build.sh's race_flag).
+test-race:
+    cd go && go test -race ./...
+
+# Known vulnerabilities reachable from the Go core (needs network for vuln.go.dev).
+vuln:
+    cd go && govulncheck ./...
+
 # Rewrite the facade contract fixtures (go/ichorgo/testdata/contract) after changing one of
 # their Go types, then fix the Kotlin and Swift models the app tests point at.
 contract-update:

@@ -31,6 +31,8 @@
         let pkgs = import nixpkgs { inherit system; config = nixpkgsConfig; };
         in pkgs.mkShell {
           packages = [ pkgs.jdk17 pkgs.gradle_9 pkgs.go_1_27 (pkgs.go-tools.override { buildGoModule = pkgs.buildGo127Module; }) ] # go-tools: staticcheck, built with the same Go
+            # govulncheck scans with the `go` on PATH (go_1_27, whose standard library it checks).
+            ++ [ pkgs.govulncheck ]
             # The on-device model engine (llama.cpp, built by build.sh with the NDK).
             ++ [ pkgs.cmake pkgs.ninja ]
             # Native cross-compiler for cgo on aarch64 hosts (matches NDK r29's clang 21).
