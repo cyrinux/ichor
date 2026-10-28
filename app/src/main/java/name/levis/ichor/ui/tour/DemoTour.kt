@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.tour
 
+import name.levis.ichor.ui.components.SMOKE_TOUR_SKIP
+import androidx.compose.ui.platform.testTag
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -179,7 +181,7 @@ private fun TourCard(step: TourStep, position: TourPosition, target: Rect, heigh
                         modifier = Modifier.weight(1f),
                     )
                     // Read first: a TalkBack user can leave the tour before anything else.
-                    TextButton(onClick = onSkip, modifier = Modifier.semantics { traversalIndex = -1f }) {
+                    TextButton(onClick = onSkip, modifier = Modifier.testTag(SMOKE_TOUR_SKIP).semantics { traversalIndex = -1f }) {
                         Text(stringResource(R.string.tour_skip))
                     }
                 }

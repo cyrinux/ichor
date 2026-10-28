@@ -19,6 +19,7 @@ import name.levis.ichor.ui.components.SMOKE_KUBE_HOME
 import name.levis.ichor.ui.components.SMOKE_LOG_LINES
 import name.levis.ichor.ui.components.SMOKE_NODE
 import name.levis.ichor.ui.components.SMOKE_NODE_SCREEN
+import name.levis.ichor.ui.components.SMOKE_TOUR_SKIP
 import name.levis.ichor.ui.components.smokeMenuTag
 import name.levis.ichor.ui.node.NodeMenuEntry
 import org.junit.Rule
@@ -44,6 +45,11 @@ class DemoSmokeTest {
     @Test
     fun theTalosDemoOpensANodeAndItsKernelLog() {
         open("ichor://demo").use {
+            // A fresh install opens the demo tour over the overview: leave it first.
+            waitFor(hasTestTag(SMOKE_TOUR_SKIP))
+            compose.onNode(hasTestTag(SMOKE_TOUR_SKIP)).performClick()
+            compose.waitUntilDoesNotExist(hasTestTag(SMOKE_TOUR_SKIP), TIMEOUT)
+
             // The overview is a lazy list: the nodes card may be below the fold.
             scrollTo(hasTestTag(SMOKE_NODE))
             compose.onAllNodes(hasTestTag(SMOKE_NODE))[0].performClick()

@@ -8,6 +8,9 @@ import name.levis.ichor.ui.node.NodeMenuEntry
 /** An overview node row (or chip). */
 const val SMOKE_NODE = "smoke-node"
 
+/** The demo tour's Skip: its coach marks cover the overview on the first demo open. */
+const val SMOKE_TOUR_SKIP = "smoke-tour-skip"
+
 /** The node screen's list (its header and menu). */
 const val SMOKE_NODE_SCREEN = "smoke-node-screen"
 
