@@ -5837,4 +5837,27 @@
     <string name="pod_sweep_started">Cleaning up in the background: follow it in the notification</string>
     <string name="pod_sweep_busy">A dead pod cleanup is already running</string>
     <string name="pod_sweep_background">Runs in the background: this sheet can be closed.</string>
+    <string name="updates_title">Updates</string>
+    <string name="updates_menu">Updates…</string>
+    <string name="updates_section_images">Images</string>
+    <string name="updates_section_charts">Charts</string>
+    <string name="updates_section_not_comparable">Not comparable</string>
+    <string name="updates_chip_patch">patch %1$s</string>
+    <string name="updates_chip_minor">minor %1$s</string>
+    <string name="updates_chip_major">major %1$s</string>
+    <string name="updates_badge_flux">Flux image automation</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">Follows a semver range</string>
+    <string name="updates_badge_bot">Bot configured</string>
+    <string name="updates_empty">Everything runs the newest version the policy allows</string>
+    <string name="updates_consent_title">Ask the registries?</string>
+    <string name="updates_consent_body">The app asks the image registries which tags exist; your pull secrets are used for private registries.</string>
+    <string name="updates_consent_continue">Ask</string>
+    <string name="updates_asking">Asking the registries…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">Updates available: %1$d</string>
+    <string name="updates_rendered">Rendered by a chart: set the tag in its values</string>
+    <string name="updates_lookups_failed">Lookups failed: %1$d of %2$d</string>
+    <string name="updates_skipped">Skipped: %1$s (%2$s)</string>
+    <string name="updates_asking_count">Asking the registries (images and charts: %1$d)…</string>
 </resources>

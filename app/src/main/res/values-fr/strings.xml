@@ -5832,4 +5832,27 @@
     <string name="pod_sweep_started">Nettoyage en arrière-plan : suivez-le dans la notification</string>
     <string name="pod_sweep_busy">Un nettoyage des pods morts est déjà en cours</string>
     <string name="pod_sweep_background">Continue en arrière-plan : ce panneau peut être fermé.</string>
+    <string name="updates_title">Mises à jour</string>
+    <string name="updates_menu">Mises à jour…</string>
+    <string name="updates_section_images">Images</string>
+    <string name="updates_section_charts">Charts</string>
+    <string name="updates_section_not_comparable">Non comparables</string>
+    <string name="updates_chip_patch">correctif %1$s</string>
+    <string name="updates_chip_minor">mineure %1$s</string>
+    <string name="updates_chip_major">majeure %1$s</string>
+    <string name="updates_badge_flux">Automatisation d’images Flux</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">Suit une plage semver</string>
+    <string name="updates_badge_bot">Bot configuré</string>
+    <string name="updates_empty">Tout tourne avec la version la plus récente que la politique permet</string>
+    <string name="updates_consent_title">Interroger les registres ?</string>
+    <string name="updates_consent_body">L’app demande aux registres d’images quels tags existent ; vos pull secrets servent pour les registres privés.</string>
+    <string name="updates_consent_continue">Interroger</string>
+    <string name="updates_asking">Interrogation des registres…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">Mises à jour disponibles : %1$d</string>
+    <string name="updates_rendered">Rendu par un chart : changez le tag dans ses values</string>
+    <string name="updates_lookups_failed">Recherches échouées : %1$d sur %2$d</string>
+    <string name="updates_skipped">Ignoré : %1$s (%2$s)</string>
+    <string name="updates_asking_count">Interrogation des registres (images et charts : %1$d)…</string>
 </resources>

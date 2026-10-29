@@ -8,6 +8,7 @@ import name.levis.ichor.model.ClusterMenuItem.RUNBOOKS
 import name.levis.ichor.model.ClusterMenuItem.SHARE_LINK
 import name.levis.ichor.model.ClusterMenuItem.SWITCH
 import name.levis.ichor.model.ClusterMenuItem.UPGRADE_CLUSTER
+import name.levis.ichor.model.ClusterMenuItem.UPDATES
 import name.levis.ichor.model.ClusterMenuItem.UPGRADE_KUBERNETES
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -20,7 +21,7 @@ class ClusterMenuItemsTest {
     fun talosAdminGetsEveryGroupInOrder() {
         val admin = ContextSummary(name = "admin@lab", roles = listOf("os:admin"))
         assertEquals(
-            listOf(listOf(SWITCH, MANAGE), listOf(UPGRADE_CLUSTER, UPGRADE_KUBERNETES, ADD_NODE, RUNBOOKS), share),
+            listOf(listOf(SWITCH, MANAGE), listOf(UPGRADE_CLUSTER, UPGRADE_KUBERNETES, ADD_NODE, UPDATES, RUNBOOKS), share),
             clusterMenuGroups(admin, canSwitch = true),
         )
     }
@@ -28,14 +29,14 @@ class ClusterMenuItemsTest {
     @Test
     fun talosReaderCannotUpgrade() {
         val reader = ContextSummary(name = "reader@lab", roles = listOf("os:reader"))
-        assertEquals(listOf(ADD_NODE, RUNBOOKS), clusterMenuGroups(reader, canSwitch = true)[1])
+        assertEquals(listOf(ADD_NODE, UPDATES, RUNBOOKS), clusterMenuGroups(reader, canSwitch = true)[1])
     }
 
     @Test
     fun omniUpgradesAndAddsANode() {
         val omni = ContextSummary(name = "omni-lab", omni = true)
         assertEquals(
-            listOf(listOf(MANAGE), listOf(UPGRADE_CLUSTER, UPGRADE_KUBERNETES, ADD_NODE, RUNBOOKS), share),
+            listOf(listOf(MANAGE), listOf(UPGRADE_CLUSTER, UPGRADE_KUBERNETES, ADD_NODE, UPDATES, RUNBOOKS), share),
             clusterMenuGroups(omni, canSwitch = false),
         )
     }
@@ -44,7 +45,7 @@ class ClusterMenuItemsTest {
     fun kubeconfigClusterOperatesWithRunbooksOnly() {
         val kube = ContextSummary(name = "kind-dev", kind = KIND_KUBE)
         assertEquals(
-            listOf(listOf(SWITCH, MANAGE), listOf(RUNBOOKS), share),
+            listOf(listOf(SWITCH, MANAGE), listOf(UPDATES, RUNBOOKS), share),
             clusterMenuGroups(kube, canSwitch = true),
         )
     }

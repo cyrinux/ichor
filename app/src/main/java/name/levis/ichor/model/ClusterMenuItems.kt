@@ -7,6 +7,7 @@ enum class ClusterMenuItem {
     UPGRADE_CLUSTER,
     UPGRADE_KUBERNETES,
     ADD_NODE,
+    UPDATES,
     RUNBOOKS,
     INCIDENT_SUMMARY,
     SHARE_LINK,
@@ -19,6 +20,7 @@ enum class ClusterMenuItem {
  * (`clusterMenuGroups` in IchorCore). [context] is the active cluster (null: none yet);
  * [canSwitch] is false with a single cluster or when the tablet rail lists them. A kubeconfig
  * cluster has no Talos API: no upgrades, no Add a node; on Omni, Add a node opens the boot media.
+ * Updates (the images and charts with a newer version) needs an active cluster.
  */
 fun clusterMenuGroups(context: ContextSummary?, canSwitch: Boolean): List<List<ClusterMenuItem>> {
     val talos = context != null && !context.isKube
@@ -28,6 +30,7 @@ fun clusterMenuGroups(context: ContextSummary?, canSwitch: Boolean): List<List<C
         ClusterMenuItem.UPGRADE_CLUSTER.takeIf { upgrade },
         ClusterMenuItem.UPGRADE_KUBERNETES.takeIf { upgrade },
         ClusterMenuItem.ADD_NODE.takeIf { talos },
+        ClusterMenuItem.UPDATES.takeIf { context != null },
         ClusterMenuItem.RUNBOOKS,
     )
     val share = listOfNotNull(

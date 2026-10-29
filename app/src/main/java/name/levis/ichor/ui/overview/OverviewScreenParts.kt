@@ -348,6 +348,7 @@ internal fun OverviewTopBar(
                         onUpgradeKubernetes = nav.onUpgradeKubernetes,
                         onAddNode = nav.onAddNode,
                         onRunbooks = nav.onRunbooks,
+                        onUpdates = nav.onUpdates,
                     )
                 }
             }

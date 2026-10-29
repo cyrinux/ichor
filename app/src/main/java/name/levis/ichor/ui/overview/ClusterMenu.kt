@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
+import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.DropdownMenu
@@ -65,6 +66,8 @@ fun ClusterMenu(
     onAddNode: () -> Unit = {},
     /** "Runbooks…": the cluster's own ordered lists of actions. */
     onRunbooks: () -> Unit,
+    /** "Updates…": the images and charts with a newer version. */
+    onUpdates: () -> Unit,
 ) {
     var switching by remember(expanded) { mutableStateOf(false) }
     var incident by remember { mutableStateOf(false) }
@@ -112,6 +115,7 @@ fun ClusterMenu(
                         ClusterMenuItem.UPGRADE_CLUSTER -> Entry(R.string.cluster_upgrade_menu, Icons.Outlined.SystemUpdateAlt, onDismiss, onUpgradeCluster)
                         ClusterMenuItem.UPGRADE_KUBERNETES -> Entry(R.string.k8s_upgrade_menu, Icons.Outlined.Upgrade, onDismiss, onUpgradeKubernetes)
                         ClusterMenuItem.ADD_NODE -> Entry(R.string.join_node_menu, Icons.Outlined.AddCircleOutline, onDismiss, onAddNode)
+                        ClusterMenuItem.UPDATES -> Entry(R.string.updates_menu, Icons.Outlined.Update, onDismiss, onUpdates)
                         ClusterMenuItem.RUNBOOKS -> Entry(R.string.runbooks_menu, Icons.Outlined.Checklist, onDismiss, onRunbooks)
                         ClusterMenuItem.INCIDENT_SUMMARY -> Entry(R.string.incident_summary_menu, Icons.Outlined.Share, onDismiss) { incident = true }
                         ClusterMenuItem.SHARE_LINK -> ShareLinkMenuItem(ShareTarget.screen(ShareTarget.CLUSTER), onClick = onDismiss)

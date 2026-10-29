@@ -54,6 +54,8 @@ import name.levis.ichor.model.QuickEditTargets
 import name.levis.ichor.model.imageTag
 import name.levis.ichor.model.isValidImageTag
 import name.levis.ichor.model.quickImageChoices
+import name.levis.ichor.model.quickPrefillIndex
+import name.levis.ichor.model.quickPrefillTag
 import name.levis.ichor.model.quickReplicaChoices
 import name.levis.ichor.model.quickTagChips
 import name.levis.ichor.ui.asString
@@ -69,9 +71,14 @@ import name.levis.ichor.ui.components.MutedText
 fun QuickEditImageSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply: (QuickEdit) -> Unit, onDismiss: () -> Unit) {
     val choices = remember(targets) { quickImageChoices(targets) }
     if (choices.isEmpty()) return
-    var selected by rememberSaveable { mutableIntStateOf(0) }
+    // An update opens on its container (or kustomization entry) with the version picked.
+    val prefill = sheet.prefill
+    val prefilled = remember(choices, prefill) { prefill?.let { quickPrefillIndex(choices, it) } ?: -1 }
+    var selected by rememberSaveable { mutableIntStateOf(prefilled.coerceAtLeast(0)) }
     val choice = choices[selected.coerceIn(0, choices.lastIndex)]
-    var tag by rememberSaveable(choice.label) { mutableStateOf(imageTag(choice.image)) }
+    var tag by rememberSaveable(choice.label) {
+        mutableStateOf(if (selected == prefilled && prefill != null) quickPrefillTag(prefill) else imageTag(choice.image))
+    }
     val revisions = sheet.suggestions.revisions[choice.documentIndex].takeUnless { choice.isKustomize }.orEmpty()
     val chips = remember(choice, sheet.suggestions) { quickTagChips(choice.image, sheet.suggestions.liveImages, revisions) }
     val valid = isValidImageTag(tag)

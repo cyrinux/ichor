@@ -82,6 +82,8 @@ class OverviewScreenNavigation(
     val onSearch: () -> Unit,
     /** The cluster's runbooks. */
     val onRunbooks: () -> Unit,
+    /** The Updates screen: images and charts with a newer version. */
+    val onUpdates: () -> Unit,
     /** Opens a pinned object's screen, like its share link. */
     val onOpenTarget: (ShareTarget) -> Unit,
 ) {
@@ -126,6 +128,7 @@ class OverviewScreenNavigation(
         onActivity = onActivity,
         onSearch = onSearch,
         onRunbooks = onRunbooks,
+        onUpdates = onUpdates,
         onApps = onApps,
         onOpenTarget = onOpenTarget,
     )

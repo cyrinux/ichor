@@ -5827,4 +5827,27 @@
     <string name="pod_sweep_started">Limpando em segundo plano: acompanhe pela notificação</string>
     <string name="pod_sweep_busy">Uma limpeza de pods mortos já está em execução</string>
     <string name="pod_sweep_background">Executa em segundo plano: esta folha pode ser fechada.</string>
+    <string name="updates_title">Atualizações</string>
+    <string name="updates_menu">Atualizações…</string>
+    <string name="updates_section_images">Imagens</string>
+    <string name="updates_section_charts">Charts</string>
+    <string name="updates_section_not_comparable">Não comparáveis</string>
+    <string name="updates_chip_patch">patch %1$s</string>
+    <string name="updates_chip_minor">menor %1$s</string>
+    <string name="updates_chip_major">maior %1$s</string>
+    <string name="updates_badge_flux">Automação de imagens do Flux</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">Segue um intervalo semver</string>
+    <string name="updates_badge_bot">Bot configurado</string>
+    <string name="updates_empty">Tudo roda a versão mais recente que a política permite</string>
+    <string name="updates_consent_title">Consultar os registros?</string>
+    <string name="updates_consent_body">O app pergunta aos registros de imagens quais tags existem; seus pull secrets são usados para registros privados.</string>
+    <string name="updates_consent_continue">Consultar</string>
+    <string name="updates_asking">Consultando os registros…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">Atualizações disponíveis: %1$d</string>
+    <string name="updates_rendered">Gerado por um chart: defina a tag nos values dele</string>
+    <string name="updates_lookups_failed">Consultas com falha: %1$d de %2$d</string>
+    <string name="updates_skipped">Ignorado: %1$s (%2$s)</string>
+    <string name="updates_asking_count">Consultando os registros (imagens e charts: %1$d)…</string>
 </resources>

@@ -5832,4 +5832,27 @@
     <string name="pod_sweep_started">Pulizia in background: seguila nella notifica</string>
     <string name="pod_sweep_busy">Una pulizia dei pod morti è già in corso</string>
     <string name="pod_sweep_background">Continua in background: questo pannello si può chiudere.</string>
+    <string name="updates_title">Aggiornamenti</string>
+    <string name="updates_menu">Aggiornamenti…</string>
+    <string name="updates_section_images">Immagini</string>
+    <string name="updates_section_charts">Chart</string>
+    <string name="updates_section_not_comparable">Non confrontabili</string>
+    <string name="updates_chip_patch">patch %1$s</string>
+    <string name="updates_chip_minor">minore %1$s</string>
+    <string name="updates_chip_major">maggiore %1$s</string>
+    <string name="updates_badge_flux">Automazione immagini Flux</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">Segue un intervallo semver</string>
+    <string name="updates_badge_bot">Bot configurato</string>
+    <string name="updates_empty">Tutto usa la versione più recente consentita dalla policy</string>
+    <string name="updates_consent_title">Interrogare i registri?</string>
+    <string name="updates_consent_body">L’app chiede ai registri di immagini quali tag esistono; i tuoi pull secret vengono usati per i registri privati.</string>
+    <string name="updates_consent_continue">Interroga</string>
+    <string name="updates_asking">Interrogazione dei registri…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">Aggiornamenti disponibili: %1$d</string>
+    <string name="updates_rendered">Generato da un chart: imposta il tag nei suoi values</string>
+    <string name="updates_lookups_failed">Ricerche non riuscite: %1$d su %2$d</string>
+    <string name="updates_skipped">Saltato: %1$s (%2$s)</string>
+    <string name="updates_asking_count">Interrogazione dei registri (immagini e chart: %1$d)…</string>
 </resources>

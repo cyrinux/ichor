@@ -5823,4 +5823,27 @@
     <string name="pod_sweep_started">Läuft im Hintergrund: in der Benachrichtigung verfolgen</string>
     <string name="pod_sweep_busy">Ein Aufräumen toter Pods läuft bereits</string>
     <string name="pod_sweep_background">Läuft im Hintergrund weiter: dieses Blatt kann geschlossen werden.</string>
+    <string name="updates_title">Updates</string>
+    <string name="updates_menu">Updates…</string>
+    <string name="updates_section_images">Images</string>
+    <string name="updates_section_charts">Charts</string>
+    <string name="updates_section_not_comparable">Nicht vergleichbar</string>
+    <string name="updates_chip_patch">Patch %1$s</string>
+    <string name="updates_chip_minor">Minor %1$s</string>
+    <string name="updates_chip_major">Major %1$s</string>
+    <string name="updates_badge_flux">Flux-Image-Automatisierung</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">Folgt einem Semver-Bereich</string>
+    <string name="updates_badge_bot">Bot eingerichtet</string>
+    <string name="updates_empty">Alles läuft mit der neuesten Version, die die Richtlinie erlaubt</string>
+    <string name="updates_consent_title">Registries abfragen?</string>
+    <string name="updates_consent_body">Die App fragt die Image-Registries, welche Tags es gibt; für private Registries werden deine Pull-Secrets verwendet.</string>
+    <string name="updates_consent_continue">Abfragen</string>
+    <string name="updates_asking">Registries werden abgefragt…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">Verfügbare Updates: %1$d</string>
+    <string name="updates_rendered">Von einem Chart gerendert: setze den Tag in seinen Values</string>
+    <string name="updates_lookups_failed">Fehlgeschlagene Abfragen: %1$d von %2$d</string>
+    <string name="updates_skipped">Übersprungen: %1$s (%2$s)</string>
+    <string name="updates_asking_count">Registries werden abgefragt (Images und Charts: %1$d)…</string>
 </resources>
