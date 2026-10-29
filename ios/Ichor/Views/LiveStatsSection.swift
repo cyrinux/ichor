@@ -9,7 +9,9 @@ struct LiveStatsSection: View {
         Section {
             Toggle("Live cluster usage", isOn: $enabled)
         } footer: {
-            Text("Refresh CPU and memory on the overview every few seconds while it is open. Turn off to save mobile data and battery.")
+            Text(
+                "Refresh CPU and memory on the overview every few seconds while it is open. Turn off to save mobile data and battery."
+            )
         }
         .onChange(of: enabled) { _, on in
             if !on { ClusterLiveStore.shared.clear() }

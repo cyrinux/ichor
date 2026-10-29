@@ -35,7 +35,10 @@ struct JoinApplySection: View {
                 if let request {
                     HostnameConfirmationSheet(
                         title: String(localized: "Join \(request.hostname)?"),
-                        message: String(localized: "The config goes to \(request.address), which installs Talos to \(request.disk) and erases it."),
+                        message: String(
+                            localized:
+                                "The config goes to \(request.address), which installs Talos to \(request.disk) and erases it."
+                        ),
                         hostname: request.hostname,
                         actionTitle: String(localized: "Join")
                     ) {
@@ -50,7 +53,9 @@ struct JoinApplySection: View {
     @ViewBuilder
     private func summary(_ request: JoinRequest) -> some View {
         LabeledContent("Address", value: request.address).monospaced()
-        LabeledContent("Role", value: request.role == "controlplane" ? String(localized: "Control plane") : String(localized: "Worker"))
+        LabeledContent(
+            "Role",
+            value: request.role == "controlplane" ? String(localized: "Control plane") : String(localized: "Worker"))
         LabeledContent("Host name", value: request.hostname).monospaced()
         LabeledContent("Install disk", value: request.disk).monospaced()
         LabeledContent("Template", value: request.template).monospaced()
@@ -58,12 +63,18 @@ struct JoinApplySection: View {
             LabeledContent("Static address (optional)", value: request.staticAddress).monospaced()
         }
         ForEach(warnings, id: \.self) { warning in
-            Label { Text(verbatim: warning).font(.footnote) } icon: { Image(systemName: "exclamationmark.triangle").foregroundStyle(.statusWarn) }
+            Label {
+                Text(verbatim: warning).font(.footnote)
+            } icon: {
+                Image(systemName: "exclamationmark.triangle").foregroundStyle(.statusWarn)
+            }
         }
         VStack(alignment: .leading, spacing: 3) {
             Toggle("Replaces a node with this host name", isOn: $replacing)
-            Text("For a machine that takes the place of \(request.hostname) while cluster discovery still lists the old one. Its old addresses are never followed.")
-                .font(.caption).foregroundStyle(.secondary)
+            Text(
+                "For a machine that takes the place of \(request.hostname) while cluster discovery still lists the old one. Its old addresses are never followed."
+            )
+            .font(.caption).foregroundStyle(.secondary)
         }
         if let authError {
             Text(verbatim: authError).foregroundStyle(.statusBad)
@@ -107,10 +118,17 @@ struct JoinApplySection: View {
                     onOpenNode(NodeRef(address: address, hostname: hostname, role: role))
                 }
             case .failed(let error)?:
-                Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad) }
+                Label {
+                    Text(verbatim: error)
+                } icon: {
+                    Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad)
+                }
                 Button("Close") { job.clear() }
             case nil:
-                Button(job.stopping ? String(localized: "Stopping…") : String(localized: "Stop following"), role: .destructive) {
+                Button(
+                    job.stopping ? String(localized: "Stopping…") : String(localized: "Stop following"),
+                    role: .destructive
+                ) {
                     confirmStop = true
                 }
                 .disabled(job.stopping)
@@ -137,7 +155,9 @@ struct JoinApplySection: View {
     private func join(_ request: JoinRequest) async {
         guard let client = model.client else { return }
         authError = nil
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Join \(request.hostname)?")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Join \(request.hostname)?"))
+        {
             authError = failure
             return
         }

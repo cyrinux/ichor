@@ -44,8 +44,10 @@ public struct KubeNodeDiskNode: Decodable, Equatable, Sendable {
     public let imageFsUsedPercent: Int
     public let diskPressure: Bool
 
-    public init(name: String, usedPercent: Int, availableBytes: Int64 = 0, capacityBytes: Int64 = 0,
-                imageFsUsedPercent: Int = 0, diskPressure: Bool = false) {
+    public init(
+        name: String, usedPercent: Int, availableBytes: Int64 = 0, capacityBytes: Int64 = 0,
+        imageFsUsedPercent: Int = 0, diskPressure: Bool = false
+    ) {
         self.name = name
         self.usedPercent = usedPercent
         self.availableBytes = availableBytes
@@ -67,7 +69,9 @@ public struct KubeNodeDiskNode: Decodable, Equatable, Sendable {
     /// The kubelet reported a size: its percent means something.
     public var measured: Bool { capacityBytes > 0 }
 
-    private enum CodingKeys: String, CodingKey { case name, usedPercent, availableBytes, capacityBytes, imageFsUsedPercent, diskPressure }
+    private enum CodingKeys: String, CodingKey {
+        case name, usedPercent, availableBytes, capacityBytes, imageFsUsedPercent, diskPressure
+    }
 }
 
 /// The volume name a kube node's storage issue carries: the kubelet's root filesystem.
@@ -92,8 +96,10 @@ private func judgedNodes(_ disk: KubeNodeDisk) -> [KubeNodeDiskNode] {
 /// alert nor an all-clear. A node of `listed` (this check's node list) that did not answer keeps
 /// its `known` issues; one no longer listed drops them. A demo cluster's disks never open an
 /// issue (a demo never notifies). Same as Android's kubeStorageIssuesOf.
-public func storageIssues(of disk: KubeNodeDisk, warn: Int, critical: Int, listed: Set<String> = [],
-                          known: [String: String] = [:], demo: Bool = false) -> [String: String]? {
+public func storageIssues(
+    of disk: KubeNodeDisk, warn: Int, critical: Int, listed: Set<String> = [],
+    known: [String: String] = [:], demo: Bool = false
+) -> [String: String]? {
     if demo { return [:] }
     if disk.skipped { return nil }
     let judged = judgedNodes(disk)
@@ -115,11 +121,13 @@ public func storageIssues(of disk: KubeNodeDisk, warn: Int, critical: Int, liste
         } else {
             continue
         }
-        out[kubeNodeDiskKey(node.name)] = StorageIssue(
-            severity: severity, kind: StorageIssue.fill, hostname: node.name, name: kubeNodeFsVolume,
-            percent: String(min(max(node.usedPercent, 0), 100)),
-            freeBytes: UInt64(max(0, node.availableBytes)), sizeBytes: UInt64(max(0, node.capacityBytes)),
-            detail: node.diskPressure ? kubeDiskPressure : "").value
+        out[kubeNodeDiskKey(node.name)] =
+            StorageIssue(
+                severity: severity, kind: StorageIssue.fill, hostname: node.name, name: kubeNodeFsVolume,
+                percent: String(min(max(node.usedPercent, 0), 100)),
+                freeBytes: UInt64(max(0, node.availableBytes)), sizeBytes: UInt64(max(0, node.capacityBytes)),
+                detail: node.diskPressure ? kubeDiskPressure : ""
+            ).value
     }
     return out
 }
@@ -129,6 +137,7 @@ public func storageIssues(of disk: KubeNodeDisk, warn: Int, critical: Int, liste
 public func historyVolumes(_ disk: KubeNodeDisk) -> [HistoryVolumeRecord] {
     guard !disk.skipped else { return [] }
     return disk.nodes.filter { !$0.name.isEmpty && $0.measured }.map {
-        HistoryVolumeRecord(key: kubeNodeDiskKey($0.name), name: kubeNodeFsVolume, node: $0.name, usedPercent: Double($0.usedPercent))
+        HistoryVolumeRecord(
+            key: kubeNodeDiskKey($0.name), name: kubeNodeFsVolume, node: $0.name, usedPercent: Double($0.usedPercent))
     }
 }

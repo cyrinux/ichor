@@ -14,8 +14,10 @@ struct KubeGreenEditButton: View {
             .disabled(denial != nil)
             .task(id: info.id) {
                 guard let client = model.client,
-                      let access = try? await client.kubeCan(verb: "patch", group: "kube-green.com", resource: "sleepinfos",
-                                                             namespace: info.namespace, name: info.name) else { return }
+                    let access = try? await client.kubeCan(
+                        verb: "patch", group: "kube-green.com", resource: "sleepinfos",
+                        namespace: info.namespace, name: info.name)
+                else { return }
                 denial = access.isDenied ? access : nil
             }
         if let denial { KubeDeniedLine(text: denial.deniedText) }

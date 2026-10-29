@@ -20,10 +20,13 @@ enum KubeLiveEvent<T: Sendable>: Sendable {
 extension TalosClient {
     /// The pods a workload's selector matches, narrowed to `phase`, kept live: the whole list
     /// first (full objects), then each pod added, changed or gone.
-    func workloadPodsWatch(kind: String, namespace: String, name: String, phase: PodPhaseFilter) -> AsyncStream<KubeWatchStreamEvent<KubePod>> {
+    func workloadPodsWatch(kind: String, namespace: String, name: String, phase: PodPhaseFilter) -> AsyncStream<
+        KubeWatchStreamEvent<KubePod>
+    > {
         let query = phase.query
         return podsWatch { bridge in
-            IchorgoStartKubeWorkloadPodsWatch(kubeConfig, kubeContext, kubeAPIServer, kind, namespace, name, query, bridge)
+            IchorgoStartKubeWorkloadPodsWatch(
+                kubeConfig, kubeContext, kubeAPIServer, kind, namespace, name, query, bridge)
         }
     }
 
@@ -37,7 +40,9 @@ extension TalosClient {
     }
 
     /// A pod watch `start` opens: SYNC pages and single pods decoded, the end reported.
-    private func podsWatch(_ start: @escaping (KubeWatchBridge) -> IchorgoKubeWatchRun?) -> AsyncStream<KubeWatchStreamEvent<KubePod>> {
+    private func podsWatch(_ start: @escaping (KubeWatchBridge) -> IchorgoKubeWatchRun?) -> AsyncStream<
+        KubeWatchStreamEvent<KubePod>
+    > {
         TalosClient.bridged { continuation in
             let bridge = KubeWatchBridge(
                 event: { eventType, json in
@@ -59,19 +64,24 @@ extension TalosClient {
     /// `resourcePage`'s list kept live: every object of `resource` in `namespace` (nil for every
     /// one, or a cluster-scoped kind) with the Table's columns first, then each row added,
     /// changed or gone.
-    func resourceWatch(_ resource: KubeAPIResource, namespace: String?) -> AsyncStream<KubeLiveEvent<KubeResourceWatchEvent>> {
+    func resourceWatch(_ resource: KubeAPIResource, namespace: String?) -> AsyncStream<
+        KubeLiveEvent<KubeResourceWatchEvent>
+    > {
         TalosClient.bridged { continuation in
             let bridge = KubeWatchBridge(
                 event: { eventType, json in
-                    if let event = KubeResourceWatchEvent.decode(eventType, json: json) { continuation.yield(.update(event)) }
+                    if let event = KubeResourceWatchEvent.decode(eventType, json: json) {
+                        continuation.yield(.update(event))
+                    }
                 },
                 done: {
                     continuation.yield(.done(error: $0))
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartKubeWatch(kubeConfig, kubeContext, kubeAPIServer, resource.group, resource.version, resource.resource,
-                                            namespace ?? "", "", "", bridge)
+            let run = IchorgoStartKubeWatch(
+                kubeConfig, kubeContext, kubeAPIServer, resource.group, resource.version, resource.resource,
+                namespace ?? "", "", "", bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
@@ -80,16 +90,20 @@ extension TalosClient {
     /// one of its pods changes.
     func rolloutWatch(_ workload: KubeWorkload) -> AsyncStream<KubeLiveEvent<KubeRolloutStatus>> {
         live { bridge in
-            IchorgoStartKubeRolloutWatch(kubeConfig, kubeContext, kubeAPIServer, workload.kind, workload.namespace, workload.name, bridge)
+            IchorgoStartKubeRolloutWatch(
+                kubeConfig, kubeContext, kubeAPIServer, workload.kind, workload.namespace, workload.name, bridge)
         }
     }
 
     /// `objectSummary` kept live: the summary at the start, then again each time the object or
     /// its events change.
-    func objectSummaryWatch(_ resource: KubeAPIResource, namespace: String, name: String) -> AsyncStream<KubeLiveEvent<KubeObjectSummary>> {
+    func objectSummaryWatch(_ resource: KubeAPIResource, namespace: String, name: String) -> AsyncStream<
+        KubeLiveEvent<KubeObjectSummary>
+    > {
         live { bridge in
-            IchorgoStartKubeObjectWatch(kubeConfig, kubeContext, kubeAPIServer, resource.group, resource.version, resource.resource,
-                                        namespace, name, bridge)
+            IchorgoStartKubeObjectWatch(
+                kubeConfig, kubeContext, kubeAPIServer, resource.group, resource.version, resource.resource,
+                namespace, name, bridge)
         }
     }
 
@@ -105,7 +119,9 @@ extension TalosClient {
 
     /// A view kept live by the Go run `start` makes for the bridge: each update decoded as `T`,
     /// only the latest one kept for a slow consumer.
-    private func live<T: Decodable & Sendable>(_ start: (KubeLiveBridge) -> IchorgoKubeLiveRun?) -> AsyncStream<KubeLiveEvent<T>> {
+    private func live<T: Decodable & Sendable>(_ start: (KubeLiveBridge) -> IchorgoKubeLiveRun?) -> AsyncStream<
+        KubeLiveEvent<T>
+    > {
         TalosClient.bridged(buffering: .bufferingNewest(1)) { continuation in
             let bridge = KubeLiveBridge(
                 update: { json in

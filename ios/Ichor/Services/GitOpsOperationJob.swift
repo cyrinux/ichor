@@ -162,7 +162,9 @@ extension GitOpsOperationJob {
     /// "Wave 2/4 · 12/30 resources", or what the sync does before it counts.
     static func argoStep(_ run: ArgoRun) -> String {
         if run.terminating { return String(localized: "Terminating the sync…") }
-        guard let p = run.progress, !p.pending else { return String(localized: "Waiting for Argo CD to start the sync…") }
+        guard let p = run.progress, !p.pending else {
+            return String(localized: "Waiting for Argo CD to start the sync…")
+        }
         if p.hasWaves, p.total > 0 {
             return String(localized: "Wave \(p.shownWave)/\(p.waves) · \(p.done)/\(p.total) resources")
         }

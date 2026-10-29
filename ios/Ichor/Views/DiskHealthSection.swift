@@ -14,8 +14,9 @@ struct DiskHealthSection: View {
             } else {
                 SectionStateView(state: state) { report in
                     if !report.supported {
-                        VersionNoticeRow(text: FeatureSupport(supported: false, reason: report.reason).localizedNotice
-                            ?? String(localized: "This node does not report disk health."))
+                        VersionNoticeRow(
+                            text: FeatureSupport(supported: false, reason: report.reason).localizedNotice
+                                ?? String(localized: "This node does not report disk health."))
                     } else if !report.reason.isEmpty {
                         // SMART collection is not configured: the disks are listed without a verdict.
                         VersionNoticeRow(text: report.reason)
@@ -47,7 +48,8 @@ private struct DiskHealthCard: View {
                 pill
             }
             if !disk.message.isEmpty {
-                Text(verbatim: disk.message).font(.caption).foregroundStyle(disk.state == .failing ? Color.red : Color.secondary)
+                Text(verbatim: disk.message).font(.caption).foregroundStyle(
+                    disk.state == .failing ? Color.red : Color.secondary)
             }
             if let temperature = disk.temperatureC {
                 LabeledContent("Temperature", value: formatTemperature(temperature)).font(.caption)

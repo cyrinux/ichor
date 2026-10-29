@@ -37,7 +37,9 @@ public struct LonghornStatus: Decodable, Equatable, Sendable {
         return volumes.filter(\.engineOutdated).count
     }
 
-    private enum CodingKeys: String, CodingKey { case version, error, volumes, nodes, backupTargets, defaultEngineImage, engineImages }
+    private enum CodingKeys: String, CodingKey {
+        case version, error, volumes, nodes, backupTargets, defaultEngineImage, engineImages
+    }
 }
 
 /// A Longhorn engine image (engineimages.longhorn.io) as the status lists it.
@@ -65,7 +67,9 @@ public struct LonghornEngineImageStatus: Decodable, Equatable, Identifiable, Sen
         nodes = try c.field(.nodes, 0)
     }
 
-    private enum CodingKeys: String, CodingKey { case image, version, state, refCount, incompatible, deployedNodes, nodes }
+    private enum CodingKeys: String, CodingKey {
+        case image, version, state, refCount, incompatible, deployedNodes, nodes
+    }
 }
 
 /// The tag of an image reference ("v1.12.0" of "longhornio/longhorn-engine:v1.12.0"), "" without one.
@@ -223,7 +227,9 @@ public struct LonghornSnapshot: Decodable, Equatable, Identifiable, Sendable {
         error = try c.field(.error, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case name, createdAt, size, ready, userCreated, backedUp, volumeSnapshot, error }
+    private enum CodingKeys: String, CodingKey {
+        case name, createdAt, size, ready, userCreated, backedUp, volumeSnapshot, error
+    }
 }
 
 /// A Longhorn backup of a volume (backups.longhorn.io).
@@ -341,6 +347,7 @@ public func filterVolumes(_ volumes: [LonghornVolume], filter: VolumeFilter, que
         case .problems: kept = v.health.needsAttention
         case .detached: kept = v.state == "detached"
         }
-        return kept && (q.isEmpty || v.label.localizedCaseInsensitiveContains(q) || v.name.localizedCaseInsensitiveContains(q))
+        return kept
+            && (q.isEmpty || v.label.localizedCaseInsensitiveContains(q) || v.name.localizedCaseInsensitiveContains(q))
     }
 }

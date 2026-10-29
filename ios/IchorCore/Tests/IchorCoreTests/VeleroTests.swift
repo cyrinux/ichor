@@ -3,26 +3,26 @@ import XCTest
 
 final class VeleroTests: XCTestCase {
     private let json = #"""
-    {"velero":{"version":"v1","error":"",
-     "schedules":[
-      {"namespace":"velero","name":"failing","schedule":"0 3 * * *","paused":false,"phase":"Enabled","validationErrors":[],
-       "health":"critical","reasons":["failed"],"storageLocation":"default","includedNamespaces":[],
-       "lastBackup":{"name":"failing-1","phase":"Failed","startedAt":1000,"completedAt":2000,"errors":0,"warnings":0,"failureReason":"error getting backup store"},
-       "lastSuccessAt":500,"inProgress":false},
-      {"namespace":"velero","name":"partial","schedule":"@daily","phase":"Enabled","health":"warning","reasons":["partiallyFailed"],
-       "storageLocation":"default","includedNamespaces":["app"],
-       "lastBackup":{"name":"partial-1","phase":"PartiallyFailed","completedAt":2000,"errors":2,"warnings":3},"lastSuccessAt":1000,"inProgress":true},
-      {"namespace":"velero","name":"invalid","schedule":"nope","phase":"FailedValidation","validationErrors":["invalid schedule"],
-       "health":"warning","reasons":["invalid"],"lastBackup":null,"lastSuccessAt":0},
-      {"namespace":"velero","name":"daily","schedule":"0 2 * * *","health":"ok","reasons":[],
-       "lastBackup":{"name":"daily-1","phase":"Completed","completedAt":3000},"lastSuccessAt":3000},
-      {"namespace":"velero","name":"paused","schedule":"0 2 * * *","paused":true,"health":"idle","reasons":[]}],
-     "adhoc":[{"namespace":"velero","name":"before-upgrade","phase":"PartiallyFailed","completedAt":2500,"errors":1,"warnings":0,
-       "failureReason":"","storageLocation":"default","health":"warning"}],
-     "locations":[
-      {"namespace":"velero","name":"offsite","provider":"aws","bucket":"offsite","default":false,"phase":"Unavailable","message":"rpc error","health":"critical"},
-      {"namespace":"velero","name":"default","provider":"aws","bucket":"backups","default":true,"phase":"Available","health":"ok"}]}}
-    """#
+        {"velero":{"version":"v1","error":"",
+         "schedules":[
+          {"namespace":"velero","name":"failing","schedule":"0 3 * * *","paused":false,"phase":"Enabled","validationErrors":[],
+           "health":"critical","reasons":["failed"],"storageLocation":"default","includedNamespaces":[],
+           "lastBackup":{"name":"failing-1","phase":"Failed","startedAt":1000,"completedAt":2000,"errors":0,"warnings":0,"failureReason":"error getting backup store"},
+           "lastSuccessAt":500,"inProgress":false},
+          {"namespace":"velero","name":"partial","schedule":"@daily","phase":"Enabled","health":"warning","reasons":["partiallyFailed"],
+           "storageLocation":"default","includedNamespaces":["app"],
+           "lastBackup":{"name":"partial-1","phase":"PartiallyFailed","completedAt":2000,"errors":2,"warnings":3},"lastSuccessAt":1000,"inProgress":true},
+          {"namespace":"velero","name":"invalid","schedule":"nope","phase":"FailedValidation","validationErrors":["invalid schedule"],
+           "health":"warning","reasons":["invalid"],"lastBackup":null,"lastSuccessAt":0},
+          {"namespace":"velero","name":"daily","schedule":"0 2 * * *","health":"ok","reasons":[],
+           "lastBackup":{"name":"daily-1","phase":"Completed","completedAt":3000},"lastSuccessAt":3000},
+          {"namespace":"velero","name":"paused","schedule":"0 2 * * *","paused":true,"health":"idle","reasons":[]}],
+         "adhoc":[{"namespace":"velero","name":"before-upgrade","phase":"PartiallyFailed","completedAt":2500,"errors":1,"warnings":0,
+           "failureReason":"","storageLocation":"default","health":"warning"}],
+         "locations":[
+          {"namespace":"velero","name":"offsite","provider":"aws","bucket":"offsite","default":false,"phase":"Unavailable","message":"rpc error","health":"critical"},
+          {"namespace":"velero","name":"default","provider":"aws","bucket":"backups","default":true,"phase":"Available","health":"ok"}]}}
+        """#
 
     private var services: DataServices { get throws { try TalosJSON.decode(DataServices.self, from: json) } }
 
@@ -49,25 +49,31 @@ final class VeleroTests: XCTestCase {
     }
 
     func testAlertsCoverSchedulesAndLocationsNotAdhoc() throws {
-        XCTAssertEqual(dataIssuesOf(try services), [
-            "velero|velero/failing": dataCritical, "velero|velero/invalid": dataWarning,
-            "velero|BackupStorageLocation/velero/offsite": dataCritical, "velero|velero/partial": dataWarning,
-        ])
+        XCTAssertEqual(
+            dataIssuesOf(try services),
+            [
+                "velero|velero/failing": dataCritical, "velero|velero/invalid": dataWarning,
+                "velero|BackupStorageLocation/velero/offsite": dataCritical, "velero|velero/partial": dataWarning,
+            ])
     }
 
     func testHintsIncludeVelero() throws {
-        let inventory = try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[{"id":"velero","name":"Velero"},{"id":"longhorn","name":"Longhorn"}]}"#)
+        let inventory = try TalosJSON.decode(
+            ClusterInventory.self,
+            from: #"{"apps":[{"id":"velero","name":"Velero"},{"id":"longhorn","name":"Longhorn"}]}"#)
         XCTAssertEqual(dataServiceHints(inventory), "longhorn,velero")
     }
 
     func testBackupListDecodesWithDefaults() throws {
-        let list = try TalosJSON.decode(VeleroBackups.self, from: #"""
-        {"namespace":"velero","schedule":"apps-daily","future":1,"backups":[
-         {"name":"apps-daily-2","phase":"Completed","startedAt":10,"completedAt":20,"expiresAt":99,"finished":true,"totalItems":4},
-         {"name":"apps-daily-1","phase":"Completed","startedAt":5,"finished":true,"deleting":true},
-         {"name":"apps-daily-0","phase":"InProgress","startedAt":1,"running":true},
-         {"name":"apps-daily-x","phase":"Failed","finished":true,"deleteErrors":["read-only location"]}]}
-        """#)
+        let list = try TalosJSON.decode(
+            VeleroBackups.self,
+            from: #"""
+                {"namespace":"velero","schedule":"apps-daily","future":1,"backups":[
+                 {"name":"apps-daily-2","phase":"Completed","startedAt":10,"completedAt":20,"expiresAt":99,"finished":true,"totalItems":4},
+                 {"name":"apps-daily-1","phase":"Completed","startedAt":5,"finished":true,"deleting":true},
+                 {"name":"apps-daily-0","phase":"InProgress","startedAt":1,"running":true},
+                 {"name":"apps-daily-x","phase":"Failed","finished":true,"deleteErrors":["read-only location"]}]}
+                """#)
         XCTAssertEqual(list.backups.map(\.deletable), [true, false, false, true])
         XCTAssertEqual(list.backups[0].at, 20)
         XCTAssertEqual(list.backups[1].at, 5)

@@ -7,12 +7,17 @@ struct SnapshotsList: View {
 
     var body: some View {
         List {
-            let errors = [status.error, status.contentsError, status.classesError, status.claimsError].filter { !$0.isEmpty }
+            let errors = [status.error, status.contentsError, status.classesError, status.claimsError].filter {
+                !$0.isEmpty
+            }
             ForEach(errors, id: \.self) { ErrorLine(error: $0) }
             Section {
                 if status.snapshots.isEmpty && status.error.isEmpty {
-                    EmptyState(systemImage: "camera",
-                               text: String(localized: "No CSI VolumeSnapshots. Longhorn’s own snapshots are under each Longhorn volume."))
+                    EmptyState(
+                        systemImage: "camera",
+                        text: String(
+                            localized:
+                                "No CSI VolumeSnapshots. Longhorn’s own snapshots are under each Longhorn volume."))
                 }
                 ForEach(status.snapshots) { SnapshotRow(snapshot: $0) }
             }
@@ -53,9 +58,12 @@ private struct SnapshotRow: View {
     let snapshot: VolumeSnapshot
 
     var body: some View {
-        ResourceRow(health: snapshotHealth(ready: snapshot.ready, error: snapshot.error), title: snapshot.id,
-                    subtitle: snapshotFacts([snapshot.pvc, snapshot.className, relativeTime(snapshot.createdAt)],
-                                            ready: snapshot.ready, error: snapshot.error)) {
+        ResourceRow(
+            health: snapshotHealth(ready: snapshot.ready, error: snapshot.error), title: snapshot.id,
+            subtitle: snapshotFacts(
+                [snapshot.pvc, snapshot.className, relativeTime(snapshot.createdAt)],
+                ready: snapshot.ready, error: snapshot.error)
+        ) {
             SnapshotErrorText(error: snapshot.error)
         }
         .accessibilityElement(children: .combine)
@@ -99,9 +107,12 @@ private struct SnapshotContentRow: View {
 
     var body: some View {
         let source = content.snapshot.isEmpty ? "" : content.namespace + "/" + content.snapshot
-        ResourceRow(health: snapshotHealth(ready: content.ready, error: content.error), title: content.name,
-                    subtitle: snapshotFacts([source, content.className, relativeTime(content.createdAt)],
-                                            ready: content.ready, error: content.error)) {
+        ResourceRow(
+            health: snapshotHealth(ready: content.ready, error: content.error), title: content.name,
+            subtitle: snapshotFacts(
+                [source, content.className, relativeTime(content.createdAt)],
+                ready: content.ready, error: content.error)
+        ) {
             SnapshotErrorText(error: content.error)
         }
         .accessibilityElement(children: .combine)
@@ -152,7 +163,8 @@ private struct BackupJobRow: View {
     }
 
     private var lastSuccess: String {
-        job.lastSuccess > 0 ? String(localized: "last success \(relativeTime(job.lastSuccess))") : String(localized: "no success yet")
+        job.lastSuccess > 0
+            ? String(localized: "last success \(relativeTime(job.lastSuccess))") : String(localized: "no success yet")
     }
 
     @ViewBuilder private var trailing: some View {

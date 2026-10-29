@@ -11,8 +11,10 @@ final class IncomingFileTests: XCTestCase {
 
     func testBackupsByHeader() {
         XCTAssertEqual(IncomingFile.classify(name: "attachment", head: Data("ICHORBAK\u{0}\u{1}".utf8)), .backup)
-        XCTAssertEqual(IncomingFile.classify(name: "file.bin", head: Data("age-encryption.org/v1\n-> scrypt".utf8)), .backup)
-        XCTAssertEqual(IncomingFile.classify(name: "backup.txt", head: Data("-----BEGIN AGE ENCRYPTED FILE-----\n".utf8)), .backup)
+        XCTAssertEqual(
+            IncomingFile.classify(name: "file.bin", head: Data("age-encryption.org/v1\n-> scrypt".utf8)), .backup)
+        XCTAssertEqual(
+            IncomingFile.classify(name: "backup.txt", head: Data("-----BEGIN AGE ENCRYPTED FILE-----\n".utf8)), .backup)
     }
 
     func testConfigsAreText() {
@@ -29,8 +31,12 @@ final class IncomingFileTests: XCTestCase {
     }
 
     func testOtherFilesAreRefused() {
-        XCTAssertEqual(IncomingFile.classify(name: "report.pdf", head: Data([0x25, 0x50, 0x44, 0x46, 0x2D, 0x00, 0xFF])), .unsupported)
-        XCTAssertEqual(IncomingFile.classify(name: "photo.png", head: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00])), .unsupported)
+        XCTAssertEqual(
+            IncomingFile.classify(name: "report.pdf", head: Data([0x25, 0x50, 0x44, 0x46, 0x2D, 0x00, 0xFF])),
+            .unsupported)
+        XCTAssertEqual(
+            IncomingFile.classify(
+                name: "photo.png", head: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00])), .unsupported)
         XCTAssertEqual(IncomingFile.classify(name: "empty.yaml", head: Data()), .unsupported)
         XCTAssertEqual(IncomingFile.classify(name: "latin1", head: Data([0x61, 0xFF, 0xFE, 0xFD, 0x62])), .unsupported)
     }
@@ -52,13 +58,15 @@ final class IncomingFileTests: XCTestCase {
         func file(_ name: String, age: TimeInterval) throws -> URL {
             let url = folder.appendingPathComponent(name)
             try Data(name.utf8).write(to: url)
-            try FileManager.default.setAttributes([.modificationDate: now.addingTimeInterval(-age)], ofItemAtPath: url.path)
+            try FileManager.default.setAttributes(
+                [.modificationDate: now.addingTimeInterval(-age)], ofItemAtPath: url.path)
             return url
         }
         let newer = try file("b.yaml", age: 60)
         let older = try file("a.yaml", age: 3600)
         let stale = try file("c.age", age: IncomingFile.maxAge + 1)
-        try FileManager.default.createDirectory(at: folder.appendingPathComponent("sub"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: folder.appendingPathComponent("sub"), withIntermediateDirectories: true)
 
         let pending = IncomingFile.pending(in: folder, now: now)
         XCTAssertEqual(pending.take.map(\.lastPathComponent), [older.lastPathComponent, newer.lastPathComponent])

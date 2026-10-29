@@ -127,7 +127,9 @@ private final class SupportBridge: NSObject, IchorgoSupportListenerProtocol, @un
     private let progress: @Sendable (SupportProgress) -> Void
     private let done: @Sendable (SupportBundleEvent) -> Void
 
-    init(progress: @escaping @Sendable (SupportProgress) -> Void, done: @escaping @Sendable (SupportBundleEvent) -> Void) {
+    init(
+        progress: @escaping @Sendable (SupportProgress) -> Void, done: @escaping @Sendable (SupportBundleEvent) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }

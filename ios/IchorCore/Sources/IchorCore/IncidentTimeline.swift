@@ -19,13 +19,13 @@ public extension IncidentEntry {
         }
         let conditions = (detail["conditions"] as? [Any])?.isEmpty == false
         let metrics = kind == "metrics" ? evidenceMetrics : nil
-        let metricProblem = metrics.map { m in
-            !m.errors.isEmpty || m.network.contains { $0.errors > 0 || $0.drops > 0 }
-        } ?? false
-        let warning = severity == "warning" || kind == "link" ||
-            (kind == "status" && (ready == false || conditions)) ||
-            (kind == "service" && (text("health") == "unhealthy" || text("state") == "absent")) ||
-            metricProblem
+        let metricProblem =
+            metrics.map { m in
+                !m.errors.isEmpty || m.network.contains { $0.errors > 0 || $0.drops > 0 }
+            } ?? false
+        let warning =
+            severity == "warning" || kind == "link" || (kind == "status" && (ready == false || conditions))
+            || (kind == "service" && (text("health") == "unhealthy" || text("state") == "absent")) || metricProblem
         return warning ? .warning : .ok
     }
 }

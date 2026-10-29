@@ -14,7 +14,9 @@ struct VpnRequiredView: View {
                 Image(systemName: "lock.shield").foregroundStyle(.orange)
             }
         } description: {
-            Text("This cluster is set to be reached over a VPN only, and no VPN is connected. Connect it: this screen reloads by itself.")
+            Text(
+                "This cluster is set to be reached over a VPN only, and no VPN is connected. Connect it: this screen reloads by itself."
+            )
         } actions: {
             Button("Retry") { Task { await retry() } }
         }

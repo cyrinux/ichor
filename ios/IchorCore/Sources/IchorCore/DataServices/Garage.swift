@@ -295,7 +295,9 @@ public struct GarageQuotaUsage: Decodable, Equatable, Sendable {
         objectPercent = try c.field(.objectPercent, 0)
     }
 
-    private enum CodingKeys: String, CodingKey { case sizeBytes, sizeLimit, sizePercent, objectCount, objectLimit, objectPercent }
+    private enum CodingKeys: String, CodingKey {
+        case sizeBytes, sizeLimit, sizePercent, objectCount, objectLimit, objectPercent
+    }
 }
 
 public struct GarageBucketStatus: Decodable, Equatable, Identifiable, Sendable {

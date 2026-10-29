@@ -73,7 +73,8 @@ public func proposalBaseRef(for source: GitSource) -> String? {
         return nil
     }
     guard !ref.isEmpty, ref != "HEAD", !ref.hasPrefix("-"), !ref.contains(".."),
-          ref.unicodeScalars.allSatisfy(isBranchScalar) else { return nil }
+        ref.unicodeScalars.allSatisfy(isBranchScalar)
+    else { return nil }
     if isCommitLike(ref) || isVersionTag(ref) { return nil }
     return ref
 }
@@ -92,7 +93,9 @@ private func isCommitLike(_ ref: String) -> Bool {
 private func isVersionTag(_ ref: String) -> Bool {
     let version = ref.hasPrefix("v") || ref.hasPrefix("V") ? ref.dropFirst() : Substring(ref)
     guard let first = version.first, first.isNumber else { return false }
-    return version.split(separator: "-", maxSplits: 1)[0].allSatisfy { $0.isNumber || $0 == "." || $0 == "x" || $0 == "X" }
+    return version.split(separator: "-", maxSplits: 1)[0].allSatisfy {
+        $0.isNumber || $0 == "." || $0 == "x" || $0 == "X"
+    }
 }
 
 /// The prefilled pull request (GitOpsProposalDefaults).
@@ -152,8 +155,10 @@ public struct GitProposal: Codable, Equatable, Sendable {
     /// Sent only when there are: the Go core refuses an empty list.
     public let files: [GitProposalFile]
 
-    public init(repoURL: String, baseRef: String, path: String, content: String, fileSha: String, message: String,
-                branch: String, title: String, body: String, draft: Bool, files: [GitProposalFile] = []) {
+    public init(
+        repoURL: String, baseRef: String, path: String, content: String, fileSha: String, message: String,
+        branch: String, title: String, body: String, draft: Bool, files: [GitProposalFile] = []
+    ) {
         self.repoURL = repoURL
         self.baseRef = baseRef
         self.path = path
@@ -167,7 +172,9 @@ public struct GitProposal: Codable, Equatable, Sendable {
         self.files = files
     }
 
-    enum CodingKeys: String, CodingKey { case repoURL, baseRef, path, content, fileSha, message, branch, title, body, draft, files }
+    enum CodingKeys: String, CodingKey {
+        case repoURL, baseRef, path, content, fileSha, message, branch, title, body, draft, files
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -214,7 +221,9 @@ public struct GitProposalResult: Codable, Equatable, Sendable {
     /// "github", "gitlab" or "gitea".
     public let forge: String
 
-    public init(url: String, number: Int, branch: String, commit: String = "", commits: [String] = [], forge: String = "") {
+    public init(
+        url: String, number: Int, branch: String, commit: String = "", commits: [String] = [], forge: String = ""
+    ) {
         self.url = url
         self.number = number
         self.branch = branch
@@ -271,7 +280,9 @@ public struct SourceManifestType: Equatable, Sendable {
 public func sourceManifestType(_ text: String) -> SourceManifestType? {
     var found: [Int: (apiVersion: String, kind: String)] = [:]
     var document = 0
-    for raw in text.replacingOccurrences(of: "\r\n", with: "\n").split(separator: "\n", omittingEmptySubsequences: false) {
+    for raw in text.replacingOccurrences(of: "\r\n", with: "\n").split(
+        separator: "\n", omittingEmptySubsequences: false)
+    {
         let line = String(raw)
         if line.hasPrefix("---") {
             document += 1
@@ -285,7 +296,9 @@ public func sourceManifestType(_ text: String) -> SourceManifestType? {
         }
     }
     let types = Set(found.values.map { "\($0.apiVersion) \($0.kind)" })
-    guard types.count == 1, let only = found.values.first, !only.apiVersion.isEmpty, !only.kind.isEmpty else { return nil }
+    guard types.count == 1, let only = found.values.first, !only.apiVersion.isEmpty, !only.kind.isEmpty else {
+        return nil
+    }
     let parts = only.apiVersion.split(separator: "/", maxSplits: 1).map(String.init)
     let group = parts.count == 2 ? parts[0] : ""
     let version = parts.count == 2 ? parts[1] : parts[0]

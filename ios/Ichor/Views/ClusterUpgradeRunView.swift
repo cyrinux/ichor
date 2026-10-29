@@ -14,16 +14,23 @@ struct ClusterUpgradeRunView: View {
             Section {
                 if let outcome = job.outcome {
                     if let error = outcome {
-                        Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill") }.foregroundStyle(.statusBad)
+                        Label {
+                            Text(verbatim: error)
+                        } icon: {
+                            Image(systemName: "xmark.octagon.fill")
+                        }.foregroundStyle(.statusBad)
                     } else {
-                        Label("Every node runs \(job.version ?? "").", systemImage: "checkmark.seal.fill").foregroundStyle(.statusOK)
+                        Label("Every node runs \(job.version ?? "").", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.statusOK)
                     }
                 } else if let p = job.progress, p.total > 0 {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Upgrading \(min(p.index + 1, p.total))/\(p.total): \(p.name), \(phaseText(p))").font(.headline)
+                        Text("Upgrading \(min(p.index + 1, p.total))/\(p.total): \(p.name), \(phaseText(p))").font(
+                            .headline)
                         // Why it paused (a failed gate), or the gate's own progress.
                         if !p.message.isEmpty {
-                            Text(verbatim: p.message).font(.footnote).foregroundStyle(job.paused ? Color.statusWarn : Color.secondary)
+                            Text(verbatim: p.message).font(.footnote).foregroundStyle(
+                                job.paused ? Color.statusWarn : Color.secondary)
                         }
                     }
                 } else {
@@ -52,7 +59,9 @@ struct ClusterUpgradeRunView: View {
                 }
             } footer: {
                 if job.isActive {
-                    Text("Keep Ichor open until the end: if the app stops, start again and it continues with the nodes left.")
+                    Text(
+                        "Keep Ichor open until the end: if the app stops, start again and it continues with the nodes left."
+                    )
                 }
             }
         }
@@ -61,7 +70,9 @@ struct ClusterUpgradeRunView: View {
             Button("Abort", role: .destructive) { job.abort() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("It stops before the next node: a node being upgraded finishes first. The nodes upgraded stay upgraded; start again later to continue with the others.")
+            Text(
+                "It stops before the next node: a node being upgraded finishes first. The nodes upgraded stay upgraded; start again later to continue with the others."
+            )
         }
     }
 

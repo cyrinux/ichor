@@ -59,7 +59,8 @@ extension BackgroundMonitor {
     /// "Your pull request #12 was merged", the request's title below (hidden in screenshot mode).
     static func localizedProposal(_ change: ProposalChange, masked: Bool) -> (title: String, text: String) {
         let number = String(change.record.number)
-        let title = change.state == "merged"
+        let title =
+            change.state == "merged"
             ? String(localized: "Your pull request #\(number) was merged")
             : String(localized: "Your pull request #\(number) was closed")
         return (title, masked ? "" : change.record.title)

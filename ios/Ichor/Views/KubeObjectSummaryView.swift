@@ -31,7 +31,9 @@ struct KubeObjectSummarySections: View {
                             if owner.via == ObjectOwner.viaArgo {
                                 FluxDiffView(argo: owner.namespace, name: owner.name, focus: focus)
                             } else {
-                                FluxDiffView(target: FluxRef(kind: owner.kind, namespace: owner.namespace, name: owner.name), focus: focus)
+                                FluxDiffView(
+                                    target: FluxRef(kind: owner.kind, namespace: owner.namespace, name: owner.name),
+                                    focus: focus)
                             }
                         } label: {
                             Text("Compare with Git").font(.callout)
@@ -99,19 +101,25 @@ struct KubeObjectSummarySections: View {
 
     @ViewBuilder private func metadata(now: Int64) -> some View {
         if summary.created > 0 {
-            Text(verbatim: SummaryText.created(checkupAge(summary.created, now: now))).font(.caption).foregroundStyle(.secondary)
+            Text(verbatim: SummaryText.created(checkupAge(summary.created, now: now))).font(.caption).foregroundStyle(
+                .secondary)
         }
         if summary.deleting > 0 {
-            Text(verbatim: SummaryText.deleting(checkupAge(summary.deleting, now: now))).font(.caption).foregroundStyle(.statusWarn)
+            Text(verbatim: SummaryText.deleting(checkupAge(summary.deleting, now: now))).font(.caption).foregroundStyle(
+                .statusWarn)
         }
         if !summary.finalizers.isEmpty {
             KeyValueList(title: SummaryText.finalizers, lines: summary.finalizers)
         }
         if !summary.labels.isEmpty {
-            KeyValueList(title: SummaryText.labels, lines: summary.labels.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" })
+            KeyValueList(
+                title: SummaryText.labels,
+                lines: summary.labels.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" })
         }
         if !summary.annotations.isEmpty {
-            KeyValueList(title: SummaryText.annotations, lines: summary.annotations.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" })
+            KeyValueList(
+                title: SummaryText.annotations,
+                lines: summary.annotations.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" })
         }
     }
 }
@@ -160,9 +168,17 @@ private struct OwnerLink: View {
 
     var body: some View {
         if owner.isHelmRelease {
-            NavigationLink { HelmReleaseView(namespace: owner.namespace, name: owner.name) } label: { label }
+            NavigationLink {
+                HelmReleaseView(namespace: owner.namespace, name: owner.name)
+            } label: {
+                label
+            }
         } else if let resource = owner.apiResource {
-            NavigationLink { KubeObjectView(resource: resource, namespace: owner.namespace, name: owner.name) } label: { label }
+            NavigationLink {
+                KubeObjectView(resource: resource, namespace: owner.namespace, name: owner.name)
+            } label: {
+                label
+            }
         } else {
             label
         }
@@ -214,7 +230,8 @@ private struct KeyValueList: View {
                 Button {
                     all.toggle()
                 } label: {
-                    Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(lines.count)")).font(.callout)
+                    Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(lines.count)"))
+                        .font(.callout)
                 }
                 .buttonStyle(.borderless)
             }

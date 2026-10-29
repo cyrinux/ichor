@@ -16,14 +16,20 @@ struct VeleroDeleteBackupSheet: View {
 
     private var denial: KubeAccess? { access?.denial(for: .veleroDeleteBackup, in: target.namespace) }
     private var message: String {
-        var lines = [String(localized: "Velero removes this backup's data from its storage location, then the backup itself. It cannot be restored afterwards.")]
+        var lines = [
+            String(
+                localized:
+                    "Velero removes this backup's data from its storage location, then the backup itself. It cannot be restored afterwards."
+            )
+        ]
         if let denial { lines.append(denial.deniedText) }
         return lines.joined(separator: "\n\n")
     }
 
     var body: some View {
-        HostnameConfirmationSheet(title: String(localized: "Delete backup \(target.name)?"), message: message, hostname: target.name,
-                                  actionTitle: String(localized: "Delete backup"), enabled: denial == nil, onConfirm: onConfirm)
+        HostnameConfirmationSheet(
+            title: String(localized: "Delete backup \(target.name)?"), message: message, hostname: target.name,
+            actionTitle: String(localized: "Delete backup"), enabled: denial == nil, onConfirm: onConfirm)
     }
 }
 
@@ -48,7 +54,10 @@ struct VeleroBackupsDisclosure: View {
                 if !list.error.isEmpty { ErrorLine(error: list.error) }
                 if list.backups.isEmpty { Text("No backups left").font(.caption).foregroundStyle(.secondary) }
                 ForEach(list.backups) { backup in
-                    BackupRow(backup: backup, deleting: backup.deleting || deleting.contains("\(schedule.namespace)/\(backup.name)")) {
+                    BackupRow(
+                        backup: backup,
+                        deleting: backup.deleting || deleting.contains("\(schedule.namespace)/\(backup.name)")
+                    ) {
                         onDelete(VeleroBackupTarget(namespace: schedule.namespace, name: backup.name))
                     } onRestore: {
                         onRestore(VeleroRestoreTarget(namespace: schedule.namespace, name: backup.name))
@@ -81,10 +90,14 @@ private struct BackupRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: backup.name).font(.caption.monospaced()).lineLimit(1)
                 Text(verbatim: line).font(.caption2)
-                    .foregroundStyle(backup.phase == "Failed" || backup.phase == "PartiallyFailed" ? .orange : .secondary)
-                if !backup.failureReason.isEmpty { Text(verbatim: backup.failureReason).font(.caption2).foregroundStyle(.red) }
+                    .foregroundStyle(
+                        backup.phase == "Failed" || backup.phase == "PartiallyFailed" ? .orange : .secondary)
+                if !backup.failureReason.isEmpty {
+                    Text(verbatim: backup.failureReason).font(.caption2).foregroundStyle(.red)
+                }
                 if !backup.deleteErrors.isEmpty {
-                    Text("Deletion failed: \(backup.deleteErrors.joined(separator: "; "))").font(.caption2).foregroundStyle(.red)
+                    Text("Deletion failed: \(backup.deleteErrors.joined(separator: "; "))").font(.caption2)
+                        .foregroundStyle(.red)
                 }
             }
             Spacer()
@@ -100,7 +113,8 @@ private struct BackupRow: View {
         if backup.errors > 0 { parts.append(String(localized: "\(backup.errors) errors")) }
         if backup.warnings > 0 { parts.append(String(localized: "\(backup.warnings) warnings")) }
         if backup.expiresAt > 0 {
-            let date = Date(timeIntervalSince1970: Double(backup.expiresAt) / 1000).formatted(date: .abbreviated, time: .omitted)
+            let date = Date(timeIntervalSince1970: Double(backup.expiresAt) / 1000).formatted(
+                date: .abbreviated, time: .omitted)
             parts.append(String(localized: "expires \(date)"))
         }
         if deleting { parts.append(String(localized: "deleting…")) }

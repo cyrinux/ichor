@@ -31,9 +31,13 @@ struct PluginToolsView: View {
             Section {
                 ForEach(tools) { tool in
                     VStack(alignment: .leading, spacing: 6) {
-                        Button { start(tool) } label: { Text(verbatim: tool.label) }
-                            .buttonStyle(.bordered)
-                            .disabled(run?.running == true)
+                        Button {
+                            start(tool)
+                        } label: {
+                            Text(verbatim: tool.label)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(run?.running == true)
                         if !tool.hint.isEmpty {
                             Text(verbatim: tool.hint).font(.caption).foregroundStyle(.secondary)
                         }
@@ -62,7 +66,8 @@ struct PluginToolsView: View {
                         HealthDot(health: result.serviceHealth)
                         Text(verbatim: result.title)
                             .font(.headline)
-                            .foregroundStyle(result.serviceHealth.needsAttention ? result.serviceHealth.color : .primary)
+                            .foregroundStyle(
+                                result.serviceHealth.needsAttention ? result.serviceHealth.color : .primary)
                     }
                     if result.shownCards.isEmpty { Text("No result.").note() }
                 }

@@ -27,7 +27,8 @@ extension TalosClient {
     /// cluster-scoped object) with `paramsJSON`, a JSON object of its params ("" for none). Go
     /// checks the object again and refuses (PluginActionFailure reads why). Never log the params.
     func pluginAction(id: String, action: String, namespace: String, name: String, paramsJSON: String) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubePluginAction(config, context, kubeServer, id, action, namespace, name, paramsJSON, error)
         }
     }
@@ -35,7 +36,9 @@ extension TalosClient {
     /// Runs tool `tool` of plugin `id` over what it reads in `scope` (a namespace, "" for all), its
     /// words in `locale`. Never cached: a tool runs only when tapped. The demo context runs the
     /// tool's canned demo over the samples.
-    func pluginTool(id: String, tool: String, scope: String = "", locale: String = pluginLocale()) async throws -> PluginToolResult {
+    func pluginTool(id: String, tool: String, scope: String = "", locale: String = pluginLocale()) async throws
+        -> PluginToolResult
+    {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubePluginTool(config, context, kubeServer, id, tool, scope, locale, $0)
         }

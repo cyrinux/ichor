@@ -30,8 +30,10 @@ public struct EtcdMemberPlan: Decodable, Equatable, Sendable {
     public let blockers: [String]
     public let warnings: [String]
 
-    public init(member: Member, healthyAfter: Int = 0, membersAfter: Int = 0, keepsQuorum: Bool = true,
-                blockers: [String] = [], warnings: [String] = []) {
+    public init(
+        member: Member, healthyAfter: Int = 0, membersAfter: Int = 0, keepsQuorum: Bool = true,
+        blockers: [String] = [], warnings: [String] = []
+    ) {
         self.member = member
         self.healthyAfter = healthyAfter
         self.membersAfter = membersAfter
@@ -40,7 +42,9 @@ public struct EtcdMemberPlan: Decodable, Equatable, Sendable {
         self.warnings = warnings
     }
 
-    private enum CodingKeys: String, CodingKey { case member, healthyAfter, membersAfter, quorumAfter, blockers, warnings }
+    private enum CodingKeys: String, CodingKey {
+        case member, healthyAfter, membersAfter, quorumAfter, blockers, warnings
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

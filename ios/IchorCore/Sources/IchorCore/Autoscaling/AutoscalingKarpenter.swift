@@ -16,9 +16,13 @@ public struct NodePoolRow: Decodable, Equatable, Hashable, Identifiable, Sendabl
     /// The state the row shows: at its limit, or not ready.
     public var state: AutoscaleState { atLimit ? .atMax : (ready ? .ok : .notReady) }
 
-    public init(name: String = "", limits: NodePoolLimits = NodePoolLimits(), resources: NodePoolResources = NodePoolResources(),
-                atLimit: Bool = false, disruption: NodePoolDisruption = NodePoolDisruption(), weight: Int = 0, ready: Bool = false,
-                message: String = "", capacityTypes: [String] = []) {
+    public init(
+        name: String = "", limits: NodePoolLimits = NodePoolLimits(),
+        resources: NodePoolResources = NodePoolResources(),
+        atLimit: Bool = false, disruption: NodePoolDisruption = NodePoolDisruption(), weight: Int = 0,
+        ready: Bool = false,
+        message: String = "", capacityTypes: [String] = []
+    ) {
         self.name = name
         self.limits = limits
         self.resources = resources
@@ -43,7 +47,9 @@ public struct NodePoolRow: Decodable, Equatable, Hashable, Identifiable, Sendabl
         capacityTypes = try c.field(.capacityTypes, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case name, limits, resources, atLimit, disruption, weight, ready, message, capacityTypes }
+    private enum CodingKeys: String, CodingKey {
+        case name, limits, resources, atLimit, disruption, weight, ready, message, capacityTypes
+    }
 }
 
 public struct NodePoolLimits: Decodable, Equatable, Hashable, Sendable {
@@ -159,9 +165,13 @@ public struct NodeClaimRow: Decodable, Equatable, Hashable, Identifiable, Sendab
         return ready ? .ok : .notReady
     }
 
-    public init(name: String = "", pool: String = "", nodeName: String = "", instanceType: String = "", capacityType: String = "",
-                launched: Bool = false, registered: Bool = false, initialized: Bool = false, ready: Bool = false, message: String = "",
-                created: Int64 = 0, pending: Bool = false, drifted: Bool = false, disrupting: Bool = false) {
+    public init(
+        name: String = "", pool: String = "", nodeName: String = "", instanceType: String = "",
+        capacityType: String = "",
+        launched: Bool = false, registered: Bool = false, initialized: Bool = false, ready: Bool = false,
+        message: String = "",
+        created: Int64 = 0, pending: Bool = false, drifted: Bool = false, disrupting: Bool = false
+    ) {
         self.name = name
         self.pool = pool
         self.nodeName = nodeName
@@ -197,6 +207,7 @@ public struct NodeClaimRow: Decodable, Equatable, Hashable, Identifiable, Sendab
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, pool, nodeName, instanceType, capacityType, launched, registered, initialized, ready, message, created, pending, drifted, disrupting
+        case name, pool, nodeName, instanceType, capacityType, launched, registered, initialized, ready, message,
+            created, pending, drifted, disrupting
     }
 }

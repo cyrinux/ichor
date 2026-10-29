@@ -9,7 +9,8 @@ struct ClusterTitleMenu: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let groups = clusterMenuGroups(context: model.activeSummary, canSwitch: (model.summary?.contexts.count ?? 0) > 1)
+        let groups = clusterMenuGroups(
+            context: model.activeSummary, canSwitch: (model.summary?.contexts.count ?? 0) > 1)
         ForEach(Array(groups.enumerated()), id: \.offset) { index, group in
             if index > 0 { Divider() }
             ForEach(group, id: \.self, content: entry)
@@ -23,7 +24,9 @@ struct ClusterTitleMenu: View {
             // A submenu: with many clusters, the actions below stay in reach without a scroll.
             Menu {
                 ForEach(model.summary?.contexts ?? []) { context in
-                    Button { model.activeContext = context.name } label: {
+                    Button {
+                        model.activeContext = context.name
+                    } label: {
                         if context.name == model.activeContext {
                             Label(model.labels.of(context), systemImage: "checkmark")
                         } else {
@@ -35,20 +38,42 @@ struct ClusterTitleMenu: View {
                 Label("Switch cluster", systemImage: "arrow.left.arrow.right")
             }
         case .manage:
-            Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
+            Button {
+                path.append(.clusters)
+            } label: {
+                Label("Manage clusters…", systemImage: "square.stack.3d.up")
+            }
         case .upgradeCluster:
-            Button { path.append(.clusterUpgrade(version: "")) } label: {
+            Button {
+                path.append(.clusterUpgrade(version: ""))
+            } label: {
                 Label("Upgrade cluster…", systemImage: "arrow.up.circle")
             }
         case .upgradeKubernetes:
-            Button { path.append(.k8sUpgrade) } label: { Label("Upgrade Kubernetes…", systemImage: "shippingbox") }
+            Button {
+                path.append(.k8sUpgrade)
+            } label: {
+                Label("Upgrade Kubernetes…", systemImage: "shippingbox")
+            }
         case .addNode:
             // On Omni, Add a node opens the boot media: Omni joins the machine itself.
-            Button { path.append(.joinNode) } label: { Label("Add a node…", systemImage: "plus.circle") }
+            Button {
+                path.append(.joinNode)
+            } label: {
+                Label("Add a node…", systemImage: "plus.circle")
+            }
         case .updates:
-            Button { path.append(.updates) } label: { Label("Updates…", systemImage: "arrow.up.square") }
+            Button {
+                path.append(.updates)
+            } label: {
+                Label("Updates…", systemImage: "arrow.up.square")
+            }
         case .runbooks:
-            Button { path.append(.runbooks) } label: { Label("Runbooks…", systemImage: "list.bullet.rectangle") }
+            Button {
+                path.append(.runbooks)
+            } label: {
+                Label("Runbooks…", systemImage: "list.bullet.rectangle")
+            }
         case .incidentSummary:
             Button(action: shareIncident) { Label("Share incident summary…", systemImage: "square.and.arrow.up") }
         case .shareLink:

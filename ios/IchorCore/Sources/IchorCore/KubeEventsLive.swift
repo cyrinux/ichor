@@ -16,8 +16,10 @@ public struct LiveKubeEventObject: Codable, Hashable, Sendable {
     public let namespace: String
     public let name: String
 
-    public init(kind: String, apiVersion: String = "v1", group: String = "", version: String = "v1", resource: String = "",
-                namespaced: Bool = true, namespace: String = "", name: String) {
+    public init(
+        kind: String, apiVersion: String = "v1", group: String = "", version: String = "v1", resource: String = "",
+        namespaced: Bool = true, namespace: String = "", name: String
+    ) {
         self.kind = kind
         self.apiVersion = apiVersion
         self.group = group
@@ -28,7 +30,9 @@ public struct LiveKubeEventObject: Codable, Hashable, Sendable {
         self.name = name
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, apiVersion, group, version, resource, namespaced, namespace, name }
+    private enum CodingKeys: String, CodingKey {
+        case kind, apiVersion, group, version, resource, namespaced, namespace, name
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -79,8 +83,10 @@ public struct LiveKubeEvent: Codable, Equatable, Identifiable, Sendable {
     public var id: String { key }
     public var isWarning: Bool { type == "Warning" }
 
-    public init(key: String, type: String = "Normal", reason: String, note: String = "", regarding: LiveKubeEventObject,
-                count: Int = 1, firstSeen: Int64 = 0, lastSeen: Int64, source: String = "") {
+    public init(
+        key: String, type: String = "Normal", reason: String, note: String = "", regarding: LiveKubeEventObject,
+        count: Int = 1, firstSeen: Int64 = 0, lastSeen: Int64, source: String = ""
+    ) {
         self.key = key
         self.type = type
         self.reason = reason
@@ -92,7 +98,9 @@ public struct LiveKubeEvent: Codable, Equatable, Identifiable, Sendable {
         self.source = source
     }
 
-    private enum CodingKeys: String, CodingKey { case key, type, reason, note, regarding, count, firstSeen, lastSeen, source }
+    private enum CodingKeys: String, CodingKey {
+        case key, type, reason, note, regarding, count, firstSeen, lastSeen, source
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -171,8 +179,10 @@ public struct LiveKubeEventsStatus: Codable, Equatable, Sendable {
 
     public var liveState: LiveKubeEventsState { LiveKubeEventsState(wire: state) }
 
-    public init(state: String = "live", reason: String = "", api: String = "", tracked: Int = 0, limit: Int = 0,
-                dropped: Int = 0, partial: Bool = false, note: String = "") {
+    public init(
+        state: String = "live", reason: String = "", api: String = "", tracked: Int = 0, limit: Int = 0,
+        dropped: Int = 0, partial: Bool = false, note: String = ""
+    ) {
         self.state = state
         self.reason = reason
         self.api = api
@@ -203,8 +213,10 @@ public let liveKubeEventsCap = 2000
 
 /// `rows` with `batch` applied: cleared on reset, `removed` dropped, `upserts` replacing the
 /// row of their key or added; newest lastSeen first (by key on a tie), at most `cap`.
-public func applyKubeEventsBatch(_ batch: LiveKubeEventsBatch, to rows: [LiveKubeEvent],
-                                 cap: Int = liveKubeEventsCap) -> [LiveKubeEvent] {
+public func applyKubeEventsBatch(
+    _ batch: LiveKubeEventsBatch, to rows: [LiveKubeEvent],
+    cap: Int = liveKubeEventsCap
+) -> [LiveKubeEvent] {
     let base = batch.reset ? [] : rows
     let dropped = Set(batch.removed)
     var byKey: [String: LiveKubeEvent] = [:]
@@ -225,7 +237,9 @@ public struct KubeEventsFeed: Equatable, Sendable {
     /// Whether the first batch came in.
     public let loaded: Bool
 
-    public init(rows: [LiveKubeEvent] = [], paused: Bool = false, pending: LiveKubeEventsBatch? = nil, loaded: Bool = false) {
+    public init(
+        rows: [LiveKubeEvent] = [], paused: Bool = false, pending: LiveKubeEventsBatch? = nil, loaded: Bool = false
+    ) {
         self.rows = rows
         self.paused = paused
         self.pending = pending
@@ -238,7 +252,8 @@ public struct KubeEventsFeed: Equatable, Sendable {
     /// The feed with `batch` shown, or held back while paused (the first batch always shows).
     public func receiving(_ batch: LiveKubeEventsBatch) -> KubeEventsFeed {
         guard paused, loaded else {
-            return KubeEventsFeed(rows: applyKubeEventsBatch(batch, to: rows), paused: paused, pending: nil, loaded: true)
+            return KubeEventsFeed(
+                rows: applyKubeEventsBatch(batch, to: rows), paused: paused, pending: nil, loaded: true)
         }
         let held = pending.map { $0.merged(with: batch) } ?? batch
         return KubeEventsFeed(rows: rows, paused: true, pending: held, loaded: true)

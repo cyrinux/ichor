@@ -38,9 +38,11 @@ public struct GitSource: Decodable, Hashable, Sendable {
     public let fluxArtifact: Bool
     public let fluxSource: FluxRef?
 
-    public init(repoURL: String, webURL: String = "", tracked: String = "", revision: String = "", path: String = "",
-                kind: GitSourceKind = .directory, chart: String = "", valueFiles: [String] = [],
-                browsable: Bool = false, fluxArtifact: Bool = false, fluxSource: FluxRef? = nil) {
+    public init(
+        repoURL: String, webURL: String = "", tracked: String = "", revision: String = "", path: String = "",
+        kind: GitSourceKind = .directory, chart: String = "", valueFiles: [String] = [],
+        browsable: Bool = false, fluxArtifact: Bool = false, fluxSource: FluxRef? = nil
+    ) {
         self.repoURL = repoURL
         self.webURL = webURL
         self.tracked = tracked

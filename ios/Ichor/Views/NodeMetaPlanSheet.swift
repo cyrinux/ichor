@@ -31,13 +31,19 @@ struct NodeMetaPlanSheet: View {
                 if !plan.warnings.isEmpty {
                     Section("Warnings") {
                         ForEach(plan.warnings, id: \.self) { warning in
-                            Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                                .foregroundStyle(.statusWarn)
+                            Label {
+                                Text(verbatim: warning)
+                            } icon: {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                            }
+                            .foregroundStyle(.statusWarn)
                         }
                     }
                 }
                 Section {
-                    Button(role: plan.hasTaintChanges ? .destructive : nil) { requestApply() } label: {
+                    Button(role: plan.hasTaintChanges ? .destructive : nil) {
+                        requestApply()
+                    } label: {
                         if applying { ProgressView() } else { Text("Apply") }
                     }
                     .disabled(!plan.canApply || applying)
@@ -68,8 +74,10 @@ struct NodeMetaPlanSheet: View {
                     run()
                 }
             }
-            .confirmationDialog(String(localized: "Change the labels of \(hostname)?"), isPresented: $confirmingLabels,
-                                titleVisibility: .visible) {
+            .confirmationDialog(
+                String(localized: "Change the labels of \(hostname)?"), isPresented: $confirmingLabels,
+                titleVisibility: .visible
+            ) {
                 Button("Apply") { run() }
                 Button("Cancel", role: .cancel) {}
             } message: {
@@ -82,15 +90,19 @@ struct NodeMetaPlanSheet: View {
         if !diff.isEmpty {
             Section {
                 diffRows(String(localized: "Added"), diff.added, systemImage: "plus.circle.fill", color: .statusOK)
-                diffRows(String(localized: "Removed"), diff.removed, systemImage: "minus.circle.fill", color: .statusBad)
-                diffRows(String(localized: "Changed"), diff.changed, systemImage: "pencil.circle.fill", color: .statusWarn)
+                diffRows(
+                    String(localized: "Removed"), diff.removed, systemImage: "minus.circle.fill", color: .statusBad)
+                diffRows(
+                    String(localized: "Changed"), diff.changed, systemImage: "pencil.circle.fill", color: .statusWarn)
             } header: {
                 Text(verbatim: title)
             }
         }
     }
 
-    @ViewBuilder private func diffRows(_ kind: String, _ changes: [NodeMetaChange], systemImage: String, color: Color) -> some View {
+    @ViewBuilder private func diffRows(_ kind: String, _ changes: [NodeMetaChange], systemImage: String, color: Color)
+        -> some View
+    {
         ForEach(changes, id: \.self) { change in
             Label {
                 Text(verbatim: change.display).font(.callout.monospaced())
@@ -120,8 +132,12 @@ struct NodeMetaPlanSheet: View {
     private var blockersSection: some View {
         Section {
             ForEach(plan.blockers, id: \.self) { blocker in
-                Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }
-                    .foregroundStyle(.statusBad)
+                Label {
+                    Text(verbatim: blocker)
+                } icon: {
+                    Image(systemName: "xmark.octagon.fill")
+                }
+                .foregroundStyle(.statusBad)
             }
         } header: {
             Text("Cannot apply:")
@@ -131,7 +147,8 @@ struct NodeMetaPlanSheet: View {
     /// The change in a few lines, for the confirmation: "+ key=value:Effect", "− …", "~ …".
     private var summary: String {
         let lines = [plan.taints, plan.labels].flatMap { diff in
-            diff.added.map { "+ \($0.display)" } + diff.removed.map { "− \($0.display)" } + diff.changed.map { "~ \($0.display)" }
+            diff.added.map { "+ \($0.display)" } + diff.removed.map { "− \($0.display)" }
+                + diff.changed.map { "~ \($0.display)" }
         }
         return (lines + plan.warnings).joined(separator: "\n")
     }

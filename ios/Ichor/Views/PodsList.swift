@@ -33,7 +33,8 @@ struct PodsList: View {
         KubeListFrame(control: control, list: list, query: query, namespaces: podNamespaces) { load in
             let selected = control.scope.namespace
             // Sorted once complete; image search only when every row carries its images.
-            let filtered = filterPods(load.items, namespace: selected, query: query, sorted: load.done, searchImages: load.detailed)
+            let filtered = filterPods(
+                load.items, namespace: selected, query: query, sorted: load.done, searchImages: load.detailed)
             let shown = filtered.sortedByUsage(sort) { top[$0.id] }
             List {
                 if let sweep, sweep.running { PodSweepRow(sweep: sweep) }
@@ -52,19 +53,30 @@ struct PodsList: View {
                 }
                 Section {
                     ForEach(shown) { pod in
-                        PodRow(pod: pod, showNamespace: selected == nil, usage: top[pod.id], deleting: actions.deleting.contains(pod.id),
-                               onLogs: { actions.logsPod = pod }) { actions.confirm = pod }
-                            .podLogsSwipe { actions.logsPod = pod }
-                            .contextMenu {
-                                Button { actions.logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
-                                ShareLinkButton(target: .pod(namespace: pod.namespace, name: pod.name))
-                                PinButton(target: .pod(namespace: pod.namespace, name: pod.name), label: pod.name)
-                                if let onFlows {
-                                    Button { onFlows(pod) } label: {
-                                        Label("Live flows of this pod", systemImage: "point.3.filled.connected.trianglepath.dotted")
-                                    }
+                        PodRow(
+                            pod: pod, showNamespace: selected == nil, usage: top[pod.id],
+                            deleting: actions.deleting.contains(pod.id),
+                            onLogs: { actions.logsPod = pod }
+                        ) { actions.confirm = pod }
+                        .podLogsSwipe { actions.logsPod = pod }
+                        .contextMenu {
+                            Button {
+                                actions.logsPod = pod
+                            } label: {
+                                Label("Logs", systemImage: "doc.text")
+                            }
+                            ShareLinkButton(target: .pod(namespace: pod.namespace, name: pod.name))
+                            PinButton(target: .pod(namespace: pod.namespace, name: pod.name), label: pod.name)
+                            if let onFlows {
+                                Button {
+                                    onFlows(pod)
+                                } label: {
+                                    Label(
+                                        "Live flows of this pod",
+                                        systemImage: "point.3.filled.connected.trianglepath.dotted")
                                 }
                             }
+                        }
                     }
                     if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
                 }
@@ -158,17 +170,21 @@ private struct PodActionsModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .confirmationDialog(actions.confirm.map { String(localized: "Delete pod \($0.name)?") } ?? "",
-                                isPresented: $actions.confirm.isPresent(),
-                                titleVisibility: .visible,
-                                presenting: actions.confirm) { pod in
+            .confirmationDialog(
+                actions.confirm.map { String(localized: "Delete pod \($0.name)?") } ?? "",
+                isPresented: $actions.confirm.isPresent(),
+                titleVisibility: .visible,
+                presenting: actions.confirm
+            ) { pod in
                 Button("Delete", role: .destructive) {
                     Task { await actions.delete(pod, model: model, reload: reload) }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: { pod in
                 if pod.owner.isEmpty {
-                    Text("It is removed from \(pod.namespace) after its grace period. No controller owns it: it will not come back.")
+                    Text(
+                        "It is removed from \(pod.namespace) after its grace period. No controller owns it: it will not come back."
+                    )
                 } else {
                     Text("It is removed from \(pod.namespace) after its grace period; \(pod.owner) starts a new one.")
                 }
@@ -198,10 +214,12 @@ struct PodRow: View {
                     .font(.callout.monospaced())
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(verbatim: [showNamespace ? pod.namespace : nil, showNode && !pod.node.isEmpty ? pod.node : nil]
-                    .compactMap { $0 }.joined(separator: " · "))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    verbatim: [showNamespace ? pod.namespace : nil, showNode && !pod.node.isEmpty ? pod.node : nil]
+                        .compactMap { $0 }.joined(separator: " · ")
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 HStack(spacing: 8) {
                     Text(verbatim: pod.status)
                         .font(.caption.monospaced())
@@ -217,7 +235,9 @@ struct PodRow: View {
                 .monospacedDigit()
                 if let pull = pod.pull {
                     // Why the image cannot be pulled; tap for the kubelet's message and a hint.
-                    Button { explainingPull = true } label: {
+                    Button {
+                        explainingPull = true
+                    } label: {
                         Label(pull.title.text, systemImage: "exclamationmark.triangle")
                             .font(.caption)
                             .foregroundStyle(Color.statusWarn)
@@ -233,8 +253,8 @@ struct PodRow: View {
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
             }
-                .buttonStyle(.borderless)
-                .accessibilityLabel(Text("Logs of \(pod.name)"))
+            .buttonStyle(.borderless)
+            .accessibilityLabel(Text("Logs of \(pod.name)"))
             if deleting {
                 ProgressView()
             } else {
@@ -243,10 +263,10 @@ struct PodRow: View {
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
                 }
-                    .buttonStyle(.borderless)
-                    .disabled(pod.status == "Terminating")
-                    .kubeGated(.deletePod, in: pod.namespace)
-                    .accessibilityLabel(Text("Delete \(pod.name)"))
+                .buttonStyle(.borderless)
+                .disabled(pod.status == "Terminating")
+                .kubeGated(.deletePod, in: pod.namespace)
+                .accessibilityLabel(Text("Delete \(pod.name)"))
             }
         }
         .sheet(isPresented: $explainingPull) {

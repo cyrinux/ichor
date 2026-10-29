@@ -87,7 +87,8 @@ public struct KubeSpanDiagPeer: Decodable, Equatable, Identifiable, Sendable {
     public var id: String { publicKey }
 
     private enum CodingKeys: String, CodingKey {
-        case publicKey, label, state, address, allowedIPs, endpointsTried, endpoint, lastUsedEndpoint, lastHandshake, lastEndpointChange, verdicts
+        case publicKey, label, state, address, allowedIPs, endpointsTried, endpoint, lastUsedEndpoint, lastHandshake,
+            lastEndpointChange, verdicts
     }
 
     public init(from decoder: Decoder) throws {

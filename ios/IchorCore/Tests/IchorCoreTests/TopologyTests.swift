@@ -14,14 +14,14 @@ final class TopologyTests: XCTestCase {
 
     func testDecodesTheGoCoreJSON() throws {
         let json = """
-        {"nodes":[{"id":"cp-1","node":"10.0.0.1","hostname":"cp-1","role":"controlplane","addresses":["10.0.0.1"],
-          "zone":"fr-par-1","country":"FR","site":"site-1","kubespan":true,"queried":true},
-          {"id":"vps","hostname":"vps","addresses":null,"site":"site-2","kubespan":false,"queried":false}],
-         "links":[{"a":"cp-1","b":"vps","state":"degraded","sides":[{"from":"cp-1","to":"vps","state":"up",
-          "endpoint":"203.0.113.5:51820","private":false,"rx":10,"tx":20,"lastHandshake":1800000000}]}],
-         "sites":[{"id":"site-1","label":"fr-par-1","kind":"zone","country":"FR","nodes":["cp-1"]},
-          {"id":"site-2","label":"","kind":"node","nodes":["vps"]}]}
-        """
+            {"nodes":[{"id":"cp-1","node":"10.0.0.1","hostname":"cp-1","role":"controlplane","addresses":["10.0.0.1"],
+              "zone":"fr-par-1","country":"FR","site":"site-1","kubespan":true,"queried":true},
+              {"id":"vps","hostname":"vps","addresses":null,"site":"site-2","kubespan":false,"queried":false}],
+             "links":[{"a":"cp-1","b":"vps","state":"degraded","sides":[{"from":"cp-1","to":"vps","state":"up",
+              "endpoint":"203.0.113.5:51820","private":false,"rx":10,"tx":20,"lastHandshake":1800000000}]}],
+             "sites":[{"id":"site-1","label":"fr-par-1","kind":"zone","country":"FR","nodes":["cp-1"]},
+              {"id":"site-2","label":"","kind":"node","nodes":["vps"]}]}
+            """
         let topology = try JSONDecoder().decode(ClusterTopology.self, from: Data(json.utf8))
 
         XCTAssertEqual(topology.nodes.count, 2)
@@ -35,7 +35,8 @@ final class TopologyTests: XCTestCase {
     }
 
     func testDecodesNullSlices() throws {
-        let topology = try JSONDecoder().decode(ClusterTopology.self, from: Data(#"{"nodes":null,"links":null,"sites":null}"#.utf8))
+        let topology = try JSONDecoder().decode(
+            ClusterTopology.self, from: Data(#"{"nodes":null,"links":null,"sites":null}"#.utf8))
         XCTAssertEqual(topology, ClusterTopology())
     }
 
@@ -52,7 +53,9 @@ final class TopologyTests: XCTestCase {
                 TopologySite(id: "site-3", nodes: ["gone"]),
             ]
         )
-        let nodes = [node("w-1"), node("cp-1", role: "controlplane"), node("new-name", target: "10.0.0.3"), node("w-9")]
+        let nodes = [
+            node("w-1"), node("cp-1", role: "controlplane"), node("new-name", target: "10.0.0.3"), node("w-9"),
+        ]
 
         let groups = groupNodes(nodes, by: topology)
 

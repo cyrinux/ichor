@@ -74,14 +74,18 @@ struct LiveFlowsView: View {
                 ContentUnavailableView {
                     Label("Whisker is not installed", systemImage: "eye.slash")
                 } description: {
-                    Text("Calico 3.30+ records flows with Goldmane and serves them through Whisker. Create the Goldmane and Whisker resources (operator.tigera.io/v1, part of the custom-resources.yaml of your Calico release), wait for the whisker pod in calico-system, then open this screen again.")
+                    Text(
+                        "Calico 3.30+ records flows with Goldmane and serves them through Whisker. Create the Goldmane and Whisker resources (operator.tigera.io/v1, part of the custom-resources.yaml of your Calico release), wait for the whisker pod in calico-system, then open this screen again."
+                    )
                 }
                 .themedBackground()
             } else {
                 ContentUnavailableView {
                     Label("Hubble is disabled", systemImage: "eye.slash")
                 } description: {
-                    Text("Cilium runs without Hubble, which records the flows. Set hubble.enabled=true in Cilium’s Helm values (enable-hubble in the cilium-config ConfigMap), then open this screen again.")
+                    Text(
+                        "Cilium runs without Hubble, which records the flows. Set hubble.enabled=true in Cilium’s Helm values (enable-hubble in the cilium-config ConfigMap), then open this screen again."
+                    )
                 }
                 .themedBackground()
             }
@@ -116,8 +120,10 @@ struct LiveFlowsView: View {
     private func flowList(_ shown: Tab) -> some View {
         List {
             filterSection
-            HubbleStatusSection(snapshot: follower.snapshot, buffer: cilium.buffer, calico: cilium.isCalico, error: follower.error,
-                                connecting: follower.active && follower.snapshot == nil) { attempt += 1 }
+            HubbleStatusSection(
+                snapshot: follower.snapshot, buffer: cilium.buffer, calico: cilium.isCalico, error: follower.error,
+                connecting: follower.active && follower.snapshot == nil
+            ) { attempt += 1 }
             if let snapshot = follower.snapshot {
                 switch shown {
                 case .drops:
@@ -126,7 +132,11 @@ struct LiveFlowsView: View {
                             Text("No drops so far.").note()
                         }
                         ForEach(snapshot.drops) { group in
-                            Button { selected = group } label: { DropGroupRow(group: group) }
+                            Button {
+                                selected = group
+                            } label: {
+                                DropGroupRow(group: group)
+                            }
                         }
                     } footer: {
                         if !snapshot.policiesError.isEmpty {
@@ -157,8 +167,12 @@ struct LiveFlowsView: View {
             }
             if let pod = filter.pod {
                 HStack {
-                    LabeledContent("Pod") { Text(verbatim: pod).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle) }
-                    Button { filter = HubbleFilter(namespace: filter.namespace, dropsOnly: filter.dropsOnly) } label: {
+                    LabeledContent("Pod") {
+                        Text(verbatim: pod).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                    }
+                    Button {
+                        filter = HubbleFilter(namespace: filter.namespace, dropsOnly: filter.dropsOnly)
+                    } label: {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                     }
                     .buttonStyle(.borderless)
@@ -175,8 +189,9 @@ struct LiveFlowsView: View {
 
     /// A new namespace drops the pod filter.
     private var namespaceBinding: Binding<String?> {
-        Binding(get: { filter.namespace },
-                set: { filter = HubbleFilter(namespace: $0, dropsOnly: filter.dropsOnly) })
+        Binding(
+            get: { filter.namespace },
+            set: { filter = HubbleFilter(namespace: $0, dropsOnly: filter.dropsOnly) })
     }
 }
 
@@ -197,7 +212,8 @@ private struct HubbleStatusSection: View {
             } else if connecting {
                 HStack(spacing: 8) {
                     ProgressView()
-                    Text(calico ? "Connecting to Whisker…" : "Connecting to the Cilium agents…").foregroundStyle(.secondary)
+                    Text(calico ? "Connecting to Whisker…" : "Connecting to the Cilium agents…").foregroundStyle(
+                        .secondary)
                 }
             }
             if let snapshot {
@@ -211,15 +227,19 @@ private struct HubbleStatusSection: View {
                 }
                 HStack {
                     counter(String(localized: "Seen"), snapshot.seen, color: .primary)
-                    counter(String(localized: "Dropped"), snapshot.dropped, color: snapshot.dropped > 0 ? .red : .primary)
-                    counter(String(localized: "Lost"), snapshot.lost, color: snapshot.lost > 0 ? attentionColor : .primary)
+                    counter(
+                        String(localized: "Dropped"), snapshot.dropped, color: snapshot.dropped > 0 ? .red : .primary)
+                    counter(
+                        String(localized: "Lost"), snapshot.lost, color: snapshot.lost > 0 ? attentionColor : .primary)
                 }
             }
         } footer: {
             if buffer > 0 {
                 Text("History only goes back as far as the agents still keep: up to \(buffer) flows per node.")
             } else if calico {
-                Text("History only goes back as far as Goldmane still keeps; flows are 15-second aggregates, not single packets.")
+                Text(
+                    "History only goes back as far as Goldmane still keeps; flows are 15-second aggregates, not single packets."
+                )
             } else {
                 Text("History only goes back as far as the agents still keep.")
             }
@@ -255,11 +275,13 @@ private struct DropGroupRow: View {
             }
             .font(.caption.weight(.medium))
             Text(verbatim: group.reason.text).font(.caption).foregroundStyle(.secondary)
-            Text(verbatim: ([relativeTime(group.lastSeen)] + group.nodes)
-                .joined(separator: " · "))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            Text(
+                verbatim: ([relativeTime(group.lastSeen)] + group.nodes)
+                    .joined(separator: " · ")
+            )
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
         }
     }
 }

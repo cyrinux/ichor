@@ -14,7 +14,9 @@ enum SharedStore {
 
     /// Every cluster's last snapshot; the single one of older versions goes to `activeCluster`.
     static func snapshots(activeCluster: String?) -> [String: ClusterSnapshot] {
-        migratedSnapshots(SharedSnapshot.loadAll(from: defaults), legacy: SharedSnapshot.load(from: defaults), activeCluster: activeCluster)
+        migratedSnapshots(
+            SharedSnapshot.loadAll(from: defaults), legacy: SharedSnapshot.load(from: defaults),
+            activeCluster: activeCluster)
     }
 
     /// Stores `snapshots` (the older versions' single one goes) and reloads the widget.
@@ -50,9 +52,20 @@ enum SharedStore {
     /// The clusters the widget can pick, named as on screen, and the active one (its default).
     static func publish(clusters: [WidgetCluster], active: String?) {
         let data = clusters.isEmpty ? nil : (try? JSONEncoder().encode(clusters))
-        guard data != defaults.data(forKey: SharedSnapshot.clustersKey) || active != SharedSnapshot.activeCluster(from: defaults) else { return }
-        if let data { defaults.set(data, forKey: SharedSnapshot.clustersKey) } else { defaults.removeObject(forKey: SharedSnapshot.clustersKey) }
-        if let active { defaults.set(active, forKey: SharedSnapshot.activeKey) } else { defaults.removeObject(forKey: SharedSnapshot.activeKey) }
+        guard
+            data != defaults.data(forKey: SharedSnapshot.clustersKey)
+                || active != SharedSnapshot.activeCluster(from: defaults)
+        else { return }
+        if let data {
+            defaults.set(data, forKey: SharedSnapshot.clustersKey)
+        } else {
+            defaults.removeObject(forKey: SharedSnapshot.clustersKey)
+        }
+        if let active {
+            defaults.set(active, forKey: SharedSnapshot.activeKey)
+        } else {
+            defaults.removeObject(forKey: SharedSnapshot.activeKey)
+        }
         WidgetCenter.shared.reloadAllTimelines()
         // The active cluster changed, or a cluster was added, renamed or masked.
         WatchLink.shared.send()

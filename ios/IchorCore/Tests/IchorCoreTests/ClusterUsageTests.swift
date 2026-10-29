@@ -4,8 +4,12 @@ import XCTest
 final class ClusterUsageTests: XCTestCase {
     private let gib: UInt64 = 1 << 30
 
-    private func counters(_ node: String, _ busy: Double, _ total: Double, mem: UInt64? = nil, free: UInt64? = nil) -> NodeCounters {
-        NodeCounters(node: node, cpuBusy: busy, cpuTotal: total, cpuCount: 4, memTotal: mem ?? 8 * gib, memAvailable: free ?? 4 * gib)
+    private func counters(_ node: String, _ busy: Double, _ total: Double, mem: UInt64? = nil, free: UInt64? = nil)
+        -> NodeCounters
+    {
+        NodeCounters(
+            node: node, cpuBusy: busy, cpuTotal: total, cpuCount: 4, memTotal: mem ?? 8 * gib,
+            memAvailable: free ?? 4 * gib)
     }
 
     private func sample(_ at: Int64, _ nodes: NodeCounters...) -> ClusterStatsSample {
@@ -73,19 +77,26 @@ final class ClusterUsageTests: XCTestCase {
         let width = 350.0
         let points = 36
         XCTAssertEqual(sparklineStep(count: 2, points: points, width: width), width, accuracy: 1e-9)
-        XCTAssertEqual(sparklineStep(count: points - 1, points: points, width: width), width / Double(points - 2), accuracy: 1e-9)
-        XCTAssertEqual(sparklineStep(count: points, points: points, width: width), width / Double(points - 1), accuracy: 1e-9)
-        XCTAssertEqual(sparklineStep(count: points + 1, points: points, width: width), width / Double(points - 1), accuracy: 1e-9)
+        XCTAssertEqual(
+            sparklineStep(count: points - 1, points: points, width: width), width / Double(points - 2), accuracy: 1e-9)
+        XCTAssertEqual(
+            sparklineStep(count: points, points: points, width: width), width / Double(points - 1), accuracy: 1e-9)
+        XCTAssertEqual(
+            sparklineStep(count: points + 1, points: points, width: width), width / Double(points - 1), accuracy: 1e-9)
         for count in 2..<points {
-            XCTAssertEqual(width - sparklineStep(count: count, points: points, width: width) * Double(count - 1), 0, accuracy: 1e-9)
+            XCTAssertEqual(
+                width - sparklineStep(count: count, points: points, width: width) * Double(count - 1), 0, accuracy: 1e-9
+            )
         }
     }
 
     func testDecodesTheGoCoreJSON() throws {
-        let json = #"{"at":1800000000000,"nodes":[{"node":"10.0.0.1","cpuBusy":1.5,"cpuTotal":10,"cpuCount":4,"memTotal":8589934592,"memAvailable":4294967296}]}"#
+        let json =
+            #"{"at":1800000000000,"nodes":[{"node":"10.0.0.1","cpuBusy":1.5,"cpuTotal":10,"cpuCount":4,"memTotal":8589934592,"memAvailable":4294967296}]}"#
         let decoded = try JSONDecoder().decode(ClusterStatsSample.self, from: Data(json.utf8))
         XCTAssertEqual(decoded, sample(1_800_000_000_000, counters("10.0.0.1", 1.5, 10)))
-        XCTAssertEqual(try JSONDecoder().decode(ClusterStatsSample.self, from: Data(#"{"at":1,"nodes":null}"#.utf8)).nodes, [])
+        XCTAssertEqual(
+            try JSONDecoder().decode(ClusterStatsSample.self, from: Data(#"{"at":1,"nodes":null}"#.utf8)).nodes, [])
     }
 
     func testLiveTakesTheSecondSampleSoonThenTheClusterCadence() {

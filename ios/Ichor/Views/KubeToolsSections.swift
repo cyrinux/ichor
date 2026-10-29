@@ -24,21 +24,31 @@ struct KubeToolsSections: View {
             NavigationLink(value: Route.workloads) {
                 toolLabel(KubeHomeAction.workloads)
             }
-            NavigationLink { KubeJobsView() } label: {
+            NavigationLink {
+                KubeJobsView()
+            } label: {
                 toolLabel(Text("Jobs"), systemImage: "checklist")
             }
-            NavigationLink { HelmReleasesView() } label: {
+            NavigationLink {
+                HelmReleasesView()
+            } label: {
                 toolLabel(KubeHomeAction.helm)
             }
-            NavigationLink { AutoscalingView() } label: {
+            NavigationLink {
+                AutoscalingView()
+            } label: {
                 toolLabel(Text("Autoscaling"), systemImage: "arrow.up.and.down")
             }
-            NavigationLink { VirtualMachinesView() } label: {
+            NavigationLink {
+                VirtualMachinesView()
+            } label: {
                 toolLabel(Text("Virtual machines"), systemImage: "desktopcomputer")
             }
             // Only when the cluster serves Argo Rollouts; a refused read (no access) stays quiet.
             if argoRollouts {
-                NavigationLink { ArgoRolloutsView() } label: {
+                NavigationLink {
+                    ArgoRolloutsView()
+                } label: {
                     toolLabel(Text("Argo Rollouts"), systemImage: "arrow.triangle.branch")
                 }
             }
@@ -49,18 +59,26 @@ struct KubeToolsSections: View {
         }
         .task(id: refreshID) { await onRefresh?() }
         Section {
-            NavigationLink { KubeServicesView() } label: {
+            NavigationLink {
+                KubeServicesView()
+            } label: {
                 toolLabel(Text("Services"), systemImage: "network")
             }
-            NavigationLink { NetPoliciesView() } label: {
+            NavigationLink {
+                NetPoliciesView()
+            } label: {
                 toolLabel(KubeHomeAction.networkPolicies)
             }
-            NavigationLink { KubeLoadBalancingView() } label: {
+            NavigationLink {
+                KubeLoadBalancingView()
+            } label: {
                 toolLabel(Text(LoadBalancingText.title), systemImage: "point.3.connected.trianglepath.dotted")
             }
             // Only when the cluster runs the Tailscale operator: the read answers "not installed" quickly.
             if tailscale {
-                NavigationLink { TailscaleView() } label: {
+                NavigationLink {
+                    TailscaleView()
+                } label: {
                     toolLabel(Text("Tailscale"), systemImage: "network.badge.shield.half.filled")
                 }
             }
@@ -70,7 +88,9 @@ struct KubeToolsSections: View {
             Text("Networking")
         }
         Section {
-            NavigationLink { KubeStorageView() } label: {
+            NavigationLink {
+                KubeStorageView()
+            } label: {
                 toolLabel(Text("Storage"), systemImage: "externaldrive")
             }
             NavigationLink(value: Route.dataServices(hints: "", downNodes: downNodes)) {
@@ -89,22 +109,30 @@ struct KubeToolsSections: View {
             }
         }
         Section {
-            NavigationLink { KubeLiveEventsView() } label: {
+            NavigationLink {
+                KubeLiveEventsView()
+            } label: {
                 toolLabel(Text("Kubernetes events"), systemImage: "list.bullet.rectangle")
             }
             NavigationLink(value: Route.metrics) {
                 toolLabel(KubeHomeAction.metrics)
             }
-            NavigationLink { CheckupView() } label: {
+            NavigationLink {
+                CheckupView()
+            } label: {
                 toolLabel(KubeHomeAction.checkup)
             }
             NavigationLink(value: Route.capacity) {
                 toolLabel(KubeHomeAction.capacity)
             }
-            NavigationLink { ApiHealthView() } label: {
+            NavigationLink {
+                ApiHealthView()
+            } label: {
                 toolLabel(KubeHomeAction.apiHealth)
             }
-            NavigationLink { PoliciesView() } label: {
+            NavigationLink {
+                PoliciesView()
+            } label: {
                 toolLabel(Text("Policies"), systemImage: "checkmark.shield")
             }
             NavigationLink(value: Route.alerts) {
@@ -114,18 +142,24 @@ struct KubeToolsSections: View {
             Text("Observe")
         }
         Section {
-            NavigationLink { KubeBrowserView() } label: {
+            NavigationLink {
+                KubeBrowserView()
+            } label: {
                 toolLabel(KubeHomeAction.resources)
             }
             // Only when the cluster runs Crossplane: the read answers "not installed" quickly.
             if crossplane {
-                NavigationLink { CrossplaneView() } label: {
+                NavigationLink {
+                    CrossplaneView()
+                } label: {
                     toolLabel(Text("Crossplane"), systemImage: "square.stack.3d.up")
                 }
             }
             // Only on a management cluster running Cluster API or Sidero Metal.
             if clusterLifecycle {
-                NavigationLink { ClusterLifecycleView() } label: {
+                NavigationLink {
+                    ClusterLifecycleView()
+                } label: {
                     toolLabel(Text("Cluster lifecycle"), systemImage: "server.rack")
                 }
             }
@@ -222,10 +256,11 @@ struct OverviewKubeTools: View {
 
     var body: some View {
         if model.allows(.workloads) {
-            KubeToolsSections(services: loaded, plugins: plugins, downNodes: downNodes,
-                              crossplane: operators.crossplane, tailscale: operators.tailscale,
-                              clusterLifecycle: operators.clusterLifecycle, argoRollouts: operators.argoRollouts,
-                              refreshID: refreshID, onRefresh: loadOperators)
+            KubeToolsSections(
+                services: loaded, plugins: plugins, downNodes: downNodes,
+                crossplane: operators.crossplane, tailscale: operators.tailscale,
+                clusterLifecycle: operators.clusterLifecycle, argoRollouts: operators.argoRollouts,
+                refreshID: refreshID, onRefresh: loadOperators)
         }
     }
 

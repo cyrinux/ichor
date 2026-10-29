@@ -4,12 +4,15 @@ import XCTest
 final class ClusterStatusSummaryTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
-    private func snap(_ health: [NodeHealth], alarms: [String] = [], etcdChecked: Bool = true,
-                      age: TimeInterval = 240) -> ClusterSnapshot {
+    private func snap(
+        _ health: [NodeHealth], alarms: [String] = [], etcdChecked: Bool = true,
+        age: TimeInterval = 240
+    ) -> ClusterSnapshot {
         var nodes: [String: NodeState] = [:]
         for (i, h) in health.enumerated() { nodes["10.0.0.\(i)"] = NodeState(hostname: "n\(i)", health: h) }
-        return ClusterSnapshot(context: "demo-lab", takenAt: now.addingTimeInterval(-age), nodes: nodes,
-                               etcdAlarms: alarms, etcdChecked: etcdChecked)
+        return ClusterSnapshot(
+            context: "demo-lab", takenAt: now.addingTimeInterval(-age), nodes: nodes,
+            etcdAlarms: alarms, etcdChecked: etcdChecked)
     }
 
     func testAllReadyWithHealthyEtcd() {
@@ -27,7 +30,8 @@ final class ClusterStatusSummaryTests: XCTestCase {
     }
 
     func testEtcdLeftOutWhenNotChecked() {
-        XCTAssertEqual(clusterStatusSummary(snap([.ready], etcdChecked: false), now: now)?.parts, [.nodes(1), .allReady])
+        XCTAssertEqual(
+            clusterStatusSummary(snap([.ready], etcdChecked: false), now: now)?.parts, [.nodes(1), .allReady])
     }
 
     func testAnOldSnapshotIsStale() {

@@ -16,7 +16,9 @@ struct GitHostsView: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(store.hosts) { host in
-                Button { editing = .edit(host) } label: {
+                Button {
+                    editing = .edit(host)
+                } label: {
                     GitHostRow(host: host, login: store.logins[host.host])
                 }
                 .foregroundStyle(.primary)
@@ -24,12 +26,16 @@ struct GitHostsView: View {
                     Button("Remove", role: .destructive) { confirmRemove = host }
                 }
                 .contextMenu {
-                    Button(role: .destructive) { confirmRemove = host } label: {
+                    Button(role: .destructive) {
+                        confirmRemove = host
+                    } label: {
                         Label("Remove", systemImage: "trash")
                     }
                 }
             }
-            Button { editing = .add } label: {
+            Button {
+                editing = .add
+            } label: {
                 Label("Add a Git host", systemImage: "plus")
             }
         } header: {
@@ -38,16 +44,20 @@ struct GitHostsView: View {
             Text("A token per Git host, to read and change the repositories Argo CD and Flux deploy from.")
         }
         Section {
-            Text("Grant only what Ichor needs. GitHub fine-grained token: Contents and Pull requests, read and write, on the repositories you deploy from. GitLab: api, or read_repository and write_repository. Gitea: repository read and write, and issue write. The token stays on this phone, encrypted, and is only sent to its own host.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            Text(
+                "Grant only what Ichor needs. GitHub fine-grained token: Contents and Pull requests, read and write, on the repositories you deploy from. GitLab: api, or read_repository and write_repository. Gitea: repository read and write, and issue write. The token stays on this phone, encrypted, and is only sent to its own host."
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
         }
         .sheet(item: $editing) { target in
             GitHostSheet(existing: target.host)
         }
-        .confirmationDialog(confirmRemove.map { String(localized: "Remove \($0.host)?") } ?? "",
-                            isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }),
-                            titleVisibility: .visible, presenting: confirmRemove) { host in
+        .confirmationDialog(
+            confirmRemove.map { String(localized: "Remove \($0.host)?") } ?? "",
+            isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }),
+            titleVisibility: .visible, presenting: confirmRemove
+        ) { host in
             Button("Remove", role: .destructive) { store.remove(host.host) }
             Button("Cancel", role: .cancel) {}
         } message: { _ in

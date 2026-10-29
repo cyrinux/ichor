@@ -89,7 +89,9 @@ public struct DriftFix: Equatable, Hashable, Sendable {
 extension DriftChange {
     /// The fix of this difference, or nil when no config change can undo it (Go DriftFixEdits).
     public var fix: DriftFix? {
-        guard ["dns", "ntp", "mtu"].contains(key), !before.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+        guard ["dns", "ntp", "mtu"].contains(key), !before.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return nil
+        }
         return DriftFix(key: key, before: before, after: after)
     }
 }

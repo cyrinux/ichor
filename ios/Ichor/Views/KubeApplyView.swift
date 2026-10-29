@@ -47,7 +47,9 @@ struct KubeApplyView: View {
                         .onChange(of: manifests) { _, _ in reset() }
                     HStack {
                         Button {
-                            if let text = UIPasteboard.general.string, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            if let text = UIPasteboard.general.string,
+                                !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            {
                                 manifests = text
                             }
                         } label: {
@@ -62,7 +64,9 @@ struct KubeApplyView: View {
                             .onChange(of: namespace) { _, _ in reset() }
                     }
                 } footer: {
-                    Text("Paste one or more Kubernetes objects (YAML, separated by ---). Preview shows what each would become in the cluster before anything is applied.")
+                    Text(
+                        "Paste one or more Kubernetes objects (YAML, separated by ---). Preview shows what each would become in the cluster before anything is applied."
+                    )
                 }
                 if let shown = applied ?? preview {
                     resultSection(shown, isApply: applied != nil)
@@ -70,7 +74,9 @@ struct KubeApplyView: View {
                 Section {
                     EmptyView()
                 } footer: {
-                    Text("Server-side apply as “ichor”, like kubectl apply --server-side. A field another manager owns (a GitOps controller, an autoscaler) is refused with its name, never taken over.")
+                    Text(
+                        "Server-side apply as “ichor”, like kubectl apply --server-side. A field another manager owns (a GitOps controller, an autoscaler) is refused with its name, never taken over."
+                    )
                 }
             }
             .themedBackground()
@@ -92,24 +98,37 @@ struct KubeApplyView: View {
     private func resultSection(_ state: LoadState<KubeApplyResult>, isApply: Bool) -> some View {
         switch state {
         case .loading:
-            Section { HStack { Spacer(); ProgressView(); Spacer() } }
+            Section {
+                HStack {
+                    Spacer(); ProgressView(); Spacer()
+                }
+            }
         case .failed(let message):
             Section {
-                Label { Text(verbatim: message).textSelection(.enabled) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                    .foregroundStyle(.statusBad)
+                Label {
+                    Text(verbatim: message).textSelection(.enabled)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .foregroundStyle(.statusBad)
             } header: {
                 Text(isApply ? "Not applied" : "Preview failed")
             }
         case .loaded(let result, _, _):
             Section {
                 if isApply {
-                    Label("\(result.applied) objects applied", systemImage: result.failed == 0 ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                        .foregroundStyle(result.failed == 0 ? Color.statusOK : Color.statusWarn)
+                    Label(
+                        "\(result.applied) objects applied",
+                        systemImage: result.failed == 0 ? "checkmark.circle.fill" : "exclamationmark.circle.fill"
+                    )
+                    .foregroundStyle(result.failed == 0 ? Color.statusOK : Color.statusWarn)
                 } else if !result.hasChanges && result.failed == 0 {
-                    Label("Nothing would change: the cluster already matches.", systemImage: "checkmark.circle.fill").foregroundStyle(.statusOK)
+                    Label("Nothing would change: the cluster already matches.", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.statusOK)
                 }
                 if result.failed > 0 {
-                    Label("\(result.failed) objects refused", systemImage: "xmark.octagon.fill").foregroundStyle(.statusBad)
+                    Label("\(result.failed) objects refused", systemImage: "xmark.octagon.fill").foregroundStyle(
+                        .statusBad)
                 }
                 if !result.counts.isEmpty {
                     ChipFlow {
@@ -117,9 +136,13 @@ struct KubeApplyView: View {
                     }
                 }
                 ForEach(result.warnings, id: \.self) { warning in
-                    Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                        .font(.callout)
-                        .foregroundStyle(.statusWarn)
+                    Label {
+                        Text(verbatim: warning)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    .font(.callout)
+                    .foregroundStyle(.statusWarn)
                 }
             }
             Section {
@@ -145,7 +168,8 @@ struct KubeApplyView: View {
 
     private func runPreview() async {
         guard let client = model.client else { return }
-        let manifests = manifests, namespace = namespace.trimmingCharacters(in: .whitespaces)
+        let manifests = manifests
+        let namespace = namespace.trimmingCharacters(in: .whitespaces)
         applied = nil
         preview = .loading
         preview = await .from { try await client.applyPreview(namespace: namespace, manifests: manifests) }
@@ -153,7 +177,8 @@ struct KubeApplyView: View {
 
     private func runApply() async {
         guard let client = model.client else { return }
-        let manifests = manifests, namespace = namespace.trimmingCharacters(in: .whitespaces)
+        let manifests = manifests
+        let namespace = namespace.trimmingCharacters(in: .whitespaces)
         applied = .loading
         applied = await .from { try await client.apply(namespace: namespace, manifests: manifests) }
     }

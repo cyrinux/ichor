@@ -80,7 +80,7 @@ extension TalosClient {
         )
         let run = IchorgoStartArgoSyncFollow(kubeConfig, kubeContext, kubeAPIServer, namespace, name, bridge)
         continuation.onTermination = { _ in
-            _ = bridge // keep the listener alive for the whole follow
+            _ = bridge  // keep the listener alive for the whole follow
         }
         if run == nil {
             continuation.yield(.done(result: "", error: String(localized: "Could not follow the sync.")))
@@ -102,7 +102,7 @@ extension TalosClient {
         )
         let run = IchorgoStartFluxReconcileFollow(kubeConfig, kubeContext, kubeAPIServer, kind, namespace, name, bridge)
         continuation.onTermination = { _ in
-            _ = bridge // keep the listener alive for the whole follow
+            _ = bridge  // keep the listener alive for the whole follow
         }
         if run == nil {
             continuation.yield(.done(result: "", error: String(localized: "Could not follow the reconcile.")))
@@ -125,7 +125,7 @@ extension TalosClient {
         )
         let run = IchorgoStartHelmRollbackFollow(kubeConfig, kubeContext, kubeAPIServer, namespace, name, bridge)
         continuation.onTermination = { _ in
-            _ = bridge // keep the listener alive for the whole follow
+            _ = bridge  // keep the listener alive for the whole follow
         }
         if run == nil {
             continuation.yield(.done(result: "", error: String(localized: "Could not follow the workloads.")))
@@ -139,7 +139,8 @@ private final class ArgoSyncBridge: NSObject, IchorgoArgoSyncListenerProtocol, @
     private let progress: @Sendable (ArgoSyncProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 
-    init(progress: @escaping @Sendable (ArgoSyncProgress) -> Void, done: @escaping @Sendable (String, String?) -> Void) {
+    init(progress: @escaping @Sendable (ArgoSyncProgress) -> Void, done: @escaping @Sendable (String, String?) -> Void)
+    {
         self.progress = progress
         self.done = done
     }
@@ -158,7 +159,10 @@ private final class FluxReconcileBridge: NSObject, IchorgoFluxReconcileListenerP
     private let progress: @Sendable (FluxReconcileProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 
-    init(progress: @escaping @Sendable (FluxReconcileProgress) -> Void, done: @escaping @Sendable (String, String?) -> Void) {
+    init(
+        progress: @escaping @Sendable (FluxReconcileProgress) -> Void,
+        done: @escaping @Sendable (String, String?) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }
@@ -177,7 +181,10 @@ private final class HelmRollbackBridge: NSObject, IchorgoHelmRollbackListenerPro
     private let progress: @Sendable (HelmRollbackFollowProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 
-    init(progress: @escaping @Sendable (HelmRollbackFollowProgress) -> Void, done: @escaping @Sendable (String, String?) -> Void) {
+    init(
+        progress: @escaping @Sendable (HelmRollbackFollowProgress) -> Void,
+        done: @escaping @Sendable (String, String?) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }

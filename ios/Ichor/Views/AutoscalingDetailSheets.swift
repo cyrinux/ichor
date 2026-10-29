@@ -54,17 +54,21 @@ struct AutoscaleSheet: View {
     }
 
     private var header: some View {
-        AutoscalingSheetHeader(name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
-                               state: row.state) {
+        AutoscalingSheetHeader(
+            name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
+            state: row.state
+        ) {
             Text(hpaBoundsText(row.current, row.min, row.max)).font(.callout)
             if row.desired != row.current {
                 Text(AutoscaleText.desired(String(row.desired))).font(.callout).foregroundStyle(.secondary)
             }
             if row.lastScaleAt > 0 {
-                Text(AutoscaleText.lastScaled(relativeTime(row.lastScaleAt))).font(.footnote).foregroundStyle(.secondary)
+                Text(AutoscaleText.lastScaled(relativeTime(row.lastScaleAt))).font(.footnote).foregroundStyle(
+                    .secondary)
             }
             if !row.managedBy.isEmpty {
-                Text(AutoscaleText.managedBy(row.managedBy, row.scaledObject)).font(.footnote).foregroundStyle(.secondary)
+                Text(AutoscaleText.managedBy(row.managedBy, row.scaledObject)).font(.footnote).foregroundStyle(
+                    .secondary)
             }
         }
     }
@@ -133,7 +137,8 @@ struct ScaledObjectSheet: View {
         }
         .loadsKubeActionAccess(namespace: row.namespace)
         .sheet(isPresented: $pausing) { ScaledObjectPauseSheet(row: row, onDone: onChanged) }
-        .confirmationDialog(AutoscaleText.resumeTitle(row.name), isPresented: $confirmResume, titleVisibility: .visible) {
+        .confirmationDialog(AutoscaleText.resumeTitle(row.name), isPresented: $confirmResume, titleVisibility: .visible)
+        {
             Button("Resume scaling") { Task { await resume() } }
         } message: {
             Text("KEDA scales the workload on its triggers again.")
@@ -170,7 +175,8 @@ struct ScaledObjectSheet: View {
         resuming = true
         failure = nil
         do {
-            try await client.pauseScaledObject(namespace: row.namespace, name: row.name, replicas: ScaledObjectPause.resume)
+            try await client.pauseScaledObject(
+                namespace: row.namespace, name: row.name, replicas: ScaledObjectPause.resume)
             await onChanged()
         } catch {
             failure = error.localizedDescription
@@ -179,8 +185,10 @@ struct ScaledObjectSheet: View {
     }
 
     private var header: some View {
-        AutoscalingSheetHeader(name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
-                               state: row.state) {
+        AutoscalingSheetHeader(
+            name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
+            state: row.state
+        ) {
             Text(hpaBoundsText(row.current, row.min, row.max)).font(.callout)
             if row.paused {
                 Text(row.pausedReplicas.map { AutoscaleText.pausedAt(String($0)) } ?? "paused")
@@ -259,10 +267,18 @@ struct VpaSheet: View {
                     ForEach(row.containers) { container in
                         VStack(alignment: .leading, spacing: 3) {
                             Text(verbatim: container.name).font(.callout.monospaced())
-                            Text(AutoscaleText.cpuChange(vpaChangeText(container.cpuRequest, container.cpuTarget))).font(.callout)
-                            Text(AutoscaleText.memoryChange(vpaChangeText(container.memoryRequest, container.memoryTarget))).font(.callout)
-                            Text(AutoscaleText.bounds(container.cpuLower, container.cpuUpper, container.memoryLower, container.memoryUpper))
-                                .font(.caption).foregroundStyle(.secondary)
+                            Text(AutoscaleText.cpuChange(vpaChangeText(container.cpuRequest, container.cpuTarget)))
+                                .font(.callout)
+                            Text(
+                                AutoscaleText.memoryChange(
+                                    vpaChangeText(container.memoryRequest, container.memoryTarget))
+                            ).font(.callout)
+                            Text(
+                                AutoscaleText.bounds(
+                                    container.cpuLower, container.cpuUpper, container.memoryLower, container.memoryUpper
+                                )
+                            )
+                            .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -272,8 +288,10 @@ struct VpaSheet: View {
     }
 
     private var header: some View {
-        AutoscalingSheetHeader(name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
-                               state: row.state) {
+        AutoscalingSheetHeader(
+            name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
+            state: row.state
+        ) {
             if !row.updateMode.isEmpty {
                 LabeledContent("Update mode") { Text(verbatim: row.updateMode) }
             }
@@ -301,8 +319,12 @@ struct NodePoolSheet: View {
         AutoscalingSheetShell {
             Section { header }
             Section("Limits and usage") {
-                LabeledContent("cpu") { Text(verbatim: AutoscaleText.poolUsage(row.resources.cpu, row.limits.cpu)).monospaced() }
-                LabeledContent("memory") { Text(verbatim: AutoscaleText.memoryUsage(row.resources.memory, row.limits.memory)).monospaced() }
+                LabeledContent("cpu") {
+                    Text(verbatim: AutoscaleText.poolUsage(row.resources.cpu, row.limits.cpu)).monospaced()
+                }
+                LabeledContent("memory") {
+                    Text(verbatim: AutoscaleText.memoryUsage(row.resources.memory, row.limits.memory)).monospaced()
+                }
                 LabeledContent("nodes") { Text(verbatim: String(row.resources.nodes)) }
             }
             Section("Disruption") {
@@ -327,12 +349,17 @@ struct NodePoolSheet: View {
                             Spacer()
                             NodeClaimBadges(claim: claim)
                         }
-                        Text(verbatim: [claim.nodeName, claim.instanceType, claim.capacityType]
-                            .filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Text(
+                            verbatim: [claim.nodeName, claim.instanceType, claim.capacityType]
+                                .filter { !$0.isEmpty }.joined(separator: "  ·  ")
+                        )
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                         if claim.created > 0 {
-                            Text(Date(timeIntervalSince1970: TimeInterval(claim.created) / 1000), format: .relative(presentation: .named))
-                                .font(.caption).foregroundStyle(.secondary)
+                            Text(
+                                Date(timeIntervalSince1970: TimeInterval(claim.created) / 1000),
+                                format: .relative(presentation: .named)
+                            )
+                            .font(.caption).foregroundStyle(.secondary)
                         }
                         if !claim.message.isEmpty {
                             Text(verbatim: claim.message).font(.caption)
@@ -366,8 +393,10 @@ struct NodePoolSheet: View {
 
     /// One disruption budget as one line: its nodes, when, how long, why.
     private func budgetLine(_ budget: NodePoolBudget) -> String {
-        [AutoscaleText.budgetNodes(budget.nodes), budget.schedule, budget.duration,
-         budget.reasons.isEmpty ? nil : budget.reasons.joined(separator: ", ")]
-            .compactMap { $0 }.joined(separator: "  ·  ")
+        [
+            AutoscaleText.budgetNodes(budget.nodes), budget.schedule, budget.duration,
+            budget.reasons.isEmpty ? nil : budget.reasons.joined(separator: ", "),
+        ]
+        .compactMap { $0 }.joined(separator: "  ·  ")
     }
 }

@@ -66,7 +66,8 @@ public struct VeleroSchedule: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, schedule, paused, phase, validationErrors, health, reasons, storageLocation, includedNamespaces
+        case namespace, name, schedule, paused, phase, validationErrors, health, reasons, storageLocation,
+            includedNamespaces
         case lastBackup, lastSuccessAt, inProgress
     }
 }
@@ -92,7 +93,9 @@ public struct VeleroBackup: Decodable, Equatable, Sendable {
         failureReason = try c.field(.failureReason, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case name, phase, startedAt, completedAt, errors, warnings, failureReason }
+    private enum CodingKeys: String, CodingKey {
+        case name, phase, startedAt, completedAt, errors, warnings, failureReason
+    }
 }
 
 /// A backup taken by hand that failed: a warning.
@@ -237,7 +240,8 @@ public struct VeleroBackupDetail: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, phase, startedAt, completedAt, expiresAt, errors, warnings, failureReason, storageLocation, includedNamespaces
+        case name, phase, startedAt, completedAt, expiresAt, errors, warnings, failureReason, storageLocation,
+            includedNamespaces
         case itemsBackedUp, totalItems, running, finished, deleting, deleteErrors
     }
 }

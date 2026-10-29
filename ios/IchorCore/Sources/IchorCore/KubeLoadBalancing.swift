@@ -64,7 +64,8 @@ public struct LBPool: Decodable, Hashable, Identifiable, Sendable {
     public var used: Double { total > 0 ? Double(max(total - available, 0)) / Double(total) : 0 }
 
     private enum CodingKeys: String, CodingKey {
-        case name, controller, addresses, total, assigned, available, countsKnown, autoAssign, namespaces, advertisedBy, services, level
+        case name, controller, addresses, total, assigned, available, countsKnown, autoAssign, namespaces, advertisedBy,
+            services, level
     }
 
     public init(from decoder: Decoder) throws {
@@ -176,7 +177,9 @@ public struct LBService: Decodable, Hashable, Identifiable, Sendable {
 
     public var id: String { "\(namespace)/\(name)" }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, addresses, pool, pending, cause, announcedBy, since, level }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, addresses, pool, pending, cause, announcedBy, since, level
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

@@ -20,7 +20,9 @@ struct ClusterEntity: AppEntity {
 
 struct ClusterQuery: EntityQuery {
     private var clusters: [ClusterEntity] {
-        SharedSnapshot.clusters(from: UserDefaults(suiteName: SharedSnapshot.suite)).map { ClusterEntity(id: $0.id, name: $0.name) }
+        SharedSnapshot.clusters(from: UserDefaults(suiteName: SharedSnapshot.suite)).map {
+            ClusterEntity(id: $0.id, name: $0.name)
+        }
     }
 
     func entities(for identifiers: [ClusterEntity.ID]) async throws -> [ClusterEntity] {
@@ -34,7 +36,8 @@ struct ClusterQuery: EntityQuery {
 /// unlocked. It only navigates; the app opens the cluster's share link (ClusterScreenHandler).
 struct OpenClusterIntent: AppIntent {
     static var title: LocalizedStringResource = "Open cluster"
-    static var description = IntentDescription("Opens a cluster's overview in Ichor. None chosen: the one open in the app.")
+    static var description = IntentDescription(
+        "Opens a cluster's overview in Ichor. None chosen: the one open in the app.")
     static var openAppWhenRun = true
 
     @Parameter(title: "Cluster")
@@ -53,7 +56,8 @@ struct OpenClusterIntent: AppIntent {
 /// is changed on the cluster.
 struct RunCheckupIntent: AppIntent {
     static var title: LocalizedStringResource = "Run a checkup"
-    static var description = IntentDescription("Opens the cluster checkup in Ichor. None chosen: the cluster open in the app.")
+    static var description = IntentDescription(
+        "Opens the cluster checkup in Ichor. None chosen: the cluster open in the app.")
     static var openAppWhenRun = true
 
     @Parameter(title: "Cluster")

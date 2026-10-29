@@ -5,21 +5,32 @@ final class KubernetesBarTests: XCTestCase {
     func testDefaultKeepsThreeIconsSoTheTitleFits() {
         let bar = KubernetesBar()
         XCTAssertEqual(bar.icons, [.checkup, .networkPolicies, .share])
-        XCTAssertEqual(bar.menu, [.apiHealth, .flows, .resources, .helm, .storage, .services, .jobs, .events, .admissionPolicies, .autoscaling, .virtualMachines, .crossplane, .tailscale, .argoRollouts, .clusterLifecycle, .dataServices, .certManager, .castai, .capacity])
+        XCTAssertEqual(
+            bar.menu,
+            [
+                .apiHealth, .flows, .resources, .helm, .storage, .services, .jobs, .events, .admissionPolicies,
+                .autoscaling, .virtualMachines, .crossplane, .tailscale, .argoRollouts, .clusterLifecycle,
+                .dataServices, .certManager, .castai, .capacity,
+            ])
         XCTAssertTrue(bar.isDefault)
         XCTAssertEqual(KubernetesBar.storageKey, "kubernetes.bar")
     }
 
     /// The same names in the same order as Android's KubernetesAction (KubernetesBarTest.theSameActionsAsIos).
     func testTheSameActionsAsAndroid() {
-        XCTAssertEqual(KubernetesAction.allCases.map(\.rawValue).joined(separator: ","),
-                       "CHECKUP,NETWORK_POLICIES,SHARE,API_HEALTH,FLOWS,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY")
+        XCTAssertEqual(
+            KubernetesAction.allCases.map(\.rawValue).joined(separator: ","),
+            "CHECKUP,NETWORK_POLICIES,SHARE,API_HEALTH,FLOWS,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY"
+        )
         XCTAssertEqual(KubernetesAction.allCases.count, 22)
     }
 
     func testEncodeMatchesAndroid() {
         let bar = KubernetesBar().toBar(.flows).toMenu(.checkup)
-        XCTAssertEqual(bar.encoded, "NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY")
+        XCTAssertEqual(
+            bar.encoded,
+            "NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE,DATA_SERVICES,CERT_MANAGER,CASTAI,CAPACITY"
+        )
         XCTAssertEqual(KubernetesBar.parse(bar.encoded), bar)
         XCTAssertFalse(bar.isDefault)
     }
@@ -58,7 +69,8 @@ final class KubernetesBarTests: XCTestCase {
     func testABarSavedBeforeTheOperatorScreensGetsThemLastInItsMenu() {
         let bar = KubernetesBar.parse("CHECKUP,FLOWS|SHARE,API_HEALTH")
         XCTAssertEqual(bar.icons, [.checkup, .flows])
-        XCTAssertEqual(Array(bar.menu.dropLast(4).suffix(4)), [.crossplane, .tailscale, .argoRollouts, .clusterLifecycle])
+        XCTAssertEqual(
+            Array(bar.menu.dropLast(4).suffix(4)), [.crossplane, .tailscale, .argoRollouts, .clusterLifecycle])
     }
 
     func testABarSavedBeforeTheDataServicesEntriesGetsThemLastInItsMenu() {

@@ -39,7 +39,9 @@ public struct TalosPatchInfo: Decodable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey { case talos, kind, documents, touchesSecrets, secret, tryable, note }
 
-    public init(talos: Bool, kind: String = "", documents: [TalosPatchDoc] = [], tryable: Bool = false, note: String = "") {
+    public init(
+        talos: Bool, kind: String = "", documents: [TalosPatchDoc] = [], tryable: Bool = false, note: String = ""
+    ) {
         self.talos = talos
         self.kind = kind
         self.documents = documents

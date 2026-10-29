@@ -54,31 +54,52 @@ struct AutoscalingView: View {
             attentionSection(attention, view: view, claims: claims)
             group("Horizontal (HPA)", state: view.hpa.state) {
                 ForEach(view.hpa.items) { row in
-                    Button { selected = .hpa(row) } label: { HpaRowView(row: row) }
+                    Button {
+                        selected = .hpa(row)
+                    } label: {
+                        HpaRowView(row: row)
+                    }
                 }
             }
             group("KEDA", state: view.keda.state) {
                 ForEach(view.keda.scaledObjects) { row in
-                    Button { selected = .scaledObject(row) } label: { ScaledObjectRowView(row: row) }
+                    Button {
+                        selected = .scaledObject(row)
+                    } label: {
+                        ScaledObjectRowView(row: row)
+                    }
                 }
                 ForEach(view.keda.scaledJobs) { row in
-                    Button { selected = .scaledJob(row) } label: { ScaledJobRowView(row: row) }
+                    Button {
+                        selected = .scaledJob(row)
+                    } label: {
+                        ScaledJobRowView(row: row)
+                    }
                 }
             }
             group("Vertical (VPA)", state: view.vpa.state) {
                 ForEach(view.vpa.items) { row in
-                    Button { selected = .vpa(row) } label: { VpaRowView(row: row) }
+                    Button {
+                        selected = .vpa(row)
+                    } label: {
+                        VpaRowView(row: row)
+                    }
                 }
             }
             group("Node pools (Karpenter)", state: view.karpenter.state) {
                 ForEach(view.karpenter.nodePools) { row in
-                    Button { selected = .pool(row, claims: claims[row.name] ?? []) } label: { NodePoolRowView(row: row, claimCount: claims[row.name]?.count ?? 0) }
+                    Button {
+                        selected = .pool(row, claims: claims[row.name] ?? [])
+                    } label: {
+                        NodePoolRowView(row: row, claimCount: claims[row.name]?.count ?? 0)
+                    }
                 }
             }
         }
         .overlay {
             if view.hpa.items.isEmpty && view.keda.scaledObjects.isEmpty && view.keda.scaledJobs.isEmpty
-                && view.vpa.items.isEmpty && view.karpenter.nodePools.isEmpty {
+                && view.vpa.items.isEmpty && view.karpenter.nodePools.isEmpty
+            {
                 ContentUnavailableView("Nothing scales this cluster automatically", systemImage: "arrow.up.and.down")
             } else if attention.isEmpty && allRows(view).isEmpty && !query.isEmpty {
                 ContentUnavailableView.search(text: query)
@@ -93,7 +114,9 @@ struct AutoscalingView: View {
     }
 
     /// The rows that need attention, across the four groups; empty says everything is fine.
-    private func attentionSection(_ problems: [AutoscalingProblem], view: AutoscalingReport, claims: [String: [NodeClaimRow]]) -> some View {
+    private func attentionSection(
+        _ problems: [AutoscalingProblem], view: AutoscalingReport, claims: [String: [NodeClaimRow]]
+    ) -> some View {
         Section {
             if problems.isEmpty {
                 Text("Everything that scales is within its bounds.").foregroundStyle(.secondary)
@@ -126,7 +149,8 @@ struct AutoscalingView: View {
             if let row = view.karpenter.nodePools.first(where: { $0.id == problem.key }) {
                 selected = .pool(row, claims: claims[row.name] ?? [])
             } else if let claim = view.karpenter.nodeClaims.first(where: { $0.id == problem.key }),
-                      let pool = view.karpenter.nodePools.first(where: { $0.name == claim.pool }) {
+                let pool = view.karpenter.nodePools.first(where: { $0.name == claim.pool })
+            {
                 selected = .pool(pool, claims: claims[pool.name] ?? [])
             }
         case .unknown:
@@ -213,13 +237,16 @@ private struct HpaRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle).foregroundStyle(.primary)
+                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                    .foregroundStyle(.primary)
                 Spacer()
                 AutoscaleStateBadge(state: row.state)
             }
-            Text(verbatim: [row.namespace, row.target.label, hpaBoundsText(row.current, row.min, row.max)]
-                .filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(
+                verbatim: [row.namespace, row.target.label, hpaBoundsText(row.current, row.min, row.max)]
+                    .filter { !$0.isEmpty }.joined(separator: "  ·  ")
+            )
+            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
             if !row.managedBy.isEmpty {
                 Text(AutoscaleText.managedBy(row.managedBy, row.scaledObject))
                     .font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -235,7 +262,8 @@ private struct ScaledObjectRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle).foregroundStyle(.primary)
+                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                    .foregroundStyle(.primary)
                 Spacer()
                 AutoscaleStateBadge(state: row.state)
             }
@@ -255,12 +283,16 @@ private struct ScaledJobRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle).foregroundStyle(.primary)
+                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                    .foregroundStyle(.primary)
                 Spacer()
                 AutoscaleStateBadge(state: row.state)
             }
-            Text(verbatim: [row.namespace, row.triggers.first?.label].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(
+                verbatim: [row.namespace, row.triggers.first?.label].compactMap { $0 }.filter { !$0.isEmpty }.joined(
+                    separator: "  ·  ")
+            )
+            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
         }
     }
 }
@@ -272,12 +304,16 @@ private struct VpaRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle).foregroundStyle(.primary)
+                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                    .foregroundStyle(.primary)
                 Spacer()
                 AutoscaleStateBadge(state: row.state)
             }
-            Text(verbatim: [row.namespace, row.target.label, row.updateMode].filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(
+                verbatim: [row.namespace, row.target.label, row.updateMode].filter { !$0.isEmpty }.joined(
+                    separator: "  ·  ")
+            )
+            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
             if let first = row.containers.first {
                 Text(verbatim: "\(first.name): \(vpaChangeText(first.cpuRequest, first.cpuTarget))")
                     .font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -294,7 +330,8 @@ private struct NodePoolRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle).foregroundStyle(.primary)
+                Text(verbatim: row.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                    .foregroundStyle(.primary)
                 Spacer()
                 if row.atLimit {
                     AutoscaleChip(text: "at limit", color: .statusBad)
@@ -302,11 +339,15 @@ private struct NodePoolRowView: View {
                     AutoscaleStateBadge(state: row.state)
                 }
             }
-            Text(verbatim: [AutoscaleText.poolUsage(row.resources.cpu, row.limits.cpu),
-                            AutoscaleText.poolNodes(String(row.resources.nodes)),
-                            AutoscaleText.poolClaims(String(claimCount))]
-                .joined(separator: "  ·  "))
-                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(
+                verbatim: [
+                    AutoscaleText.poolUsage(row.resources.cpu, row.limits.cpu),
+                    AutoscaleText.poolNodes(String(row.resources.nodes)),
+                    AutoscaleText.poolClaims(String(claimCount)),
+                ]
+                .joined(separator: "  ·  ")
+            )
+            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
         }
     }
 }

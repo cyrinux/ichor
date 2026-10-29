@@ -20,10 +20,14 @@ struct CloudDiscoverySignInRows: View {
                         .autocorrectionDisabled()
                     Text("Browser did not come back to Ichor? Paste the sign-in code the page shows.")
                         .font(.footnote).foregroundStyle(.secondary)
-                    Button("Continue") { flow.complete(code: pastedCode); pastedCode = "" }
-                        .disabled(pastedCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    Button("Continue") {
+                        flow.complete(code: pastedCode); pastedCode = ""
+                    }
+                    .disabled(pastedCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
-                Button("Cancel", role: .cancel) { pastedCode = ""; onCancel() }
+                Button("Cancel", role: .cancel) {
+                    pastedCode = ""; onCancel()
+                }
             }
         }
         .onChange(of: flow.phase) { _, phase in

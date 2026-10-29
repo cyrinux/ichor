@@ -44,7 +44,9 @@ struct Tag: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .foregroundStyle(color.map { AnyShapeStyle($0) } ?? AnyShapeStyle(HierarchicalShapeStyle.primary))
-            .background(color.map { AnyShapeStyle($0.opacity(0.15)) } ?? AnyShapeStyle(Color(.tertiarySystemFill)), in: Capsule())
+            .background(
+                color.map { AnyShapeStyle($0.opacity(0.15)) } ?? AnyShapeStyle(Color(.tertiarySystemFill)),
+                in: Capsule())
     }
 }
 
@@ -75,7 +77,8 @@ struct StatTile: View {
             // Narrow phones and long translations wrap rather than cut the label short.
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: value).font(.headline).monospacedDigit()
-                Text(verbatim: label).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: label).font(.caption2).foregroundStyle(.secondary).fixedSize(
+                    horizontal: false, vertical: true)
             }
         }
         .accessibilityElement(children: .combine)
@@ -116,8 +119,10 @@ struct ResourceRow<Trailing: View, Content: View>: View {
 
     private let dotSize: CGFloat = 10
 
-    init(health: ServiceHealth?, title: String, subtitle: String? = nil, mono: Bool = true,
-         trailing: Trailing, @ViewBuilder content: () -> Content) {
+    init(
+        health: ServiceHealth?, title: String, subtitle: String? = nil, mono: Bool = true,
+        trailing: Trailing, @ViewBuilder content: () -> Content
+    ) {
         self.health = health
         self.title = title
         self.subtitle = subtitle
@@ -157,19 +162,24 @@ struct ResourceRow<Trailing: View, Content: View>: View {
 // `trailing` is a view, `content` the only closure: a trailing closure is always the content.
 extension ResourceRow where Trailing == EmptyView, Content == EmptyView {
     init(health: ServiceHealth?, title: String, subtitle: String? = nil, mono: Bool = true) {
-        self.init(health: health, title: title, subtitle: subtitle, mono: mono, trailing: EmptyView(), content: { EmptyView() })
+        self.init(
+            health: health, title: title, subtitle: subtitle, mono: mono, trailing: EmptyView(),
+            content: { EmptyView() })
     }
 }
 
 extension ResourceRow where Content == EmptyView {
     init(health: ServiceHealth?, title: String, subtitle: String? = nil, mono: Bool = true, trailing: Trailing) {
-        self.init(health: health, title: title, subtitle: subtitle, mono: mono, trailing: trailing, content: { EmptyView() })
+        self.init(
+            health: health, title: title, subtitle: subtitle, mono: mono, trailing: trailing, content: { EmptyView() })
     }
 }
 
 extension ResourceRow where Trailing == EmptyView {
-    init(health: ServiceHealth?, title: String, subtitle: String? = nil, mono: Bool = true,
-         @ViewBuilder content: () -> Content) {
+    init(
+        health: ServiceHealth?, title: String, subtitle: String? = nil, mono: Bool = true,
+        @ViewBuilder content: () -> Content
+    ) {
         self.init(health: health, title: title, subtitle: subtitle, mono: mono, trailing: EmptyView(), content: content)
     }
 }
@@ -222,7 +232,11 @@ struct EmptyState<Action: View>: View {
     var body: some View {
         ContentUnavailableView {
             if let systemImage {
-                Label { Text(verbatim: text) } icon: { Image(systemName: systemImage) }
+                Label {
+                    Text(verbatim: text)
+                } icon: {
+                    Image(systemName: systemImage)
+                }
             } else {
                 Text(verbatim: text)
             }

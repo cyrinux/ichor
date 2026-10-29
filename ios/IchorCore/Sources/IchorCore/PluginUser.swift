@@ -28,7 +28,9 @@ public struct PluginUserItem: Decodable, Equatable, Identifiable, Sendable {
     /// From the check: an imported plugin has this id, and importing replaces it.
     public let replaces: Bool
 
-    private enum CodingKeys: String, CodingKey { case id, name, website, version, resources, actions, enabled, error, importedAt, replaces }
+    private enum CodingKeys: String, CodingKey {
+        case id, name, website, version, resources, actions, enabled, error, importedAt, replaces
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -60,11 +62,13 @@ public struct PluginUserItem: Decodable, Equatable, Identifiable, Sendable {
             website: website,
             resources: resources.map { r in
                 let secret = r.group.isEmpty && r.resource == "secrets"
-                return PluginConsentResource(name: r.group.isEmpty ? r.resource : "\(r.resource).\(r.group)",
-                                             kind: r.kind, secret: secret, revealed: secret && r.reveal)
+                return PluginConsentResource(
+                    name: r.group.isEmpty ? r.resource : "\(r.resource).\(r.group)",
+                    kind: r.kind, secret: secret, revealed: secret && r.reveal)
             },
             actions: actions.map { a in
-                let needs = [a.rbac.joined(separator: ", "), a.rbacResource].filter { !$0.isEmpty }.joined(separator: " ")
+                let needs = [a.rbac.joined(separator: ", "), a.rbacResource].filter { !$0.isEmpty }.joined(
+                    separator: " ")
                 return PluginConsentAction(label: a.label.isEmpty ? a.id : a.label, verb: a.verb, needs: needs)
             },
             replaces: replaces

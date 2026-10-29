@@ -101,19 +101,23 @@ struct SourceEditView: View {
             }
             .navigationDestination(isPresented: $reviewing) {
                 if let base {
-                    SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
-                                     defaultTitle: quickTitle, defaultBody: quickTitle == nil || quickEdit?.body.isEmpty != false ? nil : quickEdit?.body,
-                                     notice: quickTitle == nil ? nil : quickSkipped,
-                                     onReload: reload(at:), onDone: { dismiss() },
-                                     onStage: stageable(base) ? { stage(base) } as (() -> Void)? : nil)
+                    SourceEditReview(
+                        source: source, path: path, app: app, base: base, edited: draft, target: target,
+                        defaultTitle: quickTitle,
+                        defaultBody: quickTitle == nil || quickEdit?.body.isEmpty != false ? nil : quickEdit?.body,
+                        notice: quickTitle == nil ? nil : quickSkipped,
+                        onReload: reload(at:), onDone: { dismiss() },
+                        onStage: stageable(base) ? { stage(base) } as (() -> Void)? : nil)
                 }
             }
             .sheet(item: $help) { request in
                 if let manifestType {
-                    let resource = KubeAPIResource(group: manifestType.group, version: manifestType.version, resource: "",
-                                                   kind: manifestType.kind)
+                    let resource = KubeAPIResource(
+                        group: manifestType.group, version: manifestType.version, resource: "",
+                        kind: manifestType.kind)
                     KubeSchemaHelpSheet(resource: resource, request: request) { child, listItem in
-                        let inserted = insertYamlField(draft, utf16Offset: request.offset, name: child.name, listItem: listItem)
+                        let inserted = insertYamlField(
+                            draft, utf16Offset: request.offset, name: child.name, listItem: listItem)
                         cursor = inserted.cursor
                         draft = inserted.text
                     }
@@ -175,10 +179,16 @@ struct SourceEditView: View {
             if kept.fileSha.isEmpty || base?.file.sha == kept.fileSha {
                 draft = kept.draft
                 manifestType = sourceManifestType(kept.original)
-                state = .loaded(SourceEditBase(file: GitFile(path: path, sha: kept.fileSha, content: kept.original), ref: key.baseRef), at: Date())
+                state = .loaded(
+                    SourceEditBase(
+                        file: GitFile(path: path, sha: kept.fileSha, content: kept.original), ref: key.baseRef),
+                    at: Date())
             } else if base != nil {
                 staged.remove(key, path: path)
-                quickFailure = String(localized: "This file changed on the branch since it was staged: it opens as it is now, without the staged edit.")
+                quickFailure = String(
+                    localized:
+                        "This file changed on the branch since it was staged: it opens as it is now, without the staged edit."
+                )
             }
             return
         }
@@ -238,7 +248,10 @@ struct SourceEditView: View {
         do {
             // A node file the write-back creates: proposed as a new file (no sha).
             let creating = quickEdit?.op == .talos && quickEdit?.create == true
-            let file = creating ? GitFile(path: path) : try await client.forgeFile(source, path: path, ref: ref, hosts: hosts, demo: demo)
+            let file =
+                creating
+                ? GitFile(path: path)
+                : try await client.forgeFile(source, path: path, ref: ref, hosts: hosts, demo: demo)
             missingHost = nil
             guard !file.truncated else {
                 state = .failed(String(localized: "This file is larger than 1 MiB: open it in the browser to read it."))
@@ -342,8 +355,9 @@ private struct SourceEditReview: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .sheet(isPresented: $proposing) {
-            ProposeSheet(source: source, path: path, app: app, base: base, content: edited, target: target,
-                         defaultTitle: defaultTitle, defaultBody: defaultBody, onReload: onReload, onDone: onDone)
+            ProposeSheet(
+                source: source, path: path, app: app, base: base, content: edited, target: target,
+                defaultTitle: defaultTitle, defaultBody: defaultBody, onReload: onReload, onDone: onDone)
         }
     }
 
@@ -371,7 +385,8 @@ private struct SourceEditReview: View {
                 Text("Continue").frame(maxWidth: .infinity)
             }
             .disabled(sopsPending)
-            .confirmationDialog("Commit a clear-text secret?", isPresented: $confirmingSops, titleVisibility: .visible) {
+            .confirmationDialog("Commit a clear-text secret?", isPresented: $confirmingSops, titleVisibility: .visible)
+            {
                 if confirmingStage, let onStage {
                     Button("Stage", role: .destructive) { onStage() }
                 } else {
@@ -380,7 +395,9 @@ private struct SourceEditReview: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 if let w = sopsWarning {
-                    Text("\(sopsWhat(w)) would be committed in clear text at a path the rule \(w.rule?.pathRegex ?? "") encrypts. Encrypt it with sops on a computer first, unless you mean it.")
+                    Text(
+                        "\(sopsWhat(w)) would be committed in clear text at a path the rule \(w.rule?.pathRegex ?? "") encrypts. Encrypt it with sops on a computer first, unless you mean it."
+                    )
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -409,8 +426,9 @@ private struct SourceEditReview: View {
         }
         sopsCheck = .loading
         sopsCheck = await .from {
-            try await client.sopsEditWarning(source, ref: base.ref, path: path, content: edited,
-                                             hosts: hosts, demo: model.activeSummary?.demo == true)
+            try await client.sopsEditWarning(
+                source, ref: base.ref, path: path, content: edited,
+                hosts: hosts, demo: model.activeSummary?.demo == true)
         }
     }
 
@@ -421,8 +439,9 @@ private struct SourceEditReview: View {
         let flux = app.tool == "flux" && app.kind == "Kustomization" ? GitOpsEditCheck.fluxSpec(path: source.path) : ""
         check = .loading
         check = await .from {
-            try await TalosClient.editCheck(source, ref: base.ref, path: path, content: edited, fluxSpec: flux,
-                                       hosts: hosts, demo: model.activeSummary?.demo == true)
+            try await TalosClient.editCheck(
+                source, ref: base.ref, path: path, content: edited, fluxSpec: flux,
+                hosts: hosts, demo: model.activeSummary?.demo == true)
         }
     }
 }

@@ -22,20 +22,29 @@ struct PluginsSettingsView: View {
                 Text("No imported plugin yet.").foregroundStyle(.secondary)
             }
             ForEach(imported) { item in
-                ImportedPluginRow(item: item, enabled: Binding(
-                    get: { item.enabled },
-                    set: { on in Task { await change { try await TalosClient.setPluginEnabled(id: item.id, enabled: on) } } }
-                ))
+                ImportedPluginRow(
+                    item: item,
+                    enabled: Binding(
+                        get: { item.enabled },
+                        set: { on in
+                            Task { await change { try await TalosClient.setPluginEnabled(id: item.id, enabled: on) } }
+                        }
+                    )
+                )
                 .swipeActions {
                     Button("Remove", role: .destructive) { confirmRemove = item }
                 }
                 .contextMenu {
-                    Button(role: .destructive) { confirmRemove = item } label: {
+                    Button(role: .destructive) {
+                        confirmRemove = item
+                    } label: {
                         Label("Remove", systemImage: "trash")
                     }
                 }
             }
-            Button { importing = true } label: {
+            Button {
+                importing = true
+            } label: {
                 Label("Import a plugin", systemImage: "square.and.arrow.down")
             }
             Link(destination: pluginDocsURL) {
@@ -44,7 +53,9 @@ struct PluginsSettingsView: View {
         } header: {
             Text("Imported")
         } footer: {
-            Text("An imported plugin reads only the resources it declares, with your own Kubernetes access, and talks to nothing but the Kubernetes API.")
+            Text(
+                "An imported plugin reads only the resources it declares, with your own Kubernetes access, and talks to nothing but the Kubernetes API."
+            )
         }
         Section {
             ForEach(builtins, id: \.id) { item in
@@ -58,15 +69,19 @@ struct PluginsSettingsView: View {
         } header: {
             Text("Built-in")
         } footer: {
-            Text("A plugin shows a family of custom resources as cards. Built-in plugins come with the app; you can import your own YAML file.")
+            Text(
+                "A plugin shows a family of custom resources as cards. Built-in plugins come with the app; you can import your own YAML file."
+            )
         }
         .task { await load() }
         .sheet(isPresented: $importing, onDismiss: { Task { await load() } }) {
             PluginImportSheet()
         }
-        .confirmationDialog(confirmRemove.map { String(localized: "Remove \($0.title)?") } ?? "",
-                            isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }),
-                            titleVisibility: .visible, presenting: confirmRemove) { item in
+        .confirmationDialog(
+            confirmRemove.map { String(localized: "Remove \($0.title)?") } ?? "",
+            isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }),
+            titleVisibility: .visible, presenting: confirmRemove
+        ) { item in
             Button("Remove", role: .destructive) {
                 Task { await change { try await TalosClient.removePlugin(id: item.id) } }
             }

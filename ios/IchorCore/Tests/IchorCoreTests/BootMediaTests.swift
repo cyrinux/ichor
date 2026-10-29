@@ -7,15 +7,17 @@ final class BootMediaTests: XCTestCase {
 
     func testPlainTalosMediaDecode() throws {
         let image = "https://factory.talos.dev/image/\(schematic)/v1.14.0"
-        let media = try TalosJSON.decode(BootMedia.self, from: """
-        {"talosVersion":"v1.14.0","schematic":"\(schematic)","schematicSource":"member","arch":"amd64","secureBoot":false,
-         "templateNode":"192.0.2.10","iso":"\(image)/metal-amd64.iso",
-         "ipxe":"https://pxe.factory.talos.dev/pxe/\(schematic)/v1.14.0/metal-amd64",
-         "kernel":"\(image)/kernel-amd64","initramfs":"\(image)/initramfs-amd64.xz","cmdline":"\(image)/cmdline-metal-amd64",
-         "booterDocker":"sudo docker run --rm --network host ghcr.io/siderolabs/booter:v0.4.0 --talos-version=v1.14.0 --schematic-id=\(schematic)",
-         "booterPodman":"sudo podman run --rm --network host ghcr.io/siderolabs/booter:v0.4.0 --talos-version=v1.14.0 --schematic-id=\(schematic)",
-         "omni":null,"warnings":[]}
-        """)
+        let media = try TalosJSON.decode(
+            BootMedia.self,
+            from: """
+                {"talosVersion":"v1.14.0","schematic":"\(schematic)","schematicSource":"member","arch":"amd64","secureBoot":false,
+                 "templateNode":"192.0.2.10","iso":"\(image)/metal-amd64.iso",
+                 "ipxe":"https://pxe.factory.talos.dev/pxe/\(schematic)/v1.14.0/metal-amd64",
+                 "kernel":"\(image)/kernel-amd64","initramfs":"\(image)/initramfs-amd64.xz","cmdline":"\(image)/cmdline-metal-amd64",
+                 "booterDocker":"sudo docker run --rm --network host ghcr.io/siderolabs/booter:v0.4.0 --talos-version=v1.14.0 --schematic-id=\(schematic)",
+                 "booterPodman":"sudo podman run --rm --network host ghcr.io/siderolabs/booter:v0.4.0 --talos-version=v1.14.0 --schematic-id=\(schematic)",
+                 "omni":null,"warnings":[]}
+                """)
         XCTAssertTrue(media.fromMember)
         XCTAssertEqual(media.arch, "amd64")
         XCTAssertTrue(media.iso.hasSuffix("/metal-amd64.iso"))
@@ -26,11 +28,13 @@ final class BootMediaTests: XCTestCase {
     }
 
     func testOmniMediaWithNullsDecode() throws {
-        let media = try TalosJSON.decode(BootMedia.self, from: """
-        {"talosVersion":"v1.14.0","schematic":"\(schematic)","schematicSource":"default","arch":"arm64","secureBoot":true,
-         "templateNode":"cp-1","omni":{"kernelArgs":"siderolink.api=https://omni.example.com?jointoken=sample",
-         "booterDocker":"sudo docker run …","booterPodman":"sudo podman run …"},"warnings":null}
-        """)
+        let media = try TalosJSON.decode(
+            BootMedia.self,
+            from: """
+                {"talosVersion":"v1.14.0","schematic":"\(schematic)","schematicSource":"default","arch":"arm64","secureBoot":true,
+                 "templateNode":"cp-1","omni":{"kernelArgs":"siderolink.api=https://omni.example.com?jointoken=sample",
+                 "booterDocker":"sudo docker run …","booterPodman":"sudo podman run …"},"warnings":null}
+                """)
         XCTAssertFalse(media.fromMember)
         XCTAssertTrue(media.secureBoot)
         XCTAssertTrue(media.warnings.isEmpty)

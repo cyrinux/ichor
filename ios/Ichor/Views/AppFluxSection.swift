@@ -25,9 +25,17 @@ struct AppFluxSection: View {
     @ViewBuilder private var content: some View {
         switch state {
         case .loading:
-            Section { Text("Reading Flux…").note() } header: { Text(verbatim: "GitOps") }
+            Section {
+                Text("Reading Flux…").note()
+            } header: {
+                Text(verbatim: "GitOps")
+            }
         case .failed(let error):
-            Section { Text("Could not read: \(error)").note() } header: { Text(verbatim: "GitOps") }
+            Section {
+                Text("Could not read: \(error)").note()
+            } header: {
+                Text(verbatim: "GitOps")
+            }
         case .loaded(let status, _, _):
             if status.installed { summary(status) }
         }
@@ -43,15 +51,21 @@ struct AppFluxSection: View {
                     if status.worst.needsAttention { StatusPill(label: status.worst.label, color: status.worst.color) }
                 }
                 FluxStateBar(counts: status.stateCounts)
-                Text(verbatim: (status.stateCounts.map { "\($0.count) \($0.state.label.lowercased())" } +
-                                [String(localized: "\(status.sources.count) sources")]).joined(separator: " · "))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                Text(
+                    verbatim: (status.stateCounts.map { "\($0.count) \($0.state.label.lowercased())" } + [
+                        String(localized: "\(status.sources.count) sources")
+                    ]).joined(separator: " · ")
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
             }
             ForEach(status.failing.prefix(3)) { app in
                 VStack(alignment: .leading, spacing: 1) {
-                    Label { Text(verbatim: [app.name, app.reason].filter { !$0.isEmpty }.joined(separator: " · ")).font(.callout) } icon: {
+                    Label {
+                        Text(verbatim: [app.name, app.reason].filter { !$0.isEmpty }.joined(separator: " · ")).font(
+                            .callout)
+                    } icon: {
                         Image(systemName: FluxState.failing.symbol).foregroundStyle(.red)
                     }
                     if !app.message.isEmpty {

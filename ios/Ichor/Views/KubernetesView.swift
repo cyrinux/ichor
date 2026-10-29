@@ -59,7 +59,9 @@ struct KubernetesView: View {
     // The first page as full objects: a small cluster, loaded in one page, keeps its images
     // and containers; the next pages as Table rows, 10-20 times smaller (L9, L10). Kept rows
     // of Table pages have no images: image search would miss them.
-    @State private var pods = PagedList<KubePod>(base: "pods", detailed: { pods in pods.allSatisfy { !$0.images.isEmpty } }) { client, namespace, token in
+    @State private var pods = PagedList<KubePod>(
+        base: "pods", detailed: { pods in pods.allSatisfy { !$0.images.isEmpty } }
+    ) { client, namespace, token in
         try await client.podsPage(namespace: namespace, token: token, table: !token.isEmpty)
     }
     @State private var cronJobs = PagedList<KubeCronJob>(base: "cronjobs") { client, namespace, token in
@@ -88,12 +90,13 @@ struct KubernetesView: View {
 
     /// networkTest: opened on the network test (a followed test's Live Activity).
     init(focus: KubeFocus? = nil, networkTest: Bool = false) {
-        let tab: Tab = switch focus?.tab {
-        case _ where networkTest: .network
-        case .pods?: .pods
-        case .cronJobs?: .cronJobs
-        default: .workloads
-        }
+        let tab: Tab =
+            switch focus?.tab {
+            case _ where networkTest: .network
+            case .pods?: .pods
+            case .cronJobs?: .cronJobs
+            default: .workloads
+            }
         focusTab = tab
         _tab = State(initialValue: tab)
         _query = State(initialValue: focus?.name ?? "")
@@ -138,7 +141,15 @@ struct KubernetesView: View {
         if action == .share, let sharedTab {
             ShareLinkButton(target: .kubernetes(tab: sharedTab))
         } else {
-            Button { open(action) } label: { Label { action.title } icon: { Image(systemName: action.systemImage) } }
+            Button {
+                open(action)
+            } label: {
+                Label {
+                    action.title
+                } icon: {
+                    Image(systemName: action.systemImage)
+                }
+            }
         }
     }
 
@@ -173,8 +184,10 @@ struct KubernetesView: View {
             switch shown {
             case .workloads: WorkloadsList(list: workloads, control: scopeControl, query: query, focus: focus)
             // Clean up dead pods for the namespace listed (every namespace when none is picked).
-            case .pods: PodsList(list: pods, control: scopeControl, query: query, onFlows: podFlows, focus: focus,
-                                 onCleanUp: { sanitizing = true })
+            case .pods:
+                PodsList(
+                    list: pods, control: scopeControl, query: query, onFlows: podFlows, focus: focus,
+                    onCleanUp: { sanitizing = true })
             case .cronJobs: CronJobsList(list: cronJobs, control: scopeControl, query: query, focus: focus)
             case .network: NetPerfView(session: netPerf)
             }
@@ -199,7 +212,11 @@ struct KubernetesView: View {
                         }
                     }
                     if !menu.isEmpty { Divider() }
-                    Button { customizingBar = true } label: { Label("Customize top bar", systemImage: "pencil") }
+                    Button {
+                        customizingBar = true
+                    } label: {
+                        Label("Customize top bar", systemImage: "pencil")
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -230,7 +247,8 @@ struct KubernetesView: View {
             case .tailscale: TailscaleView()
             case .argoRollouts: ArgoRolloutsView()
             case .clusterLifecycle: ClusterLifecycleView()
-            case .dataServices(let kind, let solo): DataServicesView(hints: "", downNodes: [], selected: kind, solo: solo)
+            case .dataServices(let kind, let solo):
+                DataServicesView(hints: "", downNodes: [], selected: kind, solo: solo)
             }
         }
         .task(id: model.client?.kubeServer) {
@@ -259,7 +277,9 @@ struct KubernetesView: View {
             .padding(.bottom, 6)
             .background(.bar)
         }
-        .searchable(text: $query, prompt: tab == .cronJobs ? Text("Name, schedule or image") : Text("Name, kind or image"))
+        .searchable(
+            text: $query, prompt: tab == .cronJobs ? Text("Name, schedule or image") : Text("Name, kind or image")
+        )
         .navigationTitle(Text(verbatim: "Kubernetes"))
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -345,17 +365,23 @@ private struct WorkloadsList: View {
             let shown = filterWorkloads(load.items, namespace: selected, query: query, sorted: load.done)
             List {
                 // Each kind listed has its own restart permission.
-                KubeDeniedSection(actions: kubeDistinctActions(shown.map { KubeAction.restart(kind: $0.kind) }), namespace: selected ?? "")
+                KubeDeniedSection(
+                    actions: kubeDistinctActions(shown.map { KubeAction.restart(kind: $0.kind) }),
+                    namespace: selected ?? "")
                 Section {
                     ForEach(shown) { workload in
-                        WorkloadRow(workload: workload, showNamespace: selected == nil,
-                                    restarting: restarting.contains(workload.id),
-                                    onOpen: { actions = workload }) { confirm = workload }
+                        WorkloadRow(
+                            workload: workload, showNamespace: selected == nil,
+                            restarting: restarting.contains(workload.id),
+                            onOpen: { actions = workload }
+                        ) { confirm = workload }
                     }
                     if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
                 }
             }
-            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No workloads", systemImage: "square.stack.3d.up") }
+            .emptyOverlay(shown.isEmpty, query: query) {
+                ContentUnavailableView("No workloads", systemImage: "square.stack.3d.up")
+            }
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
@@ -367,7 +393,9 @@ private struct WorkloadsList: View {
             actions = workload
             self.focus = nil
         }
-        .task(id: ChangeTrigger(settles: list.settles, active: scenePhase == .active, namespace: control.scope.namespace)) {
+        .task(
+            id: ChangeTrigger(settles: list.settles, active: scenePhase == .active, namespace: control.scope.namespace)
+        ) {
             await followChanges()
         }
         .messageAlert($resultMessage)
@@ -435,10 +463,10 @@ private struct WorkloadRow: View {
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
                 }
-                    .buttonStyle(.borderless)
-                    .disabled(!workload.canRestart)
-                    .kubeGated(KubeAction.restart(kind: workload.kind), in: workload.namespace)
-                    .accessibilityLabel(Text("Restart \(workload.name)"))
+                .buttonStyle(.borderless)
+                .disabled(!workload.canRestart)
+                .kubeGated(KubeAction.restart(kind: workload.kind), in: workload.namespace)
+                .accessibilityLabel(Text("Restart \(workload.name)"))
             }
         }
     }
@@ -466,8 +494,10 @@ private struct WorkloadRow: View {
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1)
                         .foregroundStyle(workload.autoscaler?.stateOk == true ? Color.secondary : Color.statusWarn)
-                        .background((workload.autoscaler?.stateOk == true ? Color.secondary : Color.statusWarn).opacity(0.15),
-                                    in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        .background(
+                            (workload.autoscaler?.stateOk == true ? Color.secondary : Color.statusWarn).opacity(0.15),
+                            in: RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        )
                         .accessibilityLabel(Text("Autoscaled"))
                 }
                 if workload.restartedAt > 0 {

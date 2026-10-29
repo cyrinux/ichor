@@ -7,7 +7,8 @@ import SwiftUI
 /// the app; the names are the widget's (masked in screenshot mode).
 struct ClusterStatusIntent: AppIntent {
     static var title: LocalizedStringResource = "Cluster status"
-    static var description = IntentDescription("Says what Ichor's last background check saw on a cluster. None chosen: the one open in the app.")
+    static var description = IntentDescription(
+        "Says what Ichor's last background check saw on a cluster. None chosen: the one open in the app.")
 
     @Parameter(title: "Cluster")
     var cluster: ClusterEntity?
@@ -16,10 +17,12 @@ struct ClusterStatusIntent: AppIntent {
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         let defaults = UserDefaults(suiteName: SharedSnapshot.suite)
-        let chosen = intentCluster(cluster?.id, clusters: SharedSnapshot.clusters(from: defaults),
-                                   active: SharedSnapshot.activeCluster(from: defaults))
+        let chosen = intentCluster(
+            cluster?.id, clusters: SharedSnapshot.clusters(from: defaults),
+            active: SharedSnapshot.activeCluster(from: defaults))
         let name = chosen?.name ?? cluster?.name ?? String(localized: "Your cluster")
-        let summary = clusterStatusSummary(SharedSnapshot.load(from: defaults, cluster: chosen?.id ?? cluster?.id), now: .now)
+        let summary = clusterStatusSummary(
+            SharedSnapshot.load(from: defaults, cluster: chosen?.id ?? cluster?.id), now: .now)
         let sentence = ClusterStatusWords.sentence(summary, name: name, now: .now)
         return .result(dialog: "\(sentence)", view: ClusterStatusSnippet(name: name, summary: summary))
     }
@@ -92,8 +95,12 @@ enum ClusterScreenLinks {
     @MainActor
     private static func open(_ id: String?, _ screen: ShareTarget.Target) async {
         let defaults = UserDefaults(suiteName: SharedSnapshot.suite)
-        guard let cluster = intentCluster(id, clusters: SharedSnapshot.clusters(from: defaults), active: SharedSnapshot.activeCluster(from: defaults)),
-              let link = cluster.link.flatMap(URL.init(string:)) else { return }
+        guard
+            let cluster = intentCluster(
+                id, clusters: SharedSnapshot.clusters(from: defaults),
+                active: SharedSnapshot.activeCluster(from: defaults)),
+            let link = cluster.link.flatMap(URL.init(string:))
+        else { return }
         guard screen != .cluster else {
             NotificationRouter.shared.pendingShareLink = link
             return

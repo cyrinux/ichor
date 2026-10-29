@@ -4,17 +4,17 @@ import XCTest
 final class KubeObjectSummaryTests: XCTestCase {
     // A KubeObjectSummary answer (go/ichorgo/kube_summary.go).
     private let json = #"""
-    {"kind":"Pod","apiVersion":"v1","namespace":"shop","name":"web-1","health":"bad","healthReason":"Ready: ContainersNotReady",
-     "phase":"Running","conditions":[{"type":"Ready","status":"False","reason":"ContainersNotReady","lastTransition":5,"tone":"bad"}],
-     "owners":[{"via":"owner","group":"apps","version":"v1","resource":"replicasets","kind":"ReplicaSet","namespace":"shop",
-                "name":"web","namespaced":true,"verbs":["get","update"],"controller":true},
-               {"via":"flux","group":"kustomize.toolkit.fluxcd.io","kind":"Kustomization","namespace":"flux-system","name":"apps"},
-               {"via":"helm","kind":"Release","namespace":"shop","name":"web"}],
-     "labels":{"app":"web"},"annotations":{},"created":1,"deleting":0,"finalizers":[],
-     "highlights":[{"key":"image","value":"web:1"}],
-     "events":[{"type":"Warning","reason":"BackOff","message":"restarting","kind":"Pod","namespace":"shop","name":"web-1","count":2,"first":1,"last":2,"source":"kubelet"}],
-     "eventsError":"","future":"ignored"}
-    """#
+        {"kind":"Pod","apiVersion":"v1","namespace":"shop","name":"web-1","health":"bad","healthReason":"Ready: ContainersNotReady",
+         "phase":"Running","conditions":[{"type":"Ready","status":"False","reason":"ContainersNotReady","lastTransition":5,"tone":"bad"}],
+         "owners":[{"via":"owner","group":"apps","version":"v1","resource":"replicasets","kind":"ReplicaSet","namespace":"shop",
+                    "name":"web","namespaced":true,"verbs":["get","update"],"controller":true},
+                   {"via":"flux","group":"kustomize.toolkit.fluxcd.io","kind":"Kustomization","namespace":"flux-system","name":"apps"},
+                   {"via":"helm","kind":"Release","namespace":"shop","name":"web"}],
+         "labels":{"app":"web"},"annotations":{},"created":1,"deleting":0,"finalizers":[],
+         "highlights":[{"key":"image","value":"web:1"}],
+         "events":[{"type":"Warning","reason":"BackOff","message":"restarting","kind":"Pod","namespace":"shop","name":"web-1","count":2,"first":1,"last":2,"source":"kubelet"}],
+         "eventsError":"","future":"ignored"}
+        """#
 
     private func summary() throws -> KubeObjectSummary { try TalosJSON.decode(KubeObjectSummary.self, from: json) }
 
@@ -50,7 +50,9 @@ final class KubeObjectSummaryTests: XCTestCase {
 
     func testOnlyAnArgoApplicationOrAFluxKustomizationOffersItsDiff() throws {
         func owner(_ via: String, _ kind: String, _ namespace: String) throws -> ObjectOwner {
-            try TalosJSON.decode(ObjectOwner.self, from: #"{"via":"\#(via)","kind":"\#(kind)","namespace":"\#(namespace)","name":"web"}"#)
+            try TalosJSON.decode(
+                ObjectOwner.self, from: #"{"via":"\#(via)","kind":"\#(kind)","namespace":"\#(namespace)","name":"web"}"#
+            )
         }
         XCTAssertTrue(try owner("argocd", "Application", "argocd").hasGitOpsDiff)
         XCTAssertTrue(try owner("flux", "Kustomization", "flux-system").hasGitOpsDiff)
@@ -59,7 +61,9 @@ final class KubeObjectSummaryTests: XCTestCase {
         XCTAssertFalse(try owner("flux", "HelmRelease", "web").hasGitOpsDiff)
         XCTAssertFalse(try owner("helm", "Release", "web").hasGitOpsDiff)
         XCTAssertFalse(try owner("owner", "ReplicaSet", "web").hasGitOpsDiff)
-        XCTAssertEqual(KubeDiffResource(group: "apps", kind: "Deployment", namespace: "web", name: "app", change: .changed).focusKey,
-                       "Deployment/web/app")
+        XCTAssertEqual(
+            KubeDiffResource(group: "apps", kind: "Deployment", namespace: "web", name: "app", change: .changed)
+                .focusKey,
+            "Deployment/web/app")
     }
 }

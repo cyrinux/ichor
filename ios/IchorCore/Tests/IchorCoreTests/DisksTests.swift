@@ -7,18 +7,18 @@ final class DisksTests: XCTestCase {
 
     func testDecodeGoJSON() throws {
         let json = #"""
-        {"supported":true,"reason":"","disks":[{"name":"nvme0n1","devPath":"/dev/nvme0n1","size":512110190592,"type":"nvme",
-        "transport":"nvme","model":"Sample NVMe 512","serial":"SN-0001","systemDisk":true,"readonly":false,"unallocated":1048576,
-        "partitions":[
-          {"index":1,"devPath":"/dev/nvme0n1p1","label":"EFI","volumeId":"EFI","offset":1048576,"size":104857600,"filesystem":"vfat",
-           "encryption":"disabled","encryptionProvider":"","uuid":"0A1B-2C3D","partitionUuid":"11111111-2222-3333-4444-555555555555",
-           "partitionType":"c12a7328-f81f-11d2-ba4b-00a0c93ec93b","mountedOn":"","phase":"ready","error":""},
-          {"index":3,"devPath":"/dev/nvme0n1p3","label":"STATE","volumeId":"STATE","offset":105906176,"size":104857600,
-           "filesystem":"xfs","encryption":"enabled","encryptionProvider":"luks2","phase":"ready"}],
-        "segments":[{"kind":"partition","index":1,"label":"EFI","offset":1048576,"size":104857600},
-                    {"kind":"partition","index":3,"label":"STATE","offset":105906176,"size":104857600},
-                    {"kind":"free","offset":210763776,"size":1048576}]}]}
-        """#
+            {"supported":true,"reason":"","disks":[{"name":"nvme0n1","devPath":"/dev/nvme0n1","size":512110190592,"type":"nvme",
+            "transport":"nvme","model":"Sample NVMe 512","serial":"SN-0001","systemDisk":true,"readonly":false,"unallocated":1048576,
+            "partitions":[
+              {"index":1,"devPath":"/dev/nvme0n1p1","label":"EFI","volumeId":"EFI","offset":1048576,"size":104857600,"filesystem":"vfat",
+               "encryption":"disabled","encryptionProvider":"","uuid":"0A1B-2C3D","partitionUuid":"11111111-2222-3333-4444-555555555555",
+               "partitionType":"c12a7328-f81f-11d2-ba4b-00a0c93ec93b","mountedOn":"","phase":"ready","error":""},
+              {"index":3,"devPath":"/dev/nvme0n1p3","label":"STATE","volumeId":"STATE","offset":105906176,"size":104857600,
+               "filesystem":"xfs","encryption":"enabled","encryptionProvider":"luks2","phase":"ready"}],
+            "segments":[{"kind":"partition","index":1,"label":"EFI","offset":1048576,"size":104857600},
+                        {"kind":"partition","index":3,"label":"STATE","offset":105906176,"size":104857600},
+                        {"kind":"free","offset":210763776,"size":1048576}]}]}
+            """#
         let list = try TalosJSON.decode(NodeDisks.self, from: json)
         XCTAssertTrue(list.supported)
         let disk = try XCTUnwrap(list.disks.first)
@@ -45,11 +45,13 @@ final class DisksTests: XCTestCase {
     }
 
     func testFractionsSumToOneAndTinySliceWidened() {
-        let disk = DiskLayout(name: "sda", size: 101 * gib, segments: [
-            DiskSegment(kind: "partition", index: 1, label: "META", size: mib),
-            DiskSegment(kind: "partition", index: 2, label: "EPHEMERAL", size: 100 * gib),
-            DiskSegment(kind: "free", size: gib),
-        ])
+        let disk = DiskLayout(
+            name: "sda", size: 101 * gib,
+            segments: [
+                DiskSegment(kind: "partition", index: 1, label: "META", size: mib),
+                DiskSegment(kind: "partition", index: 2, label: "EPHEMERAL", size: 100 * gib),
+                DiskSegment(kind: "free", size: gib),
+            ])
         let slices = barSlices(disk)
         XCTAssertEqual(slices.count, 3)
         XCTAssertEqual(slices.reduce(0) { $0 + $1.fraction }, 1, accuracy: 1e-9)

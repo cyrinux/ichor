@@ -45,15 +45,17 @@ public struct RecentTargetList: Equatable, Sendable {
 
     public init(_ targets: [RecentTarget] = []) {
         var seen: Set<String> = []
-        self.targets = Array(targets.filter { RecentTargetList.recorded.contains($0.target.target) && seen.insert($0.id).inserted }
-            .prefix(RecentTargetList.limit))
+        self.targets = Array(
+            targets.filter { RecentTargetList.recorded.contains($0.target.target) && seen.insert($0.id).inserted }
+                .prefix(RecentTargetList.limit))
     }
 
     /// The list with `opened` first and its earlier entry dropped; unchanged for what is not
     /// recorded, names no cluster (a link could not open it again) or has no label.
     public func adding(_ opened: RecentTarget) -> RecentTargetList {
         guard RecentTargetList.recorded.contains(opened.target.target), !opened.target.cluster.isEmpty,
-              !opened.label.trimmingCharacters(in: .whitespaces).isEmpty else { return self }
+            !opened.label.trimmingCharacters(in: .whitespaces).isEmpty
+        else { return self }
         return RecentTargetList([opened] + targets.filter { $0.id != opened.id })
     }
 

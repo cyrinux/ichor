@@ -17,7 +17,8 @@ public func clusterMenuGroups(context: ContextSummary?, canSwitch: Bool) -> [[Cl
     let talos = context.map { !$0.isKube } ?? false
     let upgrade = context?.allows(.upgrade) ?? false
     let clusters: [ClusterMenuItem] = (canSwitch ? [.switchCluster] : []) + [.manage]
-    let operate: [ClusterMenuItem] = (upgrade ? [.upgradeCluster, .upgradeKubernetes] : [])
+    let operate: [ClusterMenuItem] =
+        (upgrade ? [.upgradeCluster, .upgradeKubernetes] : [])
         + (talos ? [.addNode] : []) + (context != nil ? [.updates] : []) + [.runbooks]
     let share: [ClusterMenuItem] = (context != nil ? [.incidentSummary] : []) + [.shareLink]
     return [clusters, operate, share].filter { !$0.isEmpty }

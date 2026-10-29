@@ -78,8 +78,9 @@ struct UpgradeView: View {
     }
 
     private func makeGate(_ plan: UpgradePlan, acknowledged: Bool = false) -> UpgradeGate {
-        UpgradeGate(plan: plan, targetVersion: version, versionRisk: versionRisk ?? "", force: force, busy: job.isActive,
-                    acknowledged: acknowledged)
+        UpgradeGate(
+            plan: plan, targetVersion: version, versionRisk: versionRisk ?? "", force: force, busy: job.isActive,
+            acknowledged: acknowledged)
     }
 
     private func form(_ plan: UpgradePlan) -> some View {
@@ -96,7 +97,9 @@ struct UpgradeView: View {
             targetSection(plan, gate: gate)
             checksSection(plan, gate: gate)
             Section {
-                Button(role: .destructive) { Task { await requestStart() } } label: {
+                Button(role: .destructive) {
+                    Task { await requestStart() }
+                } label: {
                     Text(stage ? String(localized: "Stage upgrade") : String(localized: "Start upgrade"))
                         .fontWeight(force ? .bold : .regular)
                 }
@@ -111,11 +114,15 @@ struct UpgradeView: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     if gate.forceAvailable {
-                        Button(role: .destructive) { confirmForce = true } label: {
+                        Button(role: .destructive) {
+                            confirmForce = true
+                        } label: {
                             Label("Force upgrade…", systemImage: "exclamationmark.triangle")
                         }
                     }
-                    Button(role: .destructive) { Task { await requestRollback() } } label: {
+                    Button(role: .destructive) {
+                        Task { await requestRollback() }
+                    } label: {
                         Label(CheckupText.rollbackMenu, systemImage: "arrow.uturn.backward")
                     }
                 } label: {
@@ -138,7 +145,9 @@ struct UpgradeView: View {
             Button("Force", role: .destructive) { force = true }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("--force upgrades even though etcd is unhealthy or would lose quorum. The cluster can become unavailable and etcd data can be lost.")
+            Text(
+                "--force upgrades even though etcd is unhealthy or would lose quorum. The cluster can become unavailable and etcd data can be lost."
+            )
         }
         .sheet(isPresented: $confirming) {
             HostnameConfirmationSheet(
@@ -157,7 +166,8 @@ struct UpgradeView: View {
     private func currentSection(_ plan: UpgradePlan) -> some View {
         Section("Current") {
             LabeledContent("Version", value: plan.currentVersion.or("—"))
-            LabeledContent("Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
+            LabeledContent(
+                "Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
             VStack(alignment: .leading, spacing: 2) {
                 Text("Image").font(.caption).foregroundStyle(.secondary)
                 Text(verbatim: plan.currentImage.or("—"))
@@ -195,16 +205,22 @@ struct UpgradeView: View {
             if gate.invalidVersion && !version.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text("Not a Talos version (vMAJOR.MINOR.PATCH).").font(.footnote).foregroundStyle(.statusBad)
             }
-            let suggestions = upgradeSuggestions(releases, current: plan.currentVersion, includePrerelease: showPrereleases)
+            let suggestions = upgradeSuggestions(
+                releases, current: plan.currentVersion, includePrerelease: showPrereleases)
             ForEach(suggestions.prefix(8)) { release in
-                Button { version = release.version } label: { ReleaseRow(release: release, selected: normalizedTalosVersion(version) == release.version) }
-                    .buttonStyle(.plain)
+                Button {
+                    version = release.version
+                } label: {
+                    ReleaseRow(release: release, selected: normalizedTalosVersion(version) == release.version)
+                }
+                .buttonStyle(.plain)
             }
             if releases.contains(where: \.prerelease) {
                 Toggle("Show pre-releases", isOn: $showPrereleases)
             }
             if let releasesError {
-                Text("Releases unavailable (\(releasesError)): type the version.").font(.footnote).foregroundStyle(.secondary)
+                Text("Releases unavailable (\(releasesError)): type the version.").font(.footnote).foregroundStyle(
+                    .secondary)
             }
             if !image.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
@@ -222,16 +238,20 @@ struct UpgradeView: View {
                 Toggle(isOn: $drain) {
                     VStack(alignment: .leading) {
                         Text("Drain the node first")
-                        Text("Cordon and drain it, upgrade, wait until it is back and Ready, then uncordon it. Without it, this Talos version stops the node's pods when it reboots.")
-                            .font(.caption).foregroundStyle(.secondary)
+                        Text(
+                            "Cordon and drain it, upgrade, wait until it is back and Ready, then uncordon it. Without it, this Talos version stops the node's pods when it reboots."
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             } else {
                 Toggle(isOn: $stage) {
                     VStack(alignment: .leading) {
                         Text("Stage (--stage)")
-                        Text("Installs during the reboot instead of before it, for nodes whose files in use block the upgrade.")
-                            .font(.caption).foregroundStyle(.secondary)
+                        Text(
+                            "Installs during the reboot instead of before it, for nodes whose files in use block the upgrade."
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -241,25 +261,42 @@ struct UpgradeView: View {
     }
 
     @ViewBuilder private func checksSection(_ plan: UpgradePlan, gate: UpgradeGate) -> some View {
-        if !plan.blockers.isEmpty || !plan.warnings.isEmpty || !gate.acknowledgments.isEmpty || gate.downgrade || gate.sameVersion || force {
+        if !plan.blockers.isEmpty || !plan.warnings.isEmpty || !gate.acknowledgments.isEmpty || gate.downgrade
+            || gate.sameVersion || force
+        {
             Section("Checks") {
                 ForEach(plan.blockers, id: \.self) { blocker in
-                    Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }
-                        .foregroundStyle(.statusBad)
+                    Label {
+                        Text(verbatim: blocker)
+                    } icon: {
+                        Image(systemName: "xmark.octagon.fill")
+                    }
+                    .foregroundStyle(.statusBad)
                 }
                 ForEach(plan.warnings, id: \.self) { warning in
-                    Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                        .foregroundStyle(.statusWarn)
+                    Label {
+                        Text(verbatim: warning)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    .foregroundStyle(.statusWarn)
                 }
                 // Confirmed one by one in the confirmation sheet.
                 ForEach(gate.acknowledgments, id: \.self) { risk in
-                    Label { Text(verbatim: risk) } icon: { Image(systemName: "hand.raised.fill") }
-                        .foregroundStyle(.statusWarn)
+                    Label {
+                        Text(verbatim: risk)
+                    } icon: {
+                        Image(systemName: "hand.raised.fill")
+                    }
+                    .foregroundStyle(.statusWarn)
                 }
                 // Go's version risk already says it.
                 if gate.downgrade && (versionRisk ?? "").isEmpty {
-                    Label("This is a downgrade: not every Talos version supports going back.", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.statusWarn)
+                    Label(
+                        "This is a downgrade: not every Talos version supports going back.",
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .foregroundStyle(.statusWarn)
                 }
                 if gate.sameVersion {
                     Label("This node already runs this version: the image is reinstalled.", systemImage: "info.circle")
@@ -279,10 +316,25 @@ struct UpgradeView: View {
 
     private func confirmationMessage(_ plan: UpgradePlan) -> String {
         let target = normalizedTalosVersion(version) ?? version
-        var text = String(localized: "\(hostname) installs \(target) and reboots: its pods are drained and it is unavailable for several minutes.")
-        if plan.controlPlane { text += "\n\n" + String(localized: "Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum.") }
+        var text = String(
+            localized:
+                "\(hostname) installs \(target) and reboots: its pods are drained and it is unavailable for several minutes."
+        )
+        if plan.controlPlane {
+            text +=
+                "\n\n"
+                + String(
+                    localized:
+                        "Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum."
+                )
+        }
         if force { text += "\n\n" + String(localized: "Force is on: the etcd checks are skipped.") }
-        text += "\n\n" + String(localized: "Keep Ichor open until the node reboots: in the background iOS can pause the app, and the upgrade with it.")
+        text +=
+            "\n\n"
+            + String(
+                localized:
+                    "Keep Ichor open until the node reboots: in the background iOS can pause the app, and the upgrade with it."
+            )
         return text
     }
 
@@ -306,8 +358,9 @@ struct UpgradeView: View {
     /// The newest stable release above the running one, once both are known.
     private func suggestDefaultVersion() {
         guard version.isEmpty, let plan = loadedPlan,
-              let latest = upgradeSuggestions(releases, current: plan.currentVersion, includePrerelease: false).first,
-              !isTalosDowngrade(from: plan.currentVersion, to: latest.version) else { return }
+            let latest = upgradeSuggestions(releases, current: plan.currentVersion, includePrerelease: false).first,
+            !isTalosDowngrade(from: plan.currentVersion, to: latest.version)
+        else { return }
         version = latest.version
     }
 
@@ -327,14 +380,18 @@ struct UpgradeView: View {
     @ViewBuilder private var extensionRow: some View {
         if let check = extensions {
             if !check.missing.isEmpty {
-                Text("These extensions have no build for \(check.targetVersion): \(check.missing.joined(separator: ", ")). The node would come back without them.")
-                    .font(.footnote).foregroundStyle(.statusWarn)
+                Text(
+                    "These extensions have no build for \(check.targetVersion): \(check.missing.joined(separator: ", ")). The node would come back without them."
+                )
+                .font(.footnote).foregroundStyle(.statusWarn)
             } else if !check.error.isEmpty {
                 Text(verbatim: check.error).font(.footnote).foregroundStyle(.secondary)
             } else if check.unknown && !check.installed.isEmpty {
-                Text("Extensions not checked: the image is not from the Image Factory.").font(.footnote).foregroundStyle(.secondary)
+                Text("Extensions not checked: the image is not from the Image Factory.").font(.footnote)
+                    .foregroundStyle(.secondary)
             } else if !check.installed.isEmpty {
-                Text("Every extension has a build for \(check.targetVersion).").font(.footnote).foregroundStyle(.statusOK)
+                Text("Every extension has a build for \(check.targetVersion).").font(.footnote).foregroundStyle(
+                    .statusOK)
             }
         }
     }
@@ -348,7 +405,9 @@ struct UpgradeView: View {
     /// App lock first (like reboot), then the typed hostname.
     private func requestStart() async {
         message = nil
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Upgrade \(hostname)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Upgrade \(hostname)"))
+        {
             message = failure
             return
         }
@@ -358,7 +417,9 @@ struct UpgradeView: View {
     /// The same two steps as an upgrade: the node reboots at once, into another Talos.
     private func requestRollback() async {
         message = nil
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: CheckupText.rollbackTitle(hostname)) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: CheckupText.rollbackTitle(hostname))
+        {
             message = failure
             return
         }
@@ -381,21 +442,27 @@ struct UpgradeView: View {
     private func start(_ plan: UpgradePlan) {
         let gate = makeGate(plan, acknowledged: true)
         guard let client = model.client, let target = normalizedTalosVersion(version), gate.canStart, !image.isEmpty,
-              versionRisk != nil else { return }
+            versionRisk != nil
+        else { return }
         if plan.drainable && drain {
             guard !MaintenanceJob.shared.isActive else {
                 message = String(localized: "Another maintenance is running. The app runs one at a time.")
                 return
             }
-            MaintenanceJob.shared.start(client: client,
-                                        target: MaintenanceJob.Target(node: node, hostname: hostname, action: .upgrade, wasCordoned: false,
-                                                                      image: image, force: force && gate.forceAvailable),
-                                        includeBare: false, acknowledged: !gate.acknowledgments.isEmpty)
+            MaintenanceJob.shared.start(
+                client: client,
+                target: MaintenanceJob.Target(
+                    node: node, hostname: hostname, action: .upgrade, wasCordoned: false,
+                    image: image, force: force && gate.forceAvailable),
+                includeBare: false, acknowledged: !gate.acknowledgments.isEmpty)
             return
         }
-        job.start(client: client, target: UpgradeJob.Target(node: node, hostname: hostname, fromVersion: plan.currentVersion,
-                                                           toVersion: target, image: image, stage: stage),
-                  force: force && gate.forceAvailable, acknowledged: !gate.acknowledgments.isEmpty)
+        job.start(
+            client: client,
+            target: UpgradeJob.Target(
+                node: node, hostname: hostname, fromVersion: plan.currentVersion,
+                toVersion: target, image: image, stage: stage),
+            force: force && gate.forceAvailable, acknowledged: !gate.acknowledgments.isEmpty)
     }
 }
 
@@ -410,7 +477,9 @@ private struct ReleaseRow: View {
             Text(verbatim: release.version).font(.body.monospaced())
             if release.prerelease { StatusPill(label: String(localized: "pre-release"), color: .orange) }
             Spacer()
-            if !release.date.isEmpty { Text(verbatim: String(release.date.prefix(10))).font(.caption).foregroundStyle(.secondary) }
+            if !release.date.isEmpty {
+                Text(verbatim: String(release.date.prefix(10))).font(.caption).foregroundStyle(.secondary)
+            }
         }
         .contentShape(Rectangle())
     }
@@ -429,8 +498,10 @@ private struct UpgradeProgressView: View {
                     Label {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Keep Ichor open until the node reboots").fontWeight(.semibold)
-                            Text("Until the reboot Ichor may drive the download and install: in the background iOS pauses it, and the upgrade can stall.")
-                                .font(.footnote).foregroundStyle(.secondary)
+                            Text(
+                                "Until the reboot Ichor may drive the download and install: in the background iOS pauses it, and the upgrade can stall."
+                            )
+                            .font(.footnote).foregroundStyle(.secondary)
                         }
                     } icon: {
                         Image(systemName: "iphone").foregroundStyle(.orange)
@@ -440,7 +511,8 @@ private struct UpgradeProgressView: View {
             if let target = job.target {
                 Section {
                     LabeledContent("Version", value: "\(target.fromVersion.or("—")) → \(target.toVersion)")
-                    Text(verbatim: target.image).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                    Text(verbatim: target.image).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(
+                        .enabled)
                 }
             }
             Section("Progress") {
@@ -464,7 +536,11 @@ private struct UpgradeProgressView: View {
                     Image(systemName: "checkmark.seal.fill").foregroundStyle(.statusOK)
                 }
             case .failed(let error)?:
-                Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad) }
+                Label {
+                    Text(verbatim: error)
+                } icon: {
+                    Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad)
+                }
             case .unfollowed?:
                 Text("Stopped following. The node keeps upgrading: check its version later.")
                     .foregroundStyle(.secondary)

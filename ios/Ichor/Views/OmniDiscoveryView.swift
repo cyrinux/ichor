@@ -39,8 +39,12 @@ struct OmniDiscoveryView: View {
                     .pickerStyle(.segmented)
                 } footer: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Sign in to your Omni instance: its clusters show in the preview, already signed in, Kubernetes included.")
-                        if !initialValues.isEmpty { Text("Filled in from the imported file: sign in to list its clusters.") }
+                        Text(
+                            "Sign in to your Omni instance: its clusters show in the preview, already signed in, Kubernetes included."
+                        )
+                        if !initialValues.isEmpty {
+                            Text("Filled in from the imported file: sign in to list its clusters.")
+                        }
                     }
                 }
                 .disabled(working)
@@ -114,7 +118,9 @@ struct OmniDiscoveryView: View {
             default: break
             }
         }
-        .onChange(of: serviceAccount) { error = nil; signedIn = nil }
+        .onChange(of: serviceAccount) {
+            error = nil; signedIn = nil
+        }
         .onChange(of: url) { signedIn = nil }
         .onChange(of: email) { signedIn = nil }
     }
@@ -130,14 +136,17 @@ struct OmniDiscoveryView: View {
             work = Task {
                 defer { busy = false }
                 do {
-                    let identity = try await TalosClient.omniServiceAccount(endpoint: endpoint, key: key.trimmingCharacters(in: .whitespacesAndNewlines))
+                    let identity = try await TalosClient.omniServiceAccount(
+                        endpoint: endpoint, key: key.trimmingCharacters(in: .whitespacesAndNewlines))
                     await discover(identity: identity)
                 } catch {
                     self.error = error.localizedDescription
                 }
             }
         } else {
-            flow.start(TalosClient.startOmniSignIn(endpoint: endpoint, email: email.trimmingCharacters(in: .whitespacesAndNewlines)))
+            flow.start(
+                TalosClient.startOmniSignIn(
+                    endpoint: endpoint, email: email.trimmingCharacters(in: .whitespacesAndNewlines)))
         }
     }
 

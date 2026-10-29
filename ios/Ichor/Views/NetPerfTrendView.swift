@@ -29,10 +29,12 @@ struct NetPerfTrendSection: View {
                     }
                     .foregroundStyle(.secondary)
                 }
-                NetPerfTrendChart(label: netPerfTestLabel(NetPerfTest.throughput), values: trend.map(\.throughputMbps),
-                                  format: formatMbps, selected: $selected)
-                NetPerfTrendChart(label: String(localized: "Latency (p50)"), values: trend.map(\.p50Us),
-                                  format: formatMicros, selected: $selected)
+                NetPerfTrendChart(
+                    label: netPerfTestLabel(NetPerfTest.throughput), values: trend.map(\.throughputMbps),
+                    format: formatMbps, selected: $selected)
+                NetPerfTrendChart(
+                    label: String(localized: "Latency (p50)"), values: trend.map(\.p50Us),
+                    format: formatMicros, selected: $selected)
             } header: {
                 HStack(spacing: 4) {
                     Text("Over time")
@@ -66,9 +68,12 @@ private struct NetPerfTrendChart: View {
                 // Each run of consecutive values is its own series, so a missing test breaks the line.
                 ForEach(Array(values.enumerated()), id: \.offset) { index, value in
                     if let value {
-                        LineMark(x: .value("Test", Double(index)), y: .value(label, value), series: .value("Series", run(of: index)))
-                            .foregroundStyle(ChartPalette.first)
-                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                        LineMark(
+                            x: .value("Test", Double(index)), y: .value(label, value),
+                            series: .value("Series", run(of: index))
+                        )
+                        .foregroundStyle(ChartPalette.first)
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                         PointMark(x: .value("Test", Double(index)), y: .value(label, value))
                             .foregroundStyle(ChartPalette.first)
                             .symbolSize(index == (selected ?? values.count - 1) ? 90 : 50)
@@ -135,14 +140,25 @@ struct NetPerfLatencyRange: View {
                     let cap: CGFloat = 4
                     let width = geometry.size.width - cap * 2
                     let mid = geometry.size.height / 2
-                    let x: (Double) -> CGFloat = { us in cap + CGFloat(Swift.min(Swift.max((us - latency.min) / (latency.max - latency.min), 0), 1)) * width }
+                    let x: (Double) -> CGFloat = { us in
+                        cap + CGFloat(Swift.min(Swift.max((us - latency.min) / (latency.max - latency.min), 0), 1))
+                            * width
+                    }
                     ZStack(alignment: .topLeading) {
-                        Path { p in p.move(to: CGPoint(x: cap, y: mid)); p.addLine(to: CGPoint(x: cap + width, y: mid)) }
-                            .stroke(.secondary.opacity(0.35), style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                        Path { p in p.move(to: CGPoint(x: x(latency.p50), y: mid)); p.addLine(to: CGPoint(x: x(latency.p99), y: mid)) }
-                            .stroke(ChartPalette.first, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                        Path { p in p.move(to: CGPoint(x: x(latency.p90), y: mid - cap)); p.addLine(to: CGPoint(x: x(latency.p90), y: mid + cap)) }
-                            .stroke(Color(.secondarySystemGroupedBackground), lineWidth: 2)
+                        Path { p in
+                            p.move(to: CGPoint(x: cap, y: mid)); p.addLine(to: CGPoint(x: cap + width, y: mid))
+                        }
+                        .stroke(.secondary.opacity(0.35), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                        Path { p in
+                            p.move(to: CGPoint(x: x(latency.p50), y: mid));
+                            p.addLine(to: CGPoint(x: x(latency.p99), y: mid))
+                        }
+                        .stroke(ChartPalette.first, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                        Path { p in
+                            p.move(to: CGPoint(x: x(latency.p90), y: mid - cap));
+                            p.addLine(to: CGPoint(x: x(latency.p90), y: mid + cap))
+                        }
+                        .stroke(Color(.secondarySystemGroupedBackground), lineWidth: 2)
                     }
                 }
                 .frame(height: 14)
@@ -157,11 +173,15 @@ struct NetPerfLatencyRange: View {
             }
             .padding(.top, 4)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Round trips from \(formatMicros(latency.min)) to \(formatMicros(latency.max)), p50 \(formatMicros(latency.p50)), p99 \(formatMicros(latency.p99))"))
+            .accessibilityLabel(
+                Text(
+                    "Round trips from \(formatMicros(latency.min)) to \(formatMicros(latency.max)), p50 \(formatMicros(latency.p50)), p99 \(formatMicros(latency.p99))"
+                ))
         }
     }
 }
 
 private enum NetPerfTrendHint {
-    static let text: LocalizedStringKey = "The saved tests between the client and server chosen above, oldest on the left. Points are evenly spaced, whatever the time between tests.\n\nTap a point to see that test in both charts. A drop in throughput or a jump in latency after a change (CNI, MTU, encryption, a new switch) shows what it cost."
+    static let text: LocalizedStringKey =
+        "The saved tests between the client and server chosen above, oldest on the left. Points are evenly spaced, whatever the time between tests.\n\nTap a point to see that test in both charts. A drop in throughput or a jump in latency after a change (CNI, MTU, encryption, a new switch) shows what it cost."
 }

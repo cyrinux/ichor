@@ -4,7 +4,9 @@ import Security
 
 /// A stored item is sealed with a security key and none was tapped yet this run.
 struct SecurityKeyRequiredError: LocalizedError {
-    var errorDescription: String? { String(localized: "The stored config is sealed with a security key: tap it first.") }
+    var errorDescription: String? {
+        String(localized: "The stored config is sealed with a security key: tap it first.")
+    }
 }
 
 enum ConfigProtection: String {
@@ -70,7 +72,9 @@ enum SecureConfigStore {
     }
 
     static func load(_ item: Item = .talosconfig) -> Data? {
-        guard let stored = Keychain.read(item.account), let key = try? privateKey(create: false), let sealed = unseal(stored) else { return nil }
+        guard let stored = Keychain.read(item.account), let key = try? privateKey(create: false),
+            let sealed = unseal(stored)
+        else { return nil }
         var error: Unmanaged<CFError>?
         return SecKeyCreateDecryptedData(key, algorithm, sealed as CFData, &error) as Data?
     }
@@ -129,7 +133,8 @@ enum SecureConfigStore {
     /// Where the key protecting the stored config lives (nil before the first import).
     static var protection: ConfigProtection? {
         guard let key = try? privateKey(create: false),
-              let attributes = SecKeyCopyAttributes(key) as? [String: Any] else { return nil }
+            let attributes = SecKeyCopyAttributes(key) as? [String: Any]
+        else { return nil }
         let token = attributes[kSecAttrTokenID as String] as? String
         return token == (kSecAttrTokenIDSecureEnclave as String) ? .secureEnclave : .keychain
     }
@@ -147,7 +152,7 @@ enum SecureConfigStore {
         query[kSecReturnRef as String] = true
         var item: CFTypeRef?
         if SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess, let item {
-            return item as! SecKey // swiftlint:disable:this force_cast (CF type, always SecKey here)
+            return item as! SecKey  // swiftlint:disable:this force_cast (CF type, always SecKey here)
         }
         guard create else { throw KeychainError(status: errSecItemNotFound) }
         if let key = try? makeKey(secureEnclave: true) { return key }
@@ -156,12 +161,14 @@ enum SecureConfigStore {
 
     private static func makeKey(secureEnclave: Bool) throws -> SecKey {
         var error: Unmanaged<CFError>?
-        guard let access = SecAccessControlCreateWithFlags(
-            nil,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            secureEnclave ? .privateKeyUsage : [],
-            &error
-        ) else { throw cfError(error) }
+        guard
+            let access = SecAccessControlCreateWithFlags(
+                nil,
+                kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                secureEnclave ? .privateKeyUsage : [],
+                &error
+            )
+        else { throw cfError(error) }
 
         var attributes: [String: Any] = [
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,

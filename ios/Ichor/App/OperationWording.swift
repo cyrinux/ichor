@@ -22,7 +22,10 @@ extension K8sUpgradeProgress {
         case "proxy": String(localized: "kube-proxy DaemonSet")
         default:
             total > 0
-                ? String(localized: "Kubernetes upgrade \(min(index + 1, total))/\(total): \(name) \(component.isEmpty ? phase : component)")
+                ? String(
+                    localized:
+                        "Kubernetes upgrade \(min(index + 1, total))/\(total): \(name) \(component.isEmpty ? phase : component)"
+                )
                 : message
         }
     }

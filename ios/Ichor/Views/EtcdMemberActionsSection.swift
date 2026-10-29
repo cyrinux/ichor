@@ -24,24 +24,32 @@ struct EtcdMemberActionsSection: View {
     var body: some View {
         Section {
             if busy {
-                HStack { ProgressView(); Text("Working…") }
+                HStack {
+                    ProgressView(); Text("Working…")
+                }
             } else {
                 Button("Forfeit leadership") { if let leader { onForfeit(leader) } }
                     .disabled(leader == nil || !support.supported)
                 Menu {
                     ForEach(removable) { member in
-                        Button(role: .destructive) { onRemove(member) } label: {
+                        Button(role: .destructive) {
+                            onRemove(member)
+                        } label: {
                             Text(verbatim: member.hostname.isEmpty ? member.id : member.hostname)
                         }
                     }
                 } label: {
-                    Text("Remove member…").foregroundStyle(removable.isEmpty || !support.supported ? Color.secondary : Color.red)
+                    Text("Remove member…").foregroundStyle(
+                        removable.isEmpty || !support.supported ? Color.secondary : Color.red)
                 }
                 .disabled(removable.isEmpty || !support.supported)
                 // The guided replacement, for a failed member only.
                 ForEach(replaceCandidates(etcd)) { member in
-                    NavigationLink(value: Route.replaceControlPlane(memberId: member.id, node: etcdMemberAddress(member),
-                                                                    hostname: member.hostname)) {
+                    NavigationLink(
+                        value: Route.replaceControlPlane(
+                            memberId: member.id, node: etcdMemberAddress(member),
+                            hostname: member.hostname)
+                    ) {
                         VStack(alignment: .leading) {
                             Text("Replace this control plane…")
                             Text(verbatim: member.hostname.isEmpty ? member.id : member.hostname)
@@ -56,7 +64,9 @@ struct EtcdMemberActionsSection: View {
         } header: {
             Text("Member actions")
         } footer: {
-            Text("Forfeiting moves etcd leadership to another member. Removing a member is for a node that is gone or being replaced: what the removal would leave is checked first.")
+            Text(
+                "Forfeiting moves etcd leadership to another member. Removing a member is for a node that is gone or being replaced: what the removal would leave is checked first."
+            )
         }
     }
 }
@@ -81,8 +91,10 @@ struct EtcdRemoveMemberSheet: View {
     @State private var message: String?
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(member: EtcdMember, throughNode: String?, client: TalosClient, lockEnabled: Bool,
-         remove: ((String) async throws -> Void)? = nil, onRemoved: @escaping (String) -> Void) {
+    init(
+        member: EtcdMember, throughNode: String?, client: TalosClient, lockEnabled: Bool,
+        remove: ((String) async throws -> Void)? = nil, onRemoved: @escaping (String) -> Void
+    ) {
         self.member = member
         self.throughNode = throughNode
         self.client = client
@@ -109,7 +121,9 @@ struct EtcdRemoveMemberSheet: View {
         return Form {
             Section {
                 LabeledContent("Member", value: gate.confirmationName)
-                LabeledContent("Member ID") { Text(verbatim: plan.member.id).font(.caption.monospaced()).textSelection(.enabled) }
+                LabeledContent("Member ID") {
+                    Text(verbatim: plan.member.id).font(.caption.monospaced()).textSelection(.enabled)
+                }
             }
             Section {
                 LabeledContent("Members after", value: "\(plan.membersAfter)")
@@ -122,35 +136,54 @@ struct EtcdRemoveMemberSheet: View {
             if !plan.blockers.isEmpty || !plan.warnings.isEmpty || throughNode == nil {
                 Section("Checks") {
                     ForEach(plan.blockers, id: \.self) { blocker in
-                        Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }
-                            .foregroundStyle(.statusBad)
+                        Label {
+                            Text(verbatim: blocker)
+                        } icon: {
+                            Image(systemName: "xmark.octagon.fill")
+                        }
+                        .foregroundStyle(.statusBad)
                     }
                     if throughNode == nil {
                         Label("No other reachable member can take the request.", systemImage: "xmark.octagon.fill")
                             .foregroundStyle(.statusBad)
                     }
                     ForEach(plan.warnings, id: \.self) { warning in
-                        Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                            .foregroundStyle(.statusWarn)
+                        Label {
+                            Text(verbatim: warning)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                        }
+                        .foregroundStyle(.statusWarn)
                     }
                 }
             }
             Section {
                 if removing {
-                    HStack { ProgressView(); Text("Removing…") }
+                    HStack {
+                        ProgressView(); Text("Removing…")
+                    }
                 } else {
-                    Button(role: .destructive) { Task { await requestRemoval() } } label: { Text("Remove member…") }
-                        .disabled(!gate.canRemove || throughNode == nil)
+                    Button(role: .destructive) {
+                        Task { await requestRemoval() }
+                    } label: {
+                        Text("Remove member…")
+                    }
+                    .disabled(!gate.canRemove || throughNode == nil)
                 }
                 if let message { Text(message).font(.footnote).foregroundStyle(.statusBad) }
             } footer: {
-                Text("The member leaves the etcd cluster. This cannot be undone: the node must be reset or rejoin to become a member again.")
+                Text(
+                    "The member leaves the etcd cluster. This cannot be undone: the node must be reset or rejoin to become a member again."
+                )
             }
         }
         .sheet(isPresented: $confirming) {
             HostnameConfirmationSheet(
                 title: String(localized: "Remove \(gate.confirmationName) from etcd?"),
-                message: String(localized: "The member leaves the etcd cluster. This cannot be undone: the node must be reset or rejoin to become a member again."),
+                message: String(
+                    localized:
+                        "The member leaves the etcd cluster. This cannot be undone: the node must be reset or rejoin to become a member again."
+                ),
                 hostname: gate.confirmationName,
                 actionTitle: String(localized: "Remove member")
             ) {
@@ -166,7 +199,11 @@ struct EtcdRemoveMemberSheet: View {
 
     private func requestRemoval() async {
         message = nil
-        if lockEnabled, let failure = await Authenticator.authenticate(reason: String(localized: "Remove etcd member \(member.hostname.isEmpty ? member.id : member.hostname)")) {
+        if lockEnabled,
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Remove etcd member \(member.hostname.isEmpty ? member.id : member.hostname)")
+            )
+        {
             message = failure
             return
         }
@@ -187,7 +224,7 @@ struct EtcdRemoveMemberSheet: View {
             onRemoved(gate.confirmationName)
         } catch {
             message = error.localizedDescription
-            await load() // the plan may have changed
+            await load()  // the plan may have changed
         }
     }
 }

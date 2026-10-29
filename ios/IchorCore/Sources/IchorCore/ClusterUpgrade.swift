@@ -27,7 +27,9 @@ public struct ClusterUpgradeNode: Decodable, Equatable, Identifiable, Sendable {
     public var controlPlane: Bool { role == "controlplane" }
     public var nodeState: State { State(rawValue: state) ?? .pending }
 
-    private enum CodingKeys: String, CodingKey { case node, hostname, role, from, image, state, leader, blockers, warnings }
+    private enum CodingKeys: String, CodingKey {
+        case node, hostname, role, from, image, state, leader, blockers, warnings
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

@@ -29,8 +29,9 @@ struct OverviewNodesSection: View {
                 ForEach(groups) { group in
                     // Site headers only when there is more than one: a single site says nothing.
                     if groups.count > 1 { SiteHeader(title: group.title) }
-                    NodeGroupRows(nodes: group.nodes, expanded: expanded, sharedVersion: version,
-                                  tourNode: tourNode, path: $path)
+                    NodeGroupRows(
+                        nodes: group.nodes, expanded: expanded, sharedVersion: version,
+                        tourNode: tourNode, path: $path)
                 }
             }
         } header: {
@@ -42,16 +43,22 @@ struct OverviewNodesSection: View {
                     DetectPublicIPsButton(running: model.isDetectingPublicIPs, start: detectIPs)
                 }
                 Text(verbatim: "\(overview.nodes.count)")
-                if isDenseCluster(overview.nodes.count) || ListDetailLayout.isSplit(sizeClass, width: availableWidth ?? .infinity) {
+                if isDenseCluster(overview.nodes.count)
+                    || ListDetailLayout.isSplit(sizeClass, width: availableWidth ?? .infinity)
+                {
                     // A section holding hundreds of rows defeats the overview: a screen instead. On
                     // an iPad, also the list beside a node's hub.
-                    Button { path.append(.nodes(filter: nil, nodes: overview.nodes.overviewOrder)) } label: {
+                    Button {
+                        path.append(.nodes(filter: nil, nodes: overview.nodes.overviewOrder))
+                    } label: {
                         Image(systemName: "chevron.right")
                     }
                     .accessibilityLabel(Text("Show all nodes"))
                 }
                 if !isDenseCluster(overview.nodes.count) {
-                    Button { withAnimation { expanded.toggle() } } label: {
+                    Button {
+                        withAnimation { expanded.toggle() }
+                    } label: {
                         Image(systemName: expanded ? "chevron.up" : "chevron.down")
                     }
                     .accessibilityLabel(expanded ? Text("Show less") : Text("Show all"))

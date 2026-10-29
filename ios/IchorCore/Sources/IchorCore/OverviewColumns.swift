@@ -19,7 +19,11 @@ public enum OverviewColumns {
         var leading = cards.contains(.summary) ? [OverviewCard.summary] : []
         var trailing: [OverviewCard] = []
         for (index, card) in others.enumerated() {
-            if index.isMultiple(of: 2) == cards.contains(.summary) { trailing.append(card) } else { leading.append(card) }
+            if index.isMultiple(of: 2) == cards.contains(.summary) {
+                trailing.append(card)
+            } else {
+                leading.append(card)
+            }
         }
         return (leading, trailing)
     }

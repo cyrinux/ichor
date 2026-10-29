@@ -9,33 +9,34 @@ final class PluginFindingsTests: XCTestCase {
     private let registry = "plugin:external-secrets:target-missing:demo-lab/registry-pull"
 
     private let reportJSON = #"""
-    {"plugins": 2,
-     "findings": [
-      {"severity": "critical", "checkupNative": true, "key": "plugin:external-secrets:target-missing:demo-lab/registry-pull",
-       "plugin": "external-secrets", "pluginName": "External Secrets", "pluginIcon": "external-secrets",
-       "id": "target-missing", "title": "demo-lab/registry-pull", "detail": "its Secret is missing",
-       "ref": {"group": "external-secrets.io", "version": "v1", "resource": "externalsecrets", "namespace": "demo-lab", "name": "registry-pull"},
-       "opens": "secrets"},
-      {"severity": "warning", "key": "plugin:kube-green:asleep-no-wakeup:demo-lab/weekend",
-       "plugin": "kube-green", "pluginName": "kube-green", "id": "asleep-no-wakeup", "title": "demo-lab/weekend",
-       "detail": "no wake-up time", "ref": {"group": "kube-green.com", "version": "v1alpha1", "resource": "sleepinfos", "namespace": "demo-lab", "name": "weekend"},
-       "opens": "list"},
-      {"severity": "info", "plugin": "kube-green", "pluginName": "kube-green", "id": "note", "title": "a note",
-       "ref": {"resource": "sleepinfos", "name": "cluster-wide"}},
-      {"severity": "warning", "plugin": "demo-widgets", "id": "loose", "title": "no object"},
-      "not a finding"],
-     "errors": [{"plugin": "demo-widgets", "pluginName": "Demo Widgets", "resource": "widgets.widgets.example.com",
-       "message": "Kubernetes API: permission denied: forbidden"}]}
-    """#
+        {"plugins": 2,
+         "findings": [
+          {"severity": "critical", "checkupNative": true, "key": "plugin:external-secrets:target-missing:demo-lab/registry-pull",
+           "plugin": "external-secrets", "pluginName": "External Secrets", "pluginIcon": "external-secrets",
+           "id": "target-missing", "title": "demo-lab/registry-pull", "detail": "its Secret is missing",
+           "ref": {"group": "external-secrets.io", "version": "v1", "resource": "externalsecrets", "namespace": "demo-lab", "name": "registry-pull"},
+           "opens": "secrets"},
+          {"severity": "warning", "key": "plugin:kube-green:asleep-no-wakeup:demo-lab/weekend",
+           "plugin": "kube-green", "pluginName": "kube-green", "id": "asleep-no-wakeup", "title": "demo-lab/weekend",
+           "detail": "no wake-up time", "ref": {"group": "kube-green.com", "version": "v1alpha1", "resource": "sleepinfos", "namespace": "demo-lab", "name": "weekend"},
+           "opens": "list"},
+          {"severity": "info", "plugin": "kube-green", "pluginName": "kube-green", "id": "note", "title": "a note",
+           "ref": {"resource": "sleepinfos", "name": "cluster-wide"}},
+          {"severity": "warning", "plugin": "demo-widgets", "id": "loose", "title": "no object"},
+          "not a finding"],
+         "errors": [{"plugin": "demo-widgets", "pluginName": "Demo Widgets", "resource": "widgets.widgets.example.com",
+           "message": "Kubernetes API: permission denied: forbidden"}]}
+        """#
 
     private func report(_ json: String? = nil) throws -> PluginFindingsReport {
         try TalosJSON.decode(PluginFindingsReport.self, from: json ?? reportJSON)
     }
 
     private func snap(_ issues: [String: String]?, watched: Bool = true, context: String = "lab") -> ClusterSnapshot {
-        ClusterSnapshot(context: context, takenAt: now, nodes: ["a": NodeState(hostname: "host-a", health: .ready)],
-                        etcdChecked: true, certNotAfter: farCert,
-                        pluginWatched: watched, pluginChecked: watched && issues != nil, pluginIssues: issues ?? [:])
+        ClusterSnapshot(
+            context: context, takenAt: now, nodes: ["a": NodeState(hostname: "host-a", health: .ready)],
+            etcdChecked: true, certNotAfter: farCert,
+            pluginWatched: watched, pluginChecked: watched && issues != nil, pluginIssues: issues ?? [:])
     }
 
     // MARK: decoding
@@ -61,20 +62,23 @@ final class PluginFindingsTests: XCTestCase {
 
     func testAnImportedPluginNotifiesOnlyWhenTheUserSaidSo() throws {
         let key = "plugin:demo-widgets:widget-broken:demo-lab/gear"
-        let imported = try report(#"""
-        {"plugins": 1, "findings": [{"severity": "critical", "user": true, "key": "plugin:demo-widgets:widget-broken:demo-lab/gear",
-          "plugin": "demo-widgets", "id": "widget-broken", "title": "demo-lab/gear"}]}
-        """#)
+        let imported = try report(
+            #"""
+            {"plugins": 1, "findings": [{"severity": "critical", "user": true, "key": "plugin:demo-widgets:widget-broken:demo-lab/gear",
+              "plugin": "demo-widgets", "id": "widget-broken", "title": "demo-lab/gear"}]}
+            """#)
         XCTAssertTrue(imported.findings[0].info.user)
         XCTAssertEqual(pluginIssuesOf(imported, checkupWatched: false), [:])
         XCTAssertEqual(Array(pluginIssuesOf(imported, checkupWatched: false, importedWatched: true).keys), [key])
 
         // The checkup's plugins section follows the same switch.
-        let checkup = try TalosJSON.decode(CheckupReport.self, from: #"""
-        {"status":"critical","sections":[{"id":"plugins","status":"critical","checked":1,"findings":[
-          {"kind":"plugin","severity":"critical","namespace":"demo-lab","name":"gear","user":true,
-           "key":"plugin:demo-widgets:widget-broken:demo-lab/gear","plugin":"demo-widgets","id":"widget-broken","title":"demo-lab/gear"}]}]}
-        """#)
+        let checkup = try TalosJSON.decode(
+            CheckupReport.self,
+            from: #"""
+                {"status":"critical","sections":[{"id":"plugins","status":"critical","checked":1,"findings":[
+                  {"kind":"plugin","severity":"critical","namespace":"demo-lab","name":"gear","user":true,
+                   "key":"plugin:demo-widgets:widget-broken:demo-lab/gear","plugin":"demo-widgets","id":"widget-broken","title":"demo-lab/gear"}]}]}
+                """#)
         XCTAssertEqual(checkup.alertIssues, [:])
         XCTAssertEqual(checkup.alertIssues(gitopsWatched: false, importedPluginsWatched: true).count, 1)
     }
@@ -99,8 +103,11 @@ final class PluginFindingsTests: XCTestCase {
         let issues = pluginIssuesOf(try report(), checkupWatched: false)
         XCTAssertEqual(Set(issues.keys), [registry, weekend, "plugin:demo-widgets:loose"])
         let issue = PluginIssue(value: try XCTUnwrap(issues[weekend]))
-        XCTAssertEqual(issue, PluginIssue(severity: dataWarning, pluginName: "kube-green", title: "demo-lab/weekend",
-                                          detail: "no wake-up time", opens: "list"))
+        XCTAssertEqual(
+            issue,
+            PluginIssue(
+                severity: dataWarning, pluginName: "kube-green", title: "demo-lab/weekend",
+                detail: "no wake-up time", opens: "list"))
         XCTAssertEqual(pluginIssueSeverity(try XCTUnwrap(issues[registry])), dataCritical)
     }
 
@@ -112,18 +119,19 @@ final class PluginFindingsTests: XCTestCase {
 
     func testDuplicateKeysKeepTheWorst() throws {
         let json = #"""
-        {"plugins": 1, "findings": [
-          {"severity": "warning", "key": "plugin:p:f:ns/a", "plugin": "p", "title": "w"},
-          {"severity": "critical", "key": "plugin:p:f:ns/a", "plugin": "p", "title": "c"},
-          {"severity": "warning", "key": "plugin:p:f:ns/a", "plugin": "p", "title": "w2"}]}
-        """#
+            {"plugins": 1, "findings": [
+              {"severity": "warning", "key": "plugin:p:f:ns/a", "plugin": "p", "title": "w"},
+              {"severity": "critical", "key": "plugin:p:f:ns/a", "plugin": "p", "title": "c"},
+              {"severity": "warning", "key": "plugin:p:f:ns/a", "plugin": "p", "title": "w2"}]}
+            """#
         let issues = pluginIssuesOf(try report(json), checkupWatched: false)
         XCTAssertEqual(issues.count, 1)
         XCTAssertEqual(PluginIssue(value: try XCTUnwrap(issues["plugin:p:f:ns/a"])).title, "c")
     }
 
     func testIssueValueRoundTripsAndToleratesABareSeverity() {
-        let issue = PluginIssue(severity: dataCritical, pluginName: "kube-green", title: "a|b", detail: "x:y", opens: "list")
+        let issue = PluginIssue(
+            severity: dataCritical, pluginName: "kube-green", title: "a|b", detail: "x:y", opens: "list")
         XCTAssertEqual(PluginIssue(value: issue.value), issue)
         XCTAssertEqual(issue.value, issue.value)
         XCTAssertEqual(PluginIssue(value: "critical").severity, dataCritical)
@@ -135,8 +143,10 @@ final class PluginFindingsTests: XCTestCase {
         // demo-widgets could not be read in full: its known issue stays; kube-green's that is gone clears.
         let widget = "plugin:demo-widgets:other:ns/w"
         let gone = "plugin:kube-green:asleep-no-wakeup:demo-lab/gone"
-        let known = [widget: PluginIssue(severity: dataWarning, pluginName: "Demo Widgets", title: "ns/w").value,
-                     gone: PluginIssue(severity: dataWarning, pluginName: "kube-green", title: "demo-lab/gone").value]
+        let known = [
+            widget: PluginIssue(severity: dataWarning, pluginName: "Demo Widgets", title: "ns/w").value,
+            gone: PluginIssue(severity: dataWarning, pluginName: "kube-green", title: "demo-lab/gone").value,
+        ]
         let issues = try XCTUnwrap(pluginIssuesWithGaps(try report(), known: known, checkupWatched: false))
         XCTAssertNotNil(issues[widget])
         XCTAssertNil(issues[gone])
@@ -151,10 +161,11 @@ final class PluginFindingsTests: XCTestCase {
 
     func testCheckupWatchedDropsACarriedNativeIssue() throws {
         let json = #"""
-        {"plugins": 1, "findings": [{"severity": "critical", "checkupNative": true, "key": "plugin:external-secrets:f:ns/a", "plugin": "external-secrets"}],
-         "truncated": 1}
-        """#
-        let issues = pluginIssuesWithGaps(try report(json), known: ["plugin:external-secrets:f:ns/a": "v"], checkupWatched: true)
+            {"plugins": 1, "findings": [{"severity": "critical", "checkupNative": true, "key": "plugin:external-secrets:f:ns/a", "plugin": "external-secrets"}],
+             "truncated": 1}
+            """#
+        let issues = pluginIssuesWithGaps(
+            try report(json), known: ["plugin:external-secrets:f:ns/a": "v"], checkupWatched: true)
         XCTAssertEqual(issues, [:])
     }
 
@@ -172,7 +183,8 @@ final class PluginFindingsTests: XCTestCase {
         let data = try JSONEncoder().encode(snap([weekend: "v"]))
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         for key in ["pluginWatched", "pluginChecked", "pluginIssues", "pluginPending"] { object[key] = nil }
-        let decoded = try JSONDecoder().decode(ClusterSnapshot.self, from: JSONSerialization.data(withJSONObject: object))
+        let decoded = try JSONDecoder().decode(
+            ClusterSnapshot.self, from: JSONSerialization.data(withJSONObject: object))
         XCTAssertFalse(decoded.pluginWatched)
         XCTAssertEqual(decoded.pluginIssues, [:])
         let roundTrip = try JSONDecoder().decode(ClusterSnapshot.self, from: data)
@@ -185,18 +197,32 @@ final class PluginFindingsTests: XCTestCase {
         let baseline = evaluate(previous: nil, current: snap([:]), now: now)
         XCTAssertTrue(baseline.alerts.isEmpty)
 
-        let critical = [registry: PluginIssue(severity: dataCritical, pluginName: "External Secrets", title: "demo-lab/registry-pull",
-                                              detail: "its Secret is missing").value]
+        let critical = [
+            registry: PluginIssue(
+                severity: dataCritical, pluginName: "External Secrets", title: "demo-lab/registry-pull",
+                detail: "its Secret is missing"
+            ).value
+        ]
         let raised = evaluate(previous: baseline.next, current: snap(critical), now: now)
-        XCTAssertEqual(raised.alerts, [Alert(key: registry, title: "External Secrets: demo-lab/registry-pull",
-                                             text: "its Secret is missing · critical", problem: true)])
+        XCTAssertEqual(
+            raised.alerts,
+            [
+                Alert(
+                    key: registry, title: "External Secrets: demo-lab/registry-pull",
+                    text: "its Secret is missing · critical", problem: true)
+            ])
         // Seen again: quiet.
         let again = evaluate(previous: raised.next, current: snap(critical), now: now)
         XCTAssertTrue(again.alerts.isEmpty)
         // Gone: says so once, named from the issue kept.
         let cleared = evaluate(previous: again.next, current: snap([:]), now: now)
-        XCTAssertEqual(cleared.alerts, [Alert(key: registry, title: "demo-lab/registry-pull is healthy again",
-                                              text: "External Secrets", problem: false)])
+        XCTAssertEqual(
+            cleared.alerts,
+            [
+                Alert(
+                    key: registry, title: "demo-lab/registry-pull is healthy again",
+                    text: "External Secrets", problem: false)
+            ])
         XCTAssertFalse(issues.isEmpty)
     }
 
@@ -225,14 +251,18 @@ final class PluginFindingsTests: XCTestCase {
     }
 
     func testSnapshotsCarryThePluginTrack() throws {
-        let kube = kubeSnapshotOf(KubeNodesOverview(), context: "k", certNotAfter: 0, takenAt: now, pluginWatched: true, pluginIssues: [weekend: "v"])
+        let kube = kubeSnapshotOf(
+            KubeNodesOverview(), context: "k", certNotAfter: 0, takenAt: now, pluginWatched: true,
+            pluginIssues: [weekend: "v"])
         XCTAssertTrue(kube.pluginChecked)
         XCTAssertEqual(kube.pluginIssues, [weekend: "v"])
         let overview = try TalosJSON.decode(ClusterOverview.self, from: #"{"context":"lab","nodes":[]}"#)
-        let unread = snapshotOf(overview, etcd: nil, certNotAfter: 0, takenAt: now, pluginWatched: true, pluginIssues: nil)
+        let unread = snapshotOf(
+            overview, etcd: nil, certNotAfter: 0, takenAt: now, pluginWatched: true, pluginIssues: nil)
         XCTAssertTrue(unread.pluginWatched)
         XCTAssertFalse(unread.pluginChecked)
-        let off = snapshotOf(overview, etcd: nil, certNotAfter: 0, takenAt: now, pluginWatched: false, pluginIssues: [weekend: "v"])
+        let off = snapshotOf(
+            overview, etcd: nil, certNotAfter: 0, takenAt: now, pluginWatched: false, pluginIssues: [weekend: "v"])
         XCTAssertEqual(off.pluginIssues, [:])
     }
 
@@ -253,18 +283,18 @@ final class PluginFindingsTests: XCTestCase {
     // MARK: checkup
 
     private let checkupJSON = #"""
-    {"status": "warning", "sections": [
-      {"id": "plugins", "status": "warning", "checked": 4, "error": "demo-widgets: widgets: forbidden", "findings": [
-        {"kind": "plugin", "severity": "warning", "namespace": "demo-lab", "name": "weekend",
-         "key": "plugin:kube-green:schedule-warning:demo-lab/weekend",
-         "plugin": "kube-green", "pluginName": "kube-green", "pluginIcon": "kube-green",
-         "id": "schedule-warning", "title": "demo-lab/weekend", "detail": "no wake-up time",
-         "ref": {"group": "kube-green.com", "version": "v1alpha1", "resource": "sleepinfos", "namespace": "demo-lab", "name": "weekend"},
-         "opens": "list"},
-        {"kind": "plugin", "severity": "critical", "namespace": "demo-lab", "name": "weekend", "plugin": "other", "id": "x", "title": "t"},
-        {"kind": "plugin", "severity": "warning", "plugin": "loose", "id": "y", "title": "about nothing"},
-        {"kind": "plugin", "severity": "info", "plugin": "kube-green", "id": "z", "title": "note"}]}]}
-    """#
+        {"status": "warning", "sections": [
+          {"id": "plugins", "status": "warning", "checked": 4, "error": "demo-widgets: widgets: forbidden", "findings": [
+            {"kind": "plugin", "severity": "warning", "namespace": "demo-lab", "name": "weekend",
+             "key": "plugin:kube-green:schedule-warning:demo-lab/weekend",
+             "plugin": "kube-green", "pluginName": "kube-green", "pluginIcon": "kube-green",
+             "id": "schedule-warning", "title": "demo-lab/weekend", "detail": "no wake-up time",
+             "ref": {"group": "kube-green.com", "version": "v1alpha1", "resource": "sleepinfos", "namespace": "demo-lab", "name": "weekend"},
+             "opens": "list"},
+            {"kind": "plugin", "severity": "critical", "namespace": "demo-lab", "name": "weekend", "plugin": "other", "id": "x", "title": "t"},
+            {"kind": "plugin", "severity": "warning", "plugin": "loose", "id": "y", "title": "about nothing"},
+            {"kind": "plugin", "severity": "info", "plugin": "kube-green", "id": "z", "title": "note"}]}]}
+        """#
 
     func testCheckupDecodesPluginFindings() throws {
         let report = try TalosJSON.decode(CheckupReport.self, from: checkupJSON)
@@ -284,10 +314,12 @@ final class PluginFindingsTests: XCTestCase {
     func testCheckupPluginFindingsAlertUnlessThePluginTrackIsWatched() throws {
         let report = try TalosJSON.decode(CheckupReport.self, from: checkupJSON)
         // Two findings on one object: the worst; one about no object: its title; the info: none.
-        XCTAssertEqual(report.alertIssues(gitopsWatched: false), [
-            "plugins|plugin|demo-lab/weekend": "critical",
-            "plugins|plugin|about nothing": "warning",
-        ])
+        XCTAssertEqual(
+            report.alertIssues(gitopsWatched: false),
+            [
+                "plugins|plugin|demo-lab/weekend": "critical",
+                "plugins|plugin|about nothing": "warning",
+            ])
         XCTAssertEqual(report.alertIssues(gitopsWatched: false, pluginsWatched: true), [:])
         // The section could not be read in full: a known plugin finding stays, unless the plugins' track has it.
         let known = ["plugins|plugin|demo-lab/gone": "warning"]
@@ -296,7 +328,8 @@ final class PluginFindingsTests: XCTestCase {
     }
 
     func testOtherKindsHaveNoPluginInfo() throws {
-        let json = #"{"status":"ok","sections":[{"id":"workloads","status":"warning","findings":[{"kind":"podFailed","severity":"warning","plugin":"x","title":"t"}]}]}"#
+        let json =
+            #"{"status":"ok","sections":[{"id":"workloads","status":"warning","findings":[{"kind":"podFailed","severity":"warning","plugin":"x","title":"t"}]}]}"#
         let report = try TalosJSON.decode(CheckupReport.self, from: json)
         XCTAssertNil(report.sections.first?.findings.first?.plugin)
     }

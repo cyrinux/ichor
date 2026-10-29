@@ -14,8 +14,10 @@ public struct BackupAI: Codable, Equatable, Sendable {
     public var baseUrls: [String: String]?
     public var anonymize: Bool?
 
-    public init(enabled: Bool? = nil, provider: String? = nil, models: [String: String]? = nil,
-                baseUrls: [String: String]? = nil, anonymize: Bool? = nil) {
+    public init(
+        enabled: Bool? = nil, provider: String? = nil, models: [String: String]? = nil,
+        baseUrls: [String: String]? = nil, anonymize: Bool? = nil
+    ) {
         self.enabled = enabled
         self.provider = provider
         self.models = models

@@ -63,9 +63,11 @@ struct ArgoRolloutSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
-            .confirmationDialog(confirming.map { $0.question(rollout.name) } ?? "",
-                                isPresented: $confirming.isPresent(),
-                                titleVisibility: .visible, presenting: confirming) { action in
+            .confirmationDialog(
+                confirming.map { $0.question(rollout.name) } ?? "",
+                isPresented: $confirming.isPresent(),
+                titleVisibility: .visible, presenting: confirming
+            ) { action in
                 Button(action.title, role: action == .abort ? .destructive : nil) { onAction(action) }
                 Button("Cancel", role: .cancel) {}
             } message: { action in
@@ -100,7 +102,9 @@ struct ArgoRolloutSheet: View {
                 LabeledContent("Phase") { Text(verbatim: rollout.phase).foregroundStyle(rollout.level.color) }
             }
             if !rollout.message.isEmpty {
-                LabeledContent("Message") { Text(verbatim: rollout.message).font(.callout).multilineTextAlignment(.trailing) }
+                LabeledContent("Message") {
+                    Text(verbatim: rollout.message).font(.callout).multilineTextAlignment(.trailing)
+                }
             }
             Text("\(String(rollout.ready)) ready of \(String(rollout.replicas)) · \(String(rollout.updated)) updated")
             if !rollout.stableHash.isEmpty || !rollout.currentHash.isEmpty {

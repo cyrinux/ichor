@@ -4,19 +4,19 @@ import XCTest
 /// Mirrors the Android CastAITest: the same wire JSON, the same expectations.
 final class CastAITests: XCTestCase {
     private let json = #"""
-    {"castai":{"version":"v1","error":"","compared":2,"cpuDeltaMilli":-430,"memoryDeltaBytes":-268435456,
-     "recommendations":[
-      {"namespace":"shop","name":"worker-statefulset","kind":"StatefulSet","workload":"worker","mode":"immediate",
-       "health":"critical","reasons":["vpa"],"message":"webhook unreachable",
-       "containers":[{"name":"worker","cpu":"2","memory":"3Gi"}]},
-      {"namespace":"shop","name":"report-cronjob","kind":"CronJob","workload":"report","mode":"deferred","readOnly":true,
-       "health":"warning","reasons":["readOnly","later"],"message":"managed by another autoscaler",
-       "containers":[{"name":"report","cpu":"50m","memory":"256Mi","originalCpu":"100m","originalMemory":"128Mi"}],
-       "cpuDeltaMilli":-50,"memoryDeltaBytes":134217728},
-      {"namespace":"shop","name":"api-deployment","kind":"Deployment","workload":"api","mode":"deferred","health":"ok","reasons":[],
-       "containers":[{"name":"api","cpu":"120m","memory":"640Mi","cpuLimit":"1","memoryLimit":"1Gi","originalCpu":"500m","originalMemory":"1Gi"}],
-       "cpuDeltaMilli":-380,"memoryDeltaBytes":-402653184}]}}
-    """#
+        {"castai":{"version":"v1","error":"","compared":2,"cpuDeltaMilli":-430,"memoryDeltaBytes":-268435456,
+         "recommendations":[
+          {"namespace":"shop","name":"worker-statefulset","kind":"StatefulSet","workload":"worker","mode":"immediate",
+           "health":"critical","reasons":["vpa"],"message":"webhook unreachable",
+           "containers":[{"name":"worker","cpu":"2","memory":"3Gi"}]},
+          {"namespace":"shop","name":"report-cronjob","kind":"CronJob","workload":"report","mode":"deferred","readOnly":true,
+           "health":"warning","reasons":["readOnly","later"],"message":"managed by another autoscaler",
+           "containers":[{"name":"report","cpu":"50m","memory":"256Mi","originalCpu":"100m","originalMemory":"128Mi"}],
+           "cpuDeltaMilli":-50,"memoryDeltaBytes":134217728},
+          {"namespace":"shop","name":"api-deployment","kind":"Deployment","workload":"api","mode":"deferred","health":"ok","reasons":[],
+           "containers":[{"name":"api","cpu":"120m","memory":"640Mi","cpuLimit":"1","memoryLimit":"1Gi","originalCpu":"500m","originalMemory":"1Gi"}],
+           "cpuDeltaMilli":-380,"memoryDeltaBytes":-402653184}]}}
+        """#
 
     private var services: DataServices { get throws { try TalosJSON.decode(DataServices.self, from: json) } }
     private var castai: CastAIStatus { get throws { try XCTUnwrap(try services.castai) } }
@@ -94,9 +94,10 @@ final class CastAITests: XCTestCase {
 
     func testOverviewShowsTheFirstGrowersOnly() {
         let recs = (1...8).map { i in
-            CastAIRecommendation(namespace: "ns", name: "w\(i)", workload: "w\(i)",
-                                 containers: [CastAIContainer(name: "c", cpu: "1", originalCpu: "500m")],
-                                 cpuDeltaMilli: Int64(100 * i))
+            CastAIRecommendation(
+                namespace: "ns", name: "w\(i)", workload: "w\(i)",
+                containers: [CastAIContainer(name: "c", cpu: "1", originalCpu: "500m")],
+                cpuDeltaMilli: Int64(100 * i))
         }
         let status = CastAIStatus(recommendations: recs)
         let grows = status.sections(.overview).first { $0.kind == .grows }
@@ -110,14 +111,19 @@ final class CastAITests: XCTestCase {
 
     func testNamespacesCarryTheirTotals() throws {
         let c = try castai
-        let two = c.with(recommendations: c.recommendations + [CastAIRecommendation(namespace: "ads", name: "x", workload: "x", cpuDeltaMilli: -10)])
+        let two = c.with(
+            recommendations: c.recommendations + [
+                CastAIRecommendation(namespace: "ads", name: "x", workload: "x", cpuDeltaMilli: -10)
+            ])
         let sections = two.sections(.namespaces)
         XCTAssertEqual(sections.map(\.namespace), ["ads", "shop"])
         XCTAssertEqual(sections[1].cpuDeltaMilli, -430)
     }
 
     func testFlagsARequestNearItsMemoryLimit() {
-        let near = CastAIRecommendation(containers: [CastAIContainer(memoryLimitPercent: 40), CastAIContainer(memoryLimitPercent: 88)])
+        let near = CastAIRecommendation(containers: [
+            CastAIContainer(memoryLimitPercent: 40), CastAIContainer(memoryLimitPercent: 88),
+        ])
         XCTAssertTrue(near.nearMemoryLimit)
         XCTAssertEqual(near.memoryLimitPercent, 88)
         XCTAssertFalse(CastAIRecommendation(containers: [CastAIContainer(memoryLimitPercent: 60)]).nearMemoryLimit)
@@ -130,7 +136,9 @@ final class CastAITests: XCTestCase {
     }
 
     func testHintsIncludeCastAI() throws {
-        let inventory = try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[{"id":"castai","name":"CAST AI"},{"id":"rook","name":"Rook Ceph"}]}"#)
+        let inventory = try TalosJSON.decode(
+            ClusterInventory.self,
+            from: #"{"apps":[{"id":"castai","name":"CAST AI"},{"id":"rook","name":"Rook Ceph"}]}"#)
         // Rook Ceph is a plugin now: it detects itself, no hint needed.
         XCTAssertEqual(dataServiceHints(inventory), "castai")
     }

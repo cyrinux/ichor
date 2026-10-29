@@ -23,7 +23,9 @@ struct VMConsoleView: View {
                         Text("Opens the serial console of \(target), like virtctl console.")
                             .font(.callout)
                     } footer: {
-                        Text("The guest must send its console to ttyS0 (or hvc0) for anything to show. One viewer at a time: opening it elsewhere disconnects this one.")
+                        Text(
+                            "The guest must send its console to ttyS0 (or hvc0) for anything to show. One viewer at a time: opening it elsewhere disconnects this one."
+                        )
                     }
                     KubeDeniedNote(.vmConsole, in: namespace)
                     if let error { Text(error).foregroundStyle(.statusBad) }
@@ -61,7 +63,9 @@ struct VMConsoleView: View {
     /// The console may sit at a logged-in shell: with the app lock on, it asks like a pod's.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Serial console of \(name)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Serial console of \(name)"))
+        {
             error = failure
             return
         }

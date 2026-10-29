@@ -90,7 +90,9 @@ public func matchingNamespaces(_ namespaces: [String], query: String) -> [String
 
 /// The scopes remembered per cluster (fingerprint -> `KubeScope.stored`) once `scope` is set
 /// for `fingerprint`: one not chosen forgets it; a blank fingerprint changes nothing.
-public func settingKubeScope(_ scope: KubeScope, for fingerprint: String, in scopes: [String: String]) -> [String: String] {
+public func settingKubeScope(_ scope: KubeScope, for fingerprint: String, in scopes: [String: String]) -> [String:
+    String]
+{
     guard !fingerprint.trimmingCharacters(in: .whitespaces).isEmpty else { return scopes }
     var next = scopes
     next[fingerprint] = scope.stored
@@ -123,7 +125,8 @@ public struct KubePageWire<Item: KubePageItem>: Decodable, Sendable {
 
     /// `detailed`: asked as full objects rather than a Table.
     public func page(detailed: Bool) -> KubePage<Item> {
-        KubePage(items: items, continueToken: continueToken, remaining: remaining, complete: complete, detailed: detailed)
+        KubePage(
+            items: items, continueToken: continueToken, remaining: remaining, complete: complete, detailed: detailed)
     }
 
     private struct Key: CodingKey {

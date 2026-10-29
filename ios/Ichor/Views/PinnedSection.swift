@@ -19,15 +19,25 @@ struct PinnedSection: View {
     var body: some View {
         Section {
             ForEach(pins) { pin in
-                Button { open(pin) } label: {
+                Button {
+                    open(pin)
+                } label: {
                     PinnedRow(pin: pin, masked: masked, chip: chip(pin))
                 }
                 .foregroundStyle(.primary)
                 .swipeActions {
-                    Button(role: .destructive) { unpin(pin) } label: { Label("Unpin", systemImage: "pin.slash") }
+                    Button(role: .destructive) {
+                        unpin(pin)
+                    } label: {
+                        Label("Unpin", systemImage: "pin.slash")
+                    }
                 }
                 .contextMenu {
-                    Button(role: .destructive) { unpin(pin) } label: { Label("Unpin", systemImage: "pin.slash") }
+                    Button(role: .destructive) {
+                        unpin(pin)
+                    } label: {
+                        Label("Unpin", systemImage: "pin.slash")
+                    }
                 }
             }
         } header: {
@@ -46,7 +56,9 @@ struct PinnedSection: View {
             let color = app.health == .healthy && app.sync == .outOfSync ? app.sync.color : app.health.color
             return PinChip(text: "\(app.health.label) · \(app.sync.label)", color: color)
         case .fluxApp:
-            guard let app = flux?.app(kind: target.kind, namespace: target.namespace, name: target.name) else { return nil }
+            guard let app = flux?.app(kind: target.kind, namespace: target.namespace, name: target.name) else {
+                return nil
+            }
             return PinChip(text: app.state.label, color: app.state.color)
         default:
             return nil
@@ -145,17 +157,22 @@ struct PinButton: View {
             let store = PinStore.shared
             let pins = store.pins(for: fingerprint)
             if pins.contains(target) {
-                Button { store.remove(target, fingerprint: fingerprint) } label: {
+                Button {
+                    store.remove(target, fingerprint: fingerprint)
+                } label: {
                     Label("Unpin", systemImage: "pin.slash")
                 }
             } else if pins.isFull {
                 // A menu item cannot explain itself once tapped: the limit is its title.
-                Button {} label: {
+                Button {
+                } label: {
                     Label(String(localized: "\(PinList.limit) pins at most. Unpin one first."), systemImage: "pin")
                 }
                 .disabled(true)
             } else {
-                Button { store.toggle(Pin(target: target, label: label), fingerprint: fingerprint) } label: {
+                Button {
+                    store.toggle(Pin(target: target, label: label), fingerprint: fingerprint)
+                } label: {
                     Label("Pin", systemImage: "pin")
                 }
             }
@@ -163,7 +180,8 @@ struct PinButton: View {
     }
 
     private var fingerprint: String? {
-        guard !model.privacyMask, let context = model.activeSummary, !context.isKube, !context.fingerprint.isEmpty else { return nil }
+        guard !model.privacyMask, let context = model.activeSummary, !context.isKube, !context.fingerprint.isEmpty
+        else { return nil }
         return context.fingerprint
     }
 }

@@ -14,16 +14,21 @@ final class MaskTransitionTests: XCTestCase {
 
     func testPathKeepsOnlyTheSettingsOnTop() {
         let isSettings: (String) -> Bool = { $0.hasPrefix("settings") }
-        XCTAssertEqual(pathKeptOnMaskSwitch(["node", "settings", "settings.privacy"], isSettings: isSettings),
-                       ["settings", "settings.privacy"])
+        XCTAssertEqual(
+            pathKeptOnMaskSwitch(["node", "settings", "settings.privacy"], isSettings: isSettings),
+            ["settings", "settings.privacy"])
         XCTAssertEqual(pathKeptOnMaskSwitch(["settings", "node", "settings"], isSettings: isSettings), ["settings"])
         XCTAssertEqual(pathKeptOnMaskSwitch(["node", "logs"], isSettings: isSettings), [])
         XCTAssertEqual(pathKeptOnMaskSwitch([], isSettings: isSettings), [])
     }
 
     func testAlertNotificationsAreTheOnesRemoved() {
-        XCTAssertTrue(notificationNamesClusters(category: alertCategory(kind: "node", actions: [], hideDetails: false), identifier: "a"))
-        XCTAssertTrue(notificationNamesClusters(category: alertCategory(kind: "etcd", actions: [], hideDetails: true), identifier: "a"))
+        XCTAssertTrue(
+            notificationNamesClusters(
+                category: alertCategory(kind: "node", actions: [], hideDetails: false), identifier: "a"))
+        XCTAssertTrue(
+            notificationNamesClusters(
+                category: alertCategory(kind: "etcd", actions: [], hideDetails: true), identifier: "a"))
         XCTAssertTrue(notificationNamesClusters(category: "private", identifier: "a"))
         XCTAssertTrue(notificationNamesClusters(category: "", identifier: "wake|demo|node"))
         XCTAssertFalse(notificationNamesClusters(category: "freeze", identifier: "freeze-1"))

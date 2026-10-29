@@ -7,23 +7,31 @@ final class KubeNodeDiskTests: XCTestCase {
 
     /// The Go core's answer: one node near full, one fine, one under DiskPressure at a low fill.
     private let wire = #"""
-    {"nodes":[
-      {"name":"worker-a","usedPercent":91,"availableBytes":9663676416,"capacityBytes":107374182400,"imageFsUsedPercent":40,"diskPressure":false},
-      {"name":"worker-b","usedPercent":42,"availableBytes":62277025792,"capacityBytes":107374182400},
-      {"name":"worker-c","usedPercent":60,"availableBytes":42949672960,"capacityBytes":107374182400,"diskPressure":true}],
-     "forbidden":false,"measured":3}
-    """#
+        {"nodes":[
+          {"name":"worker-a","usedPercent":91,"availableBytes":9663676416,"capacityBytes":107374182400,"imageFsUsedPercent":40,"diskPressure":false},
+          {"name":"worker-b","usedPercent":42,"availableBytes":62277025792,"capacityBytes":107374182400},
+          {"name":"worker-c","usedPercent":60,"availableBytes":42949672960,"capacityBytes":107374182400,"diskPressure":true}],
+         "forbidden":false,"measured":3}
+        """#
 
     private func decoded() throws -> KubeNodeDisk { try TalosJSON.decode(KubeNodeDisk.self, from: wire) }
 
-    private func disk(_ percent: Int, pressure: Bool = false, forbidden: Bool = false, skipped: Bool = false) -> KubeNodeDisk {
-        KubeNodeDisk(nodes: [KubeNodeDiskNode(name: "worker-a", usedPercent: percent, availableBytes: 2 << 30,
-                                              capacityBytes: 100 << 30, diskPressure: pressure)],
-                     forbidden: forbidden, measured: 1, skipped: skipped)
+    private func disk(_ percent: Int, pressure: Bool = false, forbidden: Bool = false, skipped: Bool = false)
+        -> KubeNodeDisk
+    {
+        KubeNodeDisk(
+            nodes: [
+                KubeNodeDiskNode(
+                    name: "worker-a", usedPercent: percent, availableBytes: 2 << 30,
+                    capacityBytes: 100 << 30, diskPressure: pressure)
+            ],
+            forbidden: forbidden, measured: 1, skipped: skipped)
     }
 
-    private func issues(_ disk: KubeNodeDisk, warn: Int = 85, critical: Int = 95, listed: Set<String> = [],
-                        known: [String: String] = [:], demo: Bool = false) -> [String: String]? {
+    private func issues(
+        _ disk: KubeNodeDisk, warn: Int = 85, critical: Int = 95, listed: Set<String> = [],
+        known: [String: String] = [:], demo: Bool = false
+    ) -> [String: String]? {
         storageIssues(of: disk, warn: warn, critical: critical, listed: listed, known: known, demo: demo)
     }
 
@@ -49,8 +57,11 @@ final class KubeNodeDiskTests: XCTestCase {
     func testWarningAtTheWarnThreshold() {
         XCTAssertEqual(issues(disk(84)), [:])
         let issue = StorageIssue(value: issues(disk(85))?[kubeNodeDiskKey("worker-a")] ?? "")
-        XCTAssertEqual(issue, StorageIssue(severity: dataWarning, kind: StorageIssue.fill, hostname: "worker-a", name: "nodefs",
-                                           percent: "85", freeBytes: 2 << 30, sizeBytes: 100 << 30))
+        XCTAssertEqual(
+            issue,
+            StorageIssue(
+                severity: dataWarning, kind: StorageIssue.fill, hostname: "worker-a", name: "nodefs",
+                percent: "85", freeBytes: 2 << 30, sizeBytes: 100 << 30))
     }
 
     func testCriticalPastTheCriticalThreshold() {
@@ -72,7 +83,8 @@ final class KubeNodeDiskTests: XCTestCase {
         XCTAssertEqual(severity(out), dataWarning)
         XCTAssertEqual(severity(issues(disk(10, pressure: true))), dataCritical)
         // Pressure reported by a node whose kubelet gave no size still counts.
-        let unsized = KubeNodeDisk(nodes: [KubeNodeDiskNode(name: "worker-a", usedPercent: 0, diskPressure: true)], measured: 0)
+        let unsized = KubeNodeDisk(
+            nodes: [KubeNodeDiskNode(name: "worker-a", usedPercent: 0, diskPressure: true)], measured: 0)
         XCTAssertEqual(severity(issues(unsized)), dataCritical)
     }
 
@@ -88,8 +100,12 @@ final class KubeNodeDiskTests: XCTestCase {
     }
 
     func testANodeListedButSilentKeepsItsIssuesAndAGoneNodeDropsThem() {
-        let kept = StorageIssue(severity: dataCritical, kind: StorageIssue.fill, hostname: "worker-b", name: "nodefs", percent: "97").value
-        let gone = StorageIssue(severity: dataWarning, kind: StorageIssue.fill, hostname: "worker-z", name: "nodefs", percent: "88").value
+        let kept = StorageIssue(
+            severity: dataCritical, kind: StorageIssue.fill, hostname: "worker-b", name: "nodefs", percent: "97"
+        ).value
+        let gone = StorageIssue(
+            severity: dataWarning, kind: StorageIssue.fill, hostname: "worker-z", name: "nodefs", percent: "88"
+        ).value
         let known = ["worker-a|nodefs": kept, "worker-b|nodefs": kept, "worker-z|nodefs": gone]
         let out = issues(disk(50), listed: ["worker-a", "worker-b"], known: known)
         // worker-a answered (now fine): cleared; worker-b listed, silent: kept; worker-z no longer listed: dropped.
@@ -107,19 +123,29 @@ final class KubeNodeDiskTests: XCTestCase {
         XCTAssertEqual(kubeNodeDiskKey("worker-a"), "worker-a|nodefs")
         XCTAssertEqual(storageIssueNode("worker-a|nodefs"), "worker-a")
         // The same value the Talos path stores for a volume "nodefs" of host worker-a at that fill.
-        let talos = storageIssuesOf(ClusterStorageHealth(nodes: [StorageNode(node: "worker-a", hostname: "worker-a", volumes: [
-            StorageVolume(key: "worker-a|nodefs", name: "nodefs", usedPercent: 91, freeBytes: 9_663_676_416, sizeBytes: 107_374_182_400),
-        ])]), thresholds: StorageThresholds())
+        let talos = storageIssuesOf(
+            ClusterStorageHealth(nodes: [
+                StorageNode(
+                    node: "worker-a", hostname: "worker-a",
+                    volumes: [
+                        StorageVolume(
+                            key: "worker-a|nodefs", name: "nodefs", usedPercent: 91, freeBytes: 9_663_676_416,
+                            sizeBytes: 107_374_182_400)
+                    ])
+            ]), thresholds: StorageThresholds())
         XCTAssertEqual(first?["worker-a|nodefs"], talos["worker-a|nodefs"])
         let history = historyVolumes(try decoded())
         XCTAssertEqual(history.map(\.key), ["worker-a|nodefs", "worker-b|nodefs", "worker-c|nodefs"])
-        XCTAssertEqual(history.first, HistoryVolumeRecord(key: "worker-a|nodefs", name: "nodefs", node: "worker-a", usedPercent: 91))
+        XCTAssertEqual(
+            history.first,
+            HistoryVolumeRecord(key: "worker-a|nodefs", name: "nodefs", node: "worker-a", usedPercent: 91))
     }
 
     private func kubeSnap(_ storage: [String: String]?) throws -> ClusterSnapshot {
         let nodes = try TalosJSON.decode(KubeNodesOverview.self, from: #"{"nodes":[{"name":"worker-a","ready":true}]}"#)
-        return kubeSnapshotOf(nodes, context: "lab", certNotAfter: farCert, takenAt: now,
-                              storageWatched: true, storageIssues: storage)
+        return kubeSnapshotOf(
+            nodes, context: "lab", certNotAfter: farCert, takenAt: now,
+            storageWatched: true, storageIssues: storage)
     }
 
     func testKubeSnapshotAlertsAndClears() throws {
@@ -147,7 +173,8 @@ final class KubeNodeDiskTests: XCTestCase {
 
     func testDiskPressureWithoutASizeStillAlerts() throws {
         // Every kubelet refused, but the node list reports DiskPressure (the Go core lists it with no size).
-        let unmeasured = KubeNodeDisk(nodes: [KubeNodeDiskNode(name: "worker-a", usedPercent: 0, diskPressure: true)], forbidden: true)
+        let unmeasured = KubeNodeDisk(
+            nodes: [KubeNodeDiskNode(name: "worker-a", usedPercent: 0, diskPressure: true)], forbidden: true)
         let out = issues(unmeasured)
         XCTAssertEqual(severity(out), dataCritical)
         let base = evaluate(previous: nil, current: try kubeSnap([:]), now: now).next

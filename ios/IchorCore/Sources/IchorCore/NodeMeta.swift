@@ -131,8 +131,10 @@ public struct NodeMetaEdits: Encodable, Equatable, Sendable {
     public let taints: [NodeTaintEdit]
     public let force: Bool
 
-    public init(resourceVersion: String = "", setLabels: [String: String] = [:], removeLabels: [String] = [],
-                taints: [NodeTaintEdit] = [], force: Bool = false) {
+    public init(
+        resourceVersion: String = "", setLabels: [String: String] = [:], removeLabels: [String] = [],
+        taints: [NodeTaintEdit] = [], force: Bool = false
+    ) {
         self.resourceVersion = resourceVersion
         self.setLabels = setLabels
         self.removeLabels = removeLabels
@@ -142,7 +144,9 @@ public struct NodeMetaEdits: Encodable, Equatable, Sendable {
 
     /// The same edits, with protected keys allowed or not.
     public func forcing(_ on: Bool) -> NodeMetaEdits {
-        NodeMetaEdits(resourceVersion: resourceVersion, setLabels: setLabels, removeLabels: removeLabels, taints: taints, force: on)
+        NodeMetaEdits(
+            resourceVersion: resourceVersion, setLabels: setLabels, removeLabels: removeLabels, taints: taints,
+            force: on)
     }
 
     private enum CodingKeys: String, CodingKey { case resourceVersion, setLabels, removeLabels, taints, force }
@@ -190,7 +194,8 @@ public struct NodeMetaDraft: Equatable, Sendable {
     public mutating func setTaint(_ taint: NodeTaint, replacing old: NodeTaint? = nil) {
         let kept = taints.filter { $0.id != taint.id && $0.id != old?.id }
         let protected = original.taints.first { $0.id == taint.id }?.protected ?? false
-        let added = NodeTaint(key: taint.key, value: taint.value, effect: taint.effect, timeAdded: taint.timeAdded, protected: protected)
+        let added = NodeTaint(
+            key: taint.key, value: taint.value, effect: taint.effect, timeAdded: taint.timeAdded, protected: protected)
         taints = (kept + [added]).sorted { ($0.key, $0.effect) < ($1.key, $1.effect) }
     }
 
@@ -202,7 +207,9 @@ public struct NodeMetaDraft: Equatable, Sendable {
     public mutating func setLabel(_ label: NodeLabel, replacing old: NodeLabel? = nil) {
         let kept = labels.filter { $0.key != label.key && $0.key != old?.key }
         let protected = original.labels.first { $0.key == label.key }?.protected ?? false
-        labels = (kept + [NodeLabel(key: label.key, value: label.value, protected: protected)]).sorted { $0.key < $1.key }
+        labels = (kept + [NodeLabel(key: label.key, value: label.value, protected: protected)]).sorted {
+            $0.key < $1.key
+        }
     }
 
     public mutating func removeLabel(_ label: NodeLabel) {
@@ -235,8 +242,9 @@ public struct NodeMetaDraft: Equatable, Sendable {
         let after = Dictionary(labels.map { ($0.key, $0.value) }, uniquingKeysWith: { first, _ in first })
         let set = after.filter { before[$0.key] != $0.value }
         let removed = before.keys.filter { after[$0] == nil }.sorted()
-        return NodeMetaEdits(resourceVersion: original.resourceVersion, setLabels: set, removeLabels: removed,
-                             taints: desiredTaints)
+        return NodeMetaEdits(
+            resourceVersion: original.resourceVersion, setLabels: set, removeLabels: removed,
+            taints: desiredTaints)
     }
 
     /// Whether the edits touch a protected taint or label: they then need force.
@@ -348,8 +356,10 @@ public struct NodeMetaPlan: Decodable, Equatable, Sendable {
     public let warnings: [String]
     public let noChange: Bool
 
-    public init(node: String, labels: NodeMetaDiff = NodeMetaDiff(), taints: NodeMetaDiff = NodeMetaDiff(),
-                evicts: [NodeMetaEviction] = [], blockers: [String] = [], warnings: [String] = [], noChange: Bool = false) {
+    public init(
+        node: String, labels: NodeMetaDiff = NodeMetaDiff(), taints: NodeMetaDiff = NodeMetaDiff(),
+        evicts: [NodeMetaEviction] = [], blockers: [String] = [], warnings: [String] = [], noChange: Bool = false
+    ) {
         self.node = node
         self.labels = labels
         self.taints = taints

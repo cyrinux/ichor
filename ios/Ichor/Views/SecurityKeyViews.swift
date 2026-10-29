@@ -32,25 +32,38 @@ private struct SecurityKeyPromptView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "key.radiowaves.forward").font(.system(size: 36)).foregroundStyle(.tint).accessibilityHidden(true)
+            Image(systemName: "key.radiowaves.forward").font(.system(size: 36)).foregroundStyle(.tint)
+                .accessibilityHidden(true)
             Text(request.reason).font(.headline).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
-            Text(SecurityKeyClient.nfcAvailable
-                 ? String(localized: "Hold your security key near the top of the iPhone, or plug it in.")
-                 : String(localized: "Plug your security key in: this device cannot read NFC."))
-                .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            Text(
+                SecurityKeyClient.nfcAvailable
+                    ? String(localized: "Hold your security key near the top of the iPhone, or plug it in.")
+                    : String(localized: "Plug your security key in: this device cannot read NFC.")
+            )
+            .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
             if let error { Text(error).font(.footnote).foregroundStyle(.statusBad).multilineTextAlignment(.center) }
             if busy {
                 ProgressView()
             } else {
                 VStack(spacing: 8) {
                     if SecurityKeyClient.nfcAvailable {
-                        Button { Task { await scan(.nfc) } } label: { Label("Tap the key", systemImage: "wave.3.right").frame(maxWidth: .infinity) }
-                            .buttonStyle(.borderedProminent)
+                        Button {
+                            Task { await scan(.nfc) }
+                        } label: {
+                            Label("Tap the key", systemImage: "wave.3.right").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    Button { Task { await scan(.wired) } } label: { Label("Use a plugged-in key", systemImage: "cable.connector").frame(maxWidth: .infinity) }
-                        .buttonStyle(.bordered)
+                    Button {
+                        Task { await scan(.wired) }
+                    } label: {
+                        Label("Use a plugged-in key", systemImage: "cable.connector").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
                     if request.allowBiometric {
-                        Button("Use Face ID or passcode instead") { Task { request.resolve(await Authenticator.biometric(reason: request.reason)) } }
+                        Button("Use Face ID or passcode instead") {
+                            Task { request.resolve(await Authenticator.biometric(reason: request.reason)) }
+                        }
                     }
                     Button("Cancel", role: .cancel) { request.resolve(String(localized: "Cancelled")) }
                 }
@@ -67,7 +80,9 @@ private struct SecurityKeyPromptView: View {
         error = nil
         defer { busy = false }
         do {
-            let assertion = try await SecurityKeyClient.withConnection(transport, message: String(localized: "Hold your security key near the top of the iPhone")) { connection in
+            let assertion = try await SecurityKeyClient.withConnection(
+                transport, message: String(localized: "Hold your security key near the top of the iPhone")
+            ) { connection in
                 try await SecurityKeyClient.assert(connection, enrolment: enrolment, wantSecret: enrolment.required)
             }
             if enrolment.required, SecurityKeySession.shared.currentDek == nil {
@@ -98,12 +113,17 @@ struct SecurityKeysSection: View {
                     Image(systemName: "key.fill").foregroundStyle(.tint).accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(key.label)
-                        Text("Added on \(key.enrolledAt.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary)
+                        Text("Added on \(key.enrolledAt.formatted(date: .abbreviated, time: .omitted))").font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button { remove(key) } label: { Image(systemName: "trash") }
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel(Text("Remove \(key.label)"))
+                    Button {
+                        remove(key)
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(Text("Remove \(key.label)"))
                 }
             }
             if keys.count < securityKeyMax {
@@ -112,11 +132,18 @@ struct SecurityKeysSection: View {
                 }
             }
             if !keys.isEmpty {
-                Toggle(isOn: Binding(get: { model.requiresKey }, set: { on in on ? checked(String(localized: "Require the key")) { flow = .require } : release() })) {
+                Toggle(
+                    isOn: Binding(
+                        get: { model.requiresKey },
+                        set: { on in on ? checked(String(localized: "Require the key")) { flow = .require } : release()
+                        })
+                ) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Require the key")
-                        Text("The stored configs are sealed so that only a tap of one of these keys can read them: Face ID or the passcode alone no longer opens Ichor. Background alerts and the widget pause when iOS has closed the app, until you unlock it again. Lose every key and you must import your configs again.")
-                            .font(.caption).foregroundStyle(.secondary)
+                        Text(
+                            "The stored configs are sealed so that only a tap of one of these keys can read them: Face ID or the passcode alone no longer opens Ichor. Background alerts and the widget pause when iOS has closed the app, until you unlock it again. Lose every key and you must import your configs again."
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .disabled(busy)
@@ -126,9 +153,13 @@ struct SecurityKeysSection: View {
             Text("Security keys")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Tap a YubiKey or another FIDO2 key on the iPhone, or plug it in, to open Ichor without Face ID. Up to two keys.")
+                Text(
+                    "Tap a YubiKey or another FIDO2 key on the iPhone, or plug it in, to open Ichor without Face ID. Up to two keys."
+                )
                 // README "What iOS does differently": USB-C keys on iPhone are best effort.
-                Text("NFC keys and the Lightning YubiKey 5Ci work reliably. A USB-C key plugged into an iPhone is best effort: if it is not seen, tap it over NFC instead.")
+                Text(
+                    "NFC keys and the Lightning YubiKey 5Ci work reliably. A USB-C key plugged into an iPhone is best effort: if it is not seen, tap it over NFC instead."
+                )
             }
         }
         .sheet(item: $flow) { flow in
@@ -154,7 +185,9 @@ struct SecurityKeysSection: View {
             message = String(localized: "Turn off “Require the key” before removing the last key.")
             return
         }
-        checked(String(localized: "Remove \(key.label)")) { model.setSecurityKeys(current.without(credentialId: key.credentialId)) }
+        checked(String(localized: "Remove \(key.label)")) {
+            model.setSecurityKeys(current.without(credentialId: key.credentialId))
+        }
     }
 
     /// Turns the requirement off: a tap first (the prompt asks for it), then the items are unsealed.
@@ -204,12 +237,15 @@ private struct SecurityKeyFlowView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                Image(systemName: "key.radiowaves.forward").font(.system(size: 44)).foregroundStyle(.tint).accessibilityHidden(true)
+                Image(systemName: "key.radiowaves.forward").font(.system(size: 44)).foregroundStyle(.tint)
+                    .accessibilityHidden(true)
                 if done {
                     Label("Done.", systemImage: "checkmark.circle.fill").font(.headline)
                 } else if askPin {
-                    Text("This key only makes new credentials with its FIDO PIN. It is used once here; unlocking never asks for it.")
-                        .multilineTextAlignment(.center)
+                    Text(
+                        "This key only makes new credentials with its FIDO PIN. It is used once here; unlocking never asks for it."
+                    )
+                    .multilineTextAlignment(.center)
                     // A FIDO PIN is any text (4+ code points, at most 63 UTF-8 bytes): the full keyboard.
                     SecureField("FIDO PIN", text: $pin).textFieldStyle(.roundedBorder)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -217,27 +253,44 @@ private struct SecurityKeyFlowView: View {
                         .disabled(fidoPin.unicodeScalars.count < 4 || fidoPin.utf8.count > 63)
                 } else {
                     Text(instruction).multilineTextAlignment(.center)
-                    if let error { Text(error).font(.footnote).foregroundStyle(.statusBad).multilineTextAlignment(.center) }
+                    if let error {
+                        Text(error).font(.footnote).foregroundStyle(.statusBad).multilineTextAlignment(.center)
+                    }
                     if busy {
                         ProgressView()
                     } else {
                         if SecurityKeyClient.nfcAvailable {
-                            Button { Task { await run(.nfc) } } label: { Label("Tap the key", systemImage: "wave.3.right").frame(maxWidth: .infinity) }
-                                .buttonStyle(.borderedProminent)
+                            Button {
+                                Task { await run(.nfc) }
+                            } label: {
+                                Label("Tap the key", systemImage: "wave.3.right").frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
-                        Button { Task { await run(.wired) } } label: { Label("Use a plugged-in key", systemImage: "cable.connector").frame(maxWidth: .infinity) }
-                            .buttonStyle(.bordered)
+                        Button {
+                            Task { await run(.wired) }
+                        } label: {
+                            Label("Use a plugged-in key", systemImage: "cable.connector").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
                     }
                 }
             }
             .padding(24)
             .frame(maxWidth: 480)
-            .navigationTitle(flow == .enrol ? String(localized: "Add a security key") : String(localized: "Require the key"))
+            .navigationTitle(
+                flow == .enrol ? String(localized: "Add a security key") : String(localized: "Require the key")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(done ? String(localized: "Close") : String(localized: "Cancel")) { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(done ? String(localized: "Close") : String(localized: "Cancel")) { dismiss() }
+                }
             }
-            .onAppear { instruction = flow == .enrol ? String(localized: "Tap the key to add, or plug it in.") : nextRequireInstruction() }
+            .onAppear {
+                instruction =
+                    flow == .enrol ? String(localized: "Tap the key to add, or plug it in.") : nextRequireInstruction()
+            }
         }
         .interactiveDismissDisabled(busy)
     }
@@ -278,7 +331,9 @@ private struct SecurityKeyFlowView: View {
         let enrolment = model.securityKeys ?? SecurityKeyEnrolment.create()
         if added == nil {
             let label = enrolment.keys.isEmpty ? String(localized: "Security key") : String(localized: "Spare key")
-            added = try await SecurityKeyClient.withConnection(lastTransport, message: String(localized: "Hold the key to add near the top of the iPhone")) { connection in
+            added = try await SecurityKeyClient.withConnection(
+                lastTransport, message: String(localized: "Hold the key to add near the top of the iPhone")
+            ) { connection in
                 try await SecurityKeyClient.enrol(connection, enrolment: enrolment, label: label, pin: pin)
             }
         }
@@ -288,7 +343,9 @@ private struct SecurityKeyFlowView: View {
             instruction = String(localized: "Touch the same key again to set it up for the sealed configs.")
             guard let dek = SecurityKeySession.shared.currentDek else { throw SecurityKeyRequiredError() }
             let withNew = enrolment.with(key)
-            let assertion = try await SecurityKeyClient.withConnection(lastTransport, message: String(localized: "Hold the same key near the top of the iPhone")) { connection in
+            let assertion = try await SecurityKeyClient.withConnection(
+                lastTransport, message: String(localized: "Hold the same key near the top of the iPhone")
+            ) { connection in
                 try await SecurityKeyClient.assert(connection, enrolment: withNew, wantSecret: true)
             }
             guard assertion.key.credentialId == key.credentialId else {
@@ -303,7 +360,9 @@ private struct SecurityKeyFlowView: View {
 
     private func nextRequireInstruction() -> String {
         let keys = model.securityKeys?.keys ?? []
-        guard let next = keys.first(where: { key in !wrapped.contains { $0.credentialId == key.credentialId } }) else { return "" }
+        guard let next = keys.first(where: { key in !wrapped.contains { $0.credentialId == key.credentialId } }) else {
+            return ""
+        }
         return String(localized: "Tap key \(wrapped.count + 1) of \(keys.count): \(next.label)")
     }
 
@@ -314,8 +373,14 @@ private struct SecurityKeyFlowView: View {
             done = true
             return
         }
-        guard let expected = enrolment.keys.first(where: { key in !wrapped.contains { $0.credentialId == key.credentialId } }) else { return }
-        let assertion = try await SecurityKeyClient.withConnection(lastTransport, message: String(localized: "Hold \(expected.label) near the top of the iPhone")) { connection in
+        guard
+            let expected = enrolment.keys.first(where: { key in
+                !wrapped.contains { $0.credentialId == key.credentialId }
+            })
+        else { return }
+        let assertion = try await SecurityKeyClient.withConnection(
+            lastTransport, message: String(localized: "Hold \(expected.label) near the top of the iPhone")
+        ) { connection in
             try await SecurityKeyClient.assert(connection, enrolment: enrolment, wantSecret: true)
         }
         guard assertion.key.credentialId == expected.credentialId else {

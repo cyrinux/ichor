@@ -7,11 +7,12 @@ final class GitOpsEditCheckTests: XCTestCase {
     }
 
     func testABuildThatChangesOneObject() throws {
-        let c = try decode(#"""
-        {"sha":"abc","kind":"kustomize","dir":"apps/web","ok":true,"errors":[],
-         "diff":{"name":"apps/web/deployment.yaml","resources":[{"group":"apps","version":"v1","kind":"Deployment",
-         "namespace":"web","name":"web","change":"changed","diff":"--- a\n+++ b\n"}],"warnings":[]},"unchanged":2}
-        """#)
+        let c = try decode(
+            #"""
+            {"sha":"abc","kind":"kustomize","dir":"apps/web","ok":true,"errors":[],
+             "diff":{"name":"apps/web/deployment.yaml","resources":[{"group":"apps","version":"v1","kind":"Deployment",
+             "namespace":"web","name":"web","change":"changed","diff":"--- a\n+++ b\n"}],"warnings":[]},"unchanged":2}
+            """#)
         XCTAssertTrue(c.built)
         XCTAssertEqual(c.resources.map(\.name), ["web"])
         XCTAssertEqual(c.resources.first?.change, .changed)
@@ -19,7 +20,9 @@ final class GitOpsEditCheckTests: XCTestCase {
     }
 
     func testAFailedBuildAndAChartAreNotBuilt() throws {
-        let failed = try decode(#"{"kind":"kustomize","ok":false,"errors":[{"message":"no matches","path":"apps/web/patch.yaml","line":3}]}"#)
+        let failed = try decode(
+            #"{"kind":"kustomize","ok":false,"errors":[{"message":"no matches","path":"apps/web/patch.yaml","line":3}]}"#
+        )
         XCTAssertFalse(failed.built)
         XCTAssertEqual(failed.errors.first?.line, 3)
         XCTAssertTrue(failed.resources.isEmpty)

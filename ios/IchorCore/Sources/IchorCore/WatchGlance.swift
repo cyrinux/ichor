@@ -55,8 +55,10 @@ public struct WatchCluster: Codable, Equatable, Sendable, Identifiable {
     public var etcdChecked: Bool
     public var etcdAlarms: Int
 
-    public init(id: String, name: String, active: Bool, takenAt: Date? = nil, nodes: [WatchNode] = [],
-                etcdChecked: Bool = false, etcdAlarms: Int = 0) {
+    public init(
+        id: String, name: String, active: Bool, takenAt: Date? = nil, nodes: [WatchNode] = [],
+        etcdChecked: Bool = false, etcdAlarms: Int = 0
+    ) {
         self.id = id
         self.name = name
         self.active = active
@@ -74,8 +76,9 @@ public struct WatchCluster: Codable, Equatable, Sendable, Identifiable {
         for (i, node) in nodes.enumerated() {
             byKey[String(i)] = NodeState(hostname: node.name, health: node.health, reason: node.reason)
         }
-        return ClusterSnapshot(context: name, takenAt: takenAt, nodes: byKey,
-                               etcdAlarms: Array(repeating: "", count: etcdAlarms), etcdChecked: etcdChecked)
+        return ClusterSnapshot(
+            context: name, takenAt: takenAt, nodes: byKey,
+            etcdAlarms: Array(repeating: "", count: etcdAlarms), etcdChecked: etcdChecked)
     }
 
     /// The widget's status items (at most two), empty before the first check.
@@ -153,7 +156,8 @@ public func watchRows(from snapshot: ClusterSnapshot) -> [WatchNode] {
         if state.health == .unreachable {
             return WatchNode(name: name, health: .unreachable, problem: watchNodeProblem(state.reason))
         }
-        return WatchNode(name: name, health: state.health, reason: cut(scrubbedAddresses(state.reason), to: watchReasonLength))
+        return WatchNode(
+            name: name, health: state.health, reason: cut(scrubbedAddresses(state.reason), to: watchReasonLength))
     }
     return rows.sorted {
         rank($0.health) != rank($1.health)
@@ -165,13 +169,16 @@ public func watchRows(from snapshot: ClusterSnapshot) -> [WatchNode] {
 /// The payload of the widget's data: `clusters` in the phone's order (WidgetCluster, named as on
 /// screen), `snapshots` by monitor key, `active` the active cluster's key. Trimmed to `limit`
 /// bytes of JSON (see trimmedWatchPayload).
-public func watchPayload(clusters: [WidgetCluster], snapshots: [String: ClusterSnapshot], active: String?,
-                         masked: Bool, sentAt: Date, limit: Int = watchPayloadLimit) -> WatchPayload {
+public func watchPayload(
+    clusters: [WidgetCluster], snapshots: [String: ClusterSnapshot], active: String?,
+    masked: Bool, sentAt: Date, limit: Int = watchPayloadLimit
+) -> WatchPayload {
     let rows = clusters.enumerated().map { index, cluster -> WatchCluster in
         let snapshot = snapshots[cluster.id]
-        return WatchCluster(id: String(index), name: cluster.name, active: cluster.id == active,
-                            takenAt: snapshot?.takenAt, nodes: snapshot.map(watchRows) ?? [],
-                            etcdChecked: snapshot?.etcdChecked ?? false, etcdAlarms: snapshot?.etcdAlarms.count ?? 0)
+        return WatchCluster(
+            id: String(index), name: cluster.name, active: cluster.id == active,
+            takenAt: snapshot?.takenAt, nodes: snapshot.map(watchRows) ?? [],
+            etcdChecked: snapshot?.etcdChecked ?? false, etcdAlarms: snapshot?.etcdAlarms.count ?? 0)
     }
     return trimmedWatchPayload(WatchPayload(sentAt: sentAt, masked: masked, clusters: rows), limit: limit)
 }

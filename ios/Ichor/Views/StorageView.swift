@@ -57,9 +57,10 @@ struct StorageView: View {
                         }
                         let fills = history?.volumes(of: node) ?? [:]
                         ForEach(loaded.volumes) { volume in
-                            VolumeRow(volume: volume, fill: volumeFill(volume, in: fills),
-                                      from: history?.from ?? 0, to: history?.to ?? 0,
-                                      trend: forecast?.volume(node: node, name: volume.id).flatMap { VolumeForecastLine($0) })
+                            VolumeRow(
+                                volume: volume, fill: volumeFill(volume, in: fills),
+                                from: history?.from ?? 0, to: history?.to ?? 0,
+                                trend: forecast?.volume(node: node, name: volume.id).flatMap { VolumeForecastLine($0) })
                         }
                     }
                 }
@@ -138,7 +139,7 @@ struct StorageView: View {
         await model.loadFeatures(node: node)
         guard let wanted = usagePath, model.support(.diskUsage, node: node).supported else { return }
         let result: LoadState<DiskUsage> = await .from { try await client.diskUsage(node: node, path: wanted) }
-        if wanted == usagePath, !Task.isCancelled { usage = result } // a newer path wins
+        if wanted == usagePath, !Task.isCancelled { usage = result }  // a newer path wins
     }
 
     private func loadHealth() async {
@@ -216,7 +217,9 @@ private struct VolumeRow: View {
                     StatusPill(label: volume.phase, color: volume.isReady ? .green : .orange)
                 }
             }
-            let facts = [volume.type, volume.filesystem, volume.size > 0 ? formatBytes(volume.size) : ""].filter { !$0.isEmpty }
+            let facts = [volume.type, volume.filesystem, volume.size > 0 ? formatBytes(volume.size) : ""].filter {
+                !$0.isEmpty
+            }
             if !facts.isEmpty {
                 Text(verbatim: facts.joined(separator: "  ·  ")).font(.caption)
             }
@@ -225,7 +228,8 @@ private struct VolumeRow: View {
                     .lineLimit(1).truncationMode(.middle)
             }
             if !volume.mountedOn.isEmpty {
-                LabeledContent("Mounted on") { Text(verbatim: volume.mountedOn).font(.caption.monospaced()) }.font(.caption)
+                LabeledContent("Mounted on") { Text(verbatim: volume.mountedOn).font(.caption.monospaced()) }.font(
+                    .caption)
             }
             if fill.count >= 2 {
                 HistorySparkline(points: fill, from: from, to: to, label: Text("Fill over the last 7 days"))

@@ -4,11 +4,16 @@ import XCTest
 final class MonitorTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
-    private func snap(_ nodes: [(String, NodeHealth)], context: String = "lab", alarms: [String] = [],
-                      cert: Int64? = nil, lastWarn: Int64 = -1) -> ClusterSnapshot {
+    private func snap(
+        _ nodes: [(String, NodeHealth)], context: String = "lab", alarms: [String] = [],
+        cert: Int64? = nil, lastWarn: Int64 = -1
+    ) -> ClusterSnapshot {
         ClusterSnapshot(
             context: context, takenAt: now,
-            nodes: Dictionary(uniqueKeysWithValues: nodes.map { ($0.0, NodeState(hostname: "host-\($0.0)", health: $0.1, reason: $0.1 == .ready ? "" : "why")) }),
+            nodes: Dictionary(
+                uniqueKeysWithValues: nodes.map {
+                    ($0.0, NodeState(hostname: "host-\($0.0)", health: $0.1, reason: $0.1 == .ready ? "" : "why"))
+                }),
             etcdAlarms: alarms, etcdChecked: true,
             certNotAfter: cert ?? Int64(now.timeIntervalSince1970) + 365 * 86_400, lastCertWarnDay: lastWarn)
     }
@@ -18,8 +23,10 @@ final class MonitorTests: XCTestCase {
     }
 
     func testOnlyTransitionsAlert() {
-        let alerts = evaluate(previous: snap([("a", .ready), ("b", .notReady), ("c", .ready)]),
-                              current: snap([("a", .unreachable), ("b", .ready), ("c", .ready)]), now: now).alerts
+        let alerts = evaluate(
+            previous: snap([("a", .ready), ("b", .notReady), ("c", .ready)]),
+            current: snap([("a", .unreachable), ("b", .ready), ("c", .ready)]), now: now
+        ).alerts
         XCTAssertEqual(alerts.map(\.key), ["node:a", "node:b"])
         XCTAssertEqual(alerts[0].title, "host-a is unreachable")
         XCTAssertEqual(alerts[1].title, "host-b is ready again")
@@ -28,8 +35,11 @@ final class MonitorTests: XCTestCase {
     func testSteadyStateAndContextSwitchAreSilent() {
         let s = snap([("a", .notReady)])
         XCTAssertTrue(evaluate(previous: s, current: s, now: now).alerts.isEmpty)
-        XCTAssertTrue(evaluate(previous: snap([("a", .ready)], context: "one"),
-                               current: snap([("a", .unreachable)], context: "two"), now: now).alerts.isEmpty)
+        XCTAssertTrue(
+            evaluate(
+                previous: snap([("a", .ready)], context: "one"),
+                current: snap([("a", .unreachable)], context: "two"), now: now
+            ).alerts.isEmpty)
     }
 
     func testWholeClusterUnreachableIsSilentAndKeepsThePreviousSnapshot() {
@@ -38,7 +48,8 @@ final class MonitorTests: XCTestCase {
         XCTAssertTrue(away.alerts.isEmpty)
         XCTAssertEqual(away.next, previous)
         // Back on the network: nothing changed since the last real check.
-        XCTAssertTrue(evaluate(previous: away.next, current: snap([("a", .ready), ("b", .notReady)]), now: now).alerts.isEmpty)
+        XCTAssertTrue(
+            evaluate(previous: away.next, current: snap([("a", .ready), ("b", .notReady)]), now: now).alerts.isEmpty)
     }
 
     func testBaselineTakenOffNetworkDoesNotAlertOnReturn() {
@@ -49,7 +60,9 @@ final class MonitorTests: XCTestCase {
     }
 
     func testNewEtcdAlarm() {
-        let alerts = evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], alarms: ["beef:NOSPACE"]), now: now).alerts
+        let alerts = evaluate(
+            previous: snap([("a", .ready)]), current: snap([("a", .ready)], alarms: ["beef:NOSPACE"]), now: now
+        ).alerts
         XCTAssertEqual(alerts.map(\.key), ["etcd:beef:NOSPACE"])
     }
 
@@ -57,9 +70,11 @@ final class MonitorTests: XCTestCase {
         let soon = Int64(now.timeIntervalSince1970) + 5 * 86_400
         let first = evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: soon), now: now)
         XCTAssertEqual(first.alerts.map(\.key), ["cert"])
-        let sameDay = evaluate(previous: first.next, current: snap([("a", .ready)], cert: soon), now: now.addingTimeInterval(3_600))
+        let sameDay = evaluate(
+            previous: first.next, current: snap([("a", .ready)], cert: soon), now: now.addingTimeInterval(3_600))
         XCTAssertTrue(sameDay.alerts.isEmpty)
-        let nextDay = evaluate(previous: sameDay.next, current: snap([("a", .ready)], cert: soon), now: now.addingTimeInterval(86_400))
+        let nextDay = evaluate(
+            previous: sameDay.next, current: snap([("a", .ready)], cert: soon), now: now.addingTimeInterval(86_400))
         XCTAssertEqual(nextDay.alerts.map(\.key), ["cert"])
     }
 
@@ -74,16 +89,23 @@ final class MonitorTests: XCTestCase {
     func testCertAlertStartsOneWeekBeforeExpiry() {
         let in10Days = Int64(now.timeIntervalSince1970) + 10 * 86_400
         let in7Days = Int64(now.timeIntervalSince1970) + 7 * 86_400
-        XCTAssertTrue(evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in10Days), now: now).alerts.isEmpty)
-        XCTAssertEqual(evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in7Days), now: now).alerts.map(\.key), ["cert"])
+        XCTAssertTrue(
+            evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in10Days), now: now).alerts
+                .isEmpty)
+        XCTAssertEqual(
+            evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in7Days), now: now).alerts
+                .map(\.key), ["cert"])
     }
 
     func testFailedAlarmListIsNotAnAllClear() throws {
         let overview = try TalosJSON.decode(ClusterOverview.self, from: #"{"context":"lab","nodes":[]}"#)
         let etcd = { (extra: String) throws -> EtcdOverview in
-            try TalosJSON.decode(EtcdOverview.self, from: #"{"leaderId":"","members":[],"statuses":[],"alarms":[]\#(extra)}"#)
+            try TalosJSON.decode(
+                EtcdOverview.self, from: #"{"leaderId":"","members":[],"statuses":[],"alarms":[]\#(extra)}"#)
         }
         XCTAssertTrue(snapshotOf(overview, etcd: try etcd(""), certNotAfter: 0, takenAt: now).etcdChecked)
-        XCTAssertFalse(snapshotOf(overview, etcd: try etcd(#","alarmsError":"permission denied""#), certNotAfter: 0, takenAt: now).etcdChecked)
+        XCTAssertFalse(
+            snapshotOf(overview, etcd: try etcd(#","alarmsError":"permission denied""#), certNotAfter: 0, takenAt: now)
+                .etcdChecked)
     }
 }

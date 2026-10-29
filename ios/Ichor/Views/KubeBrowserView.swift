@@ -17,16 +17,24 @@ struct KubeBrowserView: View {
             List {
                 if query.isEmpty {
                     Section {
-                        NavigationLink { HelmReleasesView() } label: {
+                        NavigationLink {
+                            HelmReleasesView()
+                        } label: {
                             Label("Helm releases", systemImage: "shippingbox")
                         }
-                        NavigationLink { KubeStorageView() } label: {
+                        NavigationLink {
+                            KubeStorageView()
+                        } label: {
                             Label("Storage", systemImage: "externaldrive")
                         }
-                        NavigationLink { KubeServicesView() } label: {
+                        NavigationLink {
+                            KubeServicesView()
+                        } label: {
                             Label("Services", systemImage: "network")
                         }
-                        NavigationLink { KubeJobsView() } label: {
+                        NavigationLink {
+                            KubeJobsView()
+                        } label: {
                             Label("Jobs", systemImage: "checklist")
                         }
                     }
@@ -45,7 +53,9 @@ struct KubeBrowserView: View {
                 ForEach(sections) { section in
                     Section {
                         ForEach(section.resources) { resource in
-                            NavigationLink { KubeResourceListView(resource: resource) } label: {
+                            NavigationLink {
+                                KubeResourceListView(resource: resource)
+                            } label: {
                                 KubeKindRow(resource: resource)
                             }
                         }
@@ -71,7 +81,11 @@ struct KubeBrowserView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { applying = true } label: { Label("Apply YAML", systemImage: "doc.on.clipboard") }
+                Button {
+                    applying = true
+                } label: {
+                    Label("Apply YAML", systemImage: "doc.on.clipboard")
+                }
             }
         }
         .sheet(isPresented: $applying) { KubeApplyView() }
@@ -116,7 +130,8 @@ private struct KubeKindRow: View {
                         .font(.caption2.monospaced())
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1)
-                        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        .background(
+                            Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
                 }
             }
         }

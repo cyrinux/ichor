@@ -66,7 +66,8 @@ public struct KubeCapacity: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case metricsAvailable, metricsForbidden, diskMeasured, diskForbidden, priorityClassesRead, pdbsRead, totals, nodes, workloads, nPlusOne, assumptions
+        case metricsAvailable, metricsForbidden, diskMeasured, diskForbidden, priorityClassesRead, pdbsRead, totals,
+            nodes, workloads, nPlusOne, assumptions
     }
 
     /// The measured node with the least free disk, by share; nil when no kubelet answered.
@@ -194,8 +195,10 @@ public struct CapacityNode: Decodable, Equatable, Sendable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, roles, ready, cordoned, taints, memoryPercent, memoryAllocatable, memoryUsage, cpuFree, memoryFree, podsFree, overcommitted
-        case ephemeralAllocatable, ephemeralRequests, ephemeralFree, diskPressure, diskMeasured, diskCapacity, diskAvailable
+        case name, roles, ready, cordoned, taints, memoryPercent, memoryAllocatable, memoryUsage, cpuFree, memoryFree,
+            podsFree, overcommitted
+        case ephemeralAllocatable, ephemeralRequests, ephemeralFree, diskPressure, diskMeasured, diskCapacity,
+            diskAvailable
         case imageFsCapacity, imageFsAvailable
     }
 }
@@ -247,7 +250,8 @@ public struct CapacityWorkload: Decodable, Equatable, Sendable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, namespace, name, replicas, cpuRequest, memoryRequest, priorityClassName, priority, noPriorityClass, qos, oomKills, risk
+        case kind, namespace, name, replicas, cpuRequest, memoryRequest, priorityClassName, priority, noPriorityClass,
+            qos, oomKills, risk
         case moreFit, moreFitNA, ephemeralRequest, ephemeralLimit, ephemeralUsage
     }
 }
@@ -326,7 +330,8 @@ public struct NodeLossPlan: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case node, nodes, worstCase, cpuLost, memoryLost, podsLost, daemonSetPods, placed, preempted, pending, suggestions, covered, candidates, assumptions
+        case node, nodes, worstCase, cpuLost, memoryLost, podsLost, daemonSetPods, placed, preempted, pending,
+            suggestions, covered, candidates, assumptions
     }
 }
 
@@ -358,7 +363,9 @@ public struct NodeLossPod: Decodable, Equatable, Sendable, Identifiable {
         reason = try c.field(.reason, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, workload, priority, to, node, by, pdbViolated, reason }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, workload, priority, to, node, by, pdbViolated, reason
+    }
 }
 
 /// Scale `kind`/`namespace`/`name` from `replicas` to `scaleTo`; `pdbBlocks`: its budget lets none go.
@@ -424,7 +431,8 @@ public struct NodeLossSuggestion: Decodable, Equatable, Sendable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, namespace, name, replicas, scaleTo, priority, priorityClassName, noPriorityClass, pdb, pdbMinAvailable, pdbBlocks, frees
+        case kind, namespace, name, replicas, scaleTo, priority, priorityClassName, noPriorityClass, pdb,
+            pdbMinAvailable, pdbBlocks, frees
     }
 }
 

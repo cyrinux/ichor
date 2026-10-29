@@ -86,11 +86,14 @@ public enum EtcdRecoverPhase: String, CaseIterable, Comparable, Sendable {
 }
 
 /// Timeline of a recovery from the events so far; a clear file skips decrypting.
-public func etcdRecoverTimeline(_ events: [EtcdRecoverProgress], encrypted: Bool, finished: Bool = false,
-                                failure: String? = nil) -> [TimelineStep<EtcdRecoverPhase>] {
+public func etcdRecoverTimeline(
+    _ events: [EtcdRecoverProgress], encrypted: Bool, finished: Bool = false,
+    failure: String? = nil
+) -> [TimelineStep<EtcdRecoverPhase>] {
     let phases = EtcdRecoverPhase.allCases.filter { encrypted || $0 != .decrypting }
-    return foldTimeline(events, phases: phases, finished: finished, failure: failure,
-                        phase: { EtcdRecoverPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
+    return foldTimeline(
+        events, phases: phases, finished: finished, failure: failure,
+        phase: { EtcdRecoverPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
 }
 
 public extension EtcdOverview {

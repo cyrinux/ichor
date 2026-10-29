@@ -52,8 +52,10 @@ struct RolloutProgressBar: View {
                 Capsule().fill(Color(.tertiarySystemFill))
                 Capsule().fill(startingColor)
                     .frame(width: geo.size.width * CGFloat(ready + starting) / CGFloat(total))
-                Capsule().fill(LinearGradient(colors: [.green.opacity(0.7), .green], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: geo.size.width * CGFloat(ready) / CGFloat(total))
+                Capsule().fill(
+                    LinearGradient(colors: [.green.opacity(0.7), .green], startPoint: .leading, endPoint: .trailing)
+                )
+                .frame(width: geo.size.width * CGFloat(ready) / CGFloat(total))
             }
         }
     }

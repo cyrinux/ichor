@@ -74,9 +74,12 @@ public func compareTalosVersions(_ a: String, _ b: String) -> Int {
     func parts(_ version: String) -> [Int] {
         var text = Substring(version.trimmingCharacters(in: .whitespaces))
         if text.hasPrefix("v") || text.hasPrefix("V") { text = text.dropFirst() }
-        return text.split(separator: ".", omittingEmptySubsequences: false).map { Int($0.prefix { $0.isASCII && $0.isNumber }) ?? 0 }
+        return text.split(separator: ".", omittingEmptySubsequences: false).map {
+            Int($0.prefix { $0.isASCII && $0.isNumber }) ?? 0
+        }
     }
-    let pa = parts(a), pb = parts(b)
+    let pa = parts(a)
+    let pb = parts(b)
     for index in 0..<max(pa.count, pb.count) {
         let x = index < pa.count ? pa[index] : 0
         let y = index < pb.count ? pb[index] : 0
@@ -118,7 +121,9 @@ func neededTalosVersion(_ message: String) -> String? {
         if rest.hasPrefix("v") { rest = rest.dropFirst() }
         let version = rest.prefix { $0 == "." || ($0.isASCII && $0.isNumber) }
         let parts = version.split(separator: ".", omittingEmptySubsequences: false)
-        if (2...3).contains(parts.count), parts.allSatisfy({ !$0.isEmpty }), rest.dropFirst(version.count).hasPrefix(" or newer") {
+        if (2...3).contains(parts.count), parts.allSatisfy({ !$0.isEmpty }),
+            rest.dropFirst(version.count).hasPrefix(" or newer")
+        {
             return String(version)
         }
         search = found.upperBound..<lower.endIndex
@@ -134,7 +139,9 @@ public func versionNotice(_ message: String) -> VersionNotice? {
     if let version = neededTalosVersion(message) { return VersionNotice(minVersion: displayTalosVersion(version)) }
     let lower = message.lowercased()
     // gRPC Unimplemented: the node's API has no such method (see friendlyError in the Go core).
-    if lower.hasPrefix("unimplemented:") || lower.hasPrefix("unsupported:") || unavailableMarkers.contains(where: lower.contains) {
+    if lower.hasPrefix("unimplemented:") || lower.hasPrefix("unsupported:")
+        || unavailableMarkers.contains(where: lower.contains)
+    {
         return VersionNotice(minVersion: "")
     }
     return nil

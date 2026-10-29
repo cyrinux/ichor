@@ -3,19 +3,25 @@ import XCTest
 
 final class PromTests: XCTestCase {
     func testDecodesTheGoJSON() throws {
-        let json = #"{"resultType":"matrix","times":[1000,2000,3000],"series":[{"name":"up{job=\"a\"}","labels":{"job":"a"},"values":[1.5,null,2]}],"warnings":null,"truncated":false,"total":1}"#
+        let json =
+            #"{"resultType":"matrix","times":[1000,2000,3000],"series":[{"name":"up{job=\"a\"}","labels":{"job":"a"},"values":[1.5,null,2]}],"warnings":null,"truncated":false,"total":1}"#
         let res = try TalosJSON.decode(PromResult.self, from: json)
         XCTAssertEqual(res.times, [1000, 2000, 3000])
         XCTAssertEqual(res.series[0].values, [1.5, nil, 2])
         XCTAssertEqual(res.warnings, [])
         XCTAssertEqual(res.series[0].latest, 2)
         XCTAssertEqual(try TalosJSON.decode(PromResult.self, from: "{}"), PromResult())
-        let found = try TalosJSON.decode(PromDiscovery.self, from: #"{"sources":[{"mode":"proxy","kind":"prometheus","namespace":"monitoring","service":"prometheus-operated","port":9090}]}"#)
+        let found = try TalosJSON.decode(
+            PromDiscovery.self,
+            from:
+                #"{"sources":[{"mode":"proxy","kind":"prometheus","namespace":"monitoring","service":"prometheus-operated","port":9090}]}"#
+        )
         XCTAssertEqual(found.sources.first?.label, "monitoring/prometheus-operated:9090")
     }
 
     func testRefusedQueryIsRecognised() {
-        XCTAssertTrue(isPromRefused("https://m.example/prometheus: HTTP 401, refused (credentials or tenant): no org id"))
+        XCTAssertTrue(
+            isPromRefused("https://m.example/prometheus: HTTP 401, refused (credentials or tenant): no org id"))
         XCTAssertFalse(isPromRefused("https://m.example/prometheus: HTTP 404 page not found: check the path prefix"))
         XCTAssertFalse(isPromRefused(nil))
     }
@@ -29,7 +35,8 @@ final class PromTests: XCTestCase {
     }
 
     func testSourceNeverPrintsItsSecretAndDropsOtherModeFields() throws {
-        let url = PromSource(mode: PromSource.url, url: "https://m.example/prometheus", auth: PromSource.authBearer, secret: "s3cret")
+        let url = PromSource(
+            mode: PromSource.url, url: "https://m.example/prometheus", auth: PromSource.authBearer, secret: "s3cret")
         XCTAssertFalse(url.description.contains("s3cret"))
         let proxy = url.switched(to: PromSource.proxy)
         XCTAssertEqual(proxy.secret, "")

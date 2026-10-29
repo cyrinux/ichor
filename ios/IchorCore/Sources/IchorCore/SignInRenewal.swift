@@ -19,8 +19,10 @@ public struct SignInRenewal: Codable, Equatable, Sendable {
     public let sessionExpires: Int64
     public let reason: String
 
-    public init(context: String, kind: String = ContextKind.kube, method: String = "", status: String,
-                expires: Int64 = 0, sessionExpires: Int64 = 0, reason: String = "") {
+    public init(
+        context: String, kind: String = ContextKind.kube, method: String = "", status: String,
+        expires: Int64 = 0, sessionExpires: Int64 = 0, reason: String = ""
+    ) {
         self.context = context
         self.kind = kind
         self.method = method
@@ -79,13 +81,16 @@ public struct SignInAlertPlan: Equatable, Sendable {
 /// the fingerprints already told. A cluster is told once until it is signed in again (a renewal
 /// that succeeds forgets it); one that could not be renewed for another reason (offline) keeps
 /// what it had.
-public func signInAlertPlan(renewals: [SignInRenewal], contexts: [ContextSummary], notified: Set<String>) -> SignInAlertPlan {
+public func signInAlertPlan(renewals: [SignInRenewal], contexts: [ContextSummary], notified: Set<String>)
+    -> SignInAlertPlan
+{
     var tell: [ContextSummary] = []
     var next = notified
     for renewal in renewals {
         let isKube = renewal.kind == ContextKind.kube
         guard let context = contexts.first(where: { $0.name == renewal.context && $0.isKube == isKube }),
-              !context.fingerprint.isEmpty else { continue }
+            !context.fingerprint.isEmpty
+        else { continue }
         if renewal.signedIn {
             next.remove(context.fingerprint)
         } else if renewal.needsUser, !notified.contains(context.fingerprint) {

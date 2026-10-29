@@ -42,8 +42,10 @@ public struct QuickEditDocument: Decodable, Hashable, Identifiable, Sendable {
 
     public var id: Int { index }
 
-    public init(index: Int, kind: String, name: String, replicas: Int? = nil, scalable: Bool? = nil,
-                containers: [QuickEditContainer] = []) {
+    public init(
+        index: Int, kind: String, name: String, replicas: Int? = nil, scalable: Bool? = nil,
+        containers: [QuickEditContainer] = []
+    ) {
         self.index = index
         self.kind = kind
         self.name = name
@@ -139,8 +141,10 @@ public struct QuickEditTargets: Decodable, Hashable, Sendable {
     public let kustomizeImages: [QuickEditKustomizeImage]
     public let kustomizeReplicas: [QuickEditKustomizeReplica]
 
-    public init(documents: [QuickEditDocument] = [], kustomizeImages: [QuickEditKustomizeImage] = [],
-                kustomizeReplicas: [QuickEditKustomizeReplica] = []) {
+    public init(
+        documents: [QuickEditDocument] = [], kustomizeImages: [QuickEditKustomizeImage] = [],
+        kustomizeReplicas: [QuickEditKustomizeReplica] = []
+    ) {
         self.documents = documents
         self.kustomizeImages = kustomizeImages
         self.kustomizeReplicas = kustomizeReplicas
@@ -161,14 +165,16 @@ public struct QuickEditTargets: Decodable, Hashable, Sendable {
     public var images: [QuickEditImageTarget] {
         let several = documents.filter { !$0.containers.isEmpty }.count > 1
         let kustomize = kustomizeImages.filter { !$0.name.isEmpty && $0.digest.isEmpty }.map { entry in
-            QuickEditImageTarget(place: .kustomize(documentIndex: entry.documentIndex, name: entry.name),
-                                 label: shortImageName(entry.name), image: entry.image)
+            QuickEditImageTarget(
+                place: .kustomize(documentIndex: entry.documentIndex, name: entry.name),
+                label: shortImageName(entry.name), image: entry.image)
         }
         let containers = documents.flatMap { document in
             document.containers.filter { !$0.name.isEmpty && $0.overriddenBy.isEmpty }.map { container in
-                QuickEditImageTarget(place: .container(documentIndex: document.index, name: container.name),
-                                     label: several ? "\(container.name) (\(document.kind) \(document.name))" : container.name,
-                                     image: container.image, workloadKind: document.kind, workloadName: document.name)
+                QuickEditImageTarget(
+                    place: .container(documentIndex: document.index, name: container.name),
+                    label: several ? "\(container.name) (\(document.kind) \(document.name))" : container.name,
+                    image: container.image, workloadKind: document.kind, workloadName: document.name)
             }
         }
         return kustomize + containers
@@ -177,12 +183,14 @@ public struct QuickEditTargets: Decodable, Hashable, Sendable {
     /// Every count the file sets: the kustomization's `replicas:` entries, then the workloads.
     public var replicas: [QuickEditReplicaTarget] {
         let kustomize = kustomizeReplicas.map { entry in
-            QuickEditReplicaTarget(place: .kustomize(documentIndex: entry.documentIndex, name: entry.name),
-                                   label: entry.name, current: entry.count ?? 1)
+            QuickEditReplicaTarget(
+                place: .kustomize(documentIndex: entry.documentIndex, name: entry.name),
+                label: entry.name, current: entry.count ?? 1)
         }
         let workloads = documents.filter(\.scalable).map { document in
-            QuickEditReplicaTarget(place: .document(index: document.index), label: "\(document.kind) \(document.name)",
-                                   current: document.currentReplicas, name: document.name, workloadKind: document.kind)
+            QuickEditReplicaTarget(
+                place: .document(index: document.index), label: "\(document.kind) \(document.name)",
+                current: document.currentReplicas, name: document.name, workloadKind: document.kind)
         }
         return kustomize + workloads
     }
@@ -211,7 +219,9 @@ public struct QuickEditImageTarget: Hashable, Identifiable, Sendable {
 
     public var id: QuickEditImagePlace { place }
 
-    public init(place: QuickEditImagePlace, label: String, image: String, workloadKind: String = "", workloadName: String = "") {
+    public init(
+        place: QuickEditImagePlace, label: String, image: String, workloadKind: String = "", workloadName: String = ""
+    ) {
         self.place = place
         self.label = label
         self.image = image
@@ -238,8 +248,9 @@ public struct QuickEditImageTarget: Hashable, Identifiable, Sendable {
         let tag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
         switch place {
         case .container(let index, let name):
-            return QuickEdit(op: .image, documentIndex: index, kind: nonEmpty(workloadKind), name: nonEmpty(workloadName),
-                             container: name, image: imageWithTag(image, tag: tag), label: titleName)
+            return QuickEdit(
+                op: .image, documentIndex: index, kind: nonEmpty(workloadKind), name: nonEmpty(workloadName),
+                container: name, image: imageWithTag(image, tag: tag), label: titleName)
         case .kustomize(let index, let name):
             return QuickEdit(op: .image, documentIndex: index, image: tag, kustomizeImage: name, label: titleName)
         }
@@ -267,7 +278,9 @@ public struct QuickEditReplicaTarget: Hashable, Identifiable, Sendable {
 
     public var id: QuickEditReplicaPlace { place }
 
-    public init(place: QuickEditReplicaPlace, label: String, current: Int, name: String? = nil, workloadKind: String = "") {
+    public init(
+        place: QuickEditReplicaPlace, label: String, current: Int, name: String? = nil, workloadKind: String = ""
+    ) {
         self.place = place
         self.label = label
         self.current = current
@@ -285,10 +298,12 @@ public struct QuickEditReplicaTarget: Hashable, Identifiable, Sendable {
         switch place {
         case .document(let index):
             let kind = nonEmpty(workloadKind)
-            return QuickEdit(op: .replicas, documentIndex: index, kind: kind, name: kind == nil ? nil : nonEmpty(name),
-                             replicas: replicas, label: name)
+            return QuickEdit(
+                op: .replicas, documentIndex: index, kind: kind, name: kind == nil ? nil : nonEmpty(name),
+                replicas: replicas, label: name)
         case .kustomize(let index, let entry):
-            return QuickEdit(op: .replicas, documentIndex: index, replicas: replicas, kustomizeReplica: entry, label: name)
+            return QuickEdit(
+                op: .replicas, documentIndex: index, replicas: replicas, kustomizeReplica: entry, label: name)
         }
     }
 }
@@ -333,11 +348,13 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
     public let title: String
     public let body: String
 
-    public init(op: Op, documentIndex: Int, kind: String? = nil, name: String? = nil, container: String? = nil,
-                image: String? = nil, replicas: Int? = nil, kustomizeImage: String? = nil, kustomizeReplica: String? = nil,
-                changes: [DiffLiveChange]? = nil, label: String, patch: String? = nil, hostname: String? = nil,
-                create: Bool? = nil, skipped: [String]? = nil, path: String? = nil, value: String? = nil,
-                title: String = "", body: String = "") {
+    public init(
+        op: Op, documentIndex: Int, kind: String? = nil, name: String? = nil, container: String? = nil,
+        image: String? = nil, replicas: Int? = nil, kustomizeImage: String? = nil, kustomizeReplica: String? = nil,
+        changes: [DiffLiveChange]? = nil, label: String, patch: String? = nil, hostname: String? = nil,
+        create: Bool? = nil, skipped: [String]? = nil, path: String? = nil, value: String? = nil,
+        title: String = "", body: String = ""
+    ) {
         self.op = op
         self.documentIndex = documentIndex
         self.kind = kind
@@ -361,14 +378,16 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
 
     /// A kept machine config change of hostname written into its file: plan says where and what.
     public static func talos(hostname: String, plan: TalosWriteBackPlan, firstPath: String) -> QuickEdit {
-        QuickEdit(op: .talos, documentIndex: 0, label: firstPath, patch: plan.patch, hostname: hostname, create: plan.create,
-                  skipped: plan.skipped.map { "\($0.path): \($0.why)" })
+        QuickEdit(
+            op: .talos, documentIndex: 0, label: firstPath, patch: plan.patch, hostname: hostname, create: plan.create,
+            skipped: plan.skipped.map { "\($0.path): \($0.why)" })
     }
 
     /// The live values of resource (document documentIndex of its manifest) kept in Git.
     public static func keep(documentIndex: Int, resource: KubeDiffResource) -> QuickEdit {
-        QuickEdit(op: .keep, documentIndex: documentIndex, kind: resource.kind, name: resource.name,
-                  changes: resource.liveChanges, label: "\(resource.kind) \(resource.name)")
+        QuickEdit(
+            op: .keep, documentIndex: documentIndex, kind: resource.kind, name: resource.name,
+            changes: resource.liveChanges, label: "\(resource.kind) \(resource.name)")
     }
 
     enum CodingKeys: String, CodingKey {
@@ -398,10 +417,11 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
 
     /// The same edit, named for its pull request (an update's title and body).
     public func titled(_ title: String, body: String) -> QuickEdit {
-        QuickEdit(op: op, documentIndex: documentIndex, kind: kind, name: name, container: container, image: image,
-                  replicas: replicas, kustomizeImage: kustomizeImage, kustomizeReplica: kustomizeReplica, changes: changes,
-                  label: label, patch: patch, hostname: hostname, create: create, skipped: skipped, path: path, value: value,
-                  title: title, body: body)
+        QuickEdit(
+            op: op, documentIndex: documentIndex, kind: kind, name: name, container: container, image: image,
+            replicas: replicas, kustomizeImage: kustomizeImage, kustomizeReplica: kustomizeReplica, changes: changes,
+            label: label, patch: patch, hostname: hostname, create: create, skipped: skipped, path: path, value: value,
+            title: title, body: body)
     }
 
     /// The JSON GitOpsQuickEdit takes.
@@ -454,7 +474,8 @@ public func quickEditTitle(_ edit: QuickEdit) -> String {
         return "Keep live changes of \(edit.label)"
     case .talos:
         let node = edit.hostname ?? ""
-        return edit.label.isEmpty ? "Keep \(node)'s config change in Git" : "Keep \(node)'s config change in Git: \(edit.label)"
+        return edit.label.isEmpty
+            ? "Keep \(node)'s config change in Git" : "Keep \(node)'s config change in Git: \(edit.label)"
     }
 }
 

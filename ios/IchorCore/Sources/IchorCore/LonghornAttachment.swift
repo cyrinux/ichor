@@ -15,6 +15,8 @@ public struct LonghornAttachmentPreview: Decodable, Sendable {
     public let nodes: [LonghornAttachmentNode]
     public func accepts(_ selected: String, attach: Bool) -> Bool {
         guard !selected.isEmpty else { return false }
-        return attach ? error.isEmpty && canAttach && nodes.contains { $0.name == selected && $0.eligible } : canDetach && selected == node
+        return attach
+            ? error.isEmpty && canAttach && nodes.contains { $0.name == selected && $0.eligible }
+            : canDetach && selected == node
     }
 }

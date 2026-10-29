@@ -10,7 +10,11 @@ struct ClusterRepoToolLink<Label: View>: View {
 
     var body: some View {
         if let repo = model.activeClusterRepo {
-            NavigationLink { ClusterRepoRootView(repo: repo) } label: { label() }
+            NavigationLink {
+                ClusterRepoRootView(repo: repo)
+            } label: {
+                label()
+            }
         }
     }
 }
@@ -93,7 +97,8 @@ struct ClusterRepoSheet: View {
     }
 
     private var repo: ClusterRepo? {
-        normalizeClusterRepo(ClusterRepo(repoURL: url, branch: branch, talosDir: talosDir, kubernetesDir: kubernetesDir))
+        normalizeClusterRepo(
+            ClusterRepo(repoURL: url, branch: branch, talosDir: talosDir, kubernetesDir: kubernetesDir))
     }
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -101,11 +106,16 @@ struct ClusterRepoSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Repository address", text: $url, prompt: Text(verbatim: "https://github.com/example-org/cluster-config"))
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                    Button("Paste") { url = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? url }
+                    TextField(
+                        "Repository address", text: $url,
+                        prompt: Text(verbatim: "https://github.com/example-org/cluster-config")
+                    )
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .keyboardType(.URL)
+                    Button("Paste") {
+                        url = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? url
+                    }
                     if let host = repo?.host, !host.isEmpty, !hosts.hasToken(host), !demo {
                         Text("No token is saved for \(host): add it in Settings → Git hosts.")
                             .font(.footnote).foregroundStyle(.statusWarn)
@@ -116,7 +126,9 @@ struct ClusterRepoSheet: View {
                         }
                     }
                 } footer: {
-                    Text("The Git repository that holds \(label)’s configuration. Ichor reads it with the token of its Git host; nothing is cloned.")
+                    Text(
+                        "The Git repository that holds \(label)’s configuration. Ichor reads it with the token of its Git host; nothing is cloned."
+                    )
                 }
                 Section {
                     TextField("Branch", text: $branch, prompt: Text("Blank for the default branch"))
@@ -188,7 +200,8 @@ struct ClusterRepoSheet: View {
                 if result.canPush {
                     Text("This token can push: edits open pull requests.").font(.footnote).foregroundStyle(.statusOK)
                 } else {
-                    Text("This token can read only: pull requests will be refused.").font(.footnote).foregroundStyle(.statusWarn)
+                    Text("This token can read only: pull requests will be refused.").font(.footnote).foregroundStyle(
+                        .statusWarn)
                 }
             }
         } else {

@@ -111,7 +111,8 @@ enum BackgroundMonitor {
     static var sensorThreshold: Int {
         get {
             let value = UserDefaults.standard.integer(forKey: sensorThresholdKey)
-            return value == sensorThresholdAuto ? value : min(max(value, sensorThresholdRange.lowerBound), sensorThresholdRange.upperBound)
+            return value == sensorThresholdAuto
+                ? value : min(max(value, sensorThresholdRange.lowerBound), sensorThresholdRange.upperBound)
         }
         set { UserDefaults.standard.set(newValue, forKey: sensorThresholdKey) }
     }
@@ -122,8 +123,9 @@ enum BackgroundMonitor {
     static var storageThresholds: StorageThresholds {
         get {
             let stored = UserDefaults.standard
-            return StorageThresholds(warn: stored.object(forKey: storageWarnKey) as? Int ?? storageWarnDefault,
-                                     crit: stored.object(forKey: storageCritKey) as? Int ?? storageCritDefault)
+            return StorageThresholds(
+                warn: stored.object(forKey: storageWarnKey) as? Int ?? storageWarnDefault,
+                crit: stored.object(forKey: storageCritKey) as? Int ?? storageCritDefault)
         }
         set {
             UserDefaults.standard.set(newValue.warn, forKey: storageWarnKey)
@@ -204,19 +206,22 @@ enum BackgroundMonitor {
     /// snapshot. Silent on a cluster unreachable as a whole (e.g. off VPN), past the opt-in
     /// "unreachable" alert after a few runs in a row.
     static func check() async {
-        TalosClient.applyStoredPrivacyMask() // also set at launch; keeps this path self-contained
+        TalosClient.applyStoredPrivacyMask()  // also set at launch; keeps this path self-contained
         TalosClient.applyStoredAuditEvents()
         // Both stores, as the app lists them: the saved position counts kubeconfig clusters too.
         let stored = StoredConfigs.load()
         let parsed = await stored.parsed()
-        guard parsed.unreadable.isEmpty, let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
-        let activeName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
+        guard parsed.unreadable.isEmpty, let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube)
+        else { return }
+        let activeName = summary.selectedContext(
+            index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
         // A cluster removed since drops its snapshot, unreachable count and snoozes (the app does too).
         let clusterKeys = summary.contexts.map(monitorClusterKey)
         AlertSnoozeStore.keep(clusters: summary.contexts.map(\.fingerprint))
         HistoryStore.keep(clusters: clusterKeys)
-        var snapshots = keepingClusters(SharedStore.snapshots(activeCluster: summary.context(named: activeName).map(monitorClusterKey)),
-                                        clusters: clusterKeys)
+        var snapshots = keepingClusters(
+            SharedStore.snapshots(activeCluster: summary.context(named: activeName).map(monitorClusterKey)),
+            clusters: clusterKeys)
         let unwatched = Set(UserDefaults.standard.stringArray(forKey: unwatchedKey) ?? [])
         let contexts = monitoredContexts(summary.contexts, active: activeName, unwatched: unwatched)
         // A Talos cluster without an endpoint yet cannot be checked: the widget stops showing what
@@ -229,10 +234,12 @@ enum BackgroundMonitor {
         // the reachability map) first; with the app in front ("Check now"), the cluster on screen last.
         let lastFailed = Set(reachability().filter { $0.value.misses > 0 }.keys)
         let appActive = await MainActor.run { UIApplication.shared.applicationState == .active }
-        let ordered = monitorOrder(contexts.filter { !$0.needsEndpoint }, active: activeName, appActive: appActive,
-                                   lastFailed: lastFailed)
-        let jobs = await checkJobs(for: ordered, stored: stored,
-                              kubeContexts: parsed.kube?.contexts ?? [], snapshots: snapshots)
+        let ordered = monitorOrder(
+            contexts.filter { !$0.needsEndpoint }, active: activeName, appActive: appActive,
+            lastFailed: lastFailed)
+        let jobs = await checkJobs(
+            for: ordered, stored: stored,
+            kubeContexts: parsed.kube?.contexts ?? [], snapshots: snapshots)
         let reads = await read(jobs)
         let now = Date()
         var reach = keepingClusters(reachability(), clusters: clusterKeys)
@@ -259,12 +266,14 @@ enum BackgroundMonitor {
                 history.append(HistoryInput(key: job.key, current: current, evaluated: evaluated.next, extras: extras))
             }
             // Counted even with the alert off, so turning it on knows the runs already missed.
-            let counted = evaluateReachability(previous: reach[job.key], reachable: reachable, runs: runs,
-                                               enabled: alertsEnabled && unreachableWatched)
+            let counted = evaluateReachability(
+                previous: reach[job.key], reachable: reachable, runs: runs,
+                enabled: alertsEnabled && unreachableWatched)
             reach[job.key] = counted.next == Reachability() ? nil : counted.next
             if let alert = counted.alert { alerts.insert(alert, at: 0) }
             guard !alerts.isEmpty else { continue }
-            let snapshot = latest ?? ClusterSnapshot(context: job.context.name, takenAt: now, nodes: [:], kube: job.context.isKube)
+            let snapshot =
+                latest ?? ClusterSnapshot(context: job.context.name, takenAt: now, nodes: [:], kube: job.context.isKube)
             outcomes.append(ClusterAlerts(job: job, alerts: alerts, snapshot: snapshot, previous: job.previous))
         }
         saveReachability(reach)
@@ -293,8 +302,9 @@ enum BackgroundMonitor {
             let stored = HistoryStore.ring(cluster: input.key)
             if stored == .unreadable { continue }
             let previous = await HistoryStore.openAlerts(in: stored, now: millis)
-            let record = historyRecord(at: now, current: input.current, evaluated: input.evaluated, extras: input.extras,
-                                       previousAlerts: previous, now: now)
+            let record = historyRecord(
+                at: now, current: input.current, evaluated: input.evaluated, extras: input.extras,
+                previousAlerts: previous, now: now)
             HistoryStore.append(record, cluster: input.key, stored: stored)
         }
     }
@@ -302,23 +312,29 @@ enum BackgroundMonitor {
     /// The storage trend alerts (CYR-128) of each cluster whose storage was read this run, from
     /// its ring as just written: the ones open go in its snapshot. A cluster not read, or whose
     /// ring cannot be read, keeps its open ones; with the warning off they are forgotten.
-    private static func evaluateTrends(_ inputs: [HistoryInput], jobs: [ClusterJob], snapshots: inout [String: ClusterSnapshot],
-                                       now: Date) async -> [ClusterAlerts] {
+    private static func evaluateTrends(
+        _ inputs: [HistoryInput], jobs: [ClusterJob], snapshots: inout [String: ClusterSnapshot],
+        now: Date
+    ) async -> [ClusterAlerts] {
         let watched = storageTrendWatched
         var out: [ClusterAlerts] = []
         for input in inputs {
-            guard let current = input.current, var snapshot = snapshots[input.key], snapshot.storageWatched else { continue }
+            guard let current = input.current, var snapshot = snapshots[input.key], snapshot.storageWatched else {
+                continue
+            }
             guard watched else {
                 snapshot.storageTrends = [:]
                 snapshots[input.key] = snapshot
                 continue
             }
             guard current.storageChecked, let job = jobs.first(where: { $0.key == input.key }),
-                  let forecast = await HistoryStore.forecast(cluster: input.key, now: now) else { continue }
+                let forecast = await HistoryStore.forecast(cluster: input.key, now: now)
+            else { continue }
             // At or above the warning threshold, read now or still notified: the fill alert speaks for it.
             let fill = current.storageIssues.merging(snapshot.storageIssues) { fresh, _ in fresh }
-            let outcome = evaluateStorageTrends(forecast, open: snapshot.storageTrends, fillIssues: fill,
-                                                hostnames: snapshot.nodes.mapValues(\.hostname))
+            let outcome = evaluateStorageTrends(
+                forecast, open: snapshot.storageTrends, fillIssues: fill,
+                hostnames: snapshot.nodes.mapValues(\.hostname))
             snapshot.storageTrends = outcome.open
             snapshots[input.key] = snapshot
             if !outcome.alerts.isEmpty {
@@ -330,8 +346,10 @@ enum BackgroundMonitor {
 
     /// The clusters of `contexts` to check now: a VPN-only one waits for its VPN (without it the
     /// check could only time out), and a cluster whose config is not stored is left out.
-    private static func checkJobs(for contexts: [ContextSummary], stored: StoredConfigs, kubeContexts: [ContextSummary],
-                                  snapshots: [String: ClusterSnapshot]) async -> [ClusterJob] {
+    private static func checkJobs(
+        for contexts: [ContextSummary], stored: StoredConfigs, kubeContexts: [ContextSummary],
+        snapshots: [String: ClusterSnapshot]
+    ) async -> [ClusterJob] {
         let vpnOnly = Set(UserDefaults.standard.stringArray(forKey: "vpnOnlyClusters") ?? [])
         var vpnUp = true
         if contexts.contains(where: { vpnOnly.contains($0.fingerprint) }) { vpnUp = await VpnMonitor.currentlyUp() }
@@ -342,14 +360,22 @@ enum BackgroundMonitor {
         let links = UserDefaults.standard.dictionary(forKey: "kubeAccess") as? [String: String] ?? [:]
         return contexts.compactMap { context -> ClusterJob? in
             guard !heldBackForVpn(vpnOnly: vpnOnly, fingerprint: context.fingerprint, vpnUp: vpnUp),
-                  let yaml = stored.config(for: context) else { return nil }
-            let link = context.isKube ? nil : stored.kube.flatMap { kube in
-                kubeAccessContext(of: context, links: links, kubeContexts: kubeContexts).map { KubeLink(config: kube, context: $0) }
-            }
-            let client = TalosClient(config: yaml, context: context.name, kubeServer: servers[context.fingerprint] ?? "", kubeLink: link)
+                let yaml = stored.config(for: context)
+            else { return nil }
+            let link =
+                context.isKube
+                ? nil
+                : stored.kube.flatMap { kube in
+                    kubeAccessContext(of: context, links: links, kubeContexts: kubeContexts).map {
+                        KubeLink(config: kube, context: $0)
+                    }
+                }
+            let client = TalosClient(
+                config: yaml, context: context.name, kubeServer: servers[context.fingerprint] ?? "", kubeLink: link)
             let key = monitorClusterKey(context)
-            return ClusterJob(context: context, key: key, client: client,
-                              kubeAllowed: context.allows(.workloads, kubeLinked: link != nil), previous: snapshots[key])
+            return ClusterJob(
+                context: context, key: key, client: client,
+                kubeAllowed: context.allows(.workloads, kubeLinked: link != nil), previous: snapshots[key])
         }
     }
 
@@ -392,7 +418,9 @@ enum BackgroundMonitor {
         }
         guard overview != nil || kubeNodes != nil else { return Task.isCancelled ? .skipped : .unreachable }
         var etcd: EtcdOverview?
-        if !context.isKube { etcd = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.etcd() } }
+        if !context.isKube {
+            etcd = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.etcd() }
+        }
         let left = max(0, deadline.timeIntervalSinceNow)
         let previous = job.previous
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
@@ -428,18 +456,21 @@ enum BackgroundMonitor {
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
         async let checkupRead = ifWatched(watchCheckup, within: left) {
-            await readCheckup(client, known: knownCheckup, gitopsWatched: watchGitOps, pluginsWatched: watchPlugins,
-                              importedWatched: importedPluginAlerts)
+            await readCheckup(
+                client, known: knownCheckup, gitopsWatched: watchGitOps, pluginsWatched: watchPlugins,
+                importedWatched: importedPluginAlerts)
         }
         async let pluginRead = ifWatched(watchPlugins, within: left) {
-            await readPlugins(client, known: knownPlugins, checkupWatched: watchCheckup, importedWatched: importedPluginAlerts)
+            await readPlugins(
+                client, known: knownPlugins, checkupWatched: watchCheckup, importedWatched: importedPluginAlerts)
         }
         async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
             await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
         }
         async let storageRead = ifWatched(watchStorage, within: left) { () -> StorageRead? in
             if let kubeListed {
-                return await readKubeStorage(client, thresholds: thresholds, listed: kubeListed, known: knownStorage, demo: demo)
+                return await readKubeStorage(
+                    client, thresholds: thresholds, listed: kubeListed, known: knownStorage, demo: demo)
             }
             return await readStorage(client, thresholds: thresholds, known: knownStorage)
         }
@@ -459,32 +490,38 @@ enum BackgroundMonitor {
         if let kubeNodes {
             var kubeExtras = historyExtras(kubeNodes)
             kubeExtras.volumes = storage?.volumes ?? []
-            return .read(kubeSnapshotOf(kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
-                                        dataWatched: watchData, dataServices: dataServices,
-                                        gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                        checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                        alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
-                                        storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
-                                        pluginWatched: watchPlugins, pluginIssues: pluginIssues),
-                         kubeExtras)
+            return .read(
+                kubeSnapshotOf(
+                    kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
+                    dataWatched: watchData, dataServices: dataServices,
+                    gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                    checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                    alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
+                    storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
+                    pluginWatched: watchPlugins, pluginIssues: pluginIssues),
+                kubeExtras)
         }
         guard let overview else { return .unreachable }
         var extras = historyExtras(overview)
         extras.volumes = storage?.volumes ?? []
-        return .read(snapshotOf(overview, etcd: etcd, certNotAfter: context.certNotAfter, takenAt: now,
-                                dataWatched: watchData, dataServices: dataServices,
-                                gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
-                                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
-                                sensorWatched: watchSensors, sensorIssues: sensorIssues,
-                                pluginWatched: watchPlugins, pluginIssues: pluginIssues),
-                     extras)
+        return .read(
+            snapshotOf(
+                overview, etcd: etcd, certNotAfter: context.certNotAfter, takenAt: now,
+                dataWatched: watchData, dataServices: dataServices,
+                gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
+                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
+                sensorWatched: watchSensors, sensorIssues: sensorIssues,
+                pluginWatched: watchPlugins, pluginIssues: pluginIssues),
+            extras)
     }
 
     /// `work` within `seconds` when `on`; nil when off, failed or too slow.
-    private static func ifWatched<T: Sendable>(_ on: Bool, within seconds: TimeInterval,
-                                               _ work: @escaping @Sendable () async -> T?) async -> T? {
+    private static func ifWatched<T: Sendable>(
+        _ on: Bool, within seconds: TimeInterval,
+        _ work: @escaping @Sendable () async -> T?
+    ) async -> T? {
         guard on else { return nil }
         return await withDeadline(seconds, work)
     }
@@ -499,47 +536,63 @@ enum BackgroundMonitor {
     /// The checkup's findings worth an alert; nil when it could not be read. A section that could
     /// not be read keeps what the last snapshot knew of it. With GitOps watched, what that alert
     /// already raises is left to it; with the plugins watched, their findings to their own alert.
-    private static func readCheckup(_ client: TalosClient, known: [String: String], gitopsWatched: Bool,
-                                    pluginsWatched: Bool, importedWatched: Bool) async -> [String: String]? {
+    private static func readCheckup(
+        _ client: TalosClient, known: [String: String], gitopsWatched: Bool,
+        pluginsWatched: Bool, importedWatched: Bool
+    ) async -> [String: String]? {
         guard let report = try? await client.checkup() else { return nil }
-        return checkupIssuesWithGaps(report, known: known, gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched,
-                                     importedPluginsWatched: importedWatched)
+        return checkupIssuesWithGaps(
+            report, known: known, gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched,
+            importedPluginsWatched: importedWatched)
     }
 
     /// The CRD plugins' findings worth an alert, in the app's language; nil when the call failed.
     /// A plugin that could not be read keeps what the last snapshot knew of it. With the checkup
     /// watched, the findings it reports from a section of its own are left to it.
-    private static func readPlugins(_ client: TalosClient, known: [String: String], checkupWatched: Bool,
-                                    importedWatched: Bool) async -> [String: String]? {
+    private static func readPlugins(
+        _ client: TalosClient, known: [String: String], checkupWatched: Bool,
+        importedWatched: Bool
+    ) async -> [String: String]? {
         guard let report = try? await client.pluginFindings() else { return nil }
-        return pluginIssuesWithGaps(report, known: known, checkupWatched: checkupWatched, importedWatched: importedWatched)
+        return pluginIssuesWithGaps(
+            report, known: known, checkupWatched: checkupWatched, importedWatched: importedWatched)
     }
 
     /// The Alertmanager's alerts worth a notification; nil when it could not be read (or none was
     /// found): the last snapshot's then stand. Past 1000 alerts, a known one missing from the
     /// answer is kept rather than reported resolved.
-    private static func readAlertmanager(_ client: TalosClient, fingerprint: String, known: [String: String]) async -> [String: String]? {
+    private static func readAlertmanager(_ client: TalosClient, fingerprint: String, known: [String: String]) async
+        -> [String: String]?
+    {
         guard let source = try? await AlertmanagerStore.resolve(fingerprint, with: client),
-              let alerts = try? await client.alertmanagerAlerts(source) else { return nil }
+            let alerts = try? await client.alertmanagerAlerts(source)
+        else { return nil }
         return alertmanagerIssuesWithGaps(alerts, known: known)
     }
 
     /// Volumes over `thresholds` and disks failing SMART, with every volume's fill (the history);
     /// nil when it could not be read. A node that did not answer keeps what the last snapshot knew of it.
-    private static func readStorage(_ client: TalosClient, thresholds: StorageThresholds,
-                                    known: [String: String]) async -> StorageRead? {
+    private static func readStorage(
+        _ client: TalosClient, thresholds: StorageThresholds,
+        known: [String: String]
+    ) async -> StorageRead? {
         guard let health = try? await client.clusterStorageHealth() else { return nil }
-        return StorageRead(issues: storageIssuesOf(health, thresholds: thresholds, known: known), volumes: historyVolumes(health))
+        return StorageRead(
+            issues: storageIssuesOf(health, thresholds: thresholds, known: known), volumes: historyVolumes(health))
     }
 
     /// A kubeconfig cluster's nodes over `thresholds` or under DiskPressure (see
     /// storageIssues(of:warn:critical:listed:known:demo:)), with each measured node's nodefs fill
     /// (the history); nil when the call failed. Issues nil when skipped, refused or nothing measured.
-    private static func readKubeStorage(_ client: TalosClient, thresholds: StorageThresholds, listed: Set<String>,
-                                        known: [String: String], demo: Bool) async -> StorageRead? {
+    private static func readKubeStorage(
+        _ client: TalosClient, thresholds: StorageThresholds, listed: Set<String>,
+        known: [String: String], demo: Bool
+    ) async -> StorageRead? {
         guard let disk = try? await client.kubeNodeDisk() else { return nil }
-        return StorageRead(issues: storageIssues(of: disk, warn: thresholds.warn, critical: thresholds.crit,
-                                                 listed: listed, known: known, demo: demo),
-                           volumes: historyVolumes(disk))
+        return StorageRead(
+            issues: storageIssues(
+                of: disk, warn: thresholds.warn, critical: thresholds.crit,
+                listed: listed, known: known, demo: demo),
+            volumes: historyVolumes(disk))
     }
 }

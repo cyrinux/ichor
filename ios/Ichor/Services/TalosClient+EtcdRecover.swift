@@ -19,7 +19,9 @@ extension TalosClient {
     /// Uploads the snapshot at `path` to `node` and bootstraps etcd from it, decrypting with
     /// `identity` or `passphrase` on the fly. Ending the stream cancels the run (once the
     /// bootstrap is requested it cannot be undone).
-    func etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Bool) -> AsyncStream<EtcdRecoverEvent> {
+    func etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Bool)
+        -> AsyncStream<EtcdRecoverEvent>
+    {
         Self.bridged { [config, context] continuation in
             let bridge = EtcdRecoverBridge(
                 progress: { continuation.yield(.progress($0)) },

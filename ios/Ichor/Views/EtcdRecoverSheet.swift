@@ -27,10 +27,13 @@ final class EtcdRecoverJob {
 
     var idle: Bool { !loading && picked == nil && !running && !finished }
     var timeline: [TimelineStep<EtcdRecoverPhase>] {
-        etcdRecoverTimeline(events, encrypted: picked?.info.encrypted == true,
-                            finished: finished && error == nil, failure: finished ? error : nil)
+        etcdRecoverTimeline(
+            events, encrypted: picked?.info.encrypted == true,
+            finished: finished && error == nil, failure: finished ? error : nil)
     }
-    var uploaded: EtcdRecoverProgress? { events.last { $0.phase == EtcdRecoverPhase.uploading.rawValue && $0.total > 0 } }
+    var uploaded: EtcdRecoverProgress? {
+        events.last { $0.phase == EtcdRecoverPhase.uploading.rawValue && $0.total > 0 }
+    }
 
     /// Copies the file the importer picked and reads what it needs; true when it is ready.
     func pick(_ result: Result<URL, Error>) async -> Bool {
@@ -62,7 +65,9 @@ final class EtcdRecoverJob {
     }
 
     /// Recovers on `node`; `identity` and `passphrase` go to Go and are not kept.
-    func start(client: TalosClient, node: String, identity: String, passphrase: String, skipHashCheck: Bool, lockEnabled: Bool) {
+    func start(
+        client: TalosClient, node: String, identity: String, passphrase: String, skipHashCheck: Bool, lockEnabled: Bool
+    ) {
         guard let picked, !running else { return }
         running = true
         task = Task {
@@ -70,8 +75,10 @@ final class EtcdRecoverJob {
                 error = failure
             } else {
                 var outcome: String??
-                for await event in client.etcdRecover(node: node, path: picked.url.path, identity: identity,
-                                                      passphrase: passphrase, skipHashCheck: skipHashCheck) {
+                for await event in client.etcdRecover(
+                    node: node, path: picked.url.path, identity: identity,
+                    passphrase: passphrase, skipHashCheck: skipHashCheck)
+                {
                     switch event {
                     case .progress(let progress): events.append(progress)
                     case .done(let failure): outcome = .some(failure)
@@ -133,9 +140,11 @@ struct EtcdRecoverSheet: View {
     @State private var confirming = false
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(picked: PickedSnapshot, nodes: [String], hostnames: [String: String], clusterName: String,
-         onStart: @escaping (_ node: String, _ identity: String, _ passphrase: String, _ skipHashCheck: Bool) -> Void,
-         onCancel: @escaping () -> Void) {
+    init(
+        picked: PickedSnapshot, nodes: [String], hostnames: [String: String], clusterName: String,
+        onStart: @escaping (_ node: String, _ identity: String, _ passphrase: String, _ skipHashCheck: Bool) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
         self.picked = picked
         self.nodes = nodes
         self.hostnames = hostnames
@@ -175,8 +184,10 @@ struct EtcdRecoverSheet: View {
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                     case .unsupported:
-                        Text("This snapshot is encrypted for a YubiKey or an SSH key, which the phone cannot open: decrypt it on a laptop first, or use a passphrase or age-key snapshot.")
-                            .foregroundStyle(.statusBad)
+                        Text(
+                            "This snapshot is encrypted for a YubiKey or an SSH key, which the phone cannot open: decrypt it on a laptop first, or use a passphrase or age-key snapshot."
+                        )
+                        .foregroundStyle(.statusBad)
                     }
                 }
                 Section("Control plane to recover on") {
@@ -191,7 +202,8 @@ struct EtcdRecoverSheet: View {
                         Toggle(isOn: $skipHash) {
                             VStack(alignment: .leading) {
                                 Text("Database copied from a member's data directory")
-                                Text("Skips the integrity check: such a copy has no hash.").font(.caption).foregroundStyle(.secondary)
+                                Text("Skips the integrity check: such a copy has no hash.").font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -212,10 +224,15 @@ struct EtcdRecoverSheet: View {
             .sheet(isPresented: $confirming) {
                 HostnameConfirmationSheet(
                     title: String(localized: "Recover etcd on \(nodeName)?"),
-                    message: String(localized: "etcd starts again on \(nodeName) from this snapshot, with one member. Writes made after the snapshot are lost."),
+                    message: String(
+                        localized:
+                            "etcd starts again on \(nodeName) from this snapshot, with one member. Writes made after the snapshot are lost."
+                    ),
                     hostname: clusterName,
                     actionTitle: String(localized: "Recover"),
-                    acknowledgments: [String(localized: "I understand the other control planes must be reset before they rejoin")]
+                    acknowledgments: [
+                        String(localized: "I understand the other control planes must be reset before they rejoin")
+                    ]
                 ) {
                     confirming = false
                     guard let node else { return }
@@ -236,7 +253,9 @@ struct EtcdRecoverSection: View {
     var body: some View {
         Section {
             if job.loading {
-                HStack { ProgressView(); Text("Reading the snapshot…") }
+                HStack {
+                    ProgressView(); Text("Reading the snapshot…")
+                }
             }
             if job.running || !job.events.isEmpty {
                 ForEach(job.timeline) { step in

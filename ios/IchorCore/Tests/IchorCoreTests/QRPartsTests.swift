@@ -16,7 +16,7 @@ private enum FakeCore {
         let fields = text.dropFirst("ichor:".count).split(separator: ":", maxSplits: 1)
         let position = fields.first?.split(separator: "/") ?? []
         guard fields.count == 2, position.count == 2,
-              let index = Int(position[0]), let total = Int(position[1])
+            let index = Int(position[0]), let total = Int(position[1])
         else { throw CoreFailure(message: "qr-parts-invalid: not a part") }
         return #"{"index":\#(index),"total":\#(total),"chunk":"\#(fields[1])"}"#
     }
@@ -152,8 +152,10 @@ final class QRPartsTests: XCTestCase {
     }
 
     func testOutOfRangeOrUnreadablePartJSONIsInvalid() {
-        for json in [#"{"index":0,"total":2,"chunk":"a"}"#, #"{"index":3,"total":2,"chunk":"a"}"#,
-                     #"{"index":1,"total":0,"chunk":"a"}"#, "not json"] {
+        for json in [
+            #"{"index":0,"total":2,"chunk":"a"}"#, #"{"index":3,"total":2,"chunk":"a"}"#,
+            #"{"index":1,"total":0,"chunk":"a"}"#, "not json",
+        ] {
             var collector = QRPartCollector()
             let outcome = collector.add("ichor:1/2:a", part: { _ in json }, join: FakeCore.join)
             XCTAssertEqual(outcome, .failed(.invalid), json)
@@ -164,8 +166,16 @@ final class QRPartsTests: XCTestCase {
     func testJoinReceivesEveryPartAsJSON() throws {
         var received = ""
         var collector = QRPartCollector()
-        _ = collector.add("ichor:2/2:bb", part: FakeCore.part, join: { received = $0; return "" })
-        _ = collector.add("ichor:1/2:aa", part: FakeCore.part, join: { received = $0; return "ok" })
+        _ = collector.add(
+            "ichor:2/2:bb", part: FakeCore.part,
+            join: {
+                received = $0; return ""
+            })
+        _ = collector.add(
+            "ichor:1/2:aa", part: FakeCore.part,
+            join: {
+                received = $0; return "ok"
+            })
         let parts = try JSONDecoder().decode([QRPart].self, from: Data(received.utf8))
         XCTAssertEqual(parts, [QRPart(index: 1, total: 2, chunk: "aa"), QRPart(index: 2, total: 2, chunk: "bb")])
     }

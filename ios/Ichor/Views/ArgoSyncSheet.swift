@@ -62,13 +62,18 @@ struct ArgoSyncSheet: View {
                             Text("Nothing would be deleted.").font(.callout).foregroundStyle(.secondary)
                         } else {
                             VStack(alignment: .leading, spacing: 4) {
-                                Label(String(localized: "\(pruned.count) resources will be deleted"), systemImage: "trash")
-                                    .font(.callout.weight(.semibold))
-                                    .foregroundStyle(.statusBad)
+                                Label(
+                                    String(localized: "\(pruned.count) resources will be deleted"), systemImage: "trash"
+                                )
+                                .font(.callout.weight(.semibold))
+                                .foregroundStyle(.statusBad)
                                 ForEach(pruned) { resource in
-                                    Text(verbatim: "\(resource.kind) \(resource.namespace.isEmpty ? "" : resource.namespace + "/")\(resource.name)")
-                                        .font(.caption.monospaced())
-                                        .foregroundStyle(.secondary)
+                                    Text(
+                                        verbatim:
+                                            "\(resource.kind) \(resource.namespace.isEmpty ? "" : resource.namespace + "/")\(resource.name)"
+                                    )
+                                    .font(.caption.monospaced())
+                                    .foregroundStyle(.secondary)
                                 }
                             }
                         }
@@ -153,7 +158,8 @@ struct ArgoSyncSheet: View {
                     DiffResourceRow(resource: resource, expanded: binding(for: resource))
                 }
                 if changed.count > Self.shownChanges {
-                    Text("and \(String(changed.count - Self.shownChanges)) more").font(.callout).foregroundStyle(.secondary)
+                    Text("and \(String(changed.count - Self.shownChanges)) more").font(.callout).foregroundStyle(
+                        .secondary)
                     fullDiffLink
                 }
             }
@@ -179,7 +185,8 @@ struct ArgoSyncSheet: View {
 
     private func loadDiff() async {
         guard let client = model.client else { return }
-        let namespace = app.namespace, name = app.name
+        let namespace = app.namespace
+        let name = app.name
         let loaded: LoadState<FluxDiff> = await .from { try await client.argoDiff(namespace: namespace, name: name) }
         if !Task.isCancelled { diff = loaded }
     }

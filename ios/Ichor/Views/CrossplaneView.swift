@@ -33,9 +33,11 @@ struct CrossplaneView: View {
         Task {
             var denial: KubeAccess?
             if let client = model.client,
-               let access = try? await client.kubeCan(verb: "patch", group: object.ref.group, resource: object.ref.resource,
-                                                      namespace: object.ref.namespace, name: object.ref.name),
-               access.isDenied {
+                let access = try? await client.kubeCan(
+                    verb: "patch", group: object.ref.group, resource: object.ref.resource,
+                    namespace: object.ref.namespace, name: object.ref.name),
+                access.isDenied
+            {
                 denial = access
             }
             pending = PendingCrossplaneAction(object: object, action: action, composite: composite, denial: denial)
@@ -48,7 +50,8 @@ struct CrossplaneView: View {
             try await client.crossplaneAction(ref: p.object.ref, action: p.action)
             await load()
         } catch {
-            actionError = String(localized: "\(p.actionTitle) on \(p.object.label) failed: \(error.localizedDescription)")
+            actionError = String(
+                localized: "\(p.actionTitle) on \(p.object.label) failed: \(error.localizedDescription)")
         }
     }
 
@@ -56,7 +59,10 @@ struct CrossplaneView: View {
     private func list(_ xp: Crossplane) -> some View {
         List {
             if !xp.error.isEmpty {
-                Section { Text(verbatim: String(localized: "Some sections could not be read: \(xp.error)")).font(.callout).foregroundStyle(.secondary) }
+                Section {
+                    Text(verbatim: String(localized: "Some sections could not be read: \(xp.error)")).font(.callout)
+                        .foregroundStyle(.secondary)
+                }
             }
             if !xp.installed || (xp.packages.isEmpty && xp.definitions.isEmpty && xp.rows.isEmpty) {
                 Section { Text("Crossplane is installed but defines nothing yet.").foregroundStyle(.secondary) }
@@ -71,15 +77,20 @@ struct CrossplaneView: View {
                     .pickerStyle(.segmented)
                     TextField("Search kind, name or external name", text: $query)
                     if xp.truncated {
-                        Text("Long list: healthy managed resources past the first 500 are left out; the search looks at the ones listed.")
-                            .font(.caption).foregroundStyle(.secondary)
+                        Text(
+                            "Long list: healthy managed resources past the first 500 are left out; the search looks at the ones listed."
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 let problems = xp.problems
                 if !problems.isEmpty {
                     Section("Problems") {
                         ForEach(problems) { o in
-                            ObjectRow(object: o, onPick: xp.claims.contains(o) ? nil : { pick(o, $0, composite: xp.composites.contains(o)) })
+                            ObjectRow(
+                                object: o,
+                                onPick: xp.claims.contains(o)
+                                    ? nil : { pick(o, $0, composite: xp.composites.contains(o)) })
                         }
                     }
                 }
@@ -111,15 +122,20 @@ struct CrossplaneView: View {
             }
         }
         .themedBackground()
-        .confirmationDialog(pending?.title ?? "", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),
-                            titleVisibility: .visible, presenting: pending) { p in
+        .confirmationDialog(
+            pending?.title ?? "", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),
+            titleVisibility: .visible, presenting: pending
+        ) { p in
             if p.denial == nil {
                 Button(p.actionTitle) { Task { await run(p) } }
             }
         } message: { p in
             Text(verbatim: p.message)
         }
-        .alert(String(localized: "Crossplane"), isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })) {
+        .alert(
+            String(localized: "Crossplane"),
+            isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })
+        ) {
             Button("OK") { actionError = nil }
         } message: {
             Text(verbatim: actionError ?? "")
@@ -171,7 +187,9 @@ private struct RowShell: View {
 }
 
 private func objectResource(_ ref: CrossplaneRef) -> KubeAPIResource {
-    KubeAPIResource(group: ref.group, version: ref.version, resource: ref.resource, kind: ref.kind, namespaced: !ref.namespace.isEmpty)
+    KubeAPIResource(
+        group: ref.group, version: ref.version, resource: ref.resource, kind: ref.kind,
+        namespaced: !ref.namespace.isEmpty)
 }
 
 private struct PackageRow: View {
@@ -181,8 +199,11 @@ private struct PackageRow: View {
         RowShell(
             health: package.health,
             title: "\(package.ref.kind) \(package.label)",
-            line: [package.package, package.currentRevision, conditionText(package.installed), conditionText(package.healthy)]
-                .compactMap { $0 }.joined(separator: " · ")
+            line: [
+                package.package, package.currentRevision, conditionText(package.installed),
+                conditionText(package.healthy),
+            ]
+            .compactMap { $0 }.joined(separator: " · ")
                 + package.reasons.map(reasonText).map { " · \($0)" }.joined(),
             resource: objectResource(package.ref),
             namespace: package.ref.namespace,
@@ -198,13 +219,15 @@ private struct DefinitionRow: View {
         RowShell(
             health: definition.health,
             title: definition.label,
-            line: [definition.compositeKind.isEmpty ? nil : "\(definition.compositeGroup)/\(definition.compositeKind)",
-                   definition.scope.isEmpty ? nil : definition.scope,
-                   definition.claimKind.isEmpty ? nil : String(localized: "claim kind \(definition.claimKind)"),
-                   String(localized: "\(definition.compositions) compositions"),
-                   String(localized: "\(definition.composites) composites"),
-                   conditionText(definition.established)]
-                .compactMap { $0 }.joined(separator: " · ")
+            line: [
+                definition.compositeKind.isEmpty ? nil : "\(definition.compositeGroup)/\(definition.compositeKind)",
+                definition.scope.isEmpty ? nil : definition.scope,
+                definition.claimKind.isEmpty ? nil : String(localized: "claim kind \(definition.claimKind)"),
+                String(localized: "\(definition.compositions) compositions"),
+                String(localized: "\(definition.composites) composites"),
+                conditionText(definition.established),
+            ]
+            .compactMap { $0 }.joined(separator: " · ")
                 + definition.reasons.map(reasonText).map { " · \($0)" }.joined(),
             resource: objectResource(definition.ref),
             namespace: definition.ref.namespace,
@@ -235,9 +258,17 @@ private struct PendingCrossplaneAction {
         var parts: [String]
         switch action {
         case .pause:
-            parts = [String(localized: "Crossplane stops reconciling it until it is resumed: no more calls to the provider’s API. A paused resource cannot be deleted.")]
-            if composite { parts.append(String(localized: "Its composed resources keep reconciling: each has its own pause.")) }
-        case .resume: parts = [String(localized: "Crossplane reconciles it again, calling the provider’s API as before.")]
+            parts = [
+                String(
+                    localized:
+                        "Crossplane stops reconciling it until it is resumed: no more calls to the provider’s API. A paused resource cannot be deleted."
+                )
+            ]
+            if composite {
+                parts.append(String(localized: "Its composed resources keep reconciling: each has its own pause."))
+            }
+        case .resume:
+            parts = [String(localized: "Crossplane reconciles it again, calling the provider’s API as before.")]
         case .reconcile: parts = [String(localized: "Crossplane reconciles it now instead of at its next poll.")]
         }
         if let denial { parts.append(denial.deniedText) }
@@ -262,17 +293,19 @@ private struct ObjectRow: View {
         RowShell(
             health: object.health,
             title: "\(object.ref.kind) \(object.label)",
-            line: [object.composition.isEmpty ? nil : String(localized: "composition \(object.composition)"),
-                   object.resources > 0 ? String(localized: "\(object.resources) resources") : nil,
-                   object.claim.isEmpty ? nil : String(localized: "claim \(object.claim)"),
-                   object.composite.isEmpty ? nil : String(localized: "composite \(object.composite)"),
-                   object.providerConfig.isEmpty ? nil : String(localized: "provider config \(object.providerConfig)"),
-                   object.externalName.isEmpty ? nil : String(localized: "external name \(object.externalName)"),
-                   conditionText(object.ready),
-                   conditionText(object.synced),
-                   object.synced.message.isEmpty ? nil : object.synced.message,
-                   object.paused ? String(localized: "paused") : nil]
-                .compactMap { $0 }.joined(separator: " · ")
+            line: [
+                object.composition.isEmpty ? nil : String(localized: "composition \(object.composition)"),
+                object.resources > 0 ? String(localized: "\(object.resources) resources") : nil,
+                object.claim.isEmpty ? nil : String(localized: "claim \(object.claim)"),
+                object.composite.isEmpty ? nil : String(localized: "composite \(object.composite)"),
+                object.providerConfig.isEmpty ? nil : String(localized: "provider config \(object.providerConfig)"),
+                object.externalName.isEmpty ? nil : String(localized: "external name \(object.externalName)"),
+                conditionText(object.ready),
+                conditionText(object.synced),
+                object.synced.message.isEmpty ? nil : object.synced.message,
+                object.paused ? String(localized: "paused") : nil,
+            ]
+            .compactMap { $0 }.joined(separator: " · ")
                 + object.reasons.map(reasonText).map { " · \($0)" }.joined(),
             resource: objectResource(object.ref),
             namespace: object.ref.namespace,

@@ -178,7 +178,8 @@ public func netTargetProblem(_ tool: NetTool, _ target: String) -> NetTargetProb
     if t.hasPrefix("-") || t.contains(where: { forbidden.contains($0) }) { return .characters }
     switch tool {
     case .port:
-        return t.range(of: #"^(\[[0-9a-fA-F:.]+\]|[^:\[\]]+):[0-9]{1,5}$"#, options: .regularExpression) == nil ? .hostPort : nil
+        return t.range(of: #"^(\[[0-9a-fA-F:.]+\]|[^:\[\]]+):[0-9]{1,5}$"#, options: .regularExpression) == nil
+            ? .hostPort : nil
     case .http:
         return t.hasPrefix("http://") || t.hasPrefix("https://") ? nil : .url
     case .dns, .ping, .trace:

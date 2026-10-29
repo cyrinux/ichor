@@ -24,9 +24,11 @@ final class CronDescriberTests: XCTestCase {
     }
 
     func testAnythingElseStaysRaw() {
-        for schedule in ["*/15 * * * *", "0 */6 * * *", "0 9 * * 1-5", "0 9 1,15 * *", "0 9 1 1 *", "0 9 1 * 1",
-                         "0 24 * * *", "60 1 * * *", "0 9 32 * *", "0 9 * * 8", "+5 9 * * *", "@hourly",
-                         "CRON_TZ=UTC 0 9 * * *", "0 9 * *", ""] {
+        for schedule in [
+            "*/15 * * * *", "0 */6 * * *", "0 9 * * 1-5", "0 9 1,15 * *", "0 9 1 1 *", "0 9 1 * 1",
+            "0 24 * * *", "60 1 * * *", "0 9 32 * *", "0 9 * * 8", "+5 9 * * *", "@hourly",
+            "CRON_TZ=UTC 0 9 * * *", "0 9 * *", "",
+        ] {
             XCTAssertEqual(CronDescriber.describe(schedule), .raw(schedule), schedule)
         }
     }

@@ -44,8 +44,9 @@ public struct AMMatcher: Codable, Hashable, Sendable, Identifiable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(name: try c.field(.name, ""), value: try c.field(.value, ""),
-                  isRegex: try c.field(.isRegex, false), isEqual: try c.field(.isEqual, true))
+        self.init(
+            name: try c.field(.name, ""), value: try c.field(.value, ""),
+            isRegex: try c.field(.isRegex, false), isEqual: try c.field(.isEqual, true))
     }
 
     private enum CodingKeys: String, CodingKey { case name, value, isRegex, isEqual }
@@ -85,10 +86,13 @@ public struct AMAlert: Decodable, Hashable, Identifiable, Sendable {
     public let silencedBy: [String]
     public let inhibitedBy: [String]
 
-    public init(fingerprint: String = "", alertname: String = "", severity: AMSeverity = .other, labels: [String: String] = [:],
-                annotations: [String: String] = [:], summary: String = "", description: String = "", runbookURL: String = "",
-                generatorURL: String = "", startsAt: Int64 = 0, endsAt: Int64 = 0, updatedAt: Int64 = 0, receivers: [String] = [],
-                state: AMAlertState = .active, silencedBy: [String] = [], inhibitedBy: [String] = []) {
+    public init(
+        fingerprint: String = "", alertname: String = "", severity: AMSeverity = .other, labels: [String: String] = [:],
+        annotations: [String: String] = [:], summary: String = "", description: String = "", runbookURL: String = "",
+        generatorURL: String = "", startsAt: Int64 = 0, endsAt: Int64 = 0, updatedAt: Int64 = 0,
+        receivers: [String] = [],
+        state: AMAlertState = .active, silencedBy: [String] = [], inhibitedBy: [String] = []
+    ) {
         self.fingerprint = fingerprint
         self.alertname = alertname
         self.severity = severity
@@ -109,12 +113,16 @@ public struct AMAlert: Decodable, Hashable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(fingerprint: try c.field(.fingerprint, ""), alertname: try c.field(.alertname, ""), severity: try c.wire(.severity),
-                  labels: try c.field(.labels, [:]), annotations: try c.field(.annotations, [:]), summary: try c.field(.summary, ""),
-                  description: try c.field(.description, ""), runbookURL: try c.field(.runbookURL, ""),
-                  generatorURL: try c.field(.generatorURL, ""), startsAt: try c.field(.startsAt, 0), endsAt: try c.field(.endsAt, 0),
-                  updatedAt: try c.field(.updatedAt, 0), receivers: try c.field(.receivers, []), state: try c.wire(.state),
-                  silencedBy: try c.field(.silencedBy, []), inhibitedBy: try c.field(.inhibitedBy, []))
+        self.init(
+            fingerprint: try c.field(.fingerprint, ""), alertname: try c.field(.alertname, ""),
+            severity: try c.wire(.severity),
+            labels: try c.field(.labels, [:]), annotations: try c.field(.annotations, [:]),
+            summary: try c.field(.summary, ""),
+            description: try c.field(.description, ""), runbookURL: try c.field(.runbookURL, ""),
+            generatorURL: try c.field(.generatorURL, ""), startsAt: try c.field(.startsAt, 0),
+            endsAt: try c.field(.endsAt, 0),
+            updatedAt: try c.field(.updatedAt, 0), receivers: try c.field(.receivers, []), state: try c.wire(.state),
+            silencedBy: try c.field(.silencedBy, []), inhibitedBy: try c.field(.inhibitedBy, []))
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -162,7 +170,9 @@ public struct AMAlertGroup: Decodable, Hashable, Identifiable, Sendable {
     public let active: Int
     public let alerts: [AMAlert]
 
-    public init(alertname: String = "", severity: AMSeverity = .other, count: Int = 0, active: Int = 0, alerts: [AMAlert] = []) {
+    public init(
+        alertname: String = "", severity: AMSeverity = .other, count: Int = 0, active: Int = 0, alerts: [AMAlert] = []
+    ) {
         self.alertname = alertname
         self.severity = severity
         self.count = count
@@ -172,8 +182,9 @@ public struct AMAlertGroup: Decodable, Hashable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(alertname: try c.field(.alertname, ""), severity: try c.wire(.severity), count: try c.field(.count, 0),
-                  active: try c.field(.active, 0), alerts: try c.field(.alerts, []))
+        self.init(
+            alertname: try c.field(.alertname, ""), severity: try c.wire(.severity), count: try c.field(.count, 0),
+            active: try c.field(.active, 0), alerts: try c.field(.alerts, []))
     }
 
     private enum CodingKeys: String, CodingKey { case alertname, severity, count, active, alerts }
@@ -199,8 +210,9 @@ public struct AMCounts: Decodable, Hashable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(critical: try c.field(.critical, 0), warning: try c.field(.warning, 0), info: try c.field(.info, 0),
-                  other: try c.field(.other, 0), suppressed: try c.field(.suppressed, 0))
+        self.init(
+            critical: try c.field(.critical, 0), warning: try c.field(.warning, 0), info: try c.field(.info, 0),
+            other: try c.field(.other, 0), suppressed: try c.field(.suppressed, 0))
     }
 
     private enum CodingKeys: String, CodingKey { case critical, warning, info, other, suppressed }
@@ -234,8 +246,9 @@ public struct AMAlerts: Decodable, Hashable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(groups: try c.field(.groups, []), counts: try c.field(.counts, AMCounts()), total: try c.field(.total, 0),
-                  truncated: try c.field(.truncated, false))
+        self.init(
+            groups: try c.field(.groups, []), counts: try c.field(.counts, AMCounts()), total: try c.field(.total, 0),
+            truncated: try c.field(.truncated, false))
     }
 
     private enum CodingKeys: String, CodingKey { case groups, counts, total, truncated }
@@ -248,8 +261,9 @@ public struct AMAlerts: Decodable, Hashable, Sendable {
             let kept = group.alerts.filter { severities.contains($0.severity) && $0.matches(query) }
             guard !kept.isEmpty else { return nil }
             let worst = kept.map(\.severity).min { $0.rank < $1.rank } ?? group.severity
-            return AMAlertGroup(alertname: group.alertname, severity: worst, count: kept.count,
-                                active: kept.filter { !$0.suppressed }.count, alerts: kept)
+            return AMAlertGroup(
+                alertname: group.alertname, severity: worst, count: kept.count,
+                active: kept.filter { !$0.suppressed }.count, alerts: kept)
         }
     }
 }
@@ -270,8 +284,10 @@ public struct AMSilence: Decodable, Hashable, Identifiable, Sendable {
     public let endsAt: Int64
     public let updatedAt: Int64
 
-    public init(id: String = "", state: AMSilenceState = .active, matchers: [AMMatcher] = [], createdBy: String = "",
-                comment: String = "", startsAt: Int64 = 0, endsAt: Int64 = 0, updatedAt: Int64 = 0) {
+    public init(
+        id: String = "", state: AMSilenceState = .active, matchers: [AMMatcher] = [], createdBy: String = "",
+        comment: String = "", startsAt: Int64 = 0, endsAt: Int64 = 0, updatedAt: Int64 = 0
+    ) {
         self.id = id
         self.state = state
         self.matchers = matchers
@@ -284,12 +300,16 @@ public struct AMSilence: Decodable, Hashable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(id: try c.field(.id, ""), state: try c.wire(.state), matchers: try c.field(.matchers, []),
-                  createdBy: try c.field(.createdBy, ""), comment: try c.field(.comment, ""), startsAt: try c.field(.startsAt, 0),
-                  endsAt: try c.field(.endsAt, 0), updatedAt: try c.field(.updatedAt, 0))
+        self.init(
+            id: try c.field(.id, ""), state: try c.wire(.state), matchers: try c.field(.matchers, []),
+            createdBy: try c.field(.createdBy, ""), comment: try c.field(.comment, ""),
+            startsAt: try c.field(.startsAt, 0),
+            endsAt: try c.field(.endsAt, 0), updatedAt: try c.field(.updatedAt, 0))
     }
 
-    private enum CodingKeys: String, CodingKey { case id, state, matchers, createdBy, comment, startsAt, endsAt, updatedAt }
+    private enum CodingKeys: String, CodingKey {
+        case id, state, matchers, createdBy, comment, startsAt, endsAt, updatedAt
+    }
 
     /// Active or pending: it can still be expired.
     public var expirable: Bool { state != .expired }
@@ -353,7 +373,9 @@ public func amParseDuration(_ text: String) -> Int? {
     case "w": (unit, digits) = (10_080, t.dropLast())
     default: (unit, digits) = (1, Substring(t))
     }
-    guard let n = Int(digits.trimmingCharacters(in: .whitespaces)), n > 0, n <= amMaxSilenceMinutes / unit else { return nil }
+    guard let n = Int(digits.trimmingCharacters(in: .whitespaces)), n > 0, n <= amMaxSilenceMinutes / unit else {
+        return nil
+    }
     return n * unit
 }
 

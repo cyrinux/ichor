@@ -48,9 +48,11 @@ public struct TopologyNode: Decodable, Equatable, Identifiable, Sendable {
     /// When an unreachable node last answered (epoch ms), kept by the app: see mergeLastKnown.
     public let lastSeen: Int64?
 
-    public init(id: String, node: String = "", hostname: String = "", role: String = "", addresses: [String] = [],
-                zone: String = "", region: String = "", country: String = "", site: String = "",
-                kubespan: Bool = false, queried: Bool = false, error: String? = nil, lastSeen: Int64? = nil) {
+    public init(
+        id: String, node: String = "", hostname: String = "", role: String = "", addresses: [String] = [],
+        zone: String = "", region: String = "", country: String = "", site: String = "",
+        kubespan: Bool = false, queried: Bool = false, error: String? = nil, lastSeen: Int64? = nil
+    ) {
         self.id = id
         self.node = node
         self.hostname = hostname
@@ -193,7 +195,8 @@ public func groupNodes(_ nodes: [NodeOverview], by topology: ClusterTopology?) -
     let sites = topology?.sites ?? []
     if sites.isEmpty { return [NodeGroup(site: nil, nodes: ordered)] }
     // The map keys nodes by hostname; its talosconfig target is the fallback for a renamed node.
-    let byId = Dictionary(sites.flatMap { site in site.nodes.map { ($0, site) } }, uniquingKeysWith: { _, last in last })
+    let byId = Dictionary(
+        sites.flatMap { site in site.nodes.map { ($0, site) } }, uniquingKeysWith: { _, last in last })
     let byTarget = Dictionary(
         (topology?.nodes ?? []).filter { !$0.node.trimmingCharacters(in: .whitespaces).isEmpty }
             .compactMap { n in byId[n.id].map { (n.node, $0) } },
@@ -212,7 +215,8 @@ public func groupNodes(_ nodes: [NodeOverview], by topology: ClusterTopology?) -
 public func countryFlag(_ code: String) -> String {
     let letters = Array(code.uppercased().unicodeScalars)
     guard code.unicodeScalars.count == 2, letters.count == 2,
-          letters.allSatisfy({ ("A"..."Z").contains($0) }) else { return "" }
+        letters.allSatisfy({ ("A"..."Z").contains($0) })
+    else { return "" }
     return String(String.UnicodeScalarView(letters.compactMap { Unicode.Scalar(regionalIndicatorA + $0.value - 65) }))
 }
 

@@ -3,7 +3,8 @@ import XCTest
 
 final class KubeBrowserTests: XCTestCase {
     private let resources = [
-        KubeAPIResource(group: "cert-manager.io", resource: "certificates", kind: "Certificate", shortNames: ["cert", "certs"]),
+        KubeAPIResource(
+            group: "cert-manager.io", resource: "certificates", kind: "Certificate", shortNames: ["cert", "certs"]),
         KubeAPIResource(resource: "pods", kind: "Pod", verbs: ["get", "list", "update"], shortNames: ["po"]),
         KubeAPIResource(group: "apps", resource: "deployments", kind: "Deployment", shortNames: ["deploy"]),
         KubeAPIResource(resource: "nodes", kind: "Node", namespaced: false, shortNames: ["no"]),
@@ -13,10 +14,12 @@ final class KubeBrowserTests: XCTestCase {
     ]
 
     func testDecodesResources() throws {
-        let list = try TalosJSON.decode(KubeAPIResourceList.self, from: """
-        {"resources":[{"group":"","version":"v1","resource":"secrets","kind":"Secret","namespaced":true,
-          "verbs":["get","list","update"],"shortNames":null,"categories":[]}],"failed":["metrics.k8s.io/v1beta1"]}
-        """)
+        let list = try TalosJSON.decode(
+            KubeAPIResourceList.self,
+            from: """
+                {"resources":[{"group":"","version":"v1","resource":"secrets","kind":"Secret","namespaced":true,
+                  "verbs":["get","list","update"],"shortNames":null,"categories":[]}],"failed":["metrics.k8s.io/v1beta1"]}
+                """)
         XCTAssertEqual(list.resources.count, 1)
         let secret = list.resources[0]
         XCTAssertTrue(secret.isSecret)
@@ -25,7 +28,8 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertEqual(secret.groupVersion, "v1")
         XCTAssertEqual(list.failed, ["metrics.k8s.io/v1beta1"])
         XCTAssertEqual(try TalosJSON.decode(KubeAPIResourceList.self, from: "{}"), KubeAPIResourceList())
-        XCTAssertEqual(KubeAPIResource(group: "apps", resource: "deployments", kind: "Deployment").groupVersion, "apps/v1")
+        XCTAssertEqual(
+            KubeAPIResource(group: "apps", resource: "deployments", kind: "Deployment").groupVersion, "apps/v1")
         XCTAssertFalse(KubeAPIResource(resource: "events", kind: "Event", verbs: ["list", "update"]).canUpdate)
     }
 
@@ -39,27 +43,31 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertEqual(groupAPIResources(resources, query: "deploy").flatMap(\.resources).map(\.kind), ["Deployment"])
         XCTAssertEqual(groupAPIResources(resources, query: "ING").flatMap(\.resources).map(\.kind), ["Ingress"])
         XCTAssertEqual(groupAPIResources(resources, query: "certs").flatMap(\.resources).map(\.kind), ["Certificate"])
-        XCTAssertEqual(groupAPIResources(resources, query: "argoproj").flatMap(\.resources).map(\.kind), ["Application"])
+        XCTAssertEqual(
+            groupAPIResources(resources, query: "argoproj").flatMap(\.resources).map(\.kind), ["Application"])
         XCTAssertEqual(groupAPIResources(resources, query: "po").flatMap(\.resources).map(\.kind), ["Pod"])
         XCTAssertEqual(groupAPIResources(resources, query: "  ").flatMap(\.resources).count, resources.count)
         XCTAssertTrue(groupAPIResources(resources, query: "zzz").isEmpty)
     }
 
     func testDecodesPage() throws {
-        let page = try TalosJSON.decode(KubeResourcePage.self, from: """
-        {"columns":[{"name":"Name","priority":0,"type":"string"},{"name":"Ready","priority":0,"type":"string"},
-          {"name":"IP","priority":1,"type":"string"},{"name":"Age","priority":0,"type":"string"}],
-         "rows":[{"name":"web-1","namespace":"apps","cells":["web-1","1/1","10.0.0.4","3d"],"created":1790000000},
-                 {"name":"web-2","cells":["web-2","0/1","<none>",""],"created":0,"deleting":true}],
-         "continue":"6162","remaining":12}
-        """)
+        let page = try TalosJSON.decode(
+            KubeResourcePage.self,
+            from: """
+                {"columns":[{"name":"Name","priority":0,"type":"string"},{"name":"Ready","priority":0,"type":"string"},
+                  {"name":"IP","priority":1,"type":"string"},{"name":"Age","priority":0,"type":"string"}],
+                 "rows":[{"name":"web-1","namespace":"apps","cells":["web-1","1/1","10.0.0.4","3d"],"created":1790000000},
+                         {"name":"web-2","cells":["web-2","0/1","<none>",""],"created":0,"deleting":true}],
+                 "continue":"6162","remaining":12}
+                """)
         XCTAssertEqual(page.rows.map(\.id), ["apps/web-1", "/web-2"])
         XCTAssertTrue(page.rows[1].deleting)
         XCTAssertEqual(page.page.continueToken, "6162")
         XCTAssertFalse(page.page.complete)
         XCTAssertEqual(page.page.remaining, 12)
 
-        let last = try TalosJSON.decode(KubeResourcePage.self, from: #"{"columns":[],"rows":null,"continue":"","remaining":0}"#)
+        let last = try TalosJSON.decode(
+            KubeResourcePage.self, from: #"{"columns":[],"rows":null,"continue":"","remaining":0}"#)
         XCTAssertTrue(last.page.complete)
         XCTAssertEqual(last.page.items, [])
     }
@@ -67,7 +75,8 @@ final class KubeBrowserTests: XCTestCase {
     func testColumnSelection() {
         let columns = [
             KubeResourceColumn(name: "Name"), KubeResourceColumn(name: "Namespace"), KubeResourceColumn(name: "Ready"),
-            KubeResourceColumn(name: "Status"), KubeResourceColumn(name: "IP", priority: 1), KubeResourceColumn(name: "Age"),
+            KubeResourceColumn(name: "Status"), KubeResourceColumn(name: "IP", priority: 1),
+            KubeResourceColumn(name: "Age"),
         ]
         XCTAssertEqual(browserColumnIndices(columns, wide: false), [2, 3])
         XCTAssertEqual(browserColumnIndices(columns, wide: true), [2, 3, 4])
@@ -79,7 +88,8 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertEqual(cells.map(\.column.name), ["Ready"])
         XCTAssertEqual(cells.map(\.value), ["1/1"])
         // Fewer cells than columns: never out of range.
-        XCTAssertTrue(browserCells(KubeResourceRow(name: "x", cells: ["x"]), columns: columns, indices: [2, 3]).isEmpty)
+        XCTAssertTrue(
+            browserCells(KubeResourceRow(name: "x", cells: ["x"]), columns: columns, indices: [2, 3]).isEmpty)
     }
 
     func testDateCells() {
@@ -91,8 +101,10 @@ final class KubeBrowserTests: XCTestCase {
     }
 
     func testFilterRows() {
-        let rows = [KubeResourceRow(name: "web", namespace: "apps", cells: ["web", "Running"]),
-                    KubeResourceRow(name: "db", namespace: "data", cells: ["db", "CrashLoopBackOff"])]
+        let rows = [
+            KubeResourceRow(name: "web", namespace: "apps", cells: ["web", "Running"]),
+            KubeResourceRow(name: "db", namespace: "data", cells: ["db", "CrashLoopBackOff"]),
+        ]
         XCTAssertEqual(filterResourceRows(rows, query: "crash").map(\.name), ["db"])
         XCTAssertEqual(filterResourceRows(rows, query: "APPS").map(\.name), ["web"])
         XCTAssertEqual(filterResourceRows(rows, query: "").count, 2)
@@ -115,9 +127,11 @@ final class KubeBrowserTests: XCTestCase {
     }
 
     func testEditPreviewClassifiesLines() throws {
-        let preview = try TalosJSON.decode(KubeEditPreview.self, from: """
-        {"changed":true,"diff":"--- stored\\n+++ edited\\n@@ -1,3 +1,3 @@\\n spec:\\n-  replicas: 1\\n+  replicas: 2\\n+  paused: true\\n"}
-        """)
+        let preview = try TalosJSON.decode(
+            KubeEditPreview.self,
+            from: """
+                {"changed":true,"diff":"--- stored\\n+++ edited\\n@@ -1,3 +1,3 @@\\n spec:\\n-  replicas: 1\\n+  replicas: 2\\n+  paused: true\\n"}
+                """)
         XCTAssertTrue(preview.changed)
         XCTAssertEqual(preview.lines.map(\.kind), [.hunk, .context, .removed, .added, .added])
         XCTAssertEqual(preview.lines[2].text, "  replicas: 1")
@@ -125,11 +139,13 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertEqual(preview.counts.removed, 1)
         XCTAssertEqual(try TalosJSON.decode(KubeEditPreview.self, from: "{}"), KubeEditPreview())
 
-        let apply = try TalosJSON.decode(KubeApplyResult.self, from: """
-            {"resources":[{"group":"apps","version":"v1","kind":"Deployment","namespace":"web","name":"web","change":"changed","diff":"--- live\\n+++ wanted\\n"},
-                          {"kind":"Namespace","name":"web","change":"unchanged"},{"kind":"ConfigMap","namespace":"web","name":"x","change":"error","error":"refused"}],
-             "warnings":[],"applied":0,"failed":1}
-            """)
+        let apply = try TalosJSON.decode(
+            KubeApplyResult.self,
+            from: """
+                {"resources":[{"group":"apps","version":"v1","kind":"Deployment","namespace":"web","name":"web","change":"changed","diff":"--- live\\n+++ wanted\\n"},
+                              {"kind":"Namespace","name":"web","change":"unchanged"},{"kind":"ConfigMap","namespace":"web","name":"x","change":"error","error":"refused"}],
+                 "warnings":[],"applied":0,"failed":1}
+                """)
         XCTAssertEqual(apply.resources.count, 3)
         XCTAssertTrue(apply.hasChanges)
         XCTAssertEqual(apply.failed, 1)
@@ -150,17 +166,21 @@ final class KubeBrowserTests: XCTestCase {
     }
 
     func testResourceRowNamespacesSortedWithoutClusterScoped() {
-        let rows = [KubeResourceRow(name: "a", namespace: "web"), KubeResourceRow(name: "b"),
-                    KubeResourceRow(name: "c", namespace: "apps"), KubeResourceRow(name: "d", namespace: "web")]
+        let rows = [
+            KubeResourceRow(name: "a", namespace: "web"), KubeResourceRow(name: "b"),
+            KubeResourceRow(name: "c", namespace: "apps"), KubeResourceRow(name: "d", namespace: "web"),
+        ]
         XCTAssertEqual(resourceRowNamespaces(rows), ["apps", "web"])
         XCTAssertEqual(resourceRowNamespaces([]), [])
     }
 
     func testDecodesDeletePreview() throws {
-        let preview = try TalosJSON.decode(KubeDeletePreview.self, from: """
-        {"protected":true,"reason":"needed","clusterScoped":false,"finalizers":["example.com/hold"],
-         "dependents":[{"kind":"Pod","namespace":"shop","name":"api-1"}],"moreDependents":2,"resourceVersion":"7"}
-        """)
+        let preview = try TalosJSON.decode(
+            KubeDeletePreview.self,
+            from: """
+                {"protected":true,"reason":"needed","clusterScoped":false,"finalizers":["example.com/hold"],
+                 "dependents":[{"kind":"Pod","namespace":"shop","name":"api-1"}],"moreDependents":2,"resourceVersion":"7"}
+                """)
         XCTAssertTrue(preview.isProtected)
         XCTAssertTrue(preview.needsTypedName)
         XCTAssertEqual(preview.dependents, [KubeDeleteDependent(kind: "Pod", namespace: "shop", name: "api-1")])
@@ -172,18 +192,22 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertFalse(plain.needsTypedName)
         XCTAssertTrue(KubeDeletePreview(clusterScoped: true).needsTypedName)
         XCTAssertEqual(KubeDeletePropagation.allCases.map(\.rawValue), ["Background", "Foreground", "Orphan"])
-        XCTAssertTrue(isKubeDeleteConflict("the object changed since you looked at it: review it again before deleting"))
+        XCTAssertTrue(
+            isKubeDeleteConflict("the object changed since you looked at it: review it again before deleting"))
     }
 
     func testDecodesScale() throws {
-        let list = try TalosJSON.decode(KubeAPIResourceList.self, from: """
-        {"resources":[{"group":"argoproj.io","version":"v1alpha1","resource":"rollouts","kind":"Rollout","scalable":true},
-          {"group":"","version":"v1","resource":"pods","kind":"Pod"}]}
-        """)
+        let list = try TalosJSON.decode(
+            KubeAPIResourceList.self,
+            from: """
+                {"resources":[{"group":"argoproj.io","version":"v1alpha1","resource":"rollouts","kind":"Rollout","scalable":true},
+                  {"group":"","version":"v1","resource":"pods","kind":"Pod"}]}
+                """)
         XCTAssertTrue(list.resources[0].scalable)
         XCTAssertFalse(list.resources[1].scalable)
         XCTAssertEqual(list.resources[0].scaleResource, "rollouts/scale")
-        XCTAssertEqual(KubeAPIResource(group: "batch", resource: "jobs", kind: "Job", scalable: true).scaleResource, "jobs")
+        XCTAssertEqual(
+            KubeAPIResource(group: "batch", resource: "jobs", kind: "Job", scalable: true).scaleResource, "jobs")
 
         let job = try TalosJSON.decode(KubeObjectScale.self, from: #"{"replicas":4,"current":1,"field":"parallelism"}"#)
         XCTAssertEqual(job, KubeObjectScale(replicas: 4, current: 1, field: "parallelism"))

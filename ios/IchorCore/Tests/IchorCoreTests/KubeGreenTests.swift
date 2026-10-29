@@ -6,9 +6,9 @@ final class KubeGreenTests: XCTestCase {
         // A last known state an older app kept, with the native section it read then: kube-green
         // is a plugin now (go/plugin/builtin/kube-green.yaml), nothing native shows.
         let json = #"""
-        {"kubeGreen":{"version":"v0.7.1","error":"",
-         "sleepInfos":[{"namespace":"staging","name":"nights","sleepAt":"20:00","asleep":true,"health":"ok"}]}}
-        """#
+            {"kubeGreen":{"version":"v0.7.1","error":"",
+             "sleepInfos":[{"namespace":"staging","name":"nights","sleepAt":"20:00","asleep":true,"health":"ok"}]}}
+            """#
         let services = try JSONDecoder().decode(DataServices.self, from: Data(json.utf8))
         XCTAssertTrue(services.detected.isEmpty)
         // Neither its catalog id nor an old alert's system names a native kind any more.
@@ -20,11 +20,11 @@ final class KubeGreenTests: XCTestCase {
     func testSleepInfoDefaults() throws {
         // Absent suspend flags are true, as upstream defaults; an unknown reason is dropped.
         let json = #"""
-        {"installed":true,"asleep":true,
-         "sleepInfos":[
-          {"namespace":"staging","name":"nights","sleepAt":"20:00","wakeUpAt":"07:00",
-           "operation":"SLEEP","asleep":true,"health":"warning","reasons":["noWakeUp","somethingNew"]}]}
-        """#
+            {"installed":true,"asleep":true,
+             "sleepInfos":[
+              {"namespace":"staging","name":"nights","sleepAt":"20:00","wakeUpAt":"07:00",
+               "operation":"SLEEP","asleep":true,"health":"warning","reasons":["noWakeUp","somethingNew"]}]}
+            """#
         let ns = try JSONDecoder().decode(KubeGreenNamespace.self, from: Data(json.utf8))
         let info = try XCTUnwrap(ns.sleepInfos.first)
         XCTAssertTrue(info.suspendDeployments)
@@ -37,12 +37,12 @@ final class KubeGreenTests: XCTestCase {
     func testDecodesNamespaceState() throws {
         // What kube-green has done to one namespace, read when a workload row is opened.
         let json = #"""
-        {"installed":true,"asleep":true,
-         "sleepInfos":[{"namespace":"staging","name":"nights","weekdays":"1-5","sleepAt":"20:00","wakeUpAt":"07:00",
-          "operation":"SLEEP","nextSleepAt":2000,"nextWakeUpAt":3000,"asleep":true,"health":"ok","reasons":[]}],
-         "sleepsDeployments":true,"sleepsStatefulSets":true,"sleepsCronJobs":false,
-         "nextSleepAt":2000,"nextWakeUpAt":3000,"filtered":false}
-        """#
+            {"installed":true,"asleep":true,
+             "sleepInfos":[{"namespace":"staging","name":"nights","weekdays":"1-5","sleepAt":"20:00","wakeUpAt":"07:00",
+              "operation":"SLEEP","nextSleepAt":2000,"nextWakeUpAt":3000,"asleep":true,"health":"ok","reasons":[]}],
+             "sleepsDeployments":true,"sleepsStatefulSets":true,"sleepsCronJobs":false,
+             "nextSleepAt":2000,"nextWakeUpAt":3000,"filtered":false}
+            """#
         let k = try JSONDecoder().decode(KubeGreenNamespace.self, from: Data(json.utf8))
         XCTAssertTrue(k.installed)
         XCTAssertTrue(k.asleep)
@@ -57,17 +57,20 @@ final class KubeGreenTests: XCTestCase {
         let nowMs: Int64 = 1_000_000
         let now = Date(epochMillis: nowMs)
 
-        let asleep = try JSONDecoder().decode(KubeGreenNamespace.self, from: Data(#"{"installed":true,"asleep":true,"nextWakeUpAt":3000}"#.utf8))
+        let asleep = try JSONDecoder().decode(
+            KubeGreenNamespace.self, from: Data(#"{"installed":true,"asleep":true,"nextWakeUpAt":3000}"#.utf8))
         XCTAssertEqual(asleep.warnBeforeChange(now: now), .asleep)
         XCTAssertEqual(asleep.changeUndoneAt, 3000)
 
         // Sleeps within a day: a change made now is undone at the next sleep.
-        let soon = try JSONDecoder().decode(KubeGreenNamespace.self, from: Data(#"{"installed":true,"nextSleepAt":4600000}"#.utf8))
+        let soon = try JSONDecoder().decode(
+            KubeGreenNamespace.self, from: Data(#"{"installed":true,"nextSleepAt":4600000}"#.utf8))
         XCTAssertEqual(soon.warnBeforeChange(now: now), .sleepsSoon)
-        XCTAssertEqual(soon.changeUndoneAt, 4600000)
+        XCTAssertEqual(soon.changeUndoneAt, 4_600_000)
 
         // Sleeps further out: nothing to warn about.
-        let far = try JSONDecoder().decode(KubeGreenNamespace.self, from: Data(#"{"installed":true,"nextSleepAt":1000000000000}"#.utf8))
+        let far = try JSONDecoder().decode(
+            KubeGreenNamespace.self, from: Data(#"{"installed":true,"nextSleepAt":1000000000000}"#.utf8))
         XCTAssertNil(far.warnBeforeChange(now: now))
 
         // A cluster without kube-green, or a refused list: nothing to say.

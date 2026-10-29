@@ -340,7 +340,11 @@ _adb-install device build_type:
 ios-test-linux:
     nix develop .#swift --command ios/IchorCore/test-linux.sh
 
-# macOS only: Go xcframework, core tests and a simulator build.
+# macOS only: rewrite the Swift sources to ios/.swift-format (the lint `ios-test` runs first).
+ios-format:
+    scripts/ios-build.sh format
+
+# macOS only: swift-format lint, Go xcframework, core tests and a simulator build.
 ios-test:
     scripts/ios-build.sh test
 

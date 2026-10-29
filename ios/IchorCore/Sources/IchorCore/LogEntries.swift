@@ -39,8 +39,10 @@ public struct LogEntry: Decodable, Equatable, Sendable {
 
     public var logLevel: LogLevel { LogLevel(rawValue: level) ?? .none }
 
-    public init(ts: Int64 = 0, level: String = "", source: String = "", msg: String,
-                fields: [LogField] = [], raw: String) {
+    public init(
+        ts: Int64 = 0, level: String = "", source: String = "", msg: String,
+        fields: [LogField] = [], raw: String
+    ) {
         self.ts = ts
         self.level = level
         self.source = source
@@ -76,8 +78,9 @@ public struct LogEntry: Decodable, Equatable, Sendable {
 public func parseLogEntry(json: String, line: String) -> LogEntry {
     guard let entry = try? TalosJSON.decode(LogEntry.self, from: json) else { return LogEntry(raw: line) }
     if entry.raw.isEmpty {
-        return LogEntry(ts: entry.ts, level: entry.level, source: entry.source, msg: entry.msg,
-                        fields: entry.fields, raw: line)
+        return LogEntry(
+            ts: entry.ts, level: entry.level, source: entry.source, msg: entry.msg,
+            fields: entry.fields, raw: line)
     }
     return entry
 }
@@ -182,10 +185,12 @@ public func collapseLogs(_ items: [LogItem]) -> [LogGroup] {
         if let last = groups.last, last.entry.sameContent(as: item.entry) {
             let firstTs = last.firstTs != 0 ? last.firstTs : item.entry.ts
             let lastTs = item.entry.ts != 0 ? item.entry.ts : last.lastTs
-            groups[groups.count - 1] = LogGroup(id: last.id, entry: item.entry, count: last.count + 1,
-                                                firstTs: firstTs, lastTs: lastTs)
+            groups[groups.count - 1] = LogGroup(
+                id: last.id, entry: item.entry, count: last.count + 1,
+                firstTs: firstTs, lastTs: lastTs)
         } else {
-            groups.append(LogGroup(id: item.id, entry: item.entry, count: 1, firstTs: item.entry.ts, lastTs: item.entry.ts))
+            groups.append(
+                LogGroup(id: item.id, entry: item.entry, count: 1, firstTs: item.entry.ts, lastTs: item.entry.ts))
         }
     }
     return groups
@@ -225,8 +230,10 @@ public func logRows(_ groups: [LogGroup], calendar: Calendar = .current) -> [Log
 }
 
 /// Search, level filter, collapse, then date dividers.
-public func logRows(_ items: [LogItem], search: String, level: LogLevelFilter,
-                    calendar: Calendar = .current) -> [LogRow] {
+public func logRows(
+    _ items: [LogItem], search: String, level: LogLevelFilter,
+    calendar: Calendar = .current
+) -> [LogRow] {
     let shown = searchLogs(items, search).filter { level.matches($0.entry.logLevel) }
     return logRows(collapseLogs(shown), calendar: calendar)
 }

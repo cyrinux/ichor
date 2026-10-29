@@ -79,7 +79,8 @@ struct TalosFormView: View {
         } footer: {
             Text("PEM, or base64 as in a talosconfig (ca, crt, key).")
         }
-        .fileImporter(isPresented: $importingFor.isPresent(), allowedContentTypes: [.plainText, .data, .item]) { result in
+        .fileImporter(isPresented: $importingFor.isPresent(), allowedContentTypes: [.plainText, .data, .item]) {
+            result in
             guard let field = importingFor else { return }
             switch result {
             case .success(let url): read(url, into: field)
@@ -91,10 +92,12 @@ struct TalosFormView: View {
     @ViewBuilder
     private var omniSections: some View {
         Section {
-            TextField(text: $form.omniURL, prompt: Text(verbatim: "https://acme.omni.example.com")) { Text("Omni address") }
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
+            TextField(text: $form.omniURL, prompt: Text(verbatim: "https://acme.omni.example.com")) {
+                Text("Omni address")
+            }
+            .keyboardType(.URL)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
             TextField("Omni cluster", text: $form.cluster)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -103,7 +106,9 @@ struct TalosFormView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
         } footer: {
-            Text("Your Omni account email to sign in with the browser, or a service account identity (name@serviceaccount.omni.sidero.dev) to enter its key.")
+            Text(
+                "Your Omni account email to sign in with the browser, or a service account identity (name@serviceaccount.omni.sidero.dev) to enter its key."
+            )
         }
     }
 
@@ -127,8 +132,12 @@ struct TalosFormView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .frame(minHeight: 80)
-            Button { importingFor = field } label: { Label("Choose file", systemImage: "doc") }
-                .buttonStyle(.borderless)
+            Button {
+                importingFor = field
+            } label: {
+                Label("Choose file", systemImage: "doc")
+            }
+            .buttonStyle(.borderless)
         }
     }
 
@@ -137,7 +146,8 @@ struct TalosFormView: View {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         // A certificate or a key is a few kB.
         guard let data = try? Data(contentsOf: url), data.count <= 64 * 1024,
-              let text = String(data: data, encoding: .utf8) else {
+            let text = String(data: data, encoding: .utf8)
+        else {
             error = String(localized: "This file cannot be read.")
             return
         }

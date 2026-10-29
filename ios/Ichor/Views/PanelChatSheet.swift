@@ -78,7 +78,10 @@ final class PanelChatModel {
                 guard !Task.isCancelled else { break }
                 switch event {
                 case .answer(let text): update(answer.id) { $0.text = text }
-                case .done(let panel, let error): update(answer.id) { $0.panel = panel; $0.error = error }
+                case .done(let panel, let error):
+                    update(answer.id) {
+                        $0.panel = panel; $0.error = error
+                    }
                 }
             }
             asking = false
@@ -129,12 +132,16 @@ struct PanelChatSheet: View {
                             if message.fromUser {
                                 UserBubble(text: message.text)
                             } else {
-                                AnswerBubble(message: message, providerName: providerName, asking: model.asking, sourceLabel: sourceLabel, onUse: onUse)
+                                AnswerBubble(
+                                    message: message, providerName: providerName, asking: model.asking,
+                                    sourceLabel: sourceLabel, onUse: onUse)
                             }
                         }
                         if model.messages.contains(where: { !$0.fromUser && !$0.text.isEmpty }) {
-                            Text("AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.")
-                                .font(.footnote).foregroundStyle(.secondary)
+                            Text(
+                                "AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd."
+                            )
+                            .font(.footnote).foregroundStyle(.secondary)
                         }
                         Color.clear.frame(height: 1).id("bottom")
                     }
@@ -165,8 +172,10 @@ struct PanelChatSheet: View {
             Text("Your messages, the source’s metric names and the current panel stay on this phone.")
                 .font(.footnote).foregroundStyle(.secondary)
         } else {
-            Text("Your messages, the source’s metric names and the current panel are sent to \(providerName) as they are.")
-                .font(.footnote).foregroundStyle(.secondary)
+            Text(
+                "Your messages, the source’s metric names and the current panel are sent to \(providerName) as they are."
+            )
+            .font(.footnote).foregroundStyle(.secondary)
         }
         if let error = model.openError {
             Text(verbatim: error).foregroundStyle(.statusBad).font(.footnote)
@@ -266,7 +275,11 @@ private struct PanelSuggestionCard: View {
             }
             HStack {
                 Button("Use this panel") { onUse(panel) }.buttonStyle(.borderedProminent)
-                Button { UIPasteboard.general.string = panel.query } label: { Label("Copy", systemImage: "doc.on.doc") }
+                Button {
+                    UIPasteboard.general.string = panel.query
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
             }
         }
         .padding()

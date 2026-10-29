@@ -35,7 +35,8 @@ final class OperationActivityTests: XCTestCase {
         XCTAssertFalse(OperationButton.pause.opensApp(for: .clusterUpgrade, locked: true))
         // No screen to open: the button stays a button.
         XCTAssertFalse(OperationButton.stop.opensApp(for: .imagePull, locked: true))
-        XCTAssertEqual(OperationKind.allCases.filter { !$0.hasScreen }, [.configMulti, .imagePull, .imageScan, .podSweep])
+        XCTAssertEqual(
+            OperationKind.allCases.filter { !$0.hasScreen }, [.configMulti, .imagePull, .imageScan, .podSweep])
     }
 
     func testABarOnlyWhereTheCoreCounts() {
@@ -60,7 +61,8 @@ final class OperationActivityTests: XCTestCase {
     }
 
     func testAnEndedRunHasNoButtons() {
-        let done = OperationContent(title: "Upgrading v1.11.0", step: "Every node runs v1.11.0", phase: .succeeded, buttons: [.pause, .abort])
+        let done = OperationContent(
+            title: "Upgrading v1.11.0", step: "Every node runs v1.11.0", phase: .succeeded, buttons: [.pause, .abort])
         XCTAssertEqual(done.buttons, [])
         XCTAssertTrue(OperationPhase.stopped.ended)
         XCTAssertFalse(OperationPhase.paused.ended)
@@ -68,7 +70,9 @@ final class OperationActivityTests: XCTestCase {
 
     func testTheLockedContentNamesNothing() {
         let deadline = Date(timeIntervalSince1970: 1_000)
-        let content = OperationContent(title: "Trying a config change on cp-1", step: "Reverts at 10:42", deadline: deadline, buttons: [.keep, .revert])
+        let content = OperationContent(
+            title: "Trying a config change on cp-1", step: "Reverts at 10:42", deadline: deadline,
+            buttons: [.keep, .revert])
         let masked = content.masked(title: "Config try")
         XCTAssertEqual(masked.title, "Config try")
         XCTAssertEqual(masked.step, "")

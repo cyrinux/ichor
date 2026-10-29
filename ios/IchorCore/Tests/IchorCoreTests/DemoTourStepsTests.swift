@@ -21,7 +21,8 @@ final class DemoTourStepsTests: XCTestCase {
     }
 
     func testRawValuesAreAndroidAnchors() {
-        XCTAssertEqual(DemoTourStep.allCases.map(\.rawValue), ["SWITCHER", "NODES", "DEGRADED_NODE", "ACTIONS", "SETTINGS"])
+        XCTAssertEqual(
+            DemoTourStep.allCases.map(\.rawValue), ["SWITCHER", "NODES", "DEGRADED_NODE", "ACTIONS", "SETTINGS"])
     }
 
     func testOnlyTheTalosDemoRunsIt() {

@@ -5,7 +5,10 @@ final class SettingsPageTests: XCTestCase {
     func testPagesKeepTheSettingsOrder() {
         XCTAssertEqual(
             SettingsPage.allCases.map(\.rawValue),
-            ["appearance", "security", "privacy", "alerts", "ai", "gitHosts", "plugins", "kubernetes", "clusters", "support", "about"]
+            [
+                "appearance", "security", "privacy", "alerts", "ai", "gitHosts", "plugins", "kubernetes", "clusters",
+                "support", "about",
+            ]
         )
     }
 

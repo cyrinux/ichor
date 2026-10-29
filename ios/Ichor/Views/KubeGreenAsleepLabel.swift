@@ -34,14 +34,20 @@ struct KubeGreenAsleepLabel: View {
 func kubeGreenAsleepLine(_ status: KubeGreenNamespace) -> String {
     let sleepInfo = (status.asleepInfo ?? status.sleepInfos.first)?.label ?? ""
     if status.filtered {
-        return String(localized: "Asleep: kube-green may have this namespace asleep (SleepInfo \(sleepInfo)), \(kubeGreenWakeLine(status))")
+        return String(
+            localized:
+                "Asleep: kube-green may have this namespace asleep (SleepInfo \(sleepInfo)), \(kubeGreenWakeLine(status))"
+        )
     }
-    return String(localized: "Asleep: kube-green has this namespace asleep (SleepInfo \(sleepInfo)), \(kubeGreenWakeLine(status))")
+    return String(
+        localized: "Asleep: kube-green has this namespace asleep (SleepInfo \(sleepInfo)), \(kubeGreenWakeLine(status))"
+    )
 }
 
 /// "Suspended by kube-green, resumes 15 Oct 2026, 07:00".
 func kubeGreenCronJobSuspendedLine(_ status: KubeGreenNamespace) -> String {
-    let resume = status.nextWakeUpAt > 0
+    let resume =
+        status.nextWakeUpAt > 0
         ? String(localized: "resumes \(kubeGreenInstant(status.nextWakeUpAt))")
         : String(localized: "until changed by hand")
     return String(localized: "Suspended by kube-green, \(resume)")
@@ -54,10 +60,19 @@ func kubeGreenChangeWarning(_ status: KubeGreenNamespace?) -> String? {
     switch warn {
     case .asleep:
         return status.nextWakeUpAt > 0
-            ? String(localized: "kube-green has this namespace asleep: this change is undone at the next wake-up, \(kubeGreenWakeLine(status))")
-            : String(localized: "kube-green has this namespace asleep: this change is undone when the namespace wakes up, with no wake-up scheduled")
+            ? String(
+                localized:
+                    "kube-green has this namespace asleep: this change is undone at the next wake-up, \(kubeGreenWakeLine(status))"
+            )
+            : String(
+                localized:
+                    "kube-green has this namespace asleep: this change is undone when the namespace wakes up, with no wake-up scheduled"
+            )
     case .sleepsSoon:
-        return String(localized: "kube-green sleeps this namespace at \(kubeGreenInstant(status.nextSleepAt)): a change made now is undone at the next sleep")
+        return String(
+            localized:
+                "kube-green sleeps this namespace at \(kubeGreenInstant(status.nextSleepAt)): a change made now is undone at the next sleep"
+        )
     }
 }
 

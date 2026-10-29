@@ -3,13 +3,13 @@ import XCTest
 
 final class NodeDiscoveryTests: XCTestCase {
     private let json = """
-    {"context":"prod","nodes":[
-      {"address":"10.0.0.1","addresses":["10.0.0.1"],"hostname":"cp-1","role":"controlplane","known":true},
-      {"address":"10.0.0.11","addresses":["fe80::1","10.0.0.11"],"hostname":"worker-a","role":"worker","known":false},
-      {"address":"","addresses":null,"hostname":"ghost","role":"worker","known":false},
-      {"address":"10.0.0.12","addresses":["10.0.0.12"],"hostname":"worker-b","role":"worker","known":false}
-    ]}
-    """
+        {"context":"prod","nodes":[
+          {"address":"10.0.0.1","addresses":["10.0.0.1"],"hostname":"cp-1","role":"controlplane","known":true},
+          {"address":"10.0.0.11","addresses":["fe80::1","10.0.0.11"],"hostname":"worker-a","role":"worker","known":false},
+          {"address":"","addresses":null,"hostname":"ghost","role":"worker","known":false},
+          {"address":"10.0.0.12","addresses":["10.0.0.12"],"hostname":"worker-b","role":"worker","known":false}
+        ]}
+        """
 
     private func discovery() throws -> NodeDiscovery { try TalosJSON.decode(NodeDiscovery.self, from: json) }
 

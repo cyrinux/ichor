@@ -33,7 +33,8 @@ enum BundledAppIcons {
         if let image = images.object(forKey: key) { return image }
         guard missing.object(forKey: key) == nil else { return nil }
         guard let url = Bundle.main.url(forResource: file, withExtension: "webp", subdirectory: "appicons"),
-              let image = UIImage(contentsOfFile: url.path) else {
+            let image = UIImage(contentsOfFile: url.path)
+        else {
             missing.setObject(NSNumber(value: true), forKey: key)
             return nil
         }
@@ -135,8 +136,9 @@ actor RemoteAppIcons {
     /// download stops there).
     private func download(_ url: URL) async -> Data? {
         guard let result = try? await session.bytes(from: url),
-              let http = result.1 as? HTTPURLResponse, http.statusCode == 200,
-              http.expectedContentLength <= Int64(remoteIconMaxBytes) else { return nil }
+            let http = result.1 as? HTTPURLResponse, http.statusCode == 200,
+            http.expectedContentLength <= Int64(remoteIconMaxBytes)
+        else { return nil }
         let bytes = result.0
         var data = Data()
         do {
@@ -160,16 +162,21 @@ actor RemoteAppIcons {
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceThumbnailMaxPixelSize: maxPixels,
         ]
-        guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
-              let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        guard
+            let source = CGImageSourceCreateWithData(
+                data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
+            let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+        else { return nil }
         return UIImage(cgImage: image)
     }
 }
 
 /// Refuses every redirect: the icon must come from the validated URL itself.
 private final class NoRedirects: NSObject, URLSessionTaskDelegate {
-    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
-                    newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void
+    ) {
         completionHandler(nil)
     }
 }

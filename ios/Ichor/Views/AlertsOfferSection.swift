@@ -13,24 +13,32 @@ struct AlertsOfferSection: View {
     @State private var blocked = false
 
     var body: some View {
-        if AlertsOffer.shouldShow(pending: pending, alertsEnabled: alertsEnabled,
-                                  isDemo: model.activeSummary?.demo ?? true, tourActive: DemoTour.pending) {
+        if AlertsOffer.shouldShow(
+            pending: pending, alertsEnabled: alertsEnabled,
+            isDemo: model.activeSummary?.demo ?? true, tourActive: DemoTour.pending)
+        {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Get paged when a node goes down", systemImage: "bell.badge").font(.headline)
-                    Text("Ichor checks your clusters in the background and notifies you when a node, the API or a volume needs a look. Nothing leaves your phone.")
-                        .font(.callout)
+                    Text(
+                        "Ichor checks your clusters in the background and notifies you when a node, the API or a volume needs a look. Nothing leaves your phone."
+                    )
+                    .font(.callout)
                     if blocked {
                         Text("Notifications are off for Ichor: allow them in the Settings app.")
                             .font(.footnote).foregroundStyle(.red)
                     }
                     HStack {
                         Spacer()
-                        Button("Not now") { AlertsOffer.dismiss(); pending = false }
-                            .buttonStyle(.borderless)
+                        Button("Not now") {
+                            AlertsOffer.dismiss(); pending = false
+                        }
+                        .buttonStyle(.borderless)
                         if blocked {
                             Button("Open notification settings") {
-                                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
                             }
                             .buttonStyle(.borderedProminent)
                         } else {

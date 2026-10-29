@@ -54,17 +54,22 @@ struct SystemImagesSection: View {
                     Label("Open report", systemImage: "doc.text.magnifyingglass")
                 }
             } else {
-                Text("Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with \(scanner.label). It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards.").note()
+                Text(
+                    "Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with \(scanner.label). It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards."
+                ).note()
             }
             if busyElsewhere {
                 Text("Another app's scan is running: one at a time.").note()
             }
             Button {
                 guard let client = model.client else { return }
-                job.start(client: client, context: model.activeContext, appID: scanID, pods: [], images: images.map(\.ref))
+                job.start(
+                    client: client, context: model.activeContext, appID: scanID, pods: [], images: images.map(\.ref))
             } label: {
-                Label(scan?.usableReport != nil ? LocalizedStringKey("Scan again") : LocalizedStringKey("Scan system images"),
-                      systemImage: "checkmark.shield")
+                Label(
+                    scan?.usableReport != nil
+                        ? LocalizedStringKey("Scan again") : LocalizedStringKey("Scan system images"),
+                    systemImage: "checkmark.shield")
             }
             .disabled(busyElsewhere)
         }

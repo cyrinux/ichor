@@ -68,7 +68,10 @@ enum WakeOnLanSender {
     private static func failure(_ error: Error, broadcast: Bool) -> Error {
         let reason = (error as? NWError).map { "\($0)" } ?? error.localizedDescription
         guard broadcast else { return TalosError(message: reason) }
-        let hint = String(localized: "iOS may block broadcast packets from apps. Set the address to a host that relays magic packets to the node's network (a router, for example), or to the node's own address.")
+        let hint = String(
+            localized:
+                "iOS may block broadcast packets from apps. Set the address to a host that relays magic packets to the node's network (a router, for example), or to the node's own address."
+        )
         return TalosError(message: "\(reason). \(hint)")
     }
 
@@ -94,9 +97,11 @@ enum WakeOnLanSender {
 
     private static func send(_ payload: Data, on connection: NWConnection) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            connection.send(content: payload, completion: .contentProcessed { error in
-                if let error { continuation.resume(throwing: error) } else { continuation.resume() }
-            })
+            connection.send(
+                content: payload,
+                completion: .contentProcessed { error in
+                    if let error { continuation.resume(throwing: error) } else { continuation.resume() }
+                })
         }
     }
 }

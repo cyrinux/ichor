@@ -27,9 +27,11 @@ public struct GitProposalRecord: Codable, Hashable, Sendable, Identifiable {
     public var state: String
     public var stateAt: Int64
 
-    public init(tool: String, kind: String = "", namespace: String = "", name: String = "", repoURL: String, path: String,
-                title: String, url: String, number: Int, branch: String = "", commit: String = "", forge: String = "",
-                createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000), state: String = "", stateAt: Int64 = 0) {
+    public init(
+        tool: String, kind: String = "", namespace: String = "", name: String = "", repoURL: String, path: String,
+        title: String, url: String, number: Int, branch: String = "", commit: String = "", forge: String = "",
+        createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000), state: String = "", stateAt: Int64 = 0
+    ) {
         self.tool = tool
         self.kind = kind
         self.namespace = namespace
@@ -57,7 +59,10 @@ public struct GitProposalRecord: Codable, Hashable, Sendable, Identifiable {
         self.tool == tool && self.kind == kind && self.namespace == namespace && self.name == name
     }
 
-    enum CodingKeys: String, CodingKey { case tool, kind, namespace, name, repoURL, path, title, url, number, branch, commit, forge, createdAt, state, stateAt }
+    enum CodingKeys: String, CodingKey {
+        case tool, kind, namespace, name, repoURL, path, title, url, number, branch, commit, forge, createdAt, state,
+            stateAt
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -91,7 +96,10 @@ public struct GitRequestState: Decodable, Hashable, Sendable {
     public var merged: Bool { state == "merged" }
     public var open: Bool { state == "open" }
 
-    public init(state: String, title: String = "", url: String = "", headSha: String = "", mergeSha: String = "", draft: Bool = false) {
+    public init(
+        state: String, title: String = "", url: String = "", headSha: String = "", mergeSha: String = "",
+        draft: Bool = false
+    ) {
         self.state = state
         self.title = title
         self.url = url
@@ -159,7 +167,9 @@ public enum ProposalsStore {
     public static let maxPerCluster = 50
 
     public static func decode(_ data: Data?) -> [String: [GitProposalRecord]] {
-        guard let data, let saved = try? JSONDecoder().decode([String: [GitProposalRecord]].self, from: data) else { return [:] }
+        guard let data, let saved = try? JSONDecoder().decode([String: [GitProposalRecord]].self, from: data) else {
+            return [:]
+        }
         return saved
     }
 
@@ -169,8 +179,10 @@ public enum ProposalsStore {
 
     /// The records with record first, a request kept once, 50 at most. A new record is open
     /// from now on, so the monitor tells when it is merged or closed.
-    public static func adding(_ record: GitProposalRecord, to records: [GitProposalRecord],
-                              now: Int64 = Int64(Date().timeIntervalSince1970 * 1000)) -> [GitProposalRecord] {
+    public static func adding(
+        _ record: GitProposalRecord, to records: [GitProposalRecord],
+        now: Int64 = Int64(Date().timeIntervalSince1970 * 1000)
+    ) -> [GitProposalRecord] {
         var record = record
         if record.state.isEmpty {
             record.state = "open"
@@ -180,19 +192,27 @@ public enum ProposalsStore {
     }
 
     /// The proposals of the clusters still among fingerprints: a removed cluster's go with it.
-    public static func keep(_ saved: [String: [GitProposalRecord]], fingerprints: [String]) -> [String: [GitProposalRecord]] {
+    public static func keep(_ saved: [String: [GitProposalRecord]], fingerprints: [String]) -> [String:
+        [GitProposalRecord]]
+    {
         let known = Set(fingerprints.filter { !$0.isEmpty })
         return saved.filter { known.contains($0.key) }
     }
 
     /// The demo cluster's sample proposals on its Argo CD app argocd/hello-ichor: #1 open, #2 merged and deployed.
     public static let demo: [GitProposalRecord] = [
-        GitProposalRecord(tool: "argocd", kind: "Application", namespace: "argocd", name: "hello-ichor", repoURL: ClusterRepo.demo.repoURL,
-                          path: "apps/hello-ichor/deployment.yaml", title: "Bump podinfo to 6.7.1",
-                          url: "https://git.home.example/example-org/cluster-config/pulls/1", number: 1, forge: "demo", createdAt: 1_760_860_800_000),
-        GitProposalRecord(tool: "argocd", kind: "Application", namespace: "argocd", name: "hello-ichor", repoURL: ClusterRepo.demo.repoURL,
-                          path: "apps/hello-ichor/deployment.yaml", title: "Scale podinfo to 3",
-                          url: "https://git.home.example/example-org/cluster-config/pulls/2", number: 2, forge: "demo", createdAt: 1_760_774_400_000),
+        GitProposalRecord(
+            tool: "argocd", kind: "Application", namespace: "argocd", name: "hello-ichor",
+            repoURL: ClusterRepo.demo.repoURL,
+            path: "apps/hello-ichor/deployment.yaml", title: "Bump podinfo to 6.7.1",
+            url: "https://git.home.example/example-org/cluster-config/pulls/1", number: 1, forge: "demo",
+            createdAt: 1_760_860_800_000),
+        GitProposalRecord(
+            tool: "argocd", kind: "Application", namespace: "argocd", name: "hello-ichor",
+            repoURL: ClusterRepo.demo.repoURL,
+            path: "apps/hello-ichor/deployment.yaml", title: "Scale podinfo to 3",
+            url: "https://git.home.example/example-org/cluster-config/pulls/2", number: 2, forge: "demo",
+            createdAt: 1_760_774_400_000),
     ]
 }
 
@@ -208,7 +228,10 @@ public struct RequestStateItem: Codable, Hashable, Sendable {
     public let sha: String
     public let error: String
 
-    public init(repoURL: String, number: Int, state: String, mergedAt: String = "", closedAt: String = "", sha: String = "", error: String = "") {
+    public init(
+        repoURL: String, number: Int, state: String, mergedAt: String = "", closedAt: String = "", sha: String = "",
+        error: String = ""
+    ) {
         self.repoURL = repoURL
         self.number = number
         self.state = state
@@ -243,7 +266,8 @@ public struct ProposalChange: Hashable, Sendable {
     /// The alert in English (the app words it in the user's language): a GitOps one, see alertKind.
     public var alert: Alert {
         let what = state == "merged" ? "merged" : "closed"
-        return Alert(key: alertKey, title: "Your pull request #\(record.number) was \(what)", text: record.title, problem: true)
+        return Alert(
+            key: alertKey, title: "Your pull request #\(record.number) was \(what)", text: record.title, problem: true)
     }
 }
 
@@ -262,7 +286,8 @@ public func proposalsToCheck(_ records: [GitProposalRecord]) -> [String: [GitPro
 /// closed is a change (told once: its state is kept); one never read takes its state silently
 /// (the first read is a baseline); an item that could not be read changes nothing.
 public func proposalStateChanges(records: [GitProposalRecord], states: [RequestStateItem], now: Int64)
-    -> (records: [GitProposalRecord], changes: [ProposalChange]) {
+    -> (records: [GitProposalRecord], changes: [ProposalChange])
+{
     var answers: [String: String] = [:]
     for item in states where item.error.isEmpty && !item.state.isEmpty {
         answers["\(item.repoURL)#\(item.number)"] = item.state

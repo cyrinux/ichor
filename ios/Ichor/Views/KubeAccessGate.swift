@@ -90,7 +90,9 @@ private struct KubeNamespaceAccessLoader: ViewModifier {
                 // One at a time: the core keeps each answer, and there are few namespaces.
                 for namespace in namespaces {
                     // A failure leaves that namespace out: its objects stay offered.
-                    if let answer = try? await client.kubeActionAccess(namespace: namespace) { access[namespace] = answer }
+                    if let answer = try? await client.kubeActionAccess(namespace: namespace) {
+                        access[namespace] = answer
+                    }
                     if Task.isCancelled { return }
                 }
                 loaded = (asked, access)
@@ -138,7 +140,9 @@ private struct KubeActionAccessLoader: ViewModifier {
     @State private var loaded: (key: String, access: KubeActionAccess)?
 
     /// The cluster, its generation (screenshot mode) and the namespace.
-    private var key: String { "\(model.activeContext)#\(model.dataGeneration)#\(model.client?.kubeServer ?? "")#\(namespace ?? "-")" }
+    private var key: String {
+        "\(model.activeContext)#\(model.dataGeneration)#\(model.client?.kubeServer ?? "")#\(namespace ?? "-")"
+    }
 
     func body(content: Content) -> some View {
         content
@@ -148,7 +152,9 @@ private struct KubeActionAccessLoader: ViewModifier {
                 guard let namespace, let client = model.client else { return }
                 let asked = key
                 // A failure keeps the actions offered: the API server still decides.
-                guard let access = try? await client.kubeActionAccess(namespace: namespace), !Task.isCancelled else { return }
+                guard let access = try? await client.kubeActionAccess(namespace: namespace), !Task.isCancelled else {
+                    return
+                }
                 loaded = (asked, access)
             }
     }
@@ -246,8 +252,10 @@ struct KubeGatedMenuButton: View {
 
     @Environment(\.kubeActionAccess) private var access
 
-    init(_ title: String, systemImage: String, action: KubeAction, in namespace: String? = nil,
-         role: ButtonRole? = nil, perform: @escaping () -> Void) {
+    init(
+        _ title: String, systemImage: String, action: KubeAction, in namespace: String? = nil,
+        role: ButtonRole? = nil, perform: @escaping () -> Void
+    ) {
         self.title = title
         self.systemImage = systemImage
         self.action = action

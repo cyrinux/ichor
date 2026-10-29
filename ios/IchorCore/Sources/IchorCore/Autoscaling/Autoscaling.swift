@@ -37,8 +37,11 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
     public let workloads: [AutoscaledWorkload]
     public let workloadsTruncated: Bool
 
-    public init(hpa: HpaGroup = HpaGroup(), keda: KedaGroup = KedaGroup(), vpa: VpaGroup = VpaGroup(),
-                karpenter: KarpenterGroup = KarpenterGroup(), workloads: [AutoscaledWorkload] = [], workloadsTruncated: Bool = false) {
+    public init(
+        hpa: HpaGroup = HpaGroup(), keda: KedaGroup = KedaGroup(), vpa: VpaGroup = VpaGroup(),
+        karpenter: KarpenterGroup = KarpenterGroup(), workloads: [AutoscaledWorkload] = [],
+        workloadsTruncated: Bool = false
+    ) {
         self.hpa = hpa
         self.keda = keda
         self.vpa = vpa
@@ -68,22 +71,35 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
         }
 
         return AutoscalingReport(
-            hpa: HpaGroup(installed: hpa.installed, version: hpa.version, error: hpa.error, truncated: hpa.truncated, items: hpa.items.filter {
-                (namespace == nil || $0.namespace == namespace) && keep([$0.name, $0.namespace, $0.target.kind, $0.target.name])
-            }),
-            keda: KedaGroup(installed: keda.installed, version: keda.version, error: keda.error, truncated: keda.truncated,
-                            scaledObjects: keda.scaledObjects.filter {
-                                (namespace == nil || $0.namespace == namespace) && keep([$0.name, $0.namespace, $0.target.kind, $0.target.name] + $0.triggers.map(\.label))
-                            },
-                            scaledJobs: keda.scaledJobs.filter {
-                                (namespace == nil || $0.namespace == namespace) && keep([$0.name, $0.namespace] + $0.triggers.map(\.label))
-                            }),
-            vpa: VpaGroup(installed: vpa.installed, version: vpa.version, error: vpa.error, truncated: vpa.truncated, items: vpa.items.filter {
-                (namespace == nil || $0.namespace == namespace) && keep([$0.name, $0.namespace, $0.target.kind, $0.target.name, $0.updateMode])
-            }),
-            karpenter: KarpenterGroup(installed: karpenter.installed, version: karpenter.version, error: karpenter.error, truncated: karpenter.truncated,
-                                      nodePools: karpenter.nodePools.filter { keep([$0.name, $0.capacityTypes.joined(separator: " ")]) },
-                                      nodeClaims: karpenter.nodeClaims.filter { keep([$0.name, $0.pool, $0.nodeName, $0.instanceType, $0.capacityType]) }),
+            hpa: HpaGroup(
+                installed: hpa.installed, version: hpa.version, error: hpa.error, truncated: hpa.truncated,
+                items: hpa.items.filter {
+                    (namespace == nil || $0.namespace == namespace)
+                        && keep([$0.name, $0.namespace, $0.target.kind, $0.target.name])
+                }),
+            keda: KedaGroup(
+                installed: keda.installed, version: keda.version, error: keda.error, truncated: keda.truncated,
+                scaledObjects: keda.scaledObjects.filter {
+                    (namespace == nil || $0.namespace == namespace)
+                        && keep([$0.name, $0.namespace, $0.target.kind, $0.target.name] + $0.triggers.map(\.label))
+                },
+                scaledJobs: keda.scaledJobs.filter {
+                    (namespace == nil || $0.namespace == namespace)
+                        && keep([$0.name, $0.namespace] + $0.triggers.map(\.label))
+                }),
+            vpa: VpaGroup(
+                installed: vpa.installed, version: vpa.version, error: vpa.error, truncated: vpa.truncated,
+                items: vpa.items.filter {
+                    (namespace == nil || $0.namespace == namespace)
+                        && keep([$0.name, $0.namespace, $0.target.kind, $0.target.name, $0.updateMode])
+                }),
+            karpenter: KarpenterGroup(
+                installed: karpenter.installed, version: karpenter.version, error: karpenter.error,
+                truncated: karpenter.truncated,
+                nodePools: karpenter.nodePools.filter { keep([$0.name, $0.capacityTypes.joined(separator: " ")]) },
+                nodeClaims: karpenter.nodeClaims.filter {
+                    keep([$0.name, $0.pool, $0.nodeName, $0.instanceType, $0.capacityType])
+                }),
             workloads: workloads,
             workloadsTruncated: workloadsTruncated,
         )
@@ -91,8 +107,13 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
 
     /// The namespaces with autoscaling rows, for the namespace picker.
     public var namespaceNames: [String] {
-        Array(Set(hpa.items.map(\.namespace) + keda.scaledObjects.map(\.namespace) + keda.scaledJobs.map(\.namespace) + vpa.items.map(\.namespace))
-            .filter { !$0.isEmpty }).sorted()
+        Array(
+            Set(
+                hpa.items.map(\.namespace) + keda.scaledObjects.map(\.namespace) + keda.scaledJobs.map(\.namespace)
+                    + vpa.items.map(\.namespace)
+            )
+            .filter { !$0.isEmpty }
+        ).sorted()
     }
 }
 
@@ -129,9 +150,13 @@ public struct HpaGroup: Decodable, Equatable, Hashable, Sendable {
     public let truncated: Bool
     public let items: [HpaRow]
 
-    public var state: AutoscalingGroupState { AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated) }
+    public var state: AutoscalingGroupState {
+        AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated)
+    }
 
-    public init(installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false, items: [HpaRow] = []) {
+    public init(
+        installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false, items: [HpaRow] = []
+    ) {
         self.installed = installed
         self.version = version
         self.error = error
@@ -159,10 +184,14 @@ public struct KedaGroup: Decodable, Equatable, Hashable, Sendable {
     public let scaledObjects: [ScaledObjectRow]
     public let scaledJobs: [ScaledJobRow]
 
-    public var state: AutoscalingGroupState { AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated) }
+    public var state: AutoscalingGroupState {
+        AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated)
+    }
 
-    public init(installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false,
-                scaledObjects: [ScaledObjectRow] = [], scaledJobs: [ScaledJobRow] = []) {
+    public init(
+        installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false,
+        scaledObjects: [ScaledObjectRow] = [], scaledJobs: [ScaledJobRow] = []
+    ) {
         self.installed = installed
         self.version = version
         self.error = error
@@ -191,9 +220,13 @@ public struct VpaGroup: Decodable, Equatable, Hashable, Sendable {
     public let truncated: Bool
     public let items: [VpaRow]
 
-    public var state: AutoscalingGroupState { AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated) }
+    public var state: AutoscalingGroupState {
+        AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated)
+    }
 
-    public init(installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false, items: [VpaRow] = []) {
+    public init(
+        installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false, items: [VpaRow] = []
+    ) {
         self.installed = installed
         self.version = version
         self.error = error
@@ -221,10 +254,14 @@ public struct KarpenterGroup: Decodable, Equatable, Hashable, Sendable {
     public let nodePools: [NodePoolRow]
     public let nodeClaims: [NodeClaimRow]
 
-    public var state: AutoscalingGroupState { AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated) }
+    public var state: AutoscalingGroupState {
+        AutoscalingGroupState(installed: installed, version: version, error: error, truncated: truncated)
+    }
 
-    public init(installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false,
-                nodePools: [NodePoolRow] = [], nodeClaims: [NodeClaimRow] = []) {
+    public init(
+        installed: Bool = false, version: String = "", error: String = "", truncated: Bool = false,
+        nodePools: [NodePoolRow] = [], nodeClaims: [NodeClaimRow] = []
+    ) {
         self.installed = installed
         self.version = version
         self.error = error
@@ -283,8 +320,12 @@ public struct AutoscaledWorkload: Decodable, Equatable, Hashable, Identifiable, 
 
     public var id: String { "\(kind)/\(namespace)/\(name)/\(by.rawValue)" }
 
-    public init(kind: String = "", namespace: String = "", name: String = "", by: AutoscaledBy = .unknown, autoscaler: String = "",
-                min: Int = 0, max: Int = 0, current: Int = 0, desired: Int = 0, paused: Bool = false, state: AutoscaleState = .ok) {
+    public init(
+        kind: String = "", namespace: String = "", name: String = "", by: AutoscaledBy = .unknown,
+        autoscaler: String = "",
+        min: Int = 0, max: Int = 0, current: Int = 0, desired: Int = 0, paused: Bool = false,
+        state: AutoscaleState = .ok
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.name = name
@@ -313,7 +354,9 @@ public struct AutoscaledWorkload: Decodable, Equatable, Hashable, Identifiable, 
         state = try c.wire(.state)
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, namespace, name, by, autoscaler, min, max, current, desired, paused, state }
+    private enum CodingKeys: String, CodingKey {
+        case kind, namespace, name, by, autoscaler, min, max, current, desired, paused, state
+    }
 }
 
 /// One problem row of the "Needs attention" section, across the four groups.
@@ -355,22 +398,40 @@ extension AutoscalingReport {
     public var problems: [AutoscalingProblem] {
         var out: [AutoscalingProblem] = []
         for row in hpa.items where row.state != .ok {
-            out.append(AutoscalingProblem(group: .hpa, key: row.id, namespace: row.namespace, name: row.name, state: row.state, message: row.conditions.message))
+            out.append(
+                AutoscalingProblem(
+                    group: .hpa, key: row.id, namespace: row.namespace, name: row.name, state: row.state,
+                    message: row.conditions.message))
         }
         for row in keda.scaledObjects where row.state != .ok {
-            out.append(AutoscalingProblem(group: .keda, key: row.id, namespace: row.namespace, name: row.name, state: row.state, message: row.message))
+            out.append(
+                AutoscalingProblem(
+                    group: .keda, key: row.id, namespace: row.namespace, name: row.name, state: row.state,
+                    message: row.message))
         }
         for row in keda.scaledJobs where row.state != .ok {
-            out.append(AutoscalingProblem(group: .keda, key: row.id, namespace: row.namespace, name: row.name, state: row.state, message: row.message))
+            out.append(
+                AutoscalingProblem(
+                    group: .keda, key: row.id, namespace: row.namespace, name: row.name, state: row.state,
+                    message: row.message))
         }
         for row in vpa.items where row.state != .ok {
-            out.append(AutoscalingProblem(group: .vpa, key: row.id, namespace: row.namespace, name: row.name, state: row.state, message: row.message))
+            out.append(
+                AutoscalingProblem(
+                    group: .vpa, key: row.id, namespace: row.namespace, name: row.name, state: row.state,
+                    message: row.message))
         }
         for row in karpenter.nodePools where row.atLimit || !row.ready {
-            out.append(AutoscalingProblem(group: .karpenter, key: row.id, namespace: "", name: row.name, state: row.state, message: row.message))
+            out.append(
+                AutoscalingProblem(
+                    group: .karpenter, key: row.id, namespace: "", name: row.name, state: row.state,
+                    message: row.message))
         }
         for row in karpenter.nodeClaims where row.pending || row.drifted || row.disrupting || !row.ready {
-            out.append(AutoscalingProblem(group: .karpenter, key: row.id, namespace: "", name: row.name, state: row.state, message: row.message))
+            out.append(
+                AutoscalingProblem(
+                    group: .karpenter, key: row.id, namespace: "", name: row.name, state: row.state,
+                    message: row.message))
         }
         return out
     }

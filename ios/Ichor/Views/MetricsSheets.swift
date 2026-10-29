@@ -71,7 +71,14 @@ struct SourceSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Mode", selection: Binding(get: { source.mode }, set: { source = source.switched(to: $0); outcome = nil })) {
+                    Picker(
+                        "Mode",
+                        selection: Binding(
+                            get: { source.mode },
+                            set: {
+                                source = source.switched(to: $0); outcome = nil
+                            })
+                    ) {
                         Text("In the cluster").tag(PromSource.proxy)
                         Text("URL").tag(PromSource.url)
                     }
@@ -85,7 +92,9 @@ struct SourceSheet: View {
                         TextField("Port", text: $port).keyboardType(.numberPad)
                         TextField(kind.pathPrefixHint, text: $source.pathPrefix)
                     } footer: {
-                        Text("Reached through the Kubernetes API service proxy with the cluster's admin kubeconfig: no extra credentials.")
+                        Text(
+                            "Reached through the Kubernetes API service proxy with the cluster's admin kubeconfig: no extra credentials."
+                        )
                     }
                 } else {
                     urlSection
@@ -136,7 +145,9 @@ struct SourceSheet: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text(verbatim: found.label)
-                            if !found.kind.isEmpty { Text(verbatim: found.kind).font(.caption).foregroundStyle(.secondary) }
+                            if !found.kind.isEmpty {
+                                Text(verbatim: found.kind).font(.caption).foregroundStyle(.secondary)
+                            }
                         }
                         Spacer()
                         if found.sameEndpoint(as: edited) { Image(systemName: "checkmark").foregroundStyle(.tint) }
@@ -208,7 +219,9 @@ struct PanelEditorSheet: View {
                         Menu("Start from a preset") {
                             ForEach(presets) { preset in
                                 Button(preset.title) {
-                                    panel = PromPanel(title: preset.title, query: preset.query, unit: preset.unit, legend: preset.legend)
+                                    panel = PromPanel(
+                                        title: preset.title, query: preset.query, unit: preset.unit,
+                                        legend: preset.legend)
                                     result = nil
                                 }
                             }
@@ -244,7 +257,11 @@ struct PanelEditorSheet: View {
                     }
                     .disabled(panel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || running)
                     if chat != nil {
-                        Button { openChat(panel); chatOpen = true } label: { Label("Ask AI", systemImage: "sparkles") }
+                        Button {
+                            openChat(panel); chatOpen = true
+                        } label: {
+                            Label("Ask AI", systemImage: "sparkles")
+                        }
                     }
                     if running { ProgressView() }
                     switch result {
@@ -268,7 +285,9 @@ struct PanelEditorSheet: View {
                         onSave(saved)
                         dismiss()
                     }
-                    .disabled(panel.title.trimmingCharacters(in: .whitespaces).isEmpty || panel.query.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(
+                        panel.title.trimmingCharacters(in: .whitespaces).isEmpty
+                            || panel.query.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
             .onAppear { panel = initial }

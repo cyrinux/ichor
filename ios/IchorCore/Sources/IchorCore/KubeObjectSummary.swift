@@ -123,11 +123,14 @@ public struct ObjectOwner: Decodable, Equatable, Hashable, Sendable {
     /// Helm release, which has a screen of its own).
     public var apiResource: KubeAPIResource? {
         guard !resource.isEmpty, !version.isEmpty, !name.isEmpty else { return nil }
-        return KubeAPIResource(group: group, version: version, resource: resource, kind: kind, namespaced: namespaced, verbs: verbs,
-                               scalable: scalable)
+        return KubeAPIResource(
+            group: group, version: version, resource: resource, kind: kind, namespaced: namespaced, verbs: verbs,
+            scalable: scalable)
     }
 
-    private enum CodingKeys: String, CodingKey { case via, group, version, resource, kind, namespace, name, namespaced, verbs, controller, scalable }
+    private enum CodingKeys: String, CodingKey {
+        case via, group, version, resource, kind, namespace, name, namespaced, verbs, controller, scalable
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

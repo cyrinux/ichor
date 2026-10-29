@@ -41,7 +41,9 @@ public struct GarageLayout: Decodable, Equatable, Sendable {
     public var storageNodes: Int { members.filter { !($0.role?.gateway ?? true) }.count }
     public var gatewayNodes: Int { members.filter { $0.role?.gateway ?? false }.count }
     /// Every zone a role names, current or staged, for the editor's suggestions.
-    public var zones: [String] { Array(Set(nodes.compactMap { $0.effectiveRole?.zone }.filter { !$0.isEmpty })).sorted() }
+    public var zones: [String] {
+        Array(Set(nodes.compactMap { $0.effectiveRole?.zone }.filter { !$0.isEmpty })).sorted()
+    }
 
     public func node(_ id: String) -> GarageLayoutNode? { nodes.first { $0.id == id } }
 
@@ -62,7 +64,8 @@ public struct GarageLayout: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case version, nextVersion, partitionSize, zoneRedundancy, stagedZoneRedundancy, preview, nodes, versions, minAck, trackers, stuck, messages
+        case version, nextVersion, partitionSize, zoneRedundancy, stagedZoneRedundancy, preview, nodes, versions,
+            minAck, trackers, stuck, messages
     }
 }
 
@@ -92,7 +95,8 @@ public struct GarageLayoutPreview: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case ok, error, messages, movedPartitions, usableCapacity, effectiveCapacity, totalCapacity, lowUsableCapacity, lowPartitionSize
+        case ok, error, messages, movedPartitions, usableCapacity, effectiveCapacity, totalCapacity, lowUsableCapacity,
+            lowPartitionSize
     }
 }
 
@@ -176,7 +180,9 @@ public struct GarageLayoutNode: Decodable, Equatable, Identifiable, Sendable {
         stagedRole = try c.field(.stagedRole, nil)
     }
 
-    private enum CodingKeys: String, CodingKey { case id, hostname, kubeNode, up, known, draining, dataTotal, role, staged, stagedRole }
+    private enum CodingKeys: String, CodingKey {
+        case id, hostname, kubeNode, up, known, draining, dataTotal, role, staged, stagedRole
+    }
 }
 
 public enum GarageLayoutStatus: String, WireEnum, Sendable {
@@ -237,7 +243,9 @@ public enum GarageCapacityUnit: String, CaseIterable, Sendable {
     }
 
     /// The unit that shows `bytes` with the fewest digits: TiB from one tebibyte up.
-    public static func forBytes(_ bytes: Int64) -> GarageCapacityUnit { bytes >= GarageCapacityUnit.tib.bytes ? .tib : .gib }
+    public static func forBytes(_ bytes: Int64) -> GarageCapacityUnit {
+        bytes >= GarageCapacityUnit.tib.bytes ? .tib : .gib
+    }
 }
 
 /// "1.5" in `unit` as bytes, nil when `text` is not a positive number.

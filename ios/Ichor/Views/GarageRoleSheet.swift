@@ -34,12 +34,15 @@ struct GarageRoleSheet: View {
 
     private var changed: Bool {
         guard let current else { return true }
-        return trimmedZone != current.zone || gateway != current.gateway || (!gateway && capacity != current.capacity) || tags != current.tags
+        return trimmedZone != current.zone || gateway != current.gateway || (!gateway && capacity != current.capacity)
+            || tags != current.tags
     }
 
     private var title: String {
         guard let node else { return String(localized: "Add \(String(nodeID.prefix(16))) to the layout") }
-        return node.effectiveRole != nil ? String(localized: "Change the role of \(node.label)") : String(localized: "Add \(node.label) to the layout")
+        return node.effectiveRole != nil
+            ? String(localized: "Change the role of \(node.label)")
+            : String(localized: "Add \(node.label) to the layout")
     }
 
     var body: some View {
@@ -52,7 +55,9 @@ struct GarageRoleSheet: View {
                 } else if let node {
                     form(node)
                 } else {
-                    Section { Text("The cluster no longer lists this node.").font(.footnote).foregroundStyle(.statusBad) }
+                    Section {
+                        Text("The cluster no longer lists this node.").font(.footnote).foregroundStyle(.statusBad)
+                    }
                 }
                 if let failure {
                     Section { Text(verbatim: failure).font(.footnote).foregroundStyle(.statusBad) }
@@ -121,7 +126,9 @@ struct GarageRoleSheet: View {
                     .labelsHidden()
                     .onChange(of: unit) { old, new in
                         // Keep the same bytes when the unit changes.
-                        if let bytes = garageCapacityBytes(capacityText, unit: old) { capacityText = garageCapacityText(bytes, unit: new) }
+                        if let bytes = garageCapacityBytes(capacityText, unit: old) {
+                            capacityText = garageCapacityText(bytes, unit: new)
+                        }
                     }
                 }
             }
@@ -144,9 +151,13 @@ struct GarageRoleSheet: View {
                 HStack {
                     Text(verbatim: tag).font(.body.monospaced())
                     Spacer()
-                    Button { tags.removeAll { $0 == tag } } label: { Image(systemName: "xmark.circle") }
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel(Text("Remove tag \(tag)"))
+                    Button {
+                        tags.removeAll { $0 == tag }
+                    } label: {
+                        Image(systemName: "xmark.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(Text("Remove tag \(tag)"))
                 }
             }
             HStack {
@@ -185,7 +196,8 @@ struct GarageRoleSheet: View {
         let role = node.effectiveRole
         zone = role?.zone ?? (layout?.zones.count == 1 ? layout?.zones[0] ?? "" : "")
         gateway = role?.gateway ?? false
-        let bytes = (role?.gateway == false ? role?.capacity : nil) ?? garageSuggestedCapacity(dataTotal: node.dataTotal)
+        let bytes =
+            (role?.gateway == false ? role?.capacity : nil) ?? garageSuggestedCapacity(dataTotal: node.dataTotal)
         unit = GarageCapacityUnit.forBytes(max(bytes, 1))
         capacityText = bytes > 0 ? garageCapacityText(bytes, unit: unit) : ""
         tags = role?.tags ?? (node.kubeNode.isEmpty ? [] : [node.kubeNode])
@@ -196,7 +208,8 @@ struct GarageRoleSheet: View {
         saving = true
         defer { saving = false }
         do {
-            let staged = try await client.garageStageRole(instance, node: nodeID, zone: trimmedZone, capacity: capacity ?? 0, gateway: gateway, tags: tags)
+            let staged = try await client.garageStageRole(
+                instance, node: nodeID, zone: trimmedZone, capacity: capacity ?? 0, gateway: gateway, tags: tags)
             onStaged(staged)
             dismiss()
         } catch {

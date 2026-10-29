@@ -67,9 +67,11 @@ public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
         return String(url[range.upperBound...])
     }
 
-    public init(kind: String, namespace: String, name: String, url: String, service: String = "",
-                group: String = "", version: String = "", resource: String = "",
-                certNotAfter: Int64 = 0, certIssue: String = "", certSecret: String = "", certManaged: Bool = false) {
+    public init(
+        kind: String, namespace: String, name: String, url: String, service: String = "",
+        group: String = "", version: String = "", resource: String = "",
+        certNotAfter: Int64 = 0, certIssue: String = "", certSecret: String = "", certManaged: Bool = false
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.name = name
@@ -101,7 +103,8 @@ public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, namespace, name, url, service, group, version, resource, certNotAfter, certIssue, certSecret, certManaged
+        case kind, namespace, name, url, service, group, version, resource, certNotAfter, certIssue, certSecret,
+            certManaged
     }
 }
 

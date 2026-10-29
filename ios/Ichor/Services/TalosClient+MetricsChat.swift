@@ -14,7 +14,8 @@ extension TalosClient {
     /// The metric names `source` knows, for the model to use metrics that exist.
     func promMetricNames(_ source: PromSource) async throws -> [String] {
         let sourceJSON = try TalosJSON.encode(source)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromMetricNames(config, context, kubeServer, sourceJSON, $0)
         }
     }
@@ -25,8 +26,10 @@ extension TalosClient {
         let namesJSON = try TalosJSON.encode(metricNames)
         let edited = current.flatMap { $0.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
         let panelJSON = try edited.map { try promChatPanelJSON($0) } ?? ""
-        let session: PromChatSession? = try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoNewPromChat(config, context, kubeServer, sourceJSON, namesJSON, panelJSON, $0).map(PromChatSession.init)
+        let session: PromChatSession? = try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoNewPromChat(config, context, kubeServer, sourceJSON, namesJSON, panelJSON, $0).map(
+                PromChatSession.init)
         }
         guard let session else { throw TalosError(message: "NewPromChat returned no chat") }
         return session
@@ -44,7 +47,9 @@ final class PromChatSession: @unchecked Sendable {
     /// Sends `message` with the conversation so far and streams the answer; cancelling the
     /// consuming task stops waiting for it. An empty model means the provider's default, an
     /// empty baseURL its own API.
-    func ask(provider: String, settings: AIProviderSettings, language: String, message: String) -> AsyncStream<PromChatEvent> {
+    func ask(provider: String, settings: AIProviderSettings, language: String, message: String) -> AsyncStream<
+        PromChatEvent
+    > {
         TalosClient.bridged { continuation in
             let bridge = PromChatBridge(
                 answer: { continuation.yield(.answer($0)) },
@@ -53,8 +58,9 @@ final class PromChatSession: @unchecked Sendable {
                     continuation.finish()
                 }
             )
-            let run = go.ask(provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
-                             language: language, message: message, listener: bridge)
+            let run = go.ask(
+                provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
+                language: language, message: message, listener: bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }

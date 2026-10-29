@@ -29,8 +29,14 @@ struct MaintenanceView: View {
                 LoadStateView(state: plan, retry: loadPlan) { plan in form(plan) }
             }
         }
-        .navigationTitle(draining ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)"))
-        .clusterScreenTitle(Text(verbatim: draining ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)")))
+        .navigationTitle(
+            draining ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)")
+        )
+        .clusterScreenTitle(
+            Text(
+                verbatim: draining
+                    ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)"))
+        )
         .navigationBarTitleDisplayMode(.inline)
         .task {
             if draining { action = .none }
@@ -62,7 +68,9 @@ struct MaintenanceView: View {
             }
             Section {
                 if !draining {
-                    LabeledContent("Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
+                    LabeledContent(
+                        "Role",
+                        value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
                 }
                 LabeledContent("Kubernetes node", value: plan.kubeNode.or("—"))
                 LabeledContent("Scheduling") {
@@ -71,16 +79,25 @@ struct MaintenanceView: View {
                 }
             }
             if !draining { actionSection }
-            podsSection(String(localized: "Evicted (\(groups.toEvict.count))"), pods: groups.toEvict,
-                        footer: String(localized: "Evictions honour PodDisruptionBudgets: a budget that allows no disruption makes the drain wait, it never forces."))
+            podsSection(
+                String(localized: "Evicted (\(groups.toEvict.count))"), pods: groups.toEvict,
+                footer: String(
+                    localized:
+                        "Evictions honour PodDisruptionBudgets: a budget that allows no disruption makes the drain wait, it never forces."
+                ))
             if !groups.bare.isEmpty { bareSection(groups.bare) }
-            podsSection(String(localized: "Left on the node (\(groups.leftAlone.count))"), pods: groups.leftAlone,
-                        footer: String(localized: "DaemonSet and static pods stay: they would be recreated on the node."))
+            podsSection(
+                String(localized: "Left on the node (\(groups.leftAlone.count))"), pods: groups.leftAlone,
+                footer: String(localized: "DaemonSet and static pods stay: they would be recreated on the node."))
             if !draining { checksSection(plan) }
             Section {
-                Button(role: .destructive) { Task { await requestStart() } } label: { Text(startTitle) }
-                    .disabled(!canRequest(plan))
-                    .kubeGated(kube ? .drainNode : nil)
+                Button(role: .destructive) {
+                    Task { await requestStart() }
+                } label: {
+                    Text(startTitle)
+                }
+                .disabled(!canRequest(plan))
+                .kubeGated(kube ? .drainNode : nil)
                 KubeDeniedNote(kube ? .drainNode : nil)
                 if let message { Text(message).font(.footnote).foregroundStyle(.statusBad) }
             } footer: {
@@ -90,7 +107,8 @@ struct MaintenanceView: View {
         .themedBackground()
         .sheet(isPresented: $confirming) {
             HostnameConfirmationSheet(
-                title: draining ? String(localized: "Drain \(hostname)?") : String(localized: "Maintenance of \(hostname)?"),
+                title: draining
+                    ? String(localized: "Drain \(hostname)?") : String(localized: "Maintenance of \(hostname)?"),
                 message: confirmationMessage(plan),
                 hostname: hostname,
                 actionTitle: startTitle,
@@ -146,17 +164,29 @@ struct MaintenanceView: View {
         if !plan.blockers.isEmpty || !plan.warnings.isEmpty || !plan.acknowledge.isEmpty {
             Section {
                 ForEach(plan.blockers, id: \.self) { blocker in
-                    Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }
-                        .foregroundStyle(action.takesNodeDown ? Color.statusBad : Color.secondary)
+                    Label {
+                        Text(verbatim: blocker)
+                    } icon: {
+                        Image(systemName: "xmark.octagon.fill")
+                    }
+                    .foregroundStyle(action.takesNodeDown ? Color.statusBad : Color.secondary)
                 }
                 ForEach(plan.warnings, id: \.self) { warning in
-                    Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                        .foregroundStyle(.statusWarn)
+                    Label {
+                        Text(verbatim: warning)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    .foregroundStyle(.statusWarn)
                 }
                 // Confirmed one by one in the confirmation sheet.
                 ForEach(plan.acknowledgments(for: action), id: \.self) { risk in
-                    Label { Text(verbatim: risk) } icon: { Image(systemName: "hand.raised.fill") }
-                        .foregroundStyle(.statusWarn)
+                    Label {
+                        Text(verbatim: risk)
+                    } icon: {
+                        Image(systemName: "hand.raised.fill")
+                    }
+                    .foregroundStyle(.statusWarn)
                 }
             } header: {
                 Text("Checks")
@@ -177,15 +207,38 @@ struct MaintenanceView: View {
     }
 
     private func confirmationMessage(_ plan: MaintenancePlan) -> String {
-        var text = switch action {
-        case .reboot, .upgrade: String(localized: "\(hostname) is cordoned, its pods are evicted, then it reboots and is uncordoned once Ready again.")
-        case .shutdown: String(localized: "\(hostname) is cordoned, its pods are evicted, then it shuts down. It stays cordoned and off until someone powers it on.")
-        case .none: String(localized: "\(hostname) is cordoned and its pods are evicted. It stays cordoned: uncordon it from its menu when ready.")
-        }
+        var text =
+            switch action {
+            case .reboot, .upgrade:
+                String(
+                    localized:
+                        "\(hostname) is cordoned, its pods are evicted, then it reboots and is uncordoned once Ready again."
+                )
+            case .shutdown:
+                String(
+                    localized:
+                        "\(hostname) is cordoned, its pods are evicted, then it shuts down. It stays cordoned and off until someone powers it on."
+                )
+            case .none:
+                String(
+                    localized:
+                        "\(hostname) is cordoned and its pods are evicted. It stays cordoned: uncordon it from its menu when ready."
+                )
+            }
         if plan.controlPlane && action.takesNodeDown {
-            text += "\n\n" + String(localized: "Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum.")
+            text +=
+                "\n\n"
+                + String(
+                    localized:
+                        "Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum."
+                )
         }
-        text += "\n\n" + String(localized: "Keep Ichor open until the maintenance ends: in the background iOS pauses the app, and the maintenance with it.")
+        text +=
+            "\n\n"
+            + String(
+                localized:
+                    "Keep Ichor open until the maintenance ends: in the background iOS pauses the app, and the maintenance with it."
+            )
         return text
     }
 
@@ -201,7 +254,9 @@ struct MaintenanceView: View {
     /// App lock first (like reboot), then the typed hostname.
     private func requestStart() async {
         message = nil
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Maintenance of \(hostname)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Maintenance of \(hostname)"))
+        {
             message = failure
             return
         }
@@ -211,10 +266,15 @@ struct MaintenanceView: View {
     /// After the confirmation sheet, which collected the acknowledgments.
     private func start(_ plan: MaintenancePlan) {
         let acknowledgments = plan.acknowledgments(for: action)
-        guard let client = model.client, !busy, plan.canStart(action: action, acknowledged: Set(acknowledgments)) else { return }
-        job.start(client: client, target: MaintenanceJob.Target(node: node, hostname: hostname, action: action,
-                                                                wasCordoned: plan.cordoned, kube: kube),
-                  includeBare: includeBare, acknowledged: !acknowledgments.isEmpty)
+        guard let client = model.client, !busy, plan.canStart(action: action, acknowledged: Set(acknowledgments)) else {
+            return
+        }
+        job.start(
+            client: client,
+            target: MaintenanceJob.Target(
+                node: node, hostname: hostname, action: action,
+                wasCordoned: plan.cordoned, kube: kube),
+            includeBare: includeBare, acknowledged: !acknowledgments.isEmpty)
     }
 }
 
@@ -234,8 +294,9 @@ struct DrainPodRow: View {
                 if pod.hasPDB || pod.emptyDir {
                     HStack(spacing: 6) {
                         if pod.hasPDB {
-                            StatusPill(label: String(localized: "PDB \(pod.pdb): \(pod.pdbAllowed) allowed"),
-                                       color: pod.pdbBlocks ? .statusBad : .statusOK)
+                            StatusPill(
+                                label: String(localized: "PDB \(pod.pdb): \(pod.pdbAllowed) allowed"),
+                                color: pod.pdbBlocks ? .statusBad : .statusOK)
                         }
                         if pod.emptyDir { StatusPill(label: String(localized: "loses local data"), color: .statusWarn) }
                     }
@@ -252,8 +313,10 @@ struct DrainPodRow: View {
         switch state {
         case .pending: Image(systemName: "circle").foregroundStyle(.secondary).accessibilityLabel(Text("Pending"))
         case .evicting: ProgressView().accessibilityLabel(Text("Evicting"))
-        case .blocked: Image(systemName: "pause.circle.fill").foregroundStyle(.statusWarn).accessibilityLabel(Text("Blocked"))
-        case .gone: Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK).accessibilityLabel(Text("Evicted"))
+        case .blocked:
+            Image(systemName: "pause.circle.fill").foregroundStyle(.statusWarn).accessibilityLabel(Text("Blocked"))
+        case .gone:
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK).accessibilityLabel(Text("Evicted"))
         }
     }
 }
@@ -273,7 +336,8 @@ extension MaintenanceAction {
         case .reboot: String(localized: "Reboots, waits until the node is Ready again, then uncordons it.")
         case .shutdown: String(localized: "Powers the node off; it stays cordoned.")
         case .none: String(localized: "Stops after the drain; the node stays cordoned.")
-        case .upgrade: String(localized: "Upgrade Talos, wait until the node runs the new version and is Ready, then uncordon it.")
+        case .upgrade:
+            String(localized: "Upgrade Talos, wait until the node runs the new version and is Ready, then uncordon it.")
         }
     }
 }

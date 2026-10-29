@@ -3,20 +3,20 @@ import XCTest
 
 final class KubeLoadBalancingTests: XCTestCase {
     private let json = #"""
-    {"controller":"metallb","controllers":["metallb","kube-vip"],
-     "pools":[{"name":"default-pool","controller":"metallb","addresses":["192.0.2.240/31"],"total":2,"assigned":2,"available":0,
-               "countsKnown":true,"autoAssign":true,"advertisedBy":["l2:default"],"services":["dns/blocky"],"level":"critical"},
-              {"name":"lab-pool","controller":"metallb","total":8,"available":8,"autoAssign":false,"level":"warning"}],
-     "advertisements":[{"name":"default","kind":"l2","pools":["default-pool"],"interfaces":["eth0"]}],
-     "bgpPeers":[{"name":"upstream-router","peerAddress":"192.0.2.1","peerASN":64512,"myASN":64513,
-                  "sessions":[{"node":"demo-worker-2","up":false}],"sessionsKnown":true,"level":"critical"}],
-     "configErrors":[],
-     "services":[{"namespace":"demo","name":"hello-ichor-public","addresses":[],"pending":true,"cause":"poolExhausted","since":1,"level":"critical"},
-                 {"namespace":"edge","name":"next","pending":true,"cause":"somethingNewer","level":"newer-level"},
-                 {"namespace":"networking","name":"traefik","addresses":["192.0.2.240"],"pool":"default-pool","announcedBy":"demo-worker-1","level":"ok"}],
-     "kubeVip":{"ranges":[{"scope":"global","cidrs":["198.51.100.64/29"]}],"leases":[{"name":"plndr-cp-lock","namespace":"kube-system","holder":"demo-cp-1"}]},
-     "partialAccess":true}
-    """#
+        {"controller":"metallb","controllers":["metallb","kube-vip"],
+         "pools":[{"name":"default-pool","controller":"metallb","addresses":["192.0.2.240/31"],"total":2,"assigned":2,"available":0,
+                   "countsKnown":true,"autoAssign":true,"advertisedBy":["l2:default"],"services":["dns/blocky"],"level":"critical"},
+                  {"name":"lab-pool","controller":"metallb","total":8,"available":8,"autoAssign":false,"level":"warning"}],
+         "advertisements":[{"name":"default","kind":"l2","pools":["default-pool"],"interfaces":["eth0"]}],
+         "bgpPeers":[{"name":"upstream-router","peerAddress":"192.0.2.1","peerASN":64512,"myASN":64513,
+                      "sessions":[{"node":"demo-worker-2","up":false}],"sessionsKnown":true,"level":"critical"}],
+         "configErrors":[],
+         "services":[{"namespace":"demo","name":"hello-ichor-public","addresses":[],"pending":true,"cause":"poolExhausted","since":1,"level":"critical"},
+                     {"namespace":"edge","name":"next","pending":true,"cause":"somethingNewer","level":"newer-level"},
+                     {"namespace":"networking","name":"traefik","addresses":["192.0.2.240"],"pool":"default-pool","announcedBy":"demo-worker-1","level":"ok"}],
+         "kubeVip":{"ranges":[{"scope":"global","cidrs":["198.51.100.64/29"]}],"leases":[{"name":"plndr-cp-lock","namespace":"kube-system","holder":"demo-cp-1"}]},
+         "partialAccess":true}
+        """#
 
     private func decode(_ text: String) throws -> KubeLoadBalancing {
         try JSONDecoder().decode(KubeLoadBalancing.self, from: Data(text.utf8))

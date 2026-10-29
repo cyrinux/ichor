@@ -60,7 +60,9 @@ public struct CARotationPlan: Decodable, Equatable, Sendable {
     public let warnings: [String]
     public let ready: Bool
 
-    private enum CodingKeys: String, CodingKey { case context, endpoints, ca, nodes, discovered, blockers, warnings, ready }
+    private enum CodingKeys: String, CodingKey {
+        case context, endpoints, ca, nodes, discovered, blockers, warnings, ready
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -157,8 +159,12 @@ public typealias CARotationStep = TimelineStep<CARotationPhase>
 
 /// The rotation's timeline from the events so far, like joinTimeline: phases only move forward,
 /// `finished` (or reaching done) marks them all done, `failure` marks the furthest one failed.
-public func caRotationTimeline(_ events: [CARotationProgress], finished: Bool = false, failure: String? = nil) -> [CARotationStep] {
-    foldTimeline(events, phases: CARotationPhase.allCases, finished: finished, failure: failure, terminal: .done,
-                 phase: { CARotationPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
-        .filter { $0.phase != .done }
+public func caRotationTimeline(_ events: [CARotationProgress], finished: Bool = false, failure: String? = nil)
+    -> [CARotationStep]
+{
+    foldTimeline(
+        events, phases: CARotationPhase.allCases, finished: finished, failure: failure, terminal: .done,
+        phase: { CARotationPhase(rawValue: $0.phase) }, at: \.at, message: \.message
+    )
+    .filter { $0.phase != .done }
 }

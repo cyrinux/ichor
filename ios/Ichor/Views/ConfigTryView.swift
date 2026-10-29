@@ -44,10 +44,12 @@ struct ConfigTryView: View {
                 }
                 Spacer()
                 if outcome == nil {
-                    Text("You can leave this screen: a notification offers Keep for a while. If Ichor is suspended or the connection is lost, the node reverts by itself.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                    Text(
+                        "You can leave this screen: a notification offers Keep for a while. If Ichor is suspended or the connection is lost, the node reverts by itself."
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
                 }
             }
             .padding()
@@ -86,9 +88,13 @@ struct ConfigTryView: View {
     /// Why keeping or reverting failed while the try goes on.
     @ViewBuilder private var warning: some View {
         if let message = progress?.message, !message.isEmpty {
-            Label { Text(verbatim: message) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                .font(.footnote)
-                .foregroundStyle(.statusWarn)
+            Label {
+                Text(verbatim: message)
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill")
+            }
+            .font(.footnote)
+            .foregroundStyle(.statusWarn)
         }
     }
 
@@ -169,8 +175,9 @@ struct ConfigTryView: View {
             return
         }
         if !mine { job.clear() }
-        job.start(client: client, node: node, hostname: hostname, base: request.base, draft: request.draft,
-                  timeoutSeconds: request.timeoutSeconds)
+        job.start(
+            client: client, node: node, hostname: hostname, base: request.base, draft: request.draft,
+            timeoutSeconds: request.timeoutSeconds)
     }
 
     /// Leaving keeps the try going in ConfigTryJob; only the screen's idle timer goes back.

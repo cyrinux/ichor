@@ -8,10 +8,12 @@ final class PinsTests: XCTestCase {
 
     func testEncodeRoundTripsInAndroidForm() {
         let list = PinList([node, api])
-        XCTAssertEqual(list.encoded, """
-        [{"label":"worker-1","target":{"addr":"10.0.0.11","host":"worker-1","target":"node"}},\
-        {"label":"api","target":{"kind":"Deployment","name":"api","ns":"shop","target":"workload"}}]
-        """)
+        XCTAssertEqual(
+            list.encoded,
+            """
+            [{"label":"worker-1","target":{"addr":"10.0.0.11","host":"worker-1","target":"node"}},\
+            {"label":"api","target":{"kind":"Deployment","name":"api","ns":"shop","target":"workload"}}]
+            """)
         XCTAssertEqual(PinList.parse(list.encoded), list)
     }
 
@@ -23,7 +25,8 @@ final class PinsTests: XCTestCase {
     }
 
     func testParseSkipsUnknownTargetsAndFallsBackToEmpty() {
-        let text = #"[{"target":{"target":"someday"},"label":"x"},{"target":{"target":"pod","ns":"a","name":"b"},"label":"b"}]"#
+        let text =
+            #"[{"target":{"target":"someday"},"label":"x"},{"target":{"target":"pod","ns":"a","name":"b"},"label":"b"}]"#
         XCTAssertEqual(PinList.parse(text).pins.map(\.target), [.pod(namespace: "a", name: "b")])
         XCTAssertTrue(PinList.parse(nil).isEmpty)
         XCTAssertTrue(PinList.parse("").isEmpty)
@@ -67,7 +70,8 @@ final class PinsTests: XCTestCase {
     }
 
     func testParseSkipsWhatCannotBePinned() {
-        let text = #"[{"target":{"target":"etcd"},"label":"etcd"},{"target":{"target":"pod","ns":"a","name":"b"},"label":"b"}]"#
+        let text =
+            #"[{"target":{"target":"etcd"},"label":"etcd"},{"target":{"target":"pod","ns":"a","name":"b"},"label":"b"}]"#
         XCTAssertEqual(PinList.parse(text).pins.map(\.label), ["b"])
     }
 

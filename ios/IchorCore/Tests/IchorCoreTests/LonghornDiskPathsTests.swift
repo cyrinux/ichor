@@ -3,7 +3,8 @@ import XCTest
 
 final class LonghornDiskPathsTests: XCTestCase {
     private func node(_ name: String, _ paths: [String]) throws -> LonghornNode {
-        let disks = paths.map { #"{"path":"\#($0)","schedulable":true,"maximum":100,"scheduled":8}"# }.joined(separator: ",")
+        let disks = paths.map { #"{"path":"\#($0)","schedulable":true,"maximum":100,"scheduled":8}"# }.joined(
+            separator: ",")
         let raw = #"{"name":"\#(name)","namespace":"storage","ready":true,"disks":[\#(disks)]}"#
         return try JSONDecoder().decode(LonghornNode.self, from: Data(raw.utf8))
     }

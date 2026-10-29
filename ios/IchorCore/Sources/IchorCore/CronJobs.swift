@@ -39,12 +39,16 @@ public struct KubeCronJob: Codable, Equatable, Identifiable, Sendable {
     public var runState: JobRunState { JobRunState(rawValue: state) ?? .never }
 
     /// For the icon tile: the resolved icon; the view draws a clock when there is none.
-    public var iconApp: InventoryApp { InventoryApp(id: "cronjob:\(id)", name: displayName, icon: icon, remoteIcon: remoteIcon) }
+    public var iconApp: InventoryApp {
+        InventoryApp(id: "cronjob:\(id)", name: displayName, icon: icon, remoteIcon: remoteIcon)
+    }
 
-    public init(namespace: String, name: String, title: String = "", description: String = "", icon: String? = nil,
-                remoteIcon: String? = nil, schedule: String = "", timeZone: String = "", suspended: Bool = false,
-                triggerable: Bool = true, active: Int = 0, state: String = "", lastSchedule: Int64 = 0,
-                lastSuccess: Int64 = 0, nextRun: Int64 = 0, images: [String] = [], runs: [KubeJobRun] = []) {
+    public init(
+        namespace: String, name: String, title: String = "", description: String = "", icon: String? = nil,
+        remoteIcon: String? = nil, schedule: String = "", timeZone: String = "", suspended: Bool = false,
+        triggerable: Bool = true, active: Int = 0, state: String = "", lastSchedule: Int64 = 0,
+        lastSuccess: Int64 = 0, nextRun: Int64 = 0, images: [String] = [], runs: [KubeJobRun] = []
+    ) {
         self.namespace = namespace
         self.name = name
         self.title = title
@@ -153,18 +157,22 @@ public func cronJobNamespaces(_ cronJobs: [KubeCronJob]) -> [String] {
 /// CronJobs of namespace (all when nil) whose name, title, description, schedule or image
 /// contains query (case-insensitive). sorted: running ones first, then failed, then by
 /// namespace and name; else in the order loaded (a list still incomplete).
-public func filterCronJobs(_ cronJobs: [KubeCronJob], namespace: String?, query: String, sorted: Bool = true) -> [KubeCronJob] {
+public func filterCronJobs(_ cronJobs: [KubeCronJob], namespace: String?, query: String, sorted: Bool = true)
+    -> [KubeCronJob]
+{
     let needle = query.trimmingCharacters(in: .whitespaces)
     let contains = { (text: String) in text.range(of: needle, options: .caseInsensitive) != nil }
     let matching = cronJobs.filter { c in
-        (namespace == nil || c.namespace == namespace) &&
-            (needle.isEmpty || [c.name, c.title, c.description, c.schedule].contains(where: contains) ||
-                c.images.contains(where: contains))
+        (namespace == nil || c.namespace == namespace)
+            && (needle.isEmpty || [c.name, c.title, c.description, c.schedule].contains(where: contains)
+                || c.images.contains(where: contains))
     }
     guard sorted else { return matching }
-    return matching
+    return
+        matching
         .sorted { a, b in
-            let ra = a.runState.attentionRank, rb = b.runState.attentionRank
+            let ra = a.runState.attentionRank
+            let rb = b.runState.attentionRank
             if ra != rb { return ra < rb }
             if a.namespace != b.namespace { return a.namespace < b.namespace }
             return a.name < b.name

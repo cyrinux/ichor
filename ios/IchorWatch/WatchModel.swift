@@ -53,7 +53,9 @@ final class WatchModel: NSObject, ObservableObject, WCSessionDelegate, @unchecke
     }
 
     private func receive(_ context: [String: Any]) {
-        guard let data = context[WatchPayload.contextKey] as? Data, let received = WatchPayload.decode(data) else { return }
+        guard let data = context[WatchPayload.contextKey] as? Data, let received = WatchPayload.decode(data) else {
+            return
+        }
         if defaults?.data(forKey: WatchPayload.storeKey) != data {
             defaults?.set(data, forKey: WatchPayload.storeKey)
             WidgetCenter.shared.reloadAllTimelines()
@@ -63,7 +65,9 @@ final class WatchModel: NSObject, ObservableObject, WCSessionDelegate, @unchecke
 
     // MARK: - WCSessionDelegate
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+    func session(
+        _ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?
+    ) {
         guard activationState == .activated else { return }
         // The latest context the phone sent while the app was not running.
         receive(session.receivedApplicationContext)

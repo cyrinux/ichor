@@ -45,7 +45,9 @@ public func clusterStatusSummary(_ snapshot: ClusterSnapshot?, now: Date) -> Clu
     if snapshot.notReadyCount > 0 { parts.append(.notReady(snapshot.notReadyCount)) }
     if snapshot.unreachableCount > 0 { parts.append(.unreachable(snapshot.unreachableCount)) }
     if snapshot.notReadyCount == 0 && snapshot.unreachableCount == 0 { parts.append(.allReady) }
-    if snapshot.etcdChecked { parts.append(snapshot.etcdAlarms.isEmpty ? .etcdHealthy : .etcdAlarms(snapshot.etcdAlarms.count)) }
+    if snapshot.etcdChecked {
+        parts.append(snapshot.etcdAlarms.isEmpty ? .etcdHealthy : .etcdAlarms(snapshot.etcdAlarms.count))
+    }
     if isGlanceStale(snapshot, now: now) { parts.append(.stale) }
     return ClusterStatusSummary(parts: parts, checkedAt: snapshot.takenAt)
 }

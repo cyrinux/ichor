@@ -61,7 +61,9 @@ struct PromMonitoringView: View {
             }
         } else {
             ContentUnavailableView {
-                Label("No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster", systemImage: "chart.xyaxis.line")
+                Label(
+                    "No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster",
+                    systemImage: "chart.xyaxis.line")
             } description: {
                 Text("Pick a Service by hand, or set the URL of a server the phone can reach.")
             } actions: {

@@ -29,7 +29,8 @@ struct LonghornProtectionLine: View {
     }
 
     private var lastBackup: String {
-        volume.lastBackupAt > 0 ? String(localized: "backup \(relativeTime(volume.lastBackupAt))") : String(localized: "never backed up")
+        volume.lastBackupAt > 0
+            ? String(localized: "backup \(relativeTime(volume.lastBackupAt))") : String(localized: "never backed up")
     }
 
     private var tint: Color { volume.protectionColor ?? .accentColor }
@@ -68,7 +69,8 @@ struct LonghornSnapshotsSheet: View {
                     summary
                     actionButtons
                     if !volume.attached {
-                        Text("Attach the volume to take a snapshot or back it up.").font(.footnote).foregroundStyle(.secondary)
+                        Text("Attach the volume to take a snapshot or back it up.").font(.footnote).foregroundStyle(
+                            .secondary)
                     }
                     KubeDeniedNote(.longhornSnapshot, in: volume.namespace)
                     if volume.backingUp {
@@ -101,25 +103,36 @@ struct LonghornSnapshotsSheet: View {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 0) {
                         Text("Snapshots & backups").font(.headline)
-                        Text(verbatim: volume.label).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                        Text(verbatim: volume.label).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(
+                            1)
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
             .refreshable { await refresh() }
-            .confirmationDialog(String(localized: "Delete this snapshot?"),
-                                isPresented: $confirmDelete.isPresent(),
-                                titleVisibility: .visible,
-                                presenting: confirmDelete) { snapshot in
+            .confirmationDialog(
+                String(localized: "Delete this snapshot?"),
+                isPresented: $confirmDelete.isPresent(),
+                titleVisibility: .visible,
+                presenting: confirmDelete
+            ) { snapshot in
                 Button("Delete", role: .destructive) {
                     Task { await run(.delete, snapshot: snapshot.name) }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: { snapshot in
-                let text = String(localized: "Snapshot \(snapshot.name) of \(volume.label) is deleted and its space given back. Backups taken from it stay.")
+                let text = String(
+                    localized:
+                        "Snapshot \(snapshot.name) of \(volume.label) is deleted and its space given back. Backups taken from it stay."
+                )
                 // Whether a VolumeSnapshot keeps it could not be read.
                 if !volume.volumeSnapshotsKnown && snapshot.userCreated {
-                    Text(verbatim: text + "\n\n" + String(localized: "Your account cannot read the VolumeSnapshots: if one was taken from this snapshot, it could no longer be restored. Check with kubectl get volumesnapshots -A first."))
+                    Text(
+                        verbatim: text + "\n\n"
+                            + String(
+                                localized:
+                                    "Your account cannot read the VolumeSnapshots: if one was taken from this snapshot, it could no longer be restored. Check with kubectl get volumesnapshots -A first."
+                            ))
                 } else {
                     Text(verbatim: text)
                 }
@@ -132,21 +145,29 @@ struct LonghornSnapshotsSheet: View {
 
     private var summary: some View {
         HStack(spacing: 8) {
-            LonghornStatTile(label: String(localized: "Snapshots"), value: String(volume.snapshots.count), caption: snapshotsCaption)
-            LonghornStatTile(label: String(localized: "Last backup"),
-                             value: volume.lastBackupAt > 0 ? relativeTime(volume.lastBackupAt) : String(localized: "Never"),
-                             caption: backupCaption,
-                             accent: volume.protectionColor)
-                .layoutPriority(1)
-            LonghornStatTile(label: String(localized: "Backups"), value: String(volume.backupCount), caption: nil,
-                             accent: volume.backupCount == 0 ? Color.statusWarn : nil)
+            LonghornStatTile(
+                label: String(localized: "Snapshots"), value: String(volume.snapshots.count), caption: snapshotsCaption)
+            LonghornStatTile(
+                label: String(localized: "Last backup"),
+                value: volume.lastBackupAt > 0 ? relativeTime(volume.lastBackupAt) : String(localized: "Never"),
+                caption: backupCaption,
+                accent: volume.protectionColor
+            )
+            .layoutPriority(1)
+            LonghornStatTile(
+                label: String(localized: "Backups"), value: String(volume.backupCount), caption: nil,
+                accent: volume.backupCount == 0 ? Color.statusWarn : nil)
         }
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
     }
 
     private var snapshotsCaption: String? {
-        if volume.snapshotsRemoving > 0 { return String(localized: "\(String(volume.snapshotsRemoving)) being removed") }
-        if let newest = volume.snapshots.first, newest.createdAt > 0 { return String(localized: "newest \(relativeTime(newest.createdAt))") }
+        if volume.snapshotsRemoving > 0 {
+            return String(localized: "\(String(volume.snapshotsRemoving)) being removed")
+        }
+        if let newest = volume.snapshots.first, newest.createdAt > 0 {
+            return String(localized: "newest \(relativeTime(newest.createdAt))")
+        }
         return nil
     }
 
@@ -158,14 +179,20 @@ struct LonghornSnapshotsSheet: View {
 
     private var actionButtons: some View {
         HStack(spacing: 8) {
-            Button { Task { await run(.take, snapshot: "") } } label: {
-                ButtonLabel(title: String(localized: "Take snapshot"), systemImage: "camera", busy: running.contains(""))
+            Button {
+                Task { await run(.take, snapshot: "") }
+            } label: {
+                ButtonLabel(
+                    title: String(localized: "Take snapshot"), systemImage: "camera", busy: running.contains(""))
             }
             .buttonStyle(.borderedProminent)
             .disabled(!canAct || running.contains(""))
-            Button { Task { await backUpVolume() } } label: {
-                ButtonLabel(title: String(localized: "Back up now"), systemImage: "icloud.and.arrow.up",
-                            busy: running.contains(Self.volumeBackupKey) || volume.backingUp)
+            Button {
+                Task { await backUpVolume() }
+            } label: {
+                ButtonLabel(
+                    title: String(localized: "Back up now"), systemImage: "icloud.and.arrow.up",
+                    busy: running.contains(Self.volumeBackupKey) || volume.backingUp)
             }
             .buttonStyle(.bordered)
             .disabled(!canAct || running.contains(Self.volumeBackupKey) || volume.backingUp)
@@ -179,21 +206,37 @@ struct LonghornSnapshotsSheet: View {
             .swipeActions(edge: .trailing) {
                 if canAct && !busy {
                     if snapshot.volumeSnapshot.isEmpty {
-                        Button(role: .destructive) { confirmDelete = snapshot } label: { Label("Delete", systemImage: "trash") }
+                        Button(role: .destructive) {
+                            confirmDelete = snapshot
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
                     if !snapshot.backedUp && snapshot.ready {
-                        Button { Task { await run(.backup, snapshot: snapshot.name) } } label: { Label("Back up", systemImage: "icloud.and.arrow.up") }
-                            .tint(.accentColor)
+                        Button {
+                            Task { await run(.backup, snapshot: snapshot.name) }
+                        } label: {
+                            Label("Back up", systemImage: "icloud.and.arrow.up")
+                        }
+                        .tint(.accentColor)
                     }
                 }
             }
             .contextMenu {
                 if canAct && !busy {
                     if !snapshot.backedUp && snapshot.ready {
-                        Button { Task { await run(.backup, snapshot: snapshot.name) } } label: { Label("Back up", systemImage: "icloud.and.arrow.up") }
+                        Button {
+                            Task { await run(.backup, snapshot: snapshot.name) }
+                        } label: {
+                            Label("Back up", systemImage: "icloud.and.arrow.up")
+                        }
                     }
                     if snapshot.volumeSnapshot.isEmpty {
-                        Button(role: .destructive) { confirmDelete = snapshot } label: { Label("Delete", systemImage: "trash") }
+                        Button(role: .destructive) {
+                            confirmDelete = snapshot
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     } else {
                         // Its VolumeSnapshot would be left unrestorable.
                         Text("It keeps the VolumeSnapshot \(snapshot.volumeSnapshot): delete that one instead.")
@@ -207,12 +250,14 @@ struct LonghornSnapshotsSheet: View {
         running.insert(snapshot)
         defer { running.remove(snapshot) }
         do {
-            try await client.longhornSnapshotAction(namespace: volume.namespace, volume: volume.name, snapshot: snapshot, action: action)
-            resultMessage = switch action {
-            case .take: String(localized: "Snapshot of \(volume.label) taken")
-            case .backup: String(localized: "Backup of \(volume.label) started")
-            case .delete: String(localized: "Snapshot of \(volume.label) deleted")
-            }
+            try await client.longhornSnapshotAction(
+                namespace: volume.namespace, volume: volume.name, snapshot: snapshot, action: action)
+            resultMessage =
+                switch action {
+                case .take: String(localized: "Snapshot of \(volume.label) taken")
+                case .backup: String(localized: "Backup of \(volume.label) started")
+                case .delete: String(localized: "Snapshot of \(volume.label) deleted")
+                }
             await refresh()
         } catch {
             resultMessage = String(localized: "Could not change \(volume.label): \(error.localizedDescription)")
@@ -258,7 +303,8 @@ private struct LonghornStatTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: label).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-            Text(verbatim: value).font(.headline).foregroundStyle(accent ?? .primary).lineLimit(1).minimumScaleFactor(0.7)
+            Text(verbatim: value).font(.headline).foregroundStyle(accent ?? .primary).lineLimit(1).minimumScaleFactor(
+                0.7)
             if let caption {
                 Text(verbatim: caption).font(.caption2).foregroundStyle(accent ?? .secondary).lineLimit(2)
             }
@@ -295,11 +341,14 @@ private struct LonghornSnapshotRow: View {
             SymbolBadge(systemImage: snapshot.userCreated ? "camera" : "clock.arrow.circlepath", color: .accentColor)
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
-                    Text(verbatim: snapshot.createdAt > 0 ? relativeTime(snapshot.createdAt) : snapshot.name).font(.subheadline).lineLimit(1)
+                    Text(verbatim: snapshot.createdAt > 0 ? relativeTime(snapshot.createdAt) : snapshot.name).font(
+                        .subheadline
+                    ).lineLimit(1)
                     Spacer()
                     if busy { ProgressView() }
                 }
-                Text(verbatim: details).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                Text(verbatim: details).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                    .truncationMode(.middle)
                 HStack(spacing: 6) {
                     if snapshot.backedUp {
                         StatusPill(label: String(localized: "backed up"), color: .statusOK)
@@ -309,7 +358,8 @@ private struct LonghornSnapshotRow: View {
                     if !snapshot.ready { StatusPill(label: String(localized: "not ready"), color: .statusWarn) }
                 }
                 if !snapshot.volumeSnapshot.isEmpty {
-                    StatusPill(label: String(localized: "VolumeSnapshot \(snapshot.volumeSnapshot)"), color: .accentColor)
+                    StatusPill(
+                        label: String(localized: "VolumeSnapshot \(snapshot.volumeSnapshot)"), color: .accentColor)
                 }
                 if !snapshot.error.isEmpty {
                     Text(verbatim: snapshot.error).font(.caption).foregroundStyle(.statusBad)
@@ -320,8 +370,11 @@ private struct LonghornSnapshotRow: View {
     }
 
     private var details: String {
-        [snapshot.name, formatBytes(snapshot.size), snapshot.userCreated ? nil : String(localized: "taken by Longhorn")]
-            .compactMap { $0 }.joined(separator: " · ")
+        [
+            snapshot.name, formatBytes(snapshot.size),
+            snapshot.userCreated ? nil : String(localized: "taken by Longhorn"),
+        ]
+        .compactMap { $0 }.joined(separator: " · ")
     }
 }
 
@@ -333,11 +386,14 @@ private struct LonghornBackupRow: View {
             SymbolBadge(systemImage: symbol, color: color)
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
-                    Text(verbatim: backup.createdAt > 0 ? relativeTime(backup.createdAt) : backup.name).font(.subheadline).lineLimit(1)
+                    Text(verbatim: backup.createdAt > 0 ? relativeTime(backup.createdAt) : backup.name).font(
+                        .subheadline
+                    ).lineLimit(1)
                     Spacer()
                     StatusPill(label: state, color: color)
                 }
-                Text(verbatim: details).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                Text(verbatim: details).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                    .truncationMode(.middle)
                 if !backup.completed && !backup.failed {
                     ProgressView(value: Double(min(100, max(0, backup.progress))), total: 100)
                 }
@@ -350,17 +406,23 @@ private struct LonghornBackupRow: View {
     }
 
     private var symbol: String {
-        backup.failed ? "exclamationmark.icloud" : backup.completed ? "checkmark.icloud" : "arrow.triangle.2.circlepath.icloud"
+        backup.failed
+            ? "exclamationmark.icloud" : backup.completed ? "checkmark.icloud" : "arrow.triangle.2.circlepath.icloud"
     }
 
     private var color: Color { backup.failed ? Color.statusBad : backup.completed ? Color.statusOK : Color.accentColor }
 
     private var state: String {
-        backup.failed ? String(localized: "failed") : backup.completed ? String(localized: "completed") : String(localized: "in progress")
+        backup.failed
+            ? String(localized: "failed")
+            : backup.completed ? String(localized: "completed") : String(localized: "in progress")
     }
 
     private var details: String {
-        [backup.size > 0 ? formatBytes(backup.size) : nil, backup.snapshot.isEmpty ? nil : String(localized: "from \(backup.snapshot)")]
-            .compactMap { $0 }.joined(separator: " · ")
+        [
+            backup.size > 0 ? formatBytes(backup.size) : nil,
+            backup.snapshot.isEmpty ? nil : String(localized: "from \(backup.snapshot)"),
+        ]
+        .compactMap { $0 }.joined(separator: " · ")
     }
 }

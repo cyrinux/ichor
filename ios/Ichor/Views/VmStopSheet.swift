@@ -20,19 +20,32 @@ struct VmStopSheet: View {
     private var denial: KubeAccess? { access?.denial(for: target.action.kubeAction, in: vm.namespace) }
 
     private var message: String {
-        var lines = [target.action == .stop
-            ? String(localized: "The guest is asked to shut down, then the instance is deleted after its grace period. The VM keeps its disks.")
-            : String(localized: "The instance is deleted and started again: the guest reboots and loses what is only in memory.")]
+        var lines = [
+            target.action == .stop
+                ? String(
+                    localized:
+                        "The guest is asked to shut down, then the instance is deleted after its grace period. The VM keeps its disks."
+                )
+                : String(
+                    localized:
+                        "The instance is deleted and started again: the guest reboots and loses what is only in memory."
+                )
+        ]
         if target.force { lines.append(String(localized: "Force: no grace period")) }
         if target.action == .stop && vm.runStrategy == "Always" {
-            lines.append(String(localized: "Its run strategy is Always: stopping sets it to Halted in the VM’s spec. A GitOps tool may set it back on its next sync."))
+            lines.append(
+                String(
+                    localized:
+                        "Its run strategy is Always: stopping sets it to Halted in the VM’s spec. A GitOps tool may set it back on its next sync."
+                ))
         }
         if let denial { lines.append(denial.deniedText) }
         return lines.joined(separator: "\n\n")
     }
 
     var body: some View {
-        HostnameConfirmationSheet(title: String(localized: "\(target.action.title) \(vm.name)?"), message: message, hostname: vm.name,
-                                  actionTitle: target.action.title, enabled: denial == nil, onConfirm: onConfirm)
+        HostnameConfirmationSheet(
+            title: String(localized: "\(target.action.title) \(vm.name)?"), message: message, hostname: vm.name,
+            actionTitle: target.action.title, enabled: denial == nil, onConfirm: onConfirm)
     }
 }

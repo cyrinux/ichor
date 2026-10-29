@@ -32,7 +32,9 @@ struct KubeCapacityView: View {
             let majority = CapacityMajority(capacity.workloads)
             // The rail only helps once the list is longer than a screen; without measuring the
             // content, a dozen node and workload rows is taken as that point.
-            SectionRailScroll(sections: sections, showsRail: capacity.nodes.count + workloads.count >= Self.railMinimumRows) {
+            SectionRailScroll(
+                sections: sections, showsRail: capacity.nodes.count + workloads.count >= Self.railMinimumRows
+            ) {
                 List {
                     Section {
                         CapacityHeader(capacity: capacity) { loss = NodeLossRequest(node: "") }
@@ -40,7 +42,9 @@ struct KubeCapacityView: View {
                     }
                     Section {
                         ForEach(capacity.nodes.overcommittedFirst) { node in
-                            CapacityNodeRow(node: node, metrics: capacity.metricsAvailable) { loss = NodeLossRequest(node: node.name) }
+                            CapacityNodeRow(node: node, metrics: capacity.metricsAvailable) {
+                                loss = NodeLossRequest(node: node.name)
+                            }
                         }
                     } header: {
                         SectionHeader(title: CapacityText.capacityNodesTitle)
@@ -117,7 +121,8 @@ private struct CapacityHeader: View {
             HStack(alignment: .center) {
                 StatusPill(label: nPlusOneLabel(n1), color: n1.ok ? .statusOK : .statusWarn)
                 Spacer(minLength: 4)
-                InfoHint(title: Text(verbatim: CapacityText.capacityTitle), text: Text(verbatim: CapacityText.capacityIntro))
+                InfoHint(
+                    title: Text(verbatim: CapacityText.capacityTitle), text: Text(verbatim: CapacityText.capacityIntro))
             }
             tiles(t)
             notes
@@ -132,37 +137,52 @@ private struct CapacityHeader: View {
     /// Three tiles in a row; four (disk measured, else ephemeral storage reported) in two rows of two.
     @ViewBuilder
     private func tiles(_ t: CapacityTotals) -> some View {
-        let cpu = FreeTile(free: formatCPU(t.cpuFree), of: formatCPU(t.cpuAllocatable), label: CapacityText.capacityTileCpuFree,
-                           used: freeFraction(t.cpuRequests, of: t.cpuAllocatable))
-        let memory = FreeTile(free: formatBytes(Int64(t.memoryFree)), of: formatBytes(Int64(t.memoryAllocatable)),
-                              label: CapacityText.capacityTileMemoryFree,
-                              used: freeFraction(t.memoryRequests, of: t.memoryAllocatable))
-        let pods = FreeTile(free: "\(t.podsFree)", of: "\(t.podCapacity)", label: CapacityText.capacityTilePods,
-                            used: freeFraction(Double(t.pods), of: Double(t.podCapacity)))
+        let cpu = FreeTile(
+            free: formatCPU(t.cpuFree), of: formatCPU(t.cpuAllocatable), label: CapacityText.capacityTileCpuFree,
+            used: freeFraction(t.cpuRequests, of: t.cpuAllocatable))
+        let memory = FreeTile(
+            free: formatBytes(Int64(t.memoryFree)), of: formatBytes(Int64(t.memoryAllocatable)),
+            label: CapacityText.capacityTileMemoryFree,
+            used: freeFraction(t.memoryRequests, of: t.memoryAllocatable))
+        let pods = FreeTile(
+            free: "\(t.podsFree)", of: "\(t.podCapacity)", label: CapacityText.capacityTilePods,
+            used: freeFraction(Double(t.pods), of: Double(t.podCapacity)))
         // Few pods request ephemeral storage, so allocatable minus requests reads as an empty disk:
         // the kubelets' nodefs says what is really left.
         if t.diskMeasuredNodes > 0 {
-            let disk = FreeTile(free: formatBytes(Int64(t.diskAvailable)), of: formatBytes(Int64(t.diskCapacity)),
-                                label: t.diskMeasuredNodes < t.nodes
-                                    ? CapacityText.capacityTileDiskFreePartial("\(t.diskMeasuredNodes)", "\(t.nodes)")
-                                    : CapacityText.capacityTileDiskFree,
-                                used: 1 - t.diskFreeFraction)
+            let disk = FreeTile(
+                free: formatBytes(Int64(t.diskAvailable)), of: formatBytes(Int64(t.diskCapacity)),
+                label: t.diskMeasuredNodes < t.nodes
+                    ? CapacityText.capacityTileDiskFreePartial("\(t.diskMeasuredNodes)", "\(t.nodes)")
+                    : CapacityText.capacityTileDiskFree,
+                used: 1 - t.diskFreeFraction)
             Grid(alignment: .topLeading, horizontalSpacing: 12, verticalSpacing: 10) {
-                GridRow { cpu; memory }
-                GridRow { pods; disk }
+                GridRow {
+                    cpu; memory
+                }
+                GridRow {
+                    pods; disk
+                }
             }
         } else if t.ephemeralAllocatable > 0 {
             // Unmeasured disk: fall back to requests. No allocatable reported (old kubelets, some
             // managed clusters): unknown, not full.
-            let ephemeral = FreeTile(free: formatBytes(Int64(t.ephemeralFree)), of: formatBytes(Int64(t.ephemeralAllocatable)),
-                                     label: CapacityText.capacityTileEphemeralFree,
-                                     used: freeFraction(t.ephemeralRequests, of: t.ephemeralAllocatable))
+            let ephemeral = FreeTile(
+                free: formatBytes(Int64(t.ephemeralFree)), of: formatBytes(Int64(t.ephemeralAllocatable)),
+                label: CapacityText.capacityTileEphemeralFree,
+                used: freeFraction(t.ephemeralRequests, of: t.ephemeralAllocatable))
             Grid(alignment: .topLeading, horizontalSpacing: 12, verticalSpacing: 10) {
-                GridRow { cpu; memory }
-                GridRow { pods; ephemeral }
+                GridRow {
+                    cpu; memory
+                }
+                GridRow {
+                    pods; ephemeral
+                }
             }
         } else {
-            HStack(alignment: .top, spacing: 12) { cpu; memory; pods }
+            HStack(alignment: .top, spacing: 12) {
+                cpu; memory; pods
+            }
         }
     }
 
@@ -170,9 +190,12 @@ private struct CapacityHeader: View {
     private var notes: some View {
         VStack(alignment: .leading, spacing: 4) {
             if capacity.diskMeasured, let fullest = capacity.fullestDiskNode {
-                Text(verbatim: CapacityText.capacityDiskFullest(formatBytes(Int64(fullest.diskAvailable)), fullest.name))
+                Text(
+                    verbatim: CapacityText.capacityDiskFullest(formatBytes(Int64(fullest.diskAvailable)), fullest.name))
             } else {
-                Text(verbatim: capacity.diskForbidden ? CapacityText.capacityDiskForbidden : CapacityText.capacityDiskUnmeasured)
+                Text(
+                    verbatim: capacity.diskForbidden
+                        ? CapacityText.capacityDiskForbidden : CapacityText.capacityDiskUnmeasured)
             }
             if capacity.metricsForbidden {
                 Text(verbatim: CapacityText.capacityMetricsForbidden)
@@ -201,8 +224,11 @@ private struct FreeTile: View {
     let used: Double
 
     var body: some View {
-        StatTile(icon: nil, value: CapacityText.capacityTileOf(free, of), label: label, meter: { AnyView(UsageBar(fraction: used)) })
-            .frame(maxWidth: .infinity, alignment: .leading)
+        StatTile(
+            icon: nil, value: CapacityText.capacityTileOf(free, of), label: label,
+            meter: { AnyView(UsageBar(fraction: used)) }
+        )
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -221,22 +247,32 @@ private struct CapacityNodeRow: View {
             ResourceRow(health: nil, title: node.name, subtitle: node.roleLine, trailing: pill) {
                 VStack(alignment: .leading, spacing: 4) {
                     VStack(alignment: .leading, spacing: 4) {
-                        MeterRow(label: CapacityText.capacityRequests, fraction: node.memoryPercent / 100,
-                                 value: "\(requests)%", warnAt: nodeWarnAt)
+                        MeterRow(
+                            label: CapacityText.capacityRequests, fraction: node.memoryPercent / 100,
+                            value: "\(requests)%", warnAt: nodeWarnAt)
                         if metrics {
-                            MeterRow(label: CapacityText.capacityUsage, fraction: node.memoryUsageFraction,
-                                     value: "\(usage)%", warnAt: nodeWarnAt)
+                            MeterRow(
+                                label: CapacityText.capacityUsage, fraction: node.memoryUsageFraction,
+                                value: "\(usage)%", warnAt: nodeWarnAt)
                         }
                     }
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(Text(verbatim: metrics
-                        ? CapacityText.capacityNodeBars(node.name, "\(requests)", "\(usage)")
-                        : CapacityText.capacityNodeBarsNoUsage(node.name, "\(requests)")))
-                    Text(verbatim: CapacityText.capacityNodeFree(formatCPU(node.cpuFree), formatBytes(Int64(node.memoryFree)), "\(node.podsFree)"))
-                        .font(.caption).foregroundStyle(.secondary)
+                    .accessibilityLabel(
+                        Text(
+                            verbatim: metrics
+                                ? CapacityText.capacityNodeBars(node.name, "\(requests)", "\(usage)")
+                                : CapacityText.capacityNodeBarsNoUsage(node.name, "\(requests)")))
+                    Text(
+                        verbatim: CapacityText.capacityNodeFree(
+                            formatCPU(node.cpuFree), formatBytes(Int64(node.memoryFree)), "\(node.podsFree)")
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                     if node.diskKnown {
-                        Text(verbatim: CapacityText.capacityNodeDisk(formatBytes(Int64(node.diskAvailable)), formatBytes(Int64(node.diskCapacity))))
-                            .font(.caption).foregroundStyle(.secondary)
+                        Text(
+                            verbatim: CapacityText.capacityNodeDisk(
+                                formatBytes(Int64(node.diskAvailable)), formatBytes(Int64(node.diskCapacity)))
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .padding(.top, 4)
@@ -285,8 +321,9 @@ private struct CappedWidth: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        subviews.first?.place(at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing,
-                              proposal: ProposedViewSize(width: bounds.width, height: nil))
+        subviews.first?.place(
+            at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing,
+            proposal: ProposedViewSize(width: bounds.width, height: nil))
     }
 }
 
@@ -323,7 +360,8 @@ private struct CapacityWorkloadRow: View {
         let parts = [
             CapacityText.capacityWorkloadReplicas("\(w.replicas)", formatCPU(w.cpuRequest)),
             formatBytes(Int64(w.memoryRequest)),
-            w.ephemeralRequest > 0 ? CapacityText.capacityWorkloadEphemeral(formatBytes(Int64(w.ephemeralRequest))) : nil,
+            w.ephemeralRequest > 0
+                ? CapacityText.capacityWorkloadEphemeral(formatBytes(Int64(w.ephemeralRequest))) : nil,
             w.moreFitNA ? nil : CapacityText.capacityMoreFit("\(w.moreFit)"),
             w.atRisk ? nil : CapacityText.capacityRiskOk,
         ]

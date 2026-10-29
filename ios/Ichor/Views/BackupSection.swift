@@ -32,17 +32,20 @@ struct BackupSection: View {
         Section {
             Button("Back up clusters and settings…") { Task { await startBackup() } }
                 .disabled(!model.hasConfig)
-                .fileExporter(isPresented: $exporting, document: document,
-                              contentType: sealed.format == .age ? .ageBackup : .ichorBackup,
-                              defaultFilename: backupFileName(date: Date(), format: sealed.format)) { result in
+                .fileExporter(
+                    isPresented: $exporting, document: document,
+                    contentType: sealed.format == .age ? .ageBackup : .ichorBackup,
+                    defaultFilename: backupFileName(date: Date(), format: sealed.format)
+                ) { result in
                     switch result {
                     case .success:
-                        message = sealed.forRecipients
+                        message =
+                            sealed.forRecipients
                             ? String(localized: "Backup saved. It opens with your age key on a computer.")
                             : String(localized: "Backup saved. Keep the passphrase somewhere safe.")
                     case .failure(let error): message = error.localizedDescription
                     }
-                    document = nil // don't keep the sealed credentials around
+                    document = nil  // don't keep the sealed credentials around
                 }
             RestoreBackupButton(confirmFirst: true) {
                 message = String(localized: "Backup restored.")
@@ -55,7 +58,9 @@ struct BackupSection: View {
         } header: {
             Text("Backup")
         } footer: {
-            Text("Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened.")
+            Text(
+                "Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened."
+            )
         }
         .onChange(of: requested) { _, now in
             guard now else { return }
@@ -76,7 +81,10 @@ struct BackupSection: View {
 
     /// The file holds the clusters' credentials: with the app lock on, prove it is the owner first.
     private func startBackup() async {
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Back up clusters and their credentials")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Back up clusters and their credentials"))
+        {
             message = failure
             return
         }
@@ -106,7 +114,8 @@ struct RestoreBackupButton: View {
             } message: {
                 Text("Restoring replaces every cluster and setting on this device with those of the backup.")
             }
-            .fileImporter(isPresented: $importing, allowedContentTypes: [.ichorBackup, .ageBackup, .data, .item]) { result in
+            .fileImporter(isPresented: $importing, allowedContentTypes: [.ichorBackup, .ageBackup, .data, .item]) {
+                result in
                 switch result {
                 case .success(let url): read(url)
                 case .failure(let error): onError(error.localizedDescription)
@@ -168,10 +177,13 @@ private struct ReceivedBackupRestore: ViewModifier {
             } message: { _ in
                 Text("Restoring replaces every cluster and setting on this device with those of the backup.")
             }
-            .sheet(item: $picked, onDismiss: {
-                message = restored
-                restored = nil
-            }) { backup in
+            .sheet(
+                item: $picked,
+                onDismiss: {
+                    message = restored
+                    restored = nil
+                }
+            ) { backup in
                 UnlockBackupSheet(file: backup.data) { note in
                     restored = [String(localized: "Backup restored."), note].compactMap { $0 }.joined(separator: " ")
                     picked = nil
@@ -283,7 +295,9 @@ private struct NewBackupPassphraseSheet: View {
             }
         } footer: {
             if format == .age {
-                Text("An age file opens on a computer with the age command (age -d). Sealed with a passphrase, it also restores in Ichor on iOS or Android.")
+                Text(
+                    "An age file opens on a computer with the age command (age -d). Sealed with a passphrase, it also restores in Ichor on iOS or Android."
+                )
             }
         }
     }
@@ -294,7 +308,9 @@ private struct NewBackupPassphraseSheet: View {
             SecureField("Passphrase again", text: $again).textContentType(.newPassword)
             if let problem, !again.isEmpty { Text(problem).font(.footnote).foregroundStyle(.statusBad) }
         } footer: {
-            Text("The backup holds your clusters’ credentials. Choose a passphrase of at least \(backupMinPassphrase) characters; it is needed to restore and cannot be recovered.")
+            Text(
+                "The backup holds your clusters’ credentials. Choose a passphrase of at least \(backupMinPassphrase) characters; it is needed to restore and cannot be recovered."
+            )
         }
     }
 
@@ -311,7 +327,9 @@ private struct NewBackupPassphraseSheet: View {
         } header: {
             Text("age recipients")
         } footer: {
-            Text("One age public key (age1…) per line. Only the matching age keys open the file, on a computer: this phone cannot restore it.")
+            Text(
+                "One age public key (age1…) per line. Only the matching age keys open the file, on a computer: this phone cannot restore it."
+            )
         }
     }
 
@@ -337,7 +355,8 @@ private struct NewBackupPassphraseSheet: View {
         defer { busy = false }
         error = nil
         // Exactly one of the passphrase and the keys: age refuses a passphrase with other recipients.
-        let sealing = forRecipients
+        let sealing =
+            forRecipients
             ? BackupSeal(format: .age, passphrase: "", recipients: recipients)
             : BackupSeal(format: format, passphrase: passphrase, recipients: "")
         do {
@@ -393,7 +412,8 @@ private struct UnlockBackupSheet: View {
         busy = true
         defer { busy = false }
         do {
-            let note = try await AppBackup.restore(file, passphrase: passphrase, model: model, ai: ai, gitHosts: gitHosts)
+            let note = try await AppBackup.restore(
+                file, passphrase: passphrase, model: model, ai: ai, gitHosts: gitHosts)
             onRestored(note)
         } catch {
             self.error = error.localizedDescription

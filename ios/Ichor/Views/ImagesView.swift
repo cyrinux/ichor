@@ -31,8 +31,11 @@ struct ImagesView: View {
             List {
                 SystemImagesSection(node: node, hostname: hostname)
                 Section {
-                    LabeledContent("Images", value: query.isEmpty ? "\(images.count)" : "\(shown.count) / \(images.count)")
-                    LabeledContent("Total size", value: ByteCountFormatter.string(fromByteCount: totalImageSize(shown), countStyle: .file))
+                    LabeledContent(
+                        "Images", value: query.isEmpty ? "\(images.count)" : "\(shown.count) / \(images.count)")
+                    LabeledContent(
+                        "Total size",
+                        value: ByteCountFormatter.string(fromByteCount: totalImageSize(shown), countStyle: .file))
                     Picker("Sort by", selection: $sort) {
                         ForEach(ImageSort.allCases, id: \.self) { Text($0.localizedLabel).tag($0) }
                     }
@@ -46,7 +49,9 @@ struct ImagesView: View {
                     ForEach(shown) { ImageRow(image: $0) }
                 }
             }
-            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No images", systemImage: "shippingbox") }
+            .emptyOverlay(shown.isEmpty, query: query) {
+                ContentUnavailableView("No images", systemImage: "shippingbox")
+            }
             .refreshable { await load() }
             .themedBackground()
         }
@@ -57,7 +62,9 @@ struct ImagesView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Button { pullSheet = .request } label: {
+                    Button {
+                        pullSheet = .request
+                    } label: {
                         Label("Pull an image on every node…", systemImage: "square.and.arrow.down.on.square")
                     }
                 } label: {
@@ -72,7 +79,7 @@ struct ImagesView: View {
                     if let client = model.client {
                         ImagePullJob.shared.start(client: client, image: image, namespace: namespace)
                     }
-                    pullSheet = .progress // the followed pull: this one, or one started before
+                    pullSheet = .progress  // the followed pull: this one, or one started before
                 }
             case .progress:
                 ImagePullSheet()

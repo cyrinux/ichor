@@ -81,7 +81,8 @@ struct NodeResetSheet: View {
                     VStack(alignment: .leading) {
                         Text(label(of: mode))
                         if mode != .system {
-                            Text(verbatim: plan.userDisks.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+                            Text(verbatim: plan.userDisks.joined(separator: ", ")).font(.caption).foregroundStyle(
+                                .secondary)
                         }
                     }
                     .tag(mode)
@@ -94,7 +95,8 @@ struct NodeResetSheet: View {
             Toggle(isOn: $graceful) {
                 VStack(alignment: .leading) {
                     Text("Leave etcd first (--graceful)")
-                    Text("Cordon and drain the node and leave etcd cleanly before wiping.").font(.caption).foregroundStyle(.secondary)
+                    Text("Cordon and drain the node and leave etcd cleanly before wiping.").font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         } footer: {

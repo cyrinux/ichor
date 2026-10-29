@@ -66,7 +66,8 @@ struct KubeEventsList: View {
             Button {
                 all.toggle()
             } label: {
-                Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(events.count)")).font(.callout)
+                Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(events.count)")).font(
+                    .callout)
             }
         }
     }
@@ -84,16 +85,20 @@ private struct KubeEventRow: View {
                 Tag(event.reason, color: event.isWarning ? Color.statusWarn : nil)
                 if event.count > 1 { Text(verbatim: "× \(event.count)").font(.caption).foregroundStyle(.secondary) }
                 Spacer()
-                Text(verbatim: CheckupText.kubeEventsAgo(checkupAge(event.last, now: now))).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: CheckupText.kubeEventsAgo(checkupAge(event.last, now: now))).font(.caption)
+                    .foregroundStyle(.secondary)
             }
             if showObject {
-                Text(verbatim: "\(event.kind) \(event.name)").font(.caption2.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                Text(verbatim: "\(event.kind) \(event.name)").font(.caption2.monospaced()).foregroundStyle(.secondary)
+                    .lineLimit(1).truncationMode(.middle)
             }
             if let policy = event.policy {
-                Text(verbatim: policy.rule.isEmpty
-                     ? CheckupText.kubeEventsDeniedByPolicy(policy.policy)
-                     : CheckupText.kubeEventsDeniedByPolicyRule(policy.policy, policy.rule))
-                    .font(.caption.weight(.medium))
+                Text(
+                    verbatim: policy.rule.isEmpty
+                        ? CheckupText.kubeEventsDeniedByPolicy(policy.policy)
+                        : CheckupText.kubeEventsDeniedByPolicyRule(policy.policy, policy.rule)
+                )
+                .font(.caption.weight(.medium))
             }
             Text(verbatim: event.message).font(.caption).lineLimit(6)
         }

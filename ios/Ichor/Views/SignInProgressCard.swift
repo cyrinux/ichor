@@ -19,7 +19,9 @@ struct SignInProgressCard: View {
             }
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(
+            Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+        )
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.default, value: progress)

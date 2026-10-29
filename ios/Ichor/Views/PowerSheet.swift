@@ -33,7 +33,8 @@ struct PowerSheet: View {
                             ForEach(RebootMode.allCases) { mode in
                                 VStack(alignment: .leading) {
                                     Text(mode.localizedLabel)
-                                    Text(mode.localizedDetails).font(.caption).foregroundStyle(mode == .force ? .red : .secondary)
+                                    Text(mode.localizedDetails).font(.caption).foregroundStyle(
+                                        mode == .force ? .red : .secondary)
                                 }
                                 .tag(mode)
                             }
@@ -46,8 +47,10 @@ struct PowerSheet: View {
                         Toggle(isOn: $forceShutdown) {
                             VStack(alignment: .leading) {
                                 Text("Force (--force)")
-                                Text("Skip the Kubernetes cordon/drain, e.g. when the API is down. Pods and services are still stopped.")
-                                    .font(.caption).foregroundStyle(.secondary)
+                                Text(
+                                    "Skip the Kubernetes cordon/drain, e.g. when the API is down. Pods and services are still stopped."
+                                )
+                                .font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     } footer: {
@@ -56,8 +59,10 @@ struct PowerSheet: View {
                 }
                 if role == "controlplane" {
                     Section {
-                        Text("Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum.")
-                            .foregroundStyle(.statusWarn)
+                        Text(
+                            "Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum."
+                        )
+                        .foregroundStyle(.statusWarn)
                     }
                 }
                 Section(typedConfirmationPrompt(hostname)) {
@@ -67,13 +72,18 @@ struct PowerSheet: View {
                         .textInputAutocapitalization(.never)
                 }
                 Section {
-                    Button(role: .destructive) { onConfirm(request) } label: {
+                    Button(role: .destructive) {
+                        onConfirm(request)
+                    } label: {
                         Text(request.localizedTitle).fontWeight(request.forced ? .bold : .regular)
                     }
                     .disabled(!matches)
                 }
             }
-            .navigationTitle(action == .reboot ? String(localized: "Reboot \(hostname)?") : String(localized: "Shut down \(hostname)?"))
+            .navigationTitle(
+                action == .reboot
+                    ? String(localized: "Reboot \(hostname)?") : String(localized: "Shut down \(hostname)?")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }

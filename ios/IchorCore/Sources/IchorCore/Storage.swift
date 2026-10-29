@@ -13,7 +13,10 @@ public struct MountInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(mountedOn)\n\(filesystem)" }
 
-    public init(filesystem: String, mountedOn: String, size: UInt64 = 0, available: UInt64 = 0, used: UInt64 = 0, usedPercent: Double = 0) {
+    public init(
+        filesystem: String, mountedOn: String, size: UInt64 = 0, available: UInt64 = 0, used: UInt64 = 0,
+        usedPercent: Double = 0
+    ) {
         self.filesystem = filesystem
         self.mountedOn = mountedOn
         self.size = size
@@ -111,8 +114,10 @@ public struct VolumeInfo: Decodable, Equatable, Identifiable, Sendable {
     /// Why the volume is not ready, "" when it has no error.
     public let error: String
 
-    public init(id: String, phase: String = "", type: String = "", location: String = "", size: UInt64 = 0,
-                filesystem: String = "", encryption: String = "", mountedOn: String = "", error: String = "") {
+    public init(
+        id: String, phase: String = "", type: String = "", location: String = "", size: UInt64 = 0,
+        filesystem: String = "", encryption: String = "", mountedOn: String = "", error: String = ""
+    ) {
         self.error = error
         self.id = id
         self.phase = phase
@@ -124,7 +129,9 @@ public struct VolumeInfo: Decodable, Equatable, Identifiable, Sendable {
         self.mountedOn = mountedOn
     }
 
-    private enum CodingKeys: String, CodingKey { case id, phase, type, location, size, filesystem, encryption, mountedOn, error }
+    private enum CodingKeys: String, CodingKey {
+        case id, phase, type, location, size, filesystem, encryption, mountedOn, error
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -283,16 +290,19 @@ public func diskUsageRows(_ entries: [DiskUsageEntry], root: String) -> [DiskUsa
         }
     }
     let largest = max(children.map(\.size).max() ?? 1, 1)
-    return children
+    return
+        children
         .sorted { a, b in
             if a.size != b.size { return a.size > b.size }
             return a.path < b.path
         }
         .map { entry in
-            let name = base != "/" && entry.path.hasPrefix(base + "/")
+            let name =
+                base != "/" && entry.path.hasPrefix(base + "/")
                 ? String(entry.path.dropFirst(base.count + 1)) : String(entry.path.dropFirst())
-            return DiskUsageRow(path: entry.path, name: name, size: entry.size, isDir: entry.isDir,
-                                fraction: min(max(Double(entry.size) / Double(largest), 0), 1), error: entry.error)
+            return DiskUsageRow(
+                path: entry.path, name: name, size: entry.size, isDir: entry.isDir,
+                fraction: min(max(Double(entry.size) / Double(largest), 0), 1), error: entry.error)
         }
 }
 

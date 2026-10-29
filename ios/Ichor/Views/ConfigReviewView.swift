@@ -37,16 +37,21 @@ struct ConfigReviewView: View {
                 }
         }
         .task { await load() }
-        .confirmationDialog(Text("Try this change on \(hostname)?"), isPresented: $confirming, titleVisibility: .visible) {
+        .confirmationDialog(
+            Text("Try this change on \(hostname)?"), isPresented: $confirming, titleVisibility: .visible
+        ) {
             Button("Try") { Task { await startTry() } }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("The node applies it now and reverts by itself after \(timeout / 60) min unless you keep it.")
         }
-        .confirmationDialog(Text("Apply the change to \(hostname)?"),
-                            isPresented: Binding(get: { confirmingApply != nil && confirmingApply != .reboot },
-                                                 set: { if !$0 { confirmingApply = nil } }),
-                            titleVisibility: .visible, presenting: confirmingApply) { mode in
+        .confirmationDialog(
+            Text("Apply the change to \(hostname)?"),
+            isPresented: Binding(
+                get: { confirmingApply != nil && confirmingApply != .reboot },
+                set: { if !$0 { confirmingApply = nil } }),
+            titleVisibility: .visible, presenting: confirmingApply
+        ) { mode in
             Button(modeTitle(mode)) { Task { await startApply(mode) } }
             Button("Cancel", role: .cancel) {}
         } message: { mode in
@@ -60,7 +65,8 @@ struct ConfigReviewView: View {
         .sheet(isPresented: Binding(get: { confirmingApply == .reboot }, set: { if !$0 { confirmingApply = nil } })) {
             HostnameConfirmationSheet(
                 title: String(localized: "Apply and reboot \(hostname)?"),
-                message: String(localized: "The node applies the change and reboots now. Its pods stop while it reboots."),
+                message: String(
+                    localized: "The node applies the change and reboots now. Its pods stop while it reboots."),
                 hostname: hostname,
                 actionTitle: modeTitle(.reboot)
             ) {
@@ -80,8 +86,10 @@ struct ConfigReviewView: View {
             }
         }
         .fullScreenCover(isPresented: $trying, onDismiss: tryClosed) {
-            ConfigTryView(node: node, hostname: hostname,
-                          request: ConfigTryRequest(base: base, draft: draft, timeoutSeconds: timeout)) { outcome in
+            ConfigTryView(
+                node: node, hostname: hostname,
+                request: ConfigTryRequest(base: base, draft: draft, timeoutSeconds: timeout)
+            ) { outcome in
                 if case .failed = outcome { failed = true }
             }
         }
@@ -96,9 +104,11 @@ struct ConfigReviewView: View {
                 }
                 if preview.needsReboot {
                     Section {
-                        Label("This change needs a reboot, so it cannot be tried with automatic revert.",
-                              systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.statusWarn)
+                        Label(
+                            "This change needs a reboot, so it cannot be tried with automatic revert.",
+                            systemImage: "exclamationmark.triangle.fill"
+                        )
+                        .foregroundStyle(.statusWarn)
                     }
                 } else {
                     trySection
@@ -110,7 +120,9 @@ struct ConfigReviewView: View {
                     } header: {
                         Text("Other nodes")
                     } footer: {
-                        Text("The same edits are made to each node's own config: you see each node's diff before anything is applied.")
+                        Text(
+                            "The same edits are made to each node's own config: you see each node's diff before anything is applied."
+                        )
                     }
                 }
             } else {
@@ -128,14 +140,18 @@ struct ConfigReviewView: View {
                 }
             }
             .pickerStyle(.segmented)
-            Button { confirming = true } label: {
+            Button {
+                confirming = true
+            } label: {
                 Text("Try").fontWeight(.semibold).frame(maxWidth: .infinity)
             }
             if let message { Text(verbatim: message).font(.footnote).foregroundStyle(.statusBad) }
         } header: {
             Text("Revert after")
         } footer: {
-            Text("The node applies the change without a reboot and goes back to its previous config by itself unless you keep it.")
+            Text(
+                "The node applies the change without a reboot and goes back to its previous config by itself unless you keep it."
+            )
         }
     }
 
@@ -164,7 +180,9 @@ struct ConfigReviewView: View {
     private func startApply(_ mode: ConfigApplyMode) async {
         message = nil
         if model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Apply the machine config of \(hostname)")) {
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Apply the machine config of \(hostname)"))
+        {
             message = failure
             return
         }
@@ -190,7 +208,9 @@ struct ConfigReviewView: View {
     private func startTry() async {
         message = nil
         if model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Try a config change on \(hostname)")) {
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Try a config change on \(hostname)"))
+        {
             message = failure
             return
         }

@@ -42,8 +42,11 @@ struct KubeSummaryCard: View {
             }
             Divider()
             HStack(alignment: .top, spacing: 12) {
-                StatTile(icon: "cube", value: summary.map { "\($0.ready)/\($0.total)" } ?? unknown, label: String(localized: "Nodes"))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                StatTile(
+                    icon: "cube", value: summary.map { "\($0.ready)/\($0.total)" } ?? unknown,
+                    label: String(localized: "Nodes")
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
                 cpu(summary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 memory(summary)
@@ -72,10 +75,11 @@ struct KubeSummaryCard: View {
 
     /// The API server's host and the user the credentials are (as the API server takes them, else the kubeconfig's).
     private var identity: String {
-        let server = context.endpoints.first.map { endpoint in
-            let host = endpoint.components(separatedBy: "://").last ?? endpoint
-            return host.components(separatedBy: "/").first ?? host
-        } ?? ""
+        let server =
+            context.endpoints.first.map { endpoint in
+                let host = endpoint.components(separatedBy: "://").last ?? endpoint
+                return host.components(separatedBy: "/").first ?? host
+            } ?? ""
         let user = whoAmI.flatMap { $0.isKnown ? $0.user : nil } ?? context.user ?? ""
         return [server, user].filter { !$0.isEmpty }.joined(separator: "  ·  ")
     }
@@ -85,8 +89,9 @@ struct KubeSummaryCard: View {
         let cores = summary?.cpuCount ?? 0
         if let used = summary?.cpuFraction {
             VStack(alignment: .leading, spacing: 6) {
-                StatTile(icon: "cpu", value: percent(used),
-                         label: cores > 0 ? String(localized: "of \(cores) cores") : String(localized: "CPU in use"))
+                StatTile(
+                    icon: "cpu", value: percent(used),
+                    label: cores > 0 ? String(localized: "of \(cores) cores") : String(localized: "CPU in use"))
                 UsageBar(fraction: used).animation(.easeInOut, value: used)
             }
         } else {
@@ -99,8 +104,9 @@ struct KubeSummaryCard: View {
         let total = summary?.memTotal ?? 0
         let used = summary?.memFraction
         VStack(alignment: .leading, spacing: 6) {
-            StatTile(icon: "memorychip", value: total > 0 ? formatBytes(total) : unknown,
-                     label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
+            StatTile(
+                icon: "memorychip", value: total > 0 ? formatBytes(total) : unknown,
+                label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
             if let used {
                 UsageBar(fraction: used).animation(.easeInOut, value: used)
             }

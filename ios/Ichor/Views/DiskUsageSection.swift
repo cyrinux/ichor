@@ -28,7 +28,9 @@ struct DiskUsageSection: View {
             Text("Disk usage")
         } footer: {
             if support.supported {
-                Text("Choose a folder to measure, then tap a folder to open it. Large folders such as /var can take minutes.")
+                Text(
+                    "Choose a folder to measure, then tap a folder to open it. Large folders such as /var can take minutes."
+                )
             }
         }
     }
@@ -57,8 +59,12 @@ struct DiskUsageSection: View {
             }
             ForEach(rows) { row in
                 if row.isDir {
-                    Button { open(row.path) } label: { DiskUsageRowView(row: row) }
-                        .buttonStyle(.plain)
+                    Button {
+                        open(row.path)
+                    } label: {
+                        DiskUsageRowView(row: row)
+                    }
+                    .buttonStyle(.plain)
                 } else {
                     DiskUsageRowView(row: row)
                 }
@@ -70,7 +76,9 @@ struct DiskUsageSection: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(diskUsageShortcuts, id: \.self) { shortcut in
-                    Button { open(shortcut) } label: {
+                    Button {
+                        open(shortcut)
+                    } label: {
                         Text(verbatim: shortcut).font(.caption.monospaced())
                     }
                     .buttonStyle(.bordered)
@@ -90,7 +98,9 @@ struct DiskUsageSection: View {
                         Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
                             .accessibilityHidden(true)
                     }
-                    Button { open(crumb.path) } label: {
+                    Button {
+                        open(crumb.path)
+                    } label: {
                         Text(verbatim: crumb.name).font(.callout.monospaced())
                     }
                     .buttonStyle(.borderless)

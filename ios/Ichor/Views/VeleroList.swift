@@ -29,8 +29,10 @@ struct VeleroList: View {
                     Text("No Velero schedules.").foregroundStyle(.secondary)
                 }
                 ForEach(status.schedules) { schedule in
-                    ScheduleRow(schedule: schedule, busy: running.contains(schedule.label), changes: changes, deleting: running,
-                                onBackupNow: { confirmBackup = schedule }, onDelete: { deleteTarget = $0 }, onRestore: { restoreTarget = $0 })
+                    ScheduleRow(
+                        schedule: schedule, busy: running.contains(schedule.label), changes: changes, deleting: running,
+                        onBackupNow: { confirmBackup = schedule }, onDelete: { deleteTarget = $0 },
+                        onRestore: { restoreTarget = $0 })
                 }
             }
             if !status.adhoc.isEmpty {
@@ -48,10 +50,12 @@ struct VeleroList: View {
         .refreshable { await refresh() }
         .themedBackground()
         .loadsKubeActionAccess(namespace: status.schedules.first?.namespace ?? status.adhoc.first?.namespace)
-        .confirmationDialog(confirmBackup.map { String(localized: "Back up \($0.label) now?") } ?? "",
-                            isPresented: $confirmBackup.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirmBackup) { schedule in
+        .confirmationDialog(
+            confirmBackup.map { String(localized: "Back up \($0.label) now?") } ?? "",
+            isPresented: $confirmBackup.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirmBackup
+        ) { schedule in
             Button("Back up now") { Task { await backupNow(schedule) } }
             Button("Cancel", role: .cancel) {}
         } message: { schedule in
@@ -74,7 +78,10 @@ struct VeleroList: View {
         let namespaces = schedule.includedNamespaces.filter { $0 != "*" }
         let list = namespaces.isEmpty ? String(localized: "all") : namespaces.joined(separator: ", ")
         let location = schedule.storageLocation.isEmpty ? "-" : schedule.storageLocation
-        return String(localized: "Velero starts a backup with this schedule's settings (namespaces: \(list), storage location: \(location)). It runs next to the scheduled ones and expires like them.")
+        return String(
+            localized:
+                "Velero starts a backup with this schedule's settings (namespaces: \(list), storage location: \(location)). It runs next to the scheduled ones and expires like them."
+        )
     }
 
     private func backupNow(_ schedule: VeleroSchedule) async {
@@ -86,7 +93,9 @@ struct VeleroList: View {
             resultMessage = String(localized: "Backup \(name) started")
             changes += 1
             await refresh()
-        } catch { resultMessage = String(localized: "Could not back up \(schedule.label): \(error.localizedDescription)") }
+        } catch {
+            resultMessage = String(localized: "Could not back up \(schedule.label): \(error.localizedDescription)")
+        }
     }
 
     private func delete(_ target: VeleroBackupTarget) async {
@@ -104,8 +113,10 @@ struct VeleroList: View {
 
 /// "2 errors, 3 warnings", nil when both are 0.
 private func countsText(errors: Int, warnings: Int) -> String? {
-    let parts = [errors > 0 ? String(localized: "\(errors) errors") : nil,
-                 warnings > 0 ? String(localized: "\(warnings) warnings") : nil].compactMap { $0 }
+    let parts = [
+        errors > 0 ? String(localized: "\(errors) errors") : nil,
+        warnings > 0 ? String(localized: "\(warnings) warnings") : nil,
+    ].compactMap { $0 }
     return parts.isEmpty ? nil : parts.joined(separator: ", ")
 }
 
@@ -116,11 +127,18 @@ private struct LocationRow: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(verbatim: [String(localized: "Storage location \(location.name)"), location.isDefault ? String(localized: "default") : nil]
-                        .compactMap { $0 }.joined(separator: " · "))
-                        .font(.subheadline)
-                    Text(verbatim: [location.provider, location.bucket].filter { !$0.isEmpty }.joined(separator: " · "))
-                        .font(.caption.monospaced()).foregroundStyle(.secondary)
+                    Text(
+                        verbatim: [
+                            String(localized: "Storage location \(location.name)"),
+                            location.isDefault ? String(localized: "default") : nil,
+                        ]
+                        .compactMap { $0 }.joined(separator: " · ")
+                    )
+                    .font(.subheadline)
+                    Text(
+                        verbatim: [location.provider, location.bucket].filter { !$0.isEmpty }.joined(separator: " · ")
+                    )
+                    .font(.caption.monospaced()).foregroundStyle(.secondary)
                 }
                 Spacer()
                 switch location.phase {
@@ -191,10 +209,14 @@ private struct ScheduleRow: View {
         LabeledContent("Schedule", value: schedule.schedule)
         if !schedule.storageLocation.isEmpty { LabeledContent("Storage location", value: schedule.storageLocation) }
         let namespaces = schedule.includedNamespaces.filter { $0 != "*" }
-        LabeledContent("Namespaces", value: namespaces.isEmpty ? String(localized: "all") : namespaces.joined(separator: ", "))
+        LabeledContent(
+            "Namespaces", value: namespaces.isEmpty ? String(localized: "all") : namespaces.joined(separator: ", "))
         if let b = schedule.lastBackup {
             LabeledContent("Last backup", value: b.name)
-            LabeledContent("Phase", value: [b.phase, countsText(errors: b.errors, warnings: b.warnings)].compactMap { $0 }.joined(separator: " · "))
+            LabeledContent(
+                "Phase",
+                value: [b.phase, countsText(errors: b.errors, warnings: b.warnings)].compactMap { $0 }.joined(
+                    separator: " · "))
         }
         LabeledContent("Last success", value: relativeTime(schedule.lastSuccessAt))
         if let reason = schedule.lastBackup?.failureReason, !reason.isEmpty {
@@ -210,7 +232,8 @@ private struct ScheduleRow: View {
             Text(blockerText(blocker)).font(.caption).foregroundStyle(.secondary)
         }
         KubeDeniedNote(.veleroBackupNow, in: schedule.namespace)
-        VeleroBackupsDisclosure(schedule: schedule, reload: changes, deleting: deleting, onDelete: onDelete, onRestore: onRestore)
+        VeleroBackupsDisclosure(
+            schedule: schedule, reload: changes, deleting: deleting, onDelete: onDelete, onRestore: onRestore)
     }
 
     private func blockerText(_ blocker: VeleroBackupBlocker) -> String {
@@ -253,7 +276,9 @@ private struct AdhocRow: View {
     private var line: String {
         let b = backup.backup
         let at = b.completedAt > 0 ? b.completedAt : b.startedAt
-        return [b.phase, at > 0 ? relativeTime(at) : nil, countsText(errors: b.errors, warnings: b.warnings),
-                b.failureReason.nonEmpty].compactMap { $0 }.joined(separator: " · ")
+        return [
+            b.phase, at > 0 ? relativeTime(at) : nil, countsText(errors: b.errors, warnings: b.warnings),
+            b.failureReason.nonEmpty,
+        ].compactMap { $0 }.joined(separator: " · ")
     }
 }

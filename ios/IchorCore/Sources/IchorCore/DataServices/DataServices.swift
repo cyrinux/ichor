@@ -14,10 +14,12 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let backupJobs: BackupJobStatus?
     public let castai: CastAIStatus?
 
-    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil,
-                certManager: CertManagerStatus? = nil,
-                velero: VeleroStatus? = nil,
-                castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
+    public init(
+        longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil,
+        certManager: CertManagerStatus? = nil,
+        velero: VeleroStatus? = nil,
+        castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil
+    ) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
@@ -173,10 +175,12 @@ public struct LikelyCause: Equatable, Sendable, Identifiable {
 public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
-        [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
-         certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
-         castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
-         backupJobs != nil ? .backupJobs : nil].compactMap { $0 }
+        [
+            longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
+            certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
+            castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
+            backupJobs != nil ? .backupJobs : nil,
+        ].compactMap { $0 }
     }
 
     /// The installed systems of `families`, in display order.
@@ -191,43 +195,63 @@ public extension DataServices {
     /// Data services card lists storage alone, its tools card files the rest.
     func only(_ families: Set<ServiceFamily>) -> DataServices {
         func keep<T>(_ kind: DataServiceKind, _ value: T?) -> T? { families.contains(kind.family) ? value : nil }
-        return DataServices(longhorn: keep(.longhorn, longhorn), garage: keep(.garage, garage), cnpg: keep(.cnpg, cnpg),
-                            certManager: keep(.certManager, certManager), velero: keep(.velero, velero),
-                            castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
-                            backupJobs: keep(.backupJobs, backupJobs))
+        return DataServices(
+            longhorn: keep(.longhorn, longhorn), garage: keep(.garage, garage), cnpg: keep(.cnpg, cnpg),
+            certManager: keep(.certManager, certManager), velero: keep(.velero, velero),
+            castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
+            backupJobs: keep(.backupJobs, backupJobs))
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
         switch kind {
         case .longhorn:
             guard let lh = longhorn else { return nil }
-            if !lh.error.isEmpty { return ServiceSummary(total: lh.volumes.count, attention: 0, health: .unknown, error: lh.error) }
+            if !lh.error.isEmpty {
+                return ServiceSummary(total: lh.volumes.count, attention: 0, health: .unknown, error: lh.error)
+            }
             // A node that is not ready or a backup target that is gone needs a look as much as a volume.
-            let healths = lh.volumes.map(\.health) + lh.nodes.filter { !$0.ready }.map { _ in ServiceHealth.warning } +
-                lh.backupTargets.filter { !$0.available }.map { _ in ServiceHealth.warning }
-            return ServiceSummary(total: lh.volumes.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths))
+            let healths =
+                lh.volumes.map(\.health) + lh.nodes.filter { !$0.ready }.map { _ in ServiceHealth.warning }
+                + lh.backupTargets.filter { !$0.available }.map { _ in ServiceHealth.warning }
+            return ServiceSummary(
+                total: lh.volumes.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths))
         case .garage:
             guard let g = garage else { return nil }
-            if !g.error.isEmpty { return ServiceSummary(total: g.instances.count, attention: 0, health: .unknown, error: g.error) }
+            if !g.error.isEmpty {
+                return ServiceSummary(total: g.instances.count, attention: 0, health: .unknown, error: g.error)
+            }
             let healths = g.instances.map(\.state.health)
-            return ServiceSummary(total: g.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths))
+            return ServiceSummary(
+                total: g.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths))
         case .cnpg:
             guard let p = cnpg else { return nil }
-            if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
+            if !p.error.isEmpty && p.clusters.isEmpty {
+                return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error)
+            }
             let healths = p.clusters.map(\.health)
-            return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
+            return ServiceSummary(
+                total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths),
+                error: p.error)
         case .certManager:
             guard let cm = certManager else { return nil }
-            if !cm.error.isEmpty && cm.certificates.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: cm.error) }
+            if !cm.error.isEmpty && cm.certificates.isEmpty {
+                return ServiceSummary(total: 0, attention: 0, health: .unknown, error: cm.error)
+            }
             // An issuer that is not ready needs a look as much as a certificate.
             let healths = cm.certificates.map(\.health) + cm.issuers.map(\.health)
-            return ServiceSummary(total: cm.certificates.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: cm.error)
+            return ServiceSummary(
+                total: cm.certificates.count, attention: healths.filter(\.needsAttention).count,
+                health: .worst(healths), error: cm.error)
         case .velero:
             // The total counts the schedules; a storage location down or a failed backup taken by hand needs a look too.
             guard let v = velero else { return nil }
-            if !v.error.isEmpty && v.schedules.isEmpty && v.locations.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: v.error) }
+            if !v.error.isEmpty && v.schedules.isEmpty && v.locations.isEmpty {
+                return ServiceSummary(total: 0, attention: 0, health: .unknown, error: v.error)
+            }
             let healths = v.schedules.map(\.health) + v.locations.map(\.health) + v.adhoc.map(\.health)
-            return ServiceSummary(total: v.schedules.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: v.error)
+            return ServiceSummary(
+                total: v.schedules.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths),
+                error: v.error)
         case .snapshots: return snapshots?.summary
         case .backupJobs: return backupJobs?.summary
         case .castai:
@@ -245,7 +269,9 @@ public extension DataServices {
         let down = downNodes.union((longhorn?.nodes ?? []).filter { !$0.ready }.map(\.name))
         guard !down.isEmpty else { return [] }
         var hits: [String: Int] = [:]
-        func count(_ nodes: [String]) { for node in Set(nodes) where down.contains(node) { hits[node, default: 0] += 1 } }
+        func count(_ nodes: [String]) {
+            for node in Set(nodes) where down.contains(node) { hits[node, default: 0] += 1 }
+        }
 
         for volume in longhorn?.volumes ?? [] where volume.health.needsAttention { count(volume.replicaNodes) }
         for inst in garage?.instances ?? [] where inst.state.health.needsAttention {

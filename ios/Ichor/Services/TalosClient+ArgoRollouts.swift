@@ -13,8 +13,10 @@ extension TalosClient {
 
     /// Runs `action` on `rollout` with the plugin's patches; the Go core refuses what the state forbids.
     func argoRolloutAction(_ action: ArgoRolloutAction, on rollout: ArgoRollout) async throws {
-        let namespace = rollout.namespace, name = rollout.name
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        let namespace = rollout.namespace
+        let name = rollout.name
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeArgoRolloutAction(config, context, kubeServer, namespace, name, action.rawValue, error)
         }
     }

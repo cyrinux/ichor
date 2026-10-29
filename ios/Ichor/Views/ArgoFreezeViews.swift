@@ -32,8 +32,10 @@ struct ArgoFreezeSheet: View {
     @State private var working = false
     @State private var now = Date()
 
-    init(app: ArgoApp, status: ArgoStatus, scope: FreezeScope = .app,
-         freeze: @escaping (ArgoProject, ArgoFreezeOptions) async -> Void, pauseInstead: (() async -> Void)?) {
+    init(
+        app: ArgoApp, status: ArgoStatus, scope: FreezeScope = .app,
+        freeze: @escaping (ArgoProject, ArgoFreezeOptions) async -> Void, pauseInstead: (() async -> Void)?
+    ) {
         self.app = app
         self.status = status
         self.freeze = freeze
@@ -51,7 +53,8 @@ struct ArgoFreezeSheet: View {
                 if let project = status.project(of: app) {
                     content(project)
                 } else {
-                    Text("Project \(app.project) cannot be read: there is nothing to freeze.").foregroundStyle(.secondary)
+                    Text("Project \(app.project) cannot be read: there is nothing to freeze.").foregroundStyle(
+                        .secondary)
                 }
             }
             .navigationTitle(Text("Freeze Argo CD"))
@@ -67,7 +70,11 @@ struct ArgoFreezeSheet: View {
                                 // "Until 09:00" counts from now, not from when the sheet opened.
                                 now = Date()
                                 working = true
-                                await freeze(project, freezeOptions(for: app, scope: scope, minutes: chosen, manualSync: manualSync, reason: reason))
+                                await freeze(
+                                    project,
+                                    freezeOptions(
+                                        for: app, scope: scope, minutes: chosen, manualSync: manualSync, reason: reason)
+                                )
                                 working = false
                                 dismiss()
                             }
@@ -104,7 +111,9 @@ struct ArgoFreezeSheet: View {
                         }
                     }
                     let morning = now.epochMillis + Int64(minutesUntil(hour: morningHour, from: now)) * 60_000
-                    DurationChip(label: String(localized: "Until \(freezeClock(morning))"), selected: untilMorning) { untilMorning = true }
+                    DurationChip(label: String(localized: "Until \(freezeClock(morning))"), selected: untilMorning) {
+                        untilMorning = true
+                    }
                 }
             }
         }
@@ -117,13 +126,22 @@ struct ArgoFreezeSheet: View {
             }
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Argo CD will not auto-sync or self-heal \(targets.count) apps (\(names)) until \(freezeClock(endMillis)). Changes made by hand stay until then.")
+                Text(
+                    "Argo CD will not auto-sync or self-heal \(targets.count) apps (\(names)) until \(freezeClock(endMillis)). Changes made by hand stay until then."
+                )
                 if project.managedServerSide {
-                    Label(String(localized: "Project \(project.name) is applied from Git by \(project.managedBy) with server-side apply: the freeze may not survive a sync of \(project.managedBy)."),
-                          systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(attentionColor)
+                    Label(
+                        String(
+                            localized:
+                                "Project \(project.name) is applied from Git by \(project.managedBy) with server-side apply: the freeze may not survive a sync of \(project.managedBy)."
+                        ),
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .foregroundStyle(attentionColor)
                 } else if !project.managedBy.isEmpty {
-                    Text("Project \(project.name) is applied from Git by \(project.managedBy). The freeze is not in Git: it lasts until it ends.")
+                    Text(
+                        "Project \(project.name) is applied from Git by \(project.managedBy). The freeze is not in Git: it lasts until it ends."
+                    )
                 }
             }
         }
@@ -200,9 +218,17 @@ struct ArgoFreezeSection: View {
 
     private func detail(_ frozen: ArgoFreeze) -> String {
         let reason = windows.compactMap { $0.ichor?.reason }.filter { !$0.isEmpty }
-        return ([frozen.byIchor ? String(localized: "Frozen from Ichor") : String(localized: "A sync window of project \(frozen.project)")]
+        return
+            ([
+                frozen.byIchor
+                    ? String(localized: "Frozen from Ichor")
+                    : String(localized: "A sync window of project \(frozen.project)")
+            ]
             + reason
-            + [frozen.manualSync ? String(localized: "manual syncs allowed") : String(localized: "manual syncs blocked")])
+            + [
+                frozen.manualSync
+                    ? String(localized: "manual syncs allowed") : String(localized: "manual syncs blocked")
+            ])
             .joined(separator: " · ")
     }
 }

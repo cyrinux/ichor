@@ -87,7 +87,8 @@ extension UpdateChart {
     var row: UpdateRow {
         let automation = UpdateAutomation(automatedBy: automatedBy)
         return UpdateRow(
-            id: "chart:\(name):\(owner?.namespace ?? "")/\(owner?.name ?? "")", chart: true, name: name, running: version,
+            id: "chart:\(name):\(owner?.namespace ?? "")/\(owner?.name ?? "")", chart: true, name: name,
+            running: version,
             candidates: automation == nil ? candidates(patch: patch, minor: minor, major: major) : [],
             automation: automation, reason: reason, owner: owner, editable: edit != nil && automation == nil,
             source: source.isEmpty ? repoURL : source, item: itemJSON(self))
@@ -100,13 +101,16 @@ public func updateSections(_ updates: ClusterUpdates) -> UpdateSections {
     let images = updates.images.map(\.row)
     let charts = updates.charts.map(\.row)
     let shown = { (r: UpdateRow) in !r.candidates.isEmpty || r.automation != nil }
-    return UpdateSections(images: images.filter(shown), charts: charts.filter(shown),
-                          notComparable: (images + charts).filter { !shown($0) && !$0.reason.isEmpty })
+    return UpdateSections(
+        images: images.filter(shown), charts: charts.filter(shown),
+        notComparable: (images + charts).filter { !shown($0) && !$0.reason.isEmpty })
 }
 
 /// UpdateEditTarget's itemJSON: row's item with the version of the chip tapped.
 public func updateItemJSON(_ row: UpdateRow, version: String) -> String {
-    guard var object = (try? JSONSerialization.jsonObject(with: Data(row.item.utf8))) as? [String: Any] else { return "{}" }
+    guard var object = (try? JSONSerialization.jsonObject(with: Data(row.item.utf8))) as? [String: Any] else {
+        return "{}"
+    }
     object["version"] = version
     guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) else { return "{}" }
     return String(decoding: data, as: UTF8.self)
@@ -134,13 +138,16 @@ public func updateQuickEdit(_ target: UpdateEditTarget, row: UpdateRow, version:
     func nonEmpty(_ s: String) -> String? { s.isEmpty ? nil : s }
     switch (e.op, e.kustomizeImage.isEmpty) {
     case ("path", _):
-        return QuickEdit(op: .path, documentIndex: e.documentIndex, kind: nonEmpty(e.kind), name: nonEmpty(e.name), label: label,
-                         path: e.path, value: e.value, title: title, body: body)
+        return QuickEdit(
+            op: .path, documentIndex: e.documentIndex, kind: nonEmpty(e.kind), name: nonEmpty(e.name), label: label,
+            path: e.path, value: e.value, title: title, body: body)
     case (_, false):
-        return QuickEdit(op: .image, documentIndex: e.documentIndex, image: e.image, kustomizeImage: e.kustomizeImage, label: label,
-                         title: title, body: body)
+        return QuickEdit(
+            op: .image, documentIndex: e.documentIndex, image: e.image, kustomizeImage: e.kustomizeImage, label: label,
+            title: title, body: body)
     default:
-        return QuickEdit(op: .image, documentIndex: e.documentIndex, kind: nonEmpty(e.kind), name: nonEmpty(e.name),
-                         container: e.container, image: e.image, label: label, title: title, body: body)
+        return QuickEdit(
+            op: .image, documentIndex: e.documentIndex, kind: nonEmpty(e.kind), name: nonEmpty(e.name),
+            container: e.container, image: e.image, label: label, title: title, body: body)
     }
 }

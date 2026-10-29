@@ -30,7 +30,9 @@ struct ClusterLifecycleView: View {
         List {
             Section { header(r) }
             if !r.installed || r.isEmpty {
-                Section { Text("No Cluster API cluster or Sidero Metal server on this cluster.").foregroundStyle(.secondary) }
+                Section {
+                    Text("No Cluster API cluster or Sidero Metal server on this cluster.").foregroundStyle(.secondary)
+                }
             } else {
                 if !r.clusters.isEmpty {
                     Section("Clusters") {
@@ -46,7 +48,9 @@ struct ClusterLifecycleView: View {
                 }
                 if !r.machineDeployments.isEmpty {
                     Section("Machine deployments") {
-                        ForEach(r.machineDeployments) { MachineDeploymentRow(deployment: $0, version: r.apiVersion(.machineDeployment)) }
+                        ForEach(r.machineDeployments) {
+                            MachineDeploymentRow(deployment: $0, version: r.apiVersion(.machineDeployment))
+                        }
                     }
                 }
                 if !r.servers.isEmpty {
@@ -68,7 +72,8 @@ struct ClusterLifecycleView: View {
     @ViewBuilder
     private func header(_ r: ClusterLifecycle) -> some View {
         if !r.error.isEmpty {
-            Text(verbatim: String(localized: "Some sections could not be read: \(r.error)")).font(.callout).foregroundStyle(.secondary)
+            Text(verbatim: String(localized: "Some sections could not be read: \(r.error)")).font(.callout)
+                .foregroundStyle(.secondary)
         }
         let served = [
             r.version.isEmpty ? nil : String(localized: "Cluster API \(r.version)"),
@@ -113,7 +118,9 @@ private struct RowShell: View {
     var body: some View {
         NavigationLink {
             KubeObjectView(
-                resource: KubeAPIResource(group: kind.group, version: version, resource: kind.resource, kind: kind.kind, namespaced: kind.namespaced),
+                resource: KubeAPIResource(
+                    group: kind.group, version: version, resource: kind.resource, kind: kind.kind,
+                    namespaced: kind.namespaced),
                 namespace: kind.namespaced ? namespace : "",
                 name: name,
             )
@@ -144,14 +151,16 @@ private struct ClusterRow: View {
     var body: some View {
         let c = cluster
         let workers = c.workers.flatMap { $0.desired > 0 || $0.ready > 0 ? $0.ratio : nil }
-        RowShell(kind: .cluster, version: version, namespace: c.namespace, name: c.name, title: c.name, health: c.health, line: [
-            c.phase,
-            c.controlPlane.map { String(localized: "control plane \($0.ratio)") },
-            workers.map { String(localized: "workers \($0)") },
-            c.endpoint,
-            c.versions.joined(separator: ", "),
-            c.paused ? String(localized: "paused") : nil,
-        ], problem: c.problem)
+        RowShell(
+            kind: .cluster, version: version, namespace: c.namespace, name: c.name, title: c.name, health: c.health,
+            line: [
+                c.phase,
+                c.controlPlane.map { String(localized: "control plane \($0.ratio)") },
+                workers.map { String(localized: "workers \($0)") },
+                c.endpoint,
+                c.versions.joined(separator: ", "),
+                c.paused ? String(localized: "paused") : nil,
+            ], problem: c.problem)
     }
 }
 
@@ -162,14 +171,19 @@ private struct MachineRow: View {
 
     var body: some View {
         let m = machine
-        RowShell(kind: .machine, version: version, namespace: m.namespace, name: m.name, title: m.name, health: m.health, line: [
-            m.phase,
-            m.controlPlane ? String(localized: "control plane") : nil,
-            m.node,
-            m.version,
-            m.addresses.joined(separator: ", "),
-            !m.stuck ? nil : m.stuckSince > 0 ? String(localized: "stuck since \(relativeTime(m.stuckSince))") : String(localized: "stuck"),
-        ], problem: m.problem)
+        RowShell(
+            kind: .machine, version: version, namespace: m.namespace, name: m.name, title: m.name, health: m.health,
+            line: [
+                m.phase,
+                m.controlPlane ? String(localized: "control plane") : nil,
+                m.node,
+                m.version,
+                m.addresses.joined(separator: ", "),
+                !m.stuck
+                    ? nil
+                    : m.stuckSince > 0
+                        ? String(localized: "stuck since \(relativeTime(m.stuckSince))") : String(localized: "stuck"),
+            ], problem: m.problem)
     }
 }
 
@@ -183,11 +197,14 @@ private struct MachineDeploymentRow: View {
         let ready = String(d.ready)
         let available = String(d.available)
         let desired = String(d.desired)
-        RowShell(kind: .machineDeployment, version: version, namespace: d.namespace, name: d.name, title: d.name, health: d.health, line: [
-            d.phase,
-            String(localized: "\(ready) ready, \(available) available of \(desired)"),
-            d.version,
-        ])
+        RowShell(
+            kind: .machineDeployment, version: version, namespace: d.namespace, name: d.name, title: d.name,
+            health: d.health,
+            line: [
+                d.phase,
+                String(localized: "\(ready) ready, \(available) available of \(desired)"),
+                d.version,
+            ])
     }
 }
 
@@ -197,18 +214,22 @@ private struct ServerRow: View {
 
     var body: some View {
         let s = server
-        RowShell(kind: .server, version: LifecycleKind.sideroVersion, namespace: "", name: s.name, title: s.title, health: s.health, line: [
-            s.hostname.isEmpty || s.name == s.hostname ? nil : s.name,
-            s.accepted ? String(localized: "accepted") : String(localized: "not accepted"),
-            s.cordoned ? String(localized: "cordoned") : nil,
-            s.inUse ? String(localized: "in use") : nil,
-            s.isClean ? String(localized: "clean") : nil,
-            s.power.isEmpty ? nil : String(localized: "power \(s.power)"),
-            s.serverClasses.isEmpty ? nil : String(localized: "classes: \(s.serverClasses.joined(separator: ", "))"),
-            s.addresses.joined(separator: ", "),
-            s.cpu,
-            s.memoryBytes > 0 ? ByteCountFormatter.string(fromByteCount: s.memoryBytes, countStyle: .memory) : nil,
-        ])
+        RowShell(
+            kind: .server, version: LifecycleKind.sideroVersion, namespace: "", name: s.name, title: s.title,
+            health: s.health,
+            line: [
+                s.hostname.isEmpty || s.name == s.hostname ? nil : s.name,
+                s.accepted ? String(localized: "accepted") : String(localized: "not accepted"),
+                s.cordoned ? String(localized: "cordoned") : nil,
+                s.inUse ? String(localized: "in use") : nil,
+                s.isClean ? String(localized: "clean") : nil,
+                s.power.isEmpty ? nil : String(localized: "power \(s.power)"),
+                s.serverClasses.isEmpty
+                    ? nil : String(localized: "classes: \(s.serverClasses.joined(separator: ", "))"),
+                s.addresses.joined(separator: ", "),
+                s.cpu,
+                s.memoryBytes > 0 ? ByteCountFormatter.string(fromByteCount: s.memoryBytes, countStyle: .memory) : nil,
+            ])
     }
 }
 
@@ -220,7 +241,8 @@ private struct ServerClassRow: View {
         let sc = serverClass
         let available = String(sc.available)
         let inUse = String(sc.inUse)
-        RowShell(kind: .serverClass, version: LifecycleKind.sideroVersion, namespace: "", name: sc.name, title: sc.name,
-                 health: sc.exhausted ? .warning : .ok, line: [String(localized: "\(available) available, \(inUse) in use")])
+        RowShell(
+            kind: .serverClass, version: LifecycleKind.sideroVersion, namespace: "", name: sc.name, title: sc.name,
+            health: sc.exhausted ? .warning : .ok, line: [String(localized: "\(available) available, \(inUse) in use")])
     }
 }

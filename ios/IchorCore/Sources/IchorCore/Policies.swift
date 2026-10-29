@@ -61,9 +61,13 @@ public struct PolicyReport: Decodable, Equatable, Sendable {
     /// Both engines run: each row says which one it belongs to.
     public var bothEngines: Bool { kyverno && gatekeeper }
 
-    public init(installed: Bool = false, kyverno: Bool = false, gatekeeper: Bool = false, version: String = "", error: String = "",
-                gatekeeperError: String = "", reportsError: String = "", engines: [PolicyEngine] = [], policies: [KyvernoPolicy] = [],
-                namespaces: [PolicyNamespaceTotals] = [], reportsRead: Int = 0, reportsTruncated: Bool = false) {
+    public init(
+        installed: Bool = false, kyverno: Bool = false, gatekeeper: Bool = false, version: String = "",
+        error: String = "",
+        gatekeeperError: String = "", reportsError: String = "", engines: [PolicyEngine] = [],
+        policies: [KyvernoPolicy] = [],
+        namespaces: [PolicyNamespaceTotals] = [], reportsRead: Int = 0, reportsTruncated: Bool = false
+    ) {
         self.installed = installed
         self.kyverno = kyverno
         self.gatekeeper = gatekeeper
@@ -95,7 +99,8 @@ public struct PolicyReport: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case installed, kyverno, gatekeeper, version, error, gatekeeperError, reportsError, engines, policies, namespaces
+        case installed, kyverno, gatekeeper, version, error, gatekeeperError, reportsError, engines, policies,
+            namespaces
         case reportsRead, reportsTruncated
     }
 
@@ -104,15 +109,21 @@ public struct PolicyReport: Decodable, Equatable, Sendable {
     /// or are not ready (a broken policy matters everywhere).
     public func filtered(namespace: String?, query: String) -> [KyvernoPolicy] {
         let q = query.trimmingCharacters(in: .whitespaces)
-        return policies
+        return
+            policies
             .filter { policy in
                 guard let namespace else { return true }
-                return policy.namespace == namespace || (policy.clusterWide && (!policy.ready || policy.checks(namespace)))
+                return policy.namespace == namespace
+                    || (policy.clusterWide && (!policy.ready || policy.checks(namespace)))
             }
             .filter { policy in
-                q.isEmpty || ([policy.name, policy.namespace, policy.kind, policy.category, policy.severity, policy.description, policy.action.rawValue]
-                    + policy.ruleNames)
-                    .contains { $0.localizedCaseInsensitiveContains(q) }
+                q.isEmpty
+                    || ([
+                        policy.name, policy.namespace, policy.kind, policy.category, policy.severity,
+                        policy.description, policy.action.rawValue,
+                    ]
+                        + policy.ruleNames)
+                        .contains { $0.localizedCaseInsensitiveContains(q) }
             }
     }
 
@@ -131,8 +142,10 @@ public struct PolicyEngine: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name.rawValue }
 
-    public init(name: PolicyEngineName = .kyverno, namespace: String = "", controllers: [PolicyController] = [],
-                webhook: PolicyWebhook = PolicyWebhook()) {
+    public init(
+        name: PolicyEngineName = .kyverno, namespace: String = "", controllers: [PolicyController] = [],
+        webhook: PolicyWebhook = PolicyWebhook()
+    ) {
         self.name = name
         self.namespace = namespace
         self.controllers = controllers
@@ -277,11 +290,16 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
         byNamespace.contains { $0.namespace == namespace && $0.pass + $0.fail + $0.warn + $0.errors > 0 }
     }
 
-    public init(namespace: String = "", name: String, engine: PolicyEngineName = .kyverno, kind: String = "", action: PolicyAction = .unknown,
-                background: Bool = false, ready: Bool = true, readyReason: String = "", readyMessage: String = "", category: String = "",
-                severity: String = "", description: String = "", rules: PolicyRules = PolicyRules(), ruleNames: [String] = [],
-                pass: Int = 0, fail: Int = 0, warn: Int = 0, errors: Int = 0, skip: Int = 0, failing: [PolicyFailure] = [],
-                failingCapped: Bool = false, auditAt: Int64 = 0, managedBy: String = "", byNamespace: [PolicyNamespaceTotals] = []) {
+    public init(
+        namespace: String = "", name: String, engine: PolicyEngineName = .kyverno, kind: String = "",
+        action: PolicyAction = .unknown,
+        background: Bool = false, ready: Bool = true, readyReason: String = "", readyMessage: String = "",
+        category: String = "",
+        severity: String = "", description: String = "", rules: PolicyRules = PolicyRules(), ruleNames: [String] = [],
+        pass: Int = 0, fail: Int = 0, warn: Int = 0, errors: Int = 0, skip: Int = 0, failing: [PolicyFailure] = [],
+        failingCapped: Bool = false, auditAt: Int64 = 0, managedBy: String = "",
+        byNamespace: [PolicyNamespaceTotals] = []
+    ) {
         self.namespace = namespace
         self.name = name
         self.engine = engine
@@ -337,7 +355,8 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, engine, kind, action, background, ready, readyReason, readyMessage, category, severity, description
+        case namespace, name, engine, kind, action, background, ready, readyReason, readyMessage, category, severity,
+            description
         case rules, ruleNames, pass, fail, warn, skip, failing, failingCapped, auditAt, managedBy, byNamespace
         case errors = "error"
     }
@@ -422,7 +441,10 @@ public struct PolicyFailure: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(kind)/\(namespace)/\(name)/\(rule)" }
 
-    public init(kind: String = "", namespace: String = "", name: String = "", rule: String = "", message: String = "", severity: String = "", at: Int64 = 0) {
+    public init(
+        kind: String = "", namespace: String = "", name: String = "", rule: String = "", message: String = "",
+        severity: String = "", at: Int64 = 0
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.name = name

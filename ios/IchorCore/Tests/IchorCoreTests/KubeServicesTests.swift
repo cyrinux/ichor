@@ -3,15 +3,15 @@ import XCTest
 
 final class KubeServicesTests: XCTestCase {
     private let json = #"""
-    {"partialAccess":true,"lbController":"metallb","services":[
-     {"namespace":"shop","name":"web-public","type":"LoadBalancer","clusterIP":"10.96.0.11","ports":["443:30443/TCP"],
-      "addresses":[],"pending":true,"selector":true,"endpointsKnown":true,"endpoints":2,"readyEndpoints":2,"routes":[],"level":"critical"},
-     {"namespace":"shop","name":"web","type":"ClusterIP","clusterIP":"10.96.0.10","ports":["80/TCP"],"addresses":[],
-      "selector":true,"endpointsKnown":true,"endpoints":3,"readyEndpoints":2,
-      "routes":[{"kind":"Ingress","namespace":"shop","name":"web","url":"https://shop.example.org","service":"web"}],"level":"warning"},
-     {"namespace":"shop","name":"queue","type":"ClusterIP","clusterIP":"None","level":"newer-level"},
-     {"namespace":"shop","name":"legacy","type":"ExternalName","externalName":"db.example.net","endpointsKnown":true}]}
-    """#
+        {"partialAccess":true,"lbController":"metallb","services":[
+         {"namespace":"shop","name":"web-public","type":"LoadBalancer","clusterIP":"10.96.0.11","ports":["443:30443/TCP"],
+          "addresses":[],"pending":true,"selector":true,"endpointsKnown":true,"endpoints":2,"readyEndpoints":2,"routes":[],"level":"critical"},
+         {"namespace":"shop","name":"web","type":"ClusterIP","clusterIP":"10.96.0.10","ports":["80/TCP"],"addresses":[],
+          "selector":true,"endpointsKnown":true,"endpoints":3,"readyEndpoints":2,
+          "routes":[{"kind":"Ingress","namespace":"shop","name":"web","url":"https://shop.example.org","service":"web"}],"level":"warning"},
+         {"namespace":"shop","name":"queue","type":"ClusterIP","clusterIP":"None","level":"newer-level"},
+         {"namespace":"shop","name":"legacy","type":"ExternalName","externalName":"db.example.net","endpointsKnown":true}]}
+        """#
 
     private func services() throws -> KubeServices {
         try JSONDecoder().decode(KubeServices.self, from: Data(json.utf8))

@@ -23,17 +23,23 @@ struct DropGroupSheet: View {
                 Section("Source") { HubblePeerDetails(peer: group.source) }
                 Section("Destination") { HubblePeerDetails(peer: group.destination) }
                 if !group.deniedBy.isEmpty {
-                    policySection(group.deniedBy, title: Text("Denied by"),
-                                  footer: Text("Explicit deny rules: they win over any allow rule."))
+                    policySection(
+                        group.deniedBy, title: Text("Denied by"),
+                        footer: Text("Explicit deny rules: they win over any allow rule."))
                 }
                 if !group.isolating.isEmpty {
-                    policySection(group.isolating, title: Text("Isolated by"),
-                                  footer: Text("These policies put the pod in default-deny: only what they allow passes."))
+                    policySection(
+                        group.isolating, title: Text("Isolated by"),
+                        footer: Text("These policies put the pod in default-deny: only what they allow passes."))
                 }
                 if let hint = group.hint {
                     Section {
-                        Label { Text(verbatim: hint.text) } icon: { Image(systemName: "lightbulb").foregroundStyle(.yellow) }
-                            .font(.callout)
+                        Label {
+                            Text(verbatim: hint.text)
+                        } icon: {
+                            Image(systemName: "lightbulb").foregroundStyle(.yellow)
+                        }
+                        .font(.callout)
                     }
                 }
                 Section {
@@ -75,7 +81,8 @@ struct DropGroupSheet: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             if !group.nodes.isEmpty {
-                Text(verbatim: group.nodes.joined(separator: ", ")).font(.caption.monospaced()).foregroundStyle(.secondary)
+                Text(verbatim: group.nodes.joined(separator: ", ")).font(.caption.monospaced()).foregroundStyle(
+                    .secondary)
             }
         }
     }
@@ -83,12 +90,18 @@ struct DropGroupSheet: View {
     private func policySection(_ refs: [NetPolicyRef], title: Text, footer: Text) -> some View {
         Section {
             ForEach(refs, id: \.self) { ref in
-                Button { Task { await open(ref) } } label: {
+                Button {
+                    Task { await open(ref) }
+                } label: {
                     HStack(spacing: 6) {
                         NetPolicyKindBadge(kind: NetPolicyKind(wire: ref.kind))
                         Text(verbatim: ref.path).font(.callout.monospaced()).foregroundStyle(.primary).lineLimit(1)
                         Spacer()
-                        if loading == ref { ProgressView() } else { Image(systemName: "chevron.right").foregroundStyle(.tertiary) }
+                        if loading == ref {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+                        }
                     }
                 }
                 .disabled(loading != nil)
@@ -144,7 +157,8 @@ private struct HubblePeerDetails: View {
     private func row(_ title: LocalizedStringKey, _ value: String) -> some View {
         if !value.isEmpty {
             LabeledContent(title) {
-                Text(verbatim: value).font(.callout.monospaced()).textSelection(.enabled).multilineTextAlignment(.trailing)
+                Text(verbatim: value).font(.callout.monospaced()).textSelection(.enabled).multilineTextAlignment(
+                    .trailing)
             }
         }
     }

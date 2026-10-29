@@ -4,7 +4,8 @@ import IchorCore
 extension TopologySite {
     /// "🇫🇷  fr-par-1", or what kind of network it is when it has no label. Same as Android's siteTitle.
     var title: String {
-        let label = self.label.trimmingCharacters(in: .whitespaces).isEmpty
+        let label =
+            self.label.trimmingCharacters(in: .whitespaces).isEmpty
             ? (kind == "lan" ? String(localized: "Local network") : String(localized: "Own network"))
             : self.label
         return [countryFlag(country), label].filter { !$0.isEmpty }.joined(separator: "  ")

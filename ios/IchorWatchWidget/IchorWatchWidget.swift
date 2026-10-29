@@ -12,12 +12,16 @@ struct WatchEntry: TimelineEntry {
 
 struct WatchProvider: TimelineProvider {
     private func current(at date: Date) -> WatchEntry {
-        WatchEntry(date: date, cluster: WatchPayload.load(from: UserDefaults(suiteName: SharedSnapshot.suite))?.activeCluster)
+        WatchEntry(
+            date: date, cluster: WatchPayload.load(from: UserDefaults(suiteName: SharedSnapshot.suite))?.activeCluster)
     }
 
     func placeholder(in context: Context) -> WatchEntry {
-        WatchEntry(date: .now, cluster: WatchCluster(id: "0", name: "Lab", active: true, takenAt: .now,
-                                                     nodes: [WatchNode(name: "node", health: .ready)], etcdChecked: true))
+        WatchEntry(
+            date: .now,
+            cluster: WatchCluster(
+                id: "0", name: "Lab", active: true, takenAt: .now,
+                nodes: [WatchNode(name: "node", health: .ready)], etcdChecked: true))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WatchEntry) -> Void) {

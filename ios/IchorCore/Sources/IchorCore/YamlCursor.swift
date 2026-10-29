@@ -45,8 +45,10 @@ public struct KubeExplain: Decodable, Equatable, Sendable {
     public let required: Bool
     public let children: [KubeExplainChild]
 
-    public init(path: String = "", type: String = "", format: String = "", description: String = "",
-                enumValues: [String] = [], required: Bool = false, children: [KubeExplainChild] = []) {
+    public init(
+        path: String = "", type: String = "", format: String = "", description: String = "",
+        enumValues: [String] = [], required: Bool = false, children: [KubeExplainChild] = []
+    ) {
         self.path = path
         self.type = type
         self.format = format
@@ -86,7 +88,9 @@ public struct KubeExplainChild: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, type: String = "", description: String = "", required: Bool = false, enumValues: [String] = []) {
+    public init(
+        name: String, type: String = "", description: String = "", required: Bool = false, enumValues: [String] = []
+    ) {
         self.name = name
         self.type = type
         self.description = description
@@ -157,7 +161,8 @@ private func keyEnd(_ line: [Character], _ start: Int) -> Int? {
     if "{[|>&*!%@`".contains(first) { return nil }
     if first == "\"" || first == "'" {
         guard let close = line[(start + 1)...].firstIndex(of: first),
-              close + 1 < line.count, line[close + 1] == ":" else { return nil }
+            close + 1 < line.count, line[close + 1] == ":"
+        else { return nil }
         let colon = close + 1
         return colon + 1 == line.count || line[colon + 1] == " " ? colon : nil
     }
@@ -170,7 +175,8 @@ private func keyEnd(_ line: [Character], _ start: Int) -> Int? {
 
 /// The lines of `text` (CR dropped), the index of the one holding `utf16Offset` and the
 /// cursor's column in it.
-private func yamlLines(_ text: String, _ utf16Offset: Int) -> (lines: [Substring], index: Int, column: Int, offset: Int) {
+private func yamlLines(_ text: String, _ utf16Offset: Int) -> (lines: [Substring], index: Int, column: Int, offset: Int)
+{
     let offset = max(0, min(utf16Offset, text.utf16.count))
     // "\r\n" is one Character in Swift: split on it too, so lines match the "\n" units counted below.
     let lines = text.split(omittingEmptySubsequences: false) { $0 == "\n" || $0 == "\r\n" }.map { line -> Substring in
@@ -225,7 +231,9 @@ public func yamlCursorAt(_ text: String, utf16Offset: Int) -> YamlCursor {
 /// `text` with `name: ` added where "Add field" adds at `utf16Offset`: on the cursor's line
 /// when blank, else on a new line below it; as a list item ("- name: ") when `listItem`.
 /// Returns the text and the cursor (a UTF-16 offset) after the inserted colon.
-public func insertYamlField(_ text: String, utf16Offset: Int, name: String, listItem: Bool) -> (text: String, cursor: Int) {
+public func insertYamlField(_ text: String, utf16Offset: Int, name: String, listItem: Bool) -> (
+    text: String, cursor: Int
+) {
     let cursor = yamlCursorAt(text, utf16Offset: utf16Offset)
     let units = Array(text.utf16)
     let offset = max(0, min(utf16Offset, units.count))

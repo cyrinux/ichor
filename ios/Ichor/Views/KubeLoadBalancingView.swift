@@ -32,8 +32,11 @@ struct KubeLoadBalancingView: View {
             }
             ForEach(Array(lb.configErrors.enumerated()), id: \.offset) { _, e in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(verbatim: LoadBalancingText.configError(e.node.isEmpty ? e.component : "\(e.component) · \(e.node)"))
-                        .font(.headline).foregroundStyle(Color.statusBad)
+                    Text(
+                        verbatim: LoadBalancingText.configError(
+                            e.node.isEmpty ? e.component : "\(e.component) · \(e.node)")
+                    )
+                    .font(.headline).foregroundStyle(Color.statusBad)
                     if !e.message.isEmpty { Text(verbatim: e.message).font(.caption).foregroundStyle(.secondary) }
                 }
             }
@@ -64,7 +67,9 @@ struct KubeLoadBalancingView: View {
 
     private func serviceLink<Label: View>(_ svc: LBService, @ViewBuilder label: () -> Label) -> some View {
         NavigationLink {
-            KubeObjectView(resource: KubeAPIResource(resource: "services", kind: "Service"), namespace: svc.namespace, name: svc.name)
+            KubeObjectView(
+                resource: KubeAPIResource(resource: "services", kind: "Service"), namespace: svc.namespace,
+                name: svc.name)
         } label: {
             label()
         }
@@ -105,7 +110,8 @@ private struct WaitingRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: LoadBalancingText.waiting(service.id)).font(.headline).foregroundStyle(lbLevelColor(service.level))
+            Text(verbatim: LoadBalancingText.waiting(service.id)).font(.headline).foregroundStyle(
+                lbLevelColor(service.level))
             Text(verbatim: lbCauseText(service.cause)).font(.callout)
             let age = checkupAge(service.since, now: Int64(Date().timeIntervalSince1970 * 1000))
             if !age.isEmpty {
@@ -129,7 +135,9 @@ private struct PoolRow: View {
                     .font(.caption).foregroundStyle(lbLevelColor(pool.level))
             }
             ProgressView(value: pool.used)
-            Text(verbatim: pool.addresses.joined(separator: ", ")).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(2)
+            Text(verbatim: pool.addresses.joined(separator: ", ")).font(.caption.monospaced()).foregroundStyle(
+                .secondary
+            ).lineLimit(2)
             let notes = poolNotes
             if !notes.isEmpty {
                 Text(verbatim: notes.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
@@ -141,12 +149,15 @@ private struct PoolRow: View {
     private var poolNotes: [String] {
         var notes: [String] = []
         if pool.controller == LBController.metallb.rawValue {
-            notes.append(pool.advertisedBy.isEmpty
-                ? LoadBalancingText.poolNotAdvertised
-                : LoadBalancingText.poolAdvertisedBy(pool.advertisedBy.joined(separator: ", ")))
+            notes.append(
+                pool.advertisedBy.isEmpty
+                    ? LoadBalancingText.poolNotAdvertised
+                    : LoadBalancingText.poolAdvertisedBy(pool.advertisedBy.joined(separator: ", ")))
         }
         if !pool.autoAssign { notes.append(LoadBalancingText.poolManual) }
-        if !pool.namespaces.isEmpty { notes.append(LoadBalancingText.poolNamespaces(pool.namespaces.joined(separator: ", "))) }
+        if !pool.namespaces.isEmpty {
+            notes.append(LoadBalancingText.poolNamespaces(pool.namespaces.joined(separator: ", ")))
+        }
         return notes
     }
 }
@@ -161,11 +172,15 @@ private struct AdvertisementRow: View {
                 Spacer()
                 Text(verbatim: ad.kind == "bgp" ? "BGP" : "L2").font(.caption)
             }
-            Text(verbatim: ad.allPools ? LoadBalancingText.advAllPools : LoadBalancingText.advPools(ad.pools.joined(separator: ", ")))
-                .font(.caption).foregroundStyle(.secondary)
+            Text(
+                verbatim: ad.allPools
+                    ? LoadBalancingText.advAllPools : LoadBalancingText.advPools(ad.pools.joined(separator: ", "))
+            )
+            .font(.caption).foregroundStyle(.secondary)
             let via = ad.interfaces.isEmpty ? ad.peers : ad.interfaces
             if !via.isEmpty {
-                Text(verbatim: LoadBalancingText.advVia(via.joined(separator: ", "))).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: LoadBalancingText.advVia(via.joined(separator: ", "))).font(.caption).foregroundStyle(
+                    .secondary)
             }
         }
         .accessibilityElement(children: .combine)
@@ -182,16 +197,22 @@ private struct PeerRow: View {
                 Spacer()
                 Text(verbatim: peer.peerAddress.isEmpty ? peer.interface : peer.peerAddress).font(.caption.monospaced())
             }
-            Text(verbatim: LoadBalancingText.peerASN(peer.peerASN > 0 ? "\(peer.peerASN)" : peer.dynamicASN, "\(peer.myASN)"))
-                .font(.caption).foregroundStyle(.secondary)
+            Text(
+                verbatim: LoadBalancingText.peerASN(
+                    peer.peerASN > 0 ? "\(peer.peerASN)" : peer.dynamicASN, "\(peer.myASN)")
+            )
+            .font(.caption).foregroundStyle(.secondary)
             if !peer.sessionsKnown {
                 Text(verbatim: LoadBalancingText.peerSessionsUnknown).font(.caption).foregroundStyle(.secondary)
             } else if peer.sessions.isEmpty {
                 Text(verbatim: LoadBalancingText.peerNoSession).font(.caption).foregroundStyle(.secondary)
             } else {
                 ForEach(peer.sessions, id: \.node) { s in
-                    Text(verbatim: s.up ? LoadBalancingText.peerSessionUp(s.node) : LoadBalancingText.peerSessionDown(s.node))
-                        .font(.caption).foregroundStyle(s.up ? Color.primary : Color.statusBad)
+                    Text(
+                        verbatim: s.up
+                            ? LoadBalancingText.peerSessionUp(s.node) : LoadBalancingText.peerSessionDown(s.node)
+                    )
+                    .font(.caption).foregroundStyle(s.up ? Color.primary : Color.statusBad)
                 }
             }
         }
@@ -212,10 +233,12 @@ private struct KubeVipRows: View {
         }
         ForEach(vip.leases, id: \.self) { l in
             let age = checkupAge(l.renewed, now: Int64(Date().timeIntervalSince1970 * 1000))
-            Text(verbatim: age.isEmpty
-                ? LoadBalancingText.kubeVipLease(l.name, l.holder)
-                : LoadBalancingText.kubeVipLeaseRenewed(l.name, l.holder, age))
-                .font(.caption).foregroundStyle(.secondary)
+            Text(
+                verbatim: age.isEmpty
+                    ? LoadBalancingText.kubeVipLease(l.name, l.holder)
+                    : LoadBalancingText.kubeVipLeaseRenewed(l.name, l.holder, age)
+            )
+            .font(.caption).foregroundStyle(.secondary)
         }
     }
 }
@@ -234,9 +257,11 @@ private struct ServiceLine: View {
                     Text(verbatim: service.addresses.joined(separator: ", ")).font(.caption.monospaced())
                 }
             }
-            let notes = [service.pool.isEmpty ? "" : LoadBalancingText.servicePool(service.pool),
-                         service.announcedBy.isEmpty ? "" : LoadBalancingText.serviceAnnouncedBy(service.announcedBy)]
-                .filter { !$0.isEmpty }
+            let notes = [
+                service.pool.isEmpty ? "" : LoadBalancingText.servicePool(service.pool),
+                service.announcedBy.isEmpty ? "" : LoadBalancingText.serviceAnnouncedBy(service.announcedBy),
+            ]
+            .filter { !$0.isEmpty }
             if !notes.isEmpty {
                 Text(verbatim: notes.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
             }

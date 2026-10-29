@@ -17,7 +17,8 @@ final class KubeBrowserScope {
     func control(model: AppModel) -> KubeScopeControl {
         let cluster = Self.cluster(model)
         let scope = defaultScope(remembered: remembered(cluster), namespaces: namespaces)
-        return KubeScopeControl(scope: scope ?? KubeScope(), namespaces: namespaces, ready: scope != nil) { [weak self] picked in
+        return KubeScopeControl(scope: scope ?? KubeScope(), namespaces: namespaces, ready: scope != nil) {
+            [weak self] picked in
             guard let self else { return }
             if let cluster { KubeScopeStore.set(picked, for: cluster) } else { localScope = picked }
             edits += 1

@@ -47,10 +47,12 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
     /// This upgrade does not drain the node: offer to drain it first (a maintenance run).
     public let drainable: Bool
 
-    public init(node: String, hostname: String = "", controlPlane: Bool = false, currentVersion: String = "",
-                currentImage: String = "", schematic: String = "", etcd: Etcd? = nil,
-                blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [], forceable: Bool? = nil,
-                drainable: Bool = false) {
+    public init(
+        node: String, hostname: String = "", controlPlane: Bool = false, currentVersion: String = "",
+        currentImage: String = "", schematic: String = "", etcd: Etcd? = nil,
+        blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [], forceable: Bool? = nil,
+        drainable: Bool = false
+    ) {
         self.node = node
         self.hostname = hostname
         self.controlPlane = controlPlane
@@ -66,7 +68,8 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case node, hostname, controlPlane, currentVersion, currentImage, schematic, etcd, blockers, warnings, acknowledge, forceable
+        case node, hostname, controlPlane, currentVersion, currentImage, schematic, etcd, blockers, warnings,
+            acknowledge, forceable
         case drainable
     }
 
@@ -140,7 +143,9 @@ public func isTalosDowngrade(from current: String, to target: String) -> Bool {
 /// in Go's order (newest first).
 public func upgradeSuggestions(_ releases: [TalosRelease], current: String, includePrerelease: Bool) -> [TalosRelease] {
     let running = normalizedTalosVersion(current)
-    return releases.filter { ($0.prerelease ? includePrerelease : true) && normalizedTalosVersion($0.version) != running }
+    return releases.filter {
+        ($0.prerelease ? includePrerelease : true) && normalizedTalosVersion($0.version) != running
+    }
 }
 
 /// A blocker that `talosctl upgrade --force` skips (the etcd health and quorum checks).
@@ -168,8 +173,10 @@ public struct UpgradeGate: Equatable, Sendable {
     public let sameVersion: Bool
 
     /// `versionRisk` is UpgradeVersionCheck's answer for the target ("" for none).
-    public init(plan: UpgradePlan, targetVersion: String, versionRisk: String = "", force: Bool, busy: Bool,
-                acknowledged: Bool = false) {
+    public init(
+        plan: UpgradePlan, targetVersion: String, versionRisk: String = "", force: Bool, busy: Bool,
+        acknowledged: Bool = false
+    ) {
         let target = normalizedTalosVersion(targetVersion)
         forceAvailable = !plan.blockers.isEmpty && (plan.forceable ?? plan.blockers.allSatisfy(isEtcdBlocker))
         invalidVersion = target == nil
@@ -240,7 +247,9 @@ public struct UpgradeProgress: Decodable, Equatable, Sendable {
         message = try c.field(.message, "")
         if let ms = try? c.decodeIfPresent(Int64.self, forKey: .at) {
             at = ms
-        } else if let text = try? c.decodeIfPresent(String.self, forKey: .at), let date = ISO8601DateFormatter().date(from: text) {
+        } else if let text = try? c.decodeIfPresent(String.self, forKey: .at),
+            let date = ISO8601DateFormatter().date(from: text)
+        {
             at = date.epochMillis
         } else {
             at = 0
@@ -254,10 +263,13 @@ public typealias UpgradeStep = TimelineStep<UpgradePhase>
 /// Timeline of all phases from the events received so far. Phases only move forward: a late
 /// event of an earlier phase only updates its message. `failure` marks the furthest phase
 /// (or "requested" when nothing was reported) failed, with the failure as its message.
-public func upgradeTimeline(_ events: [UpgradeProgress], finished: Bool = false, failure: String? = nil) -> [UpgradeStep] {
+public func upgradeTimeline(_ events: [UpgradeProgress], finished: Bool = false, failure: String? = nil)
+    -> [UpgradeStep]
+{
     // An unknown phase name lends its message to the current step.
-    foldTimeline(events, phases: UpgradePhase.allCases, finished: finished, failure: failure, terminal: .done,
-                 strayMessagesToCurrent: true, phase: { UpgradePhase(go: $0.phase) }, at: \.at, message: \.message)
+    foldTimeline(
+        events, phases: UpgradePhase.allCases, finished: finished, failure: failure, terminal: .done,
+        strayMessagesToCurrent: true, phase: { UpgradePhase(go: $0.phase) }, at: \.at, message: \.message)
 }
 
 /// TalosUpdateCheck's answer: the latest stable Talos and how many nodes run an older one.
@@ -273,7 +285,9 @@ public struct TalosUpdateInfo: Decodable, Equatable, Sendable {
     /// Release notes URL.
     public let notes: String
 
-    public init(latest: String, latestDate: String = "", newer: Bool, outdated: Int = 0, oldest: String = "", notes: String = "") {
+    public init(
+        latest: String, latestDate: String = "", newer: Bool, outdated: Int = 0, oldest: String = "", notes: String = ""
+    ) {
         self.latest = latest
         self.latestDate = latestDate
         self.newer = newer

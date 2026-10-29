@@ -51,7 +51,9 @@ struct EndpointScanSheet: View {
     private func result(_ matches: [EndpointMatch], networks: [String]) -> some View {
         if matches.isEmpty {
             Section {
-                Text("No node of your clusters answered on these networks. If you know a node's address, add it as an endpoint.")
+                Text(
+                    "No node of your clusters answered on these networks. If you know a node's address, add it as an endpoint."
+                )
                 LocalNetworkNotice()
             } footer: {
                 NetworksSearched(networks: networks)
@@ -61,8 +63,11 @@ struct EndpointScanSheet: View {
             Section {
                 ForEach(matches, id: \.self) { match in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: [match.endpoint, match.hostname, match.role, match.version].filter { !$0.isEmpty }.joined(separator: " · "))
-                            .font(.callout.monospaced())
+                        Text(
+                            verbatim: [match.endpoint, match.hostname, match.role, match.version].filter { !$0.isEmpty }
+                                .joined(separator: " · ")
+                        )
+                        .font(.callout.monospaced())
                         Text("Added to \(match.contexts.map(label).joined(separator: ", "))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -71,7 +76,9 @@ struct EndpointScanSheet: View {
             } header: {
                 Text("Found \(matches.count) nodes, added as endpoints:")
             } footer: {
-                Text("Only nodes that accept the cluster's credentials are added. Once the cluster answers, the overview offers to add its other nodes.")
+                Text(
+                    "Only nodes that accept the cluster's credentials are added. Once the cluster answers, the overview offers to add its other nodes."
+                )
             }
         }
     }
@@ -109,10 +116,12 @@ struct LocalNetworkNotice: View {
 
     var body: some View {
         VStack(alignment: centered ? .center : .leading, spacing: 6) {
-            Text("If Ichor was not allowed to reach devices on your local network, nodes on your Wi-Fi cannot answer. Allow it in the Settings app (Ichor › Local Network).")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(centered ? .center : .leading)
+            Text(
+                "If Ichor was not allowed to reach devices on your local network, nodes on your Wi-Fi cannot answer. Allow it in the Settings app (Ichor › Local Network)."
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(centered ? .center : .leading)
             Button("Open Settings") { LocalNetwork.openSettings() }
                 .buttonStyle(.bordered)
                 .font(.footnote)

@@ -37,7 +37,9 @@ public struct DiscoveredNode: Decodable, Equatable, Hashable, Identifiable, Send
 
     public var id: String { address }
 
-    public init(address: String, addresses: [String] = [], hostname: String = "", role: String = "", known: Bool = false) {
+    public init(
+        address: String, addresses: [String] = [], hostname: String = "", role: String = "", known: Bool = false
+    ) {
         self.address = address
         self.addresses = addresses
         self.hostname = hostname

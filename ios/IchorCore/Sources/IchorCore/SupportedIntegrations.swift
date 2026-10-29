@@ -55,7 +55,9 @@ public struct SupportedIntegration: Decodable, Equatable, Sendable, Identifiable
     /// The catalog app the integration is, for its icon.
     public var app: InventoryApp { InventoryApp(id: id, name: name, icon: icon.nonEmpty) }
 
-    private enum CodingKeys: String, CodingKey { case id, name, icon, website, groups, detected, via, version, namespace }
+    private enum CodingKeys: String, CodingKey {
+        case id, name, icon, website, groups, detected, via, version, namespace
+    }
 }
 
 /// How an integration was found on the cluster.

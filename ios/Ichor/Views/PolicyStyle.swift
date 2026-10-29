@@ -5,18 +5,26 @@ import IchorCore
 /// the catalog holds (an Int would look up `%lld`).
 enum PolicyText {
     static func reportsRead(_ a: String) -> String { String(localized: "\(a) reports read") }
-    static func reportsTruncated(_ a: String) -> String { String(localized: "Reports truncated: the counts cover the first \(a) reports") }
+    static func reportsTruncated(_ a: String) -> String {
+        String(localized: "Reports truncated: the counts cover the first \(a) reports")
+    }
     static func reportsUnavailable(_ a: String) -> String { String(localized: "Reports unavailable: \(a)") }
     static func readError(_ a: String) -> String { String(localized: "Not everything could be read: \(a)") }
-    static func controllerReady(_ a: String, _ b: String, _ c: String) -> String { String(localized: "\(a): \(b) of \(c) ready") }
+    static func controllerReady(_ a: String, _ b: String, _ c: String) -> String {
+        String(localized: "\(a): \(b) of \(c) ready")
+    }
     static func failCount(_ a: String) -> String { String(localized: "\(a) failing") }
     static func warnCount(_ a: String) -> String { String(localized: "\(a) warnings") }
     static func passCount(_ a: String) -> String { String(localized: "\(a) passing") }
     static func ruleOf(_ a: String) -> String { String(localized: "Rule \(a)") }
     static func failingShown(_ a: String, _ b: String) -> String { String(localized: "The latest \(a) of \(b)") }
-    static func switchGitOps(_ a: String) -> String { String(localized: "\(a) applies this policy: its next sync puts the previous mode back.") }
+    static func switchGitOps(_ a: String) -> String {
+        String(localized: "\(a) applies this policy: its next sync puts the previous mode back.")
+    }
     static func switchFailed(_ a: String, _ b: String) -> String { String(localized: "Could not switch \(a): \(b)") }
-    static func failingCapped(_ a: String, _ b: String) -> String { String(localized: "Gatekeeper keeps the first \(a) of \(b) violations") }
+    static func failingCapped(_ a: String, _ b: String) -> String {
+        String(localized: "Gatekeeper keeps the first \(a) of \(b) violations")
+    }
 }
 
 extension PolicyAction {

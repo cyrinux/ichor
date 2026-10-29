@@ -105,7 +105,8 @@ struct CastAISplitBar: View {
                 ChipFlow(spacing: 14) {
                     ForEach(shown) { part in
                         HStack(spacing: 6) {
-                            RoundedRectangle(cornerRadius: 2).fill(part.color).frame(width: 8, height: 8).accessibilityHidden(true)
+                            RoundedRectangle(cornerRadius: 2).fill(part.color).frame(width: 8, height: 8)
+                                .accessibilityHidden(true)
                             Text(verbatim: part.label).font(.caption)
                         }
                     }
@@ -231,20 +232,23 @@ extension CastAIEventTone {
 extension CastAIPlan {
     /// "Timeout · while removing nodes", CAST AI's message when it gives no reason nor phase.
     var failureText: String {
-        let phase: String = switch failurePhase {
-        case "Deletion": String(localized: "while removing nodes")
-        case "Creation": String(localized: "while adding nodes")
-        default: failurePhase
-        }
+        let phase: String =
+            switch failurePhase {
+            case "Deletion": String(localized: "while removing nodes")
+            case "Creation": String(localized: "while adding nodes")
+            default: failurePhase
+            }
         let text = [failureReason, phase].filter { !$0.isEmpty }.joined(separator: " · ")
         return text.isEmpty ? message : text
     }
 
     /// "3 of 4 nodes removed · 1 of 1 added".
     var nodesText: String {
-        [removing.isEmpty ? nil : String(localized: "\(String(removed)) of \(String(removing.count)) nodes removed"),
-         adding.isEmpty ? nil : String(localized: "\(String(added)) of \(String(adding.count)) added")]
-            .compactMap { $0 }.joined(separator: " · ")
+        [
+            removing.isEmpty ? nil : String(localized: "\(String(removed)) of \(String(removing.count)) nodes removed"),
+            adding.isEmpty ? nil : String(localized: "\(String(added)) of \(String(adding.count)) added"),
+        ]
+        .compactMap { $0 }.joined(separator: " · ")
     }
 
     /// "−$53/mo" saved, "$141 planned", or "$98 missed" for a failed plan (the nodes it left).
@@ -253,10 +257,14 @@ extension CastAIPlan {
         case .done:
             let saved = savedMonthly ?? 0
             // A plan that ended up costing more is said so, not shown as a negative saving.
-            return saved < 0 ? String(localized: "+\(formatMoney(-saved, currency: currency))/mo")
+            return saved < 0
+                ? String(localized: "+\(formatMoney(-saved, currency: currency))/mo")
                 : String(localized: "−\(formatMoney(saved, currency: currency))/mo")
         case .failed:
-            return String(localized: "\(castAIApprox(formatMoney(missedMonthly, currency: currency), estimated: missedEstimated)) missed")
+            return String(
+                localized:
+                    "\(castAIApprox(formatMoney(missedMonthly, currency: currency), estimated: missedEstimated)) missed"
+            )
         default:
             return String(localized: "\(formatMoney(plannedMonthly, currency: currency)) planned")
         }
@@ -278,5 +286,6 @@ func castAITime(_ millis: Int64) -> String {
 
 /// "1m 35s": a duration in the user's language.
 func castAIDuration(_ seconds: Int64) -> String {
-    Duration.seconds(seconds).formatted(.units(allowed: [.days, .hours, .minutes, .seconds], width: .narrow, maximumUnitCount: 2))
+    Duration.seconds(seconds).formatted(
+        .units(allowed: [.days, .hours, .minutes, .seconds], width: .narrow, maximumUnitCount: 2))
 }

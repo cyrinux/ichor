@@ -3,12 +3,12 @@ import XCTest
 
 final class KubeStorageTests: XCTestCase {
     private let json = #"""
-    {"partialAccess":true,"claims":[
-     {"namespace":"db","name":"data-pg-1","phase":"Bound","storageClass":"longhorn","provisioner":"driver.longhorn.io",
-      "volume":"pv-pg","accessModes":["ReadWriteOnce"],"capacity":10737418240,"used":9663676416,"usedPercent":90,
-      "measured":true,"pods":["pg-1"],"terminating":false,"managedBy":"cloudnative-pg","level":"warning"},
-     {"namespace":"web","name":"uploads","phase":"Pending","level":"newer-level"}]}
-    """#
+        {"partialAccess":true,"claims":[
+         {"namespace":"db","name":"data-pg-1","phase":"Bound","storageClass":"longhorn","provisioner":"driver.longhorn.io",
+          "volume":"pv-pg","accessModes":["ReadWriteOnce"],"capacity":10737418240,"used":9663676416,"usedPercent":90,
+          "measured":true,"pods":["pg-1"],"terminating":false,"managedBy":"cloudnative-pg","level":"warning"},
+         {"namespace":"web","name":"uploads","phase":"Pending","level":"newer-level"}]}
+        """#
 
     private func storage() throws -> KubeStorage {
         try JSONDecoder().decode(KubeStorage.self, from: Data(json.utf8))
@@ -29,7 +29,8 @@ final class KubeStorageTests: XCTestCase {
     }
 
     func testAPluginsClaimOpensThePlugin() throws {
-        let json = #"{"namespace":"web","name":"uploads","phase":"Bound","managedBy":"rook","managedName":"Rook Ceph","level":"ok"}"#
+        let json =
+            #"{"namespace":"web","name":"uploads","phase":"Bound","managedBy":"rook","managedName":"Rook Ceph","level":"ok"}"#
         let claim = try JSONDecoder().decode(StorageClaim.self, from: Data(json.utf8))
         XCTAssertNil(claim.managedKind)
         XCTAssertEqual(claim.managedPlugin, "rook")

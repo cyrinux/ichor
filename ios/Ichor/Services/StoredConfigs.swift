@@ -19,7 +19,8 @@ struct StoredConfigs: Sendable {
 
     /// Both as stored (SecureConfigStore); nothing can be read before the first unlock.
     static func load() -> StoredConfigs {
-        var stored = StoredConfigs(talos: SecureConfigStore.loadText(.talosconfig), kube: SecureConfigStore.loadText(.kubeconfig))
+        var stored = StoredConfigs(
+            talos: SecureConfigStore.loadText(.talosconfig), kube: SecureConfigStore.loadText(.kubeconfig))
         stored.talosStored = stored.talos != nil || SecureConfigStore.isStored(.talosconfig)
         stored.kubeStored = stored.kube != nil || SecureConfigStore.isStored(.kubeconfig)
         return stored
@@ -36,7 +37,9 @@ struct StoredConfigs: Sendable {
     /// A store whose text is unchanged since its summary was cached (ConfigSummaryCache, same
     /// screenshot-mode masking) is not parsed again. `generation`: the masking they were made
     /// under (TalosClient.privacyGeneration, read before parsing), for ConfigSummaryCache.store.
-    func parsed() async -> (talos: ConfigSummary?, kube: ConfigSummary?, unreadable: [StoredConfigKind], generation: Int) {
+    func parsed() async -> (
+        talos: ConfigSummary?, kube: ConfigSummary?, unreadable: [StoredConfigKind], generation: Int
+    ) {
         let cache = ConfigSummaryCache.shared
         let record = cache.load()
         let generation = TalosClient.privacyGeneration()

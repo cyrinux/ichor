@@ -47,7 +47,9 @@ final class PodSweepJob {
             }
             stopSweep = nil
             background.end()
-            if let state { OperationNotice.post(.podSweep, title: Self.title(state), body: state.error ?? Self.result(state)) }
+            if let state {
+                OperationNotice.post(.podSweep, title: Self.title(state), body: state.error ?? Self.result(state))
+            }
         }
         return true
     }
@@ -66,7 +68,9 @@ extension PodSweepJob {
         let place = state.namespace.isEmpty ? String(localized: "every namespace") : state.namespace
         if state.running { return String(localized: "Cleaning up dead pods · \(place)") }
         if state.error != nil { return String(localized: "Dead pod cleanup failed · \(place)") }
-        return state.stopped ? String(localized: "Dead pod cleanup stopped · \(place)") : String(localized: "Dead pods cleaned up · \(place)")
+        return state.stopped
+            ? String(localized: "Dead pod cleanup stopped · \(place)")
+            : String(localized: "Dead pods cleaned up · \(place)")
     }
 
     /// "12 of 140 pods", or the stop on its way.
@@ -75,7 +79,8 @@ extension PodSweepJob {
     }
 
     static func progress(_ state: PodSweepState) -> String {
-        let done = String(state.done), total = String(state.total)
+        let done = String(state.done)
+        let total = String(state.total)
         return String(localized: "\(done) of \(total) pods")
     }
 

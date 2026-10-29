@@ -2,31 +2,41 @@ import XCTest
 @testable import IchorCore
 
 final class IncidentTimelineTests: XCTestCase {
-    private func entry(_ id: String, node: String = "10.0.0.2", kind: String = "service",
-                       detail: String = #"{"state":"Running","health":"healthy"}"#,
-                       severity: String = "info", at: Int64 = 0) -> IncidentEntry {
-        IncidentEntry(id: id, at: at, node: node, kind: kind, subject: "udevd", detail: detail,
-                      severity: severity, metrics: nil, metricsOmitted: nil)
+    private func entry(
+        _ id: String, node: String = "10.0.0.2", kind: String = "service",
+        detail: String = #"{"state":"Running","health":"healthy"}"#,
+        severity: String = "info", at: Int64 = 0
+    ) -> IncidentEntry {
+        IncidentEntry(
+            id: id, at: at, node: node, kind: kind, subject: "udevd", detail: detail,
+            severity: severity, metrics: nil, metricsOmitted: nil)
     }
 
     func testHealthCriticalForUnreachableAndErrors() {
-        XCTAssertEqual(entry("a", kind: "status", detail: #"{"ready":false,"reachable":false}"#).timelineHealth, .critical)
+        XCTAssertEqual(
+            entry("a", kind: "status", detail: #"{"ready":false,"reachable":false}"#).timelineHealth, .critical)
         XCTAssertEqual(entry("b", kind: "error", detail: "").timelineHealth, .critical)
         XCTAssertEqual(entry("c", severity: "error").timelineHealth, .critical)
     }
 
     func testHealthWarningForChangedCondition() {
-        XCTAssertEqual(entry("a", kind: "status", detail: #"{"ready":false,"reachable":true}"#).timelineHealth, .warning)
+        XCTAssertEqual(
+            entry("a", kind: "status", detail: #"{"ready":false,"reachable":true}"#).timelineHealth, .warning)
         XCTAssertEqual(entry("b", kind: "link", detail: #"{"before":"up","after":"down"}"#).timelineHealth, .warning)
         XCTAssertEqual(entry("c", kind: "event", detail: "", severity: "warning").timelineHealth, .warning)
         XCTAssertEqual(entry("d", detail: #"{"state":"Running","health":"unhealthy"}"#).timelineHealth, .warning)
         XCTAssertEqual(entry("e", detail: #"{"state":"absent"}"#).timelineHealth, .warning)
-        XCTAssertEqual(entry("f", kind: "status", detail: #"{"ready":true,"reachable":true,"conditions":[{"name":"x","reason":"y"}]}"#).timelineHealth, .warning)
+        XCTAssertEqual(
+            entry(
+                "f", kind: "status",
+                detail: #"{"ready":true,"reachable":true,"conditions":[{"name":"x","reason":"y"}]}"#
+            ).timelineHealth, .warning)
     }
 
     func testHealthOkOtherwise() {
         XCTAssertEqual(entry("a").timelineHealth, .ok)
-        XCTAssertEqual(entry("b", kind: "status", detail: #"{"ready":true,"reachable":true,"conditions":[]}"#).timelineHealth, .ok)
+        XCTAssertEqual(
+            entry("b", kind: "status", detail: #"{"ready":true,"reachable":true,"conditions":[]}"#).timelineHealth, .ok)
         XCTAssertEqual(entry("c", kind: "event", detail: "{…").timelineHealth, .ok)
     }
 
@@ -43,7 +53,9 @@ final class IncidentTimelineTests: XCTestCase {
 
     func testHealthyStatusRowsDoNotCollapse() {
         let ready = #"{"ready":true,"reachable":true}"#
-        let items = incidentTimeline([entry("1", kind: "status", detail: ready), entry("2", kind: "status", detail: ready)])
+        let items = incidentTimeline([
+            entry("1", kind: "status", detail: ready), entry("2", kind: "status", detail: ready),
+        ])
         XCTAssertEqual(items.map(\.id), ["1", "2"])
     }
 

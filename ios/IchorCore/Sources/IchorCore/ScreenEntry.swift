@@ -72,6 +72,7 @@ public struct ScreenMatches: Decodable, Equatable, Sendable {
 /// "overview" blob: the last known one, a refresh's or the demo's); none without one.
 public func searchOverviewNodes(_ entries: [SearchEntry], context: String) -> [NodeOverview] {
     guard let entry = entries.first(where: { $0.context == context && $0.key == "overview" }),
-          let overview = try? TalosJSON.decode(ClusterOverview.self, from: entry.json) else { return [] }
+        let overview = try? TalosJSON.decode(ClusterOverview.self, from: entry.json)
+    else { return [] }
     return overview.nodes
 }

@@ -12,9 +12,13 @@ struct PrivacySection: View {
 
     var body: some View {
         Section {
-            Toggle(isOn: Binding(get: { model.privacyMask }, set: { on in
-                Task { await model.setPrivacyMask(on) }
-            })) {
+            Toggle(
+                isOn: Binding(
+                    get: { model.privacyMask },
+                    set: { on in
+                        Task { await model.setPrivacyMask(on) }
+                    })
+            ) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Screenshot mode")
                     Text("Hide IP addresses, node names and app logos, e.g. for screenshots or screen sharing")
@@ -37,18 +41,22 @@ struct PrivacySection: View {
             Toggle(isOn: $remoteIcons) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Download missing app icons")
-                    Text("About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
             }
             // Off: what was kept is deleted (AppModel.setKeepLastKnown).
             Toggle(isOn: Binding(get: { model.keepLastKnown }, set: { model.setKeepLastKnown($0) })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Keep last known state")
-                    Text("Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can't be reached. Kept for 24 hours and never backed up.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can't be reached. Kept for 24 hours and never backed up."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
             }
         } header: {

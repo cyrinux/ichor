@@ -60,26 +60,44 @@ struct HistorySinceSection: View {
         var out: [HistorySinceRow] = []
         for node in summary.nodesDown {
             let health: NodeHealth = node.state == "unreachable" ? .unreachable : .notReady
-            let title = node.downAt > summary.from ? String(localized: "\(node.label) went down") : String(localized: "\(node.label) is still down")
-            out.append(HistorySinceRow(id: "down \(node.node)", title: title, icon: "xmark.circle.fill", tint: health.color, at: node.downAt))
+            let title =
+                node.downAt > summary.from
+                ? String(localized: "\(node.label) went down") : String(localized: "\(node.label) is still down")
+            out.append(
+                HistorySinceRow(
+                    id: "down \(node.node)", title: title, icon: "xmark.circle.fill", tint: health.color,
+                    at: node.downAt))
         }
         for alert in summary.alertsOpen {
-            let title = summary.isNew(alert) ? String(localized: "\(alert.label) fired") : String(localized: "\(alert.label) is still open")
+            let title =
+                summary.isNew(alert)
+                ? String(localized: "\(alert.label) fired") : String(localized: "\(alert.label) is still open")
             let tint: Color = alert.severity == dataCritical ? .statusBad : .statusWarn
-            out.append(HistorySinceRow(id: "open \(alert.track) \(alert.key)", title: title, icon: "exclamationmark.triangle.fill",
-                                       tint: tint, at: alert.openedAt))
+            out.append(
+                HistorySinceRow(
+                    id: "open \(alert.track) \(alert.key)", title: title, icon: "exclamationmark.triangle.fill",
+                    tint: tint, at: alert.openedAt))
         }
         for node in summary.nodesRecovered {
-            out.append(HistorySinceRow(id: "back \(node.node) \(node.downAt)", title: String(localized: "\(node.label) was down and is back"),
-                                       icon: "arrow.uturn.up.circle.fill", tint: .statusOK, at: node.upAt ?? node.downAt))
+            out.append(
+                HistorySinceRow(
+                    id: "back \(node.node) \(node.downAt)",
+                    title: String(localized: "\(node.label) was down and is back"),
+                    icon: "arrow.uturn.up.circle.fill", tint: .statusOK, at: node.upAt ?? node.downAt))
         }
         for alert in summary.alertsResolved {
-            out.append(HistorySinceRow(id: "resolved \(alert.track) \(alert.key) \(alert.openedAt)", title: String(localized: "\(alert.label) resolved"),
-                                       icon: "checkmark.circle.fill", tint: .statusOK, at: alert.closedAt ?? alert.openedAt))
+            out.append(
+                HistorySinceRow(
+                    id: "resolved \(alert.track) \(alert.key) \(alert.openedAt)",
+                    title: String(localized: "\(alert.label) resolved"),
+                    icon: "checkmark.circle.fill", tint: .statusOK, at: alert.closedAt ?? alert.openedAt))
         }
         for upgrade in summary.upgrades {
-            out.append(HistorySinceRow(id: "upgrade \(upgrade.node) \(upgrade.at)", title: String(localized: "\(upgrade.label) upgraded"),
-                                       detail: "\(upgrade.from) → \(upgrade.to)", icon: "arrow.up.circle.fill", tint: .blue, at: upgrade.at))
+            out.append(
+                HistorySinceRow(
+                    id: "upgrade \(upgrade.node) \(upgrade.at)", title: String(localized: "\(upgrade.label) upgraded"),
+                    detail: "\(upgrade.from) → \(upgrade.to)", icon: "arrow.up.circle.fill", tint: .blue, at: upgrade.at
+                ))
         }
         return out
     }
@@ -162,8 +180,9 @@ private struct HistoryStrip: View {
     var body: some View {
         Canvas { context, size in
             for segment in segments {
-                let rect = CGRect(x: size.width * segment.start, y: 0,
-                                  width: max(1, size.width * (segment.end - segment.start)), height: size.height)
+                let rect = CGRect(
+                    x: size.width * segment.start, y: 0,
+                    width: max(1, size.width * (segment.end - segment.start)), height: size.height)
                 context.fill(Path(rect), with: .color(color(segment.state)))
             }
         }
@@ -202,7 +221,8 @@ struct HistorySparkline: View {
                 let p = CGPoint(x: x(point.at), y: y(point.value))
                 if i == 0 { line.move(to: p) } else { line.addLine(to: p) }
             }
-            context.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: stroke, lineCap: .round, lineJoin: .round))
+            context.stroke(
+                line, with: .color(color), style: StrokeStyle(lineWidth: stroke, lineCap: .round, lineJoin: .round))
         }
         .frame(height: 20)
         .accessibilityElement()

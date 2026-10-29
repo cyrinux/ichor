@@ -110,7 +110,8 @@ private struct PlainTextEditor: UIViewRepresentable {
             context.coordinator.replacing = true
             view.text = text
             if let cursor {
-                view.selectedRange = NSRange(location: min(max(cursor.wrappedValue, 0), view.text.utf16.count), length: 0)
+                view.selectedRange = NSRange(
+                    location: min(max(cursor.wrappedValue, 0), view.text.utf16.count), length: 0)
             }
             context.coordinator.replacing = false
         }

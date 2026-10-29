@@ -4,14 +4,14 @@ import XCTest
 final class BackupTests: XCTestCase {
     func testDecodesAnAndroidPayload() throws {
         let json = """
-        {"format":1,"platform":"android","createdAt":1790000000,"talosconfig":"context: lab\\n",
-         "activeContextIndex":1,
-         "settings":{"themeMode":"black","language":"fr","liveClusterStats":true,"privacyMask":false,
-                     "privacyMaskWords":"","monitorAlerts":true,"monitorIntervalMinutes":30,
-                     "remoteAppIcons":true},
-         "clusters":{"aaaa":{"name":"Home","color":11141120,"vpnOnly":true,"kubeServer":"https://k8s.lan:6443",
-                             "wakeOnLan":{"10.0.0.2":{"mac":"aa:bb:cc:dd:ee:ff","broadcast":"","port":9}}}}}
-        """
+            {"format":1,"platform":"android","createdAt":1790000000,"talosconfig":"context: lab\\n",
+             "activeContextIndex":1,
+             "settings":{"themeMode":"black","language":"fr","liveClusterStats":true,"privacyMask":false,
+                         "privacyMaskWords":"","monitorAlerts":true,"monitorIntervalMinutes":30,
+                         "remoteAppIcons":true},
+             "clusters":{"aaaa":{"name":"Home","color":11141120,"vpnOnly":true,"kubeServer":"https://k8s.lan:6443",
+                                 "wakeOnLan":{"10.0.0.2":{"mac":"aa:bb:cc:dd:ee:ff","broadcast":"","port":9}}}}}
+            """
         let payload = try JSONDecoder().decode(BackupPayload.self, from: Data(json.utf8))
 
         XCTAssertEqual(payload.talosconfig, "context: lab\n")
@@ -19,11 +19,13 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(payload.settings?.themeMode, "black")
         XCTAssertEqual(payload.settings?.monitorAlerts, true)
         XCTAssertEqual(payload.settings?.remoteAppIcons, true)
-        XCTAssertEqual(payload.clusters?["aaaa"], BackupCluster(
-            name: "Home", color: 0xAA0000, vpnOnly: true,
-            wakeOnLan: ["10.0.0.2": BackupWolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "", port: 9)],
-            kubeServer: "https://k8s.lan:6443"
-        ))
+        XCTAssertEqual(
+            payload.clusters?["aaaa"],
+            BackupCluster(
+                name: "Home", color: 0xAA0000, vpnOnly: true,
+                wakeOnLan: ["10.0.0.2": BackupWolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "", port: 9)],
+                kubeServer: "https://k8s.lan:6443"
+            ))
     }
 
     func testWritesFormatThree() {
@@ -81,10 +83,12 @@ final class BackupTests: XCTestCase {
             colors: ["aaaa": 0xFF00FF, "bbbb": 0x123456],
             kubeServers: ["bbbb": "https://k8s.lan:6443", "gone": "https://old.lan"]
         )
-        XCTAssertEqual(clusters, [
-            "aaaa": BackupCluster(name: "Home", color: 0xFF00FF),
-            "bbbb": BackupCluster(color: 0x123456, kubeServer: "https://k8s.lan:6443"),
-        ])
+        XCTAssertEqual(
+            clusters,
+            [
+                "aaaa": BackupCluster(name: "Home", color: 0xFF00FF),
+                "bbbb": BackupCluster(color: 0x123456, kubeServer: "https://k8s.lan:6443"),
+            ])
     }
 
     func testRestoredClustersValidates() {
@@ -96,8 +100,11 @@ final class BackupTests: XCTestCase {
             ],
             fingerprints: ["aaaa", "bbbb"]
         )
-        XCTAssertEqual(restored, RestoredClusters(names: ["aaaa": "Home"], colors: ["aaaa": 0xAA0000],
-                                                   kubeServers: ["bbbb": "https://k8s.lan"]))
+        XCTAssertEqual(
+            restored,
+            RestoredClusters(
+                names: ["aaaa": "Home"], colors: ["aaaa": 0xAA0000],
+                kubeServers: ["bbbb": "https://k8s.lan"]))
     }
 
     func testBackupClustersCarryVpnOnlyAndWakeOnLan() {
@@ -105,19 +112,25 @@ final class BackupTests: XCTestCase {
             fingerprints: ["aaaa", "bbbb"], names: [:], colors: [:], kubeServers: [:],
             vpnOnly: ["bbbb", "gone"],
             wakeOnLan: [
-                wolKey(fingerprint: "aaaa", node: "10.0.0.5"): WolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "10.0.0.255", port: 7),
+                wolKey(fingerprint: "aaaa", node: "10.0.0.5"): WolTarget(
+                    mac: "aa:bb:cc:dd:ee:ff", broadcast: "10.0.0.255", port: 7),
                 wolKey(fingerprint: "gone", node: "10.0.0.6"): WolTarget(mac: "aa:bb:cc:dd:ee:00"),
             ]
         )
-        XCTAssertEqual(clusters, [
-            "aaaa": BackupCluster(wakeOnLan: ["10.0.0.5": BackupWolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "10.0.0.255", port: 7)]),
-            "bbbb": BackupCluster(vpnOnly: true),
-        ])
+        XCTAssertEqual(
+            clusters,
+            [
+                "aaaa": BackupCluster(wakeOnLan: [
+                    "10.0.0.5": BackupWolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "10.0.0.255", port: 7)
+                ]),
+                "bbbb": BackupCluster(vpnOnly: true),
+            ])
     }
 
     func testRecordActionsTravelsPerCluster() throws {
-        let clusters = backupClusters(fingerprints: ["aaaa", "bbbb"], names: [:], colors: [:], kubeServers: [:],
-                                      auditEvents: ["aaaa", "gone"])
+        let clusters = backupClusters(
+            fingerprints: ["aaaa", "bbbb"], names: [:], colors: [:], kubeServers: [:],
+            auditEvents: ["aaaa", "gone"])
         XCTAssertEqual(clusters, ["aaaa": BackupCluster(auditEvents: true), "bbbb": BackupCluster()])
         let decoded = try JSONDecoder().decode([String: BackupCluster].self, from: JSONEncoder().encode(clusters))
         XCTAssertEqual(restoredClusters(decoded, fingerprints: ["aaaa", "bbbb"]).auditEvents, ["aaaa"])
@@ -125,7 +138,8 @@ final class BackupTests: XCTestCase {
     }
 
     func testAnOlderBackupRestoresWithoutRecordingActions() throws {
-        let decoded = try JSONDecoder().decode([String: BackupCluster].self, from: Data(#"{"aaaa":{"name":"Home","vpnOnly":true}}"#.utf8))
+        let decoded = try JSONDecoder().decode(
+            [String: BackupCluster].self, from: Data(#"{"aaaa":{"name":"Home","vpnOnly":true}}"#.utf8))
         let restored = restoredClusters(decoded, fingerprints: ["aaaa"])
         XCTAssertEqual(restored.vpnOnly, ["aaaa"])
         XCTAssertEqual(restored.auditEvents, [])
@@ -134,19 +148,22 @@ final class BackupTests: XCTestCase {
     func testRestoredClustersCheckVpnOnlyAndWakeOnLan() {
         let restored = restoredClusters(
             [
-                "aaaa": BackupCluster(vpnOnly: false, wakeOnLan: [
-                    " 10.0.0.5 ": BackupWolTarget(mac: "AA-BB-CC-DD-EE-FF"),
-                    "10.0.0.6": BackupWolTarget(mac: "nope"),
-                    "10.0.0.7": BackupWolTarget(mac: "aabbccddeeff", broadcast: "a|b"),
-                    "10.0.0.8": BackupWolTarget(mac: "aabbccddeeff", port: 0),
-                ]),
+                "aaaa": BackupCluster(
+                    vpnOnly: false,
+                    wakeOnLan: [
+                        " 10.0.0.5 ": BackupWolTarget(mac: "AA-BB-CC-DD-EE-FF"),
+                        "10.0.0.6": BackupWolTarget(mac: "nope"),
+                        "10.0.0.7": BackupWolTarget(mac: "aabbccddeeff", broadcast: "a|b"),
+                        "10.0.0.8": BackupWolTarget(mac: "aabbccddeeff", port: 0),
+                    ]),
                 "bbbb": BackupCluster(vpnOnly: true),
                 "gone": BackupCluster(vpnOnly: true),
             ],
             fingerprints: ["aaaa", "bbbb"]
         )
         XCTAssertEqual(restored.vpnOnly, ["bbbb"])
-        XCTAssertEqual(restored.wakeOnLan, [wolKey(fingerprint: "aaaa", node: "10.0.0.5"): WolTarget(mac: "aa:bb:cc:dd:ee:ff")])
+        XCTAssertEqual(
+            restored.wakeOnLan, [wolKey(fingerprint: "aaaa", node: "10.0.0.5"): WolTarget(mac: "aa:bb:cc:dd:ee:ff")])
     }
 
     func testPassphraseRules() {
@@ -154,18 +171,20 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(backupPassphraseProblem("correct horse", again: "correct horsE"), .mismatch)
         XCTAssertNil(backupPassphraseProblem("correct horse", again: "correct horse"))
         // Characters, not bytes, like the Go core.
-        XCTAssertNil(backupPassphraseProblem(String(repeating: "é", count: 12), again: String(repeating: "é", count: 12)))
+        XCTAssertNil(
+            backupPassphraseProblem(String(repeating: "é", count: 12), again: String(repeating: "é", count: 12)))
     }
 
     func testFileName() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
-        let date = Date(timeIntervalSince1970: 1_790_899_200) // 2026-10-02
+        let date = Date(timeIntervalSince1970: 1_790_899_200)  // 2026-10-02
         XCTAssertEqual(backupFileName(date: date, calendar: calendar), "ichor-2026-10-02.ichorbackup")
     }
 
     func testCoreErrorCodes() {
-        XCTAssertEqual(BackupError(coreMessage: "backup-wrong-passphrase: wrong passphrase or damaged file"), .wrongPassphrase)
+        XCTAssertEqual(
+            BackupError(coreMessage: "backup-wrong-passphrase: wrong passphrase or damaged file"), .wrongPassphrase)
         XCTAssertEqual(BackupError(coreMessage: "backup-unsupported: payload format 2, update the app"), .unsupported)
         XCTAssertEqual(BackupError(coreMessage: "backup-invalid-content: no cluster"), .invalidContent)
         XCTAssertNil(BackupError(coreMessage: "dial tcp: timeout"))

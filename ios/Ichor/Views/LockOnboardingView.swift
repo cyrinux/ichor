@@ -16,7 +16,10 @@ struct LockOnboardingView: View {
     private static let features: [(icon: String, title: LocalizedStringKey, detail: LocalizedStringKey)] = [
         ("faceid", "Face ID, Touch ID or passcode", "Asked when Ichor opens and after 30 seconds in the background."),
         ("power", "A check before risky actions", "Reboot, shutdown, upgrades and config exports ask for it first."),
-        ("eye.slash", "Private by default", "The app switcher shows a blank cover, and alerts hide cluster details on the lock screen."),
+        (
+            "eye.slash", "Private by default",
+            "The app switcher shows a blank cover, and alerts hide cluster details on the lock screen."
+        ),
     ]
 
     var body: some View {
@@ -28,8 +31,10 @@ struct LockOnboardingView: View {
                         .font(.title2.bold())
                         .contentTransition(.opacity)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Your talosconfig or kubeconfig holds credentials with direct access to your clusters. Ichor keeps them behind the app lock.")
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Your talosconfig or kubeconfig holds credentials with direct access to your clusters. Ichor keeps them behind the app lock."
+                    )
+                    .foregroundStyle(.secondary)
                 }
                 .multilineTextAlignment(.center)
                 VStack(alignment: .leading, spacing: 14) {
@@ -69,7 +74,9 @@ struct LockOnboardingView: View {
     private var actions: some View {
         VStack(spacing: 12) {
             if available {
-                Button { Task { await enable() } } label: {
+                Button {
+                    Task { await enable() }
+                } label: {
                     Label("Enable app lock", systemImage: "faceid").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -123,9 +130,12 @@ private struct ShieldHero: View {
                     .frame(width: 96, height: 96)
                     .scaleEffect(pulsing ? 1.65 : 1)
                     .opacity(pulsing ? 0 : 0.35)
-                    .animation(.easeOut(duration: 2.4).repeatForever(autoreverses: false).delay(Double(ring) * 1.2), value: pulsing)
+                    .animation(
+                        .easeOut(duration: 2.4).repeatForever(autoreverses: false).delay(Double(ring) * 1.2),
+                        value: pulsing)
             }
-            Circle().fill(.tint.opacity(0.2)).background(Circle().fill(Color(.systemBackground))).frame(width: 96, height: 96)
+            Circle().fill(.tint.opacity(0.2)).background(Circle().fill(Color(.systemBackground))).frame(
+                width: 96, height: 96)
             Image(systemName: done ? "checkmark.shield.fill" : "lock.shield")
                 .font(.system(size: 44))
                 .foregroundStyle(.tint)

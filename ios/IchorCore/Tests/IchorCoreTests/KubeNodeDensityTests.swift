@@ -3,7 +3,8 @@ import XCTest
 
 final class KubeNodeDensityTests: XCTestCase {
     private func node(_ i: Int, ready: Bool = true, cordoned: Bool = false, pressure: [String] = []) -> KubeNodeInfo {
-        KubeNodeInfo(name: "ip-10-0-0-\(i)", ready: ready, cordoned: cordoned, internalIP: "10.0.0.\(i)", pressure: pressure)
+        KubeNodeInfo(
+            name: "ip-10-0-0-\(i)", ready: ready, cordoned: cordoned, internalIP: "10.0.0.\(i)", pressure: pressure)
     }
 
     private func cluster(_ size: Int) -> [KubeNodeInfo] { (1...size).map { node($0) } }
@@ -27,7 +28,9 @@ final class KubeNodeDensityTests: XCTestCase {
     }
 
     func testGroupsByStatusWorstFirstKeepingTheOrderWithin() {
-        let nodes = [node(1), node(2, cordoned: true), node(3, ready: false), node(4), node(5, pressure: ["MemoryPressure"])]
+        let nodes = [
+            node(1), node(2, cordoned: true), node(3, ready: false), node(4), node(5, pressure: ["MemoryPressure"]),
+        ]
         let groups = nodes.byStatus
         XCTAssertEqual(groups.map(\.status), [.notReady, .attention, .ready])
         XCTAssertEqual(groups[0].nodes.map(\.name), ["ip-10-0-0-3"])
@@ -45,7 +48,8 @@ final class KubeNodeDensityTests: XCTestCase {
         }
         let problems = nodes.problemNodes()
         // The two not-ready ones first, then the cordoned, cut at five.
-        XCTAssertEqual(problems.shown.map(\.name), ["ip-10-0-0-7", "ip-10-0-0-8", "ip-10-0-0-1", "ip-10-0-0-2", "ip-10-0-0-3"])
+        XCTAssertEqual(
+            problems.shown.map(\.name), ["ip-10-0-0-7", "ip-10-0-0-8", "ip-10-0-0-1", "ip-10-0-0-2", "ip-10-0-0-3"])
         XCTAssertEqual(problems.more, 3)
         XCTAssertEqual(cluster(3).problemNodes(), KubeProblemNodes(shown: [], more: 0))
     }
@@ -53,7 +57,8 @@ final class KubeNodeDensityTests: XCTestCase {
     func testFiltersByStatusAndQuery() {
         let nodes = [node(1), node(2, cordoned: true), node(3, ready: false), node(14)]
         XCTAssertEqual(nodes.filtered(query: "", filter: .attention).map(\.name), ["ip-10-0-0-2", "ip-10-0-0-3"])
-        XCTAssertEqual(nodes.filtered(query: "", filter: .ready).map(\.name), ["ip-10-0-0-1", "ip-10-0-0-2", "ip-10-0-0-14"])
+        XCTAssertEqual(
+            nodes.filtered(query: "", filter: .ready).map(\.name), ["ip-10-0-0-1", "ip-10-0-0-2", "ip-10-0-0-14"])
         XCTAssertEqual(nodes.filtered(query: "", filter: .notReady).map(\.name), ["ip-10-0-0-3"])
         // Nothing is unreachable to Kubernetes: the filter is not offered, and matches nothing.
         XCTAssertEqual(nodes.filtered(query: "", filter: .unreachable), [])

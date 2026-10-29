@@ -37,7 +37,9 @@ struct NetToolsView: View {
         .toolbar {
             if let result {
                 ToolbarItem(placement: .primaryAction) {
-                    ShareLink(item: netToolShareText(result, hostname: hostname)) { Label("Share result", systemImage: "square.and.arrow.up") }
+                    ShareLink(item: netToolShareText(result, hostname: hostname)) {
+                        Label("Share result", systemImage: "square.and.arrow.up")
+                    }
                 }
             }
         }
@@ -47,7 +49,8 @@ struct NetToolsView: View {
 
     @ViewBuilder private var form: some View {
         Section {
-            Text("Checks run from this node: what it resolves, reaches and sees on the way.").font(.footnote).foregroundStyle(.secondary)
+            Text("Checks run from this node: what it resolves, reaches and sees on the way.").font(.footnote)
+                .foregroundStyle(.secondary)
             Picker("Tool", selection: $tool) {
                 ForEach(NetTool.allCases) { Text(label($0)).tag($0) }
             }
@@ -65,8 +68,12 @@ struct NetToolsView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         ForEach(recent, id: \.self) { r in
-                            Button { target = r } label: { Text(verbatim: r).font(.caption.monospaced()) }
-                                .buttonStyle(.bordered)
+                            Button {
+                                target = r
+                            } label: {
+                                Text(verbatim: r).font(.caption.monospaced())
+                            }
+                            .buttonStyle(.bordered)
                         }
                     }
                 }
@@ -97,7 +104,9 @@ struct NetToolsView: View {
             Button(action: start) { Text("Run").fontWeight(.semibold).frame(maxWidth: .infinity) }
                 .disabled(problem != nil)
         } footer: {
-            Text("Runs in a privileged netshoot container, like the debug shell (os:admin). The first run pulls the image.")
+            Text(
+                "Runs in a privileged netshoot container, like the debug shell (os:admin). The first run pulls the image."
+            )
         }
     }
 
@@ -108,7 +117,8 @@ struct NetToolsView: View {
                 ProgressView().frame(maxWidth: .infinity)
             }
             if let failure {
-                Text(verbatim: failure.isEmpty ? String(localized: "The check ended without a result.") : failure).foregroundStyle(.statusBad)
+                Text(verbatim: failure.isEmpty ? String(localized: "The check ended without a result.") : failure)
+                    .foregroundStyle(.statusBad)
             }
         }
         if let result {
@@ -116,7 +126,9 @@ struct NetToolsView: View {
             if !result.raw.isEmpty {
                 Section {
                     DisclosureGroup("Raw output") {
-                        ScrollView(.horizontal) { Text(verbatim: result.raw).font(.caption.monospaced()).textSelection(.enabled) }
+                        ScrollView(.horizontal) {
+                            Text(verbatim: result.raw).font(.caption.monospaced()).textSelection(.enabled)
+                        }
                     }
                 }
             }
@@ -149,9 +161,10 @@ struct NetToolsView: View {
         lines = []
         result = nil
         failure = nil
-        let events = client.netTool(node: node, tool: tool, target: target,
-                                    record: tool == .dns ? record : "", server: tool == .dns ? server : "",
-                                    count: tool == .ping ? count : 0)
+        let events = client.netTool(
+            node: node, tool: tool, target: target,
+            record: tool == .dns ? record : "", server: tool == .dns ? server : "",
+            count: tool == .ping ? count : 0)
         task = Task {
             for await event in events {
                 switch event {

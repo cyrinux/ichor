@@ -5,22 +5,33 @@ final class KubeHomeBarTests: XCTestCase {
     func testDefaultKeepsFourIconsWithGitOps() {
         let bar = KubeHomeBar()
         XCTAssertEqual(bar.icons, [.workloads, .resources, .gitOps, .metrics])
-        XCTAssertEqual(bar.menu, [.alerts, .helm, .dataServices, .checkup, .capacity, .apiHealth, .networkPolicies, .search, .settings])
+        XCTAssertEqual(
+            bar.menu,
+            [.alerts, .helm, .dataServices, .checkup, .capacity, .apiHealth, .networkPolicies, .search, .settings])
         XCTAssertTrue(bar.isDefault)
         XCTAssertEqual(KubeHomeBar.storageKey, "kubeHome.bar")
     }
 
     func testEncodeMatchesAndroid() {
         let bar = KubeHomeBar().toBar(.dataServices).toMenu(.resources)
-        XCTAssertEqual(bar.encoded, "WORKLOADS,GITOPS,METRICS,DATA_SERVICES|RESOURCES,ALERTS,HELM,CHECKUP,CAPACITY,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS")
+        XCTAssertEqual(
+            bar.encoded,
+            "WORKLOADS,GITOPS,METRICS,DATA_SERVICES|RESOURCES,ALERTS,HELM,CHECKUP,CAPACITY,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS"
+        )
         XCTAssertEqual(KubeHomeBar.parse(bar.encoded), bar)
         XCTAssertFalse(bar.isDefault)
     }
 
     func testABarSavedBeforeGitOpsKeepsItsArrangement() {
-        let bar = KubeHomeBar.parse("WORKLOADS,RESOURCES,METRICS|HELM,DATA_SERVICES,CHECKUP,API_HEALTH,NETWORK_POLICIES,SETTINGS")
+        let bar = KubeHomeBar.parse(
+            "WORKLOADS,RESOURCES,METRICS|HELM,DATA_SERVICES,CHECKUP,API_HEALTH,NETWORK_POLICIES,SETTINGS")
         XCTAssertEqual(bar.icons, [.workloads, .resources, .metrics])
-        XCTAssertEqual(bar.menu, [.helm, .dataServices, .checkup, .apiHealth, .networkPolicies, .settings, .gitOps, .alerts, .capacity, .search])
+        XCTAssertEqual(
+            bar.menu,
+            [
+                .helm, .dataServices, .checkup, .apiHealth, .networkPolicies, .settings, .gitOps, .alerts, .capacity,
+                .search,
+            ])
         XCTAssertFalse(bar.isDefault)
     }
 

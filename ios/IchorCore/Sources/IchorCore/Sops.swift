@@ -38,7 +38,9 @@ public struct SopsInfo: Decodable, Sendable {
     public let encryptedKeys: Int
     public let clearKeys: [String]
 
-    private enum CodingKeys: String, CodingKey { case encrypted, format, recipients, lastModified, encryptedKeys, clearKeys }
+    private enum CodingKeys: String, CodingKey {
+        case encrypted, format, recipients, lastModified, encryptedKeys, clearKeys
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

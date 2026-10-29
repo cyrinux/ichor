@@ -69,8 +69,12 @@ struct AlertsView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 ShareLinkButton(target: .screen(.alerts))
-                Button { sourceOpen = true } label: { Image(systemName: "slider.horizontal.3") }
-                    .accessibilityLabel(Text("Alertmanager source"))
+                Button {
+                    sourceOpen = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel(Text("Alertmanager source"))
             }
         }
         .task(id: model.alertsKey) { await resolve() }
@@ -81,36 +85,44 @@ struct AlertsView: View {
                 try? await Task.sleep(for: .seconds(60))
             }
         }
-        .sheet(item: $selected, onDismiss: {
-            if let pendingRoute { path.append(pendingRoute) }
-            pendingRoute = nil
-            silenceComment = nil
-        }) { alert in
-            AlertDetailSheet(alert: alert, node: alertNode(alert.labels, in: nodes),
-                             canOpenKube: model.allows(.workloads), silence: silence,
-                             open: { route in
-                                 pendingRoute = route
-                                 selected = nil
-                             },
-                             silenced: {
-                                 selected = nil
-                                 succeeded += 1
-                                 announce(String(localized: "Silenced"))
-                                 Task { await reload() }
-                             },
-                             silenceComment: silenceComment)
+        .sheet(
+            item: $selected,
+            onDismiss: {
+                if let pendingRoute { path.append(pendingRoute) }
+                pendingRoute = nil
+                silenceComment = nil
+            }
+        ) { alert in
+            AlertDetailSheet(
+                alert: alert, node: alertNode(alert.labels, in: nodes),
+                canOpenKube: model.allows(.workloads), silence: silence,
+                open: { route in
+                    pendingRoute = route
+                    selected = nil
+                },
+                silenced: {
+                    selected = nil
+                    succeeded += 1
+                    announce(String(localized: "Silenced"))
+                    Task { await reload() }
+                },
+                silenceComment: silenceComment)
         }
         .sheet(isPresented: $sourceOpen) {
-            SourceSheet(kind: .alertmanager, current: source, discovered: discovered, discovering: discovering,
-                        discoveryError: discoveryError, discover: { await discover(autoSelect: false) }, test: test, save: setSource)
+            SourceSheet(
+                kind: .alertmanager, current: source, discovered: discovered, discovering: discovering,
+                discoveryError: discoveryError, discover: { await discover(autoSelect: false) }, test: test,
+                save: setSource)
         }
-        .confirmationDialog(String(localized: "Expire this silence?"), isPresented: $expiring.isPresent(),
-                            titleVisibility: .visible, presenting: expiring) { silence in
+        .confirmationDialog(
+            String(localized: "Expire this silence?"), isPresented: $expiring.isPresent(),
+            titleVisibility: .visible, presenting: expiring
+        ) { silence in
             Button("Expire", role: .destructive) { Task { await expire(silence) } }
             Button("Cancel", role: .cancel) {}
         } message: { silence in
-            Text(verbatim: silence.matchers.map(\.text).joined(separator: ", ")) + Text(verbatim: "\n\n") +
-                Text("The alerts it mutes notify again.")
+            Text(verbatim: silence.matchers.map(\.text).joined(separator: ", ")) + Text(verbatim: "\n\n")
+                + Text("The alerts it mutes notify again.")
         }
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
@@ -125,7 +137,8 @@ struct AlertsView: View {
     /// the alerts are read; said so when it no longer fires.
     private func takeAlertAction() {
         guard let request = NotificationRouter.shared.alertActionRequest, let fingerprint = request.silenceFingerprint,
-              case .loaded(let alerts, _, _) = state else { return }
+            case .loaded(let alerts, _, _) = state
+        else { return }
         NotificationRouter.shared.alertActionRequest = nil
         guard let alert = alerts.alerts.first(where: { $0.fingerprint == fingerprint }) else {
             message = String(localized: "This alert no longer fires.")
@@ -158,10 +171,17 @@ struct AlertsView: View {
                     HStack(spacing: 8) {
                         stateMenu
                         ForEach(AMSeverity.allCases, id: \.self) { severity in
-                            FilterChip(label: severity.label, count: severityCount(severity), selected: severities.contains(severity),
-                                       dot: severity.color) {
+                            FilterChip(
+                                label: severity.label, count: severityCount(severity),
+                                selected: severities.contains(severity),
+                                dot: severity.color
+                            ) {
                                 withAnimation(.snappy) {
-                                    if severities.contains(severity) { severities.remove(severity) } else { severities.insert(severity) }
+                                    if severities.contains(severity) {
+                                        severities.remove(severity)
+                                    } else {
+                                        severities.insert(severity)
+                                    }
                                 }
                             }
                         }
@@ -201,17 +221,23 @@ struct AlertsView: View {
             let groups = alerts.filtered(severities: severities, query: query)
             List {
                 if alerts.truncated {
-                    Text("Showing the first 1000 of \(alerts.total) alerts.").font(.footnote).foregroundStyle(.secondary)
+                    Text("Showing the first 1000 of \(alerts.total) alerts.").font(.footnote).foregroundStyle(
+                        .secondary)
                 }
                 ForEach(groups) { group in
                     Section {
                         ForEach(group.alerts) { alert in
-                            Button { selected = alert } label: { AlertRow(alert: alert) }
-                                .foregroundStyle(.primary)
+                            Button {
+                                selected = alert
+                            } label: {
+                                AlertRow(alert: alert)
+                            }
+                            .foregroundStyle(.primary)
                         }
                     } header: {
                         HStack(spacing: 6) {
-                            Image(systemName: group.severity.symbol).foregroundStyle(group.severity.color).accessibilityHidden(true)
+                            Image(systemName: group.severity.symbol).foregroundStyle(group.severity.color)
+                                .accessibilityHidden(true)
                             Text(verbatim: group.alertname)
                             Spacer()
                             Text(verbatim: "\(group.count)").monospacedDigit()
@@ -220,8 +246,9 @@ struct AlertsView: View {
                 }
             }
             .emptyOverlay(groups.isEmpty, query: query) {
-                ContentUnavailableView("No alerts", systemImage: "bell.slash",
-                                       description: Text("Nothing in the states and severities picked."))
+                ContentUnavailableView(
+                    "No alerts", systemImage: "bell.slash",
+                    description: Text("Nothing in the states and severities picked."))
             }
             .refreshable { await reload() }
         }
@@ -244,15 +271,20 @@ struct AlertsView: View {
                         }
                         .contextMenu {
                             if silence.expirable {
-                                Button(role: .destructive) { expiring = silence } label: { Label("Expire", systemImage: "bell") }
-                                    .kubeGated(.alertmanagerExpire)
+                                Button(role: .destructive) {
+                                    expiring = silence
+                                } label: {
+                                    Label("Expire", systemImage: "bell")
+                                }
+                                .kubeGated(.alertmanagerExpire)
                             }
                         }
                 }
             }
             .emptyOverlay(list.filter { silenceMatches($0) }.isEmpty, query: query) {
-                ContentUnavailableView("No silences", systemImage: "bell",
-                                       description: Text("Silence an alert from its details."))
+                ContentUnavailableView(
+                    "No silences", systemImage: "bell",
+                    description: Text("Silence an alert from its details."))
             }
             .refreshable { await reload() }
         }
@@ -261,18 +293,24 @@ struct AlertsView: View {
     private func silenceMatches(_ silence: AMSilence) -> Bool {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return true }
-        return silence.comment.lowercased().contains(q) || silence.matchers.contains { $0.text.lowercased().contains(q) }
+        return silence.comment.lowercased().contains(q)
+            || silence.matchers.contains { $0.text.lowercased().contains(q) }
     }
 
     private var noSource: some View {
         Group {
             if discovering {
-                ProgressView("Looking for Alertmanager in the cluster…").frame(maxWidth: .infinity, maxHeight: .infinity)
+                ProgressView("Looking for Alertmanager in the cluster…").frame(
+                    maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ContentUnavailableView {
                     Label("No Alertmanager found in the cluster", systemImage: "bell.slash")
                 } description: {
-                    Text(discoveryError ?? String(localized: "Pick a Service by hand, or set the URL of an Alertmanager the phone can reach."))
+                    Text(
+                        discoveryError
+                            ?? String(
+                                localized:
+                                    "Pick a Service by hand, or set the URL of an Alertmanager the phone can reach."))
                 } actions: {
                     Button("Set up a source") { sourceOpen = true }
                     Button("Search the cluster again") { Task { await discover(autoSelect: true) } }
@@ -352,12 +390,17 @@ struct AlertsView: View {
         let filter = filter
         let withExpired = withExpired
         let alerts: LoadState<AMAlerts> = await .from { try await client.alertmanagerAlerts(source, filter: filter) }
-        let list: LoadState<[AMSilence]> = await .from { try await client.alertmanagerSilences(source, withExpired: withExpired) }
-        guard key == model.alertsKey, source == self.source, filter == self.filter, withExpired == self.withExpired else { return }
+        let list: LoadState<[AMSilence]> = await .from {
+            try await client.alertmanagerSilences(source, withExpired: withExpired)
+        }
+        guard key == model.alertsKey, source == self.source, filter == self.filter, withExpired == self.withExpired
+        else { return }
         state = state.refreshed(with: alerts)
         silences = silences.refreshed(with: list)
         // Every state shown: what the home card counts too.
-        if case .loaded(let read, _, _) = alerts, filter == AMStateFilter() { AlertsStore.shared.remember(read, key: key) }
+        if case .loaded(let read, _, _) = alerts, filter == AMStateFilter() {
+            AlertsStore.shared.remember(read, key: key)
+        }
         takeAlertAction()
     }
 
@@ -384,7 +427,9 @@ struct AlertsView: View {
         } catch {
             failure = error.localizedDescription
         }
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Silence expired")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Silence expired"))
+        }
         await reload()
     }
 }
@@ -399,7 +444,8 @@ private struct AlertRow: View {
             HStack(spacing: 8) {
                 Circle().fill(alert.suppressed ? Color.secondary : alert.severity.color).frame(width: 8, height: 8)
                     .accessibilityHidden(true)
-                Text(verbatim: alert.subject.isEmpty ? alert.alertname : alert.subject).font(.body.weight(.medium)).lineLimit(1)
+                Text(verbatim: alert.subject.isEmpty ? alert.alertname : alert.subject).font(.body.weight(.medium))
+                    .lineLimit(1)
                 Spacer()
                 if alert.state != .active {
                     Text(alert.stateLabel).font(.caption).foregroundStyle(.secondary)

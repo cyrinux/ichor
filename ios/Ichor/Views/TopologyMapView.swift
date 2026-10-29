@@ -35,9 +35,14 @@ struct TopologyMapView: View {
                     .accessibilityAddTraits(.isHeader)
             }
             ForEach(speeds.sorted { $0.key < $1.key }, id: \.key) { entry in
-                let index = entry.key, speed = entry.value
-                if topology.links.indices.contains(index), let middle = layout.middle(of: topology.links[index], in: topology) {
-                    Button { onLink(index) } label: {
+                let index = entry.key
+                let speed = entry.value
+                if topology.links.indices.contains(index),
+                    let middle = layout.middle(of: topology.links[index], in: topology)
+                {
+                    Button {
+                        onLink(index)
+                    } label: {
                         Text(verbatim: speed)
                             .font(.caption2.weight(.medium))
                             .monospacedDigit()
@@ -98,7 +103,8 @@ struct TopologyMapView: View {
         }
         return Canvas { context, size in
             for box in layout.sites {
-                let rect = Path(roundedRect: CGRect(x: 0, y: box.top, width: size.width, height: box.height), cornerRadius: 16)
+                let rect = Path(
+                    roundedRect: CGRect(x: 0, y: box.top, width: size.width, height: box.height), cornerRadius: 16)
                 context.fill(rect, with: .color(Color(.tertiarySystemFill)))
                 context.stroke(rect, with: .color(Color(.separator)), lineWidth: 1)
             }
@@ -110,7 +116,9 @@ struct TopologyMapView: View {
                 path.addQuadCurve(to: CGPoint(x: curve.b.x, y: curve.b.y), control: CGPoint(x: curve.c.x, y: curve.c.y))
                 if index == selected {
                     // A halo under the line in the accent colour, so it stands out whatever its state.
-                    context.stroke(path, with: .color(.accentColor.opacity(0.35)), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    context.stroke(
+                        path, with: .color(.accentColor.opacity(0.35)),
+                        style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     context.stroke(path, with: .color(.accentColor), style: StrokeStyle(lineWidth: 4, lineCap: .round))
                     continue
                 }
@@ -130,7 +138,9 @@ struct TopologyMapView: View {
         .accessibilityLabel(Text("Cluster map of sites, nodes and KubeSpan links"))
         .accessibilityActions {
             ForEach(topology.links.indices, id: \.self) { index in
-                Button { onLink(index) } label: {
+                Button {
+                    onLink(index)
+                } label: {
                     Text(verbatim: "\(linkName(topology.links[index])), \(linkStateLabel(topology.links[index].state))")
                 }
             }
@@ -187,8 +197,10 @@ private struct TopologyNodeChip: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .frame(minHeight: 44)
-            .background(pickLabel != nil ? Color.accentColor.opacity(0.18) : Color(.systemBackground),
-                        in: RoundedRectangle(cornerRadius: 12))
+            .background(
+                pickLabel != nil ? Color.accentColor.opacity(0.18) : Color(.systemBackground),
+                in: RoundedRectangle(cornerRadius: 12)
+            )
             .overlay {
                 // Outlined when picked for a test or at an end of the selected link.
                 if pickLabel != nil || onSelected {

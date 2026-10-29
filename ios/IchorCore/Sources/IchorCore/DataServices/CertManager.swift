@@ -65,7 +65,8 @@ public struct Certificate: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, secretName, dnsNames, dnsNameCount, issuer, health, reasons, ready, issuing, message, notAfter, renewalTime, failedAttempts
+        case namespace, name, secretName, dnsNames, dnsNameCount, issuer, health, reasons, ready, issuing, message,
+            notAfter, renewalTime, failedAttempts
     }
 }
 

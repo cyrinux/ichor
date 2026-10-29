@@ -49,9 +49,13 @@ struct IssueConfigView: View {
                     .pickerStyle(.segmented)
                 } footer: {
                     if mode == .renew {
-                        Text("Issues a new certificate with the same roles and replaces this context's credentials on this device. Other contexts are kept.")
+                        Text(
+                            "Issues a new certificate with the same roles and replaces this context's credentials on this device. Other contexts are kept."
+                        )
                     } else {
-                        Text("Issues a separate talosconfig for another device or person, to scan as a QR code or save as a file.")
+                        Text(
+                            "Issues a separate talosconfig for another device or person, to scan as a QR code or save as a file."
+                        )
                     }
                 }
                 if mode == .renew { renewSection } else { rolesSection }
@@ -66,7 +70,10 @@ struct IssueConfigView: View {
                         confirming = true
                     } label: {
                         HStack {
-                            Text(mode == .renew ? String(localized: "Renew certificate…") : String(localized: "Create talosconfig…"))
+                            Text(
+                                mode == .renew
+                                    ? String(localized: "Renew certificate…") : String(localized: "Create talosconfig…")
+                            )
                             if busy {
                                 Spacer()
                                 ProgressView()
@@ -118,9 +125,13 @@ struct IssueConfigView: View {
     private var rolesSection: some View {
         Section {
             ForEach(issuableRoles, id: \.self) { role in
-                Toggle(isOn: Binding(get: { roles.contains(role) }, set: { on in
-                    roles = on ? roles.union([role]) : roles.subtracting([role])
-                })) {
+                Toggle(
+                    isOn: Binding(
+                        get: { roles.contains(role) },
+                        set: { on in
+                            roles = on ? roles.union([role]) : roles.subtracting([role])
+                        })
+                ) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: role).font(.body.monospaced())
                         Text(roleDescription(role)).font(.caption).foregroundStyle(.secondary)
@@ -145,22 +156,31 @@ struct IssueConfigView: View {
     }
 
     private var confirmTitle: String {
-        mode == .renew ? String(localized: "Renew this device's certificate?") : String(localized: "Create a talosconfig?")
+        mode == .renew
+            ? String(localized: "Renew this device's certificate?") : String(localized: "Create a talosconfig?")
     }
 
     private var confirmMessage: String {
         let roleList = (selectedRoles ?? "").replacingOccurrences(of: ",", with: ", ")
         let until = expiry.formatted(date: .abbreviated, time: .omitted)
-        let grant = String(localized: "It grants access to the cluster with \(roleList) until \(until), and cannot be revoked short of rotating the cluster CA.")
+        let grant = String(
+            localized:
+                "It grants access to the cluster with \(roleList) until \(until), and cannot be revoked short of rotating the cluster CA."
+        )
         return mode == .renew
-            ? String(localized: "The new certificate replaces this context's credentials on this device; the old one stays valid until it expires.") + " " + grant
+            ? String(
+                localized:
+                    "The new certificate replaces this context's credentials on this device; the old one stays valid until it expires."
+            ) + " " + grant
             : String(localized: "Anyone holding the file or the QR code can use it.") + " " + grant
     }
 
     /// Face ID / passcode first when the app lock is on, then issue and store or show.
     private func issue() async {
         guard let client = model.client, let roleList = selectedRoles else { return }
-        let reason = mode == .renew ? String(localized: "Renew the talosconfig certificate") : String(localized: "Create a talosconfig")
+        let reason =
+            mode == .renew
+            ? String(localized: "Renew the talosconfig certificate") : String(localized: "Create a talosconfig")
         if model.lock.enabled, let failure = await Authenticator.authenticate(reason: reason) {
             show(failure, failed: true)
             return
@@ -222,13 +242,15 @@ private struct IssuedConfigSection: View {
         Group {
             sections
         }
-        .fileExporter(isPresented: $exporting, document: document, contentType: .yaml,
-                      defaultFilename: issuedFileName(context: contextName, roles: issued.roles)) { result in
+        .fileExporter(
+            isPresented: $exporting, document: document, contentType: .yaml,
+            defaultFilename: issuedFileName(context: contextName, roles: issued.roles)
+        ) { result in
             switch result {
             case .success: message = String(localized: "Saved.")
             case .failure(let error): message = error.localizedDescription
             }
-            document = nil // don't keep the credential around
+            document = nil  // don't keep the credential around
         }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { revealed = false }
@@ -252,15 +274,20 @@ private struct IssuedConfigSection: View {
             LabeledContent("Roles", value: issued.roles.replacingOccurrences(of: ",", with: ", "))
             LabeledContent("Expires", value: issued.expires.formatted(date: .abbreviated, time: .omitted))
         } footer: {
-            Text("Grants cluster access with these roles until it expires; it cannot be revoked short of rotating the cluster CA.")
+            Text(
+                "Grants cluster access with these roles until it expires; it cannot be revoked short of rotating the cluster CA."
+            )
         }
         Section {
             if fitsInQRCode(issued.yaml) {
                 qrCode
             } else {
-                Label("Too large for a QR code: save it to a file and transfer it securely (e.g. AirDrop).", systemImage: "qrcode")
-                    .font(.footnote)
-                    .foregroundStyle(.statusWarn)
+                Label(
+                    "Too large for a QR code: save it to a file and transfer it securely (e.g. AirDrop).",
+                    systemImage: "qrcode"
+                )
+                .font(.footnote)
+                .foregroundStyle(.statusWarn)
             }
         } header: {
             Text("QR code")
@@ -309,7 +336,9 @@ private struct IssuedConfigSection: View {
     }
 
     private func reveal() async {
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Show the talosconfig QR code")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Show the talosconfig QR code"))
+        {
             message = failure
             return
         }

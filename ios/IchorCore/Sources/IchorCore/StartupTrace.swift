@@ -1,6 +1,6 @@
 import Foundation
 #if canImport(os)
-import os
+    import os
 #endif
 
 /// Where a cold start's time goes, in the unified log (Console, category `startup`): one line
@@ -18,8 +18,9 @@ public enum StartupTrace {
     private static let state = TraceState()
 
     #if canImport(os)
-    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "name.levis.ichor", category: "startup")
-    private static let signposter = OSSignposter(logger: logger)
+        private static let logger = Logger(
+            subsystem: Bundle.main.bundleIdentifier ?? "name.levis.ichor", category: "startup")
+        private static let signposter = OSSignposter(logger: logger)
     #endif
 
     public static var isEnabled: Bool { state.enabled }
@@ -45,7 +46,7 @@ public enum StartupTrace {
         let name: String
         let start: Date
         #if canImport(os)
-        let signpost: OSSignpostIntervalState
+            let signpost: OSSignpostIntervalState
         #endif
     }
 
@@ -53,10 +54,11 @@ public enum StartupTrace {
     public static func begin(_ name: String) -> Span? {
         guard state.enabled else { return nil }
         #if canImport(os)
-        let signpost = signposter.beginInterval("go call", id: signposter.makeSignpostID(), "\(name, privacy: .public)")
-        return Span(name: name, start: Date(), signpost: signpost)
+            let signpost = signposter.beginInterval(
+                "go call", id: signposter.makeSignpostID(), "\(name, privacy: .public)")
+            return Span(name: name, start: Date(), signpost: signpost)
         #else
-        return Span(name: name, start: Date())
+            return Span(name: name, start: Date())
         #endif
     }
 
@@ -64,7 +66,7 @@ public enum StartupTrace {
     public static func end(_ span: Span?) {
         guard let span else { return }
         #if canImport(os)
-        signposter.endInterval("go call", span.signpost)
+            signposter.endInterval("go call", span.signpost)
         #endif
         mark(callStep(name: span.name, ms: Int(Date().timeIntervalSince(span.start) * 1000)))
     }
@@ -99,7 +101,7 @@ public enum StartupTrace {
 
     private static func log(_ line: String) {
         #if canImport(os)
-        logger.info("\(line, privacy: .public)")
+            logger.info("\(line, privacy: .public)")
         #endif
     }
 }
@@ -146,14 +148,14 @@ private final class TraceState: @unchecked Sendable {
     private static func processStartTime() -> Double? {
         // Not on watchOS: the watch app never traces, and its SDK may not offer kinfo_proc.
         #if canImport(Darwin) && !os(watchOS)
-        var info = kinfo_proc()
-        var size = MemoryLayout<kinfo_proc>.stride
-        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
-        guard sysctl(&mib, u_int(mib.count), &info, &size, nil, 0) == 0 else { return nil }
-        let start = info.kp_proc.p_starttime
-        return Double(start.tv_sec) + Double(start.tv_usec) / 1_000_000
+            var info = kinfo_proc()
+            var size = MemoryLayout<kinfo_proc>.stride
+            var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
+            guard sysctl(&mib, u_int(mib.count), &info, &size, nil, 0) == 0 else { return nil }
+            let start = info.kp_proc.p_starttime
+            return Double(start.tv_sec) + Double(start.tv_usec) / 1_000_000
         #else
-        return nil
+            return nil
         #endif
     }
 }

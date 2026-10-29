@@ -18,12 +18,15 @@ struct MetaKeysView: View {
         LoadStateView(state: state, retry: load) { list in
             List {
                 Section {
-                    Label("Boot-time values Talos reads before the machine config. A wrong value can keep the node from booting: change them only to fix a node that cannot boot with its config.",
-                          systemImage: "exclamationmark.triangle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.statusBad)
+                    Label(
+                        "Boot-time values Talos reads before the machine config. A wrong value can keep the node from booting: change them only to fix a node that cannot boot with its config.",
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.statusBad)
                     if !list.loaded {
-                        Text("The node has not read its META partition yet.").font(.footnote).foregroundStyle(.secondary)
+                        Text("The node has not read its META partition yet.").font(.footnote).foregroundStyle(
+                            .secondary)
                     }
                     if let message {
                         Text(verbatim: message).font(.footnote)
@@ -51,7 +54,8 @@ struct MetaKeysView: View {
             HostnameConfirmationSheet(
                 title: change.title(hostname: hostname),
                 message: change.isWrite
-                    ? String(localized: "Talos reads it at the next boot. A wrong value can keep the node from booting.")
+                    ? String(
+                        localized: "Talos reads it at the next boot. A wrong value can keep the node from booting.")
                     : String(localized: "Talos no longer finds this value at the next boot."),
                 hostname: hostname,
                 actionTitle: change.isWrite ? String(localized: "Write") : String(localized: "Delete")
@@ -66,9 +70,13 @@ struct MetaKeysView: View {
     private func row(_ key: MetaKey) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: key.hex).font(.headline.monospaced())
-            Text(verbatim: [key.name.isEmpty ? String(localized: "Unknown key") : key.name,
-                            ByteCountFormatter.string(fromByteCount: Int64(key.size), countStyle: .file)].joined(separator: "  ·  "))
-                .font(.caption).foregroundStyle(.secondary)
+            Text(
+                verbatim: [
+                    key.name.isEmpty ? String(localized: "Unknown key") : key.name,
+                    ByteCountFormatter.string(fromByteCount: Int64(key.size), countStyle: .file),
+                ].joined(separator: "  ·  ")
+            )
+            .font(.caption).foregroundStyle(.secondary)
             if key.secret {
                 Text("Holds a secret: not shown.").font(.caption).foregroundStyle(.secondary)
             } else {
@@ -91,13 +99,25 @@ struct MetaKeysView: View {
         }
         .contextMenu {
             if !key.value.isEmpty {
-                Button { UIPasteboard.general.string = key.value } label: { Label("Copy", systemImage: "doc.on.doc") }
+                Button {
+                    UIPasteboard.general.string = key.value
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
             }
             if key.editable {
-                Button { editing = MetaEditTarget(current: key) } label: { Label("Edit", systemImage: "pencil") }
+                Button {
+                    editing = MetaEditTarget(current: key)
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
             }
             if key.writable {
-                Button(role: .destructive) { pending = .delete(key: key.key) } label: { Label("Delete", systemImage: "trash") }
+                Button(role: .destructive) {
+                    pending = .delete(key: key.key)
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
             }
         }
     }
@@ -115,7 +135,8 @@ struct MetaKeysView: View {
     private func apply(_ change: MetaChange) async {
         guard let client = model.client, !busy else { return }
         if model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Change META on \(hostname)")) {
+            let failure = await Authenticator.authenticate(reason: String(localized: "Change META on \(hostname)"))
+        {
             message = failure
             return
         }

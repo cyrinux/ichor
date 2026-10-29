@@ -71,7 +71,11 @@ struct LonghornList: View {
                 } footer: {
                     // Said once when every disk sits on it, not on each node.
                     if let sharedPath {
-                        Label { Text(verbatim: sharedPath).monospaced() } icon: { Image(systemName: "internaldrive") }
+                        Label {
+                            Text(verbatim: sharedPath).monospaced()
+                        } icon: {
+                            Image(systemName: "internaldrive")
+                        }
                     }
                 }
             }
@@ -84,21 +88,26 @@ struct LonghornList: View {
                 Task { await run(LonghornRequest(volume: volume, action: .replicas, value: count)) }
             }
         }
-        .confirmationDialog(confirmEvict.map { String(localized: "Evict the replicas of \($0.name)?") } ?? "",
-                            isPresented: $confirmEvict.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirmEvict) { node in
+        .confirmationDialog(
+            confirmEvict.map { String(localized: "Evict the replicas of \($0.name)?") } ?? "",
+            isPresented: $confirmEvict.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirmEvict
+        ) { node in
             Button("Evict replicas", role: .destructive) {
                 Task { await run(LonghornRequest(node: node, action: .evict)) }
             }
             Button("Cancel", role: .cancel) {}
         } message: { node in
-            Text("Longhorn copies every replica on \(node.name) to other nodes, then removes them. Scheduling stays off until you turn it back on.")
+            Text(
+                "Longhorn copies every replica on \(node.name) to other nodes, then removes them. Scheduling stays off until you turn it back on."
+            )
         }
         .sheet(item: $snapshotsFor) { name in
             // Looked up by name: the sheet follows the volume as the status refreshes.
             if let volume = status.volumes.first(where: { $0.name == name.id }) {
-                LonghornSnapshotsSheet(volume: volume, refresh: refresh).loadsKubeActionAccess(namespace: volume.namespace)
+                LonghornSnapshotsSheet(volume: volume, refresh: refresh).loadsKubeActionAccess(
+                    namespace: volume.namespace)
             } else {
                 // The volume is gone: no blank sheet.
                 Color.clear.onAppear { snapshotsFor = nil }
@@ -129,35 +138,52 @@ struct LonghornList: View {
         let busy = running.contains(LonghornRequest.key(namespace: volume.namespace, name: volume.name, node: false))
         let actions = busy ? [] : volume.actions
         let act = { (action: LonghornAction) in
-            if action == .replicas { replicasFor = volume } else { Task { await run(LonghornRequest(volume: volume, action: action)) } }
+            if action == .replicas {
+                replicasFor = volume
+            } else {
+                Task { await run(LonghornRequest(volume: volume, action: action)) }
+            }
         }
         let sheets = { (inMenu: Bool) in
-            LonghornVolumeSheetButtons(volume: volume, busy: busy, inMenu: inMenu,
-                                       onSnapshots: { snapshotsFor = LonghornVolumeName(id: volume.name) },
-                                       onSalvage: { salvageTarget = volume },
-                                       onAttachment: { attach in attachmentTarget = LonghornAttachmentTarget(volume: volume, attach: attach) },
-                                       onEngineUpgrade: { engineTarget = volume })
+            LonghornVolumeSheetButtons(
+                volume: volume, busy: busy, inMenu: inMenu,
+                onSnapshots: { snapshotsFor = LonghornVolumeName(id: volume.name) },
+                onSalvage: { salvageTarget = volume },
+                onAttachment: { attach in attachmentTarget = LonghornAttachmentTarget(volume: volume, attach: attach) },
+                onEngineUpgrade: { engineTarget = volume })
         }
-        return LonghornVolumeRow(volume: volume, busy: busy, availableEngine: status.defaultEngineVersion) { snapshotsFor = LonghornVolumeName(id: volume.name) }
-            .swipeActions(edge: .leading) { sheets(false) }
-            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: volume.namespace, onAction: act) }
-            .contextMenu {
-                sheets(true)
-                LonghornActionButtons(actions: actions, namespace: volume.namespace, inMenu: true, onAction: act)
-            }
-            // Last: the buttons above read the access it loads.
-            .loadsKubeActionAccess(namespace: volume.namespace)
+        return LonghornVolumeRow(volume: volume, busy: busy, availableEngine: status.defaultEngineVersion) {
+            snapshotsFor = LonghornVolumeName(id: volume.name)
+        }
+        .swipeActions(edge: .leading) { sheets(false) }
+        .swipeActions(edge: .trailing) {
+            LonghornActionButtons(actions: actions, namespace: volume.namespace, onAction: act)
+        }
+        .contextMenu {
+            sheets(true)
+            LonghornActionButtons(actions: actions, namespace: volume.namespace, inMenu: true, onAction: act)
+        }
+        // Last: the buttons above read the access it loads.
+        .loadsKubeActionAccess(namespace: volume.namespace)
     }
 
     private func nodeRow(_ node: LonghornNode, sharedPath: String?) -> some View {
         let busy = running.contains(LonghornRequest.key(namespace: node.namespace, name: node.name, node: true))
         let actions = busy ? [] : node.actions
         let act = { (action: LonghornAction) in
-            if action == .evict { confirmEvict = node } else { Task { await run(LonghornRequest(node: node, action: action)) } }
+            if action == .evict {
+                confirmEvict = node
+            } else {
+                Task { await run(LonghornRequest(node: node, action: action)) }
+            }
         }
         return LonghornNodeRow(node: node, busy: busy, sharedPath: sharedPath)
-            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: node.namespace, onAction: act) }
-            .contextMenu { LonghornActionButtons(actions: actions, namespace: node.namespace, inMenu: true, onAction: act) }
+            .swipeActions(edge: .trailing) {
+                LonghornActionButtons(actions: actions, namespace: node.namespace, onAction: act)
+            }
+            .contextMenu {
+                LonghornActionButtons(actions: actions, namespace: node.namespace, inMenu: true, onAction: act)
+            }
             .loadsKubeActionAccess(namespace: node.namespace)
     }
 
@@ -180,10 +206,13 @@ struct LonghornList: View {
         running.insert(key)
         defer { running.remove(key) }
         do {
-            try await client.longhornAttachment(namespace: volume.namespace, name: volume.name, node: node, attach: target.attach)
+            try await client.longhornAttachment(
+                namespace: volume.namespace, name: volume.name, node: node, attach: target.attach)
             resultMessage = String(localized: "Volume attachment change requested")
             await refresh()
-        } catch { resultMessage = String(localized: "Could not change volume attachment: \(error.localizedDescription)") }
+        } catch {
+            resultMessage = String(localized: "Could not change volume attachment: \(error.localizedDescription)")
+        }
     }
 
     private func engineUpgrade(_ volume: LonghornVolume, image: String) async {
@@ -203,7 +232,8 @@ struct LonghornList: View {
         running.insert(request.id)
         defer { running.remove(request.id) }
         do {
-            try await client.longhornAction(namespace: request.namespace, name: request.name, action: request.action, value: request.value)
+            try await client.longhornAction(
+                namespace: request.namespace, name: request.name, action: request.action, value: request.value)
             resultMessage = request.doneMessage
             await refresh()
         } catch {
@@ -240,8 +270,9 @@ private struct LonghornVolumeSheetButtons: View {
             .tint(.indigo)
         if !busy && faulted {
             if inMenu {
-                KubeGatedMenuButton(String(localized: "Salvage volume"), systemImage: "cross.case",
-                                    action: .longhornSalvage, in: volume.namespace, perform: onSalvage)
+                KubeGatedMenuButton(
+                    String(localized: "Salvage volume"), systemImage: "cross.case",
+                    action: .longhornSalvage, in: volume.namespace, perform: onSalvage)
             } else {
                 Button(action: onSalvage) { Label("Salvage volume", systemImage: "cross.case") }
                     .tint(.orange)
@@ -252,17 +283,24 @@ private struct LonghornVolumeSheetButtons: View {
             let title = detached ? String(localized: "Attach volume") : String(localized: "Detach volume")
             let icon = detached ? "link" : "eject"
             if inMenu {
-                KubeGatedMenuButton(title, systemImage: icon, action: .longhornAttachment, in: volume.namespace) { onAttachment(detached) }
+                KubeGatedMenuButton(title, systemImage: icon, action: .longhornAttachment, in: volume.namespace) {
+                    onAttachment(detached)
+                }
             } else {
-                Button { onAttachment(detached) } label: { Label(title, systemImage: icon) }
-                    .tint(.blue)
-                    .kubeGated(.longhornAttachment, in: volume.namespace)
+                Button {
+                    onAttachment(detached)
+                } label: {
+                    Label(title, systemImage: icon)
+                }
+                .tint(.blue)
+                .kubeGated(.longhornAttachment, in: volume.namespace)
             }
         }
         // Menu only: the leading swipe already holds two buttons.
         if !busy && inMenu && volume.engineUpgradable {
-            KubeGatedMenuButton(String(localized: "Upgrade engine"), systemImage: "arrow.up.circle",
-                                action: .longhornEngineUpgrade, in: volume.namespace, perform: onEngineUpgrade)
+            KubeGatedMenuButton(
+                String(localized: "Upgrade engine"), systemImage: "arrow.up.circle",
+                action: .longhornEngineUpgrade, in: volume.namespace, perform: onEngineUpgrade)
         }
     }
 }

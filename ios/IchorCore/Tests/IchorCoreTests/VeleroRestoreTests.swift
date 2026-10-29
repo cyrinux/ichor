@@ -3,14 +3,16 @@ import XCTest
 
 final class VeleroRestoreTests: XCTestCase {
     func testDecodesPreviewWithDefaults() throws {
-        let preview = try TalosJSON.decode(VeleroRestorePreview.self, from: #"""
-            {"namespace":"velero","backup":"apps-daily-2","phase":"Completed","completedAt":20,"expiresAt":99,
-             "storageLocation":"default","locationAvailable":true,"includedNamespaces":["demo"],
-             "includeClusterResources":"unset","snapshotVolumes":true,"totalItems":4,"itemsBackedUp":4,
-             "volumeSnapshots":2,"canRestore":true,"reasons":["partiallyFailed"],"restores":[
-              {"name":"apps-daily-2-r","phase":"InProgress","startedAt":30,"totalItems":4,"itemsRestored":1,
-               "namespaceMapping":{"demo":"demo-restored"},"includedNamespaces":["demo"],"existingResourcePolicy":"update"}]}
-        """#)
+        let preview = try TalosJSON.decode(
+            VeleroRestorePreview.self,
+            from: #"""
+                    {"namespace":"velero","backup":"apps-daily-2","phase":"Completed","completedAt":20,"expiresAt":99,
+                     "storageLocation":"default","locationAvailable":true,"includedNamespaces":["demo"],
+                     "includeClusterResources":"unset","snapshotVolumes":true,"totalItems":4,"itemsBackedUp":4,
+                     "volumeSnapshots":2,"canRestore":true,"reasons":["partiallyFailed"],"restores":[
+                      {"name":"apps-daily-2-r","phase":"InProgress","startedAt":30,"totalItems":4,"itemsRestored":1,
+                       "namespaceMapping":{"demo":"demo-restored"},"includedNamespaces":["demo"],"existingResourcePolicy":"update"}]}
+                """#)
         XCTAssertTrue(preview.canRestore)
         XCTAssertEqual(preview.snapshotVolumes, true)
         XCTAssertEqual(preview.includeClusterResources, "unset")
@@ -45,9 +47,11 @@ final class VeleroRestoreTests: XCTestCase {
     func testOptionsOmitEmptyAndUnset() throws {
         let bare = String(decoding: try JSONEncoder().encode(VeleroRestoreOptions()), as: UTF8.self)
         XCTAssertEqual(bare, #"{"existingResourcePolicy":"none"}"#)
-        let full = String(decoding: try JSONEncoder().encode(VeleroRestoreOptions(
-            includedNamespaces: ["demo"], namespaceMapping: ["demo": "demo-restored"],
-            existingResourcePolicy: "update", restorePVs: false, includeClusterResources: nil)), as: UTF8.self)
+        let full = String(
+            decoding: try JSONEncoder().encode(
+                VeleroRestoreOptions(
+                    includedNamespaces: ["demo"], namespaceMapping: ["demo": "demo-restored"],
+                    existingResourcePolicy: "update", restorePVs: false, includeClusterResources: nil)), as: UTF8.self)
         XCTAssertTrue(full.contains(#""includedNamespaces":["demo"]"#), full)
         XCTAssertTrue(full.contains(#""namespaceMapping":{"demo":"demo-restored"}"#), full)
         XCTAssertTrue(full.contains(#""restorePVs":false"#), full)

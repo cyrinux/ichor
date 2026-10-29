@@ -43,8 +43,9 @@ struct EventsView: View {
                 if streaming && events.isEmpty {
                     ProgressView()
                 } else {
-                    ContentUnavailableView("No events", systemImage: "list.bullet.rectangle",
-                                           description: Text("New events appear here as they happen."))
+                    ContentUnavailableView(
+                        "No events", systemImage: "list.bullet.rectangle",
+                        description: Text("New events appear here as they happen."))
                 }
             }
         }
@@ -58,8 +59,10 @@ struct EventsView: View {
                         ForEach(EventFilter.allCases, id: \.self) { Text($0.localizedLabel).tag($0) }
                     }
                 } label: {
-                    Image(systemName: filter == .all
-                          ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                    Image(
+                        systemName: filter == .all
+                            ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
+                    )
                     .accessibilityLabel(Text("Filter"))
                     .accessibilityValue(Text(filter.localizedLabel))
                 }

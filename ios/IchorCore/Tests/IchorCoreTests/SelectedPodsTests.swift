@@ -17,8 +17,9 @@ final class SelectedPodsTests: XCTestCase {
     }
 
     func testOnlyTheSelectorKindsListTheirPods() {
-        XCTAssertEqual(KubeWorkload(kind: "StatefulSet", namespace: "db", name: "postgres").podSelection,
-                       .workload(kind: "StatefulSet", namespace: "db", name: "postgres"))
+        XCTAssertEqual(
+            KubeWorkload(kind: "StatefulSet", namespace: "db", name: "postgres").podSelection,
+            .workload(kind: "StatefulSet", namespace: "db", name: "postgres"))
         XCTAssertNil(KubeWorkload(kind: "CronJob", namespace: "db", name: "backup").podSelection)
     }
 

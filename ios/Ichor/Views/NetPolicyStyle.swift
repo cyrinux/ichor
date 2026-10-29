@@ -70,7 +70,8 @@ extension NetSubject {
         case .allPods: String(localized: "All pods")
         case .allPodsOfCluster: String(localized: "All pods of the cluster")
         case .selector(let selector): selector
-        case .nodes(let selector): selector.isEmpty ? String(localized: "All nodes") : String(localized: "Nodes \(selector)")
+        case .nodes(let selector):
+            selector.isEmpty ? String(localized: "All nodes") : String(localized: "Nodes \(selector)")
         }
     }
 }
@@ -101,7 +102,8 @@ extension NetPeer {
             case .matching(let namespaces): return String(localized: "\(pods) in namespaces \(namespaces)")
             }
         case .namespaces:
-            return namespaceSelector.isEmpty ? String(localized: "All namespaces") : String(localized: "Namespaces \(namespaceSelector)")
+            return namespaceSelector.isEmpty
+                ? String(localized: "All namespaces") : String(localized: "Namespaces \(namespaceSelector)")
         case .cidr:
             return except.isEmpty ? value : String(localized: "\(value) except \(except.joined(separator: ", "))")
         case .entity, .fqdn:
@@ -178,10 +180,12 @@ extension DropHint {
     var text: String {
         switch self {
         case .allowIngress(let from, let port, _):
-            port.isEmpty ? String(localized: "Add an ingress rule allowing \(from) to one of these policies")
+            port.isEmpty
+                ? String(localized: "Add an ingress rule allowing \(from) to one of these policies")
                 : String(localized: "Add an ingress rule allowing \(from) on \(port) to one of these policies")
         case .allowEgress(let to, let port, _):
-            port.isEmpty ? String(localized: "Add an egress rule allowing \(to) to one of these policies")
+            port.isEmpty
+                ? String(localized: "Add an egress rule allowing \(to) to one of these policies")
                 : String(localized: "Add an egress rule allowing \(to) on \(port) to one of these policies")
         case .removeDeny:
             String(localized: "A deny rule wins over any allow rule: narrow or remove it in these policies")

@@ -131,9 +131,12 @@ struct KubeObjectView: View {
             }
             .pickerStyle(.segmented)
             if resource.isSecret && reveal {
-                Label("Secret values are shown in clear. Don't share screenshots.", systemImage: "exclamationmark.triangle.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.statusWarn)
+                Label(
+                    "Secret values are shown in clear. Don't share screenshots.",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .font(.footnote)
+                .foregroundStyle(.statusWarn)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -144,15 +147,25 @@ struct KubeObjectView: View {
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
             if resource.canUpdate, case .loaded = state {
-                Button { startEditing() } label: { Label("Edit", systemImage: "pencil") }
+                Button {
+                    startEditing()
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
             }
             Menu {
                 if case .loaded(let yaml, _, _) = state {
-                    Button { copy(yaml) } label: { Label("Copy", systemImage: "doc.on.doc") }
+                    Button {
+                        copy(yaml)
+                    } label: {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
                     ShareLink(item: yaml) { Label("Share", systemImage: "square.and.arrow.up") }
                 }
                 if resource.isSecret {
-                    Button { Task { await setReveal(!reveal) } } label: {
+                    Button {
+                        Task { await setReveal(!reveal) }
+                    } label: {
                         if reveal {
                             Label("Hide secret values", systemImage: "eye.slash")
                         } else {
@@ -161,35 +174,45 @@ struct KubeObjectView: View {
                     }
                 }
                 if resource.isPod {
-                    Button { logsPod = KubePod(namespace: namespace, name: name) } label: {
+                    Button {
+                        logsPod = KubePod(namespace: namespace, name: name)
+                    } label: {
                         Label("Logs", systemImage: "doc.text")
                     }
-                    Button { forwarding = true } label: {
+                    Button {
+                        forwarding = true
+                    } label: {
                         Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
                     }
                 }
                 if resource.scalable {
                     if let scaleDenial {
-                        Button {} label: {
+                        Button {
+                        } label: {
                             Text("Scale")
                             Text(verbatim: scaleDenial.deniedText)
                         }
                         .disabled(true)
                     } else {
-                        Button { scaling = true } label: {
+                        Button {
+                            scaling = true
+                        } label: {
                             Label("Scale", systemImage: "arrow.up.and.down")
                         }
                     }
                 }
                 Divider()
                 if let deleteDenial {
-                    Button(role: .destructive) {} label: {
+                    Button(role: .destructive) {
+                    } label: {
                         Text("Delete")
                         Text(verbatim: deleteDenial.deniedText)
                     }
                     .disabled(true)
                 } else {
-                    Button(role: .destructive) { confirmingDelete = true } label: {
+                    Button(role: .destructive) {
+                        confirmingDelete = true
+                    } label: {
                         Label("Delete", systemImage: "trash")
                     }
                 }
@@ -236,9 +259,12 @@ struct KubeObjectView: View {
     /// leaves Delete offered (the API server still decides).
     private func loadDeleteAccess() async {
         guard let client = model.client else { return }
-        guard let access = try? await client.kubeCan(verb: "delete", group: resource.group, resource: resource.resource,
-                                                     namespace: namespace, name: name),
-              !Task.isCancelled else { return }
+        guard
+            let access = try? await client.kubeCan(
+                verb: "delete", group: resource.group, resource: resource.resource,
+                namespace: namespace, name: name),
+            !Task.isCancelled
+        else { return }
         deleteDenial = access.isDenied ? access : nil
     }
 
@@ -246,9 +272,12 @@ struct KubeObjectView: View {
     /// that cannot be had leaves Scale offered.
     private func loadScaleAccess() async {
         guard resource.scalable, let client = model.client else { return }
-        guard let access = try? await client.kubeCan(verb: "patch", group: resource.group, resource: resource.scaleResource,
-                                                     namespace: namespace, name: name),
-              !Task.isCancelled else { return }
+        guard
+            let access = try? await client.kubeCan(
+                verb: "patch", group: resource.group, resource: resource.scaleResource,
+                namespace: namespace, name: name),
+            !Task.isCancelled
+        else { return }
         scaleDenial = access.isDenied ? access : nil
     }
 
@@ -263,7 +292,9 @@ struct KubeObjectView: View {
     /// hiding them reads the object again so they leave the screen and memory.
     private func setReveal(_ on: Bool) async {
         if on, model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Show the values of Secret \(name)")) {
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Show the values of Secret \(name)"))
+        {
             message = failure
             return
         }
@@ -284,11 +315,13 @@ struct KubeObjectView: View {
 
     /// Device-only pasteboard; revealed values expire from it after two minutes.
     private func copy(_ yaml: String) {
-        let options: [UIPasteboard.OptionsKey: Any] = reveal
+        let options: [UIPasteboard.OptionsKey: Any] =
+            reveal
             ? [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)]
             : [.localOnly: true]
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: yaml]], options: options)
-        message = reveal ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
+        message =
+            reveal ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
     }
 }
 

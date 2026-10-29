@@ -29,9 +29,11 @@ enum LastKnownStore {
     /// longer opens). Unreadable while the device is locked: nil, the file stays.
     static func read(fingerprint: String, key domainKey: String, now: Date = Date()) -> LastKnownEntry? {
         guard let file = try? location(fingerprint: fingerprint, key: domainKey, create: false),
-              FileManager.default.fileExists(atPath: file.path), let plain = sealed.read(file) else { return nil }
+            FileManager.default.fileExists(atPath: file.path), let plain = sealed.read(file)
+        else { return nil }
         guard let entry = try? JSONDecoder().decode(LastKnownEntry.self, from: plain),
-              entry.key == domainKey, entry.isFresh(now: now) else {
+            entry.key == domainKey, entry.isFresh(now: now)
+        else {
             try? FileManager.default.removeItem(at: file)
             return nil
         }
@@ -46,7 +48,8 @@ enum LastKnownStore {
     /// Only the clusters still imported keep theirs.
     static func keep(fingerprints: [String]) {
         guard let root = try? directory(create: false),
-              let folders = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) else { return }
+            let folders = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+        else { return }
         let kept = Set(fingerprints.map(hash))
         for folder in folders where !kept.contains(folder.lastPathComponent) {
             try? FileManager.default.removeItem(at: folder)

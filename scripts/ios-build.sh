@@ -10,6 +10,7 @@
 #   scripts/ios-build.sh appstore  # App Store build, signed and uploaded to App Store Connect
 #   scripts/ios-build.sh watch  # the Apple Watch app and complication, unsigned, for the watchOS
 #                               # simulator (not embedded in the IPA yet; no Go core needed)
+#   scripts/ios-build.sh format # rewrite the Swift sources to ios/.swift-format (`just ios-format`)
 #   ICHOR_SKIP_TESTS=1 scripts/ios-build.sh ipa  # no core tests (CI: the test job runs them)
 #
 # The unsigned IPA can be re-signed and installed with your Apple ID by Sideloadly or
@@ -31,7 +32,7 @@ set -euo pipefail
 MODE="${1:-ipa}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 case "$MODE" in
-  test|ipa|watch) ;;
+  test|ipa|watch|format) ;;
   appstore)
     : "${ICHOR_IOS_TEAM_ID:?ICHOR_IOS_TEAM_ID is not set}"
     : "${ASC_KEY_PATH:?ASC_KEY_PATH is not set (App Store Connect API key, AuthKey_<id>.p8)}"
@@ -39,12 +40,33 @@ case "$MODE" in
     : "${ASC_ISSUER_ID:?ASC_ISSUER_ID is not set}"
     ;;
   *)
-    echo "usage: $0 [test|ipa|appstore|watch]" >&2
+    echo "usage: $0 [test|ipa|appstore|watch|format]" >&2
     exit 2
     ;;
 esac
 
 [[ "$(uname -s)" == Darwin ]] || { echo "iOS builds need macOS with Xcode." >&2; exit 1; }
+
+# The Swift sources keep the shape of ios/.swift-format, with the swift-format of the selected
+# Xcode (its rules change between releases: a runner image with a newer Xcode may ask for a
+# one-time reformat). `test` lints them first, so a format slip fails in seconds, before the Go
+# core and llama.cpp builds; `format` rewrites them in place. Only the source folders that exist
+# are passed (no build/ or Frameworks/).
+if [[ "$MODE" == test || "$MODE" == format ]]; then
+  swift_dirs=()
+  for dir in Ichor IchorCore/Sources IchorCore/Tests IchorShare IchorUITests IchorWatch \
+    IchorWatchWidget Shared TalosWidget WatchShared; do
+    [[ -d "$ROOT/ios/$dir" ]] && swift_dirs+=("ios/$dir")
+  done
+  echo "swift-format $(xcrun swift-format --version)"
+  if [[ "$MODE" == format ]]; then
+    (cd "$ROOT" && xcrun swift-format format --in-place --recursive --parallel \
+      --configuration ios/.swift-format "${swift_dirs[@]}")
+    exit 0
+  fi
+  (cd "$ROOT" && xcrun swift-format lint --strict --recursive --parallel \
+    --configuration ios/.swift-format "${swift_dirs[@]}")
+fi
 command -v xcodegen >/dev/null || { echo "xcodegen is missing (brew install xcodegen)." >&2; exit 1; }
 
 set -a

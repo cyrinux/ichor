@@ -99,7 +99,8 @@ extension AppModel {
 
     /// Turns the background checks of `context`'s cluster on or off.
     func setWatchInBackground(_ on: Bool, for context: ContextSummary) {
-        storeMonitorUnwatched(settingWatched(on, for: context, contexts: summary?.contexts ?? [], unwatched: monitorUnwatched))
+        storeMonitorUnwatched(
+            settingWatched(on, for: context, contexts: summary?.contexts ?? [], unwatched: monitorUnwatched))
     }
 
     /// Whether `context`'s cluster records actions (a Kubernetes Event per change).
@@ -109,8 +110,10 @@ extension AppModel {
 
     /// Turns "Record actions in the cluster" on or off for `context`'s cluster (all its contexts).
     func setRecordActions(_ on: Bool, for context: ContextSummary) {
-        storeAuditEventClusters(settingClusterFlag(on, for: context, contexts: summary?.contexts ?? [],
-                                                   members: auditEventClusters))
+        storeAuditEventClusters(
+            settingClusterFlag(
+                on, for: context, contexts: summary?.contexts ?? [],
+                members: auditEventClusters))
     }
 
     /// Saves the clusters that record actions and hands them to Go.
@@ -135,14 +138,15 @@ extension AppModel {
     // Internal, not private: AppModel+Clusters.swift uses it.
     func publishWidgetClusters() {
         // A widget set to a cluster opens that cluster's screen (a share link, routed after unlock).
-        let clusters = summary.map { summary in
-            widgetClusters(summary.contexts, active: activeContext, labels: labels) { context in
-                guard !context.clusterID.isEmpty else { return nil }
-                var target = ShareTarget.screen(.cluster)
-                target.cluster = context.clusterID
-                return TalosClient.shareLink(for: target).flatMap { appShareLink(web: $0.absoluteString) }
-            }
-        } ?? []
+        let clusters =
+            summary.map { summary in
+                widgetClusters(summary.contexts, active: activeContext, labels: labels) { context in
+                    guard !context.clusterID.isEmpty else { return nil }
+                    var target = ShareTarget.screen(.cluster)
+                    target.cluster = context.clusterID
+                    return TalosClient.shareLink(for: target).flatMap { appShareLink(web: $0.absoluteString) }
+                }
+            } ?? []
         SharedStore.publish(clusters: clusters, active: activeSummary.map(monitorClusterKey))
     }
 
@@ -150,8 +154,9 @@ extension AppModel {
     /// lock and no screenshot mode (any of them on deletes what was indexed).
     // Internal, not private: AppModel+Clusters.swift uses it.
     func updateSpotlight() {
-        SpotlightIndex.update(summary: summary, active: activeContext, labels: labels,
-                              enabled: keepLastKnown && !lock.enabled && !privacyMask)
+        SpotlightIndex.update(
+            summary: summary, active: activeContext, labels: labels,
+            enabled: keepLastKnown && !lock.enabled && !privacyMask)
     }
 
     /// The VPN came up: a VPN-only cluster on screen reloads.

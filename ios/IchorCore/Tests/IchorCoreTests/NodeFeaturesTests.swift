@@ -7,14 +7,17 @@ final class NodeFeaturesTests: XCTestCase {
     }
 
     func testDecoding() throws {
-        let decoded = try features("""
-        {"version":"v1.7.6","features":{
-          "events":{"supported":true,"minVersion":"","reason":""},
-          "volumes":{"supported":false,"minVersion":"v1.8","reason":"needs Talos v1.8 or newer"},
-          "diskHealth":{"supported":false}}}
-        """)
+        let decoded = try features(
+            """
+            {"version":"v1.7.6","features":{
+              "events":{"supported":true,"minVersion":"","reason":""},
+              "volumes":{"supported":false,"minVersion":"v1.8","reason":"needs Talos v1.8 or newer"},
+              "diskHealth":{"supported":false}}}
+            """)
         XCTAssertEqual(decoded.version, "v1.7.6")
-        XCTAssertEqual(decoded.features["volumes"], FeatureSupport(supported: false, minVersion: "v1.8", reason: "needs Talos v1.8 or newer"))
+        XCTAssertEqual(
+            decoded.features["volumes"],
+            FeatureSupport(supported: false, minVersion: "v1.8", reason: "needs Talos v1.8 or newer"))
         XCTAssertEqual(decoded.features["diskHealth"], FeatureSupport(supported: false))
         XCTAssertEqual(try features("{}"), NodeFeatures())
         XCTAssertEqual(try features(#"{"version":"v1.9.0","features":null}"#).features, [:])
@@ -39,28 +42,37 @@ final class NodeFeaturesTests: XCTestCase {
     func testNotice() {
         XCTAssertNil(FeatureSupport(supported: true, minVersion: "v1.8").notice)
         // With a reason, the version is the one it names…
-        XCTAssertEqual(FeatureSupport(supported: false, minVersion: "v1.8", reason: "needs Talos v1.9 or newer").notice,
-                       VersionNotice(minVersion: "v1.9"))
+        XCTAssertEqual(
+            FeatureSupport(supported: false, minVersion: "v1.8", reason: "needs Talos v1.9 or newer").notice,
+            VersionNotice(minVersion: "v1.9"))
         // …or none: "removed in" must not read as "needs".
-        XCTAssertEqual(FeatureSupport(supported: false, minVersion: "v1.2",
-                                      reason: "not available on this node's Talos version (v1.18.0): removed in Talos v1.18").notice,
-                       VersionNotice(minVersion: ""))
-        XCTAssertEqual(FeatureSupport(supported: false, reason: "no SMART on this platform").notice, VersionNotice(minVersion: ""))
+        XCTAssertEqual(
+            FeatureSupport(
+                supported: false, minVersion: "v1.2",
+                reason: "not available on this node's Talos version (v1.18.0): removed in Talos v1.18"
+            ).notice,
+            VersionNotice(minVersion: ""))
+        XCTAssertEqual(
+            FeatureSupport(supported: false, reason: "no SMART on this platform").notice, VersionNotice(minVersion: ""))
         // Only without a reason does minVersion speak.
         XCTAssertEqual(FeatureSupport(supported: false, minVersion: "1.8").notice, VersionNotice(minVersion: "v1.8"))
     }
 
     func testVersionNoticeOfErrors() {
         XCTAssertEqual(versionNotice("volumes: needs Talos v1.8 or newer"), VersionNotice(minVersion: "v1.8"))
-        XCTAssertEqual(versionNotice("Needs talos 1.10.2 or newer (node runs v1.9.1)"), VersionNotice(minVersion: "v1.10.2"))
+        XCTAssertEqual(
+            versionNotice("Needs talos 1.10.2 or newer (node runs v1.9.1)"), VersionNotice(minVersion: "v1.10.2"))
         // Go's volumes reason: the version it needs wins over the one the node runs.
-        XCTAssertEqual(versionNotice("not available on this node's Talos version (v1.7.6): volumes need Talos v1.8 or newer"),
-                       VersionNotice(minVersion: "v1.8"))
-        XCTAssertEqual(versionNotice("not available on this node's Talos version (v1.7.6)"), VersionNotice(minVersion: ""))
+        XCTAssertEqual(
+            versionNotice("not available on this node's Talos version (v1.7.6): volumes need Talos v1.8 or newer"),
+            VersionNotice(minVersion: "v1.8"))
+        XCTAssertEqual(
+            versionNotice("not available on this node's Talos version (v1.7.6)"), VersionNotice(minVersion: ""))
         XCTAssertNil(versionNotice("you need to upgrade"))
         XCTAssertEqual(versionNotice("Unsupported: no such API"), VersionNotice(minVersion: ""))
         XCTAssertEqual(versionNotice("Unimplemented: unknown method DiskUsage"), VersionNotice(minVersion: ""))
-        XCTAssertEqual(versionNotice("disk health is not available on this node's Talos version"), VersionNotice(minVersion: ""))
+        XCTAssertEqual(
+            versionNotice("disk health is not available on this node's Talos version"), VersionNotice(minVersion: ""))
         XCTAssertEqual(versionNotice("Not available on this Talos version."), VersionNotice(minVersion: ""))
         XCTAssertNil(versionNotice("permission denied (talosconfig role too limited): no"))
         XCTAssertNil(versionNotice("unreachable: connection refused"))
@@ -91,7 +103,9 @@ final class NodeFeaturesTests: XCTestCase {
         // One node is enough.
         XCTAssertTrue(clusterSupport([old, new], .etcdMemberActions).supported)
         // Unsupported everywhere: the lowest version that would bring it.
-        XCTAssertEqual(clusterSupport([old, older, vague], .etcdMemberActions), FeatureSupport(supported: false, minVersion: "v1.9"))
+        XCTAssertEqual(
+            clusterSupport([old, older, vague], .etcdMemberActions),
+            FeatureSupport(supported: false, minVersion: "v1.9"))
         XCTAssertEqual(clusterSupport([vague], .etcdMemberActions), FeatureSupport(supported: false, reason: "no"))
     }
 }

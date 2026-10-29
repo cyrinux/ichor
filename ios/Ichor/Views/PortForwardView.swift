@@ -55,8 +55,12 @@ struct PortForwardView: View {
             }
             if let ended {
                 Section {
-                    Label { Text(verbatim: ended).textSelection(.enabled) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                        .foregroundStyle(.statusBad)
+                    Label {
+                        Text(verbatim: ended).textSelection(.enabled)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    .foregroundStyle(.statusBad)
                 } header: {
                     Text("Stopped")
                 }
@@ -64,7 +68,8 @@ struct PortForwardView: View {
             if !connectionErrors.isEmpty {
                 Section {
                     ForEach(Array(connectionErrors.enumerated()), id: \.offset) { _, error in
-                        Text(verbatim: error).font(.caption.monospaced()).foregroundStyle(.statusWarn).textSelection(.enabled)
+                        Text(verbatim: error).font(.caption.monospaced()).foregroundStyle(.statusWarn).textSelection(
+                            .enabled)
                     }
                 } header: {
                     Text("Connection errors")
@@ -73,9 +78,11 @@ struct PortForwardView: View {
                 }
             }
             Section {
-                Text("Only this phone can open the forwarded port, and only while Ichor stays open: nothing listens on the network the phone is on.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Only this phone can open the forwarded port, and only while Ichor stays open: nothing listens on the network the phone is on."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             }
         }
         .themedBackground()
@@ -101,17 +108,33 @@ struct PortForwardView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 2)
-                Button { browsing = url } label: { Label("Open in browser", systemImage: "safari") }
-                Button { copy(url.absoluteString) } label: { Label("Copy address", systemImage: "doc.on.doc") }
+                Button {
+                    browsing = url
+                } label: {
+                    Label("Open in browser", systemImage: "safari")
+                }
+                Button {
+                    copy(url.absoluteString)
+                } label: {
+                    Label("Copy address", systemImage: "doc.on.doc")
+                }
             } else if ended == nil {
                 HStack(spacing: 8) {
                     ProgressView()
                     Text("Starting…").foregroundStyle(.secondary)
                 }
             } else {
-                Button { runs += 1 } label: { Label("Start again", systemImage: "arrow.clockwise") }
+                Button {
+                    runs += 1
+                } label: {
+                    Label("Start again", systemImage: "arrow.clockwise")
+                }
             }
-            Button(role: .destructive) { stop() } label: { Label("Stop", systemImage: "stop.circle") }
+            Button(role: .destructive) {
+                stop()
+            } label: {
+                Label("Stop", systemImage: "stop.circle")
+            }
         } header: {
             Text("Forwarding")
         }
@@ -121,10 +144,13 @@ struct PortForwardView: View {
         Section {
             if let ports {
                 if ports.isEmpty {
-                    Text("The containers declare no TCP port: type one below.").font(.callout).foregroundStyle(.secondary)
+                    Text("The containers declare no TCP port: type one below.").font(.callout).foregroundStyle(
+                        .secondary)
                 }
                 ForEach(ports) { port in
-                    Button { start(port.port) } label: {
+                    Button {
+                        start(port.port)
+                    } label: {
                         HStack {
                             Text(verbatim: "\(port.port)").font(.body.monospacedDigit())
                             if !port.name.isEmpty {

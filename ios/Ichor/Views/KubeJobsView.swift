@@ -35,14 +35,22 @@ struct KubeJobsView: View {
                     JobRowView(job: job, showNamespace: showNamespace)
                 }
                 .swipeActions {
-                    Button(role: .destructive) { deleting = job } label: { Label("Delete", systemImage: "trash") }
+                    Button(role: .destructive) {
+                        deleting = job
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
                 if !job.owner.isEmpty {
                     NavigationLink {
                         KubeObjectView(resource: Self.cronJobs, namespace: job.namespace, name: job.owner)
                     } label: {
-                        Label { Text("CronJob \(job.owner)") } icon: { Image(systemName: "clock.arrow.circlepath") }
-                            .font(.footnote)
+                        Label {
+                            Text("CronJob \(job.owner)")
+                        } icon: {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                        .font(.footnote)
                     }
                 }
             }
@@ -74,9 +82,11 @@ private struct JobRowView: View {
                 Spacer()
                 stateLabel.font(.caption).foregroundStyle(levelColor)
             }
-            let facts = [job.durationSeconds.map { localizedDuration($0) },
-                         job.completions.isEmpty ? nil : String(localized: "Completions: \(job.completions)"),
-                         job.manual ? String(localized: "manual") : nil].compactMap { $0 }
+            let facts = [
+                job.durationSeconds.map { localizedDuration($0) },
+                job.completions.isEmpty ? nil : String(localized: "Completions: \(job.completions)"),
+                job.manual ? String(localized: "manual") : nil,
+            ].compactMap { $0 }
             if !facts.isEmpty {
                 Text(verbatim: facts.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
             }

@@ -44,7 +44,8 @@ struct HealthView: View {
                 Section {
                     ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                         Text(line).font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(lineColor(healthLineStatus(line, failed: error != nil && index == lines.count - 1)))
+                            .foregroundStyle(
+                                lineColor(healthLineStatus(line, failed: error != nil && index == lines.count - 1)))
                     }
                 }
             }

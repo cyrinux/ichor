@@ -23,12 +23,18 @@ struct ServiceAccountHelpView: View {
     var body: some View {
         List {
             Section {
-                Text("Give the phone its own ServiceAccount rather than your admin credentials: if the phone is lost, its token only grants what you chose, and deleting the ServiceAccount revokes it.")
-                    .font(.callout)
-                Text("Never bind it to cluster-admin: whoever holds the phone could then change or delete anything in the cluster.")
-                    .font(.footnote).foregroundStyle(.statusWarn)
-                Text("A token from kubectl create token (TokenRequest) expires, after an hour by default. The kubernetes.io/service-account-token Secret below holds one that lasts until you delete it, for long-lived access from the phone.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "Give the phone its own ServiceAccount rather than your admin credentials: if the phone is lost, its token only grants what you chose, and deleting the ServiceAccount revokes it."
+                )
+                .font(.callout)
+                Text(
+                    "Never bind it to cluster-admin: whoever holds the phone could then change or delete anything in the cluster."
+                )
+                .font(.footnote).foregroundStyle(.statusWarn)
+                Text(
+                    "A token from kubectl create token (TokenRequest) expires, after an hour by default. The kubernetes.io/service-account-token Secret below holds one that lasts until you delete it, for long-lived access from the phone."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
                 Picker("Role", selection: $role) {
                     ForEach(templates, id: \.role) { Text(Self.label($0.role)).tag($0.role) }
                 }
@@ -40,8 +46,10 @@ struct ServiceAccountHelpView: View {
                     CommandRow(template.yaml, copyLabel: "Copy YAML")
                     CommandRow(template.apply)
                 } header: {
-                    Text("1. Save it as ichor-phone.yaml (for another namespace, replace ichor everywhere), then apply it:")
-                        .textCase(nil)
+                    Text(
+                        "1. Save it as ichor-phone.yaml (for another namespace, replace ichor everywhere), then apply it:"
+                    )
+                    .textCase(nil)
                 }
                 Section {
                     CommandRow(template.kubeconfig)
@@ -49,7 +57,9 @@ struct ServiceAccountHelpView: View {
                     Text("2. Build kubeconfig-phone from its token, with the server of your current context:")
                         .textCase(nil)
                 } footer: {
-                    Text("3. Bring kubeconfig-phone to the phone and import it, then delete the other copies: the token is a password.")
+                    Text(
+                        "3. Bring kubeconfig-phone to the phone and import it, then delete the other copies: the token is a password."
+                    )
                 }
             }
         }
@@ -69,11 +79,20 @@ struct ServiceAccountHelpView: View {
     private static func grants(_ role: ServiceAccountRole) -> String {
         switch role {
         case .read:
-            String(localized: "The built-in view role in every namespace, plus nodes: workloads, events, logs and metrics, no Secrets. Recommended for a phone.")
+            String(
+                localized:
+                    "The built-in view role in every namespace, plus nodes: workloads, events, logs and metrics, no Secrets. Recommended for a phone."
+            )
         case .operate:
-            String(localized: "Read-only everywhere, plus restarting and scaling Deployments, StatefulSets and DaemonSets in one namespace (my-apps in the YAML: change it). A restart needs the right to edit the workload and RBAC cannot narrow that: this token can change those workloads entirely, their image too. Bind it only where you would let this phone deploy.")
+            String(
+                localized:
+                    "Read-only everywhere, plus restarting and scaling Deployments, StatefulSets and DaemonSets in one namespace (my-apps in the YAML: change it). A restart needs the right to edit the workload and RBAC cannot narrow that: this token can change those workloads entirely, their image too. Bind it only where you would let this phone deploy."
+            )
         case .namespace:
-            String(localized: "Everything inside the ichor namespace (the built-in admin role there), nothing outside it: no nodes, no other namespace.")
+            String(
+                localized:
+                    "Everything inside the ichor namespace (the built-in admin role there), nothing outside it: no nodes, no other namespace."
+            )
         }
     }
 }

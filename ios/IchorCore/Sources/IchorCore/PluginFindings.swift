@@ -24,8 +24,10 @@ public struct PluginFindingInfo: Decodable, Equatable, Sendable {
     /// The plugin was imported, not built in: notified only when the user said so.
     public let user: Bool
 
-    public init(key: String = "", plugin: String = "", pluginName: String = "", pluginIcon: String = "", id: String = "",
-                title: String = "", detail: String = "", ref: PluginRef? = nil, opens: String = "", user: Bool = false) {
+    public init(
+        key: String = "", plugin: String = "", pluginName: String = "", pluginIcon: String = "", id: String = "",
+        title: String = "", detail: String = "", ref: PluginRef? = nil, opens: String = "", user: Bool = false
+    ) {
         self.key = key
         self.plugin = plugin
         self.pluginName = pluginName
@@ -38,7 +40,9 @@ public struct PluginFindingInfo: Decodable, Equatable, Sendable {
         self.user = user
     }
 
-    private enum CodingKeys: String, CodingKey { case key, plugin, pluginName, pluginIcon, id, title, detail, ref, opens, user }
+    private enum CodingKeys: String, CodingKey {
+        case key, plugin, pluginName, pluginIcon, id, title, detail, ref, opens, user
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -160,7 +164,9 @@ public struct PluginIssue: Codable, Equatable, Sendable {
         self.opens = opens
     }
 
-    private enum CodingKeys: String, CodingKey { case severity = "s", pluginName = "p", title = "t", detail = "d", opens = "o" }
+    private enum CodingKeys: String, CodingKey {
+        case severity = "s", pluginName = "p", title = "t", detail = "d", opens = "o"
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -196,15 +202,20 @@ public func pluginIssueSeverity(_ value: String) -> String { PluginIssue(value: 
 /// findings the checkup reports from a section of its own (`checkupNative`) are left to it. An
 /// imported plugin's findings (`user`) are notified only with `importedWatched`: a plugin pasted
 /// in does not page anyone by itself.
-public func pluginIssuesOf(_ report: PluginFindingsReport, checkupWatched: Bool, importedWatched: Bool = false) -> [String: String] {
+public func pluginIssuesOf(_ report: PluginFindingsReport, checkupWatched: Bool, importedWatched: Bool = false)
+    -> [String: String]
+{
     var out: [String: PluginIssue] = [:]
-    for finding in report.findings where finding.severity != .info && !(checkupWatched && finding.checkupNative)
-        && !(finding.info.user && !importedWatched) {
+    for finding in report.findings
+    where finding.severity != .info && !(checkupWatched && finding.checkupNative)
+        && !(finding.info.user && !importedWatched)
+    {
         let key = finding.info.key
         let severity = finding.severity == .critical ? dataCritical : dataWarning
         if out[key]?.severity == dataCritical { continue }
-        out[key] = PluginIssue(severity: severity, pluginName: finding.info.pluginLabel, title: finding.info.headline,
-                               detail: finding.info.detail, opens: finding.info.opens)
+        out[key] = PluginIssue(
+            severity: severity, pluginName: finding.info.pluginLabel, title: finding.info.headline,
+            detail: finding.info.detail, opens: finding.info.opens)
     }
     return out.mapValues(\.value)
 }
@@ -213,12 +224,15 @@ public func pluginIssuesOf(_ report: PluginFindingsReport, checkupWatched: Bool,
 /// failed (the last snapshot's issues stand); otherwise the issues read, plus those `known`
 /// (the previous snapshot's) had for a plugin in `errors` (not read in full), or for any plugin
 /// when the findings were cut (`truncated`). An unread plugin neither alerts nor clears.
-public func pluginIssuesWithGaps(_ report: PluginFindingsReport?, known: [String: String], checkupWatched: Bool,
-                                 importedWatched: Bool = false) -> [String: String]? {
+public func pluginIssuesWithGaps(
+    _ report: PluginFindingsReport?, known: [String: String], checkupWatched: Bool,
+    importedWatched: Bool = false
+) -> [String: String]? {
     guard let report else { return nil }
     var out = pluginIssuesOf(report, checkupWatched: checkupWatched, importedWatched: importedWatched)
     let unread = Set(report.errors.map(\.plugin))
-    for (key, value) in known where out[key] == nil && (report.truncated > 0 || unread.contains(pluginIDOfFindingKey(key))) {
+    for (key, value) in known
+    where out[key] == nil && (report.truncated > 0 || unread.contains(pluginIDOfFindingKey(key))) {
         out[key] = value
     }
     // A finding the checkup reports itself stays with it, even one carried over.
@@ -237,10 +251,13 @@ public func knownPluginIssues(_ previous: ClusterSnapshot?, context: String) -> 
 }
 
 /// Plugin findings (see evaluateTrack), keyed by the finding's key ("plugin:<id>:…").
-func evaluatePlugins(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+func evaluatePlugins(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
+    -> IssueTrack
+{
     let named = previous?.pluginIssues ?? [:]
     return evaluateTrack(
-        previous: previous?.pluginTrack, current: current.pluginTrack, comparable: comparable, severity: pluginIssueSeverity,
+        previous: previous?.pluginTrack, current: current.pluginTrack, comparable: comparable,
+        severity: pluginIssueSeverity,
         problem: { key, value in
             let issue = PluginIssue(value: value)
             let text = [issue.detail, issue.severity].filter { !$0.isEmpty }.joined(separator: " · ")

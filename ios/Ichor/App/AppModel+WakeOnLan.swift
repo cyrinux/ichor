@@ -16,7 +16,9 @@ extension AppModel {
         let store = WakeOnLanStore.shared
         for node in nodes where node.reachable && store.shouldRecord(fingerprint: fingerprint, node: node.node) {
             // Unreadable now: tried again on a later load.
-            guard let network = try? await client.network(node: node.node), wakeOnLanFingerprint == fingerprint else { continue }
+            guard let network = try? await client.network(node: node.node), wakeOnLanFingerprint == fingerprint else {
+                continue
+            }
             store.record(IchorCore.seenMacs(network.links), fingerprint: fingerprint, node: node.node)
         }
     }

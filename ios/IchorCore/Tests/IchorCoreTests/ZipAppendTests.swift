@@ -2,14 +2,17 @@ import XCTest
 @testable import IchorCore
 
 final class ZipAppendTests: XCTestCase {
-    private let date = Date(timeIntervalSince1970: 1_800_000_000) // 2027-01-15 08:00:00 UTC
+    private let date = Date(timeIntervalSince1970: 1_800_000_000)  // 2027-01-15 08:00:00 UTC
     private let utc = TimeZone(identifier: "UTC")!
 
     /// A zip with no entry: the end record alone.
     private let empty = Data([0x50, 0x4B, 0x05, 0x06] + [UInt8](repeating: 0, count: 18))
 
     /// A zip Python's zipfile wrote: "a.txt" holding "hi" (stored), and the comment "c".
-    private let python = Data(base64Encoded: "UEsDBBQAAAAAAAAAIVCsKpPYAgAAAAIAAAAFAAAAYS50eHRoaVBLAQIUAxQAAAAAAAAAIVCsKpPYAgAAAAIAAAAFAAAAAAAAAAAAAACAAQAAAABhLnR4dFBLBQYAAAAAAQABADMAAAAlAAAAAQBj")!
+    private let python = Data(
+        base64Encoded:
+            "UEsDBBQAAAAAAAAAIVCsKpPYAgAAAAIAAAAFAAAAYS50eHRoaVBLAQIUAxQAAAAAAAAAIVCsKpPYAgAAAAIAAAAFAAAAAAAAAAAAAACAAQAAAABhLnR4dFBLBQYAAAAAAQABADMAAAAlAAAAAQBj"
+    )!
 
     private func applied(_ zip: Data, _ plan: ZipAppendPlan) -> Data {
         var out = Data(zip.prefix(plan.truncateAt))
@@ -36,7 +39,8 @@ final class ZipAppendTests: XCTestCase {
 
     func testAddsToAnEmptyZip() throws {
         let content = Data(#"{"format":1}"#.utf8)
-        let plan = try XCTUnwrap(zipAppendPlan(empty, name: "cluster/history.json", content: content, date: date, timeZone: utc))
+        let plan = try XCTUnwrap(
+            zipAppendPlan(empty, name: "cluster/history.json", content: content, date: date, timeZone: utc))
         XCTAssertEqual(plan.truncateAt, 0)
         let zip = applied(empty, plan)
         let end = zip.count - 22
@@ -47,13 +51,14 @@ final class ZipAppendTests: XCTestCase {
         XCTAssertEqual(u32(zip, cdOffset), 0x0201_4B50)
         XCTAssertEqual(u32(zip, 0), 0x0403_4B50)
         XCTAssertEqual(UInt32(u32(zip, 14)), crc32(content))
-        XCTAssertEqual(zip.subdata(in: 50 ..< 50 + content.count), content)
+        XCTAssertEqual(zip.subdata(in: 50..<50 + content.count), content)
     }
 
     func testAddsAfterTheEntriesAndKeepsTheComment() throws {
-        let plan = try XCTUnwrap(zipAppendPlan(python, name: "b.json", content: Data("{}".utf8), date: date, timeZone: utc))
+        let plan = try XCTUnwrap(
+            zipAppendPlan(python, name: "b.json", content: Data("{}".utf8), date: date, timeZone: utc))
         let zip = applied(python, plan)
-        XCTAssertEqual(zip.prefix(plan.truncateAt), python.prefix(plan.truncateAt)) // a.txt untouched
+        XCTAssertEqual(zip.prefix(plan.truncateAt), python.prefix(plan.truncateAt))  // a.txt untouched
         let end = zip.count - 23
         XCTAssertEqual(u32(zip, end), 0x0605_4B50)
         XCTAssertEqual(u16(zip, end + 10), 2)

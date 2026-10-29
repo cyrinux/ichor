@@ -22,9 +22,11 @@ public struct TalosForm: Equatable, Sendable {
     /// The Omni account's email, or a service account's identity.
     public var identity: String
 
-    public init(mode: Mode = .direct, name: String = "", endpoints: String = "", nodes: String = "",
-                ca: String = "", crt: String = "", key: String = "", omniURL: String = "", cluster: String = "",
-                identity: String = "") {
+    public init(
+        mode: Mode = .direct, name: String = "", endpoints: String = "", nodes: String = "",
+        ca: String = "", crt: String = "", key: String = "", omniURL: String = "", cluster: String = "",
+        identity: String = ""
+    ) {
         self.mode = mode
         self.name = name
         self.endpoints = endpoints
@@ -61,12 +63,14 @@ public struct TalosForm: Equatable, Sendable {
         switch mode {
         case .direct:
             let nodeList = Self.lines(nodes)
-            payload = Payload(mode: mode.rawValue, name: Self.trimmed(name), endpoints: Self.lines(endpoints),
-                              nodes: nodeList.isEmpty ? nil : nodeList,
-                              ca: Self.trimmed(ca), crt: Self.trimmed(crt), key: Self.trimmed(key))
+            payload = Payload(
+                mode: mode.rawValue, name: Self.trimmed(name), endpoints: Self.lines(endpoints),
+                nodes: nodeList.isEmpty ? nil : nodeList,
+                ca: Self.trimmed(ca), crt: Self.trimmed(crt), key: Self.trimmed(key))
         case .omni:
-            payload = Payload(mode: mode.rawValue, name: Self.trimmed(name), omniUrl: Self.trimmed(omniURL),
-                              cluster: Self.trimmed(cluster), identity: Self.trimmed(identity))
+            payload = Payload(
+                mode: mode.rawValue, name: Self.trimmed(name), omniUrl: Self.trimmed(omniURL),
+                cluster: Self.trimmed(cluster), identity: Self.trimmed(identity))
         }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]

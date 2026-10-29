@@ -51,7 +51,8 @@ final class ImageScanTests: XCTestCase {
         XCTAssertEqual(fixable.map(\.package), ["libssl3 3.0.11"])
         XCTAssertEqual(fixable[0].vulns.map(\.id), ["CVE-1", "CVE-2"])
 
-        XCTAssertEqual(nginx.byPackage(VulnFilter(fixableOnly: false)).map(\.package), ["libssl3 3.0.11", "perl-base 5.36"])
+        XCTAssertEqual(
+            nginx.byPackage(VulnFilter(fixableOnly: false)).map(\.package), ["libssl3 3.0.11", "perl-base 5.36"])
 
         var noHigh = VulnFilter(fixableOnly: false)
         noHigh.toggle(.high)
@@ -80,7 +81,8 @@ final class ImageScanTests: XCTestCase {
         XCTAssertNil(failed.usableReport)
 
         // Stopped before the first image: every image "not scanned".
-        let nothing = ImageScanReport(source: "scan", images: report.images.map { ScannedImage(image: $0.image, error: imageScanNotScanned) })
+        let nothing = ImageScanReport(
+            source: "scan", images: report.images.map { ScannedImage(image: $0.image, error: imageScanNotScanned) })
         var empty = ImageScanState(context: "ctx", appID: "nginx")
         empty.finish(report: nothing, json: "", error: nil)
         XCTAssertNil(empty.usableReport)
@@ -94,7 +96,9 @@ final class ImageScanTests: XCTestCase {
     }
 
     func testMadeAtAndFilename() throws {
-        let operatorReport = ImageScanReport(source: "operator", finished: 5, images: [ScannedImage(image: "a", scannedAt: 3), ScannedImage(image: "b", scannedAt: 4)])
+        let operatorReport = ImageScanReport(
+            source: "operator", finished: 5,
+            images: [ScannedImage(image: "a", scannedAt: 3), ScannedImage(image: "b", scannedAt: 4)])
         XCTAssertEqual(operatorReport.madeAt, 4)
         XCTAssertEqual(ImageScanReport(source: "operator", finished: 5, images: [ScannedImage(image: "a")]).madeAt, 5)
         XCTAssertEqual(try report().madeAt, 2)
@@ -103,30 +107,40 @@ final class ImageScanTests: XCTestCase {
         let name = imageScanFilename(app: "Home Assistant / Core!", date: date, format: .cyclonedx)
         XCTAssertTrue(name.hasPrefix("home-assistant-core-vulnerabilities-"), name)
         XCTAssertTrue(name.hasSuffix(".cdx.json"), name)
-        XCTAssertNotNil(name.range(of: #"-vulnerabilities-19(69|70)[01][0-9][0-3][0-9]-[0-2][0-9][0-5][0-9]\.cdx\.json$"#, options: .regularExpression), name)
+        XCTAssertNotNil(
+            name.range(
+                of: #"-vulnerabilities-19(69|70)[01][0-9][0-3][0-9]-[0-2][0-9][0-5][0-9]\.cdx\.json$"#,
+                options: .regularExpression), name)
         XCTAssertEqual(imageScanFilename(app: "***", date: date, format: .csv).prefix(20), "app-vulnerabilities-")
     }
 
     // As go/ichorgo/images_system.go writes it.
     func testDecodesSystemImages() throws {
-        let images = try TalosJSON.decode([SystemImage].self, from: """
-            [{"role":"installer","image":"ghcr.io/example/installer:v1.14.0","ref":"ghcr.io/example/installer:v1.14.0","digest":""},
-             {"role":"kubelet","image":"ghcr.io/example/kubelet:v1.34.1","ref":"ghcr.io/example/kubelet@sha256:a1","digest":"sha256:a1"},
-             {"role":"etcd","image":"registry.example/etcd:3.6.5-0","ref":"registry.example/etcd:3.6.5-0"}]
-            """)
+        let images = try TalosJSON.decode(
+            [SystemImage].self,
+            from: """
+                [{"role":"installer","image":"ghcr.io/example/installer:v1.14.0","ref":"ghcr.io/example/installer:v1.14.0","digest":""},
+                 {"role":"kubelet","image":"ghcr.io/example/kubelet:v1.34.1","ref":"ghcr.io/example/kubelet@sha256:a1","digest":"sha256:a1"},
+                 {"role":"etcd","image":"registry.example/etcd:3.6.5-0","ref":"registry.example/etcd:3.6.5-0"}]
+                """)
         XCTAssertEqual(images.count, 3)
-        XCTAssertEqual(images[1], SystemImage(role: "kubelet", image: "ghcr.io/example/kubelet:v1.34.1",
-                                              ref: "ghcr.io/example/kubelet@sha256:a1", digest: "sha256:a1"))
+        XCTAssertEqual(
+            images[1],
+            SystemImage(
+                role: "kubelet", image: "ghcr.io/example/kubelet:v1.34.1",
+                ref: "ghcr.io/example/kubelet@sha256:a1", digest: "sha256:a1"))
         XCTAssertEqual(images[2].digest, "")
         XCTAssertEqual(systemImagesScanID(node: "192.0.2.10"), "talos:192.0.2.10")
     }
 
     func testImageScanOptions() throws {
-        XCTAssertEqual(try TalosJSON.decode(ImageScanOptions.self, from: imageScanOptions(images: [])),
-                       ImageScanOptions(images: [], scanner: "grype"))
+        XCTAssertEqual(
+            try TalosJSON.decode(ImageScanOptions.self, from: imageScanOptions(images: [])),
+            ImageScanOptions(images: [], scanner: "grype"))
         let options = try imageScanOptions(images: ["ghcr.io/example/kubelet@sha256:a1"], scanner: .grype)
-        XCTAssertEqual(try TalosJSON.decode(ImageScanOptions.self, from: options),
-                       ImageScanOptions(images: ["ghcr.io/example/kubelet@sha256:a1"], scanner: "grype"))
+        XCTAssertEqual(
+            try TalosJSON.decode(ImageScanOptions.self, from: options),
+            ImageScanOptions(images: ["ghcr.io/example/kubelet@sha256:a1"], scanner: "grype"))
     }
 
     func testImageScannerStored() throws {
@@ -141,40 +155,49 @@ final class ImageScanTests: XCTestCase {
 
     // A report kept before the "new since the last scan" fields: nothing new, nothing to compare.
     func testOldReportsDecodeWithoutTheNewFields() throws {
-        let report = try TalosJSON.decode(ImageScanReport.self, from: """
-            {"images":[{"image":"nginx:1.25","summary":{"high":1},"vulnerabilities":[{"id":"CVE-1","severity":"HIGH"}]}]}
-            """)
+        let report = try TalosJSON.decode(
+            ImageScanReport.self,
+            from: """
+                {"images":[{"image":"nginx:1.25","summary":{"high":1},"vulnerabilities":[{"id":"CVE-1","severity":"HIGH"}]}]}
+                """)
         XCTAssertEqual(report.newSummary, VulnSummary())
         XCTAssertFalse(report.hasPrevious)
         XCTAssertFalse(report.images[0].vulnerabilities[0].new)
     }
 
     func testMarksWhatIsNewSinceTheLastScan() throws {
-        let report = try TalosJSON.decode(ImageScanReport.self, from: """
-            {"images":[{"image":"nginx:1.25","previousScannedAt":5,"summary":{"critical":1,"high":1},"new":{"high":1,"fixable":1},
-              "vulnerabilities":[{"id":"CVE-1","severity":"CRITICAL","fixed":"1"},{"id":"CVE-2","severity":"HIGH","fixed":"2","new":true}]}]}
-            """)
+        let report = try TalosJSON.decode(
+            ImageScanReport.self,
+            from: """
+                {"images":[{"image":"nginx:1.25","previousScannedAt":5,"summary":{"critical":1,"high":1},"new":{"high":1,"fixable":1},
+                  "vulnerabilities":[{"id":"CVE-1","severity":"CRITICAL","fixed":"1"},{"id":"CVE-2","severity":"HIGH","fixed":"2","new":true}]}]}
+                """)
         XCTAssertTrue(report.hasPrevious)
         XCTAssertEqual(report.newSummary.total, 1)
         XCTAssertEqual(report.images[0].vulnerabilities.filter(VulnFilter(newOnly: true).keeps).map(\.id), ["CVE-2"])
         XCTAssertEqual(report.images[0].vulnerabilities.filter(VulnFilter().keeps).count, 2)
         // The exports re-encode the report: the new fields go with it.
-        let again = try TalosJSON.decode(ImageScanReport.self, from: String(decoding: JSONEncoder().encode(report), as: UTF8.self))
+        let again = try TalosJSON.decode(
+            ImageScanReport.self, from: String(decoding: JSONEncoder().encode(report), as: UTF8.self))
         XCTAssertEqual(again, report)
     }
 
     func testSavedScans() throws {
-        let saved = try TalosJSON.decode([SavedScan].self, from: """
-            [{"id":"2-aaaaaaaa","cluster":"lab","app":"grafana","scanner":"Grype 0.80","finished":2,"images":1,"summary":{"high":2},"new":{"high":1},"digests":["sha256:a"]},
-             {"id":"1-bbbbbbbb","cluster":"lab","app":"grafana","finished":1,"summary":{},"new":{}},
-             {"id":"0-cccccccc","cluster":"lab","app":"talos:192.0.2.10","finished":0}]
-            """)
+        let saved = try TalosJSON.decode(
+            [SavedScan].self,
+            from: """
+                [{"id":"2-aaaaaaaa","cluster":"lab","app":"grafana","scanner":"Grype 0.80","finished":2,"images":1,"summary":{"high":2},"new":{"high":1},"digests":["sha256:a"]},
+                 {"id":"1-bbbbbbbb","cluster":"lab","app":"grafana","finished":1,"summary":{},"new":{}},
+                 {"id":"0-cccccccc","cluster":"lab","app":"talos:192.0.2.10","finished":0}]
+                """)
         XCTAssertEqual(saved.last(of: "grafana")?.id, "2-aaaaaaaa")
         XCTAssertNil(saved.last(of: "loki"))
         XCTAssertEqual(saved[0].newSummary.total, 1)
         XCTAssertEqual(systemImagesNode(saved[2].app), "192.0.2.10")
         XCTAssertNil(systemImagesNode("grafana"))
         let options = try imageScanOptions(images: [], scanner: .trivy, app: "grafana")
-        XCTAssertEqual(try TalosJSON.decode(ImageScanOptions.self, from: options), ImageScanOptions(images: [], scanner: "trivy", app: "grafana"))
+        XCTAssertEqual(
+            try TalosJSON.decode(ImageScanOptions.self, from: options),
+            ImageScanOptions(images: [], scanner: "trivy", app: "grafana"))
     }
 }

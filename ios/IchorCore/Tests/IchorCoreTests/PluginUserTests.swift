@@ -14,9 +14,11 @@ final class PluginUserTests: XCTestCase {
             .appendingPathComponent(relative)
         let byDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent("../../\(relative)").standardizedFileURL
-        let url = try XCTUnwrap([byFile, byDirectory].first { FileManager.default.fileExists(atPath: $0.path) },
-                                "\(relative) not found")
-        return try TalosJSON.decode(PluginUserList.self, from: String(decoding: try Data(contentsOf: url), as: UTF8.self))
+        let url = try XCTUnwrap(
+            [byFile, byDirectory].first { FileManager.default.fileExists(atPath: $0.path) },
+            "\(relative) not found")
+        return try TalosJSON.decode(
+            PluginUserList.self, from: String(decoding: try Data(contentsOf: url), as: UTF8.self))
     }
 
     func testGoldenDecodes() throws {
@@ -40,16 +42,19 @@ final class PluginUserTests: XCTestCase {
         XCTAssertEqual(consent.resources.map(\.secret), [false, true])
         XCTAssertTrue(consent.revealsSecrets)
         XCTAssertFalse(consent.readOnly)
-        XCTAssertEqual(consent.actions, [PluginConsentAction(label: "Wake up now", verb: "mergePatch", needs: "patch sleepinfos")])
+        XCTAssertEqual(
+            consent.actions, [PluginConsentAction(label: "Wake up now", verb: "mergePatch", needs: "patch sleepinfos")])
     }
 
     func testMaskedSecretIsNotFlagged() throws {
-        let item = try TalosJSON.decode(PluginUserItem.self, from: #"""
-        {"id":"kube-green-copy","replaces":true,"resources":[
-          {"group":"kube-green.com","resource":"sleepinfos","kind":"SleepInfo"},
-          {"group":"","resource":"secrets","kind":"Secret","reveal":false},
-          {"group":"example.com","resource":"secrets","reveal":true}]}
-        """#)
+        let item = try TalosJSON.decode(
+            PluginUserItem.self,
+            from: #"""
+                {"id":"kube-green-copy","replaces":true,"resources":[
+                  {"group":"kube-green.com","resource":"sleepinfos","kind":"SleepInfo"},
+                  {"group":"","resource":"secrets","kind":"Secret","reveal":false},
+                  {"group":"example.com","resource":"secrets","reveal":true}]}
+                """#)
         let consent = item.consent
         XCTAssertEqual(consent.name, "kube-green-copy")
         XCTAssertTrue(consent.replaces)
@@ -59,7 +64,8 @@ final class PluginUserTests: XCTestCase {
     }
 
     func testCatalogSplitsBuiltins() throws {
-        let catalog = try TalosJSON.decode(PluginCatalog.self, from: #"{"items":[{"id":"kube-green"},{"id":"mine","user":true}]}"#)
+        let catalog = try TalosJSON.decode(
+            PluginCatalog.self, from: #"{"items":[{"id":"kube-green"},{"id":"mine","user":true}]}"#)
         XCTAssertEqual(catalog.builtins.map(\.id), ["kube-green"])
     }
 }

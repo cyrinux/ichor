@@ -18,16 +18,27 @@ struct LocalFileActions: View {
             HStack {
                 ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
                 Spacer()
-                Button { exporting = true } label: { Label("Save to Files", systemImage: "folder") }
+                Button {
+                    exporting = true
+                } label: {
+                    Label("Save to Files", systemImage: "folder")
+                }
                 Spacer()
-                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
+                Button(role: .destructive) {
+                    confirmDelete = true
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
             }
             .buttonStyle(.bordered)
             .labelStyle(.iconOnly)
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         }
-        .fileExporter(isPresented: $exporting, document: ExportFileDocument(url: url, options: wrapperOptions), contentType: contentType,
-                      defaultFilename: url.lastPathComponent) { result in
+        .fileExporter(
+            isPresented: $exporting, document: ExportFileDocument(url: url, options: wrapperOptions),
+            contentType: contentType,
+            defaultFilename: url.lastPathComponent
+        ) { result in
             switch result {
             case .success: message = String(localized: "Saved.")
             case .failure(let error): message = error.localizedDescription

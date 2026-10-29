@@ -31,8 +31,9 @@ final class VpnMonitor {
     }
 
     nonisolated static func isUp(_ path: NWPath) -> Bool {
-        vpnIsUp(interfaces: path.availableInterfaces.map { PathInterface(name: $0.name, isOther: $0.type == .other) },
-                usesOther: path.usesInterfaceType(.other))
+        vpnIsUp(
+            interfaces: path.availableInterfaces.map { PathInterface(name: $0.name, isOther: $0.type == .other) },
+            usesOther: path.usesInterfaceType(.other))
     }
 
     /// The current answer, read once from a fresh monitor: for background checks, which may

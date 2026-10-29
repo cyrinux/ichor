@@ -109,8 +109,9 @@ final class AISettings {
             if !set.baseURL.isEmpty { baseURLs[item.id] = set.baseURL }
             if includeKeys, !set.apiKey.isEmpty { keys[item.id] = set.apiKey }
         }
-        let settings = BackupAI(enabled: enabled, provider: provider?.id, models: models.isEmpty ? nil : models,
-                                baseUrls: baseURLs.isEmpty ? nil : baseURLs, anonymize: anonymize)
+        let settings = BackupAI(
+            enabled: enabled, provider: provider?.id, models: models.isEmpty ? nil : models,
+            baseUrls: baseURLs.isEmpty ? nil : baseURLs, anonymize: anonymize)
         return (settings, keys)
     }
 

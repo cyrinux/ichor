@@ -18,18 +18,26 @@ struct FluxAppsList: View {
         // The namespace FluxView asks about; each kind in it has its own permission.
         let accessNamespace = kubeSharedNamespace(status.apps.filter(\.isKustomization).map(\.namespace))
         List {
-            KubeDeniedSection(actions: kubeDistinctActions(status.apps.filter { $0.namespace == accessNamespace }.map(\.target.accessAction)),
-                              namespace: accessNamespace)
+            KubeDeniedSection(
+                actions: kubeDistinctActions(
+                    status.apps.filter { $0.namespace == accessNamespace }.map(\.target.accessAction)),
+                namespace: accessNamespace)
             if !status.helmError.isEmpty { Section { ErrorLine(error: status.helmError) } }
             ForEach(shown) { app in
-                ListDetailLink(value: FluxAppRoute(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: downNodes)) {
+                ListDetailLink(
+                    value: FluxAppRoute(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: downNodes)
+                ) {
                     FluxAppRow(app: app, busy: busy.contains(app.target))
                 }
                 .swipeActions(edge: .leading) {
-                    Button { act(.reconcile, app.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                        .tint(.blue)
-                        .disabled(!app.canReconcile)
-                        .kubeGated(app.target.accessAction, in: app.namespace)
+                    Button {
+                        act(.reconcile, app.target)
+                    } label: {
+                        Label("Reconcile", systemImage: FluxAction.reconcile.symbol)
+                    }
+                    .tint(.blue)
+                    .disabled(!app.canReconcile)
+                    .kubeGated(app.target.accessAction, in: app.namespace)
                 }
                 .swipeActions(edge: .trailing) {
                     suspendButton(suspended: app.suspended, target: app.target)
@@ -37,9 +45,15 @@ struct FluxAppsList: View {
                 }
                 .contextMenu {
                     Group {
-                        Button { act(.reconcile, app.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                            .disabled(!app.canReconcile)
-                        Button { act(.reconcileWithSource, app.target) } label: {
+                        Button {
+                            act(.reconcile, app.target)
+                        } label: {
+                            Label("Reconcile", systemImage: FluxAction.reconcile.symbol)
+                        }
+                        .disabled(!app.canReconcile)
+                        Button {
+                            act(.reconcileWithSource, app.target)
+                        } label: {
                             Label("Reconcile with source", systemImage: FluxAction.reconcileWithSource.symbol)
                         }
                         .disabled(!app.canReconcileWithSource)
@@ -78,8 +92,12 @@ struct FluxAppsList: View {
 /// Suspend (or Resume for a suspended object), for swipes and menus.
 func fluxSuspendButton(suspended: Bool, act: @escaping (FluxAction) -> Void) -> some View {
     let action: FluxAction = suspended ? .resume : .suspend
-    return Button { act(action) } label: { Label(action.label, systemImage: action.symbol) }
-        .tint(suspended ? Color.green : Color.gray)
+    return Button {
+        act(action)
+    } label: {
+        Label(action.label, systemImage: action.symbol)
+    }
+    .tint(suspended ? Color.green : Color.gray)
 }
 
 /// Icon, name and kind, "main@4be1d0c · 2 hours ago", the reason when it is not ready, and the
@@ -102,10 +120,13 @@ struct FluxAppRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if app.state == .failing || app.state == .reconciling, !app.summary.isEmpty {
-                    Text(verbatim: app.state == .failing && !app.reason.isEmpty ? "\(app.reason): \(app.message)" : app.summary)
-                        .font(.caption)
-                        .foregroundStyle(app.state == .failing ? Color.red : Color.blue)
-                        .lineLimit(2)
+                    Text(
+                        verbatim: app.state == .failing && !app.reason.isEmpty
+                            ? "\(app.reason): \(app.message)" : app.summary
+                    )
+                    .font(.caption)
+                    .foregroundStyle(app.state == .failing ? Color.red : Color.blue)
+                    .lineLimit(2)
                 }
             }
             Spacer(minLength: 4)
@@ -141,16 +162,22 @@ struct FluxSourcesList: View {
         // The namespace FluxView asks about (the Kustomizations', where sources usually are).
         let accessNamespace = kubeSharedNamespace(status.apps.filter(\.isKustomization).map(\.namespace))
         List {
-            KubeDeniedSection(actions: kubeDistinctActions(status.sources.filter { $0.namespace == accessNamespace }.map(\.target.accessAction)),
-                              namespace: accessNamespace)
+            KubeDeniedSection(
+                actions: kubeDistinctActions(
+                    status.sources.filter { $0.namespace == accessNamespace }.map(\.target.accessAction)),
+                namespace: accessNamespace)
             if !status.sourcesError.isEmpty { Section { ErrorLine(error: status.sourcesError) } }
             ForEach(shown) { source in
                 // A tap opens the actions too: sources have no screen, and the row looked
                 // tappable while only a long press did anything.
                 Menu {
                     Group {
-                        Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                            .disabled(!source.canReconcile)
+                        Button {
+                            act(.reconcile, source.target)
+                        } label: {
+                            Label("Reconcile", systemImage: FluxAction.reconcile.symbol)
+                        }
+                        .disabled(!source.canReconcile)
                         fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
                     }
                     .kubeGated(source.target.accessAction, in: source.namespace)
@@ -160,10 +187,14 @@ struct FluxSourcesList: View {
                         .contentShape(Rectangle())
                 }
                 .swipeActions(edge: .leading) {
-                    Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                        .tint(.blue)
-                        .disabled(!source.canReconcile)
-                        .kubeGated(source.target.accessAction, in: source.namespace)
+                    Button {
+                        act(.reconcile, source.target)
+                    } label: {
+                        Label("Reconcile", systemImage: FluxAction.reconcile.symbol)
+                    }
+                    .tint(.blue)
+                    .disabled(!source.canReconcile)
+                    .kubeGated(source.target.accessAction, in: source.namespace)
                 }
                 .swipeActions(edge: .trailing) {
                     fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
@@ -171,7 +202,9 @@ struct FluxSourcesList: View {
                 }
             }
         }
-        .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No Flux sources", systemImage: "arrow.triangle.branch") }
+        .emptyOverlay(shown.isEmpty, query: query) {
+            ContentUnavailableView("No Flux sources", systemImage: "arrow.triangle.branch")
+        }
         .refreshable { await refresh() }
         .themedBackground()
     }
@@ -226,13 +259,15 @@ struct FluxSourceRow: View {
     }
 
     private var detail: String {
-        [source.ref,
-         source.revisionLabel,
-         source.fetchedAt > 0 ? String(localized: "fetched \(relativeTime(source.fetchedAt))") : nil,
-         source.suspended ? String(localized: "suspended") : nil,
-         String(localized: "\(source.apps) apps")]
-            .compactMap { $0 }
-            .filter { !$0.isEmpty }
-            .joined(separator: " · ")
+        [
+            source.ref,
+            source.revisionLabel,
+            source.fetchedAt > 0 ? String(localized: "fetched \(relativeTime(source.fetchedAt))") : nil,
+            source.suspended ? String(localized: "suspended") : nil,
+            String(localized: "\(source.apps) apps"),
+        ]
+        .compactMap { $0 }
+        .filter { !$0.isEmpty }
+        .joined(separator: " · ")
     }
 }

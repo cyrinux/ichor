@@ -36,8 +36,10 @@ public func watchedInBackground(_ context: ContextSummary, contexts: [ContextSum
 }
 
 /// `unwatched` once `context`'s cluster is watched (`on`: none of its contexts left in it) or not.
-public func settingWatched(_ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
-                           unwatched: Set<String>) -> Set<String> {
+public func settingWatched(
+    _ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
+    unwatched: Set<String>
+) -> Set<String> {
     guard !context.fingerprint.isEmpty else { return unwatched }
     guard on else { return unwatched.union([context.fingerprint]) }
     let key = monitorClusterKey(context)
@@ -54,8 +56,10 @@ public func clusterFlagged(_ context: ContextSummary, contexts: [ContextSummary]
 }
 
 /// `members` once `context`'s cluster is in it (`on`: every context of the cluster) or not (none).
-public func settingClusterFlag(_ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
-                               members: Set<String>) -> Set<String> {
+public func settingClusterFlag(
+    _ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
+    members: Set<String>
+) -> Set<String> {
     guard !context.fingerprint.isEmpty else { return members }
     let key = monitorClusterKey(context)
     let ofCluster = (contexts.filter { monitorClusterKey($0) == key }.map(\.fingerprint) + [context.fingerprint])
@@ -79,8 +83,11 @@ public func seededAuditEventClusters(legacyOn: Bool?, contexts: [ContextSummary]
 
 /// The contexts a background run checks: one per cluster (clusterContexts), but not the
 /// clusters turned off.
-public func monitoredContexts(_ contexts: [ContextSummary], active: String?, unwatched: Set<String>) -> [ContextSummary] {
-    clusterContexts(contexts, active: active).filter { watchedInBackground($0, contexts: contexts, unwatched: unwatched) }
+public func monitoredContexts(_ contexts: [ContextSummary], active: String?, unwatched: Set<String>) -> [ContextSummary]
+{
+    clusterContexts(contexts, active: active).filter {
+        watchedInBackground($0, contexts: contexts, unwatched: unwatched)
+    }
 }
 
 // MARK: - Snapshots per cluster
@@ -88,9 +95,13 @@ public func monitoredContexts(_ contexts: [ContextSummary], active: String?, unw
 /// `snapshots` (by monitor key) with the single snapshot older versions kept (`legacy`) given
 /// to the active cluster, so the first run after the update compares it instead of taking a
 /// silent baseline. Unchanged when that cluster already has one.
-public func migratedSnapshots(_ snapshots: [String: ClusterSnapshot], legacy: ClusterSnapshot?,
-                              activeCluster: String?) -> [String: ClusterSnapshot] {
-    guard let legacy, let activeCluster, !activeCluster.isEmpty, snapshots[activeCluster] == nil else { return snapshots }
+public func migratedSnapshots(
+    _ snapshots: [String: ClusterSnapshot], legacy: ClusterSnapshot?,
+    activeCluster: String?
+) -> [String: ClusterSnapshot] {
+    guard let legacy, let activeCluster, !activeCluster.isEmpty, snapshots[activeCluster] == nil else {
+        return snapshots
+    }
     var migrated = snapshots
     migrated[activeCluster] = legacy
     return migrated
@@ -119,9 +130,13 @@ public struct WidgetCluster: Codable, Equatable, Hashable, Sendable {
 
 /// The clusters the widget can show, one per cluster, named as on screen; `link` makes the
 /// share link of a context's cluster (the app builds it through Go).
-public func widgetClusters(_ contexts: [ContextSummary], active: String?, labels: ClusterLabels,
-                           link: (ContextSummary) -> String? = { _ in nil }) -> [WidgetCluster] {
-    clusterContexts(contexts, active: active).map { WidgetCluster(id: monitorClusterKey($0), name: labels.of($0), link: link($0)) }
+public func widgetClusters(
+    _ contexts: [ContextSummary], active: String?, labels: ClusterLabels,
+    link: (ContextSummary) -> String? = { _ in nil }
+) -> [WidgetCluster] {
+    clusterContexts(contexts, active: active).map {
+        WidgetCluster(id: monitorClusterKey($0), name: labels.of($0), link: link($0))
+    }
 }
 
 /// The in-app form (ichor://open?…) of a web share link (https://…/open/#…): what a widget tap
@@ -139,7 +154,9 @@ extension SharedSnapshot {
     public static let activeKey = "activeCluster"
 
     public static func loadAll(from defaults: UserDefaults?) -> [String: ClusterSnapshot] {
-        defaults?.data(forKey: snapshotsKey).flatMap { try? JSONDecoder().decode([String: ClusterSnapshot].self, from: $0) } ?? [:]
+        defaults?.data(forKey: snapshotsKey).flatMap {
+            try? JSONDecoder().decode([String: ClusterSnapshot].self, from: $0)
+        } ?? [:]
     }
 
     public static func clusters(from defaults: UserDefaults?) -> [WidgetCluster] {
@@ -183,12 +200,17 @@ public struct Reachability: Codable, Equatable, Sendable {
 /// `runs` in a row (clamped to unreachableRunsRange), and "reachable again" once when it answers
 /// after it. `enabled` off counts without alerting. A run that did not try the cluster (waiting
 /// for its VPN) is not counted at all: callers skip it.
-public func evaluateReachability(previous: Reachability?, reachable: Bool, runs: Int,
-                                 enabled: Bool) -> (alert: Alert?, next: Reachability) {
+public func evaluateReachability(
+    previous: Reachability?, reachable: Bool, runs: Int,
+    enabled: Bool
+) -> (alert: Alert?, next: Reachability) {
     let before = previous ?? Reachability()
     if reachable {
-        let alert = before.alerted && enabled
-            ? Alert(key: "unreachable", title: "Cluster reachable again", text: "It answers the background checks again.", problem: false)
+        let alert =
+            before.alerted && enabled
+            ? Alert(
+                key: "unreachable", title: "Cluster reachable again", text: "It answers the background checks again.",
+                problem: false)
             : nil
         return (alert, Reachability())
     }
@@ -196,7 +218,11 @@ public func evaluateReachability(previous: Reachability?, reachable: Bool, runs:
     var next = Reachability(misses: before.misses + 1, alerted: before.alerted)
     guard enabled, !before.alerted, next.misses >= threshold else { return (nil, next) }
     next.alerted = true
-    return (Alert(key: "unreachable", title: "Cluster unreachable", text: "No answer to the last \(threshold) checks.", problem: true), next)
+    return (
+        Alert(
+            key: "unreachable", title: "Cluster unreachable", text: "No answer to the last \(threshold) checks.",
+            problem: true), next
+    )
 }
 
 // MARK: - Budget
@@ -211,8 +237,10 @@ public let monitorParallel = 4
 /// alert is not pushed past the refresh budget; with the app in front (`appActive`), the active
 /// context (`active`, a name) last, so the screen's own calls are not raced by the monitor's.
 /// Otherwise the stored order, unchanged.
-public func monitorOrder(_ contexts: [ContextSummary], active: String?, appActive: Bool,
-                         lastFailed: Set<String>) -> [ContextSummary] {
+public func monitorOrder(
+    _ contexts: [ContextSummary], active: String?, appActive: Bool,
+    lastFailed: Set<String>
+) -> [ContextSummary] {
     let isLast: (ContextSummary) -> Bool = { appActive && active != nil && $0.name == active }
     let rest = contexts.filter { !isLast($0) }
     let failed = rest.filter { lastFailed.contains(monitorClusterKey($0)) }
@@ -222,7 +250,9 @@ public func monitorOrder(_ contexts: [ContextSummary], active: String?, appActiv
 
 /// How long one cluster may take: the budget split over the waves of `monitorParallel`, between
 /// 8 s and 20 s (a Go call gives up after 20 s). Past that it counts as unreachable for the run.
-public func monitorClusterTimeout(clusters: Int, budget: TimeInterval = monitorBudget, parallel: Int = monitorParallel) -> TimeInterval {
+public func monitorClusterTimeout(clusters: Int, budget: TimeInterval = monitorBudget, parallel: Int = monitorParallel)
+    -> TimeInterval
+{
     let width = max(1, parallel)
     let waves = max(1, (clusters + width - 1) / width)
     return min(20, max(8, budget / Double(waves)))

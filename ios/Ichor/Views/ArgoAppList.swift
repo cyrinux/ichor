@@ -28,8 +28,12 @@ struct ArgoAppsList: View {
             KubeBulkDeniedSection(.argoSync, across: status.apps.map(\.namespace))
             if filter == .outOfSync && !candidates.isEmpty {
                 Section {
-                    Button { onSyncAll(candidates) } label: {
-                        Label(String(localized: "Sync all out of sync (\(candidates.count))"), systemImage: "arrow.triangle.2.circlepath")
+                    Button {
+                        onSyncAll(candidates)
+                    } label: {
+                        Label(
+                            String(localized: "Sync all out of sync (\(candidates.count))"),
+                            systemImage: "arrow.triangle.2.circlepath")
                     }
                     .kubeGated(.argoSync, across: candidates.map(\.namespace))
                 }
@@ -37,19 +41,29 @@ struct ArgoAppsList: View {
             ForEach(groupArgoApps(shown, by: grouping)) { group in
                 Section {
                     ForEach(group.apps) { app in
-                        ListDetailLink(value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)) {
+                        ListDetailLink(
+                            value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)
+                        ) {
                             ArgoAppRow(app: app, downNodes: downNodes, busy: busy.contains(app.id))
                         }
                         .swipeActions(edge: .leading) {
-                            Button { onSync(app) } label: { Label("Sync", systemImage: "arrow.triangle.2.circlepath") }
-                                .tint(.blue)
-                                .disabled(!app.canSync)
-                                .kubeGated(.argoSync, in: app.namespace)
+                            Button {
+                                onSync(app)
+                            } label: {
+                                Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+                            }
+                            .tint(.blue)
+                            .disabled(!app.canSync)
+                            .kubeGated(.argoSync, in: app.namespace)
                         }
                         .swipeActions(edge: .trailing) {
-                            Button { onRefresh(app) } label: { Label("Refresh", systemImage: "arrow.clockwise") }
-                                .tint(.indigo)
-                                .kubeGated(.argoSync, in: app.namespace)
+                            Button {
+                                onRefresh(app)
+                            } label: {
+                                Label("Refresh", systemImage: "arrow.clockwise")
+                            }
+                            .tint(.indigo)
+                            .kubeGated(.argoSync, in: app.namespace)
                         }
                     }
                 } header: {
@@ -90,7 +104,9 @@ struct ArgoAppsList: View {
             Spacer()
             Text(verbatim: "\(group.apps.count)").monospacedDigit()
             if let scope = freezeScope(group), let anchor = group.apps.first {
-                Button { onFreeze(anchor, scope) } label: {
+                Button {
+                    onFreeze(anchor, scope)
+                } label: {
                     Image(systemName: "snowflake").accessibilityLabel(Text("Freeze \(group.title)"))
                 }
                 .textCase(nil)
@@ -132,7 +148,8 @@ struct ArgoAppRow: View {
                     Text(verbatim: app.name).font(.body.weight(.medium)).lineLimit(1)
                     if let owner = app.owner { ArgoOwnerBadge(owner: owner) }
                     if app.freeze != nil {
-                        Image(systemName: "snowflake").font(.caption).foregroundStyle(.blue).accessibilityLabel(Text("Frozen"))
+                        Image(systemName: "snowflake").font(.caption).foregroundStyle(.blue).accessibilityLabel(
+                            Text("Frozen"))
                     }
                 }
                 Text(verbatim: detail)
@@ -142,12 +159,16 @@ struct ArgoAppRow: View {
                     .truncationMode(.middle)
                 if let op = app.operation, op.phase.active {
                     HStack(spacing: 6) {
-                        Text(verbatim: [op.phase.label, argoProgressText(op)].filter { !$0.isEmpty }.joined(separator: " · "))
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.blue)
-                            .monospacedDigit()
+                        Text(
+                            verbatim: [op.phase.label, argoProgressText(op)].filter { !$0.isEmpty }.joined(
+                                separator: " · ")
+                        )
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.blue)
+                        .monospacedDigit()
                         if op.total > 0 {
-                            ProgressView(value: Double(op.done), total: Double(op.total)).frame(maxWidth: 80).tint(.blue)
+                            ProgressView(value: Double(op.done), total: Double(op.total)).frame(maxWidth: 80).tint(
+                                .blue)
                         }
                     }
                 } else if let cause = app.likelyCause(downNodes: downNodes) {
@@ -196,12 +217,15 @@ struct ArgoAppSetsList: View {
                         let apps = status.apps(of: set)
                         if apps.isEmpty { Text("No apps generated.").font(.callout).foregroundStyle(.secondary) }
                         ForEach(apps) { app in
-                            ListDetailLink(value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)) {
+                            ListDetailLink(
+                                value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)
+                            ) {
                                 HStack(spacing: 10) {
                                     AppIconView(app: app.iconApp, size: 28)
                                     Text(verbatim: app.name).font(.callout)
                                     Spacer()
-                                    ArgoGlyphs(health: app.health, sync: app.sync, running: app.isRunning, font: .caption)
+                                    ArgoGlyphs(
+                                        health: app.health, sync: app.sync, running: app.isRunning, font: .caption)
                                 }
                             }
                         }
@@ -230,7 +254,8 @@ struct ArgoAppSetsList: View {
             HStack {
                 Text(verbatim: project.name).font(.callout.weight(.medium))
                 Spacer()
-                Text("\(status.apps(of: project).count) apps").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                Text("\(status.apps(of: project).count) apps").font(.caption).foregroundStyle(.secondary)
+                    .monospacedDigit()
             }
             if !project.description.isEmpty {
                 Text(verbatim: project.description).font(.caption).foregroundStyle(.secondary)

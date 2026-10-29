@@ -16,6 +16,7 @@ public struct LonghornSalvagePreview: Decodable, Sendable {
     public let error: String
     public let replicas: [LonghornSalvageReplica]
     public func accepts(_ selection: Set<String>) -> Bool {
-        canSalvage && error.isEmpty && !selection.isEmpty && selection.allSatisfy { name in replicas.contains { $0.name == name && $0.eligible } }
+        canSalvage && error.isEmpty && !selection.isEmpty
+            && selection.allSatisfy { name in replicas.contains { $0.name == name && $0.eligible } }
     }
 }

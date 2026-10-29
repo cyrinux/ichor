@@ -29,10 +29,13 @@ enum SpotlightIndex {
         }
         guard let summary else { return }
         active = summary.context(named: context)
-        replace(domain: SpotlightItems.clustersDomain, with: SpotlightItems.clusters(summary.contexts, active: context, labels: labels))
+        replace(
+            domain: SpotlightItems.clustersDomain,
+            with: SpotlightItems.clusters(summary.contexts, active: context, labels: labels))
         let stale = SpotlightItems.staleAppClusters(indexed: appClusters, current: summary.contexts)
         guard !stale.isEmpty else { return }
-        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: stale.map(SpotlightItems.appsDomain(cluster:)))
+        CSSearchableIndex.default().deleteSearchableItems(
+            withDomainIdentifiers: stale.map(SpotlightItems.appsDomain(cluster:)))
         appClusters = appClusters.filter { !stale.contains($0) }
     }
 
@@ -52,13 +55,16 @@ enum SpotlightIndex {
     static func wipe() {
         active = nil
         appClusters = []
-        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [SpotlightItems.clustersDomain, SpotlightItems.appsDomain])
+        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [
+            SpotlightItems.clustersDomain, SpotlightItems.appsDomain,
+        ])
     }
 
     /// The share link (ichor://open?…) of the Spotlight result `activity` opens, if it is one of ours.
     nonisolated static func link(of activity: NSUserActivity) -> URL? {
         guard activity.activityType == CSSearchableItemActionType,
-              let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return nil }
+            let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String
+        else { return nil }
         return SpotlightItems.link(identifier: identifier).flatMap(URL.init(string:))
     }
 
@@ -83,12 +89,14 @@ enum SpotlightIndex {
         guard let link = TalosClient.shareLink(for: item.target) else { return nil }
         let attributes = CSSearchableItemAttributeSet(contentType: .content)
         attributes.title = item.title
-        attributes.contentDescription = switch item.kind {
-        case .cluster: String(localized: "Cluster in Ichor")
-        case .argoApp: String(localized: "Argo CD app · \(item.clusterLabel)")
-        case .fluxApp: String(localized: "Flux app · \(item.clusterLabel)")
-        }
-        return CSSearchableItem(uniqueIdentifier: link.absoluteString, domainIdentifier: item.domain, attributeSet: attributes)
+        attributes.contentDescription =
+            switch item.kind {
+            case .cluster: String(localized: "Cluster in Ichor")
+            case .argoApp: String(localized: "Argo CD app · \(item.clusterLabel)")
+            case .fluxApp: String(localized: "Flux app · \(item.clusterLabel)")
+            }
+        return CSSearchableItem(
+            uniqueIdentifier: link.absoluteString, domainIdentifier: item.domain, attributeSet: attributes)
     }
 
     private static var appClusters: [String] {

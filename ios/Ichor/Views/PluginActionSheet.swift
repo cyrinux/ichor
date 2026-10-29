@@ -52,16 +52,22 @@ struct PluginActionButton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
-                Button { start() } label: { Text(verbatim: action.label) }
-                    .buttonStyle(.bordered)
-                    .disabled(!runnable || running)
+                Button {
+                    start()
+                } label: {
+                    Text(verbatim: action.label)
+                }
+                .buttonStyle(.bordered)
+                .disabled(!runnable || running)
                 if running { ProgressView() }
             }
             if let note { Text(note).font(.caption).foregroundStyle(.secondary) }
         }
-        .modifier(PluginActionConfirmation(action: action, plain: $plain, typed: $typed) { run in
-            Task { await execute(run) }
-        })
+        .modifier(
+            PluginActionConfirmation(action: action, plain: $plain, typed: $typed) { run in
+                Task { await execute(run) }
+            }
+        )
         .sheet(item: $form) { request in
             PluginActionFormSheet(action: action, request: request) { run in
                 form = nil
@@ -107,19 +113,26 @@ struct PluginActionButton: View {
 
     /// Runs on `run.target` only, and only while the row still shows it with the button on.
     private func execute(_ run: PluginActionRun) async {
-        guard let client = model.client, let context, !running, run.applies(to: target, usable: action.usable) else { return }
+        guard let client = model.client, let context, !running, run.applies(to: target, usable: action.usable) else {
+            return
+        }
         let target = run.target
         running = true
         defer { running = false }
         do {
-            try await client.pluginAction(id: context.pluginID, action: action.id, namespace: target.namespace,
-                                          name: target.name, paramsJSON: run.paramsJSON)
-            context.finished(PluginActionOutcome(
-                message: String(localized: "\(action.label) sent to \(target.label)."), succeeded: true, reload: true))
+            try await client.pluginAction(
+                id: context.pluginID, action: action.id, namespace: target.namespace,
+                name: target.name, paramsJSON: run.paramsJSON)
+            context.finished(
+                PluginActionOutcome(
+                    message: String(localized: "\(action.label) sent to \(target.label)."), succeeded: true,
+                    reload: true))
         } catch {
             let failure = PluginActionFailure(message: error.localizedDescription)
-            context.finished(PluginActionOutcome(
-                message: pluginActionFailureText(failure, action: action, target: target), succeeded: false, reload: failure.staleObject))
+            context.finished(
+                PluginActionOutcome(
+                    message: pluginActionFailureText(failure, action: action, target: target), succeeded: false,
+                    reload: failure.staleObject))
         }
     }
 }
@@ -152,18 +165,26 @@ private struct PluginActionConfirmation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .confirmationDialog(plain.map { String(localized: "\(action.label) on \($0.target.label)?") } ?? "",
-                                isPresented: $plain.isPresent(),
-                                titleVisibility: .visible,
-                                presenting: plain) { request in
-                Button { run(request) } label: { Text(verbatim: action.label) }
+            .confirmationDialog(
+                plain.map { String(localized: "\(action.label) on \($0.target.label)?") } ?? "",
+                isPresented: $plain.isPresent(),
+                titleVisibility: .visible,
+                presenting: plain
+            ) { request in
+                Button {
+                    run(request)
+                } label: {
+                    Text(verbatim: action.label)
+                }
                 Button("Cancel", role: .cancel) {}
             } message: { request in
                 Text(verbatim: pluginActionExplanation(action, target: request.target))
             }
             .sheet(item: $typed) { request in
-                HostnameConfirmationSheet(title: action.label, message: pluginActionExplanation(action, target: request.target),
-                                          hostname: request.target.name, actionTitle: action.label) {
+                HostnameConfirmationSheet(
+                    title: action.label, message: pluginActionExplanation(action, target: request.target),
+                    hostname: request.target.name, actionTitle: action.label
+                ) {
                     typed = nil
                     run(request)
                 }

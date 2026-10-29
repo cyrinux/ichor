@@ -34,7 +34,9 @@ public struct PluginTree: Decodable, Equatable, Sendable {
     /// The unreadable parts as lines: "secrets: forbidden".
     public var errorLines: [String] { errors.map(\.line) }
 
-    private enum CodingKeys: String, CodingKey { case plugin, active, detectedVia, apiVersion, health, partial, summary, cards, findings, errors, tools }
+    private enum CodingKeys: String, CodingKey {
+        case plugin, active, detectedVia, apiVersion, health, partial, summary, cards, findings, errors, tools
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -128,8 +130,10 @@ public struct PluginInfo: Decodable, Equatable, Sendable {
     public let screen: String
     public let website: String
 
-    public init(id: String = "", name: String = "", icon: String = "", category: String = pluginCategoryDataServices,
-                version: String = "", screen: String = "", website: String = "") {
+    public init(
+        id: String = "", name: String = "", icon: String = "", category: String = pluginCategoryDataServices,
+        version: String = "", screen: String = "", website: String = ""
+    ) {
         self.id = id
         self.name = name
         self.icon = icon
@@ -284,7 +288,10 @@ public struct PluginRef: Decodable, Equatable, Hashable, Sendable {
     /// Set when the plugin's ref names another object than the listed one; "" otherwise.
     public let kind: String
 
-    public init(group: String = "", version: String = "", resource: String = "", namespace: String = "", name: String = "", kind: String = "") {
+    public init(
+        group: String = "", version: String = "", resource: String = "", namespace: String = "", name: String = "",
+        kind: String = ""
+    ) {
         self.group = group
         self.version = version
         self.resource = resource
@@ -313,7 +320,9 @@ public struct PluginRef: Decodable, Equatable, Hashable, Sendable {
     /// The object screen's resource; `kind` comes from the ref, else the plugin catalog ("" when
     /// unknown: only the title misses it).
     public func apiResource(kind: String) -> KubeAPIResource {
-        KubeAPIResource(group: group, version: version.isEmpty ? "v1" : version, resource: resource, kind: kind, namespaced: !namespace.isEmpty)
+        KubeAPIResource(
+            group: group, version: version.isEmpty ? "v1" : version, resource: resource, kind: kind,
+            namespaced: !namespace.isEmpty)
     }
 
     /// A SleepInfo of kube-green: its plugin rows get the native schedule editor.

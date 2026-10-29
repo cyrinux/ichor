@@ -9,7 +9,8 @@ extension TalosClient {
         }
     }
     func longhornAttachment(namespace: String, name: String, node: String, attach: Bool) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeLonghornAttachment(config, context, server, namespace, name, node, attach, error)
         }
     }
@@ -20,7 +21,8 @@ extension TalosClient {
         }
     }
     func longhornEngineUpgrade(namespace: String, name: String, image: String) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeLonghornEngineUpgrade(config, context, server, namespace, name, image, error)
         }
     }
@@ -32,21 +34,24 @@ extension TalosClient {
     }
     func longhornSalvage(namespace: String, name: String, replicas: Set<String>) async throws {
         let names = String(decoding: try JSONEncoder().encode(replicas.sorted()), as: UTF8.self)
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeLonghornSalvage(config, context, server, namespace, name, names, error)
         }
     }
 
- func cnpgRestartPrimary(namespace: String, name: String) async throws {
- try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
- _ = IchorgoKubeCNPGRestartPrimary(config, context, server, namespace, name, error)
- }
- }
- func cnpgHibernate(namespace: String, name: String, enabled: Bool) async throws {
- try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
- _ = IchorgoKubeCNPGHibernate(config, context, server, namespace, name, enabled, error)
- }
- }
+    func cnpgRestartPrimary(namespace: String, name: String) async throws {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeCNPGRestartPrimary(config, context, server, namespace, name, error)
+        }
+    }
+    func cnpgHibernate(namespace: String, name: String, enabled: Bool) async throws {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeCNPGHibernate(config, context, server, namespace, name, enabled, error)
+        }
+    }
 
     func cnpgPromotePreview(namespace: String, name: String, instance: String) async throws -> CnpgPromotePreview {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
@@ -54,7 +59,8 @@ extension TalosClient {
         }
     }
     func cnpgPromote(namespace: String, name: String, instance: String) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeCNPGPromote(config, context, kubeServer, namespace, name, instance, error)
         }
     }
@@ -64,7 +70,8 @@ extension TalosClient {
         }
     }
     func createVolumeSnapshot(namespace: String, pvc: String) async throws -> String {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeCreateVolumeSnapshot(config, context, kubeServer, namespace, pvc, error)
         }
     }
@@ -80,13 +87,16 @@ extension TalosClient {
     /// Health of Longhorn, Garage and CloudNativePG (os:admin). hints: their catalog ids seen in the
     /// inventory (see dataServiceHints); "" checks everything.
     func dataServices(hints: String) async throws -> DataServices {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeDataServices(config, context, kubeServer, hints, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeDataServices(config, context, kubeServer, hints, $0)
+        }
     }
 
     /// What the blocks failing to resync in a Garage cluster are, from a sample (os:admin).
     func garageBlockErrors(_ instance: GarageInstance) async throws -> GarageBlockReport {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageBlockErrors(config, context, kubeServer, namespace, pod, $0)
         }
     }
@@ -94,7 +104,8 @@ extension TalosClient {
     /// Launches the safe repairs for the blocks failing to resync (os:admin); they run asynchronously.
     func garageRepairBlocks(_ instance: GarageInstance) async throws -> GarageRepairResult {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageRepairBlocks(config, context, kubeServer, namespace, pod, $0)
         }
     }
@@ -102,25 +113,31 @@ extension TalosClient {
     /// A Garage cluster's layout: roles, staged changes with their preview, version history (os:admin).
     func garageLayout(_ instance: GarageInstance) async throws -> GarageLayout {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageLayout(config, context, kubeServer, namespace, pod, $0)
         }
     }
 
     /// Stages a role for a Garage node (full id): zone, capacity in bytes unless gateway, tags (os:admin).
     /// Nothing moves until garageApplyLayout. Answers the layout with the staged change and its preview.
-    func garageStageRole(_ instance: GarageInstance, node: String, zone: String, capacity: Int64, gateway: Bool, tags: [String]) async throws -> GarageLayout {
+    func garageStageRole(
+        _ instance: GarageInstance, node: String, zone: String, capacity: Int64, gateway: Bool, tags: [String]
+    ) async throws -> GarageLayout {
         let (namespace, pod) = (instance.namespace, instance.pod)
         let tagsJSON = try String(decoding: JSONEncoder().encode(tags), as: UTF8.self)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeGarageStageRole(config, context, kubeServer, namespace, pod, node, zone, capacity, gateway, tagsJSON, $0)
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGarageStageRole(
+                config, context, kubeServer, namespace, pod, node, zone, capacity, gateway, tagsJSON, $0)
         }
     }
 
     /// Stages the removal of a Garage node from the layout (os:admin).
     func garageStageRemoval(_ instance: GarageInstance, node: String) async throws -> GarageLayout {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageStageRemoval(config, context, kubeServer, namespace, pod, node, $0)
         }
     }
@@ -128,7 +145,8 @@ extension TalosClient {
     /// Stages the layout's zone redundancy: "maximum" or a number of zones (os:admin).
     func garageSetZoneRedundancy(_ instance: GarageInstance, value: String) async throws -> GarageLayout {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageSetZoneRedundancy(config, context, kubeServer, namespace, pod, value, $0)
         }
     }
@@ -136,7 +154,8 @@ extension TalosClient {
     /// Applies the staged layout changes as `version`, the one the preview announced (os:admin); Garage refuses any other.
     func garageApplyLayout(_ instance: GarageInstance, version: Int64) async throws -> GarageLayout {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageApplyLayout(config, context, kubeServer, namespace, pod, version, $0)
         }
     }
@@ -144,9 +163,12 @@ extension TalosClient {
     /// Lets a draining layout version stop waiting on the nodes that are down (os:admin): their acknowledgement
     /// trackers move to `version`, the current one; allowMissingData moves every node's sync tracker too, giving up
     /// the metadata only the dead nodes held. Throws when nothing moved.
-    func garageSkipDeadNodes(_ instance: GarageInstance, version: Int64, allowMissingData: Bool) async throws -> GarageLayout {
+    func garageSkipDeadNodes(_ instance: GarageInstance, version: Int64, allowMissingData: Bool) async throws
+        -> GarageLayout
+    {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageSkipDeadNodes(config, context, kubeServer, namespace, pod, version, allowMissingData, $0)
         }
     }
@@ -154,7 +176,8 @@ extension TalosClient {
     /// Drops every staged layout change (os:admin).
     func garageRevertLayout(_ instance: GarageInstance) async throws -> GarageLayout {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeGarageRevertLayout(config, context, kubeServer, namespace, pod, $0)
         }
     }
@@ -162,7 +185,8 @@ extension TalosClient {
     /// Sets the resync tranquility of a Garage node, full id or "*" (os:admin): 0 is full speed, 2 the default.
     func garageSetTranquility(_ instance: GarageInstance, node: String, value: Int) async throws {
         let (namespace, pod) = (instance.namespace, instance.pod)
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeGarageSetTranquility(config, context, kubeServer, namespace, pod, node, value, error)
         }
     }
@@ -170,16 +194,21 @@ extension TalosClient {
     /// Runs action on the Longhorn volume or node namespace/name (os:admin); namespace is Longhorn's
     /// own. value: the replica count for .replicas, ignored otherwise.
     func longhornAction(namespace: String, name: String, action: LonghornAction, value: Int = 0) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeLonghornAction(config, context, kubeServer, namespace, name, action.rawValue, value, error)
         }
     }
 
     /// Runs action on snapshot ("" to take one) of the Longhorn volume namespace/volume (os:admin).
     /// Throws when refused, a detached volume included.
-    func longhornSnapshotAction(namespace: String, volume: String, snapshot: String, action: LonghornSnapshotAction) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeLonghornSnapshotAction(config, context, kubeServer, namespace, volume, snapshot, action.rawValue, error)
+    func longhornSnapshotAction(namespace: String, volume: String, snapshot: String, action: LonghornSnapshotAction)
+        async throws
+    {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeLonghornSnapshotAction(
+                config, context, kubeServer, namespace, volume, snapshot, action.rawValue, error)
         }
     }
 
@@ -193,16 +222,21 @@ extension TalosClient {
 
     /// Moves the kube-green SleepInfo namespace/name's schedule: `weekdays` (cron day-of-week),
     /// `sleepAt` and `wakeUpAt` ("HH:mm"; "" for no wake-up) in `timeZone` (IANA).
-    func setKubeGreenSchedule(namespace: String, name: String, weekdays: String, sleepAt: String, wakeUpAt: String, timeZone: String) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeGreenSetSchedule(config, context, kubeServer, namespace, name, weekdays, sleepAt, wakeUpAt, timeZone, error)
+    func setKubeGreenSchedule(
+        namespace: String, name: String, weekdays: String, sleepAt: String, wakeUpAt: String, timeZone: String
+    ) async throws {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeGreenSetSchedule(
+                config, context, kubeServer, namespace, name, weekdays, sleepAt, wakeUpAt, timeZone, error)
         }
     }
 
     /// Issues the cert-manager certificate namespace/name again now, like `cmctl renew` (os:admin).
     /// Refused while it is already being issued.
     func renewCertificate(namespace: String, name: String) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeCertManagerRenew(config, context, kubeServer, namespace, name, error)
         }
     }
@@ -210,7 +244,8 @@ extension TalosClient {
     /// Starts a backup of the CloudNativePG cluster namespace/name now, like `kubectl cnpg backup`
     /// (os:admin): the new Backup's name. Refused when hibernated, without a backup method, or while one runs.
     func cnpgBackup(namespace: String, name: String) async throws -> String {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeCNPGBackup(config, context, kubeServer, namespace, name, error)
         }
     }
@@ -225,7 +260,8 @@ extension TalosClient {
     /// Backs the Velero schedule namespace/schedule up now, like `velero backup create --from-schedule`
     /// (os:admin): the new Backup's name. Refused when paused, invalid, or while one of its backups runs.
     func veleroBackupNow(namespace: String, schedule: String) async throws -> String {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeVeleroBackupNow(config, context, kubeServer, namespace, schedule, error)
         }
     }
@@ -233,7 +269,8 @@ extension TalosClient {
     /// Asks Velero to delete the backup namespace/backup and its data, like `velero backup delete`
     /// (os:admin): the deletion request's name. Refused while it runs or is already being deleted.
     func veleroDeleteBackup(namespace: String, backup: String) async throws -> String {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeVeleroDeleteBackup(config, context, kubeServer, namespace, backup, error)
         }
     }
@@ -252,7 +289,8 @@ extension TalosClient {
     /// backup cannot be a source, its storage location is down, or a restore of it runs.
     func veleroRestore(namespace: String, backup: String, options: VeleroRestoreOptions) async throws -> String {
         let json = String(decoding: try JSONEncoder().encode(options), as: UTF8.self)
-        return try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+        return try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeVeleroRestore(config, context, kubeServer, namespace, backup, json, error)
         }
     }

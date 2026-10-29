@@ -24,7 +24,9 @@ struct KubeObjectScaleSheet: View {
     @State private var resultMessage: String?
 
     // Explicit: the private @State makes the memberwise init private.
-    init(resource: KubeAPIResource, namespace: String, name: String, denial: KubeAccess?, onScaled: @escaping () -> Void) {
+    init(
+        resource: KubeAPIResource, namespace: String, name: String, denial: KubeAccess?, onScaled: @escaping () -> Void
+    ) {
         self.resource = resource
         self.namespace = namespace
         self.name = name
@@ -54,7 +56,8 @@ struct KubeObjectScaleSheet: View {
         Form {
             Section {
                 Stepper(value: $target, in: 0...kubeMaxScaleReplicas) {
-                    Text(verbatim: target == scale.replicas ? "\(target)" : "\(scale.replicas) → \(target)").monospacedDigit()
+                    Text(verbatim: target == scale.replicas ? "\(target)" : "\(scale.replicas) → \(target)")
+                        .monospacedDigit()
                 }
                 .disabled(applying)
                 Text("Running now: \(String(scale.current))").foregroundStyle(.secondary)
@@ -102,8 +105,9 @@ struct KubeObjectScaleSheet: View {
                         Text("Apply")
                     }
                 }
-                .disabled(applying || denial != nil || target == scale.replicas
-                          || (toZero(scale) && !typedConfirmationMatches(typed, token: name)))
+                .disabled(
+                    applying || denial != nil || target == scale.replicas
+                        || (toZero(scale) && !typedConfirmationMatches(typed, token: name)))
             }
         }
     }

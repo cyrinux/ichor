@@ -27,7 +27,9 @@ extension TalosClient {
     /// they reach the stream in batches, 4 times a second. After a stop Go still reports `done`
     /// with the file, so stop rather than cancel the consuming task (which also stops the
     /// capture, but drops that last event).
-    func packetCapture(node: String, options: CaptureOptions, destPath: String) -> (events: AsyncStream<CaptureEvent>, stop: @Sendable () -> Void) {
+    func packetCapture(node: String, options: CaptureOptions, destPath: String) -> (
+        events: AsyncStream<CaptureEvent>, stop: @Sendable () -> Void
+    ) {
         let (stream, continuation) = AsyncStream.makeStream(of: CaptureEvent.self)
         let bridge = CaptureBridge(
             packets: { continuation.yield(.packets($0)) },
@@ -37,9 +39,10 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartPacketCapture(config, context, node, options.interface, options.trimmedFilter,
-                                                options.promiscuous, options.snapLen, options.duration.seconds,
-                                                options.sizeLimit.bytes, destPath, bridge)
+        let run = IchorgoStartPacketCapture(
+            config, context, node, options.interface, options.trimmedFilter,
+            options.promiscuous, options.snapLen, options.duration.seconds,
+            options.sizeLimit.bytes, destPath, bridge)
         let flusher = Task.detached {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
@@ -49,14 +52,16 @@ extension TalosClient {
         continuation.onTermination = { _ in
             flusher.cancel()
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole capture
+            _ = bridge  // keep the listener alive for the whole capture
         }
         return (stream, { run?.cancel() })
     }
 
     /// `packetCapture` on node and on `options.peer` at once, merged into destPath (one
     /// interface per node, each summary naming its node).
-    func packetCapturePair(node: String, options: CaptureOptions, destPath: String) -> (events: AsyncStream<CaptureEvent>, stop: @Sendable () -> Void) {
+    func packetCapturePair(node: String, options: CaptureOptions, destPath: String) -> (
+        events: AsyncStream<CaptureEvent>, stop: @Sendable () -> Void
+    ) {
         let (stream, continuation) = AsyncStream.makeStream(of: CaptureEvent.self)
         let bridge = PairCaptureBridge(
             packets: { continuation.yield(.packets($0)) },
@@ -66,9 +71,10 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartPacketCapturePair(config, context, "\(node),\(options.peer)", options.interfaces, options.trimmedFilter,
-                                                    options.promiscuous, options.snapLen, options.duration.seconds,
-                                                    options.sizeLimit.bytes, destPath, bridge)
+        let run = IchorgoStartPacketCapturePair(
+            config, context, "\(node),\(options.peer)", options.interfaces, options.trimmedFilter,
+            options.promiscuous, options.snapLen, options.duration.seconds,
+            options.sizeLimit.bytes, destPath, bridge)
         let flusher = Task.detached {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
@@ -78,7 +84,7 @@ extension TalosClient {
         continuation.onTermination = { _ in
             flusher.cancel()
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole capture
+            _ = bridge  // keep the listener alive for the whole capture
         }
         return (stream, { run?.cancel() })
     }
@@ -102,7 +108,8 @@ extension TalosClient {
     }
 
     func upgradePlan(node: String) async throws -> UpgradePlan {
-        try await Self.json { [config, context, kubeServer] in IchorgoUpgradePlan(config, context, kubeServer, node, $0) }
+        try await Self.json { [config, context, kubeServer] in IchorgoUpgradePlan(config, context, kubeServer, node, $0)
+        }
     }
 
     /// Recent Talos releases from GitHub, newest first.
@@ -129,7 +136,8 @@ extension TalosClient {
     /// `talosctl upgrade` and following the node until it is back (os:admin). Cancelling the
     /// consuming task only stops following: the node keeps upgrading. `acknowledged`: the user
     /// confirmed the plan's and the version's risks (Go refuses them otherwise, even forced).
-    func upgrade(node: String, image: String, stage: Bool, force: Bool, acknowledged: Bool) -> AsyncStream<UpgradeEvent> {
+    func upgrade(node: String, image: String, stage: Bool, force: Bool, acknowledged: Bool) -> AsyncStream<UpgradeEvent>
+    {
         TalosClient.bridged { continuation in
             let bridge = UpgradeBridge(
                 progress: { continuation.yield(.progress($0)) },
@@ -152,8 +160,10 @@ private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, @un
     private let lock = NSLock()
     private var pending: [PacketSummary] = []
 
-    init(packets: @escaping @Sendable ([PacketSummary]) -> Void, stats: @escaping @Sendable (Int64, Int64) -> Void,
-         done: @escaping @Sendable (CaptureEvent) -> Void) {
+    init(
+        packets: @escaping @Sendable ([PacketSummary]) -> Void, stats: @escaping @Sendable (Int64, Int64) -> Void,
+        done: @escaping @Sendable (CaptureEvent) -> Void
+    ) {
         self.packets = packets
         self.stats = stats
         self.done = done
@@ -195,8 +205,10 @@ private final class PairCaptureBridge: NSObject, IchorgoPairCaptureListenerProto
     private let lock = NSLock()
     private var pending: [PacketSummary] = []
 
-    init(packets: @escaping @Sendable ([PacketSummary]) -> Void, stats: @escaping @Sendable (PairCaptureStats) -> Void,
-         done: @escaping @Sendable (CaptureEvent) -> Void) {
+    init(
+        packets: @escaping @Sendable ([PacketSummary]) -> Void, stats: @escaping @Sendable (PairCaptureStats) -> Void,
+        done: @escaping @Sendable (CaptureEvent) -> Void
+    ) {
         self.packets = packets
         self.stats = stats
         self.done = done

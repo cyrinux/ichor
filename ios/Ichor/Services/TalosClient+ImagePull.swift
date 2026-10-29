@@ -22,7 +22,8 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartImagePull(config, context, nodes.joined(separator: ","), image, namespace.rawValue, bridge)
+            let run = IchorgoStartImagePull(
+                config, context, nodes.joined(separator: ","), image, namespace.rawValue, bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }

@@ -31,13 +31,17 @@ struct TopologyLinkSheet: View {
                     Section("Last network test") { LinkTestRow(test: test) }
                 }
                 Section {
-                    Button { onTest?() } label: {
+                    Button {
+                        onTest?()
+                    } label: {
                         Label("Test this link", systemImage: "speedometer")
                     }
                     .disabled(onTest == nil)
                     if let ends {
                         NavigationLink {
-                            CaptureView(node: ends.0.node, hostname: ends.0.hostname, peer: ends.1.node, peerHostname: ends.1.hostname)
+                            CaptureView(
+                                node: ends.0.node, hostname: ends.0.hostname, peer: ends.1.node,
+                                peerHostname: ends.1.hostname)
                         } label: {
                             Label("Capture both ends", systemImage: "waveform.path.ecg")
                         }

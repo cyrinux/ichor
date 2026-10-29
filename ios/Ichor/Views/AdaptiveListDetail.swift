@@ -67,8 +67,10 @@ struct AdaptiveListDetail<Item: Hashable, ListContent: View, Detail: View>: View
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    init(selection: Binding<Item?>, split: Binding<Bool> = .constant(false), placeholder: LocalizedStringKey,
-         systemImage: String, @ViewBuilder list: () -> ListContent, @ViewBuilder detail: @escaping (Item) -> Detail) {
+    init(
+        selection: Binding<Item?>, split: Binding<Bool> = .constant(false), placeholder: LocalizedStringKey,
+        systemImage: String, @ViewBuilder list: () -> ListContent, @ViewBuilder detail: @escaping (Item) -> Detail
+    ) {
         _selection = selection
         _split = split
         self.placeholder = placeholder
@@ -157,7 +159,9 @@ struct ListDetailLink<Value: Hashable, Label: View>: View {
         } else if let picker {
             let key = pick ?? AnyHashable(value)
             let shown = picker.selected == key
-            Button { picker.pick(key) } label: {
+            Button {
+                picker.pick(key)
+            } label: {
                 label.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }
             .buttonStyle(.plain)

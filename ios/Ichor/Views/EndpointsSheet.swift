@@ -38,7 +38,9 @@ struct EndpointsSheet: View {
                     }
                     .onDelete { endpoints.remove(atOffsets: $0) }
                 } footer: {
-                    Text("The addresses the app reaches the Talos API through (port 50000 unless given, e.g. 192.168.1.10:50001). Test one with the cluster's credentials; one that does not answer now can still be saved, it may answer over a VPN.")
+                    Text(
+                        "The addresses the app reaches the Talos API through (port 50000 unless given, e.g. 192.168.1.10:50001). Test one with the cluster's credentials; one that does not answer now can still be saved, it may answer over a VPN."
+                    )
                 }
                 Section {
                     HStack {
@@ -48,7 +50,9 @@ struct EndpointsSheet: View {
                             .autocorrectionDisabled()
                             .font(.body.monospaced())
                             .onSubmit(add)
-                            .onChange(of: draft) { _, text in if text.count > endpointMax { draft = String(text.prefix(endpointMax)) } }
+                            .onChange(of: draft) { _, text in
+                                if text.count > endpointMax { draft = String(text.prefix(endpointMax)) }
+                            }
                         Button(action: add) { Image(systemName: "plus.circle.fill") }
                             .buttonStyle(.borderless)
                             .disabled(!isEndpoint(trimmedDraft) || endpoints.contains(trimmedDraft))
@@ -106,11 +110,17 @@ struct EndpointsSheet: View {
             if case .running = probes[endpoint] {
                 ProgressView()
             } else {
-                Button { probe(endpoint) } label: { Image(systemName: "network") }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel(Text("Test \(endpoint)"))
+                Button {
+                    probe(endpoint)
+                } label: {
+                    Image(systemName: "network")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(Text("Test \(endpoint)"))
             }
-            Button { endpoints.removeAll { $0 == endpoint } } label: {
+            Button {
+                endpoints.removeAll { $0 == endpoint }
+            } label: {
                 Image(systemName: "minus.circle").foregroundStyle(.red)
             }
             .buttonStyle(.borderless)
@@ -132,7 +142,8 @@ struct EndpointsSheet: View {
         let name = context.name
         Task {
             do {
-                probes[endpoint] = .answered(try await TalosClient.probeEndpoint(stored: yaml, context: name, endpoint: endpoint))
+                probes[endpoint] = .answered(
+                    try await TalosClient.probeEndpoint(stored: yaml, context: name, endpoint: endpoint))
             } catch {
                 probes[endpoint] = .failed(error.localizedDescription)
             }

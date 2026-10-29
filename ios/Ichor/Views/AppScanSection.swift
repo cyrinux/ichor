@@ -36,7 +36,9 @@ struct AppScanSection: View {
     }
 
     /// Reads the kept reports again when the target, the cluster or the scan's state changes.
-    private var savedKey: String { "\(model.activeContext)|\(target.id)|\(scan?.running == true)|\(scan?.report?.finished ?? 0)" }
+    private var savedKey: String {
+        "\(model.activeContext)|\(target.id)|\(scan?.running == true)|\(scan?.report?.finished ?? 0)"
+    }
 
     var body: some View {
         Section("Vulnerabilities") {
@@ -59,7 +61,8 @@ struct AppScanSection: View {
                     LastScanLines(finished: current.finished, summary: current.summary)
                     NewFindingsLine(summary: current.newSummary, hasPrevious: current.hasPrevious)
                     if current.failed > 0 {
-                        Text("Images not scanned: \(String(current.failed))").font(.caption).foregroundStyle(.statusWarn)
+                        Text("Images not scanned: \(String(current.failed))").font(.caption).foregroundStyle(
+                            .statusWarn)
                     }
                     NavigationLink {
                         ImageScanReportView(report: current, reportJSON: scan.reportJSON, appName: target.name)
@@ -83,20 +86,28 @@ struct AppScanSection: View {
                         Label("Open report", systemImage: "doc.text.magnifyingglass")
                     }
                 } else if !target.byRefs {
-                    Text("Checks the images these pods run, by digest, for known vulnerabilities with \(scanner.label). It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards.").note()
+                    Text(
+                        "Checks the images these pods run, by digest, for known vulnerabilities with \(scanner.label). It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards."
+                    ).note()
                 }
                 if target.byRefs {
-                    Text("Scanned by the image references in this workload's spec: the findings are for those tags, not necessarily what runs right now.").note()
+                    Text(
+                        "Scanned by the image references in this workload's spec: the findings are for those tags, not necessarily what runs right now."
+                    ).note()
                 }
                 if busyElsewhere {
                     Text("Another app's scan is running: one at a time.").note()
                 }
                 Button {
                     guard let client = model.client else { return }
-                    job.start(client: client, context: model.activeContext, appID: target.id, pods: target.pods, images: target.images)
+                    job.start(
+                        client: client, context: model.activeContext, appID: target.id, pods: target.pods,
+                        images: target.images)
                 } label: {
-                    Label(current != nil || lastSaved != nil ? LocalizedStringKey("Scan again") : LocalizedStringKey("Scan images"),
-                          systemImage: "checkmark.shield")
+                    Label(
+                        current != nil || lastSaved != nil
+                            ? LocalizedStringKey("Scan again") : LocalizedStringKey("Scan images"),
+                        systemImage: "checkmark.shield")
                 }
                 .disabled(busyElsewhere || target.isEmpty)
                 NavigationLink {
@@ -130,7 +141,8 @@ struct ScanProgressLines: View {
 
     var body: some View {
         let progress = scan.progress
-        Text(verbatim: scan.stopping ? String(localized: "Stopping…") : phaseText(progress, scanner: scan.scanner.label))
+        Text(
+            verbatim: scan.stopping ? String(localized: "Stopping…") : phaseText(progress, scanner: scan.scanner.label))
         if let progress, progress.phase == ImageScanPhase.scanning, progress.steps > 0 {
             ProgressView(value: Double(max(progress.step - 1, 0)), total: Double(progress.steps))
         } else {
@@ -141,7 +153,9 @@ struct ScanProgressLines: View {
         }
     }
 
-    private func phaseText(_ p: ImageScanProgress?, scanner: String) -> String { imageScanPhaseText(p, scanner: scanner) }
+    private func phaseText(_ p: ImageScanProgress?, scanner: String) -> String {
+        imageScanPhaseText(p, scanner: scanner)
+    }
 }
 
 /// "Last scan 3 minutes ago" and the severities it found.

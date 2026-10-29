@@ -74,8 +74,12 @@ struct CastAIWorkloadsList: View {
                 ForEach(sections) { section in
                     Section {
                         ForEach(section.rows) { rec in
-                            Button { selected = rec } label: { CastAIWorkloadRow(rec: rec) }
-                                .buttonStyle(.plain)
+                            Button {
+                                selected = rec
+                            } label: {
+                                CastAIWorkloadRow(rec: rec)
+                            }
+                            .buttonStyle(.plain)
                         }
                         if section.hidden > 0 {
                             Button("All \(section.total) that grow") { mode = .grows }
@@ -93,13 +97,20 @@ struct CastAIWorkloadsList: View {
     }
 
     private func chip(_ label: String, _ value: CastAIListMode) -> some View {
-        Button { mode = value } label: {
+        Button {
+            mode = value
+        } label: {
             Text(verbatim: label)
                 .font(.subheadline.weight(.medium))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .foregroundStyle(mode == value ? AnyShapeStyle(Color.white) : AnyShapeStyle(HierarchicalShapeStyle.primary))
-                .background(mode == value ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color(.tertiarySystemFill)), in: Capsule())
+                .foregroundStyle(
+                    mode == value ? AnyShapeStyle(Color.white) : AnyShapeStyle(HierarchicalShapeStyle.primary)
+                )
+                .background(
+                    mode == value ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color(.tertiarySystemFill)),
+                    in: Capsule()
+                )
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -144,7 +155,10 @@ private struct CastAISectionHeader: View {
 
     private var note: String {
         guard section.kind == .namespace else { return "\(section.total)" }
-        return String(localized: "\(formatMilliCores(section.cpuDeltaMilli, signed: true)) CPU · \(signedBytes(section.memoryDeltaBytes))")
+        return String(
+            localized:
+                "\(formatMilliCores(section.cpuDeltaMilli, signed: true)) CPU · \(signedBytes(section.memoryDeltaBytes))"
+        )
     }
 }
 
@@ -155,24 +169,36 @@ private struct CastAIWorkloadsSummary: View {
     var body: some View {
         let counts = status.changeCounts
         VStack(alignment: .leading, spacing: 14) {
-            Text("Requests if every recommendation applies").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+            Text("Requests if every recommendation applies").font(.subheadline.weight(.medium)).foregroundStyle(
+                .secondary)
             if status.compared > 0 {
                 HStack(alignment: .top, spacing: 12) {
-                    CastAIMetricTile(title: String(localized: "CPU requests"), value: formatMilliCores(status.cpuDeltaMilli, signed: true),
-                                     caption: String(localized: "cores"), color: castAIDeltaColor(status.cpuDeltaMilli))
-                    CastAIMetricTile(title: String(localized: "Memory requests"), value: signedBytes(status.memoryDeltaBytes),
-                                     caption: String(localized: "Per pod"), color: castAIDeltaColor(status.memoryDeltaBytes))
+                    CastAIMetricTile(
+                        title: String(localized: "CPU requests"),
+                        value: formatMilliCores(status.cpuDeltaMilli, signed: true),
+                        caption: String(localized: "cores"), color: castAIDeltaColor(status.cpuDeltaMilli))
+                    CastAIMetricTile(
+                        title: String(localized: "Memory requests"), value: signedBytes(status.memoryDeltaBytes),
+                        caption: String(localized: "Per pod"), color: castAIDeltaColor(status.memoryDeltaBytes))
                 }
             }
             CastAISplitBar(parts: [
-                CastAISplitPart(count: counts.shrink, color: .statusOK, label: String(localized: "\(counts.shrink) shrink")),
-                CastAISplitPart(count: counts.grow, color: .statusWarn, label: String(localized: "\(counts.grow) grow")),
+                CastAISplitPart(
+                    count: counts.shrink, color: .statusOK, label: String(localized: "\(counts.shrink) shrink")),
+                CastAISplitPart(
+                    count: counts.grow, color: .statusWarn, label: String(localized: "\(counts.grow) grow")),
                 CastAISplitPart(count: counts.same, color: .gray, label: String(localized: "\(counts.same) unchanged")),
-                CastAISplitPart(count: counts.unknown, color: Color(.systemFill), label: String(localized: "\(counts.unknown) without a baseline")),
+                CastAISplitPart(
+                    count: counts.unknown, color: Color(.systemFill),
+                    label: String(localized: "\(counts.unknown) without a baseline")),
             ])
             if let common = status.commonMode, let label = common.mode.label {
-                Text(verbatim: String(localized: "\(label) · \(String(common.count)) of \(String(status.recommendations.count)) workloads"))
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    verbatim: String(
+                        localized:
+                            "\(label) · \(String(common.count)) of \(String(status.recommendations.count)) workloads")
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 6)
@@ -193,20 +219,27 @@ private struct CastAIWorkloadRow: View {
                 Spacer()
                 if rec.change != .unknown {
                     VStack(alignment: .trailing, spacing: 1) {
-                        Text(verbatim: formatMilliCores(rec.cpuDeltaMilli, signed: true)).foregroundStyle(castAIDeltaColor(rec.cpuDeltaMilli))
-                        Text(verbatim: signedBytes(rec.memoryDeltaBytes)).foregroundStyle(castAIDeltaColor(rec.memoryDeltaBytes))
+                        Text(verbatim: formatMilliCores(rec.cpuDeltaMilli, signed: true)).foregroundStyle(
+                            castAIDeltaColor(rec.cpuDeltaMilli))
+                        Text(verbatim: signedBytes(rec.memoryDeltaBytes)).foregroundStyle(
+                            castAIDeltaColor(rec.memoryDeltaBytes))
                     }
                     .font(.caption.monospaced())
                 }
             }
-            CastAIResourceRow(label: String(localized: "CPU"), before: Double(rec.originalCpuMilli), after: Double(rec.cpuMilli),
-                              text: castAIChangeText(formatMilliCores(rec.originalCpuMilli), formatMilliCores(rec.cpuMilli)))
-            CastAIResourceRow(label: String(localized: "Memory"), before: Double(rec.originalMemoryBytes), after: Double(rec.memoryBytes),
-                              text: castAIChangeText(formatBytes(rec.originalMemoryBytes), formatBytes(rec.memoryBytes)))
+            CastAIResourceRow(
+                label: String(localized: "CPU"), before: Double(rec.originalCpuMilli), after: Double(rec.cpuMilli),
+                text: castAIChangeText(formatMilliCores(rec.originalCpuMilli), formatMilliCores(rec.cpuMilli)))
+            CastAIResourceRow(
+                label: String(localized: "Memory"), before: Double(rec.originalMemoryBytes),
+                after: Double(rec.memoryBytes),
+                text: castAIChangeText(formatBytes(rec.originalMemoryBytes), formatBytes(rec.memoryBytes)))
             if rec.health.needsAttention {
-                Text(verbatim: (rec.reasons.map(\.label) + [rec.message].filter { !$0.isEmpty }).joined(separator: " · "))
-                    .font(.caption2)
-                    .foregroundStyle(rec.health == .critical ? Color.statusBad : Color.statusWarn)
+                Text(
+                    verbatim: (rec.reasons.map(\.label) + [rec.message].filter { !$0.isEmpty }).joined(separator: " · ")
+                )
+                .font(.caption2)
+                .foregroundStyle(rec.health == .critical ? Color.statusBad : Color.statusWarn)
             }
             if rec.nearMemoryLimit {
                 Text(verbatim: String(localized: "Memory request at \(String(rec.memoryLimitPercent))% of its limit"))

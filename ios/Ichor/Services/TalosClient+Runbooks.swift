@@ -59,9 +59,10 @@ extension TalosClient {
     func startRunbook(yaml: String, continueIDs: Set<String>) -> RunbookHandle {
         let (stream, continuation) = AsyncStream.makeStream(of: RunbookEvent.self)
         let bridge = RunbookBridge(continuation)
-        let run = IchorgoStartRunbook(kubeConfig, kubeContext, kubeAPIServer, yaml, runbookContinueIDs(continueIDs), bridge)
+        let run = IchorgoStartRunbook(
+            kubeConfig, kubeContext, kubeAPIServer, yaml, runbookContinueIDs(continueIDs), bridge)
         continuation.onTermination = { _ in
-            _ = bridge // keep the listener alive for the whole run
+            _ = bridge  // keep the listener alive for the whole run
         }
         return RunbookHandle(events: stream, stop: { run?.stop() }, confirm: { run?.confirm($0) })
     }
@@ -80,7 +81,9 @@ private final class RunbookBridge: NSObject, IchorgoRunbookListenerProtocol, @un
     }
 
     func onDone(_ resultJSON: String?) {
-        let result = resultJSON.flatMap { try? TalosJSON.decode(RunbookResult.self, from: $0) } ?? RunbookResult(ok: false, steps: [])
+        let result =
+            resultJSON.flatMap { try? TalosJSON.decode(RunbookResult.self, from: $0) }
+            ?? RunbookResult(ok: false, steps: [])
         continuation.yield(.done(result))
         continuation.finish()
     }

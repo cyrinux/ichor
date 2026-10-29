@@ -16,7 +16,8 @@ struct RunbooksView: View {
 
     /// docs/runbooks.md, published by the website workflow (scripts/site-reference.py).
     private static let docs = URL(string: "https://cyrinux.github.io/ichor/runbooks/")!
-    private static let help: LocalizedStringKey = "A runbook is a YAML file that lists this app's own actions, run in order: a schemaVersion, a name and 1 to 50 steps. Each step has an id, an action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), a target and its params.\n\nImport one by pasting it, from a file or from an https link: its plan shows first and nothing runs. Tap a runbook to see its plan and run it; every destructive step asks before it runs. Swipe one to remove it.\n\nThe documentation lists every action, its target and parameters, with examples."
+    private static let help: LocalizedStringKey =
+        "A runbook is a YAML file that lists this app's own actions, run in order: a schemaVersion, a name and 1 to 50 steps. Each step has an id, an action (scale, rolloutRestart, triggerCronJob, argoSync, fluxReconcile, etcdSnapshot, nodeReboot…), a target and its params.\n\nImport one by pasting it, from a file or from an https link: its plan shows first and nothing runs. Tap a runbook to see its plan and run it; every destructive step asks before it runs. Swipe one to remove it.\n\nThe documentation lists every action, its target and parameters, with examples."
 
     private var fingerprint: String { model.activeSummary?.fingerprint ?? "" }
 
@@ -30,8 +31,10 @@ struct RunbooksView: View {
             let items = store.list(for: fingerprint)
             if items.isEmpty, !loading {
                 Section {
-                    Text("No runbooks yet. A runbook is an ordered list of this app's actions, written in YAML: import one to plan and run it step by step.")
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "No runbooks yet. A runbook is an ordered list of this app's actions, written in YAML: import one to plan and run it step by step."
+                    )
+                    .foregroundStyle(.secondary)
                 }
             }
             ForEach(items) { item in
@@ -57,7 +60,9 @@ struct RunbooksView: View {
                 InfoHint("Runbooks", Self.help, link: Self.docs)
             }
             ToolbarItem(placement: .primaryAction) {
-                Button { importing = true } label: {
+                Button {
+                    importing = true
+                } label: {
                     Label("Import runbook", systemImage: "square.and.arrow.down")
                 }
             }

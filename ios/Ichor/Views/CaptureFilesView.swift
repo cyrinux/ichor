@@ -25,21 +25,30 @@ struct CapturesListView: View {
                                 CaptureFileRow(file: file)
                             }
                             .swipeActions {
-                                Button(role: .destructive) { delete(url) } label: { Label("Delete", systemImage: "trash") }
+                                Button(role: .destructive) {
+                                    delete(url)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                                 ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
                             }
                         }
                     }
                 } header: {
-                    if !list.isEmpty { Text("\(list.count) captures") + Text(verbatim: " · \(formatBytes(totalCaptureSize(list)))") }
+                    if !list.isEmpty {
+                        Text("\(list.count) captures") + Text(verbatim: " · \(formatBytes(totalCaptureSize(list)))")
+                    }
                 } footer: {
-                    Text("Captures can contain sensitive traffic (tokens, internal names). They are kept on this phone only, out of backups: delete them when done.")
+                    Text(
+                        "Captures can contain sensitive traffic (tokens, internal names). They are kept on this phone only, out of backups: delete them when done."
+                    )
                 }
             }
             .overlay {
                 if list.isEmpty {
-                    ContentUnavailableView("No captures", systemImage: "antenna.radiowaves.left.and.right",
-                                           description: Text("Captures from a node's Capture packets menu appear here."))
+                    ContentUnavailableView(
+                        "No captures", systemImage: "antenna.radiowaves.left.and.right",
+                        description: Text("Captures from a node's Capture packets menu appear here."))
                 }
             }
             .toolbar {
@@ -49,9 +58,12 @@ struct CapturesListView: View {
                     }
                 }
             }
-            .confirmationDialog(Text("Delete all captures?"), isPresented: $confirmDeleteAll, titleVisibility: .visible) {
+            .confirmationDialog(Text("Delete all captures?"), isPresented: $confirmDeleteAll, titleVisibility: .visible)
+            {
                 Button("Delete all", role: .destructive) {
-                    for file in list { if let url = directory?.appendingPathComponent(file.name) { try? CaptureStore.delete(url) } }
+                    for file in list {
+                        if let url = directory?.appendingPathComponent(file.name) { try? CaptureStore.delete(url) }
+                    }
                     Task { await load() }
                 }
             }
@@ -82,8 +94,10 @@ private struct CaptureFileRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: file.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-            Text(verbatim: "\(file.modified.formatted(date: .abbreviated, time: .shortened)) · \(formatBytes(file.size))")
-                .font(.caption).foregroundStyle(.secondary)
+            Text(
+                verbatim: "\(file.modified.formatted(date: .abbreviated, time: .shortened)) · \(formatBytes(file.size))"
+            )
+            .font(.caption).foregroundStyle(.secondary)
         }
     }
 }
@@ -107,9 +121,13 @@ struct CaptureFileView: View {
                 }
                 Section {
                     ForEach(page.packets) { packet in
-                        Button { selected = packet } label: { PacketRow(packet: packet) }
-                            .buttonStyle(.plain)
-                            .monoFont()
+                        Button {
+                            selected = packet
+                        } label: {
+                            PacketRow(packet: packet)
+                        }
+                        .buttonStyle(.plain)
+                        .monoFont()
                     }
                 } header: {
                     VStack(alignment: .leading, spacing: 4) {
@@ -131,16 +149,24 @@ struct CaptureFileView: View {
 
     private func pager(total: Int) -> some View {
         HStack {
-            Button { offset = max(offset - pcapPageSize, 0) } label: { Image(systemName: "chevron.left") }
-                .disabled(offset == 0)
-                .accessibilityLabel(Text("Previous page"))
+            Button {
+                offset = max(offset - pcapPageSize, 0)
+            } label: {
+                Image(systemName: "chevron.left")
+            }
+            .disabled(offset == 0)
+            .accessibilityLabel(Text("Previous page"))
             Spacer()
             Text("Packets \(total == 0 ? 0 : offset + 1)–\(min(offset + pcapPageSize, total)) of \(total)")
                 .monospacedDigit()
             Spacer()
-            Button { offset += pcapPageSize } label: { Image(systemName: "chevron.right") }
-                .disabled(offset + pcapPageSize >= total)
-                .accessibilityLabel(Text("Next page"))
+            Button {
+                offset += pcapPageSize
+            } label: {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(offset + pcapPageSize >= total)
+            .accessibilityLabel(Text("Next page"))
         }
         .buttonStyle(.borderless)
     }

@@ -51,8 +51,10 @@ final class CaptureSession {
         guard !isRunning else { return }
         let url: URL
         do {
-            let name = options.isPaired
-                ? pairCaptureFilename(hostname: hostname, peerHostname: options.peerHostname, interface: options.interface, date: Date())
+            let name =
+                options.isPaired
+                ? pairCaptureFilename(
+                    hostname: hostname, peerHostname: options.peerHostname, interface: options.interface, date: Date())
                 : captureFilename(hostname: hostname, interface: options.interface, date: Date())
             url = try CaptureStore.directory().appendingPathComponent(name)
         } catch {
@@ -68,7 +70,8 @@ final class CaptureSession {
         stoppedAt = nil
         state = .running
         UIApplication.shared.isIdleTimerDisabled = true
-        let capture = options.isPaired
+        let capture =
+            options.isPaired
             ? client.packetCapturePair(node: node, options: options, destPath: url.path)
             : client.packetCapture(node: node, options: options, destPath: url.path)
         stopCapture = capture.stop
@@ -90,7 +93,8 @@ final class CaptureSession {
                     packetCount = count
                     bytes = size
                     let file = path.isEmpty ? url : URL(fileURLWithPath: path)
-                    outcome = .finished(file: FileManager.default.fileExists(atPath: file.path) ? file : nil, error: error)
+                    outcome = .finished(
+                        file: FileManager.default.fileExists(atPath: file.path) ? file : nil, error: error)
                 }
             }
             finish(outcome ?? .finished(file: FileManager.default.fileExists(atPath: url.path) ? url : nil, error: nil))

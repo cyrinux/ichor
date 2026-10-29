@@ -18,18 +18,22 @@ struct KubeSpanMapTab: View {
 
     var body: some View {
         // Node names of the network test are Kubernetes node names: the hostnames on Talos.
-        let tests = Dictionary(uniqueKeysWithValues: topology.links.indices.compactMap { i in
-            netPerf.history.latestBetween(topology.links[i].a, topology.links[i].b).map { (i, $0) }
-        })
+        let tests = Dictionary(
+            uniqueKeysWithValues: topology.links.indices.compactMap { i in
+                netPerf.history.latestBetween(topology.links[i].a, topology.links[i].b).map { (i, $0) }
+            })
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 summary
                 if topology.nodes.isEmpty {
                     Text("Nothing to map: no cluster member or KubeSpan peer was found.")
                 } else {
-                    NetPerfPickBar(picking: picking, picked: picked.count, running: netPerf.isRunning,
-                                   toggle: { picking.toggle(); picked = [] },
-                                   open: { testing = true })
+                    NetPerfPickBar(
+                        picking: picking, picked: picked.count, running: netPerf.isRunning,
+                        toggle: {
+                            picking.toggle(); picked = []
+                        },
+                        open: { testing = true })
                     TopologyMapView(
                         topology: topology,
                         speeds: tests.compactMapValues { $0.podThroughputMbps.map(formatMbps) },
@@ -75,7 +79,8 @@ struct KubeSpanMapTab: View {
     }
 
     private var names: [String: String] {
-        Dictionary(topology.nodes.map { ($0.id, $0.hostname.isEmpty ? $0.id : $0.hostname) }, uniquingKeysWith: { a, _ in a })
+        Dictionary(
+            topology.nodes.map { ($0.id, $0.hostname.isEmpty ? $0.id : $0.hostname) }, uniquingKeysWith: { a, _ in a })
     }
 
     private var summary: some View {
@@ -108,7 +113,8 @@ struct KubeSpanMapTab: View {
     /// The link's two nodes when both are talosconfig targets (a capture goes through their Talos API).
     private func captureEnds(_ link: TopologyLink) -> (TopologyNode, TopologyNode)? {
         guard let a = topology.nodes.first(where: { $0.id == link.a && !$0.node.isEmpty }),
-              let b = topology.nodes.first(where: { $0.id == link.b && !$0.node.isEmpty }) else { return nil }
+            let b = topology.nodes.first(where: { $0.id == link.b && !$0.node.isEmpty })
+        else { return nil }
         return (a, b)
     }
 }
@@ -147,9 +153,13 @@ private struct NetPerfPickBar: View {
                 Button(action: toggle) { Label("Test speed", systemImage: "speedometer") }
                     .buttonStyle(.borderedProminent)
                     .accessibilityAddTraits(.isSelected)
-                Text(picked == 0 ? LocalizedStringKey("Tap the client node: it sends.") : LocalizedStringKey("Now tap the server node."))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(
+                    picked == 0
+                        ? LocalizedStringKey("Tap the client node: it sends.")
+                        : LocalizedStringKey("Now tap the server node.")
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             } else {
                 Button(action: toggle) { Label("Test speed", systemImage: "speedometer") }
                     .buttonStyle(.bordered)

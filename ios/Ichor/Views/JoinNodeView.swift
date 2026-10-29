@@ -18,14 +18,18 @@ struct JoinNodeView: View {
                 NavigationLink(value: Route.bootMedia) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("No machine yet? Boot a new machine")
-                        Text("The booter command, the ISO and the iPXE link; the machine then waits in maintenance mode")
-                            .font(.footnote).foregroundStyle(.secondary)
+                        Text(
+                            "The booter command, the ISO and the iPXE link; the machine then waits in maintenance mode"
+                        )
+                        .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
             }
             Section {
-                Text("Boot the new machine from the Talos ISO: it waits in maintenance mode and its console shows its IP address. Your phone must be on the same network, or on a VPN that reaches it.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "Boot the new machine from the Talos ISO: it waits in maintenance mode and its console shows its IP address. Your phone must be on the same network, or on a VPN that reaches it."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
                 if model.activeSummary?.demo == true {
                     Text("In the demo, type demo to see a sample node.").note()
                 }
@@ -75,9 +79,11 @@ struct JoinNodeView: View {
     /// one the node was inspected at, and the disk one of its own.
     private var joinRequest: JoinRequest? {
         guard case .loaded(let node, _, _) = inspection, node.maintenance, let c = configured,
-              joinDiskFits(c.disk, node: node) else { return nil }
-        return JoinRequest(address: node.address, template: c.template, role: c.role, hostname: c.hostname,
-                           disk: c.disk, staticAddress: c.staticAddress)
+            joinDiskFits(c.disk, node: node)
+        else { return nil }
+        return JoinRequest(
+            address: node.address, template: c.template, role: c.role, hostname: c.hostname,
+            disk: c.disk, staticAddress: c.staticAddress)
     }
 
     /// The writable disks of the inspected node, for step 2.
@@ -96,7 +102,9 @@ struct JoinNodeView: View {
         if !node.maintenance {
             Section {
                 StatusPill(label: String(localized: "Already installed"), color: .orange)
-                Text("\(node.address) is already installed: it asks for a client certificate. Only a node booted from the ISO and not installed yet can be added here.")
+                Text(
+                    "\(node.address) is already installed: it asks for a client certificate. Only a node booted from the ISO and not installed yet can be added here."
+                )
             }
         } else {
             Section {
@@ -105,8 +113,11 @@ struct JoinNodeView: View {
                     Spacer()
                     StatusPill(label: String(localized: "Maintenance mode"), color: .green)
                 }
-                Text(verbatim: ["Talos \(node.version)", node.arch, node.platform].filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    verbatim: ["Talos \(node.version)", node.arch, node.platform].filter { !$0.isEmpty }.joined(
+                        separator: "  ·  ")
+                )
+                .font(.caption).foregroundStyle(.secondary)
                 SectionError(message: node.errors["system"])
                 if let system = node.system {
                     if !system.manufacturer.isEmpty { LabeledContent("Manufacturer", value: system.manufacturer) }
@@ -160,7 +171,8 @@ private struct JoinDiskRow: View {
                 Text(verbatim: disk.devPath.isEmpty ? disk.name : disk.devPath).font(.body.monospaced())
                 if disk.systemDisk { StatusPill(label: String(localized: "System disk"), color: .blue) }
                 Spacer()
-                Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(clamping: disk.size), countStyle: .file)).monospacedDigit()
+                Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(clamping: disk.size), countStyle: .file))
+                    .monospacedDigit()
             }
             Text(verbatim: [disk.type.uppercased(), disk.model].filter { !$0.isEmpty }.joined(separator: "  ·  "))
                 .font(.caption).foregroundStyle(.secondary)

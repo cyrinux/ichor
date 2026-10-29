@@ -122,8 +122,10 @@ public struct JoinRequest: Equatable, Sendable {
     /// The new node replaces a member discovery still lists under `hostname` (a dead node).
     public let replacing: Bool
 
-    public init(address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
-                replacing: Bool = false) {
+    public init(
+        address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
+        replacing: Bool = false
+    ) {
         self.address = address
         self.template = template
         self.role = role
@@ -135,8 +137,9 @@ public struct JoinRequest: Equatable, Sendable {
 
     /// The same request, replacing (or not) the member already named `hostname`.
     public func withReplacing(_ on: Bool) -> JoinRequest {
-        JoinRequest(address: address, template: template, role: role, hostname: hostname, disk: disk,
-                    staticAddress: staticAddress, replacing: on)
+        JoinRequest(
+            address: address, template: template, role: role, hostname: hostname, disk: disk,
+            staticAddress: staticAddress, replacing: on)
     }
 }
 
@@ -180,6 +183,7 @@ public typealias JoinStep = TimelineStep<JoinPhase>
 /// Timeline of the join from the events so far, like maintenanceTimeline: phases only move
 /// forward, `finished` marks them all done, `failure` marks the furthest one failed.
 public func joinTimeline(_ events: [JoinProgress], finished: Bool = false, failure: String? = nil) -> [JoinStep] {
-    foldTimeline(events, phases: JoinPhase.allCases, finished: finished, failure: failure,
-                 phase: { JoinPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
+    foldTimeline(
+        events, phases: JoinPhase.allCases, finished: finished, failure: failure,
+        phase: { JoinPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
 }

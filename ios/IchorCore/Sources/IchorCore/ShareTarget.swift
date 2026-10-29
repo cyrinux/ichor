@@ -21,8 +21,10 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     public var namespace: String
     public var name: String
 
-    public init(cluster: String = "", target: Target, host: String = "", addr: String = "", tab: String = "",
-                kind: String = "", namespace: String = "", name: String = "") {
+    public init(
+        cluster: String = "", target: Target, host: String = "", addr: String = "", tab: String = "",
+        kind: String = "", namespace: String = "", name: String = ""
+    ) {
         self.cluster = cluster
         self.target = target
         self.host = host
@@ -53,7 +55,9 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         if !cluster.isEmpty { try c.encode(cluster, forKey: .cluster) }
         try c.encode(target, forKey: .target)
-        for (key, value) in [(CodingKeys.host, host), (.addr, addr), (.tab, tab), (.kind, kind), (.namespace, namespace), (.name, name)]
+        for (key, value) in [
+            (CodingKeys.host, host), (.addr, addr), (.tab, tab), (.kind, kind), (.namespace, namespace), (.name, name),
+        ]
         where !value.isEmpty {
             try c.encode(value, forKey: key)
         }
@@ -159,7 +163,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
                 return .node(address: address, hostname: address, tab: "")
             }
             // A trend alert ("<node>|<volume>:trend") names it in its own issue.
-            let kept = storageTrendVolumeKey(subject: subject).flatMap { snapshot.storageTrends[$0] }
+            let kept =
+                storageTrendVolumeKey(subject: subject).flatMap { snapshot.storageTrends[$0] }
                 .map { StorageTrendIssue(value: $0).hostname }
                 ?? snapshot.storageIssues[subject].map { StorageIssue(value: $0).hostname } ?? ""
             return .storage(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)

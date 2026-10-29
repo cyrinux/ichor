@@ -30,7 +30,9 @@ extension TalosClient {
 
     /// What upgrading Kubernetes to `version` would change, read-only (os:admin).
     func k8sUpgradePlan(version: String) async throws -> K8sUpgradePlan {
-        try await Self.json { [config, context, kubeServer] in IchorgoK8sUpgradePlan(config, context, kubeServer, version, $0) }
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoK8sUpgradePlan(config, context, kubeServer, version, $0)
+        }
     }
 
     /// StartK8sUpgrade: with `dryRun` each node only checks its change.
@@ -45,7 +47,7 @@ extension TalosClient {
         )
         let run = IchorgoStartK8sUpgrade(config, context, kubeServer, version, dryRun, bridge)
         continuation.onTermination = { _ in
-            _ = bridge // keep the listener alive for the whole run
+            _ = bridge  // keep the listener alive for the whole run
         }
         if run == nil {
             continuation.yield(.done(error: String(localized: "The Kubernetes upgrade could not start.")))

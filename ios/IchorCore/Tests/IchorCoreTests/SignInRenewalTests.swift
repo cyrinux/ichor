@@ -6,7 +6,8 @@ final class SignInRenewalTests: XCTestCase {
     private let omni = ContextSummary(name: "omni-lab", fingerprint: "fpomni")
 
     func testDecodesTheCoreReport() throws {
-        let json = #"[{"context":"sso-lab","kind":"kube","method":"oidc","status":"renewed","expires":1900000000},"#
+        let json =
+            #"[{"context":"sso-lab","kind":"kube","method":"oidc","status":"renewed","expires":1900000000},"#
             + #"{"context":"omni-lab","kind":"talos","method":"omni","status":"signInRequired","sessionExpires":1800000000,"reason":"the Omni key expired"}]"#
         let list = try SignInRenewal.decodeList(json)
         XCTAssertEqual(list.count, 2)
@@ -28,10 +29,12 @@ final class SignInRenewalTests: XCTestCase {
         let second = signInAlertPlan(renewals: ended, contexts: contexts, notified: first.notified)
         XCTAssertEqual(second.contexts, [])
 
-        let renewed = signInAlertPlan(renewals: [SignInRenewal(context: "sso-lab", status: SignInRenewal.renewed)],
-                                      contexts: contexts, notified: second.notified)
+        let renewed = signInAlertPlan(
+            renewals: [SignInRenewal(context: "sso-lab", status: SignInRenewal.renewed)],
+            contexts: contexts, notified: second.notified)
         XCTAssertEqual(renewed.notified, [])
-        XCTAssertEqual(signInAlertPlan(renewals: ended, contexts: contexts, notified: renewed.notified).contexts, [oidc])
+        XCTAssertEqual(
+            signInAlertPlan(renewals: ended, contexts: contexts, notified: renewed.notified).contexts, [oidc])
     }
 
     func testOfflineTellsNothingAndKeepsWhatWasTold() {
@@ -45,20 +48,26 @@ final class SignInRenewalTests: XCTestCase {
         let kubeNamedLikeOmni = [SignInRenewal(context: "omni-lab", status: SignInRenewal.signInRequiredStatus)]
         XCTAssertEqual(signInAlertPlan(renewals: kubeNamedLikeOmni, contexts: [oidc, omni], notified: []).contexts, [])
 
-        let talos = [SignInRenewal(context: "omni-lab", kind: ContextKind.talos, status: SignInRenewal.signInRequiredStatus)]
+        let talos = [
+            SignInRenewal(context: "omni-lab", kind: ContextKind.talos, status: SignInRenewal.signInRequiredStatus)
+        ]
         XCTAssertEqual(signInAlertPlan(renewals: talos, contexts: [oidc, omni], notified: []).contexts, [omni])
         XCTAssertEqual(signInAlertPlan(renewals: talos, contexts: [oidc], notified: []).contexts, [])
     }
 
     func testSignInWithGoogleIsRenewedByTheAppNotTold() {
-        let google = [SignInRenewal(context: "sso-lab", status: SignInRenewal.signInRequiredStatus,
-                                    reason: SignInRenewal.googleNativeReason)]
+        let google = [
+            SignInRenewal(
+                context: "sso-lab", status: SignInRenewal.signInRequiredStatus,
+                reason: SignInRenewal.googleNativeReason)
+        ]
         XCTAssertEqual(signInAlertPlan(renewals: google, contexts: [oidc], notified: []).contexts, [])
     }
 
     func testTheAlertIsToldAsACertificateAlert() {
         XCTAssertEqual(alertKind(key: signInAlertKey), "cert")
-        let alert = signInAlert(title: "Sign in again", text: "sso-lab needs you to sign in again before its next check.")
+        let alert = signInAlert(
+            title: "Sign in again", text: "sso-lab needs you to sign in again before its next check.")
         XCTAssertEqual(alert.key, signInAlertKey)
         XCTAssertTrue(alert.problem)
     }

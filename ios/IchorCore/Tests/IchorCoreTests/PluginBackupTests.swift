@@ -5,9 +5,9 @@ import XCTest
 /// scanned plugin code (Go PluginQRPayload), as the Go core and Android write them.
 final class PluginBackupTests: XCTestCase {
     private let export = """
-    {"plugins":[{"id":"kube-green-copy","enabled":true,"yaml":"schemaVersion: ichor.dev/plugin/v1alpha1\\nid: kube-green-copy\\n"},
-    {"id":"widgets","enabled":false,"yaml":"schemaVersion: ichor.dev/plugin/v1alpha1\\nid: widgets\\n"}]}
-    """
+        {"plugins":[{"id":"kube-green-copy","enabled":true,"yaml":"schemaVersion: ichor.dev/plugin/v1alpha1\\nid: kube-green-copy\\n"},
+        {"id":"widgets","enabled":false,"yaml":"schemaVersion: ichor.dev/plugin/v1alpha1\\nid: widgets\\n"}]}
+        """
 
     func testExportDecodesAndEncodesBack() throws {
         let backup = try TalosJSON.decode(PluginBackup.self, from: export)
@@ -26,8 +26,9 @@ final class PluginBackupTests: XCTestCase {
         XCTAssertEqual(backupPayloadFormat(hasProposals: true, hasPlugins: true), backupFormatPlugins)
         XCTAssertNil(backupPlugins(PluginBackup()))
 
-        let payload = BackupPayload(format: backupPayloadFormat(hasPlugins: true), talosconfig: "context: a\n",
-                                    plugins: backupPlugins(plugins))
+        let payload = BackupPayload(
+            format: backupPayloadFormat(hasPlugins: true), talosconfig: "context: a\n",
+            plugins: backupPlugins(plugins))
         let decoded = try TalosJSON.decode(BackupPayload.self, from: try TalosJSON.encode(payload))
         XCTAssertEqual(restoredPlugins(decoded), plugins)
 
@@ -39,19 +40,23 @@ final class PluginBackupTests: XCTestCase {
     }
 
     func testRestoreResultDecodes() throws {
-        let result = try TalosJSON.decode(PluginRestoreResult.self, from: """
-        {"restored":["kube-green-copy"],"errors":[{"id":"broken","error":"plugin.yaml:2: bad"},{"id":"kube-green","error":"built-in"}]}
-        """)
+        let result = try TalosJSON.decode(
+            PluginRestoreResult.self,
+            from: """
+                {"restored":["kube-green-copy"],"errors":[{"id":"broken","error":"plugin.yaml:2: bad"},{"id":"kube-green","error":"built-in"}]}
+                """)
         XCTAssertEqual(result.restored, ["kube-green-copy"])
         XCTAssertEqual(result.skippedLine, "broken: plugin.yaml:2: bad; kube-green: built-in")
         XCTAssertEqual(try TalosJSON.decode(PluginRestoreResult.self, from: "{}").errors, [])
     }
 
     func testQRPayloadDecodes() throws {
-        XCTAssertEqual(try TalosJSON.decode(PluginQRPayload.self, from: #"{"kind":"url","url":"https://example.org/p.yaml"}"#),
-                       .url("https://example.org/p.yaml"))
-        XCTAssertEqual(try TalosJSON.decode(PluginQRPayload.self, from: #"{"kind":"yaml","yaml":"schemaVersion: x\n"}"#),
-                       .yaml("schemaVersion: x\n"))
+        XCTAssertEqual(
+            try TalosJSON.decode(PluginQRPayload.self, from: #"{"kind":"url","url":"https://example.org/p.yaml"}"#),
+            .url("https://example.org/p.yaml"))
+        XCTAssertEqual(
+            try TalosJSON.decode(PluginQRPayload.self, from: #"{"kind":"yaml","yaml":"schemaVersion: x\n"}"#),
+            .yaml("schemaVersion: x\n"))
         XCTAssertThrowsError(try TalosJSON.decode(PluginQRPayload.self, from: #"{"kind":"other"}"#))
     }
 }

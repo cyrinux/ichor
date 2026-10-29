@@ -63,7 +63,10 @@ public struct ImageScanOptions: Codable, Equatable, Sendable {
     /// The context the report is listed under (ImageScanHistory), whatever Kubernetes context scanned it.
     public let cluster: String
 
-    public init(images: [String] = [], scanner: String = ImageScanner.defaultScanner.rawValue, app: String = "", cluster: String = "") {
+    public init(
+        images: [String] = [], scanner: String = ImageScanner.defaultScanner.rawValue, app: String = "",
+        cluster: String = ""
+    ) {
         self.images = images
         self.scanner = scanner
         self.app = app
@@ -73,7 +76,9 @@ public struct ImageScanOptions: Codable, Equatable, Sendable {
 
 /// The options JSON of a scan of `images` (refs with no pod behind them) with `scanner`, kept
 /// under `app` in `cluster`.
-public func imageScanOptions(images: [String], scanner: ImageScanner = .defaultScanner, app: String = "", cluster: String = "") throws -> String {
+public func imageScanOptions(
+    images: [String], scanner: ImageScanner = .defaultScanner, app: String = "", cluster: String = ""
+) throws -> String {
     try TalosJSON.encode(ImageScanOptions(images: images, scanner: scanner.rawValue, app: app, cluster: cluster))
 }
 
@@ -169,7 +174,9 @@ public struct VulnSummary: Codable, Equatable, Sendable {
     /// In the OS packages: a newer base image fixes them.
     public var os: Int
 
-    public init(critical: Int = 0, high: Int = 0, medium: Int = 0, low: Int = 0, unknown: Int = 0, fixable: Int = 0, os: Int = 0) {
+    public init(
+        critical: Int = 0, high: Int = 0, medium: Int = 0, low: Int = 0, unknown: Int = 0, fixable: Int = 0, os: Int = 0
+    ) {
         self.critical = critical
         self.high = high
         self.medium = medium
@@ -205,8 +212,9 @@ public struct VulnSummary: Codable, Equatable, Sendable {
     }
 
     public static func + (a: VulnSummary, b: VulnSummary) -> VulnSummary {
-        VulnSummary(critical: a.critical + b.critical, high: a.high + b.high, medium: a.medium + b.medium, low: a.low + b.low,
-                    unknown: a.unknown + b.unknown, fixable: a.fixable + b.fixable, os: a.os + b.os)
+        VulnSummary(
+            critical: a.critical + b.critical, high: a.high + b.high, medium: a.medium + b.medium, low: a.low + b.low,
+            unknown: a.unknown + b.unknown, fixable: a.fixable + b.fixable, os: a.os + b.os)
     }
 }
 
@@ -230,9 +238,11 @@ public struct ImageVuln: Codable, Equatable, Hashable, Sendable {
     /// Not in the last kept scan of the same digest.
     public let new: Bool
 
-    public init(id: String, package: String, installed: String, fixed: String = "", severity: String, title: String = "",
-                description: String = "", url: String = "", score: Double = 0, vector: String = "", purl: String = "",
-                target: String = "", class: String = "", type: String = "", published: String = "", new: Bool = false) {
+    public init(
+        id: String, package: String, installed: String, fixed: String = "", severity: String, title: String = "",
+        description: String = "", url: String = "", score: Double = 0, vector: String = "", purl: String = "",
+        target: String = "", class: String = "", type: String = "", published: String = "", new: Bool = false
+    ) {
         self.id = id
         self.package = package
         self.installed = installed
@@ -272,7 +282,8 @@ public struct ImageVuln: Codable, Equatable, Hashable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, package, installed, fixed, severity, title, description, url, score, vector, purl, target, `class`, type, published, new
+        case id, package, installed, fixed, severity, title, description, url, score, vector, purl, target, `class`,
+            type, published, new
     }
 
     public var level: VulnSeverity { VulnSeverity(wire: severity) }
@@ -298,9 +309,12 @@ public struct ScannedImage: Codable, Equatable, Sendable {
     public let previousScannedAt: Int64
     public let vulnerabilities: [ImageVuln]
 
-    public init(image: String, ref: String = "", digest: String = "", os: String = "", pods: [String] = [], scannedAt: Int64 = 0,
-                error: String = "", summary: VulnSummary = VulnSummary(), newSummary: VulnSummary = VulnSummary(),
-                previousScannedAt: Int64 = 0, vulnerabilities: [ImageVuln] = []) {
+    public init(
+        image: String, ref: String = "", digest: String = "", os: String = "", pods: [String] = [],
+        scannedAt: Int64 = 0,
+        error: String = "", summary: VulnSummary = VulnSummary(), newSummary: VulnSummary = VulnSummary(),
+        previousScannedAt: Int64 = 0, vulnerabilities: [ImageVuln] = []
+    ) {
         self.image = image
         self.ref = ref
         self.digest = digest
@@ -355,7 +369,9 @@ public struct ImageScanReport: Codable, Equatable, Sendable {
     public let finished: Int64
     public let images: [ScannedImage]
 
-    public init(source: String = "", scanner: String = "", started: Int64 = 0, finished: Int64 = 0, images: [ScannedImage] = []) {
+    public init(
+        source: String = "", scanner: String = "", started: Int64 = 0, finished: Int64 = 0, images: [ScannedImage] = []
+    ) {
         self.source = source
         self.scanner = scanner
         self.started = started
@@ -412,13 +428,17 @@ public struct VulnFilter: Equatable, Sendable {
     public var severities: Set<VulnSeverity>
     public var newOnly: Bool
 
-    public init(fixableOnly: Bool = true, severities: Set<VulnSeverity> = Set(VulnSeverity.allCases), newOnly: Bool = false) {
+    public init(
+        fixableOnly: Bool = true, severities: Set<VulnSeverity> = Set(VulnSeverity.allCases), newOnly: Bool = false
+    ) {
         self.fixableOnly = fixableOnly
         self.severities = severities
         self.newOnly = newOnly
     }
 
-    public func keeps(_ v: ImageVuln) -> Bool { (!fixableOnly || v.fixable) && severities.contains(v.level) && (!newOnly || v.new) }
+    public func keeps(_ v: ImageVuln) -> Bool {
+        (!fixableOnly || v.fixable) && severities.contains(v.level) && (!newOnly || v.new)
+    }
 
     public mutating func toggle(_ severity: VulnSeverity) {
         if severities.contains(severity) { severities.remove(severity) } else { severities.insert(severity) }
@@ -451,7 +471,9 @@ public struct ImageScanState: Equatable, Sendable {
 
     /// The finished scan's report, when it scanned at least one image (not stopped or failed early).
     public var usableReport: ImageScanReport? {
-        guard let report, !running, !stopped, error == nil, report.images.contains(where: { $0.error.isEmpty }) else { return nil }
+        guard let report, !running, !stopped, error == nil, report.images.contains(where: { $0.error.isEmpty }) else {
+            return nil
+        }
         return report
     }
 
@@ -476,7 +498,8 @@ public func imageScanFilename(app: String, date: Date, format: ImageScanFormat) 
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = TimeZone.current
     let at = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-    let stamp = String(format: "%04d%02d%02d-%02d%02d", at.year ?? 0, at.month ?? 0, at.day ?? 0, at.hour ?? 0, at.minute ?? 0)
+    let stamp = String(
+        format: "%04d%02d%02d-%02d%02d", at.year ?? 0, at.month ?? 0, at.day ?? 0, at.hour ?? 0, at.minute ?? 0)
     return "\(safe.isEmpty ? "app" : safe)-vulnerabilities-\(stamp).\(format.fileExtension)"
 }
 
@@ -495,8 +518,11 @@ public struct SavedScan: Codable, Equatable, Hashable, Identifiable, Sendable {
     /// The findings that were not in the previous scan of the same images.
     public let newSummary: VulnSummary
 
-    public init(id: String, cluster: String = "", app: String = "", scanner: String = "", started: Int64 = 0, finished: Int64 = 0,
-                images: Int = 0, summary: VulnSummary = VulnSummary(), newSummary: VulnSummary = VulnSummary()) {
+    public init(
+        id: String, cluster: String = "", app: String = "", scanner: String = "", started: Int64 = 0,
+        finished: Int64 = 0,
+        images: Int = 0, summary: VulnSummary = VulnSummary(), newSummary: VulnSummary = VulnSummary()
+    ) {
         self.id = id
         self.cluster = cluster
         self.app = app

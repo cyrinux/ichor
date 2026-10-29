@@ -89,7 +89,11 @@ struct DiffResourceRow: View {
     var body: some View {
         if hasDetail {
             VStack(alignment: .leading, spacing: 6) {
-                DisclosureGroup(isExpanded: $expanded) { detail } label: { header }
+                DisclosureGroup(isExpanded: $expanded) {
+                    detail
+                } label: {
+                    header
+                }
                 sourceAction
                 keepAction
             }
@@ -160,7 +164,8 @@ struct DiffResourceRow: View {
                 Text(hint).font(.caption).foregroundStyle(.secondary)
             }
             if !resource.error.isEmpty {
-                Text("The API server refused it: \(resource.error)").font(.caption).foregroundStyle(.statusBad).textSelection(.enabled)
+                Text("The API server refused it: \(resource.error)").font(.caption).foregroundStyle(.statusBad)
+                    .textSelection(.enabled)
             }
             if !resource.diff.isEmpty { DiffLinesView(lines: resource.lines) }
             if resource.truncated {
@@ -189,12 +194,13 @@ struct DiffLinesView: View {
     }
 
     private func row(_ line: DiffLine) -> some View {
-        let style: (sign: String, tint: Color) = switch line.kind {
-        case .added: ("+", Color.statusOK)
-        case .removed: ("-", Color.statusBad)
-        case .hunk: ("", Color.secondary)
-        case .context: (" ", Color.primary)
-        }
+        let style: (sign: String, tint: Color) =
+            switch line.kind {
+            case .added: ("+", Color.statusOK)
+            case .removed: ("-", Color.statusBad)
+            case .hunk: ("", Color.secondary)
+            case .context: (" ", Color.primary)
+            }
         let tinted = line.kind == .added || line.kind == .removed
         return HStack(spacing: 0) {
             Text(verbatim: style.sign).frame(width: 12, alignment: .leading)

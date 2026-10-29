@@ -35,9 +35,12 @@ struct GarageLayoutView: View {
                 SummarySection(layout: layout, onRedundancy: editable ? { redundancy = true } : nil)
                 if managed {
                     Section {
-                        Label("The garage-operator declares this layout: change the GarageNode objects, not the layout here.", systemImage: "info.circle")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
+                        Label(
+                            "The garage-operator declares this layout: change the GarageNode objects, not the layout here.",
+                            systemImage: "info.circle"
+                        )
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                     }
                 }
                 if layout.hasStaged { stagedSection(layout) }
@@ -58,9 +61,17 @@ struct GarageLayoutView: View {
                     message: applyMessage(layout),
                     hostname: String(layout.nextVersion),
                     actionTitle: String(localized: "Apply"),
-                    onConfirm: { Task { await write(String(localized: "Layout version \(layout.nextVersion) applied: data now moves between nodes.")) {
-                        try await $0.garageApplyLayout(instance, version: layout.nextVersion)
-                    } } }
+                    onConfirm: {
+                        Task {
+                            await write(
+                                String(
+                                    localized:
+                                        "Layout version \(layout.nextVersion) applied: data now moves between nodes.")
+                            ) {
+                                try await $0.garageApplyLayout(instance, version: layout.nextVersion)
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -72,35 +83,55 @@ struct GarageLayoutView: View {
         }
         .sheet(isPresented: $redundancy) {
             if let layout {
-                ZoneRedundancySheet(current: layout.stagedZoneRedundancy.isEmpty ? layout.zoneRedundancy : layout.stagedZoneRedundancy) { value in
-                    Task { await write(String(localized: "Zone redundancy staged. Apply the layout to enact it.")) { try await $0.garageSetZoneRedundancy(instance, value: value) } }
+                ZoneRedundancySheet(
+                    current: layout.stagedZoneRedundancy.isEmpty ? layout.zoneRedundancy : layout.stagedZoneRedundancy
+                ) { value in
+                    Task {
+                        await write(String(localized: "Zone redundancy staged. Apply the layout to enact it.")) {
+                            try await $0.garageSetZoneRedundancy(instance, value: value)
+                        }
+                    }
                 }
                 .presentationDetents([.medium])
             }
         }
         .confirmationDialog(Text("Drop the staged changes?"), isPresented: $confirmRevert, titleVisibility: .visible) {
             Button("Revert", role: .destructive) {
-                Task { await write(String(localized: "Staged changes dropped.")) { try await $0.garageRevertLayout(instance) } }
+                Task {
+                    await write(String(localized: "Staged changes dropped.")) {
+                        try await $0.garageRevertLayout(instance)
+                    }
+                }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Every staged role change and parameter goes away; the current layout stays as it is.")
         }
-        .confirmationDialog(removal.map { Text("Remove \($0.label) from the layout?") } ?? Text(""),
-                            isPresented: $removal.isPresent(), titleVisibility: .visible, presenting: removal) { node in
+        .confirmationDialog(
+            removal.map { Text("Remove \($0.label) from the layout?") } ?? Text(""),
+            isPresented: $removal.isPresent(), titleVisibility: .visible, presenting: removal
+        ) { node in
             Button("Remove from layout", role: .destructive) {
-                Task { await write(String(localized: "\(node.label): removal staged. Apply the layout to enact it.")) { try await $0.garageStageRemoval(instance, node: node.id) } }
+                Task {
+                    await write(String(localized: "\(node.label): removal staged. Apply the layout to enact it.")) {
+                        try await $0.garageStageRemoval(instance, node: node.id)
+                    }
+                }
             }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
-            Text("The removal is staged only: once the layout is applied, the node's data moves to the other nodes. You can revert it before then.")
+            Text(
+                "The removal is staged only: once the layout is applied, the node's data moves to the other nodes. You can revert it before then."
+            )
         }
         .confirmationDialog(Text("Skip the dead nodes?"), isPresented: $skipChoice, titleVisibility: .visible) {
             Button("Skip dead nodes") { skip = SkipRequest(allowMissingData: false) }
             Button("Skip and allow missing data", role: .destructive) { skip = SkipRequest(allowMissingData: true) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The draining layout stops waiting on the nodes that are down: Garage marks them as having acknowledged the current version, and the migration goes on without them. Allowing missing data also moves every node's sync tracker: metadata that only the dead nodes held is given up for good. There is no undo; use it only for nodes that will not come back.")
+            Text(
+                "The draining layout stops waiting on the nodes that are down: Garage marks them as having acknowledged the current version, and the migration goes on without them. Allowing missing data also moves every node's sync tracker: metadata that only the dead nodes held is given up for good. There is no undo; use it only for nodes that will not come back."
+            )
         }
         .sheet(item: $skip) { request in
             if let layout {
@@ -109,12 +140,18 @@ struct GarageLayoutView: View {
                     message: skipMessage(layout),
                     hostname: instance.name,
                     actionTitle: String(localized: "Skip dead nodes"),
-                    acknowledgments: request.allowMissingData ? [String(localized: "Metadata that only the dead nodes held is given up for good.")] : [],
+                    acknowledgments: request.allowMissingData
+                        ? [String(localized: "Metadata that only the dead nodes held is given up for good.")] : [],
                     onConfirm: {
                         skip = nil
-                        Task { await write(String(localized: "Dead nodes skipped: the layout migration goes on without them.")) {
-                            try await $0.garageSkipDeadNodes(instance, version: layout.version, allowMissingData: request.allowMissingData)
-                        } }
+                        Task {
+                            await write(
+                                String(localized: "Dead nodes skipped: the layout migration goes on without them.")
+                            ) {
+                                try await $0.garageSkipDeadNodes(
+                                    instance, version: layout.version, allowMissingData: request.allowMissingData)
+                            }
+                        }
                     }
                 )
             }
@@ -123,15 +160,25 @@ struct GarageLayoutView: View {
     }
 
     private func skipMessage(_ layout: GarageLayout) -> String {
-        let down = layout.trackers.filter { t in layout.node(t.id).map { !$0.up } ?? false }.map(\.label).joined(separator: ", ")
-        return String(localized: "The draining layout stops waiting on \(down.isEmpty ? "—" : down): Garage marks them as having acknowledged version \(layout.version), and the migration goes on without them. There is no undo; use it only for nodes that will not come back.")
+        let down = layout.trackers.filter { t in layout.node(t.id).map { !$0.up } ?? false }.map(\.label).joined(
+            separator: ", ")
+        return String(
+            localized:
+                "The draining layout stops waiting on \(down.isEmpty ? "—" : down): Garage marks them as having acknowledged version \(layout.version), and the migration goes on without them. There is no undo; use it only for nodes that will not come back."
+        )
     }
 
     private func applyMessage(_ layout: GarageLayout) -> String {
         if let moved = layout.preview?.movedPartitions, moved >= 0 {
-            return String(localized: "The whole cluster moves to the new layout: \(moved) partitions change nodes, adding disk and network load until the rebalance is done. Garage refuses the apply if another change was staged meanwhile.")
+            return String(
+                localized:
+                    "The whole cluster moves to the new layout: \(moved) partitions change nodes, adding disk and network load until the rebalance is done. Garage refuses the apply if another change was staged meanwhile."
+            )
         }
-        return String(localized: "The whole cluster moves to the new layout and data is rebalanced between nodes, adding disk and network load until it is done. Garage refuses the apply if another change was staged meanwhile.")
+        return String(
+            localized:
+                "The whole cluster moves to the new layout and data is rebalanced between nodes, adding disk and network load until it is done. Garage refuses the apply if another change was staged meanwhile."
+        )
     }
 
     @ViewBuilder private func stagedSection(_ layout: GarageLayout) -> some View {
@@ -165,15 +212,27 @@ struct GarageLayoutView: View {
                 MemberRow(node: node)
                     .contextMenu {
                         if editable {
-                            Button { editing = GarageRoleTarget(id: node.id) } label: { Label("Change role…", systemImage: "slider.horizontal.3") }
+                            Button {
+                                editing = GarageRoleTarget(id: node.id)
+                            } label: {
+                                Label("Change role…", systemImage: "slider.horizontal.3")
+                            }
                             if node.staged != .remove {
-                                Button(role: .destructive) { removal = node } label: { Label("Remove from layout", systemImage: "minus.circle") }
+                                Button(role: .destructive) {
+                                    removal = node
+                                } label: {
+                                    Label("Remove from layout", systemImage: "minus.circle")
+                                }
                             }
                         }
                     }
                     .swipeActions(edge: .trailing) {
                         if editable, node.staged != .remove {
-                            Button { removal = node } label: { Label("Remove from layout", systemImage: "minus.circle") }.tint(.orange)
+                            Button {
+                                removal = node
+                            } label: {
+                                Label("Remove from layout", systemImage: "minus.circle")
+                            }.tint(.orange)
                         }
                     }
             }
@@ -185,11 +244,15 @@ struct GarageLayoutView: View {
     @ViewBuilder private func candidatesSection(_ layout: GarageLayout) -> some View {
         Section {
             ForEach(layout.candidates) { node in
-                ResourceRow(health: node.up ? .idle : .warning, title: node.label, subtitle: candidateDetails(node), trailing: Group {
-                    if editable {
-                        Button("Add to layout…") { editing = GarageRoleTarget(id: node.id) }.buttonStyle(.borderless)
+                ResourceRow(
+                    health: node.up ? .idle : .warning, title: node.label, subtitle: candidateDetails(node),
+                    trailing: Group {
+                        if editable {
+                            Button("Add to layout…") { editing = GarageRoleTarget(id: node.id) }.buttonStyle(
+                                .borderless)
+                        }
                     }
-                }) {}
+                ) {}
             }
         } header: {
             Text("Nodes without a role").textCase(nil)
@@ -245,7 +308,10 @@ func redundancyLabel(_ value: String) -> String {
 
 /// Capacity or gateway, then the zone and tags: "450 GiB · zone zone-1 · demo-worker-1".
 func garageRoleLabel(_ role: GarageLayoutRole) -> String {
-    var parts = [role.gateway ? String(localized: "gateway") : formatBytes(role.capacity), String(localized: "zone \(role.zone)")]
+    var parts = [
+        role.gateway ? String(localized: "gateway") : formatBytes(role.capacity),
+        String(localized: "zone \(role.zone)"),
+    ]
     parts.append(contentsOf: role.tags)
     return parts.joined(separator: " · ")
 }
@@ -258,9 +324,13 @@ private struct SummarySection: View {
         Section {
             HStack(alignment: .top, spacing: 12) {
                 StatTile(icon: nil, value: "v\(layout.version)", label: String(localized: "Layout version"))
-                StatTile(icon: nil, value: layout.partitionSize > 0 ? formatBytes(layout.partitionSize) : "—", label: String(localized: "Partition size"))
+                StatTile(
+                    icon: nil, value: layout.partitionSize > 0 ? formatBytes(layout.partitionSize) : "—",
+                    label: String(localized: "Partition size"))
                 let usable = layout.members.reduce(Int64(0)) { $0 + ($1.role?.usableCapacity ?? 0) }
-                StatTile(icon: nil, value: usable > 0 ? formatBytes(usable) : "—", label: String(localized: "Usable capacity"))
+                StatTile(
+                    icon: nil, value: usable > 0 ? formatBytes(usable) : "—",
+                    label: String(localized: "Usable capacity"))
             }
             LabeledContent("Storage nodes", value: "\(layout.storageNodes)")
             if layout.gatewayNodes > 0 { LabeledContent("Gateway nodes", value: "\(layout.gatewayNodes)") }
@@ -281,18 +351,21 @@ private struct StagedRow: View {
     let node: GarageLayoutNode
 
     var body: some View {
-        let (health, tag, color): (ServiceHealth, String, Color) = switch node.staged {
-        case .add: (.ok, String(localized: "joins"), .statusOK)
-        case .remove: (.critical, String(localized: "leaves"), .statusBad)
-        case .change, .unchanged: (.warning, String(localized: "changes"), .statusWarn)
-        }
+        let (health, tag, color): (ServiceHealth, String, Color) =
+            switch node.staged {
+            case .add: (.ok, String(localized: "joins"), .statusOK)
+            case .remove: (.critical, String(localized: "leaves"), .statusBad)
+            case .change, .unchanged: (.warning, String(localized: "changes"), .statusWarn)
+            }
         ResourceRow(health: health, title: node.label, subtitle: subtitle, trailing: Tag(tag, color: color)) {}
     }
 
     private var subtitle: String? {
         switch node.staged {
         case .remove: node.role.map { String(localized: "was \(garageRoleLabel($0))") }
-        case .change: [node.stagedRole.map(garageRoleLabel), node.role.map { String(localized: "was \(garageRoleLabel($0))") }].compactMap { $0 }.joined(separator: " · ")
+        case .change:
+            [node.stagedRole.map(garageRoleLabel), node.role.map { String(localized: "was \(garageRoleLabel($0))") }]
+                .compactMap { $0 }.joined(separator: " · ")
         case .add, .unchanged: node.stagedRole.map(garageRoleLabel)
         }
     }
@@ -306,13 +379,19 @@ private struct PreviewRows: View {
         if !preview.error.isEmpty {
             Text("Garage cannot compute this layout: \(preview.error)").font(.callout).foregroundStyle(.statusBad)
         } else {
-            if preview.movedPartitions >= 0 { LabeledContent("Partitions moved", value: preview.movedPartitions.formatted()) }
-            if preview.usableCapacity > 0 { LabeledContent("Usable capacity after", value: formatBytes(preview.usableCapacity)) }
+            if preview.movedPartitions >= 0 {
+                LabeledContent("Partitions moved", value: preview.movedPartitions.formatted())
+            }
+            if preview.usableCapacity > 0 {
+                LabeledContent("Usable capacity after", value: formatBytes(preview.usableCapacity))
+            }
             if preview.lowUsableCapacity {
-                Text("Part of the declared capacity cannot be used: zones or nodes are too unequal.").font(.caption).foregroundStyle(.statusWarn)
+                Text("Part of the declared capacity cannot be used: zones or nodes are too unequal.").font(.caption)
+                    .foregroundStyle(.statusWarn)
             }
             if preview.lowPartitionSize {
-                Text("Partitions would be very small: Garage recommends more capacity per node.").font(.caption).foregroundStyle(.statusWarn)
+                Text("Partitions would be very small: Garage recommends more capacity per node.").font(.caption)
+                    .foregroundStyle(.statusWarn)
             }
             ForEach(Array(preview.messages.enumerated()), id: \.offset) { _, line in
                 Text(verbatim: line).font(.caption).foregroundStyle(.secondary)
@@ -336,8 +415,9 @@ private struct MemberRow: View {
         ResourceRow(health: health, title: node.label, subtitle: details, trailing: trailing) {
             if let role = node.role, !role.gateway, role.usableCapacity > 0 {
                 // Here a full bar is the good case: the whole capacity is usable.
-                MeterRow(label: String(localized: "usable"), fraction: role.usableFraction,
-                         value: "\(formatBytes(role.usableCapacity)) / \(formatBytes(role.capacity))", warnAt: 2)
+                MeterRow(
+                    label: String(localized: "usable"), fraction: role.usableFraction,
+                    value: "\(formatBytes(role.usableCapacity)) / \(formatBytes(role.capacity))", warnAt: 2)
             }
         }
         .accessibilityElement(children: .combine)
@@ -357,7 +437,9 @@ private struct MemberRow: View {
         if !node.kubeNode.isEmpty { parts.append(String(localized: "on \(node.kubeNode)")) }
         if node.known && !node.up { parts.append(String(localized: "down")) }
         if !node.known { parts.append(String(localized: "no longer known to the cluster")) }
-        if let partitions = node.role?.storedPartitions, partitions > 0 { parts.append(String(localized: "\(partitions) partitions")) }
+        if let partitions = node.role?.storedPartitions, partitions > 0 {
+            parts.append(String(localized: "\(partitions) partitions"))
+        }
         return parts.joined(separator: " · ")
     }
 }
@@ -374,11 +456,14 @@ private struct HistorySection: View {
         Section {
             DisclosureGroup(isExpanded: $open) {
                 if layout.stuck {
-                    let down = layout.trackers.filter { t in layout.node(t.id).map { !$0.up } ?? false }.map(\.label).joined(separator: ", ")
+                    let down = layout.trackers.filter { t in layout.node(t.id).map { !$0.up } ?? false }.map(\.label)
+                        .joined(separator: ", ")
                     let names = down.isEmpty ? "—" : down
-                    Text("A draining version waits on a node that is down (\(names)). Bring it back, or skip it with garage layout skip-dead-nodes.")
-                        .font(.caption)
-                        .foregroundStyle(.statusBad)
+                    Text(
+                        "A draining version waits on a node that is down (\(names)). Bring it back, or skip it with garage layout skip-dead-nodes."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.statusBad)
                     if let onSkip {
                         Button("Skip dead nodes…", role: .destructive, action: onSkip)
                     }
@@ -386,7 +471,8 @@ private struct HistorySection: View {
                 ForEach(layout.versions) { version in
                     HStack {
                         Text(verbatim: "v\(version.version)").font(.subheadline.monospaced())
-                        Text("\(version.storageNodes) storage · \(version.gatewayNodes) gateways").font(.caption).foregroundStyle(.secondary)
+                        Text("\(version.storageNodes) storage · \(version.gatewayNodes) gateways").font(.caption)
+                            .foregroundStyle(.secondary)
                         Spacer()
                         StatusPill(label: statusLabel(version.status), color: statusColor(version.status))
                     }
@@ -394,8 +480,11 @@ private struct HistorySection: View {
                 if !layout.trackers.isEmpty {
                     LabeledContent("Acknowledged by every node", value: "v\(layout.minAck)")
                     ForEach(layout.trackers) { t in
-                        LabeledContent(t.label, value: String(localized: "ack v\(t.ack) · sync v\(t.sync) · sync-ack v\(t.syncAck)"))
-                            .font(.caption.monospaced())
+                        LabeledContent(
+                            t.label,
+                            value: String(localized: "ack v\(t.ack) · sync v\(t.sync) · sync-ack v\(t.syncAck)")
+                        )
+                        .font(.caption.monospaced())
                     }
                 }
             } label: {
@@ -444,7 +533,9 @@ private struct ZoneRedundancySheet: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
                 } footer: {
-                    Text("The least number of zones each partition is replicated in; maximum spreads the replicas over as many zones as there are. Garage refuses more zones than its replication factor.")
+                    Text(
+                        "The least number of zones each partition is replicated in; maximum spreads the replicas over as many zones as there are. Garage refuses more zones than its replication factor."
+                    )
                 }
             }
             .themedBackground()

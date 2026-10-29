@@ -27,7 +27,9 @@ struct KubeScopeBar: View {
             if control.namespaces?.forbidden == true {
                 TypedNamespaceField(control: control)
             } else if choices.count > scopeChipsMax {
-                Button { sheet = true } label: {
+                Button {
+                    sheet = true
+                } label: {
                     Label {
                         if let namespace = control.scope.namespace {
                             Text(verbatim: namespace).font(.callout.monospaced())
@@ -71,12 +73,16 @@ struct KubeScopeBar: View {
     }
 
     private func chip<L: View>(selected: Bool, namespace: String?, @ViewBuilder label: () -> L) -> some View {
-        Button { control.onScope(KubeScope(namespace: namespace, chosen: true)) } label: { label() }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            .controlSize(.small)
-            .tint(selected ? Color.accentColor : Color.secondary)
-            .accessibilityAddTraits(selected ? .isSelected : [])
+        Button {
+            control.onScope(KubeScope(namespace: namespace, chosen: true))
+        } label: {
+            label()
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .tint(selected ? Color.accentColor : Color.secondary)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -96,10 +102,14 @@ private struct NamespaceSheet: View {
                     row(Text("All namespaces"), selected: selected == nil) { onPick(nil) }
                 }
                 ForEach(matchingNamespaces(choices, query: search), id: \.self) { namespace in
-                    row(Text(verbatim: namespace).font(.body.monospaced()), selected: selected == namespace) { onPick(namespace) }
+                    row(Text(verbatim: namespace).font(.body.monospaced()), selected: selected == namespace) {
+                        onPick(namespace)
+                    }
                 }
             }
-            .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Search namespaces"))
+            .searchable(
+                text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Search namespaces")
+            )
             .navigationTitle(Text("Namespace"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -269,16 +279,20 @@ struct KubeListFrame<T: Codable & Sendable, Content: View>: View {
                 LoadStateView(state: shownState, retry: { await list.refresh(model: model) }) { load in
                     VStack(spacing: 0) {
                         PagedProgressBar(progress: list.progress)
-                        IncompleteNotice(load: load, searching: !query.isEmpty, loadingMore: list.loadingMore,
-                                         onLoadMore: { list.loadMore(model: model) },
-                                         onLoadAll: { list.loadMore(model: model, all: true) })
+                        IncompleteNotice(
+                            load: load, searching: !query.isEmpty, loadingMore: list.loadingMore,
+                            onLoadMore: { list.loadMore(model: model) },
+                            onLoadAll: { list.loadMore(model: model, all: true) })
                         content(load)
                     }
                 }
             }
         }
-        .task(id: Trigger(scope: control.scope, ready: control.ready, context: model.activeContext,
-                          server: model.client?.kubeServer, generation: model.dataGeneration)) {
+        .task(
+            id: Trigger(
+                scope: control.scope, ready: control.ready, context: model.activeContext,
+                server: model.client?.kubeServer, generation: model.dataGeneration)
+        ) {
             if control.ready { await list.show(control.scope, model: model) }
         }
     }
@@ -290,7 +304,8 @@ struct KubeListFrame<T: Codable & Sendable, Content: View>: View {
 
     /// The list's state, a namespace the credentials may not read told as such.
     private var shownState: LoadState<PagedLoad<T>> {
-        guard case .failed(let message) = list.state, let namespace = control.scope.namespace, isKubeForbidden(message) else {
+        guard case .failed(let message) = list.state, let namespace = control.scope.namespace, isKubeForbidden(message)
+        else {
             return list.state
         }
         return .failed(String(localized: "No access to the namespace \(namespace): pick or type another one."))

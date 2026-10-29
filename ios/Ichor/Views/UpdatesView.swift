@@ -28,8 +28,12 @@ struct UpdatesView: View {
             .navigationTitle("Updates")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { Task { await fetch() } } label: { Label("Refresh", systemImage: "arrow.clockwise") }
-                        .disabled(consenting)
+                    Button {
+                        Task { await fetch() }
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+                    .disabled(consenting)
                 }
             }
             .task(id: key) { start() }
@@ -40,14 +44,17 @@ struct UpdatesView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("The app asks the image registries which tags exist; your pull secrets are used for private registries.")
+                Text(
+                    "The app asks the image registries which tags exist; your pull secrets are used for private registries."
+                )
             }
             .alert("Rendered by a chart: set the tag in its values", isPresented: $renderedHint) {
                 Button("OK", role: .cancel) {}
             }
             .navigationDestination(item: $opened) { file in
-                SourceFileView(source: file.source, path: file.path, app: file.app, line: file.line > 0 ? file.line : nil,
-                               prefill: file.prefill)
+                SourceFileView(
+                    source: file.source, path: file.path, app: file.app, line: file.line > 0 ? file.line : nil,
+                    prefill: file.prefill)
             }
             .navigationDestination(item: $editing) { file in
                 SourceEditView(source: file.source, path: file.path, app: file.app, quickEdit: file.edit)
@@ -156,7 +163,8 @@ struct UpdatesView: View {
         notes[row.id] = nil
         defer { resolving = nil }
         do {
-            let target = try await client.updateEditTarget(row, version: version, repo: model.activeClusterRepo, hosts: hosts, demo: demo)
+            let target = try await client.updateEditTarget(
+                row, version: version, repo: model.activeClusterRepo, hosts: hosts, demo: demo)
             guard let app = target.app?.ref, let source = target.source, !target.path.isEmpty else {
                 notes[row.id] = target.note
                 return

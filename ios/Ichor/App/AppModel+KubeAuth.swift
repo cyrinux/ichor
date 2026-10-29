@@ -31,7 +31,8 @@ extension AppModel {
     /// The stored kubeconfig context the Kubernetes calls of `context` (a Talos cluster) go
     /// through, nil when they use the admin kubeconfig Talos issues.
     func kubeLink(for context: ContextSummary?) -> KubeLink? {
-        guard let kubeYAML, let name = kubeAccessContext(of: context, links: kubeAccess, kubeContexts: kubeContexts) else { return nil }
+        guard let kubeYAML, let name = kubeAccessContext(of: context, links: kubeAccess, kubeContexts: kubeContexts)
+        else { return nil }
         return KubeLink(config: kubeYAML, context: name)
     }
 
@@ -64,12 +65,15 @@ extension AppModel {
         guard let context else { return nil }
         if context.omni {
             guard let yaml, context.signIn != nil else { return nil }
-            return KubeSignInTarget(kube: yaml, context: context.name, fingerprint: context.fingerprint, label: labels.of(context), talos: true)
+            return KubeSignInTarget(
+                kube: yaml, context: context.name, fingerprint: context.fingerprint, label: labels.of(context),
+                talos: true)
         }
         guard let kubeYAML else { return nil }
         let kube = context.isKube ? context : kubeAccessTarget(of: context)
         guard let kube, kube.signIn != nil else { return nil }
-        return KubeSignInTarget(kube: kubeYAML, context: kube.name, fingerprint: kube.fingerprint, label: labels.of(kube))
+        return KubeSignInTarget(
+            kube: kubeYAML, context: kube.name, fingerprint: kube.fingerprint, label: labels.of(kube))
     }
 
     /// The sign-in of the cluster on screen, if it has one.

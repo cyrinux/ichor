@@ -48,7 +48,9 @@ public struct UpdateBotConfig: Decodable, Hashable, Sendable {
     public let draft: UpdateBotDraft
     public let notes: [String]
 
-    public init(sha: String = "", present: [UpdateBotFile] = [], draft: UpdateBotDraft = UpdateBotDraft(), notes: [String] = []) {
+    public init(
+        sha: String = "", present: [UpdateBotFile] = [], draft: UpdateBotDraft = UpdateBotDraft(), notes: [String] = []
+    ) {
         self.sha = sha
         self.present = present
         self.draft = draft

@@ -14,10 +14,15 @@ struct FindPartsButton: View {
 
     var body: some View {
         if let url {
-            Button { openURL(url) } label: {
+            Button {
+                openURL(url)
+            } label: {
                 Label("Find spare parts", systemImage: "wrench.and.screwdriver")
             }
-            .accessibilityHint(Text("Opens the Ichor site with this part's model and serial number, then the vendor's page or a web search"))
+            .accessibilityHint(
+                Text(
+                    "Opens the Ichor site with this part's model and serial number, then the vendor's page or a web search"
+                ))
         }
     }
 }

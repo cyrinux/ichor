@@ -20,7 +20,8 @@ struct ClusterUnreachableView: View {
                     .font(.system(size: 44))
                     .foregroundStyle(outage.cause.tint)
                     .accessibilityHidden(true)
-                Text("Can’t reach the cluster").font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
+                Text("Can’t reach the cluster").font(.title2.bold()).multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
                 Text(outage.cause.explanation).font(.callout).multilineTextAlignment(.center)
                 if !endpoints.isEmpty {
                     Text("Endpoints: \(endpoints.joined(separator: ", "))")
@@ -82,9 +83,15 @@ extension OutageCause {
     var explanation: String {
         switch self {
         case .network:
-            String(localized: "No node answered. Your phone is probably not on the cluster’s network: check that your VPN is connected, or that you are on the right Wi-Fi.")
+            String(
+                localized:
+                    "No node answered. Your phone is probably not on the cluster’s network: check that your VPN is connected, or that you are on the right Wi-Fi."
+            )
         case .credentials:
-            String(localized: "The cluster answered but refused this talosconfig: its certificate, CA or role may be wrong or expired.")
+            String(
+                localized:
+                    "The cluster answered but refused this talosconfig: its certificate, CA or role may be wrong or expired."
+            )
         case .other:
             String(localized: "No node answered. The details are below.")
         }

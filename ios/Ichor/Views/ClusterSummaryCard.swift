@@ -48,7 +48,7 @@ struct ClusterSummaryCard: View {
             if let fraction = answered?.fraction {
                 ProgressView(value: min(max(fraction, 0), 1))
                     .animation(.easeInOut, value: fraction)
-                    .accessibilityHidden(true) // the label above says the same
+                    .accessibilityHidden(true)  // the label above says the same
             }
             // A line of its own only when it says two things; one goes in the headline.
             if issues.count > 1 { Breakdown(parts: issues) }
@@ -59,8 +59,11 @@ struct ClusterSummaryCard: View {
                 CpuStat(cpuCount: summary.cpuCount, live: live)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 // Live memory only once it covers every node the overview reached, never fewer.
-                MemoryStat(summary: summary, live: live?.usage.flatMap { $0.nodes >= summary.total - summary.unreachable ? $0 : nil })
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                MemoryStat(
+                    summary: summary,
+                    live: live?.usage.flatMap { $0.nodes >= summary.total - summary.unreachable ? $0 : nil }
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             // The stat icons in cluster-tinted containers; the values stay neutral.
             .environment(\.summaryColors, colors)
@@ -80,15 +83,19 @@ struct ClusterSummaryCard: View {
     /// its count in its status colour.
     private var headline: Text {
         let issue = issues.count == 1 ? issues.first : nil
-        let parts: [Text?] = [Text(String(localized: "\(summary.total) nodes")), issue, summary.versionSpan.map { Text(verbatim: $0) }]
+        let parts: [Text?] = [
+            Text(String(localized: "\(summary.total) nodes")), issue, summary.versionSpan.map { Text(verbatim: $0) },
+        ]
         return dotJoined(parts.compactMap { $0 })
     }
 
     /// Which nodes are in trouble, each count in its own status colour; empty when all are ready.
     private var issues: [Text] {
         [
-            summary.notReady > 0 ? Text(String(localized: "\(summary.notReady) not ready")).foregroundStyle(.statusWarn) : nil,
-            summary.unreachable > 0 ? Text(String(localized: "\(summary.unreachable) unreachable")).foregroundStyle(.statusBad) : nil,
+            summary.notReady > 0
+                ? Text(String(localized: "\(summary.notReady) not ready")).foregroundStyle(.statusWarn) : nil,
+            summary.unreachable > 0
+                ? Text(String(localized: "\(summary.unreachable) unreachable")).foregroundStyle(.statusBad) : nil,
         ].compactMap { $0 }
     }
 }
@@ -151,12 +158,14 @@ private struct CpuStat: View {
     var body: some View {
         if let used = live?.usage?.cpuFraction, let live {
             VStack(alignment: .leading, spacing: 4) {
-                StatTile(icon: "cpu", value: percent(used),
-                         label: cpuCount > 0 ? String(localized: "of \(cpuCount) cores") : String(localized: "CPU in use"))
+                StatTile(
+                    icon: "cpu", value: percent(used),
+                    label: cpuCount > 0 ? String(localized: "of \(cpuCount) cores") : String(localized: "CPU in use"))
                 CpuSparkline(history: live.cpuHistory)
             }
         } else {
-            StatTile(icon: "cpu", value: cpuCount > 0 ? "\(cpuCount)" : unknownValue, label: String(localized: "CPU cores"))
+            StatTile(
+                icon: "cpu", value: cpuCount > 0 ? "\(cpuCount)" : unknownValue, label: String(localized: "CPU cores"))
         }
     }
 }
@@ -169,8 +178,9 @@ private struct MemoryStat: View {
         let total = live.map(\.memTotal).flatMap { $0 > 0 ? $0 : nil } ?? summary.memTotal
         let used = live?.memUsedFraction ?? summary.memUsedFraction
         VStack(alignment: .leading, spacing: 6) {
-            StatTile(icon: "memorychip", value: total > 0 ? formatBytes(total) : unknownValue,
-                     label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
+            StatTile(
+                icon: "memorychip", value: total > 0 ? formatBytes(total) : unknownValue,
+                label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
             if let used {
                 // Glide between samples rather than jump.
                 UsageBar(fraction: used).animation(.easeInOut, value: used)

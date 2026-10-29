@@ -41,9 +41,11 @@ public struct KubeWorkload: Codable, Equatable, Identifiable, Sendable {
     /// kubectl refuses to restart a paused Deployment, and so does the Go core.
     public var canRestart: Bool { workloadState != .paused }
 
-    public init(kind: String, namespace: String, name: String, desired: Int = 0, ready: Int = 0, updated: Int = 0,
-                available: Int = 0, state: String = "", restartedAt: Int64 = 0, created: Int64 = 0, images: [String] = [],
-                autoscaler: WorkloadAutoscaler? = nil) {
+    public init(
+        kind: String, namespace: String, name: String, desired: Int = 0, ready: Int = 0, updated: Int = 0,
+        available: Int = 0, state: String = "", restartedAt: Int64 = 0, created: Int64 = 0, images: [String] = [],
+        autoscaler: WorkloadAutoscaler? = nil
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.name = name
@@ -102,8 +104,10 @@ public struct WorkloadAutoscaler: Codable, Equatable, Hashable, Sendable {
         return "\(who) \(name) · \(what)"
     }
 
-    public init(by: String = "", name: String = "", min: Int = 0, max: Int = 0, current: Int = 0, desired: Int = 0,
-                paused: Bool = false, state: String = "") {
+    public init(
+        by: String = "", name: String = "", min: Int = 0, max: Int = 0, current: Int = 0, desired: Int = 0,
+        paused: Bool = false, state: String = ""
+    ) {
         self.by = by
         self.name = name
         self.min = min
@@ -150,17 +154,21 @@ public func workloadNamespaces(_ workloads: [KubeWorkload]) -> [String] {
 /// Workloads of namespace (all when nil) whose name, kind or image contains query
 /// (case-insensitive). sorted: the ones that need attention (degraded, progressing) first;
 /// else in the order loaded (a list still incomplete).
-public func filterWorkloads(_ workloads: [KubeWorkload], namespace: String?, query: String, sorted: Bool = true) -> [KubeWorkload] {
+public func filterWorkloads(_ workloads: [KubeWorkload], namespace: String?, query: String, sorted: Bool = true)
+    -> [KubeWorkload]
+{
     let needle = query.trimmingCharacters(in: .whitespaces)
     let contains = { (text: String) in text.range(of: needle, options: .caseInsensitive) != nil }
     let matching = workloads.filter { w in
-        (namespace == nil || w.namespace == namespace) &&
-            (needle.isEmpty || contains(w.name) || contains(w.kind) || w.images.contains(where: contains))
+        (namespace == nil || w.namespace == namespace)
+            && (needle.isEmpty || contains(w.name) || contains(w.kind) || w.images.contains(where: contains))
     }
     guard sorted else { return matching }
-    return matching
+    return
+        matching
         .sorted { a, b in
-            let ra = a.workloadState.attentionRank, rb = b.workloadState.attentionRank
+            let ra = a.workloadState.attentionRank
+            let rb = b.workloadState.attentionRank
             if ra != rb { return ra < rb }
             if a.namespace != b.namespace { return a.namespace < b.namespace }
             if a.name != b.name { return a.name < b.name }
@@ -197,7 +205,10 @@ public struct KubeRolloutStatus: Decodable, Equatable, Sendable {
     /// The new pods first, the newest first.
     public let pods: [KubeRolloutPod]
 
-    public init(workload: KubeWorkload, done: Bool = false, failed: Bool = false, manual: Bool = false, pods: [KubeRolloutPod] = []) {
+    public init(
+        workload: KubeWorkload, done: Bool = false, failed: Bool = false, manual: Bool = false,
+        pods: [KubeRolloutPod] = []
+    ) {
         self.workload = workload
         self.done = done
         self.failed = failed
@@ -237,8 +248,10 @@ public struct KubeRolloutPod: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, status: String = "", healthy: Bool = false, ready: Int = 0, containers: Int = 0,
-                restarts: Int = 0, node: String = "", created: Int64 = 0, updated: Bool = false) {
+    public init(
+        name: String, status: String = "", healthy: Bool = false, ready: Int = 0, containers: Int = 0,
+        restarts: Int = 0, node: String = "", created: Int64 = 0, updated: Bool = false
+    ) {
         self.name = name
         self.status = status
         self.healthy = healthy

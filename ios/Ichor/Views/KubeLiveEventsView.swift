@@ -77,8 +77,11 @@ struct KubeLiveEventsView: View {
             }
         }
         .task(id: kubeNamespacesKey(model)) { await scope.loadNamespaces(model: model) }
-        .task(id: Trigger(scope: control.scope, ready: control.ready, source: kubeNamespacesKey(model),
-                          warningsOnly: warningsOnly, active: scenePhase == .active, run: runID)) {
+        .task(
+            id: Trigger(
+                scope: control.scope, ready: control.ready, source: kubeNamespacesKey(model),
+                warningsOnly: warningsOnly, active: scenePhase == .active, run: runID)
+        ) {
             if control.ready { await stream(namespace: control.scope.namespace) }
         }
     }
@@ -90,7 +93,9 @@ struct KubeLiveEventsView: View {
                 Section {
                     KubeEventsStatusLine(status: status)
                     if feed.paused {
-                        Button { feed = feed.resuming() } label: {
+                        Button {
+                            feed = feed.resuming()
+                        } label: {
                             HStack {
                                 Label("Paused", systemImage: "pause.circle")
                                 Spacer()
@@ -112,7 +117,9 @@ struct KubeLiveEventsView: View {
                     ForEach(shown) { event in
                         if let resource = event.regarding.apiResource {
                             NavigationLink {
-                                KubeObjectView(resource: resource, namespace: event.regarding.objectNamespace, name: event.regarding.name)
+                                KubeObjectView(
+                                    resource: resource, namespace: event.regarding.objectNamespace,
+                                    name: event.regarding.name)
                             } label: {
                                 LiveKubeEventRow(event: event, now: now)
                             }
@@ -128,8 +135,9 @@ struct KubeLiveEventsView: View {
                 }
             }
             .emptyOverlay(feed.loaded && shown.isEmpty && error == nil, query: query) {
-                ContentUnavailableView("No events", systemImage: "list.bullet.rectangle",
-                                       description: Text("New events appear here as they happen."))
+                ContentUnavailableView(
+                    "No events", systemImage: "list.bullet.rectangle",
+                    description: Text("New events appear here as they happen."))
             }
             .themedBackground()
         }

@@ -74,7 +74,8 @@ public extension FluxApp {
     var resourcesByKind: [FluxResourceGroup] {
         Dictionary(grouping: resources, by: \.kind)
             .map { kind, items in
-                FluxResourceGroup(kind: kind, resources: items.sorted { ($0.namespace, $0.name) < ($1.namespace, $1.name) })
+                FluxResourceGroup(
+                    kind: kind, resources: items.sorted { ($0.namespace, $0.name) < ($1.namespace, $1.name) })
             }
             .sorted { $0.kind < $1.kind }
     }
@@ -101,7 +102,9 @@ public func fluxShortRevision(_ revision: String) -> String {
     revision.split(separator: "@", omittingEmptySubsequences: false)
         .map { part in
             let hash = part.split(separator: ":", maxSplits: 1).last.map(String.init) ?? ""
-            let digest = part.hasPrefix("sha1:") || part.hasPrefix("sha256:") || part.hasPrefix("sha384:") || part.hasPrefix("sha512:")
+            let digest =
+                part.hasPrefix("sha1:") || part.hasPrefix("sha256:") || part.hasPrefix("sha384:")
+                || part.hasPrefix("sha512:")
             return shortRevision(digest ? hash : String(part))
         }
         .joined(separator: "@")
@@ -129,7 +132,8 @@ public enum FluxFilter: String, Sendable, CaseIterable, Hashable, Identifiable {
 /// (case-insensitive), worst level first, then by name.
 public func filterFluxApps(_ apps: [FluxApp], filter: FluxFilter, query: String) -> [FluxApp] {
     let q = query.trimmingCharacters(in: .whitespaces)
-    return apps
+    return
+        apps
         .filter { app in
             guard filter.matches(app) else { return false }
             guard !q.isEmpty else { return true }
@@ -142,9 +146,14 @@ public func filterFluxApps(_ apps: [FluxApp], filter: FluxFilter, query: String)
 /// Sources whose name, namespace, kind or URL contains query, worst level first, then by name.
 public func filterFluxSources(_ sources: [FluxSource], query: String) -> [FluxSource] {
     let q = query.trimmingCharacters(in: .whitespaces)
-    return sources
-        .filter { s in q.isEmpty || [s.name, s.namespace, s.kind, s.url].contains { $0.localizedCaseInsensitiveContains(q) } }
-        .sorted { a, b in a.level != b.level ? a.level < b.level : (a.name, a.namespace, a.kind) < (b.name, b.namespace, b.kind) }
+    return
+        sources
+        .filter { s in
+            q.isEmpty || [s.name, s.namespace, s.kind, s.url].contains { $0.localizedCaseInsensitiveContains(q) }
+        }
+        .sorted { a, b in
+            a.level != b.level ? a.level < b.level : (a.name, a.namespace, a.kind) < (b.name, b.namespace, b.kind)
+        }
 }
 
 /// Worst level first, then by name.
@@ -196,7 +205,8 @@ public extension FluxStatus {
     /// paths to it) is not shown again. Then the apps that wait for it.
     func dependencyTree(of app: FluxApp) -> FluxDependencyTree {
         let sameKind = apps.filter { $0.kind == app.kind }
-        let byKey = Dictionary(sameKind.map { ("\($0.namespace)/\($0.name)", $0) }, uniquingKeysWith: { first, _ in first })
+        let byKey = Dictionary(
+            sameKind.map { ("\($0.namespace)/\($0.name)", $0) }, uniquingKeysWith: { first, _ in first })
         let me = "\(app.namespace)/\(app.name)"
         var seen: Set<String> = [me]
         var upstream: [FluxDependencyNode] = []
@@ -211,7 +221,9 @@ public extension FluxStatus {
         }
 
         walk(app.dependsOn, depth: 1)
-        let dependents = sameKind.filter { $0.dependsOn.contains(me) }.sorted { "\($0.namespace)/\($0.name)" < "\($1.namespace)/\($1.name)" }
+        let dependents = sameKind.filter { $0.dependsOn.contains(me) }.sorted {
+            "\($0.namespace)/\($0.name)" < "\($1.namespace)/\($1.name)"
+        }
         return FluxDependencyTree(upstream: upstream, dependents: dependents)
     }
 }

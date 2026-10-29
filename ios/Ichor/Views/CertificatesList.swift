@@ -32,14 +32,18 @@ struct CertificatesList: View {
         }
         .refreshable { await refresh() }
         .themedBackground()
-        .confirmationDialog(confirmRenew.map { String(localized: "Renew \($0.label)?") } ?? "",
-                            isPresented: $confirmRenew.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirmRenew) { cert in
+        .confirmationDialog(
+            confirmRenew.map { String(localized: "Renew \($0.label)?") } ?? "",
+            isPresented: $confirmRenew.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirmRenew
+        ) { cert in
             Button("Renew now") { Task { await renew(cert) } }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
-            Text("cert-manager issues the certificate again now, whatever its renewal time. An ACME issuer such as Let’s Encrypt counts it against its rate limits.")
+            Text(
+                "cert-manager issues the certificate again now, whatever its renewal time. An ACME issuer such as Let’s Encrypt counts it against its rate limits."
+            )
         }
         .messageAlert($resultMessage)
     }
@@ -53,12 +57,20 @@ struct CertificatesList: View {
         }
         .swipeActions(edge: .trailing) {
             if !busy && !cert.issuing {
-                Button { confirmRenew = cert } label: { Label("Renew now", systemImage: "arrow.clockwise") }.tint(.blue)
+                Button {
+                    confirmRenew = cert
+                } label: {
+                    Label("Renew now", systemImage: "arrow.clockwise")
+                }.tint(.blue)
             }
         }
         .contextMenu {
             if !busy && !cert.issuing {
-                Button { confirmRenew = cert } label: { Label("Renew now", systemImage: "arrow.clockwise") }
+                Button {
+                    confirmRenew = cert
+                } label: {
+                    Label("Renew now", systemImage: "arrow.clockwise")
+                }
             }
         }
     }
@@ -112,7 +124,9 @@ private struct CertificateRow: View {
         let failed = cert.failedAttempts > 0 ? String(localized: "\(cert.failedAttempts) failed attempts") : nil
         let issuing = cert.issuing ? String(localized: "issuing") : nil
         let issuer = cert.issuerName.isEmpty ? nil : cert.issuerName
-        return ([expiry, issuing].compactMap { $0 } + cert.reasons.compactMap(reasonText) + [failed, issuer].compactMap { $0 })
+        return
+            ([expiry, issuing].compactMap { $0 } + cert.reasons.compactMap(reasonText)
+            + [failed, issuer].compactMap { $0 })
             .joined(separator: " · ")
     }
 
@@ -120,7 +134,8 @@ private struct CertificateRow: View {
     private var expiry: String {
         guard cert.notAfter > 0 else { return String(localized: "not issued yet") }
         let relative = relativeTime(cert.notAfter)
-        return cert.expired(now: now) ? String(localized: "expired \(relative)") : String(localized: "expires \(relative)")
+        return cert.expired(now: now)
+            ? String(localized: "expired \(relative)") : String(localized: "expires \(relative)")
     }
 
     /// "a.example.org +2": the first name; the details list them all.

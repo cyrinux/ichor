@@ -57,18 +57,24 @@ enum SecurityKeyCrypto {
 
     /// The inner ciphertext of a sealed `blob`; nil when `dek` is not the one it was sealed with.
     static func open(_ blob: Data, dek: Data) -> Data? {
-        guard let combined = SealedBlob.unwrap(blob), let box = try? AES.GCM.SealedBox(combined: combined) else { return nil }
+        guard let combined = SealedBlob.unwrap(blob), let box = try? AES.GCM.SealedBox(combined: combined) else {
+            return nil
+        }
         return try? AES.GCM.open(box, using: SymmetricKey(data: dek))
     }
 
     /// Checks an assertion as a relying party would: the rpIdHash, the user-presence flag and the
     /// ES256 signature (DER, as CTAP gives it) over authenticatorData || clientDataHash with the
     /// enrolled public key. Returns whether the key verified the user, nil when the check fails.
-    static func verify(_ key: EnrolledKey, authenticatorData: Data, clientDataHash: Data, signature: Data, rpId: String = securityKeyRpId) -> Bool? {
+    static func verify(
+        _ key: EnrolledKey, authenticatorData: Data, clientDataHash: Data, signature: Data,
+        rpId: String = securityKeyRpId
+    ) -> Bool? {
         guard let head = AuthenticatorDataHead(authenticatorData), head.userPresent else { return nil }
         guard head.rpIdHash == Data(SHA256.hash(data: Data(rpId.utf8))) else { return nil }
         guard let publicKey = try? P256.Signing.PublicKey(rawRepresentation: key.publicKey),
-              let ecdsa = try? P256.Signing.ECDSASignature(derRepresentation: signature) else { return nil }
+            let ecdsa = try? P256.Signing.ECDSASignature(derRepresentation: signature)
+        else { return nil }
         guard publicKey.isValidSignature(ecdsa, for: authenticatorData + clientDataHash) else { return nil }
         return head.userVerified
     }

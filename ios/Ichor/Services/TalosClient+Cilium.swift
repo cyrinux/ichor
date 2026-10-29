@@ -12,13 +12,17 @@ enum HubbleEvent: Sendable {
 extension TalosClient {
     /// Whether Cilium runs, with Hubble, and its agents.
     func cilium() async throws -> CiliumStatus {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeCilium(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeCilium(config, context, kubeServer, $0)
+        }
     }
 
     /// Every NetworkPolicy, Cilium and Calico policy, with the pods
     /// each selects and how isolated each namespace is.
     func networkPolicies() async throws -> NetPolicyReport {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNetworkPolicies(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeNetworkPolicies(config, context, kubeServer, $0)
+        }
     }
 
     /// Follows the cluster's flows live (`hubble observe --follow` in every cilium-agent);
@@ -33,7 +37,8 @@ extension TalosClient {
                 }
             )
             let wire = filter.wire
-            let run = IchorgoStartHubbleFlows(kubeConfig, kubeContext, kubeAPIServer, wire.namespace, wire.pod, filter.dropsOnly, bridge)
+            let run = IchorgoStartHubbleFlows(
+                kubeConfig, kubeContext, kubeAPIServer, wire.namespace, wire.pod, filter.dropsOnly, bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }

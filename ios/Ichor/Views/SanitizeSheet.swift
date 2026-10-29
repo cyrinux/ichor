@@ -144,7 +144,9 @@ private struct SanitizeContent: View {
                 }
             }
         }
-        .confirmationDialog(String(localized: "Delete \(count) pods?"), isPresented: $confirming, titleVisibility: .visible) {
+        .confirmationDialog(
+            String(localized: "Delete \(count) pods?"), isPresented: $confirming, titleVisibility: .visible
+        ) {
             Button("Delete", role: .destructive) { start(preview) }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -197,7 +199,9 @@ private struct SanitizeContent: View {
         guard let client = model.client else { return }
         let namespace = namespace
         preview = .loading
-        let fetched: LoadState<KubeSanitizePreview> = await .from { try await client.sanitizePreview(namespace: namespace) }
+        let fetched: LoadState<KubeSanitizePreview> = await .from {
+            try await client.sanitizePreview(namespace: namespace)
+        }
         if case .loaded(let loaded, _, _) = fetched { selected = sanitizeDefaultSelection(loaded.pods) }
         preview = fetched
     }

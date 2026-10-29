@@ -14,7 +14,9 @@ extension AppModel {
 struct InsightsStore: Sendable {
     let scope: String
     private var sealed: SealedFile { SealedFile(account: "insights-key-\(scope)") }
-    private func url(_ kind: String) throws -> URL { try AppSupport.excludedFolder("insights").appendingPathComponent("\(scope)-\(kind)") }
+    private func url(_ kind: String) throws -> URL {
+        try AppSupport.excludedFolder("insights").appendingPathComponent("\(scope)-\(kind)")
+    }
     func read(_ kind: String) throws -> String? {
         let file = try url(kind)
         guard FileManager.default.fileExists(atPath: file.path) else { return nil }

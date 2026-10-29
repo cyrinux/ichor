@@ -57,7 +57,9 @@ private final class PinAsked: @unchecked Sendable {
 enum SecurityKeyClient {
     private static var origin: WebAuthn.Origin {
         // A literal https origin: cannot fail.
-        guard let origin = try? WebAuthn.Origin("https://\(securityKeyRpId)") else { preconditionFailure("invalid relying party origin") }
+        guard let origin = try? WebAuthn.Origin("https://\(securityKeyRpId)") else {
+            preconditionFailure("invalid relying party origin")
+        }
         return origin
     }
 
@@ -65,8 +67,10 @@ enum SecurityKeyClient {
 
     /// Runs `body` with the key reached over `transport`, then closes the connection. Over NFC the
     /// system sheet shows `message` and the key must stay on the phone until `body` returns.
-    static func withConnection<T: Sendable>(_ transport: SecurityKeyTransport, message: String,
-                                            body: (SmartCardConnection) async throws -> T) async throws -> T {
+    static func withConnection<T: Sendable>(
+        _ transport: SecurityKeyTransport, message: String,
+        body: (SmartCardConnection) async throws -> T
+    ) async throws -> T {
         let connection: SmartCardConnection
         switch transport {
         case .nfc:
@@ -94,7 +98,9 @@ enum SecurityKeyClient {
     /// the hmac-secret (prf) extension enabled, user verification discouraged. The keys already in
     /// `enrolment` are excluded, so the same key cannot be added twice. A key that only makes
     /// credentials with its FIDO PIN throws `SecurityKeyError.pinRequired`: call again with `pin`.
-    static func enrol(_ connection: SmartCardConnection, enrolment: SecurityKeyEnrolment, label: String, pin: String? = nil) async throws -> EnrolledKey {
+    static func enrol(
+        _ connection: SmartCardConnection, enrolment: SecurityKeyEnrolment, label: String, pin: String? = nil
+    ) async throws -> EnrolledKey {
         let client = try await makeClient(connection)
         let options = WebAuthn.Registration.Options(
             challenge: random(32),
@@ -108,17 +114,25 @@ enum SecurityKeyClient {
             extensions: WebAuthn.Extension.RegistrationInputs(prf: .enable)
         )
         let pinAsked = PinAsked()
-        let authorization = pin.map { WebAuthn.Authorization.pin($0) }
-            ?? WebAuthn.Authorization(providePIN: { pinAsked.set(); return .cancel }, uv: .skipped)
+        let authorization =
+            pin.map { WebAuthn.Authorization.pin($0) }
+            ?? WebAuthn.Authorization(
+                providePIN: {
+                    pinAsked.set(); return .cancel
+                }, uv: .skipped)
         let response: WebAuthn.Registration.Response
         do {
             response = try await client.makeCredential(options, authorization: authorization).value
         } catch {
             if pinAsked.value { throw SecurityKeyError.pinRequired }
-            if let clientError = error as? WebAuthn.ClientError, case .credentialExcluded = clientError { throw SecurityKeyError.alreadyEnrolled }
+            if let clientError = error as? WebAuthn.ClientError, case .credentialExcluded = clientError {
+                throw SecurityKeyError.alreadyEnrolled
+            }
             throw error
         }
-        guard case .ec2(_, _, _, let x, let y) = response.publicKey, x.count == 32, y.count == 32 else { throw SecurityKeyError.unsupportedKey }
+        guard case .ec2(_, _, _, let x, let y) = response.publicKey, x.count == 32, y.count == 32 else {
+            throw SecurityKeyError.unsupportedKey
+        }
         return EnrolledKey(credentialId: response.credentialId, publicKey: x + y, label: label)
     }
 
@@ -126,7 +140,9 @@ enum SecurityKeyClient {
     /// (user presence only: a touch, no PIN) and checks it. With `wantSecret`, also the hmac-secret
     /// output for the enrolment's salt (the prf extension), which the required mode unwraps the
     /// data key with.
-    static func assert(_ connection: SmartCardConnection, enrolment: SecurityKeyEnrolment, wantSecret: Bool) async throws -> SecurityKeyAssertion {
+    static func assert(_ connection: SmartCardConnection, enrolment: SecurityKeyEnrolment, wantSecret: Bool)
+        async throws -> SecurityKeyAssertion
+    {
         let client = try await makeClient(connection)
         let clientDataHash = random(32)
         let options = WebAuthn.Authentication.Options(
@@ -141,16 +157,26 @@ enum SecurityKeyClient {
         let authorization = WebAuthn.Authorization(providePIN: { .cancel }, uv: .skipped)
         let responses: [WebAuthn.Authentication.Response]
         do {
-            responses = try await client.getAssertion(options, clientData: clientData, authorization: authorization).value
+            responses = try await client.getAssertion(options, clientData: clientData, authorization: authorization)
+                .value
         } catch {
-            if let clientError = error as? WebAuthn.ClientError, case .noCredentials = clientError { throw SecurityKeyError.notEnrolled }
+            if let clientError = error as? WebAuthn.ClientError, case .noCredentials = clientError {
+                throw SecurityKeyError.notEnrolled
+            }
             throw error
         }
-        guard let response = responses.first, let key = enrolment.key(credentialId: response.credentialId) else { throw SecurityKeyError.notEnrolled }
-        guard let uv = SecurityKeyCrypto.verify(key, authenticatorData: response.rawAuthenticatorData, clientDataHash: clientDataHash, signature: response.signature) else {
+        guard let response = responses.first, let key = enrolment.key(credentialId: response.credentialId) else {
+            throw SecurityKeyError.notEnrolled
+        }
+        guard
+            let uv = SecurityKeyCrypto.verify(
+                key, authenticatorData: response.rawAuthenticatorData, clientDataHash: clientDataHash,
+                signature: response.signature)
+        else {
             throw SecurityKeyError.badSignature
         }
-        return SecurityKeyAssertion(key: key, secret: wantSecret ? response.clientExtensionResults.prf?.results.first : nil, uv: uv)
+        return SecurityKeyAssertion(
+            key: key, secret: wantSecret ? response.clientExtensionResults.prf?.results.first : nil, uv: uv)
     }
 
     private static func random(_ count: Int) -> Data {
@@ -165,9 +191,15 @@ func securityKeyMessage(_ error: Error) -> String {
         return error.errorDescription ?? String(describing: error)
     case let error as SecurityKeyUnwrapError:
         switch error {
-        case .noSecret: return String(localized: "This key cannot seal the configs: it lacks the hmac-secret extension.")
-        case .notWrapped: return String(localized: "This key was added before the key requirement. Tap another enrolled key.")
-        case .uvChanged: return String(localized: "This key's PIN or fingerprint setting changed since it was set up, so it computes another secret. Turn the key requirement off with another key, then on again.")
+        case .noSecret:
+            return String(localized: "This key cannot seal the configs: it lacks the hmac-secret extension.")
+        case .notWrapped:
+            return String(localized: "This key was added before the key requirement. Tap another enrolled key.")
+        case .uvChanged:
+            return String(
+                localized:
+                    "This key's PIN or fingerprint setting changed since it was set up, so it computes another secret. Turn the key requirement off with another key, then on again."
+            )
         case .wrongKey, .damaged: return String(localized: "This security key cannot unlock the stored config.")
         }
     case let error as WebAuthn.ClientError:
@@ -178,7 +210,8 @@ func securityKeyMessage(_ error: Error) -> String {
         case .credentialExcluded: return String(localized: "This key is already enrolled.")
         case .pinRejected(let retries, _): return String(localized: "Wrong PIN, \(retries) tries left.")
         case .pinBlocked, .pinAuthBlocked: return String(localized: "The key's PIN is blocked.")
-        default: return String(localized: "Could not talk to the security key (\(String(describing: error))). Tap it again.")
+        default:
+            return String(localized: "Could not talk to the security key (\(String(describing: error))). Tap it again.")
         }
     default:
         return String(localized: "Could not talk to the security key (\(error.localizedDescription)). Tap it again.")

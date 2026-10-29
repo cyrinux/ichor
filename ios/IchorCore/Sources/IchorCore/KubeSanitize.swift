@@ -38,7 +38,10 @@ public struct SanitizePod: Decodable, Hashable, Identifiable, Sendable {
     /// Its owner brings it back (a Deployment's ReplicaSet, a DaemonSet...); a Job's pod stays gone.
     public var hasOwner: Bool { !ownerKind.isEmpty && !ownerName.isEmpty }
 
-    public init(namespace: String, name: String, status: String, ownerKind: String = "", ownerName: String = "", ageSec: Int64 = 0) {
+    public init(
+        namespace: String, name: String, status: String, ownerKind: String = "", ownerName: String = "",
+        ageSec: Int64 = 0
+    ) {
         self.namespace = namespace
         self.name = name
         self.status = status

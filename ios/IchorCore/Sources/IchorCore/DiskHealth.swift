@@ -18,8 +18,12 @@ public struct DiskHealthInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { device }
 
-    public init(device: String, model: String = "", serial: String = "", healthy: Bool? = nil, message: String = "", temperatureC: Double? = nil,
-                powerOnHours: Int64? = nil, wearPercent: Double? = nil, criticalWarnings: [String] = [], attributes: [LogField] = []) {
+    public init(
+        device: String, model: String = "", serial: String = "", healthy: Bool? = nil, message: String = "",
+        temperatureC: Double? = nil,
+        powerOnHours: Int64? = nil, wearPercent: Double? = nil, criticalWarnings: [String] = [],
+        attributes: [LogField] = []
+    ) {
         self.device = device
         self.model = model
         self.serial = serial
@@ -33,7 +37,8 @@ public struct DiskHealthInfo: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case device, model, serial, healthy, message, temperatureC, powerOnHours, wearPercent, criticalWarnings, attributes
+        case device, model, serial, healthy, message, temperatureC, powerOnHours, wearPercent, criticalWarnings,
+            attributes
     }
 
     public init(from decoder: Decoder) throws {
@@ -103,7 +108,8 @@ public func sortDiskHealth(_ disks: [DiskHealthInfo]) -> [DiskHealthInfo] {
         }
     }
     return disks.sorted { a, b in
-        let ra = rank(a.state), rb = rank(b.state)
+        let ra = rank(a.state)
+        let rb = rank(b.state)
         if ra != rb { return ra < rb }
         return a.device < b.device
     }

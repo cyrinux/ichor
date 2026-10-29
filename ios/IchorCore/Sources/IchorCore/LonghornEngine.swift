@@ -15,7 +15,9 @@ public struct LonghornEngineImage: Decodable, Equatable, Identifiable, Sendable 
     /// It can be picked: deployed where the volume runs and compatible.
     public var selectable: Bool { deployed && !incompatible }
 
-    public init(image: String, version: String = "", deployed: Bool, isDefault: Bool = false, incompatible: Bool = false) {
+    public init(
+        image: String, version: String = "", deployed: Bool, isDefault: Bool = false, incompatible: Bool = false
+    ) {
         self.image = image
         self.version = version
         self.deployed = deployed
@@ -55,9 +57,11 @@ public struct LonghornEngineUpgradePreview: Decodable, Equatable, Sendable {
     public let images: [LonghornEngineImage]
     public let error: String
 
-    public init(namespace: String = "", name: String = "", state: String = "", robustness: String = "",
-                currentImage: String = "", specImage: String = "", defaultImage: String = "", live: Bool = false,
-                canUpgrade: Bool = false, reason: String = "", images: [LonghornEngineImage] = [], error: String = "") {
+    public init(
+        namespace: String = "", name: String = "", state: String = "", robustness: String = "",
+        currentImage: String = "", specImage: String = "", defaultImage: String = "", live: Bool = false,
+        canUpgrade: Bool = false, reason: String = "", images: [LonghornEngineImage] = [], error: String = ""
+    ) {
         self.namespace = namespace
         self.name = name
         self.state = state
@@ -89,7 +93,8 @@ public struct LonghornEngineUpgradePreview: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, state, robustness, currentImage, specImage, defaultImage, live, canUpgrade, reason, images, error
+        case namespace, name, state, robustness, currentImage, specImage, defaultImage, live, canUpgrade, reason,
+            images, error
     }
 
     /// The image the sheet starts on: the default one when it can be picked, else the first that can,

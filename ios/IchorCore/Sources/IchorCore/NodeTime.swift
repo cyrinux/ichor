@@ -14,7 +14,10 @@ public struct NodeTimeInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { node }
 
-    public init(node: String, server: String = "", localTime: Int64 = 0, remoteTime: Int64 = 0, offsetMs: Int64 = 0, error: String? = nil) {
+    public init(
+        node: String, server: String = "", localTime: Int64 = 0, remoteTime: Int64 = 0, offsetMs: Int64 = 0,
+        error: String? = nil
+    ) {
         self.node = node
         self.server = server
         self.localTime = localTime

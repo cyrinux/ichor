@@ -6,10 +6,10 @@
 /// sideloaded and reinstalled by hand.
 enum Distribution {
     #if APP_STORE
-    static let appStore = true
-    static let donations = false
+        static let appStore = true
+        static let donations = false
     #else
-    static let appStore = false
-    static let donations = true
+        static let appStore = false
+        static let donations = true
     #endif
 }

@@ -66,16 +66,18 @@ struct KubeObjectEditView: View {
                 }
                 .sheet(item: $help) { request in
                     KubeSchemaHelpSheet(resource: target.resource, request: request) { child, listItem in
-                        let inserted = insertYamlField(draft, utf16Offset: request.offset, name: child.name, listItem: listItem)
+                        let inserted = insertYamlField(
+                            draft, utf16Offset: request.offset, name: child.name, listItem: listItem)
                         cursor = inserted.cursor
                         draft = inserted.text
                     }
                 }
                 .task(id: target.id) { await loadSaveAccess() }
-                .confirmationDialog("Discard your changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
-                    Button("Discard changes", role: .destructive) { dismiss() }
-                    Button("Keep editing", role: .cancel) {}
-                }
+                .confirmationDialog("Discard your changes?", isPresented: $confirmingDiscard, titleVisibility: .visible)
+            {
+                Button("Discard changes", role: .destructive) { dismiss() }
+                Button("Keep editing", role: .cancel) {}
+            }
         }
         .interactiveDismissDisabled(changed)
     }
@@ -90,9 +92,12 @@ struct KubeObjectEditView: View {
     private func loadSaveAccess() async {
         guard let client = model.client else { return }
         let target = target
-        guard let access = try? await client.kubeCan(verb: "update", group: target.resource.group, resource: target.resource.resource,
-                                                     namespace: target.namespace, name: target.name),
-              !Task.isCancelled else { return }
+        guard
+            let access = try? await client.kubeCan(
+                verb: "update", group: target.resource.group, resource: target.resource.resource,
+                namespace: target.namespace, name: target.name),
+            !Task.isCancelled
+        else { return }
         saveDenial = access.isDenied ? access : nil
     }
 }
@@ -130,8 +135,11 @@ private struct KubeEditReview: View {
                     }
                 } else {
                     Section {
-                        Label("No changes: the API server would store the object as it is.", systemImage: "checkmark.circle")
-                            .foregroundStyle(.secondary)
+                        Label(
+                            "No changes: the API server would store the object as it is.",
+                            systemImage: "checkmark.circle"
+                        )
+                        .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -174,9 +182,11 @@ private struct KubeEditReview: View {
             }
             .foregroundStyle(.statusBad)
             if isKubeEditConflict(failure) {
-                Text("Someone changed this object after you opened it. Your edit was not saved: go back, close the editor and open the object again to start from the latest version.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Someone changed this object after you opened it. Your edit was not saved: go back, close the editor and open the object again to start from the latest version."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             }
         } header: {
             Text("Not saved")
@@ -189,7 +199,8 @@ private struct KubeEditReview: View {
         let edited = edited
         state = .loading
         state = await .from {
-            try await client.objectUpdatePreview(target.resource, namespace: target.namespace, name: target.name, edited: edited)
+            try await client.objectUpdatePreview(
+                target.resource, namespace: target.namespace, name: target.name, edited: edited)
         }
     }
 
@@ -199,7 +210,8 @@ private struct KubeEditReview: View {
         defer { saving = false }
         failure = nil
         do {
-            try await client.updateObject(target.resource, namespace: target.namespace, name: target.name, edited: edited)
+            try await client.updateObject(
+                target.resource, namespace: target.namespace, name: target.name, edited: edited)
             onSaved()
         } catch {
             failure = error.localizedDescription

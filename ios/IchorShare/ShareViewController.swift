@@ -51,8 +51,11 @@ enum ShareInbox {
     ]
 
     static func save(_ provider: NSItemProvider?) async -> ShareOutcome {
-        guard let provider, let type = types.first(where: { provider.hasItemConformingToTypeIdentifier($0) }) else { return .unsupported }
-        guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SharedSnapshot.suite) else { return .failed }
+        guard let provider, let type = types.first(where: { provider.hasItemConformingToTypeIdentifier($0) }) else {
+            return .unsupported
+        }
+        guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SharedSnapshot.suite)
+        else { return .failed }
         let inbox = group.appendingPathComponent(IncomingFile.inboxFolder, isDirectory: true)
         return await withCheckedContinuation { continuation in
             // The file only exists until the handler returns: copied there.
@@ -67,10 +70,13 @@ enum ShareInbox {
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         guard size <= IncomingFile.maxBytes else { return .tooLarge }
         let name = url.lastPathComponent
-        guard IncomingFile.classify(name: name, head: IncomingFile.head(of: url)) != .unsupported else { return .unsupported }
+        guard IncomingFile.classify(name: name, head: IncomingFile.head(of: url)) != .unsupported else {
+            return .unsupported
+        }
         do {
             try FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true)
-            try FileManager.default.copyItem(at: url, to: inbox.appendingPathComponent(IncomingFile.inboxName(for: name)))
+            try FileManager.default.copyItem(
+                at: url, to: inbox.appendingPathComponent(IncomingFile.inboxName(for: name)))
             return .saved
         } catch {
             return .failed
@@ -94,7 +100,9 @@ struct ShareView: View {
                 case .tooLarge:
                     Label("This file is too large for a config or a backup.", systemImage: "exclamationmark.triangle")
                 case .unsupported:
-                    Label("Ichor takes Talos and Kubernetes configs and Ichor backups.", systemImage: "exclamationmark.triangle")
+                    Label(
+                        "Ichor takes Talos and Kubernetes configs and Ichor backups.",
+                        systemImage: "exclamationmark.triangle")
                 case .failed:
                     Label("The file could not be saved.", systemImage: "exclamationmark.triangle")
                 }

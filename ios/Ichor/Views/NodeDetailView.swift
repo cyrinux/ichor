@@ -37,8 +37,9 @@ struct NodeDetailView: View {
             NodeStatusSection(ref: ref, open: $open)
             NodeInspectSection(node: ref.address, open: $open)
             NodeTroubleshootSection(node: ref.address, open: $open)
-            NodeOperateSection(node: ref.address, maintenanceRunning: maintenanceRunning, open: $open,
-                               showingReset: $showingReset, showingCordon: $showingCordon)
+            NodeOperateSection(
+                node: ref.address, maintenanceRunning: maintenanceRunning, open: $open,
+                showingReset: $showingReset, showingCordon: $showingCordon)
             NodePowerSection(powerAction: $powerAction)
         }
         .themedBackground()
@@ -48,7 +49,8 @@ struct NodeDetailView: View {
         .task { await model.loadFeatures(node: ref.address) }
         // Masked like the screen in screenshot mode: reloaded when it changes.
         .task(id: "\(period.rawValue)#\(model.dataGeneration)") {
-            history = await HistoryStore.query(cluster: model.activeSummary.map(monitorClusterKey) ?? "", period: period)
+            history = await HistoryStore.query(
+                cluster: model.activeSummary.map(monitorClusterKey) ?? "", period: period)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -58,8 +60,13 @@ struct NodeDetailView: View {
                     Menu {
                         // No tab: the link opens this hub.
                         ShareLinkButton(target: .node(address: ref.address, hostname: ref.hostname, tab: ""))
-                        PinButton(target: .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
-                        Button { copyAddress() } label: { Label("Copy IP", systemImage: "doc.on.doc") }
+                        PinButton(
+                            target: .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
+                        Button {
+                            copyAddress()
+                        } label: {
+                            Label("Copy IP", systemImage: "doc.on.doc")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
@@ -67,8 +74,10 @@ struct NodeDetailView: View {
             }
         }
         .navigationDestination(item: $open) { $0.view(ref) }
-        .confirmationDialog(String(localized: "Kubernetes scheduling on \(ref.hostname)"), isPresented: $showingCordon,
-                            titleVisibility: .visible) {
+        .confirmationDialog(
+            String(localized: "Kubernetes scheduling on \(ref.hostname)"), isPresented: $showingCordon,
+            titleVisibility: .visible
+        ) {
             Button("Cordon", role: .destructive) { Task { await cordon(true) } }
             Button("Uncordon") { Task { await cordon(false) } }
             Button("Cancel", role: .cancel) {}
@@ -109,13 +118,23 @@ struct NodeDetailView: View {
             }
             .accessibilityElement(children: .combine)
             .contextMenu {
-                Button { copyAddress() } label: { Label("Copy IP", systemImage: "doc.on.doc") }
+                Button {
+                    copyAddress()
+                } label: {
+                    Label("Copy IP", systemImage: "doc.on.doc")
+                }
             }
             .swipeActions(edge: .trailing) {
-                Button { copyAddress() } label: { Label("Copy IP", systemImage: "doc.on.doc") }
-                    .tint(.blue)
+                Button {
+                    copyAddress()
+                } label: {
+                    Label("Copy IP", systemImage: "doc.on.doc")
+                }
+                .tint(.blue)
             }
-            if let history, let uptime = history.node(ref.address), uptime.uptimePercent != nil || !uptime.intervals.isEmpty {
+            if let history, let uptime = history.node(ref.address),
+                uptime.uptimePercent != nil || !uptime.intervals.isEmpty
+            {
                 NodeUptimeStrip(uptime: uptime, from: history.from, to: history.to, period: $period)
             }
         }
@@ -134,7 +153,9 @@ struct NodeDetailView: View {
     /// `talosctl reset`, after the app lock when it is on; the screen closes once requested.
     private func performReset(_ request: NodeResetSheet.Request) async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(ref.hostname)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(ref.hostname)"))
+        {
             succeeded = false
             resultMessage = failure
             return
@@ -142,7 +163,8 @@ struct NodeDetailView: View {
         running = true
         defer { running = false }
         do {
-            try await client.reset(node: ref.address, wipe: request.wipe, graceful: request.graceful, reboot: request.reboot)
+            try await client.reset(
+                node: ref.address, wipe: request.wipe, graceful: request.graceful, reboot: request.reboot)
             succeeded = true
             resultMessage = String(localized: "\(ref.hostname): reset requested")
         } catch {
@@ -153,7 +175,9 @@ struct NodeDetailView: View {
 
     private func perform(_ request: PowerRequest) async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "\(request.localizedTitle) \(ref.hostname)") {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: "\(request.localizedTitle) \(ref.hostname)")
+        {
             succeeded = false
             resultMessage = failure
             return
@@ -190,7 +214,9 @@ extension NodeDetailView {
         defer { running = false }
         do {
             try await client.cordon(node: ref.address, on: on)
-            resultMessage = on ? String(localized: "\(ref.hostname) is cordoned: no new pods are scheduled on it.")
+            resultMessage =
+                on
+                ? String(localized: "\(ref.hostname) is cordoned: no new pods are scheduled on it.")
                 : String(localized: "\(ref.hostname) is uncordoned: pods can be scheduled on it again.")
         } catch {
             resultMessage = error.localizedDescription

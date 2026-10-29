@@ -22,7 +22,9 @@ public let freezeMaxMinutes = 7 * 24 * 60
 public let freezeExtendMinutes = 60
 
 /// The options KubeArgoFreeze takes for a freeze of scope around app.
-public func freezeOptions(for app: ArgoApp, scope: FreezeScope, minutes: Int, manualSync: Bool, reason: String) -> ArgoFreezeOptions {
+public func freezeOptions(for app: ArgoApp, scope: FreezeScope, minutes: Int, manualSync: Bool, reason: String)
+    -> ArgoFreezeOptions
+{
     ArgoFreezeOptions(
         applications: scope == .app ? [app.name] : scope == .project ? ["*"] : [],
         namespaces: scope == .namespace ? [app.destination.namespace] : [],
@@ -112,15 +114,17 @@ public extension ArgoStatus {
     /// The windows freezing app, with its project.
     func freezeWindows(of app: ArgoApp) -> [ProjectWindow] {
         guard let freeze = app.freeze, let project = project(of: app) else { return [] }
-        return project.windows.filter { freeze.windows.contains($0.id) }.map { ProjectWindow(project: project, window: $0) }
+        return project.windows.filter { freeze.windows.contains($0.id) }.map {
+            ProjectWindow(project: project, window: $0)
+        }
     }
 
     /// The app that would undo a hand-made change to kind namespace/name within minutes: it
     /// deploys that resource with auto-sync and self-heal on, and is not frozen.
     func selfHealingOwner(kind: String, namespace: String, name: String) -> ArgoApp? {
         apps.first { app in
-            app.autoSync.enabled && app.autoSync.selfHeal && app.freeze == nil &&
-                app.resources.contains { $0.kind == kind && $0.namespace == namespace && $0.name == name }
+            app.autoSync.enabled && app.autoSync.selfHeal && app.freeze == nil
+                && app.resources.contains { $0.kind == kind && $0.namespace == namespace && $0.name == name }
         }
     }
 }

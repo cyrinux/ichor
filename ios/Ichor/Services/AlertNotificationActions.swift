@@ -9,7 +9,8 @@ enum AlertSnoozeStore {
 
     static func load() -> AlertSnoozes {
         guard let data = SharedStore.defaults.data(forKey: key),
-              let snoozes = try? JSONDecoder().decode(AlertSnoozes.self, from: data) else { return AlertSnoozes() }
+            let snoozes = try? JSONDecoder().decode(AlertSnoozes.self, from: data)
+        else { return AlertSnoozes() }
         return snoozes
     }
 
@@ -61,22 +62,38 @@ enum AlertNotificationActions {
             switch action {
             case .snooze:
                 return alertSnoozeHours.map { hours in
-                    UNNotificationAction(identifier: snoozeActionID(hours: hours), title: String(localized: "Snooze \(hours) h"), options: [])
+                    UNNotificationAction(
+                        identifier: snoozeActionID(hours: hours), title: String(localized: "Snooze \(hours) h"),
+                        options: [])
                 }
             case .wake:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Wake"), options: [])]
+                return [
+                    UNNotificationAction(identifier: action.rawValue, title: String(localized: "Wake"), options: [])
+                ]
             case .reboot:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Reboot"),
-                                             options: [.foreground, .authenticationRequired, .destructive])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Reboot"),
+                        options: [.foreground, .authenticationRequired, .destructive])
+                ]
             case .sync:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Sync"),
-                                             options: [.foreground, .authenticationRequired])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Sync"),
+                        options: [.foreground, .authenticationRequired])
+                ]
             case .reconcile:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Reconcile"),
-                                             options: [.foreground, .authenticationRequired])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Reconcile"),
+                        options: [.foreground, .authenticationRequired])
+                ]
             case .silence:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Silence 1 h"),
-                                             options: [.foreground, .authenticationRequired])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Silence 1 h"),
+                        options: [.foreground, .authenticationRequired])
+                ]
             }
         }
     }
@@ -116,8 +133,9 @@ enum AlertNotificationActions {
         // Hidden on the lock screen with the app lock on, like the alert it answers.
         if UserDefaults.standard.bool(forKey: "appLockEnabled") { content.categoryIdentifier = "private" }
         // Per cluster, like the alerts: two clusters' nodes may share an address.
-        let request = UNNotificationRequest(identifier: wakePrefix + alertNotificationID(cluster: cluster, alertKey: alertKey),
-                                            content: content, trigger: nil)
+        let request = UNNotificationRequest(
+            identifier: wakePrefix + alertNotificationID(cluster: cluster, alertKey: alertKey),
+            content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
 }

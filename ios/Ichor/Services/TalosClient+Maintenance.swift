@@ -13,7 +13,9 @@ enum MaintenanceEvent: Sendable {
 extension TalosClient {
     /// The pods a drain evicts or leaves, their budgets, and the checks of a reboot (os:admin).
     func maintenancePlan(node: String) async throws -> MaintenancePlan {
-        try await Self.json { [config, context, kubeServer] in IchorgoNodeMaintenancePlan(config, context, kubeServer, node, $0) }
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoNodeMaintenancePlan(config, context, kubeServer, node, $0)
+        }
     }
 
     /// `kubectl cordon` (on) or `uncordon` the node (os:admin).
@@ -26,19 +28,25 @@ extension TalosClient {
     /// Cordons, drains, then reboots, shuts down or stops (`action`). After a stop Go still
     /// reports `done` (the node stays cordoned), so stop rather than cancel the consuming task.
     /// `acknowledged`: the user confirmed the plan's risks.
-    func startMaintenance(node: String, action: MaintenanceAction, includeBare: Bool,
-                          acknowledged: Bool) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
+    func startMaintenance(
+        node: String, action: MaintenanceAction, includeBare: Bool,
+        acknowledged: Bool
+    ) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
         Self.followMaintenance { [config, context, kubeServer] bridge in
-            IchorgoStartNodeMaintenance(config, context, kubeServer, node, action.rawValue, includeBare, acknowledged, bridge)
+            IchorgoStartNodeMaintenance(
+                config, context, kubeServer, node, action.rawValue, includeBare, acknowledged, bridge)
         }
     }
 
     /// Cordons, drains, upgrades Talos to `image`, waits until the node is back and Ready, then
     /// uncordons it (StartNodeMaintenanceUpgrade). `force` skips the etcd checks as for an upgrade.
-    func startMaintenanceUpgrade(node: String, image: String, includeBare: Bool, acknowledged: Bool,
-                                 force: Bool) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
+    func startMaintenanceUpgrade(
+        node: String, image: String, includeBare: Bool, acknowledged: Bool,
+        force: Bool
+    ) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
         Self.followMaintenance { [config, context, kubeServer] bridge in
-            IchorgoStartNodeMaintenanceUpgrade(config, context, kubeServer, node, image, includeBare, acknowledged, force, bridge)
+            IchorgoStartNodeMaintenanceUpgrade(
+                config, context, kubeServer, node, image, includeBare, acknowledged, force, bridge)
         }
     }
 
@@ -59,7 +67,9 @@ extension TalosClient {
 
     /// A cluster without Talos: cordons and drains the Kubernetes node `kubeNode`, which stays
     /// cordoned. Reports like startMaintenance (phases cordon and drain).
-    func startKubeDrain(kubeNode: String, includeBare: Bool) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
+    func startKubeDrain(kubeNode: String, includeBare: Bool) -> (
+        events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void
+    ) {
         Self.followMaintenance { [config = kubeConfig, context = kubeContext, kubeServer = kubeAPIServer] bridge in
             IchorgoStartKubeDrain(config, context, kubeServer, kubeNode, includeBare, bridge)
         }
@@ -80,7 +90,7 @@ extension TalosClient {
         let run = start(bridge)
         continuation.onTermination = { _ in
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole run
+            _ = bridge  // keep the listener alive for the whole run
         }
         return (stream, { run?.cancel() })
     }

@@ -28,7 +28,7 @@ public struct BootMedia: Decodable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case talosVersion, schematic, schematicSource, arch, secureBoot, templateNode, iso, ipxe, kernel, initramfs,
-             cmdline, booterDocker, booterPodman, omni, warnings
+            cmdline, booterDocker, booterPodman, omni, warnings
     }
 
     public init(from decoder: Decoder) throws {
@@ -90,15 +90,19 @@ extension BootMedia {
 
     /// The files of a PXE server of one's own.
     public var pxeFileValues: [BootValue] {
-        [BootValue(label: "kernel", text: kernel), BootValue(label: "initramfs", text: initramfs),
-         BootValue(label: "cmdline", text: cmdline)]
+        [
+            BootValue(label: "kernel", text: kernel), BootValue(label: "initramfs", text: initramfs),
+            BootValue(label: "cmdline", text: cmdline),
+        ]
     }
 }
 
 extension BootMediaOmni {
     /// The booter commands with the join arguments, then the arguments alone.
     public var values: [BootValue] {
-        [BootValue(label: "docker", text: booterDocker), BootValue(label: "podman", text: booterPodman),
-         BootValue(label: "kernel args", text: kernelArgs)]
+        [
+            BootValue(label: "docker", text: booterDocker), BootValue(label: "podman", text: booterPodman),
+            BootValue(label: "kernel args", text: kernelArgs),
+        ]
     }
 }

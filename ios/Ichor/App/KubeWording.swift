@@ -6,22 +6,23 @@ import IchorCore
 extension ContextSummary {
     /// How the context signs in, with what it signs in to when the core names it.
     var localizedAuthLabel: String {
-        let method = switch auth ?? "" {
-        case "cert": String(localized: "Client certificate")
-        case "token": String(localized: "Token")
-        case "eks": "AWS EKS"
-        case "gke": "Google GKE"
-        case "oidc": "OIDC"
-        case "azure": "Azure AKS"
-        case "digitalocean": "DigitalOcean"
-        case "rancher": "Rancher"
-        case "omni": "Sidero Omni"
-        case "omni-service-account": String(localized: "Omni service account")
-        case "exec": String(localized: "Exec plugin")
-        case "auth-provider": String(localized: "Auth provider")
-        case "basic": String(localized: "Username and password")
-        default: String(localized: "None")
-        }
+        let method =
+            switch auth ?? "" {
+            case "cert": String(localized: "Client certificate")
+            case "token": String(localized: "Token")
+            case "eks": "AWS EKS"
+            case "gke": "Google GKE"
+            case "oidc": "OIDC"
+            case "azure": "Azure AKS"
+            case "digitalocean": "DigitalOcean"
+            case "rancher": "Rancher"
+            case "omni": "Sidero Omni"
+            case "omni-service-account": String(localized: "Omni service account")
+            case "exec": String(localized: "Exec plugin")
+            case "auth-provider": String(localized: "Auth provider")
+            case "basic": String(localized: "Username and password")
+            default: String(localized: "None")
+            }
         guard let detail = authDetail, !detail.isEmpty else { return method }
         return "\(method) · \(detail)"
     }
@@ -38,7 +39,10 @@ extension ContextSummary {
         case "kube-not-https":
             return String(localized: "The server is not https: Ichor only connects over TLS.")
         case "kube-file-path":
-            return String(localized: "Certificates or keys are file paths. Run kubectl config view --flatten --minify and import its output.")
+            return String(
+                localized:
+                    "Certificates or keys are file paths. Run kubectl config view --flatten --minify and import its output."
+            )
         case "kube-proxy-url":
             return String(localized: "Connecting through a proxy (proxy-url) is not supported.")
         case "kube-basic-auth":
@@ -79,7 +83,9 @@ extension CloudContext {
     /// The location and owner under a cloud context's cluster name: "EKS · eu-north-1 · account 12…12".
     var localizedDetail: String {
         guard !shortOwner.isEmpty else { return [provider, location].joined(separator: " · ") }
-        let owner = provider == Self.eks ? String(localized: "account \(shortOwner)") : String(localized: "project \(shortOwner)")
+        let owner =
+            provider == Self.eks
+            ? String(localized: "account \(shortOwner)") : String(localized: "project \(shortOwner)")
         return [provider, location, owner].joined(separator: " · ")
     }
 }

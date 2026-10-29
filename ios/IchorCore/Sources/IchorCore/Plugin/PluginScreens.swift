@@ -87,7 +87,9 @@ public enum DataServicesTab: Hashable, Sendable, Identifiable {
     /// The hub's tabs: `solo`'s alone when it runs; else, on a Kubernetes cluster (whose home
     /// files the other systems in their families), storage, databases and backups; on a Talos
     /// cluster, which has no tools card yet, every system. The plugins follow, except with `solo`.
-    public static func hubTabs(_ services: DataServices, plugins: PluginDetect?, kube: Bool, solo: DataServiceKind?) -> [DataServicesTab] {
+    public static func hubTabs(_ services: DataServices, plugins: PluginDetect?, kube: Bool, solo: DataServiceKind?)
+        -> [DataServicesTab]
+    {
         if let solo { return services.detected.contains(solo) ? [.native(solo)] : [] }
         return tabs(detected: services.detected(kube ? [.data] : Set(ServiceFamily.allCases)), plugins: plugins)
     }
@@ -136,9 +138,12 @@ public enum DataServicesCardLine: Equatable, Sendable, Identifiable {
 
     /// Worst first (critical, warning, then the calm levels; no health counts as unknown), as on
     /// Android; equal ones keep their order, the native systems before the plugins.
-    public static func lines(natives: [DataServiceKind], summary: (DataServiceKind) -> ServiceSummary?,
-                             plugins: [PluginDetectItem]) -> [DataServicesCardLine] {
-        let all = natives.map { DataServicesCardLine.native($0, health: summary($0)?.health) } + plugins.map { .plugin($0) }
+    public static func lines(
+        natives: [DataServiceKind], summary: (DataServiceKind) -> ServiceSummary?,
+        plugins: [PluginDetectItem]
+    ) -> [DataServicesCardLine] {
+        let all =
+            natives.map { DataServicesCardLine.native($0, health: summary($0)?.health) } + plugins.map { .plugin($0) }
         return all.enumerated()
             .sorted { a, b in
                 let ha = a.element.health ?? .unknown
@@ -150,8 +155,10 @@ public enum DataServicesCardLine: Equatable, Sendable, Identifiable {
 
     /// "N need a look": what each native system counts, plus one per plugin whose tile needs
     /// attention (a tile has no count of its own).
-    public static func attention(natives: [DataServiceKind], summary: (DataServiceKind) -> ServiceSummary?,
-                                 plugins: [PluginDetectItem]) -> Int {
+    public static func attention(
+        natives: [DataServiceKind], summary: (DataServiceKind) -> ServiceSummary?,
+        plugins: [PluginDetectItem]
+    ) -> Int {
         natives.compactMap { summary($0)?.attention }.reduce(0, +)
             + plugins.filter { $0.summary?.serviceHealth.needsAttention == true }.count
     }

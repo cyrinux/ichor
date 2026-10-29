@@ -70,37 +70,61 @@ struct WorkloadActionsSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
                 ToolbarItemGroup(placement: .topBarLeading) {
-                    ShareLinkButton(target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name))
-                    PinButton(target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name), label: workload.name)
+                    ShareLinkButton(
+                        target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name))
+                    PinButton(
+                        target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name),
+                        label: workload.name)
                 }
             }
             .task {
                 if workload.hasHistory { await loadRevisions() }
                 await loadKubeGreen()
             }
-            .confirmationDialog(String(localized: "Argo CD will revert this"), isPresented: $askArgo, titleVisibility: .visible,
-                                presenting: argoOwner) { owner in
-                Button(String(localized: "Freeze \(owner.app.name) 1 h, then scale")) { freezeFirst = true; confirmAfterArgo() }
-                Button(String(localized: "Scale anyway")) { freezeFirst = false; confirmAfterArgo() }
+            .confirmationDialog(
+                String(localized: "Argo CD will revert this"), isPresented: $askArgo, titleVisibility: .visible,
+                presenting: argoOwner
+            ) { owner in
+                Button(String(localized: "Freeze \(owner.app.name) 1 h, then scale")) {
+                    freezeFirst = true; confirmAfterArgo()
+                }
+                Button(String(localized: "Scale anyway")) {
+                    freezeFirst = false; confirmAfterArgo()
+                }
                 Button("Cancel", role: .cancel) {}
             } message: { owner in
-                Text("\(owner.app.name) deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze \(owner.app.name) first to keep your change for a while.")
+                Text(
+                    "\(owner.app.name) deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze \(owner.app.name) first to keep your change for a while."
+                )
             }
-            .confirmationDialog(String(localized: "Scale \(workload.name) to \(replicas)?"), isPresented: $confirmScale,
-                                titleVisibility: .visible) {
+            .confirmationDialog(
+                String(localized: "Scale \(workload.name) to \(replicas)?"), isPresented: $confirmScale,
+                titleVisibility: .visible
+            ) {
                 Button("Scale") { Task { await scale() } }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text(verbatim: [String(localized: "From \(current) to \(replicas) replicas in \(workload.namespace), like kubectl scale."), kubeGreenWarning]
+                Text(
+                    verbatim: [
+                        String(
+                            localized:
+                                "From \(current) to \(replicas) replicas in \(workload.namespace), like kubectl scale."),
+                        kubeGreenWarning,
+                    ]
                     .compactMap { $0 }
                     .joined(separator: "\n\n"))
             }
             .sheet(isPresented: $confirmScaleToZero) {
                 HostnameConfirmationSheet(
                     title: String(localized: "Scale \(workload.name) to 0?"),
-                    message: [String(localized: "Every pod of \(workload.name) stops: what it serves is down until it is scaled up again."), kubeGreenWarning]
-                        .compactMap { $0 }
-                        .joined(separator: "\n\n"),
+                    message: [
+                        String(
+                            localized:
+                                "Every pod of \(workload.name) stops: what it serves is down until it is scaled up again."
+                        ), kubeGreenWarning,
+                    ]
+                    .compactMap { $0 }
+                    .joined(separator: "\n\n"),
                     hostname: workload.name,
                     actionTitle: String(localized: "Scale to 0")
                 ) {
@@ -108,14 +132,18 @@ struct WorkloadActionsSheet: View {
                     Task { await scale() }
                 }
             }
-            .confirmationDialog(confirmRollback.map { String(localized: "Roll back to revision \($0.revision)?") } ?? "",
-                                isPresented: $confirmRollback.isPresent(),
-                                titleVisibility: .visible,
-                                presenting: confirmRollback) { revision in
+            .confirmationDialog(
+                confirmRollback.map { String(localized: "Roll back to revision \($0.revision)?") } ?? "",
+                isPresented: $confirmRollback.isPresent(),
+                titleVisibility: .visible,
+                presenting: confirmRollback
+            ) { revision in
                 Button("Roll back", role: .destructive) { Task { await rollback(to: revision) } }
                 Button("Cancel", role: .cancel) {}
             } message: { revision in
-                Text("\(workload.name) gets the pod template of revision \(revision.revision) back: its pods are replaced with a rolling update, like kubectl rollout undo.")
+                Text(
+                    "\(workload.name) gets the pod template of revision \(revision.revision) back: its pods are replaced with a rolling update, like kubectl rollout undo."
+                )
             }
             .sheet(item: $following) { workload in
                 RolloutStatusSheet(workload: workload) {
@@ -203,7 +231,8 @@ struct WorkloadActionsSheet: View {
 
     private func loadKubeGreen() async {
         guard let client = model.client else { return }
-        kubeGreen = await KubeGreenStore.shared.load(namespace: workload.namespace, key: model.kubeGreenKey, with: client)
+        kubeGreen = await KubeGreenStore.shared.load(
+            namespace: workload.namespace, key: model.kubeGreenKey, with: client)
     }
 
     /// The warning to show before a scale kube-green would undo; nil when it will not touch it.
@@ -212,7 +241,8 @@ struct WorkloadActionsSheet: View {
     /// The Argo CD app that would revert a scale (self-heal on, not frozen) with its project, from
     /// the Argo CD status already loaded; nil when none or not loaded.
     private var argoOwner: ArgoSelfHealer? {
-        ArgoCDStore.shared.selfHealer(kind: workload.kind, namespace: workload.namespace, name: workload.name, key: model.argoKey)
+        ArgoCDStore.shared.selfHealer(
+            kind: workload.kind, namespace: workload.namespace, name: workload.name, key: model.argoKey)
     }
 
     private func confirmScaleNow() {
@@ -233,7 +263,9 @@ struct WorkloadActionsSheet: View {
         defer { scaling = false }
         let target = replicas
         if freezeFirst, let owner = argoOwner,
-           let failure = await ArgoCDStore.shared.freezeForHandChange(owner, reason: String(localized: "scale to \(target)"), with: client) {
+            let failure = await ArgoCDStore.shared.freezeForHandChange(
+                owner, reason: String(localized: "scale to \(target)"), with: client)
+        {
             resultMessage = failure
             return
         }

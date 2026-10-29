@@ -24,7 +24,8 @@ enum SupportBundleStore {
     /// nothing was added (no history, or a bundle that is not a plain zip).
     static func addHistory(cluster: String, to url: URL) async -> Int64? {
         guard let ring = HistoryStore.bytes(cluster: cluster),
-              let export = try? await TalosClient.historyExport(ring: ring) else { return nil }
+            let export = try? await TalosClient.historyExport(ring: ring)
+        else { return nil }
         let part = url.appendingPathExtension("add")
         do {
             guard let plan = try historyPlan(export, for: url) else { return nil }
@@ -54,7 +55,8 @@ enum SupportBundleStore {
     /// renames); called at launch, when no collection can be running.
     static func removeStaleParts() {
         guard let folder = try? directory(),
-              let urls = try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
+            let urls = try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+        else { return }
         for url in urls where isStaleSupportPartName(url.lastPathComponent) {
             try? FileManager.default.removeItem(at: url)
         }
@@ -86,7 +88,8 @@ final class SupportBundleJob {
         guard !isRunning, !selected.isEmpty else { return }
         let url: URL
         do {
-            url = try SupportBundleStore.directory().appendingPathComponent(supportBundleFilename(context: context, date: Date()))
+            url = try SupportBundleStore.directory().appendingPathComponent(
+                supportBundleFilename(context: context, date: Date()))
         } catch {
             state = .failed(error.localizedDescription)
             return
@@ -111,7 +114,8 @@ final class SupportBundleJob {
             }
             // Best effort: without a history (or when it cannot be added) the bundle stays as Go wrote it.
             if case .finished(let file, _)? = outcome, !Task.isCancelled,
-               let size = await SupportBundleStore.addHistory(cluster: cluster, to: file) {
+                let size = await SupportBundleStore.addHistory(cluster: cluster, to: file)
+            {
                 outcome = .finished(file: file, size: size)
             }
             finish(Task.isCancelled ? nil : outcome, partial: url)
@@ -131,7 +135,8 @@ final class SupportBundleJob {
         task = nil
         let result = outcome ?? .cancelled
         // Cancelled or failed: no half-written archive is kept.
-        if case .finished = result {} else {
+        if case .finished = result {
+        } else {
             try? FileManager.default.removeItem(at: partial)
             try? FileManager.default.removeItem(at: partial.appendingPathExtension("part"))
         }

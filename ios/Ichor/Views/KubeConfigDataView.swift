@@ -43,9 +43,12 @@ struct KubeConfigDataView: View {
                 Text("Type: \(data.type)").font(.caption).foregroundStyle(.secondary)
             }
             if revealed != nil {
-                Label("Secret values are shown in clear. Don't share screenshots.", systemImage: "exclamationmark.triangle.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.statusWarn)
+                Label(
+                    "Secret values are shown in clear. Don't share screenshots.",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .font(.footnote)
+                .foregroundStyle(.statusWarn)
             }
             if data.keys.isEmpty {
                 Text("No keys.").font(.caption).foregroundStyle(.secondary)
@@ -84,7 +87,9 @@ struct KubeConfigDataView: View {
     @ViewBuilder private func keyRow(_ key: ConfigDataKey, now: Int64) -> some View {
         let shown = isShown(key)
         VStack(alignment: .leading, spacing: 6) {
-            Button { Task { await toggle(key) } } label: {
+            Button {
+                Task { await toggle(key) }
+            } label: {
                 HStack(spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: key.key).font(.subheadline.monospaced()).lineLimit(2)
@@ -94,9 +99,12 @@ struct KubeConfigDataView: View {
                     if revealing == key.key {
                         ProgressView()
                     } else {
-                        Image(systemName: resource.isSecret ? (shown ? "eye.slash" : "eye") : (shown ? "chevron.up" : "chevron.down"))
-                            .foregroundStyle(.secondary)
-                            .accessibilityHidden(true)
+                        Image(
+                            systemName: resource.isSecret
+                                ? (shown ? "eye.slash" : "eye") : (shown ? "chevron.up" : "chevron.down")
+                        )
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                     }
                 }
                 .contentShape(Rectangle())
@@ -116,12 +124,13 @@ struct KubeConfigDataView: View {
 
     /// "1.2 KiB · JSON".
     private func facts(_ key: ConfigDataKey) -> String {
-        let hint = switch key.hint {
-        case ConfigDataKey.hintJSON: "JSON"
-        case ConfigDataKey.hintPEM: "PEM"
-        case ConfigDataKey.hintBinary: String(localized: "Binary")
-        default: String(localized: "Text")
-        }
+        let hint =
+            switch key.hint {
+            case ConfigDataKey.hintJSON: "JSON"
+            case ConfigDataKey.hintPEM: "PEM"
+            case ConfigDataKey.hintBinary: String(localized: "Binary")
+            default: String(localized: "Text")
+            }
         return "\(formatBytes(key.size)) · \(hint)"
     }
 
@@ -145,10 +154,15 @@ struct KubeConfigDataView: View {
             if key.base64 {
                 Text("Binary value, shown as base64.").font(.caption).foregroundStyle(.secondary)
             }
-            Text(verbatim: key.value.count > Self.previewChars ? String(key.value.prefix(Self.previewChars)) + "…" : key.value)
-                .font(.caption.monospaced())
-                .textSelection(.enabled)
-            Button { copy(key) } label: {
+            Text(
+                verbatim: key.value.count > Self.previewChars
+                    ? String(key.value.prefix(Self.previewChars)) + "…" : key.value
+            )
+            .font(.caption.monospaced())
+            .textSelection(.enabled)
+            Button {
+                copy(key)
+            } label: {
                 Label("Copy value", systemImage: "doc.on.doc")
             }
             .buttonStyle(.borderless)
@@ -164,12 +178,14 @@ struct KubeConfigDataView: View {
         } else {
             ForEach(data.usedBy) { use in
                 NavigationLink {
-                    KubeObjectView(resource: KubeAPIResource(resource: "pods", kind: "Pod"), namespace: namespace, name: use.pod)
+                    KubeObjectView(
+                        resource: KubeAPIResource(resource: "pods", kind: "Pod"), namespace: namespace, name: use.pod)
                 } label: {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: use.pod).font(.subheadline.monospaced()).lineLimit(1)
                         // Kubernetes' field names: env, envFrom, volume, projected, imagePullSecret.
-                        Text(verbatim: use.via.joined(separator: " · ")).font(.caption.monospaced()).foregroundStyle(.secondary)
+                        Text(verbatim: use.via.joined(separator: " · ")).font(.caption.monospaced()).foregroundStyle(
+                            .secondary)
                     }
                 }
             }
@@ -198,7 +214,8 @@ struct KubeConfigDataView: View {
             return
         }
         if model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Show \(key.key) of \(name)")) {
+            let failure = await Authenticator.authenticate(reason: String(localized: "Show \(key.key) of \(name)"))
+        {
             message = failure
             return
         }
@@ -217,10 +234,12 @@ struct KubeConfigDataView: View {
     /// Device-only pasteboard; a Secret's value expires from it after two minutes.
     private func copy(_ key: ConfigDataKey) {
         let secret = resource.isSecret
-        let options: [UIPasteboard.OptionsKey: Any] = secret
+        let options: [UIPasteboard.OptionsKey: Any] =
+            secret
             ? [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)]
             : [.localOnly: true]
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: key.value]], options: options)
-        message = secret ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
+        message =
+            secret ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
     }
 }

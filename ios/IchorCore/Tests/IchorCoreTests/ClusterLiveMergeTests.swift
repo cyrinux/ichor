@@ -5,10 +5,12 @@ final class ClusterLiveMergeTests: XCTestCase {
     private let gib: UInt64 = 1 << 30
 
     private func counters(_ node: String, _ busy: Double, _ total: Double, mem: UInt64? = nil) -> NodeCounters {
-        NodeCounters(node: node, cpuBusy: busy, cpuTotal: total, cpuCount: 4, memTotal: mem ?? 8 * gib, memAvailable: 4 * gib)
+        NodeCounters(
+            node: node, cpuBusy: busy, cpuTotal: total, cpuCount: 4, memTotal: mem ?? 8 * gib, memAvailable: 4 * gib)
     }
 
-    private func sample(_ at: Int64, of total: Int, sampled: Int? = nil, _ nodes: NodeCounters...) -> ClusterStatsSample {
+    private func sample(_ at: Int64, of total: Int, sampled: Int? = nil, _ nodes: NodeCounters...) -> ClusterStatsSample
+    {
         ClusterStatsSample(at: at, nodes: nodes, sampled: sampled ?? nodes.count, total: total)
     }
 
@@ -21,7 +23,8 @@ final class ClusterLiveMergeTests: XCTestCase {
         XCTAssertEqual(decoded.total, 30)
         XCTAssertTrue(decoded.isPartial)
         // An older core says neither: a full sample.
-        XCTAssertFalse(try JSONDecoder().decode(ClusterStatsSample.self, from: Data(#"{"at":1,"nodes":[]}"#.utf8)).isPartial)
+        XCTAssertFalse(
+            try JSONDecoder().decode(ClusterStatsSample.self, from: Data(#"{"at":1,"nodes":[]}"#.utf8)).isPartial)
     }
 
     func testSmallClusterAlwaysAsksEveryNode() {
@@ -42,7 +45,8 @@ final class ClusterLiveMergeTests: XCTestCase {
             live.record(sample(Int64(i) * 15_000, of: 3, sampled: nodes?.isEmpty == false ? 2 : 3, counters("a", 0, 0)))
         }
         // The first sample and its quick delta ask every node, then every 4th tick.
-        XCTAssertEqual(asked, [[], [], ["a", "b"], ["a", "b"], [], ["a", "b"], ["a", "b"], ["a", "b"], [], ["a", "b"]])
+        XCTAssertEqual(
+            asked, [[], [], ["a", "b"], ["a", "b"], [], ["a", "b"], ["a", "b"], ["a", "b"], [], ["a", "b"]])
     }
 
     func testAnEmptyFocusSkipsTheTick() {

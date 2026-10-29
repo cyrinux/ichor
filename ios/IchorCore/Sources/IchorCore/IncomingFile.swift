@@ -23,7 +23,9 @@ public enum IncomingFile {
     /// How many bytes `classify` needs from the start of a file.
     public static let headLength = 64
 
-    private static let backupHeaders = ["ICHORBAK", "age-encryption.org/", "-----BEGIN AGE ENCRYPTED FILE-----"].map { Data($0.utf8) }
+    private static let backupHeaders = ["ICHORBAK", "age-encryption.org/", "-----BEGIN AGE ENCRYPTED FILE-----"].map {
+        Data($0.utf8)
+    }
 
     /// By the name's extension first (`.ichorbackup`, `.age`), then by the first bytes: a
     /// backup's header, else text (a config); anything else (a PDF, an image) is not ours.
@@ -53,11 +55,17 @@ public enum IncomingFile {
 
     /// The inbox's files to take, oldest first, and the stale ones (older than `maxAge`) to
     /// delete unread.
-    public static func pending(in folder: URL, now: Date = Date(), fileManager: FileManager = .default) -> (take: [URL], stale: [URL]) {
+    public static func pending(in folder: URL, now: Date = Date(), fileManager: FileManager = .default) -> (
+        take: [URL], stale: [URL]
+    ) {
         let keys: [URLResourceKey] = [.contentModificationDateKey, .isRegularFileKey]
-        guard let urls = try? fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys) else { return ([], []) }
+        guard let urls = try? fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys) else {
+            return ([], [])
+        }
         let files = urls.compactMap { url -> (URL, Date)? in
-            guard let values = try? url.resourceValues(forKeys: Set(keys)), values.isRegularFile == true else { return nil }
+            guard let values = try? url.resourceValues(forKeys: Set(keys)), values.isRegularFile == true else {
+                return nil
+            }
             return (url, values.contentModificationDate ?? .distantPast)
         }
         let stale = files.filter { now.timeIntervalSince($0.1) > maxAge }.map(\.0)

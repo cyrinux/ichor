@@ -4,30 +4,30 @@ import XCTest
 final class DataServicesTests: XCTestCase {
     // Shaped like KubeDataServices' answer on a cluster with one node down.
     private let json = #"""
-    {"longhorn":{"version":"v1beta2","error":"","volumes":[
-      {"name":"pvc-1","namespace":"longhorn-system","pvcNamespace":"app","pvcName":"search","state":"detached","robustness":"faulted","health":"critical",
-       "replicasDesired":1,"replicasHealthy":0,"rebuilding":0,"replicaNodes":["node-3"],"node":"","size":10,"actualSize":5,"lastBackupAt":0},
-      {"name":"pvc-2","namespace":"longhorn-system","pvcNamespace":"app","pvcName":"db","state":"attached","robustness":"healthy","health":"ok","replicasDesired":3,"replicasHealthy":3,"replicaNodes":["node-1","node-2","node-3"],
-       "rebuilding":1,"rebuildProgress":42,"backingUp":true,"backupProgress":63,"restoring":false,"restoreProgress":0,"scheduleError":"insufficient storage","tooManySnapshots":true},
-      {"name":"pvc-3","state":"detached","robustness":"unknown","health":"idle","replicaNodes":["node-1"]}],
-     "nodes":[{"name":"node-1","namespace":"longhorn-system","ready":true,"schedulable":false,"allowScheduling":false,"evictionRequested":true,"replicas":2,"disks":[{"path":"/var/lib/longhorn","schedulable":true,"available":1,"maximum":2,"scheduled":1}]},
-              {"name":"node-3","ready":false,"schedulable":false,"disks":[]}],
-     "backupTargets":[{"name":"default","url":"s3://b@garage/","available":true,"message":""}]},
-     "garage":{"error":"","instances":[
-      {"namespace":"storage","name":"garage","pod":"garage-a","pods":3,"podsReady":2,"version":"v2.3.0","status":"degraded",
-       "message":"1 node down (zone z3, tags node-3)","storageNodes":3,"storageNodesUp":2,"partitions":256,"partitionsQuorum":256,"partitionsAllOk":170,
-       "resyncQueue":12,"resyncErrors":10,"tableSyncQueue":4,"layoutVersion":3,"source":"cli-json","futureField":true,
-       "nodes":[{"id":"aa","hostname":"","zone":"z3","tags":["node-3"],"kubeNode":"","storage":true,"up":false,"lastSeenSecs":-1,"resyncQueue":-1,"resyncErrors":-1,"tableSyncQueue":-1,"statsError":"Not connected"},
-                {"id":"bb","hostname":"garage-a","zone":"z1","tags":["node-1"],"kubeNode":"node-1","storage":true,"up":true,"lastSeenSecs":-1,"dataAvail":1,"dataTotal":2,"resyncQueue":6,"resyncErrors":5,"tableSyncQueue":2,"tranquility":0}]},
-      {"namespace":"nas","name":"garage-nas","pods":1,"podsReady":1,"status":"healthy","source":"cli-json"}]},
-     "cnpg":{"version":"v1","error":"","clusters":[
-      {"namespace":"app","name":"down-db","phase":"Waiting for the instances to become active","health":"critical","hibernated":false,"reasons":["noInstance","someNewReason"],
-       "instances":2,"readyInstances":0,"currentPrimary":"down-db-1","targetPrimary":"down-db-1",
-       "instancePods":[{"name":"down-db-1","node":"node-3","phase":"Running","role":"primary","ready":false},{"name":"down-db-2","node":"","phase":"Pending","role":"","ready":false}],
-       "archiving":"ok","lastBackup":"failed","backupMethod":"plugin","objectStore":"garage-store","scheduled":true,
-       "lastSuccessfulBackupAt":1000,"lastFailedBackupAt":2000,"firstRecoverabilityAt":500},
-      {"namespace":"app","name":"ok-db","phase":"Cluster in healthy state","health":"ok","reasons":[],"instances":2,"readyInstances":2,"archiving":"off","lastBackup":"ok"}]}}
-    """#
+        {"longhorn":{"version":"v1beta2","error":"","volumes":[
+          {"name":"pvc-1","namespace":"longhorn-system","pvcNamespace":"app","pvcName":"search","state":"detached","robustness":"faulted","health":"critical",
+           "replicasDesired":1,"replicasHealthy":0,"rebuilding":0,"replicaNodes":["node-3"],"node":"","size":10,"actualSize":5,"lastBackupAt":0},
+          {"name":"pvc-2","namespace":"longhorn-system","pvcNamespace":"app","pvcName":"db","state":"attached","robustness":"healthy","health":"ok","replicasDesired":3,"replicasHealthy":3,"replicaNodes":["node-1","node-2","node-3"],
+           "rebuilding":1,"rebuildProgress":42,"backingUp":true,"backupProgress":63,"restoring":false,"restoreProgress":0,"scheduleError":"insufficient storage","tooManySnapshots":true},
+          {"name":"pvc-3","state":"detached","robustness":"unknown","health":"idle","replicaNodes":["node-1"]}],
+         "nodes":[{"name":"node-1","namespace":"longhorn-system","ready":true,"schedulable":false,"allowScheduling":false,"evictionRequested":true,"replicas":2,"disks":[{"path":"/var/lib/longhorn","schedulable":true,"available":1,"maximum":2,"scheduled":1}]},
+                  {"name":"node-3","ready":false,"schedulable":false,"disks":[]}],
+         "backupTargets":[{"name":"default","url":"s3://b@garage/","available":true,"message":""}]},
+         "garage":{"error":"","instances":[
+          {"namespace":"storage","name":"garage","pod":"garage-a","pods":3,"podsReady":2,"version":"v2.3.0","status":"degraded",
+           "message":"1 node down (zone z3, tags node-3)","storageNodes":3,"storageNodesUp":2,"partitions":256,"partitionsQuorum":256,"partitionsAllOk":170,
+           "resyncQueue":12,"resyncErrors":10,"tableSyncQueue":4,"layoutVersion":3,"source":"cli-json","futureField":true,
+           "nodes":[{"id":"aa","hostname":"","zone":"z3","tags":["node-3"],"kubeNode":"","storage":true,"up":false,"lastSeenSecs":-1,"resyncQueue":-1,"resyncErrors":-1,"tableSyncQueue":-1,"statsError":"Not connected"},
+                    {"id":"bb","hostname":"garage-a","zone":"z1","tags":["node-1"],"kubeNode":"node-1","storage":true,"up":true,"lastSeenSecs":-1,"dataAvail":1,"dataTotal":2,"resyncQueue":6,"resyncErrors":5,"tableSyncQueue":2,"tranquility":0}]},
+          {"namespace":"nas","name":"garage-nas","pods":1,"podsReady":1,"status":"healthy","source":"cli-json"}]},
+         "cnpg":{"version":"v1","error":"","clusters":[
+          {"namespace":"app","name":"down-db","phase":"Waiting for the instances to become active","health":"critical","hibernated":false,"reasons":["noInstance","someNewReason"],
+           "instances":2,"readyInstances":0,"currentPrimary":"down-db-1","targetPrimary":"down-db-1",
+           "instancePods":[{"name":"down-db-1","node":"node-3","phase":"Running","role":"primary","ready":false},{"name":"down-db-2","node":"","phase":"Pending","role":"","ready":false}],
+           "archiving":"ok","lastBackup":"failed","backupMethod":"plugin","objectStore":"garage-store","scheduled":true,
+           "lastSuccessfulBackupAt":1000,"lastFailedBackupAt":2000,"firstRecoverabilityAt":500},
+          {"namespace":"app","name":"ok-db","phase":"Cluster in healthy state","health":"ok","reasons":[],"instances":2,"readyInstances":2,"archiving":"off","lastBackup":"ok"}]}}
+        """#
 
     private var services: DataServices { get throws { try TalosJSON.decode(DataServices.self, from: json) } }
 
@@ -79,30 +79,38 @@ final class DataServicesTests: XCTestCase {
     }
 
     func testSummaryOfAnUnreadableSystem() throws {
-        let broken = try TalosJSON.decode(DataServices.self, from: #"{"longhorn":{"error":"Kubernetes API: permission denied"}}"#)
+        let broken = try TalosJSON.decode(
+            DataServices.self, from: #"{"longhorn":{"error":"Kubernetes API: permission denied"}}"#)
         XCTAssertEqual(broken.summary(.longhorn)?.health, .unknown)
         XCTAssertEqual(broken.summary(.longhorn)?.error, "Kubernetes API: permission denied")
     }
 
     func testIdleOnlyIsOk() throws {
-        let idle = try TalosJSON.decode(DataServices.self, from: #"{"longhorn":{"volumes":[{"name":"v","state":"detached","health":"idle"}]}}"#)
+        let idle = try TalosJSON.decode(
+            DataServices.self, from: #"{"longhorn":{"volumes":[{"name":"v","state":"detached","health":"idle"}]}}"#)
         XCTAssertEqual(idle.summary(.longhorn), ServiceSummary(total: 1, attention: 0, health: .ok))
     }
 
     func testHintsFromTheInventory() throws {
-        let inventory = try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[{"id":"cloudnative-pg","name":"CloudNativePG"},{"id":"nginx","name":"nginx"},{"id":"longhorn","name":"Longhorn"}]}"#)
+        let inventory = try TalosJSON.decode(
+            ClusterInventory.self,
+            from:
+                #"{"apps":[{"id":"cloudnative-pg","name":"CloudNativePG"},{"id":"nginx","name":"nginx"},{"id":"longhorn","name":"Longhorn"}]}"#
+        )
         XCTAssertEqual(dataServiceHints(inventory), "longhorn,cloudnative-pg")
         let other = try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[{"id":"nginx","name":"nginx"}]}"#)
         XCTAssertEqual(dataServiceHints(other), "")
     }
 
     func testHintsIncludeTheDataServicesPlugins() throws {
-        let catalog = try TalosJSON.decode(PluginCatalog.self, from: #"""
-        {"items":[{"id":"rook-ceph","category":"data-services","catalogId":"rook"},
-        {"id":"mariadb","category":"data-services","catalogId":"mariadb"},
-        {"id":"external-dns","category":"networking","catalogId":"external-dns"},
-        {"id":"no-pods","category":"data-services"}]}
-        """#)
+        let catalog = try TalosJSON.decode(
+            PluginCatalog.self,
+            from: #"""
+                {"items":[{"id":"rook-ceph","category":"data-services","catalogId":"rook"},
+                {"id":"mariadb","category":"data-services","catalogId":"mariadb"},
+                {"id":"external-dns","category":"networking","catalogId":"external-dns"},
+                {"id":"no-pods","category":"data-services"}]}
+                """#)
         XCTAssertEqual(catalog.dataServiceCatalogIDs, ["rook", "mariadb"])
         func inventory(_ ids: [String]) throws -> ClusterInventory {
             let apps = ids.map { #"{"id":"\#($0)","name":"\#($0)"}"# }.joined(separator: ",")
@@ -165,21 +173,28 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(lh.nodes[0].actions, [.schedulingOn, .cancelEviction])
         XCTAssertEqual(lh.nodes[1].actions, [])
 
-        let node = try TalosJSON.decode(LonghornNode.self, from: #"{"name":"n","namespace":"longhorn-system","allowScheduling":true}"#)
+        let node = try TalosJSON.decode(
+            LonghornNode.self, from: #"{"name":"n","namespace":"longhorn-system","allowScheduling":true}"#)
         XCTAssertEqual(node.actions, [.schedulingOff, .evict])
         XCTAssertEqual(LonghornAction.cancelEviction.rawValue, "cancelEviction")
         XCTAssertEqual(LonghornAction.schedulingOff.rawValue, "schedulingOff")
-        XCTAssertEqual(LonghornAction.allCases.map(\.kubeAction),
-                       [.longhornSnapshot, .longhornSnapshot, .longhornReplicas, .longhornNode, .longhornNode, .longhornNode, .longhornNode])
+        XCTAssertEqual(
+            LonghornAction.allCases.map(\.kubeAction),
+            [
+                .longhornSnapshot, .longhornSnapshot, .longhornReplicas, .longhornNode, .longhornNode, .longhornNode,
+                .longhornNode,
+            ])
     }
 
     func testLonghornSnapshotsAndBackups() throws {
-        let v = try TalosJSON.decode(LonghornVolume.self, from: #"""
-        {"name":"v","state":"attached","snapshotsRemoving":2,"backupCount":31,"backupStale":true,
-         "snapshots":[{"name":"snapshot-1","createdAt":1700000000000,"size":1024,"ready":true,"userCreated":true,"backedUp":true,"volumeSnapshot":"db/nightly"}],"volumeSnapshotsKnown":true,
-         "backups":[{"name":"backup-2","snapshot":"snapshot-0","state":"Error","error":"target unreachable"},
-                    {"name":"backup-1","snapshot":"snapshot-1","state":"Completed","size":4096}]}
-        """#)
+        let v = try TalosJSON.decode(
+            LonghornVolume.self,
+            from: #"""
+                {"name":"v","state":"attached","snapshotsRemoving":2,"backupCount":31,"backupStale":true,
+                 "snapshots":[{"name":"snapshot-1","createdAt":1700000000000,"size":1024,"ready":true,"userCreated":true,"backedUp":true,"volumeSnapshot":"db/nightly"}],"volumeSnapshotsKnown":true,
+                 "backups":[{"name":"backup-2","snapshot":"snapshot-0","state":"Error","error":"target unreachable"},
+                            {"name":"backup-1","snapshot":"snapshot-1","state":"Completed","size":4096}]}
+                """#)
         XCTAssertTrue(v.attached)
         XCTAssertEqual(v.snapshots.map(\.name), ["snapshot-1"])
         XCTAssertTrue(v.snapshots[0].backedUp && v.snapshots[0].userCreated)
@@ -236,14 +251,17 @@ final class DataServicesTests: XCTestCase {
     }
 
     func testHubTabsByClusterKind() throws {
-        let mixed = try TalosJSON.decode(DataServices.self, from: #"{"longhorn":{},"certManager":{},"velero":{},"castai":{}}"#)
+        let mixed = try TalosJSON.decode(
+            DataServices.self, from: #"{"longhorn":{},"certManager":{},"velero":{},"castai":{}}"#)
         XCTAssertEqual(mixed.detected(.data), [.longhorn, .velero])
         XCTAssertEqual(mixed.detected([.security, .workloads]), [.certManager, .castai])
         XCTAssertEqual(mixed.only([.data]).detected, [.longhorn, .velero])
         // A Kubernetes cluster's hub keeps storage and backups; a Talos cluster's keeps every system.
-        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: nil), [.native(.longhorn), .native(.velero)])
+        XCTAssertEqual(
+            DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: nil), [.native(.longhorn), .native(.velero)])
         XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: false, solo: nil).count, 4)
-        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .certManager), [.native(.certManager)])
+        XCTAssertEqual(
+            DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .certManager), [.native(.certManager)])
         XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .garage), [])
     }
 }

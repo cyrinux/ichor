@@ -3,17 +3,19 @@ import XCTest
 
 final class JoinNodeTests: XCTestCase {
     func testInspectionDecodes() throws {
-        let node = try TalosJSON.decode(MaintenanceInspection.self, from: """
-        {"address":"192.168.1.42","version":"v1.14.2","arch":"amd64","platform":"metal",
-         "system":{"manufacturer":"Sample Systems","product":"Box 1","version":"","serial":"S-0001","uuid":"","sku":"","biosVersion":""},
-         "disks":[{"name":"nvme0n1","devPath":"/dev/nvme0n1","model":"Sample NVMe","serial":"","size":549755813888,
-                   "type":"nvme","wwid":"","busPath":"","systemDisk":false,"readonly":false}],
-         "links":[{"name":"enp1s0","type":"ether","kind":"","state":"up","hardwareAddr":"02:00:00:00:00:42","mtu":1500,"speedMbit":1000,"virtual":false},
-                  {"name":"enp2s0","type":"ether","kind":"","state":"down","hardwareAddr":"02:00:00:00:00:43","mtu":1500,"speedMbit":0,"virtual":false}],
-         "addresses":[{"address":"192.168.1.42/24","link":"enp1s0","family":"inet4","scope":"global","virtual":false},
-                      {"address":"fd00::42/64","link":"enp1s0","family":"inet6","scope":"global","virtual":false}],
-         "maintenance":true,"errors":{}}
-        """)
+        let node = try TalosJSON.decode(
+            MaintenanceInspection.self,
+            from: """
+                {"address":"192.168.1.42","version":"v1.14.2","arch":"amd64","platform":"metal",
+                 "system":{"manufacturer":"Sample Systems","product":"Box 1","version":"","serial":"S-0001","uuid":"","sku":"","biosVersion":""},
+                 "disks":[{"name":"nvme0n1","devPath":"/dev/nvme0n1","model":"Sample NVMe","serial":"","size":549755813888,
+                           "type":"nvme","wwid":"","busPath":"","systemDisk":false,"readonly":false}],
+                 "links":[{"name":"enp1s0","type":"ether","kind":"","state":"up","hardwareAddr":"02:00:00:00:00:42","mtu":1500,"speedMbit":1000,"virtual":false},
+                          {"name":"enp2s0","type":"ether","kind":"","state":"down","hardwareAddr":"02:00:00:00:00:43","mtu":1500,"speedMbit":0,"virtual":false}],
+                 "addresses":[{"address":"192.168.1.42/24","link":"enp1s0","family":"inet4","scope":"global","virtual":false},
+                              {"address":"fd00::42/64","link":"enp1s0","family":"inet6","scope":"global","virtual":false}],
+                 "maintenance":true,"errors":{}}
+                """)
         XCTAssertTrue(node.maintenance)
         XCTAssertEqual(node.version, "v1.14.2")
         XCTAssertEqual(node.system?.manufacturer, "Sample Systems")
@@ -23,9 +25,11 @@ final class JoinNodeTests: XCTestCase {
     }
 
     func testInstalledNodeWithNulls() throws {
-        let node = try TalosJSON.decode(MaintenanceInspection.self, from: """
-        {"address":"192.168.1.10","version":"","arch":"","platform":"","system":null,"disks":null,"links":[],"addresses":null,"maintenance":false,"errors":null}
-        """)
+        let node = try TalosJSON.decode(
+            MaintenanceInspection.self,
+            from: """
+                {"address":"192.168.1.10","version":"","arch":"","platform":"","system":null,"disks":null,"links":[],"addresses":null,"maintenance":false,"errors":null}
+                """)
         XCTAssertFalse(node.maintenance)
         XCTAssertNil(node.system)
         XCTAssertTrue(node.disks.isEmpty)
@@ -38,10 +42,12 @@ final class JoinNodeTests: XCTestCase {
     }
 
     func testConfigPreviewDecodes() throws {
-        let preview = try TalosJSON.decode(JoinConfigPreview.self, from: """
-        {"redactedYaml":"machine:\\n    token: ******\\n","warnings":null,"needsBootstrap":false,"size":4096,
-         "role":"worker","hostname":"worker-3","template":"192.0.2.13"}
-        """)
+        let preview = try TalosJSON.decode(
+            JoinConfigPreview.self,
+            from: """
+                {"redactedYaml":"machine:\\n    token: ******\\n","warnings":null,"needsBootstrap":false,"size":4096,
+                 "role":"worker","hostname":"worker-3","template":"192.0.2.13"}
+                """)
         XCTAssertEqual(preview.hostname, "worker-3")
         XCTAssertEqual(preview.size, 4096)
         XCTAssertTrue(preview.warnings.isEmpty)
@@ -75,16 +81,20 @@ final class JoinNodeTests: XCTestCase {
     }
 
     func testTheDiskMustBeOneOfTheInspectedNode() throws {
-        let node = try TalosJSON.decode(MaintenanceInspection.self, from: #"{"address":"10.0.0.5","maintenance":true,"disks":[{"name":"sda","devPath":"/dev/sda","size":1}]}"#)
+        let node = try TalosJSON.decode(
+            MaintenanceInspection.self,
+            from: #"{"address":"10.0.0.5","maintenance":true,"disks":[{"name":"sda","devPath":"/dev/sda","size":1}]}"#)
         XCTAssertTrue(joinDiskFits("/dev/sda", node: node))
         XCTAssertFalse(joinDiskFits("/dev/nvme0n1", node: node))
-        let bare = try TalosJSON.decode(MaintenanceInspection.self, from: #"{"address":"10.0.0.5","maintenance":true,"disks":[]}"#)
+        let bare = try TalosJSON.decode(
+            MaintenanceInspection.self, from: #"{"address":"10.0.0.5","maintenance":true,"disks":[]}"#)
         XCTAssertTrue(joinDiskFits("/dev/vda", node: bare))
     }
 
     func testReplacingKeepsTheRequest() {
-        let request = JoinRequest(address: "10.0.0.5", template: "192.0.2.11", role: "worker", hostname: "worker-3",
-                                  disk: "/dev/sda", staticAddress: "")
+        let request = JoinRequest(
+            address: "10.0.0.5", template: "192.0.2.11", role: "worker", hostname: "worker-3",
+            disk: "/dev/sda", staticAddress: "")
         XCTAssertFalse(request.replacing)
         let replacing = request.withReplacing(true)
         XCTAssertTrue(replacing.replacing)
@@ -92,9 +102,11 @@ final class JoinNodeTests: XCTestCase {
     }
 
     func testJoinProgressDecodes() throws {
-        let event = try TalosJSON.decode(JoinProgress.self, from: """
-        {"phase":"rebooting","message":"installing to /dev/sda and rebooting","at":1700000000000,"address":"192.0.2.20"}
-        """)
+        let event = try TalosJSON.decode(
+            JoinProgress.self,
+            from: """
+                {"phase":"rebooting","message":"installing to /dev/sda and rebooting","at":1700000000000,"address":"192.0.2.20"}
+                """)
         XCTAssertEqual(JoinPhase(rawValue: event.phase), .rebooting)
         XCTAssertEqual(event.address, "192.0.2.20")
         let bare = try TalosJSON.decode(JoinProgress.self, from: #"{"phase":"applying","message":"","at":1}"#)
@@ -104,7 +116,8 @@ final class JoinNodeTests: XCTestCase {
     func testJoinTimelineMarksTheLatestPhaseCurrent() {
         let steps = joinTimeline([
             JoinProgress(phase: "applying", at: 1), JoinProgress(phase: "installing", at: 2),
-            JoinProgress(phase: "rebooting", message: "down", at: 3), JoinProgress(phase: "rebooting", message: "still down", at: 4),
+            JoinProgress(phase: "rebooting", message: "down", at: 3),
+            JoinProgress(phase: "rebooting", message: "still down", at: 4),
         ])
         XCTAssertEqual(steps.map(\.phase), JoinPhase.allCases)
         XCTAssertEqual(steps.map(\.state), [.done, .done, .current, .pending, .pending, .pending, .pending])
@@ -113,7 +126,8 @@ final class JoinNodeTests: XCTestCase {
     }
 
     func testJoinTimelineFailureAndSuccess() {
-        let failed = joinTimeline([JoinProgress(phase: "applying"), JoinProgress(phase: "installing")], failure: "timeout")
+        let failed = joinTimeline(
+            [JoinProgress(phase: "applying"), JoinProgress(phase: "installing")], failure: "timeout")
         XCTAssertEqual(failed[1].state, .failed)
         XCTAssertEqual(failed[1].message, "timeout")
         XCTAssertEqual(failed[3].state, .pending)

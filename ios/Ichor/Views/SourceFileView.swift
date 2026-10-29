@@ -25,7 +25,10 @@ struct SourceFileView: View {
     let prefill: QuickEdit?
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil, allowTry: Bool = true, prefill: QuickEdit? = nil) {
+    init(
+        source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil, allowTry: Bool = true,
+        prefill: QuickEdit? = nil
+    ) {
         self.source = source
         self.path = path
         self.app = app
@@ -66,7 +69,8 @@ struct SourceFileView: View {
     private var name: String { path.split(separator: "/").last.map(String.init) ?? path }
 
     private var page: URL? {
-        hosts.browserURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: path, dir: false))
+        hosts.browserURL(
+            gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: path, dir: false))
     }
 
     var body: some View {
@@ -100,8 +104,10 @@ struct SourceFileView: View {
                     Button {
                         quickEdit = nil
                         editing = true
-                    } label: { Label("Edit", systemImage: "pencil") }
-                        .disabled(editBlock != nil)
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    .disabled(editBlock != nil)
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -111,8 +117,12 @@ struct SourceFileView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 if case .loaded(let file, _, _) = state, !file.file.truncated {
-                    Button { copy(file.file.content) } label: {
-                        Label(copied ? LocalizedStringKey("Copied") : LocalizedStringKey("Copy"), systemImage: copied ? "checkmark" : "doc.on.doc")
+                    Button {
+                        copy(file.file.content)
+                    } label: {
+                        Label(
+                            copied ? LocalizedStringKey("Copied") : LocalizedStringKey("Copy"),
+                            systemImage: copied ? "checkmark" : "doc.on.doc")
                     }
                 }
             }
@@ -127,7 +137,11 @@ struct SourceFileView: View {
     @ViewBuilder private func content(_ text: SourceFileText) -> some View {
         if text.file.truncated {
             ContentUnavailableView {
-                Label { Text(verbatim: name) } icon: { Image(systemName: "doc.text") }
+                Label {
+                    Text(verbatim: name)
+                } icon: {
+                    Image(systemName: "doc.text")
+                }
             } description: {
                 Text("This file is larger than 1 MiB: open it in the browser to read it.")
             } actions: {
@@ -169,10 +183,18 @@ struct SourceFileView: View {
     private func quickMenu(_ targets: QuickEditTargets) -> some View {
         Menu {
             if !targets.images.isEmpty {
-                Button { quickSheet = .image } label: { Label("Change image tag", systemImage: "shippingbox") }
+                Button {
+                    quickSheet = .image
+                } label: {
+                    Label("Change image tag", systemImage: "shippingbox")
+                }
             }
             if !targets.replicas.isEmpty {
-                Button { quickSheet = .replicas } label: { Label("Set replicas", systemImage: "square.stack.3d.up") }
+                Button {
+                    quickSheet = .replicas
+                } label: {
+                    Label("Set replicas", systemImage: "square.stack.3d.up")
+                }
             }
         } label: {
             Label("Quick edit", systemImage: "wand.and.stars")
@@ -184,7 +206,9 @@ struct SourceFileView: View {
         if case .loaded(let file, _, _) = state, let quickTargets {
             switch sheet {
             case .image:
-                QuickEditImageSheet(targets: quickTargets.images, content: file.file.content, app: app, prefill: prefill) { edit in
+                QuickEditImageSheet(
+                    targets: quickTargets.images, content: file.file.content, app: app, prefill: prefill
+                ) { edit in
                     // An update's title and body stay only while the edit is the one it asked for.
                     if let prefill, prefill.image == edit.image, prefill.kustomizeImage == edit.kustomizeImage {
                         pendingQuickEdit = edit.titled(prefill.title, body: prefill.body)
@@ -215,7 +239,8 @@ struct SourceFileView: View {
         guard case .loaded(let file, _, _) = state else { return }
         let rev = shortRevision(source.ref)
         let from = rev.isEmpty ? path : "\(path) @ \(rev)"
-        pendingTry = PatchTarget(node: node.node, hostname: node.hostname, patch: PatchRequest(content: file.file.content, from: from))
+        pendingTry = PatchTarget(
+            node: node.node, hostname: node.hostname, patch: PatchRequest(content: file.file.content, from: from))
         pickingNode = false
     }
 
@@ -253,7 +278,9 @@ struct SourceFileView: View {
             let saved = source.proposalHost.map { hosts.hasToken($0) } ?? false
             editBlock = sourceEditBlock(source, demo: demo, hasToken: saved)
             quickTargets = await Self.quickTargets(of: file)
-            sops = file.truncated ? nil : (try? await TalosClient.sopsInspect(file.content)).flatMap { $0.encrypted ? $0 : nil }
+            sops =
+                file.truncated
+                ? nil : (try? await TalosClient.sopsInspect(file.content)).flatMap { $0.encrypted ? $0 : nil }
             let encrypted = sops != nil
             talosPatch = model.activeIsKube || !allowTry ? nil : await Self.talosPatch(of: file, path: path)
             state = .loaded(SourceFileText(file: file, collapseSops: encrypted), at: Date())
@@ -273,7 +300,8 @@ struct SourceFileView: View {
     /// YAML): the menu is then hidden, Edit still works.
     private static func quickTargets(of file: GitFile) async -> QuickEditTargets? {
         guard !file.truncated, let targets = try? await TalosClient.quickEditTargets(file.content),
-              !targets.isEmpty else { return nil }
+            !targets.isEmpty
+        else { return nil }
         return targets
     }
 
@@ -281,7 +309,8 @@ struct SourceFileView: View {
     private static func talosPatch(of file: GitFile, path: String) async -> TalosPatchInfo? {
         let yaml = path.hasSuffix(".yaml") || path.hasSuffix(".yml")
         guard yaml, !file.truncated, file.content.utf8.count <= PatchRequest.maxBytes,
-              let info = try? await TalosClient.talosPatchDetect(file.content), info.talos else { return nil }
+            let info = try? await TalosClient.talosPatchDetect(file.content), info.talos
+        else { return nil }
         return info
     }
 
@@ -315,7 +344,11 @@ private struct SourceEditBlockBar: View {
                 Label("This file cannot be edited here: open it in the browser.", systemImage: "pencil.slash")
             case .noToken(let host):
                 Label("Add a token for \(host) to open pull requests.", systemImage: "key")
-                NavigationLink { SettingsPageView(page: .gitHosts) } label: { Text("Add a token") }
+                NavigationLink {
+                    SettingsPageView(page: .gitHosts)
+                } label: {
+                    Text("Add a token")
+                }
             }
         }
         .font(.footnote)

@@ -55,11 +55,14 @@ struct ConfigFieldEditorSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { Task { await submit(.set(doc: doc, path: node.path, type: type, value: sentValue)) } }
-                        .disabled(busy || !configValueIsComplete(type: type, text: value))
+                    Button("Save") {
+                        Task { await submit(.set(doc: doc, path: node.path, type: type, value: sentValue)) }
+                    }
+                    .disabled(busy || !configValueIsComplete(type: type, text: value))
                 }
             }
-            .confirmationDialog(Text("Remove \(node.key)?"), isPresented: $confirmingRemove, titleVisibility: .visible) {
+            .confirmationDialog(Text("Remove \(node.key)?"), isPresented: $confirmingRemove, titleVisibility: .visible)
+            {
                 Button("Remove", role: .destructive) { Task { await submit(.remove(doc: doc, path: node.path)) } }
                 Button("Cancel", role: .cancel) {}
             }
@@ -70,10 +73,12 @@ struct ConfigFieldEditorSheet: View {
 
     /// Another type starts from its own empty value.
     private var typeSelection: Binding<String> {
-        Binding(get: { type }, set: { new in
-            type = new
-            value = configInitialValue(type: new, options: node.enum)
-        })
+        Binding(
+            get: { type },
+            set: { new in
+                type = new
+                value = configInitialValue(type: new, options: node.enum)
+            })
     }
 
     private func submit(_ edit: ConfigEdit) async {

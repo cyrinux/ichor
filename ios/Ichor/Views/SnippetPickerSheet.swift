@@ -79,7 +79,9 @@ private struct SnippetForm: View {
     @State private var values: [String: String] = [:]
 
     private var complete: Bool {
-        snippet.params.allSatisfy { $0.type == "bool" || !(values[$0.name] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        snippet.params.allSatisfy {
+            $0.type == "bool" || !(values[$0.name] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
     }
 
     var body: some View {
@@ -87,7 +89,8 @@ private struct SnippetForm: View {
             Section {
                 Text(snippetDescription(snippet.id)).font(.footnote).foregroundStyle(.secondary)
                 if snippet.staged {
-                    Text("Takes effect at the next boot: apply it staged or with a reboot.").font(.footnote).foregroundStyle(.secondary)
+                    Text("Takes effect at the next boot: apply it staged or with a reboot.").font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
             Section {
@@ -116,15 +119,20 @@ private struct SnippetForm: View {
         let binding = Binding(get: { values[param.name] ?? "" }, set: { values[param.name] = $0 })
         switch param.type {
         case "bool":
-            Toggle(snippetParamTitle(param.name), isOn: Binding(get: { binding.wrappedValue == "true" }, set: { binding.wrappedValue = $0 ? "true" : "false" }))
+            Toggle(
+                snippetParamTitle(param.name),
+                isOn: Binding(
+                    get: { binding.wrappedValue == "true" }, set: { binding.wrappedValue = $0 ? "true" : "false" }))
         case "list":
             VStack(alignment: .leading, spacing: 4) {
                 Text(snippetParamTitle(param.name)).font(.caption).foregroundStyle(.secondary)
-                TextField(text: binding, prompt: Text(verbatim: param.hint), axis: .vertical) { Text(snippetParamTitle(param.name)) }
-                    .lineLimit(3...8)
-                    .font(.body.monospaced())
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
+                TextField(text: binding, prompt: Text(verbatim: param.hint), axis: .vertical) {
+                    Text(snippetParamTitle(param.name))
+                }
+                .lineLimit(3...8)
+                .font(.body.monospaced())
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
             }
         default:
             TextField(text: binding, prompt: Text(verbatim: param.hint)) { Text(snippetParamTitle(param.name)) }

@@ -46,7 +46,9 @@ extension TalosClient {
 
     /// `stored` (the stored kubeconfig, "" for none) with the importable contexts of `added`
     /// added, except those `choices` skips (see kubeImportChoices). Throws when none is added.
-    static func mergeKubeconfig(stored: String, talos: String, added: String, choices: [KubeImportChoice]) async throws -> String {
+    static func mergeKubeconfig(stored: String, talos: String, added: String, choices: [KubeImportChoice]) async throws
+        -> String
+    {
         let encoded = try TalosJSON.encode(choices)
         return try await run { IchorgoMergeKubeconfig(stored, talos, added, encoded, $0) }
     }
@@ -72,25 +74,33 @@ extension TalosClient {
     /// unique across both stores. A stored context is never overwritten: one of that name is
     /// added as name-1, unless `choices` (a JSON array of {index, name, replace}, see
     /// MergeConfig in Go) names it or replaces the same cluster.
-    static func mergeTalosconfig(stored: String, kube: String, added: String, choices: String = "") async throws -> String {
+    static func mergeTalosconfig(stored: String, kube: String, added: String, choices: String = "") async throws
+        -> String
+    {
         try await run { IchorgoMergeTalosconfig(stored, kube, added, choices, $0) }
     }
 
     /// The cluster's nodes as the Kubernetes API sees them, and its version: the home of a
     /// cluster added from a kubeconfig.
     func kubeNodes() async throws -> KubeNodesOverview {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNodes(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeNodes(config, context, kubeServer, $0)
+        }
     }
 
     /// Each node's root filesystem fill (the kubelet summary) and DiskPressure: the background
     /// monitor's node storage on a cluster added from a kubeconfig.
     func kubeNodeDisk() async throws -> KubeNodeDisk {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNodeDisk(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeNodeDisk(config, context, kubeServer, $0)
+        }
     }
 
     /// CPU and memory each node uses (metrics-server).
     func topNodes() async throws -> KubeTopNodes {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeTopNodes(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeTopNodes(config, context, kubeServer, $0)
+        }
     }
 
     /// CPU and memory one pod uses, with its requests and limits: two small reads.

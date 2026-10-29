@@ -27,13 +27,17 @@ struct AppArgoSection: View {
                     await load()
                 }
             }
-            .confirmationDialog(confirmSync.map { String(localized: "Sync \($0.name)?") } ?? "",
-                                isPresented: $confirmSync.isPresent(),
-                                titleVisibility: .visible, presenting: confirmSync) { target in
+            .confirmationDialog(
+                confirmSync.map { String(localized: "Sync \($0.name)?") } ?? "",
+                isPresented: $confirmSync.isPresent(),
+                titleVisibility: .visible, presenting: confirmSync
+            ) { target in
                 Button("Sync") { Task { await run(.sync, on: target, options: ArgoSyncOptions(defaultsFor: target)) } }
                 Button("Cancel", role: .cancel) {}
             } message: { target in
-                Text("\(target.name) syncs to \(target.sources.first?.targetRevision ?? target.revision) with its own sync options. Nothing is pruned.")
+                Text(
+                    "\(target.name) syncs to \(target.sources.first?.targetRevision ?? target.revision) with its own sync options. Nothing is pruned."
+                )
             }
             .messageAlert($message)
             .sensoryFeedback(.success, trigger: succeeded)
@@ -49,9 +53,17 @@ struct AppArgoSection: View {
     @ViewBuilder private var content: some View {
         switch state {
         case .loading:
-            Section { Text("Reading Argo CD…").note() } header: { Text(verbatim: "Argo CD") }
+            Section {
+                Text("Reading Argo CD…").note()
+            } header: {
+                Text(verbatim: "Argo CD")
+            }
         case .failed(let error):
-            Section { Text("Could not read: \(error)").note() } header: { Text(verbatim: "Argo CD") }
+            Section {
+                Text("Could not read: \(error)").note()
+            } header: {
+                Text(verbatim: "Argo CD")
+            }
         case .loaded(let status, _, _):
             if app.id == argoCDCatalogID {
                 summary(status)
@@ -78,13 +90,15 @@ struct AppArgoSection: View {
                     if status.worst.needsAttention { StatusPill(label: status.worst.label, color: status.worst.color) }
                 }
                 ArgoHealthBar(counts: status.healthCounts)
-                Text(verbatim: ServiceHealth.allCases.compactMap { level in
-                    let count = status.apps.filter { $0.level == level }.count
-                    return count > 0 ? "\(count) \(level.label)" : nil
-                }.joined(separator: " · "))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                Text(
+                    verbatim: ServiceHealth.allCases.compactMap { level in
+                        let count = status.apps.filter { $0.level == level }.count
+                        return count > 0 ? "\(count) \(level.label)" : nil
+                    }.joined(separator: " · ")
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
             }
             ForEach(status.running) { running in
                 HStack(spacing: 8) {
@@ -92,7 +106,8 @@ struct AppArgoSection: View {
                     Text(verbatim: running.name).font(.callout)
                     Spacer()
                     if let op = running.operation {
-                        Text(verbatim: argoProgressText(op)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                        Text(verbatim: argoProgressText(op)).font(.caption.monospacedDigit()).foregroundStyle(
+                            .secondary)
                     }
                 }
             }
@@ -117,20 +132,27 @@ struct AppArgoSection: View {
                             Text(verbatim: argo.name).font(.callout.weight(.medium)).lineLimit(1)
                             if let owner = argo.owner { ArgoOwnerBadge(owner: owner) }
                         }
-                        Text(verbatim: [argo.revisionLabel, argo.deployedAt > 0 ? relativeTime(argo.deployedAt) : ""]
-                            .filter { !$0.isEmpty }.joined(separator: " · "))
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
+                        Text(
+                            verbatim: [argo.revisionLabel, argo.deployedAt > 0 ? relativeTime(argo.deployedAt) : ""]
+                                .filter { !$0.isEmpty }.joined(separator: " · ")
+                        )
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
                         if let op = argo.operation, op.phase.active {
-                            Text(verbatim: [op.phase.label, argoProgressText(op)].filter { !$0.isEmpty }.joined(separator: " · "))
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.blue)
+                            Text(
+                                verbatim: [op.phase.label, argoProgressText(op)].filter { !$0.isEmpty }.joined(
+                                    separator: " · ")
+                            )
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.blue)
                         }
                         // A hotfix is made here: say Argo CD holds off, and until when (freezing is on the app page).
                         if let freeze = argo.freeze {
-                            Label(String(localized: "Frozen until \(freezeClock(freeze.until))"), systemImage: "snowflake")
-                                .font(.caption)
-                                .foregroundStyle(.blue)
+                            Label(
+                                String(localized: "Frozen until \(freezeClock(freeze.until))"), systemImage: "snowflake"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.blue)
                         }
                     }
                     Spacer(minLength: 4)
@@ -142,12 +164,20 @@ struct AppArgoSection: View {
                 }
             }
             HStack(spacing: 10) {
-                Button { confirmSync = argo } label: { Label("Sync", systemImage: "arrow.triangle.2.circlepath") }
-                    .buttonStyle(.bordered)
-                    .disabled(!argo.canSync || busy.contains(argo.id))
-                Button { Task { await run(.refresh, on: argo) } } label: { Label("Refresh", systemImage: "arrow.clockwise") }
-                    .buttonStyle(.bordered)
-                    .disabled(busy.contains(argo.id))
+                Button {
+                    confirmSync = argo
+                } label: {
+                    Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .buttonStyle(.bordered)
+                .disabled(!argo.canSync || busy.contains(argo.id))
+                Button {
+                    Task { await run(.refresh, on: argo) }
+                } label: {
+                    Label("Refresh", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.bordered)
+                .disabled(busy.contains(argo.id))
                 if busy.contains(argo.id) { ProgressView() }
             }
             .controlSize(.small)
@@ -160,7 +190,8 @@ struct AppArgoSection: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        let cluster = model.activeSummary, store = self.store
+        let cluster = model.activeSummary
+        let store = self.store
         await store.refresh($state, key: key, seed: false, currentKey: { model.argoKey }) {
             try await store.load(with: client, key: key, cluster: cluster)
         }
@@ -175,7 +206,9 @@ struct AppArgoSection: View {
         if failure == nil, action == .sync {
             GitOpsOperationJob.shared.followArgoSync(client: client, namespace: argo.namespace, name: argo.name)
         }
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
         await load()
     }
 }

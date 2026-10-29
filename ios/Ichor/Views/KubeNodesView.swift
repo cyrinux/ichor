@@ -28,8 +28,10 @@ struct KubeNodesView: View {
     }
 
     var body: some View {
-        AdaptiveListDetail(selection: $selected, split: $split, placeholder: "Pick a node to see its details",
-                           systemImage: "server.rack") {
+        AdaptiveListDetail(
+            selection: $selected, split: $split, placeholder: "Pick a node to see its details",
+            systemImage: "server.rack"
+        ) {
             nodeList
         } detail: { name in
             if let node = nodes.first(where: { $0.name == name }) {
@@ -87,7 +89,10 @@ struct KubeNodesView: View {
                     withAnimation(.snappy) { filter = nil }
                 }
                 ForEach(kubeNodeFilters, id: \.self) { chip in
-                    FilterChip(label: chip.label, count: nodes.filter(chip.matches).count, selected: filter == chip, dot: chip.dot) {
+                    FilterChip(
+                        label: chip.label, count: nodes.filter(chip.matches).count, selected: filter == chip,
+                        dot: chip.dot
+                    ) {
                         withAnimation(.snappy) { filter = chip }
                     }
                 }

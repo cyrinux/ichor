@@ -20,7 +20,8 @@ final class EndpointScanTests: XCTestCase {
             ],
             known: []
         )
-        XCTAssertEqual(Array(networks.prefix(3)), ["192.168.42.0/24", "fd12:3456:789a:1::/120", "fd12:3456:789a:2::1:0/120"])
+        XCTAssertEqual(
+            Array(networks.prefix(3)), ["192.168.42.0/24", "fd12:3456:789a:1::/120", "fd12:3456:789a:2::1:0/120"])
     }
 
     func testGlobalAndLinkLocalIpv6AreSkipped() {
@@ -37,12 +38,17 @@ final class EndpointScanTests: XCTestCase {
             known: ["[fd00:0:0:1::7]:50001", "FD00:0:0:2::1:20", "[fd00::3:4]", "fd00::1.2.3.4"]
         )
         // fd00:0:0:1::7 is inside the phone's own /120 already; the first longest zero run is the one shortened.
-        XCTAssertEqual(Array(networks.prefix(4)), ["fd00:0:0:1::/120", "fd00::2:0:0:1:0/120", "fd00::3:0/120", "fd00::102:300/120"])
+        XCTAssertEqual(
+            Array(networks.prefix(4)),
+            ["fd00:0:0:1::/120", "fd00::2:0:0:1:0/120", "fd00::3:0/120", "fd00::102:300/120"])
         XCTAssertEqual(networks.count, 4 + commonPrivateNetworks.count)
     }
 
     func testMalformedIpv6IsIgnored() {
-        let known = ["fd00:::1", "fd00::1::2", "fd00:12345::1", "fd00:g::1", "1:2:3:4:5:6:7:8:9", "fd00:1:2:3:4:5:6", "fd00::1.2.3.4:5"]
+        let known = [
+            "fd00:::1", "fd00::1::2", "fd00:12345::1", "fd00:g::1", "1:2:3:4:5:6:7:8:9", "fd00:1:2:3:4:5:6",
+            "fd00::1.2.3.4:5",
+        ]
         XCTAssertEqual(scanNetworks(local: [], known: known), commonPrivateNetworks)
     }
 
@@ -92,10 +98,13 @@ final class EndpointScanTests: XCTestCase {
     }
 
     func testMatchesDecodeGoNulls() throws {
-        let json = #"[{"endpoint":"10.0.0.2","hostname":"cp-1","version":"v1.11.0","role":"controlplane","contexts":null}]"#
+        let json =
+            #"[{"endpoint":"10.0.0.2","hostname":"cp-1","version":"v1.11.0","role":"controlplane","contexts":null}]"#
         let matches = try JSONDecoder().decode([EndpointMatch].self, from: Data(json.utf8))
-        XCTAssertEqual(matches, [EndpointMatch(endpoint: "10.0.0.2", hostname: "cp-1", version: "v1.11.0", role: "controlplane")])
-        let probe = try JSONDecoder().decode(EndpointProbe.self, from: Data(#"{"endpoint":"10.0.0.2","hostname":"cp-1","version":""}"#.utf8))
+        XCTAssertEqual(
+            matches, [EndpointMatch(endpoint: "10.0.0.2", hostname: "cp-1", version: "v1.11.0", role: "controlplane")])
+        let probe = try JSONDecoder().decode(
+            EndpointProbe.self, from: Data(#"{"endpoint":"10.0.0.2","hostname":"cp-1","version":""}"#.utf8))
         XCTAssertEqual(probe.summary, "cp-1")
     }
 }

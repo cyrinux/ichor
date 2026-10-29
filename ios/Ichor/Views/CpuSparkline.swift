@@ -33,11 +33,14 @@ struct CpuSparkline: View {
             area.addLine(to: CGPoint(x: w, y: h))
             area.addLine(to: CGPoint(x: startX, y: h))
             area.closeSubpath()
-            context.fill(area, with: .linearGradient(
-                Gradient(colors: [color.opacity(0.35), color.opacity(0.04)]),
-                startPoint: .zero, endPoint: CGPoint(x: 0, y: h)
-            ))
-            context.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: stroke, lineCap: .round, lineJoin: .round))
+            context.fill(
+                area,
+                with: .linearGradient(
+                    Gradient(colors: [color.opacity(0.35), color.opacity(0.04)]),
+                    startPoint: .zero, endPoint: CGPoint(x: 0, y: h)
+                ))
+            context.stroke(
+                line, with: .color(color), style: StrokeStyle(lineWidth: stroke, lineCap: .round, lineJoin: .round))
         }
         .frame(height: 20)
         .accessibilityElement()

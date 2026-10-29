@@ -73,8 +73,12 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
     /// A freeze reminder shows while the app is open too (it is the likely moment); the alerts
     /// keep today's behaviour.
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        if notification.request.content.categoryIdentifier == FreezeReminders.category { return [.banner, .list, .sound] }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async
+        -> UNNotificationPresentationOptions
+    {
+        if notification.request.content.categoryIdentifier == FreezeReminders.category {
+            return [.banner, .list, .sound]
+        }
         // How a Wake chosen on an alert went: the app may be open by then.
         return notification.request.identifier.hasPrefix(AlertNotificationActions.wakePrefix) ? [.banner, .list] : []
     }
@@ -91,7 +95,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             return
         }
         if content.categoryIdentifier == FreezeReminders.category {
-            let extend = response.actionIdentifier == FreezeReminders.extendAction ? FreezeExtendRequest(userInfo: content.userInfo) : nil
+            let extend =
+                response.actionIdentifier == FreezeReminders.extendAction
+                ? FreezeExtendRequest(userInfo: content.userInfo) : nil
             await MainActor.run {
                 if let extend { NotificationRouter.shared.pendingFreezeExtend = extend }
                 NotificationRouter.shared.pendingArgoWindows = true
@@ -109,7 +115,8 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         let alertKey = content.userInfo[AlertNotificationActions.alertKey] as? String ?? identifier
         // Snooze and Wake: in the background, the app stays closed.
         if let hours = snoozeHours(actionID: action) {
-            AlertNotificationActions.snooze(hours: hours, cluster: cluster, alertKey: alertKey, notification: identifier)
+            AlertNotificationActions.snooze(
+                hours: hours, cluster: cluster, alertKey: alertKey, notification: identifier)
             return
         }
         if action == AlertAction.wake.rawValue {
@@ -120,7 +127,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         // The screen the alert is about, on its cluster (BackgroundMonitor.post); Reboot, Sync,
         // Reconcile and Silence then show that screen's confirmation, nothing runs before it.
         if let link = (content.userInfo["link"] as? String).flatMap(URL.init(string:)) {
-            let request = AlertAction(rawValue: action).flatMap { $0.changesCluster ? AlertActionRequest(action: $0, alertKey: alertKey) : nil }
+            let request = AlertAction(rawValue: action).flatMap {
+                $0.changesCluster ? AlertActionRequest(action: $0, alertKey: alertKey) : nil
+            }
             await MainActor.run {
                 NotificationRouter.shared.pendingAlertAction = request
                 NotificationRouter.shared.pendingShareLink = link

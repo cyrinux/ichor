@@ -3,15 +3,15 @@ import XCTest
 
 final class KubeAccessTests: XCTestCase {
     private let json = """
-    {"namespace":"shop","actions":{
-      "restartWorkload":{"allowed":true},
-      "scale":{"allowed":false,"verb":"patch","group":"apps","resource":"deployments/scale","namespace":"shop","reason":"no RBAC policy matched"},
-      "execPod":{"allowed":true,"unknown":true},
-      "deletePod":{"allowed":false,"verb":"delete","resource":"pods","namespace":"shop"},
-      "drainNode":{"allowed":false,"verb":"create","resource":"pods/eviction"},
-      "cordonNode":{"allowed":false,"unknown":true}
-    }}
-    """
+        {"namespace":"shop","actions":{
+          "restartWorkload":{"allowed":true},
+          "scale":{"allowed":false,"verb":"patch","group":"apps","resource":"deployments/scale","namespace":"shop","reason":"no RBAC policy matched"},
+          "execPod":{"allowed":true,"unknown":true},
+          "deletePod":{"allowed":false,"verb":"delete","resource":"pods","namespace":"shop"},
+          "drainNode":{"allowed":false,"verb":"create","resource":"pods/eviction"},
+          "cordonNode":{"allowed":false,"unknown":true}
+        }}
+        """
 
     func testDecodesAndDenies() throws {
         let access = try TalosJSON.decode(KubeActionAccess.self, from: json)
@@ -44,18 +44,24 @@ final class KubeAccessTests: XCTestCase {
         XCTAssertEqual(drain.deniedResource, "pods/eviction")
 
         // Every namespace asked, an object in one: a refusal everywhere may still allow it there.
-        let everywhere = KubeActionAccess(namespace: "", actions: [
-            "deletePod": KubeAccess(allowed: false, verb: "delete", resource: "pods"),
-        ])
+        let everywhere = KubeActionAccess(
+            namespace: "",
+            actions: [
+                "deletePod": KubeAccess(allowed: false, verb: "delete", resource: "pods")
+            ])
         XCTAssertNil(everywhere.denial(for: .deletePod, in: "shop"))
         XCTAssertNotNil(everywhere.denial(for: .deletePod, in: ""))
         XCTAssertNotNil(everywhere.denial(for: .deletePod))
     }
 
     func testFluxAccessAction() {
-        XCTAssertEqual(FluxRef(kind: "Kustomization", namespace: "flux-system", name: "apps").accessAction, .fluxReconcile)
-        XCTAssertEqual(FluxRef(kind: "HelmRelease", namespace: "flux-system", name: "web").accessAction, .fluxReconcileHelmRelease)
-        XCTAssertEqual(FluxRef(kind: "GitRepository", namespace: "flux-system", name: "repo").accessAction, .fluxReconcileGitRepository)
+        XCTAssertEqual(
+            FluxRef(kind: "Kustomization", namespace: "flux-system", name: "apps").accessAction, .fluxReconcile)
+        XCTAssertEqual(
+            FluxRef(kind: "HelmRelease", namespace: "flux-system", name: "web").accessAction, .fluxReconcileHelmRelease)
+        XCTAssertEqual(
+            FluxRef(kind: "GitRepository", namespace: "flux-system", name: "repo").accessAction,
+            .fluxReconcileGitRepository)
         XCTAssertEqual(KubeAction.fluxReconcile(kind: "OCIRepository"), .fluxReconcileOCIRepository)
         XCTAssertEqual(KubeAction.fluxReconcile(kind: "HelmRepository"), .fluxReconcileHelmRepository)
         XCTAssertEqual(KubeAction.fluxReconcile(kind: "Bucket"), .fluxReconcileBucket)
@@ -70,14 +76,20 @@ final class KubeAccessTests: XCTestCase {
         XCTAssertEqual(KubeAction.scale(kind: "Deployment"), .scale)
         XCTAssertEqual(KubeAction.scale(kind: "StatefulSet"), .scaleStatefulSet)
         XCTAssertNil(KubeAction.scale(kind: "DaemonSet"), "one pod per node: never scaled")
-        XCTAssertEqual(kubeDistinctActions([.restartWorkload, nil, .restartDaemonSet, .restartWorkload]), [.restartWorkload, .restartDaemonSet])
+        XCTAssertEqual(
+            kubeDistinctActions([.restartWorkload, nil, .restartDaemonSet, .restartWorkload]),
+            [.restartWorkload, .restartDaemonSet])
     }
 
     func testBulkDenialAcrossNamespaces() {
         let refused = { (namespace: String) in
-            KubeActionAccess(namespace: namespace, actions: [
-                "argoSync": KubeAccess(allowed: false, verb: "patch", group: "argoproj.io", resource: "applications", namespace: namespace),
-            ])
+            KubeActionAccess(
+                namespace: namespace,
+                actions: [
+                    "argoSync": KubeAccess(
+                        allowed: false, verb: "patch", group: "argoproj.io", resource: "applications",
+                        namespace: namespace)
+                ])
         }
         let access: [String: KubeActionAccess] = [
             "argocd": KubeActionAccess(namespace: "argocd", actions: ["argoSync": KubeAccess(allowed: true)]),
@@ -85,9 +97,11 @@ final class KubeAccessTests: XCTestCase {
             "team-b": refused("team-b"),
         ]
         XCTAssertNil(kubeBulkDenial(for: .argoSync, across: ["argocd", "argocd"], in: access))
-        XCTAssertEqual(kubeBulkDenial(for: .argoSync, across: ["argocd", "team-a", "team-b"], in: access)?.namespace, "team-a",
-                       "the first refused namespace gives the reason")
-        XCTAssertNil(kubeBulkDenial(for: .argoSync, across: ["argocd", "elsewhere"], in: access), "not loaded never blocks")
+        XCTAssertEqual(
+            kubeBulkDenial(for: .argoSync, across: ["argocd", "team-a", "team-b"], in: access)?.namespace, "team-a",
+            "the first refused namespace gives the reason")
+        XCTAssertNil(
+            kubeBulkDenial(for: .argoSync, across: ["argocd", "elsewhere"], in: access), "not loaded never blocks")
         XCTAssertNil(kubeBulkDenial(for: nil, across: ["team-a"], in: access))
     }
 
@@ -105,32 +119,42 @@ final class KubeAccessTests: XCTestCase {
     }
 
     func testEveryActionHasItsCoreName() {
-        XCTAssertEqual(KubeAction.allCases.map(\.rawValue), [
-            "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
-            "deletePod", "sanitizePods", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
-            "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
-            "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "editNodeMeta",
-            "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode", "longhornEngineUpgrade",
-            "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",
-            "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause", "vmConsole", "autoscale", "autoscaleKeda",
-            "argoRollout",
-        ])
+        XCTAssertEqual(
+            KubeAction.allCases.map(\.rawValue),
+            [
+                "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale",
+                "scaleStatefulSet",
+                "deletePod", "sanitizePods", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob",
+                "helmRollback", "argoSync",
+                "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
+                "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "editNodeMeta",
+                "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate",
+                "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode",
+                "longhornEngineUpgrade",
+                "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",
+                "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause", "vmConsole", "autoscale",
+                "autoscaleKeda",
+                "argoRollout",
+            ])
         XCTAssertFalse(KubeAction.cordonNode.isNamespaced)
         XCTAssertFalse(KubeAction.drainNode.isNamespaced)
         XCTAssertFalse(KubeAction.editNodeMeta.isNamespaced)
         XCTAssertTrue(KubeAction.argoSync.isNamespaced)
-        XCTAssertTrue(KubeAction.debugNode.isNamespaced) // the debug pod's namespace
+        XCTAssertTrue(KubeAction.debugNode.isNamespaced)  // the debug pod's namespace
     }
 
     func testOneAnswerDecodes() throws {
-        let can = try TalosJSON.decode(KubeAccess.self, from: #"{"allowed":false,"verb":"update","group":"","resource":"configmaps","namespace":"shop"}"#)
+        let can = try TalosJSON.decode(
+            KubeAccess.self,
+            from: #"{"allowed":false,"verb":"update","group":"","resource":"configmaps","namespace":"shop"}"#)
         XCTAssertTrue(can.isDenied)
         XCTAssertEqual(can.deniedResource, "configmaps")
         XCTAssertFalse(try TalosJSON.decode(KubeAccess.self, from: #"{"allowed":true}"#).isDenied)
     }
 
     func testWhoAmI() throws {
-        let me = try TalosJSON.decode(KubeWhoAmI.self, from: #"{"user":"jane@example.com","groups":["dev","system:authenticated"]}"#)
+        let me = try TalosJSON.decode(
+            KubeWhoAmI.self, from: #"{"user":"jane@example.com","groups":["dev","system:authenticated"]}"#)
         XCTAssertTrue(me.isKnown)
         XCTAssertEqual(me.user, "jane@example.com")
         XCTAssertEqual(me.groupsLine, "dev")

@@ -21,8 +21,10 @@ public struct KubeAPIResource: Decodable, Equatable, Hashable, Identifiable, Sen
 
     public var id: String { "\(group)/\(resource)" }
 
-    public init(group: String = "", version: String = "v1", resource: String, kind: String, namespaced: Bool = true,
-                verbs: [String] = ["get", "list"], shortNames: [String] = [], categories: [String] = [], scalable: Bool = false) {
+    public init(
+        group: String = "", version: String = "v1", resource: String, kind: String, namespaced: Bool = true,
+        verbs: [String] = ["get", "list"], shortNames: [String] = [], categories: [String] = [], scalable: Bool = false
+    ) {
         self.group = group
         self.version = version
         self.resource = resource
@@ -34,7 +36,9 @@ public struct KubeAPIResource: Decodable, Equatable, Hashable, Identifiable, Sen
         self.scalable = scalable
     }
 
-    private enum CodingKeys: String, CodingKey { case group, version, resource, kind, namespaced, verbs, shortNames, categories, scalable }
+    private enum CodingKeys: String, CodingKey {
+        case group, version, resource, kind, namespaced, verbs, shortNames, categories, scalable
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -151,9 +155,11 @@ public func groupAPIResources(_ resources: [KubeAPIResource], query: String = ""
     let shown = resources.filter { apiResourceMatches($0, query: query) }
     return Dictionary(grouping: shown, by: \.group)
         .map { group, items in
-            KubeAPIGroupSection(group: group, resources: items.sorted {
-                ($0.kind.lowercased(), $0.resource) < ($1.kind.lowercased(), $1.resource)
-            })
+            KubeAPIGroupSection(
+                group: group,
+                resources: items.sorted {
+                    ($0.kind.lowercased(), $0.resource) < ($1.kind.lowercased(), $1.resource)
+                })
         }
         .sorted { (groupRank($0.group), $0.group) < (groupRank($1.group), $1.group) }
 }
@@ -197,7 +203,8 @@ public struct KubeResourceRow: Codable, Equatable, Hashable, Identifiable, Senda
 
     public var id: String { "\(namespace)/\(name)" }
 
-    public init(name: String, namespace: String = "", cells: [String] = [], created: Int64 = 0, deleting: Bool = false) {
+    public init(name: String, namespace: String = "", cells: [String] = [], created: Int64 = 0, deleting: Bool = false)
+    {
         self.name = name
         self.namespace = namespace
         self.cells = cells
@@ -232,7 +239,10 @@ public struct KubeResourcePage: Decodable, Equatable, Sendable {
     /// Items left after this page, -1 when the API server does not say.
     public let remaining: Int64
 
-    public init(columns: [KubeResourceColumn] = [], rows: [KubeResourceRow] = [], continueToken: String = "", remaining: Int64 = 0) {
+    public init(
+        columns: [KubeResourceColumn] = [], rows: [KubeResourceRow] = [], continueToken: String = "",
+        remaining: Int64 = 0
+    ) {
         self.columns = columns
         self.rows = rows
         self.continueToken = continueToken
@@ -254,8 +264,9 @@ public struct KubeResourcePage: Decodable, Equatable, Sendable {
 
     /// As the paged lists take it: complete when there is no next page.
     public var page: KubePage<KubeResourceRow> {
-        KubePage(items: rows, continueToken: continueToken, remaining: continueToken.isEmpty ? 0 : remaining,
-                 complete: continueToken.isEmpty)
+        KubePage(
+            items: rows, continueToken: continueToken, remaining: continueToken.isEmpty ? 0 : remaining,
+            complete: continueToken.isEmpty)
     }
 }
 
@@ -276,7 +287,9 @@ public func hasWideColumns(_ columns: [KubeResourceColumn]) -> Bool {
 
 /// A row's cells worth a line under its name: (column, value) for `indices`, blank and "<none>"
 /// cells left out.
-public func browserCells(_ row: KubeResourceRow, columns: [KubeResourceColumn], indices: [Int]) -> [(column: KubeResourceColumn, value: String)] {
+public func browserCells(_ row: KubeResourceRow, columns: [KubeResourceColumn], indices: [Int]) -> [(
+    column: KubeResourceColumn, value: String
+)] {
     indices.compactMap { index in
         guard index < columns.count, index < row.cells.count else { return nil }
         let value = row.cells[index].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -483,8 +496,11 @@ public struct KubeDeletePreview: Decodable, Equatable, Sendable {
     /// A deletion is already pending, held by the finalizers.
     public let deleting: Bool
 
-    public init(isProtected: Bool = false, reason: String = "", clusterScoped: Bool = false, finalizers: [String] = [],
-                dependents: [KubeDeleteDependent] = [], moreDependents: Int = 0, resourceVersion: String = "", deleting: Bool = false) {
+    public init(
+        isProtected: Bool = false, reason: String = "", clusterScoped: Bool = false, finalizers: [String] = [],
+        dependents: [KubeDeleteDependent] = [], moreDependents: Int = 0, resourceVersion: String = "",
+        deleting: Bool = false
+    ) {
         self.isProtected = isProtected
         self.reason = reason
         self.clusterScoped = clusterScoped
@@ -496,7 +512,8 @@ public struct KubeDeletePreview: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case isProtected = "protected", reason, clusterScoped, finalizers, dependents, moreDependents, resourceVersion, deleting
+        case isProtected = "protected", reason, clusterScoped, finalizers, dependents, moreDependents, resourceVersion,
+            deleting
     }
 
     public init(from decoder: Decoder) throws {

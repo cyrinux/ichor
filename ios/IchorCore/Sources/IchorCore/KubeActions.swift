@@ -34,8 +34,10 @@ public struct DeploymentRevision: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: Int { revision }
 
-    public init(revision: Int, replicaSet: String = "", created: Int64 = 0, images: [String] = [], changeCause: String = "",
-                replicas: Int = 0, current: Bool = false) {
+    public init(
+        revision: Int, replicaSet: String = "", created: Int64 = 0, images: [String] = [], changeCause: String = "",
+        replicas: Int = 0, current: Bool = false
+    ) {
         self.revision = revision
         self.replicaSet = replicaSet
         self.created = created
@@ -45,7 +47,9 @@ public struct DeploymentRevision: Decodable, Equatable, Identifiable, Sendable {
         self.current = current
     }
 
-    private enum CodingKeys: String, CodingKey { case revision, replicaSet, created, images, changeCause, replicas, current }
+    private enum CodingKeys: String, CodingKey {
+        case revision, replicaSet, created, images, changeCause, replicas, current
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

@@ -10,8 +10,9 @@ struct NetToolResultSections: View {
 
     var body: some View {
         Section {
-            StatusPill(label: result.ok ? String(localized: "OK") : String(localized: "Problem"),
-                       color: result.ok ? .statusOK : .statusBad)
+            StatusPill(
+                label: result.ok ? String(localized: "OK") : String(localized: "Problem"),
+                color: result.ok ? .statusOK : .statusBad)
             if let dns = result.dns { dnsRows(dns) }
             if let ping = result.ping { pingRows(ping) }
             if let port = result.port { portRows(port) }
@@ -40,7 +41,10 @@ struct NetToolResultSections: View {
                             .font(.body.monospaced())
                             .foregroundStyle(h.silent ? Color.secondary : Color.primary)
                         Spacer()
-                        if !h.silent { Text(verbatim: "\(ms(h.avgMs)) · \(pct(h.lossPct))").font(.caption).foregroundStyle(.secondary) }
+                        if !h.silent {
+                            Text(verbatim: "\(ms(h.avgMs)) · \(pct(h.lossPct))").font(.caption).foregroundStyle(
+                                .secondary)
+                        }
                     }
                     .accessibilityElement(children: .combine)
                 }
@@ -51,14 +55,20 @@ struct NetToolResultSections: View {
                 LabeledContent("Verified") {
                     Text(http.tlsOk ? "Yes" : "No").foregroundStyle(http.tlsOk ? Color.statusOK : Color.statusBad)
                 }
-                if !http.subject.isEmpty { LabeledContent("Subject") { Text(verbatim: http.subject).font(.caption.monospaced()) } }
-                if !http.issuer.isEmpty { LabeledContent("Issuer") { Text(verbatim: http.issuer).font(.caption.monospaced()) } }
+                if !http.subject.isEmpty {
+                    LabeledContent("Subject") { Text(verbatim: http.subject).font(.caption.monospaced()) }
+                }
+                if !http.issuer.isEmpty {
+                    LabeledContent("Issuer") { Text(verbatim: http.issuer).font(.caption.monospaced()) }
+                }
                 if !http.notAfter.isEmpty {
                     HStack {
                         Text("Expires \(String(http.notAfter.prefix(10)))")
                         Spacer()
-                        StatusPill(label: String(localized: "\(http.daysLeft) days left"),
-                                   color: http.daysLeft < 0 ? .statusBad : http.daysLeft < certWarnDays ? .statusWarn : .statusOK)
+                        StatusPill(
+                            label: String(localized: "\(http.daysLeft) days left"),
+                            color: http.daysLeft < 0
+                                ? .statusBad : http.daysLeft < certWarnDays ? .statusWarn : .statusOK)
                     }
                 }
             }
@@ -73,9 +83,13 @@ struct NetToolResultSections: View {
 
     @ViewBuilder private func pingRows(_ ping: NetPingResult) -> some View {
         LabeledContent("Received") { Text(verbatim: "\(ping.received) / \(ping.sent)") }
-        LabeledContent("Loss") { Text(verbatim: pct(ping.lossPct)).foregroundStyle(ping.lossPct > 0 ? Color.statusWarn : Color.statusOK) }
+        LabeledContent("Loss") {
+            Text(verbatim: pct(ping.lossPct)).foregroundStyle(ping.lossPct > 0 ? Color.statusWarn : Color.statusOK)
+        }
         if ping.received > 0 {
-            LabeledContent("Min / avg / max") { Text(verbatim: "\(num(ping.minMs)) / \(num(ping.avgMs)) / \(ms(ping.maxMs))") }
+            LabeledContent("Min / avg / max") {
+                Text(verbatim: "\(num(ping.minMs)) / \(num(ping.avgMs)) / \(ms(ping.maxMs))")
+            }
         }
     }
 
@@ -89,7 +103,9 @@ struct NetToolResultSections: View {
     @ViewBuilder private func httpRows(_ http: NetHttpResult) -> some View {
         LabeledContent("HTTP status") { Text(verbatim: http.status == 0 ? "—" : "\(http.status)") }
         LabeledContent("Total time") { Text(verbatim: ms(http.totalMs)) }
-        if !http.redirectUrl.isEmpty { LabeledContent("Redirect") { Text(verbatim: http.redirectUrl).font(.caption.monospaced()) } }
+        if !http.redirectUrl.isEmpty {
+            LabeledContent("Redirect") { Text(verbatim: http.redirectUrl).font(.caption.monospaced()) }
+        }
         if !http.error.isEmpty { Text(verbatim: http.error).font(.caption).foregroundStyle(.statusBad) }
     }
 }
@@ -104,8 +120,10 @@ private func pct(_ value: Double) -> String { "\(num(value)) %" }
 
 /// A result as plain text, to paste in a chat or a ticket: the fields, then the raw output.
 func netToolShareText(_ result: NetToolResult, hostname: String) -> String {
-    var lines = ["\(result.tool.uppercased()) \(result.target) — \(hostname)",
-                 result.ok ? String(localized: "OK") : String(localized: "Problem")]
+    var lines = [
+        "\(result.tool.uppercased()) \(result.target) — \(hostname)",
+        result.ok ? String(localized: "OK") : String(localized: "Problem"),
+    ]
     if let d = result.dns {
         lines.append("\(d.status) · \(d.server) · \(d.queryMs) ms")
         lines += d.records.map { "\($0.name) \($0.ttl) \($0.type) \($0.value)" }
@@ -121,7 +139,9 @@ func netToolShareText(_ result: NetToolResult, hostname: String) -> String {
     }
     if let h = result.http {
         lines.append("HTTP \(h.status) · \(ms(h.totalMs))")
-        if h.tls { lines.append("\(h.subject) · \(h.issuer) · \(h.notAfter) (\(String(localized: "\(h.daysLeft) days left")))") }
+        if h.tls {
+            lines.append("\(h.subject) · \(h.issuer) · \(h.notAfter) (\(String(localized: "\(h.daysLeft) days left")))")
+        }
     }
     if !result.raw.isEmpty { lines += ["", result.raw.trimmingCharacters(in: .whitespacesAndNewlines)] }
     return lines.joined(separator: "\n")

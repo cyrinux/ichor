@@ -30,14 +30,18 @@ struct AISection: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Toggle("Hide names and addresses", isOn: $ai.anonymize)
-                    Text("The nodes’ names, IP addresses and domain are replaced with placeholders before the report is sent. The rest of the logs, such as pod names and other host names, is sent as it is.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(
+                        "The nodes’ names, IP addresses and domain are replaced with placeholders before the report is sent. The rest of the logs, such as pod names and other host names, is sent as it is."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                 }
             }
         } header: {
             Text("AI diagnosis")
         } footer: {
-            Text("Optional. Ask an AI model what is wrong with the cluster and how to fix it. Nothing is sent until you ask.")
+            Text(
+                "Optional. Ask an AI model what is wrong with the cluster and how to fix it. Nothing is sent until you ask."
+            )
         }
         .task { await ai.loadProviders() }
         // Another provider, key or server has another list.
@@ -73,17 +77,23 @@ struct AISection: View {
     /// The model id, typed or picked from the provider's list.
     @ViewBuilder
     private func modelRows(_ provider: AIProvider) -> some View {
-        TextField("Model", text: Binding(get: { ai.current.model }, set: { ai.setModel($0) }),
-                  prompt: Text("Default: \(provider.defaultModel)"))
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
+        TextField(
+            "Model", text: Binding(get: { ai.current.model }, set: { ai.setModel($0) }),
+            prompt: Text("Default: \(provider.defaultModel)")
+        )
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
         if models.isEmpty {
             Button("List models") { Task { await listModels(provider) } }
                 .disabled(listing || !ai.current.canAsk)
         } else {
             Menu("List models") {
                 ForEach(models) { model in
-                    Button { ai.setModel(model.id) } label: { Text(verbatim: model.label) }
+                    Button {
+                        ai.setModel(model.id)
+                    } label: {
+                        Text(verbatim: model.label)
+                    }
                 }
             }
         }

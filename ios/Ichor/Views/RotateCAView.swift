@@ -32,7 +32,10 @@ struct RotateCAView: View {
         .sheet(isPresented: $confirming) {
             HostnameConfirmationSheet(
                 title: String(localized: "Rotate the Talos CA of “\(model.activeContext)”?"),
-                message: String(localized: "Each node’s machine config changes three times, without a reboot. This phone’s talosconfig is replaced on the way. Every other talosconfig for this cluster stops working at the end: issue new ones afterwards."),
+                message: String(
+                    localized:
+                        "Each node’s machine config changes three times, without a reboot. This phone’s talosconfig is replaced on the way. Every other talosconfig for this cluster stops working at the end: issue new ones afterwards."
+                ),
                 hostname: model.activeContext,
                 actionTitle: String(localized: "Rotate")
             ) {
@@ -43,44 +46,63 @@ struct RotateCAView: View {
             Button("Stop", role: .destructive) { job.stop() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("It stops before its next step. The cluster keeps the CAs it has then, and this phone’s talosconfig keeps working. Rotate again later to finish.")
+            Text(
+                "It stops before its next step. The cluster keeps the CAs it has then, and this phone’s talosconfig keeps working. Rotate again later to finish."
+            )
         }
     }
 
     private func planList(_ plan: CARotationPlan) -> some View {
         List {
             Section {
-                Text("A new CA replaces the one that signs every Talos API certificate, like talosctl rotate-ca --kubernetes=false. The nodes trust both CAs while it goes on, and this phone stores its new talosconfig before the old CA stops issuing, so nothing is cut off on the way. At the end every certificate of the old CA stops working, other devices’ talosconfigs included. The Kubernetes CA does not change.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "A new CA replaces the one that signs every Talos API certificate, like talosctl rotate-ca --kubernetes=false. The nodes trust both CAs while it goes on, and this phone stores its new talosconfig before the old CA stops issuing, so nothing is cut off on the way. At the end every certificate of the old CA stops working, other devices’ talosconfigs included. The Kubernetes CA does not change."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
             }
             if let ca = plan.ca {
                 Section("Current CA") {
                     LabeledContent("Subject") { Text(verbatim: ca.subject).font(.callout.monospaced()) }
                     LabeledContent("SHA-256") { Text(verbatim: ca.fingerprint).font(.callout.monospaced()) }
-                    LabeledContent("Valid until", value: Date(timeIntervalSince1970: TimeInterval(ca.notAfter)).formatted(date: .abbreviated, time: .omitted))
+                    LabeledContent(
+                        "Valid until",
+                        value: Date(timeIntervalSince1970: TimeInterval(ca.notAfter)).formatted(
+                            date: .abbreviated, time: .omitted))
                 }
             }
             Section {
                 ForEach(plan.nodes) { node in
-                    nodeRow(node.label, detail: "\(node.node) · \(node.role) · \(node.version.isEmpty ? "?" : node.version)", health: node.health, problem: node.problem)
+                    nodeRow(
+                        node.label,
+                        detail: "\(node.node) · \(node.role) · \(node.version.isEmpty ? "?" : node.version)",
+                        health: node.health, problem: node.problem)
                 }
             } header: {
                 HStack {
                     Text("Nodes (\(plan.nodes.count))")
                     Spacer()
-                    StatusPill(label: plan.ready ? String(localized: "Ready") : String(localized: "Blocked"), color: plan.ready ? Color.statusOK : Color.statusBad)
+                    StatusPill(
+                        label: plan.ready ? String(localized: "Ready") : String(localized: "Blocked"),
+                        color: plan.ready ? Color.statusOK : Color.statusBad)
                 }
             } footer: {
-                Text(plan.discovered ? LocalizedStringKey("Every member cluster discovery lists") : LocalizedStringKey("The nodes this talosconfig names"))
+                Text(
+                    plan.discovered
+                        ? LocalizedStringKey("Every member cluster discovery lists")
+                        : LocalizedStringKey("The nodes this talosconfig names"))
             }
             if !plan.blockers.isEmpty {
                 Section("Before it can start") {
-                    ForEach(plan.blockers, id: \.self) { Text(verbatim: $0).font(.footnote).foregroundStyle(.statusBad) }
+                    ForEach(plan.blockers, id: \.self) {
+                        Text(verbatim: $0).font(.footnote).foregroundStyle(.statusBad)
+                    }
                 }
             }
             if !plan.warnings.isEmpty {
                 Section("Good to know") {
-                    ForEach(plan.warnings, id: \.self) { Text(verbatim: $0).font(.footnote).foregroundStyle(.secondary) }
+                    ForEach(plan.warnings, id: \.self) {
+                        Text(verbatim: $0).font(.footnote).foregroundStyle(.secondary)
+                    }
                 }
             }
             Section {
@@ -120,22 +142,42 @@ struct RotateCAView: View {
     @ViewBuilder
     private func outcome(_ run: CARotationJob.State) -> some View {
         if run.running {
-            Text("You can leave this screen: the rotation goes on in a notification.").font(.footnote).foregroundStyle(.secondary)
-            Button(run.stopping ? String(localized: "Stopping before the next step…") : String(localized: "Stop"), role: .destructive) { stopping = true }
-                .disabled(run.stopping)
+            Text("You can leave this screen: the rotation goes on in a notification.").font(.footnote).foregroundStyle(
+                .secondary)
+            Button(
+                run.stopping ? String(localized: "Stopping before the next step…") : String(localized: "Stop"),
+                role: .destructive
+            ) { stopping = true }
+            .disabled(run.stopping)
         } else if let error = run.error {
-            Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad) }
-            Text(run.transitionStored
-                 ? LocalizedStringKey("This phone already stores a talosconfig that trusts both CAs, so it keeps reaching the cluster. Some nodes may issue with the new CA already: read the plan again, then rotate again to finish.")
-                 : LocalizedStringKey("The issuing CA did not change and this phone’s talosconfig is the one it had. The nodes may also accept the new CA now: a new rotation starts over."))
-                .font(.footnote).foregroundStyle(.secondary)
+            Label {
+                Text(verbatim: error)
+            } icon: {
+                Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad)
+            }
+            Text(
+                run.transitionStored
+                    ? LocalizedStringKey(
+                        "This phone already stores a talosconfig that trusts both CAs, so it keeps reaching the cluster. Some nodes may issue with the new CA already: read the plan again, then rotate again to finish."
+                    )
+                    : LocalizedStringKey(
+                        "The issuing CA did not change and this phone’s talosconfig is the one it had. The nodes may also accept the new CA now: a new rotation starts over."
+                    )
+            )
+            .font(.footnote).foregroundStyle(.secondary)
             Button("Done") { dismissRun() }
         } else {
-            Label { Text("CA rotated") } icon: { Image(systemName: "checkmark.seal.fill").foregroundStyle(.statusOK) }
+            Label {
+                Text("CA rotated")
+            } icon: {
+                Image(systemName: "checkmark.seal.fill").foregroundStyle(.statusOK)
+            }
             Text(CARotationJob.doneBody).font(.footnote)
             if let failure = run.finalStoreError {
-                Text("The final talosconfig could not be stored (\(failure)). The one stored during the rotation keeps working.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "The final talosconfig could not be stored (\(failure)). The one stored during the rotation keeps working."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
             }
             NavigationLink("Issue talosconfigs for other devices", value: Route.issueConfig(renew: false))
             Button("Done") { dismissRun() }
@@ -165,7 +207,9 @@ struct RotateCAView: View {
     private func start() async {
         guard let client = model.client else { return }
         startError = nil
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Rotate the cluster CA")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Rotate the cluster CA"))
+        {
             startError = failure
             return
         }

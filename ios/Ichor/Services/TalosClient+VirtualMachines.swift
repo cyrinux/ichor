@@ -27,7 +27,8 @@ extension TalosClient {
 
     /// `virtctl console`: the serial console of the running VM `namespace`/`name`, raw bytes with
     /// no size to set. Events go to the listener (from Go threads).
-    func startVMConsole(namespace: String, name: String, listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
+    func startVMConsole(namespace: String, name: String, listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession?
+    {
         IchorgoStartVMConsole(kubeConfig, kubeContext, kubeAPIServer, namespace, name, listener)
     }
 }

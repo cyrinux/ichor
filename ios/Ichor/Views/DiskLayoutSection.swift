@@ -15,8 +15,9 @@ struct DiskLayoutSection: View {
             } else {
                 SectionStateView(state: state) { list in
                     if !list.supported {
-                        VersionNoticeRow(text: FeatureSupport(supported: false, reason: list.reason).localizedNotice
-                            ?? String(localized: "Not available on this node's Talos version"))
+                        VersionNoticeRow(
+                            text: FeatureSupport(supported: false, reason: list.reason).localizedNotice
+                                ?? String(localized: "Not available on this node's Talos version"))
                     } else if list.disks.isEmpty {
                         Text("No disk reported").font(.footnote).foregroundStyle(.secondary)
                     }
@@ -42,7 +43,9 @@ private func partitionRGB(label: String?, index: Int) -> Int {
     return otherColors[((index % count) + count) % count]
 }
 
-private func partitionColor(label: String?, index: Int) -> Color { Color(uiColor: UIColor(rgb: partitionRGB(label: label, index: index))) }
+private func partitionColor(label: String?, index: Int) -> Color {
+    Color(uiColor: UIColor(rgb: partitionRGB(label: label, index: index)))
+}
 
 /// Black on light slices, white on dark ones.
 private func textColor(on rgb: Int) -> Color {
@@ -63,7 +66,8 @@ private struct DiskCard: View {
 
     var body: some View {
         let slices = barSlices(disk)
-        let labels = Dictionary(disk.partitions.map { ($0.index, partitionLabel($0)) }, uniquingKeysWith: { first, _ in first })
+        let labels = Dictionary(
+            disk.partitions.map { ($0.index, partitionLabel($0)) }, uniquingKeysWith: { first, _ in first })
         VStack(alignment: .leading, spacing: 8) {
             header
             if !slices.isEmpty {
@@ -100,11 +104,14 @@ private struct DiskCard: View {
     private func legend(_ labels: [Int: String]) -> some View {
         ChipFlow(spacing: 12) {
             ForEach(disk.partitions) { partition in
-                LegendEntry(color: partitionColor(label: partition.knownLabel, index: partition.index),
-                            label: labels[partition.index] ?? "", size: partition.size)
+                LegendEntry(
+                    color: partitionColor(label: partition.knownLabel, index: partition.index),
+                    label: labels[partition.index] ?? "", size: partition.size)
             }
             if disk.unallocated > 0 {
-                LegendEntry(color: Color.secondary.opacity(0.35), label: String(localized: "Unallocated"), size: disk.unallocated)
+                LegendEntry(
+                    color: Color.secondary.opacity(0.35), label: String(localized: "Unallocated"),
+                    size: disk.unallocated)
             }
         }
     }
@@ -117,7 +124,9 @@ private struct PartitionBar: View {
 
     var body: some View {
         let unallocated = String(localized: "Unallocated")
-        let descriptions = slices.map { "\(sliceLabel($0.segment, unallocated: unallocated)), \(formatBytes($0.segment.size))" }
+        let descriptions = slices.map {
+            "\(sliceLabel($0.segment, unallocated: unallocated)), \(formatBytes($0.segment.size))"
+        }
         GeometryReader { geo in
             let spacing: CGFloat = 1
             let width = max(geo.size.width - spacing * CGFloat(max(slices.count - 1, 0)), 0)
@@ -206,7 +215,9 @@ private struct PartitionRow: View {
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }
-                let details = [partition.mountedOn, partition.phaseNeedsMention ? partition.phase : ""].filter { !$0.isEmpty }
+                let details = [partition.mountedOn, partition.phaseNeedsMention ? partition.phase : ""].filter {
+                    !$0.isEmpty
+                }
                 if !details.isEmpty {
                     Text(verbatim: details.joined(separator: "  ·  ")).font(.caption).foregroundStyle(.secondary)
                 }
@@ -225,7 +236,8 @@ private struct EncryptionChip: View {
     private var style: (symbol: String, label: String, color: Color) {
         switch partition.encryptionState {
         case .enabled:
-            let label = [String(localized: "Encrypted"), partition.encryptionProvider].filter { !$0.isEmpty }.joined(separator: " · ")
+            let label = [String(localized: "Encrypted"), partition.encryptionProvider].filter { !$0.isEmpty }.joined(
+                separator: " · ")
             return ("lock.fill", label, Color.statusOK)
         case .disabled:
             return ("lock.open", String(localized: "Not encrypted"), Color.statusWarn)

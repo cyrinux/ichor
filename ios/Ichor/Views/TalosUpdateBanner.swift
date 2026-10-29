@@ -41,7 +41,10 @@ struct TalosUpdateSection: View {
                 }
                 // Two controls in one row: each takes its own taps.
                 .buttonStyle(.borderless)
-                .confirmationDialog(String(localized: "Skip Talos \(info.latest)?"), isPresented: $confirmSkip, titleVisibility: .visible) {
+                .confirmationDialog(
+                    String(localized: "Skip Talos \(info.latest)?"), isPresented: $confirmSkip,
+                    titleVisibility: .visible
+                ) {
                     Button("Skip") { withAnimation { model.skipTalosUpdate(info.latest) } }
                     Button("Cancel", role: .cancel) {}
                 } message: {
@@ -54,7 +57,8 @@ struct TalosUpdateSection: View {
     private func bannerLabel(count: Int) -> some View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Talos \(info.latest) is available") + Text(verbatim: " · ") + Text("\(count) nodes on older versions")
+                Text("Talos \(info.latest) is available") + Text(verbatim: " · ")
+                    + Text("\(count) nodes on older versions")
                 if canUpgrade {
                     Text("Tap to upgrade a node.").font(.caption).foregroundStyle(.secondary)
                 }
@@ -87,7 +91,8 @@ private struct TalosRolloutView: View {
         guard let target = job.target else { return nil }
         switch job.outcome {
         case .unfollowed?: return nil
-        case .succeeded(let newVersion)?: return RolloutRun(node: target.node, waiting: true, finished: true, reached: newVersion)
+        case .succeeded(let newVersion)?:
+            return RolloutRun(node: target.node, waiting: true, finished: true, reached: newVersion)
         case .failed?: return RolloutRun(node: target.node, finished: true, failed: true)
         case nil: return RolloutRun(node: target.node, waiting: upgradeWaitsForNode(job.events))
         }
@@ -104,8 +109,11 @@ private struct TalosRolloutView: View {
             }
             if let next = plan.next {
                 Section {
-                    Button { pick(next, in: plan) } label: {
-                        Label("Upgrade next: \(next.node.hostname)", systemImage: "arrow.up.circle.fill").fontWeight(.semibold)
+                    Button {
+                        pick(next, in: plan)
+                    } label: {
+                        Label("Upgrade next: \(next.node.hostname)", systemImage: "arrow.up.circle.fill").fontWeight(
+                            .semibold)
                     }
                     .disabled(!plan.canOpen(next))
                     // Every node in one roll, the app driving it.
@@ -149,7 +157,9 @@ private struct TalosRolloutView: View {
             Button("Upgrade anyway") { open(row) }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
-            Text("Control-plane nodes normally go first, and only \(plan.controlPlaneDone) of \(plan.controlPlane.count) are done. For a patch release the order is harmless.")
+            Text(
+                "Control-plane nodes normally go first, and only \(plan.controlPlaneDone) of \(plan.controlPlane.count) are done. For a patch release the order is harmless."
+            )
         }
     }
 
@@ -178,7 +188,8 @@ private struct TalosRolloutView: View {
                     }
                     // Only a control-plane node takes an etcd member down with it.
                     if let etcd, node.role == "controlplane" {
-                        Text("etcd \(etcd.healthy)/\(etcd.members)").font(.caption.monospaced()).foregroundStyle(.secondary)
+                        Text("etcd \(etcd.healthy)/\(etcd.members)").font(.caption.monospaced()).foregroundStyle(
+                            .secondary)
                     }
                 }
             }
@@ -200,8 +211,10 @@ private struct TalosRolloutView: View {
     }
 
     @ViewBuilder
-    private func section<Header: View>(_ rows: [RolloutRow], in plan: TalosRollout, later: Bool,
-                                       @ViewBuilder header: () -> Header) -> some View {
+    private func section<Header: View>(
+        _ rows: [RolloutRow], in plan: TalosRollout, later: Bool,
+        @ViewBuilder header: () -> Header
+    ) -> some View {
         if !rows.isEmpty {
             let title = header()
             Section {
@@ -214,7 +227,9 @@ private struct TalosRolloutView: View {
 
     private func nodeRow(_ row: RolloutRow, in plan: TalosRollout, later: Bool) -> some View {
         let enabled = plan.canOpen(row)
-        return Button { pick(row, in: plan) } label: {
+        return Button {
+            pick(row, in: plan)
+        } label: {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: row.node.hostname).font(.headline)

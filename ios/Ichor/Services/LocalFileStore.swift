@@ -11,8 +11,9 @@ enum LocalFileStore {
         let urls = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys)
         return urls.map { url in
             let values = try? url.resourceValues(forKeys: Set(keys))
-            return LocalFile(name: url.lastPathComponent, size: Int64(values?.fileSize ?? 0),
-                             modified: values?.contentModificationDate ?? .distantPast)
+            return LocalFile(
+                name: url.lastPathComponent, size: Int64(values?.fileSize ?? 0),
+                modified: values?.contentModificationDate ?? .distantPast)
         }
     }
 
@@ -33,7 +34,7 @@ struct ExportFileDocument: FileDocument {
     }
 
     init(configuration: ReadConfiguration) throws {
-        throw CocoaError(.featureUnsupported) // export only
+        throw CocoaError(.featureUnsupported)  // export only
     }
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {

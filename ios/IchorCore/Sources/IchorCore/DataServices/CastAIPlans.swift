@@ -82,8 +82,10 @@ public struct CastAIPlan: Decodable, Equatable, Identifiable, Sendable {
     public var clusterSharePercent: Double? { clusterMonthly > 0 ? plannedMonthly / clusterMonthly * 100 : nil }
 
     private enum CodingKeys: String, CodingKey {
-        case name, createdAt, endedAt, mode, state, execute, currency, beforeMonthly, afterMonthly, savingsPercent, achievedMonthly
-        case clusterMonthly, clusterNodes, missedMonthly, missedEstimated, failureReason, failurePhase, message, warnings
+        case name, createdAt, endedAt, mode, state, execute, currency, beforeMonthly, afterMonthly, savingsPercent,
+            achievedMonthly
+        case clusterMonthly, clusterNodes, missedMonthly, missedEstimated, failureReason, failurePhase, message,
+            warnings
         case removing, adding, budgets
     }
 }
@@ -112,7 +114,9 @@ public struct CastAIPlanNode: Decodable, Equatable, Identifiable, Sendable {
 
     /// How long an added node took to be ready (first to last step, in seconds); nil unless it succeeded.
     public var readySeconds: Int64? {
-        guard status == .success, let first = events.first, let last = events.last, last.at >= first.at else { return nil }
+        guard status == .success, let first = events.first, let last = events.last, last.at >= first.at else {
+            return nil
+        }
         return (last.at - first.at) / 1000
     }
 

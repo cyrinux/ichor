@@ -20,13 +20,16 @@ struct K8sUpgradePlanView: View {
     var body: some View {
         Group {
             if job.version != nil {
-                K8sUpgradeRunView(job: job, onUpgradeNow: {
-                    job.clear()
-                    confirming = true
-                }, onClose: {
-                    job.clear()
-                    Task { await loadPlan() }
-                })
+                K8sUpgradeRunView(
+                    job: job,
+                    onUpgradeNow: {
+                        job.clear()
+                        confirming = true
+                    },
+                    onClose: {
+                        job.clear()
+                        Task { await loadPlan() }
+                    })
             } else {
                 planList
             }
@@ -38,7 +41,10 @@ struct K8sUpgradePlanView: View {
         .sheet(isPresented: $confirming) {
             HostnameConfirmationSheet(
                 title: String(localized: "Upgrade Kubernetes on \(cluster) to \(version)?"),
-                message: String(localized: "The control planes restart their components one after the other, then each kubelet restarts. Going back to the previous version is another upgrade."),
+                message: String(
+                    localized:
+                        "The control planes restart their components one after the other, then each kubelet restarts. Going back to the previous version is another upgrade."
+                ),
                 hostname: cluster,
                 actionTitle: String(localized: "Upgrade now")
             ) {
@@ -54,8 +60,10 @@ struct K8sUpgradePlanView: View {
                 Section { Text("Demo cluster: the plan is a sample, and the upgrade is refused.").note() }
             }
             Section {
-                Text("Like talosctl upgrade-k8s: each control plane gets the new API server, controller manager, scheduler and kube-proxy images, one after the other, then every node gets the new kubelet. Each step is waited for.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "Like talosctl upgrade-k8s: each control plane gets the new API server, controller manager, scheduler and kube-proxy images, one after the other, then every node gets the new kubelet. Each step is waited for."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
                 switch choice {
                 case .loading:
                     ProgressView().frame(maxWidth: .infinity)
@@ -84,7 +92,9 @@ struct K8sUpgradePlanView: View {
     }
 
     @ViewBuilder private func versionRows(_ c: K8sVersionChoice) -> some View {
-        Text("Runs \(c.from.isEmpty ? "?" : c.from) · Talos supports \(c.supportedRange.isEmpty ? "?" : c.supportedRange)")
+        Text(
+            "Runs \(c.from.isEmpty ? "?" : c.from) · Talos supports \(c.supportedRange.isEmpty ? "?" : c.supportedRange)"
+        )
         if !c.versions.isEmpty {
             Picker("Version", selection: Binding(get: { version }, set: { pick($0) })) {
                 ForEach(c.versions, id: \.self) { Text(verbatim: $0).tag($0) }
@@ -111,20 +121,32 @@ struct K8sUpgradePlanView: View {
                 ForEach(p.deprecatedAPIs, id: \.api) { d in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
-                            StatusPill(label: d.severity.isEmpty ? "info" : d.severity, color: d.severity == "critical" ? .statusBad : .statusWarn)
+                            StatusPill(
+                                label: d.severity.isEmpty ? "info" : d.severity,
+                                color: d.severity == "critical" ? .statusBad : .statusWarn)
                             Text(verbatim: d.api).font(.caption.monospaced())
                         }
-                        if !d.removedIn.isEmpty { Text("Removed in \(d.removedIn)").font(.caption).foregroundStyle(.secondary) }
+                        if !d.removedIn.isEmpty {
+                            Text("Removed in \(d.removedIn)").font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                 }
             }
         }
         Section("Checks") {
             ForEach(p.blockers, id: \.self) { blocker in
-                Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }.foregroundStyle(.statusBad)
+                Label {
+                    Text(verbatim: blocker)
+                } icon: {
+                    Image(systemName: "xmark.octagon.fill")
+                }.foregroundStyle(.statusBad)
             }
             ForEach(p.warnings, id: \.self) { warning in
-                Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }.foregroundStyle(.statusWarn)
+                Label {
+                    Text(verbatim: warning)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }.foregroundStyle(.statusWarn)
             }
             if p.blockers.isEmpty && p.warnings.isEmpty { Text("No issues found").foregroundStyle(.statusOK) }
         }
@@ -185,7 +207,9 @@ struct K8sUpgradePlanView: View {
     private func start(dryRun: Bool) async {
         message = nil
         if !dryRun, model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Upgrade Kubernetes on \(cluster)")) {
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Upgrade Kubernetes on \(cluster)"))
+        {
             message = failure
             return
         }
@@ -207,12 +231,17 @@ struct K8sUpgradeRunView: View {
             Section {
                 if let outcome = job.outcome {
                     if let error = outcome {
-                        Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill") }.foregroundStyle(.statusBad)
+                        Label {
+                            Text(verbatim: error)
+                        } icon: {
+                            Image(systemName: "xmark.octagon.fill")
+                        }.foregroundStyle(.statusBad)
                     } else if job.dryRun {
                         Label("Every node accepted its change. Nothing was applied.", systemImage: "checkmark.seal")
                             .foregroundStyle(.statusOK)
                     } else {
-                        Label("Every component runs \(job.version ?? "").", systemImage: "checkmark.seal.fill").foregroundStyle(.statusOK)
+                        Label("Every component runs \(job.version ?? "").", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.statusOK)
                     }
                 } else if let p = job.latest {
                     Text(verbatim: stepText(p)).font(.headline)
@@ -221,7 +250,9 @@ struct K8sUpgradeRunView: View {
                     Label("Starting…", systemImage: "hourglass")
                 }
             } header: {
-                Text(job.dryRun ? "Dry run of Kubernetes \(job.version ?? "")" : "Upgrading Kubernetes to \(job.version ?? "")")
+                Text(
+                    job.dryRun
+                        ? "Dry run of Kubernetes \(job.version ?? "")" : "Upgrading Kubernetes to \(job.version ?? "")")
             }
             if !job.events.isEmpty {
                 Section("Steps") {
@@ -258,7 +289,9 @@ struct K8sUpgradeRunView: View {
             Button("Stop after this node", role: .destructive) { job.cancel() }
             Button("Keep going", role: .cancel) {}
         } message: {
-            Text("It stops after the node being changed, which is finished and waited for. The nodes done keep the new version; start again later to continue.")
+            Text(
+                "It stops after the node being changed, which is finished and waited for. The nodes done keep the new version; start again later to continue."
+            )
         }
     }
 

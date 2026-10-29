@@ -34,7 +34,9 @@ struct CertificateDetailsView: View {
                     }
                 }
                 Section("Conditions") {
-                    ForEach(Array(details.conditions.enumerated()), id: \.offset) { ConditionRow(condition: $0.element) }
+                    ForEach(Array(details.conditions.enumerated()), id: \.offset) {
+                        ConditionRow(condition: $0.element)
+                    }
                 }
                 if !details.requests.isEmpty {
                     Section("Requests") { ForEach(details.requests) { RequestRow(request: $0) } }
@@ -47,7 +49,8 @@ struct CertificateDetailsView: View {
                 }
                 Section("Controller log") {
                     if details.log.isEmpty {
-                        Text("No line of the cert-manager controller log names this certificate.").foregroundStyle(.secondary)
+                        Text("No line of the cert-manager controller log names this certificate.").foregroundStyle(
+                            .secondary)
                     } else {
                         Text(verbatim: details.log.joined(separator: "\n"))
                             .font(.caption2.monospaced())
@@ -66,7 +69,9 @@ struct CertificateDetailsView: View {
             Button("Renew now") { Task { await renew() } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("cert-manager issues the certificate again now, whatever its renewal time. An ACME issuer such as Let’s Encrypt counts it against its rate limits.")
+            Text(
+                "cert-manager issues the certificate again now, whatever its renewal time. An ACME issuer such as Let’s Encrypt counts it against its rate limits."
+            )
         }
         .messageAlert($resultMessage)
     }
@@ -74,7 +79,9 @@ struct CertificateDetailsView: View {
     private func load() async {
         guard let client = model.client else { return }
         let (namespace, name) = (cert.namespace, cert.name)
-        let loaded: LoadState<CertDetails> = await .from { try await client.certificateDetails(namespace: namespace, name: name) }
+        let loaded: LoadState<CertDetails> = await .from {
+            try await client.certificateDetails(namespace: namespace, name: name)
+        }
         state = state.refreshed(with: loaded)
     }
 
@@ -99,9 +106,10 @@ private struct ConditionRow: View {
 
     var body: some View {
         let c = condition
-        DetailLines(title: ["\(c.type): \(c.status)", c.reason, c.time > 0 ? relativeTime(c.time) : ""],
-                    message: c.message,
-                    health: c.health)
+        DetailLines(
+            title: ["\(c.type): \(c.status)", c.reason, c.time > 0 ? relativeTime(c.time) : ""],
+            message: c.message,
+            health: c.health)
     }
 }
 
@@ -110,19 +118,31 @@ private struct RequestRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: [request.name, request.created > 0 ? relativeTime(request.created) : ""].filter { !$0.isEmpty }.joined(separator: " · "))
-                .font(.subheadline.monospaced())
-            ForEach(Array(request.conditions.enumerated()), id: \.offset) { ConditionRow(condition: $0.element).padding(.leading, 12) }
+            Text(
+                verbatim: [request.name, request.created > 0 ? relativeTime(request.created) : ""].filter {
+                    !$0.isEmpty
+                }.joined(separator: " · ")
+            )
+            .font(.subheadline.monospaced())
+            ForEach(Array(request.conditions.enumerated()), id: \.offset) {
+                ConditionRow(condition: $0.element).padding(.leading, 12)
+            }
             ForEach(request.orders) { order in
-                DetailLines(title: [String(localized: "ACME order · \(order.state.isEmpty ? "…" : order.state)")],
-                            message: order.reason,
-                            health: order.failed ? .critical : .ok)
-                    .padding(.leading, 12)
+                DetailLines(
+                    title: [String(localized: "ACME order · \(order.state.isEmpty ? "…" : order.state)")],
+                    message: order.reason,
+                    health: order.failed ? .critical : .ok
+                )
+                .padding(.leading, 12)
                 ForEach(order.challenges) { challenge in
-                    DetailLines(title: ["\(challenge.type) \(challenge.domain)", challenge.state.isEmpty ? "…" : challenge.state],
-                                message: challenge.reason,
-                                health: challenge.health)
-                        .padding(.leading, 24)
+                    DetailLines(
+                        title: [
+                            "\(challenge.type) \(challenge.domain)", challenge.state.isEmpty ? "…" : challenge.state,
+                        ],
+                        message: challenge.reason,
+                        health: challenge.health
+                    )
+                    .padding(.leading, 24)
                 }
             }
         }
@@ -134,9 +154,13 @@ private struct EventRow: View {
     let event: CertEvent
 
     var body: some View {
-        DetailLines(title: [event.reason, event.object, event.count > 1 ? "×\(event.count)" : "", event.time > 0 ? relativeTime(event.time) : ""],
-                    message: event.message,
-                    health: event.warning ? .warning : .ok)
+        DetailLines(
+            title: [
+                event.reason, event.object, event.count > 1 ? "×\(event.count)" : "",
+                event.time > 0 ? relativeTime(event.time) : "",
+            ],
+            message: event.message,
+            health: event.warning ? .warning : .ok)
     }
 }
 
