@@ -139211,6 +139211,20 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Масштабирование" } }
       }
     },
+    "Scale…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Skalieren…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escalar…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre à l’échelle…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scala…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Масштабувати…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "扩缩容…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スケール…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escalar…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Масштабировать…" } }
+      }
+    },
     "Scale %@ to %lld?" : {
       "extractionState" : "manual",
       "localizations" : {

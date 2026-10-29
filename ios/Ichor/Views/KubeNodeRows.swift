@@ -6,7 +6,8 @@ import IchorCore
 /// and outcome (`kubeCordonDialogs`), which both screens share.
 
 /// `KubeNodeRow` behind a menu: the cordon (asking `cordoning` for a confirmation) and the
-/// drain (the maintenance screen). No node screen: it reads Talos.
+/// drain (the maintenance screen). No node screen: it reads Talos. Swipe left: the cordon and
+/// the drain, each only opening its confirmation or screen; VoiceOver lists them too.
 struct KubeNodeActionRow: View {
     let node: KubeNodeInfo
     @Binding var path: [Route]
@@ -21,6 +22,25 @@ struct KubeNodeActionRow: View {
             KubeNodeRow(node: node, usage: usage)
         }
         .tint(.primary)
+        // No full swipe: a long swipe must not reach the drain without a tap.
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button {
+                cordoning = node
+            } label: {
+                Label(
+                    node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"),
+                    systemImage: "nosign")
+            }
+            .tint(.orange)
+            .kubeGated(.cordonNode)
+            Button {
+                path.append(.drain(node: node.name, hostname: node.name))
+            } label: {
+                Label("Drain…", systemImage: "rectangle.portrait.and.arrow.right")
+            }
+            .tint(.red)
+            .kubeGated(.drainNode)
+        }
     }
 }
 

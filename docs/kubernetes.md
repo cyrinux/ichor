@@ -35,6 +35,12 @@ cleanup apply. A suspended CronJob can be run once without resuming its schedule
 confirmation warns when a run is already in progress, since a manual run ignores the
 `concurrencyPolicy`.
 
+On iOS, swipe a workload, CronJob or node row for its first action and long-press it for the
+rest: a workload swipes right to Restart and long-presses to Restart, Scale…, Share and Pin; a
+CronJob swipes right to Run now and left to Suspend or Resume; a node swipes left to Cordon (or
+Uncordon) and Drain…. Each opens the same confirmation as its button, and VoiceOver lists the
+swipe actions in its actions rotor.
+
 When kube-green has the namespace asleep, a workload sheet says so on the row (with its wake-up
 time) and warns before scaling a workload or resuming a CronJob, since kube-green restores the
 replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster
