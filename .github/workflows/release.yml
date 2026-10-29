@@ -144,22 +144,29 @@ jobs:
   verify:
     needs: [publish]
     runs-on: ubuntu-latest
+    # A draft release is invisible to a read-only token ("release not found"): only the
+    # download step gets the token, the rebuild step (Gradle, third-party plugins) does not.
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # scripts/version.sh counts the commits for the versionCode
           persist-credentials: false
 
+      - name: Download the drafted APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "ichor-$TAG-arm64-v8a.apk" --dir "$RUNNER_TEMP/published"
+
       - uses: ./.github/actions/android-toolchain
 
       - name: Rebuild and compare
         env:
-          GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
-        run: python3 -I scripts/verify-release.py verify "$TAG" --repo "$GITHUB_REPOSITORY" --report "$RUNNER_TEMP/differences.txt"
+        run: python3 -I scripts/verify-release.py verify "$TAG" --repo "$GITHUB_REPOSITORY" --published "$RUNNER_TEMP/published/ichor-$TAG-arm64-v8a.apk" --report "$RUNNER_TEMP/differences.txt"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
