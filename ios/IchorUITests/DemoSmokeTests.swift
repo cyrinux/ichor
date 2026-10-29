@@ -9,6 +9,10 @@ final class DemoSmokeTests: XCTestCase {
     private enum ID {
         static let node = "smoke-node"
         static let kernelLog = "smoke-node-kernel-log"
+        static let containers = "smoke-node-containers"
+        static let containerRow = "smoke-container-row"
+        static let settings = "smoke-settings"
+        static let settingsScreen = "smoke-settings-screen"
         static let logLines = "smoke-log-lines"
         static let kubeHome = "smoke-kube-home"
     }
@@ -31,14 +35,37 @@ final class DemoSmokeTests: XCTestCase {
         waitFor(ID.logLines, in: app)
     }
 
+    func testTheTalosDemoListsANodesContainersAndOpensALog() {
+        let app = launch("demo")
+
+        scrollTo(ID.node, in: app).tap()
+        scrollTo(ID.containers, in: app).tap()
+        // Wait on the rows, not on the list's loading state.
+        waitFor(ID.containerRow, in: app).tap()
+
+        waitFor(ID.logLines, in: app)
+    }
+
+    func testTheOverviewOpensSettings() {
+        // Settings is in the ⋯ menu by default, and on a phone iOS folds the toolbar into its own
+        // overflow, whose items lose their identifiers: the bar is arranged with Settings as its
+        // only icon (the overview's @AppStorage("overview.bar"), "icons|menu").
+        let app = launch("demo", arguments: ["-overview.bar", "SETTINGS|"])
+
+        waitFor(ID.settings, in: app).tap()
+
+        waitFor(ID.settingsScreen, in: app)
+    }
+
     func testTheKubernetesDemoOpensItsHome() {
         let app = launch("demo-kube")
         waitFor(ID.kubeHome, in: app)
     }
 
-    private func launch(_ demo: String) -> XCUIApplication {
+    private func launch(_ demo: String, arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["ICHOR_UI_TEST"] = demo
+        app.launchArguments += arguments
         app.launch()
         return app
     }

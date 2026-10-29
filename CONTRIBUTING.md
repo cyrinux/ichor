@@ -15,8 +15,12 @@ an issue first so we can agree on the approach before you spend time on it.
   `IchorgoFooBar(` in Swift, `.fooBar(` on a handle), so a new facade function needs no
   allowlist: call it from an app or a test in the same pull request, or delete it.
 - The demo-mode smoke test (`DemoSmokeTest`, CI job `ui-smoke`) walks the demo cluster on an
-  emulator; it runs on CI only (see docs/build.md to run it on an AVD). When a screen's anchor
-  moves, move its test tag (`ui/components/SmokeTags.kt`), not the test's waits. The iOS twin
+  emulator; it runs on CI only (see docs/build.md to run it on an AVD). Four walks: overview →
+  node → kernel log; overview → node → Containers → a container's log; overview → Settings
+  (Android through the ⋮ menu where it sits by default; iOS launched with Settings as the bar's
+  only icon, since iOS folds a phone's toolbar into an overflow without identifiers); the
+  Kubernetes demo's home. A moved anchor
+  moves its tag (`ui/components/SmokeTags.kt`), not the test. The iOS twin
   (`IchorUITests/DemoSmokeTests`) runs on macOS CI after the simulator build; its anchors are
   accessibility identifiers (`SmokeID` in `ios/Ichor/App/UITestLaunch.swift`), never labels.
 - A govulncheck finding (`just vuln`) means a known vulnerability is reachable from the Go
