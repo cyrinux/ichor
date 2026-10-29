@@ -18,10 +18,13 @@ func demoClusterUpdates(now time.Time) clusterUpdates {
 	flux := &updateOwner{Tool: "flux", Kind: "HelmRelease", Namespace: "demo", Name: "podinfo"}
 	argo := &updateOwner{Tool: "argocd", Kind: "Application", Namespace: "argocd", Name: "hello-ichor"}
 
+	// podinfo's Deployment is in the demo repository (apps/podinfo/deployment.yaml): its edit
+	// resolves to the image line there (UpdateEditTarget).
 	podinfo := &updateImage{
-		Repo: "ghcr.io/stefanprodan/podinfo", Tag: "6.7.0", Workloads: workload("Deployment", "demo", "podinfo", "podinfo"), Owner: flux,
+		Repo: "ghcr.io/stefanprodan/podinfo", Tag: "6.7.0", Workloads: workload("Deployment", "demo", "podinfo", "podinfo"),
+		Owner:     &updateOwner{Tool: "flux", Kind: "Kustomization", Namespace: "flux-system", Name: "podinfo"},
 		Candidate: cand("6.7.0", "6.7.1", "6.9.2", "", "ghcr.io"),
-		Edit:      &updateEdit{Op: "path", Hint: updateRenderedHint, ValueFiles: []string{}},
+		Edit:      &updateEdit{Op: "image", Kind: "Deployment", Name: "podinfo", Container: "podinfo", Image: "ghcr.io/stefanprodan/podinfo:6.7.1"},
 	}
 	nginx := &updateImage{
 		Repo: "nginx", Tag: "1.27.4-alpine", Workloads: workload("Deployment", "demo", "hello-ichor", "nginx"), Owner: argo,
