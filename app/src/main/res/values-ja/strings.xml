@@ -4925,6 +4925,9 @@
     <string name="lb_adv_all_pools">すべてのプール</string>
     <string name="lb_adv_pools">プール：%1$s</string>
     <string name="lb_adv_via">経由：%1$s</string>
+    <string name="lb_adv_l2_disabled">何もアナウンスしません。cilium-config で L2 アナウンスが無効です (enable-l2-announcements)。</string>
+    <string name="lb_adv_no_lb_ips">LoadBalancer アドレスをアナウンスしません。loadBalancerIPs が設定されていません。</string>
+    <string name="lb_adv_no_service">一致する LoadBalancer Service がありません。</string>
     <string name="lb_peer_asn">AS %1$s、ローカル AS %2$s</string>
     <string name="lb_peer_sessions_unknown">セッション状態は不明です。スピーカーのメトリクスを読み取れませんでした。</string>
     <string name="lb_peer_no_session">このピアとのセッションを報告しているスピーカーはありません。</string>
@@ -4940,6 +4943,7 @@
     <string name="checkup_lbPending_cause">%1$s間アドレスなし：%2$s</string>
     <string name="checkup_lbPoolUnadvertised">アドバタイズなし</string>
     <string name="checkup_lbPoolUnadvertised_fix">MetalLB はこのプールのアドレスを割り当てていますが、アナウンスしているものがありません。このプールを選択する L2Advertisement または BGPAdvertisement を追加してください。</string>
+    <string name="checkup_lbCiliumPoolUnannounced_fix">Cilium はこのプールのアドレスを割り当てていますが、その Service をアナウンスする CiliumL2AnnouncementPolicy がなく、BGP も無効です。それらを選択する loadBalancerIPs 付きのポリシーを追加してください。</string>
     <string name="checkup_lbConfigError">MetalLB が構成を拒否しました</string>
     <string name="checkup_lbConfigError_fix">メッセージに示された問題（プールの重複、不正なピア…）を修正してください。それまで MetalLB は最後の正常な構成を保持します。</string>
     <string name="checkup_lbBGPPeerDown">%1$s との BGP セッションがダウン</string>

@@ -165,7 +165,7 @@ extension CheckupFinding {
             return LoadBalancingText.checkupPendingCause(age, lbCauseText(cause))
         case .lbPoolExhausted: return CheckupText.checkupLbPoolExhausted("\(Int(f.value.rounded()))")
         case .lbPoolConflict: return CheckupText.checkupLbPoolConflict
-        case .lbPoolUnadvertised: return LoadBalancingText.checkupPoolUnadvertised
+        case .lbPoolUnadvertised, .lbCiliumPoolUnannounced: return LoadBalancingText.checkupPoolUnadvertised
         case .lbConfigError: return LoadBalancingText.checkupConfigError
         case .lbBGPPeerDown: return LoadBalancingText.checkupBGPPeerDown(f.extra.isEmpty ? f.name : f.extra)
         case .namespaceTerminating, .podTerminating, .pvcTerminating: return CheckupText.checkupTerminating(age)
@@ -276,6 +276,7 @@ extension CheckupFinding {
         case .lbPoolExhausted: return CheckupText.checkupLbPoolExhaustedFix
         case .lbPoolConflict: return CheckupText.checkupLbPoolConflictFix
         case .lbPoolUnadvertised: return LoadBalancingText.checkupPoolUnadvertisedFix
+        case .lbCiliumPoolUnannounced: return LoadBalancingText.checkupCiliumPoolUnannouncedFix
         case .lbConfigError: return LoadBalancingText.checkupConfigErrorFix
         case .lbBGPPeerDown: return LoadBalancingText.checkupBGPPeerDownFix
         case .namespaceTerminating: return CheckupText.checkupNamespaceTerminatingFix

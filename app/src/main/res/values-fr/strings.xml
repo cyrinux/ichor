@@ -5051,6 +5051,9 @@
     <string name="lb_adv_all_pools">Tous les pools</string>
     <string name="lb_adv_pools">Pools : %1$s</string>
     <string name="lb_adv_via">Via %1$s</string>
+    <string name="lb_adv_l2_disabled">N’annonce rien : les annonces L2 sont désactivées dans cilium-config (enable-l2-announcements).</string>
+    <string name="lb_adv_no_lb_ips">N’annonce aucune adresse LoadBalancer : loadBalancerIPs n’est pas activé.</string>
+    <string name="lb_adv_no_service">Aucun Service LoadBalancer ne lui correspond.</string>
     <string name="lb_peer_asn">AS %1$s, AS local %2$s</string>
     <string name="lb_peer_sessions_unknown">État des sessions inconnu : les métriques des speakers n’ont pas pu être lues.</string>
     <string name="lb_peer_no_session">Aucun speaker ne signale de session avec ce pair.</string>
@@ -5066,6 +5069,7 @@
     <string name="checkup_lbPending_cause">Aucune adresse depuis %1$s : %2$s</string>
     <string name="checkup_lbPoolUnadvertised">Non annoncé</string>
     <string name="checkup_lbPoolUnadvertised_fix">MetalLB distribue les adresses de ce pool mais rien ne les annonce : ajoutez une L2Advertisement ou une BGPAdvertisement qui le sélectionne.</string>
+    <string name="checkup_lbCiliumPoolUnannounced_fix">Cilium distribue les adresses de ce pool mais aucune CiliumL2AnnouncementPolicy n’annonce ses Services, et BGP est désactivé : ajoutez une politique avec loadBalancerIPs qui les sélectionne.</string>
     <string name="checkup_lbConfigError">MetalLB a refusé sa configuration</string>
     <string name="checkup_lbConfigError_fix">Corrigez ce que le message indique (pools qui se chevauchent, pair invalide…) : d’ici là, MetalLB garde sa dernière configuration valide.</string>
     <string name="checkup_lbBGPPeerDown">Session BGP coupée avec %1$s</string>

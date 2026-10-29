@@ -36,6 +36,8 @@ public enum CheckupKind: String, Sendable {
     case nodeRequestsHigh, nodePodsFull, noRoomToDrain, quotaNearLimit
     case nodeNotReady, nodePressure, nodeCordoned, nodeVersionSkew
     case lbPending, lbPoolExhausted, lbPoolConflict, lbPoolUnadvertised, lbConfigError, lbBGPPeerDown
+    /// A Cilium pool whose Services no CiliumL2AnnouncementPolicy announces, BGP being off.
+    case lbCiliumPoolUnannounced
     case namespaceTerminating, podTerminating, pvcTerminating
     /// A network test namespace the app could not delete (it was closed mid-run).
     case netperfLeftover

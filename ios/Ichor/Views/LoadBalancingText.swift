@@ -51,6 +51,11 @@ enum LoadBalancingText {
     static var advAllPools: String { String(localized: "Every pool") }
     static func advPools(_ a: String) -> String { String(localized: "Pools: \(a)") }
     static func advVia(_ a: String) -> String { String(localized: "Via \(a)") }
+    static var advL2Disabled: String {
+        String(localized: "Announces nothing: L2 announcements are off in cilium-config (enable-l2-announcements).")
+    }
+    static var advNoLBIPs: String { String(localized: "Announces no LoadBalancer address: loadBalancerIPs is not set.") }
+    static var advNoService: String { String(localized: "No LoadBalancer Service matches it.") }
     static func peerASN(_ a: String, _ b: String) -> String { String(localized: "AS \(a), local AS \(b)") }
     static var peerSessionsUnknown: String {
         String(localized: "Session state unknown: the speakers’ metrics could not be read.")
@@ -80,6 +85,12 @@ enum LoadBalancingText {
         String(
             localized:
                 "MetalLB hands out this pool’s addresses but nothing announces them: add an L2Advertisement or a BGPAdvertisement that selects it."
+        )
+    }
+    static var checkupCiliumPoolUnannouncedFix: String {
+        String(
+            localized:
+                "Cilium hands out this pool’s addresses but no CiliumL2AnnouncementPolicy announces its Services, and BGP is off: add a policy with loadBalancerIPs that selects them."
         )
     }
     static var checkupConfigError: String { String(localized: "MetalLB refused its configuration") }

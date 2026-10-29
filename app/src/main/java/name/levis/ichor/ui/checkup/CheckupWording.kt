@@ -132,7 +132,7 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
             ?: stringResource(R.string.checkup_lbPending, age)
         CheckupKind.LB_POOL_EXHAUSTED -> stringResource(R.string.checkup_lbPoolExhausted, f.value.roundToInt().toString())
         CheckupKind.LB_POOL_CONFLICT -> stringResource(R.string.checkup_lbPoolConflict)
-        CheckupKind.LB_POOL_UNADVERTISED -> stringResource(R.string.checkup_lbPoolUnadvertised)
+        CheckupKind.LB_POOL_UNADVERTISED, CheckupKind.LB_CILIUM_POOL_UNANNOUNCED -> stringResource(R.string.checkup_lbPoolUnadvertised)
         CheckupKind.LB_CONFIG_ERROR -> stringResource(R.string.checkup_lbConfigError)
         CheckupKind.LB_BGP_PEER_DOWN -> stringResource(R.string.checkup_lbBGPPeerDown, f.extra.ifEmpty { f.name })
         CheckupKind.NAMESPACE_TERMINATING, CheckupKind.POD_TERMINATING, CheckupKind.PVC_TERMINATING ->
@@ -225,6 +225,7 @@ fun checkupFix(kind: String, reason: String = "", extra: String = ""): Int = whe
     CheckupKind.LB_POOL_EXHAUSTED -> R.string.checkup_lbPoolExhausted_fix
     CheckupKind.LB_POOL_CONFLICT -> R.string.checkup_lbPoolConflict_fix
     CheckupKind.LB_POOL_UNADVERTISED -> R.string.checkup_lbPoolUnadvertised_fix
+    CheckupKind.LB_CILIUM_POOL_UNANNOUNCED -> R.string.checkup_lbCiliumPoolUnannounced_fix
     CheckupKind.LB_CONFIG_ERROR -> R.string.checkup_lbConfigError_fix
     CheckupKind.LB_BGP_PEER_DOWN -> R.string.checkup_lbBGPPeerDown_fix
     CheckupKind.NAMESPACE_TERMINATING -> R.string.checkup_namespaceTerminating_fix

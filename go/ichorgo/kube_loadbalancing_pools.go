@@ -171,16 +171,7 @@ func (p ciliumPoolObject) serves(svc lbServiceObject) bool {
 		return false
 	}
 
-	if p.Spec.ServiceSelector == nil {
-		return true
-	}
-
-	labels := labelSet{"io.kubernetes.service.namespace": svc.Metadata.Namespace, "io.kubernetes.service.name": svc.Metadata.Name}
-	for k, v := range svc.Metadata.Labels {
-		labels[k] = v
-	}
-
-	return p.Spec.ServiceSelector.matches(labels)
+	return p.Spec.ServiceSelector == nil || p.Spec.ServiceSelector.matches(ciliumServiceLabels(svc))
 }
 
 // lbPoolRows lists MetalLB's and Cilium's pools with what is left of them. waiting: some
@@ -225,7 +216,7 @@ func ciliumPoolRow(in lbInputs, p ciliumPoolObject, waiting bool) lbPool {
 	ranges := poolRanges(p.addresses())
 	row := lbPool{
 		Name: p.Metadata.Name, Controller: lbControllerCilium, Addresses: p.addresses(), Total: rangesSize(ranges),
-		AutoAssign: !p.Spec.Disabled, Namespaces: []string{}, AdvertisedBy: []string{},
+		AutoAssign: !p.Spec.Disabled, Namespaces: []string{}, AdvertisedBy: in.ciliumL2.advertisers(p, in.services),
 	}
 
 	row.Services, row.Assigned = servicesInPool(in.services, "", ranges)
@@ -235,7 +226,7 @@ func ciliumPoolRow(in lbInputs, p ciliumPoolObject, waiting bool) lbPool {
 		row.Total, row.Available, row.Assigned, row.CountsKnown = total, available, max(total-available, 0), true
 	}
 
-	row.Level = poolLevel(row.Available == 0, waiting, false)
+	row.Level = poolLevel(row.Available == 0, waiting, in.ciliumL2.unannounced(p, in.services))
 
 	return row
 }

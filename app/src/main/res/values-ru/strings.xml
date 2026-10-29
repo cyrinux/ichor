@@ -5291,6 +5291,9 @@
     <string name="lb_adv_all_pools">Все пулы</string>
     <string name="lb_adv_pools">Пулы: %1$s</string>
     <string name="lb_adv_via">Через %1$s</string>
+    <string name="lb_adv_l2_disabled">Ничего не анонсирует: L2-анонсы отключены в cilium-config (enable-l2-announcements).</string>
+    <string name="lb_adv_no_lb_ips">Не анонсирует адреса LoadBalancer: loadBalancerIPs не задан.</string>
+    <string name="lb_adv_no_service">Ни один Service LoadBalancer ей не соответствует.</string>
     <string name="lb_peer_asn">AS %1$s, локальная AS %2$s</string>
     <string name="lb_peer_sessions_unknown">Состояние сессий неизвестно: не удалось прочитать метрики speaker.</string>
     <string name="lb_peer_no_session">Ни один speaker не сообщает о сессии с этим пиром.</string>
@@ -5306,6 +5309,7 @@
     <string name="checkup_lbPending_cause">Нет адреса уже %1$s: %2$s</string>
     <string name="checkup_lbPoolUnadvertised">Не анонсируется</string>
     <string name="checkup_lbPoolUnadvertised_fix">MetalLB выдаёт адреса этого пула, но никто их не анонсирует: добавьте L2Advertisement или BGPAdvertisement, который его выбирает.</string>
+    <string name="checkup_lbCiliumPoolUnannounced_fix">Cilium выдаёт адреса этого пула, но ни одна CiliumL2AnnouncementPolicy не анонсирует его Service, а BGP выключен: добавьте политику с loadBalancerIPs, которая их выбирает.</string>
     <string name="checkup_lbConfigError">MetalLB отклонил свою конфигурацию</string>
     <string name="checkup_lbConfigError_fix">Исправьте то, что указано в сообщении (пересекающиеся пулы, неверный пир…): до тех пор MetalLB использует последнюю корректную конфигурацию.</string>
     <string name="checkup_lbBGPPeerDown">BGP-сессия с %1$s разорвана</string>
