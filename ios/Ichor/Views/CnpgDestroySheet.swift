@@ -43,7 +43,8 @@ struct CnpgDestroySheet: View {
         lines.append(pod.isEmpty ? String(localized: "No pod") : String(localized: "Pod: \(pod)"))
         lines += p.volumes.map { "\($0.name) · \(volumeWhere($0))" }
         if p.blockers.contains("primary") {
-            lines.append(String(localized: "The primary cannot be removed, nor any instance while no primary is known."))
+            lines.append(
+                String(localized: "The primary cannot be removed, nor any instance while no primary is known."))
         }
         if p.blockers.contains("noOtherData") {
             lines.append(

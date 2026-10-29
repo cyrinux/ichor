@@ -83,7 +83,8 @@ public struct CnpgCluster: Decodable, Equatable, Identifiable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, phase, phaseReason, health, hibernated, reasons, instances, readyInstances
-        case currentPrimary, targetPrimary, instancePods, failedInstances, missingInstances, archiving, lastBackup, backupMethod, objectStore, scheduled
+        case currentPrimary, targetPrimary, instancePods, failedInstances, missingInstances
+        case archiving, lastBackup, backupMethod, objectStore, scheduled
         case lastSuccessfulBackupAt, lastFailedBackupAt, firstRecoverabilityAt
     }
 }
