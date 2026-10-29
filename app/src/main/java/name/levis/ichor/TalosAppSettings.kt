@@ -2,6 +2,8 @@ package name.levis.ichor
 
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.util.StartupTrace
+import name.levis.ichor.util.ExitRecords
+import name.levis.ichor.data.Diagnostics
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.PrivacyMask
@@ -175,6 +177,23 @@ fun TalosApp.applyAuditEventClusters() {
 fun TalosApp.setStartupTrace(enabled: Boolean) {
     uiPreferences.setStartupTrace(enabled)
     StartupTrace.setEnabled(BuildConfig.DEBUG || enabled)
+}
+
+/** Keeps the diagnostics log on this phone across launches, or in memory only (its files deleted). */
+fun TalosApp.setDiagPersist(enabled: Boolean) {
+    uiPreferences.setDiagPersist(enabled)
+    ProcessLifecycleOwner.get().lifecycleScope.launch { Diagnostics.setPersist(enabled) }
+}
+
+/**
+ * At launch, after Ichorgo.setDataDir: the diagnostics log is kept or not as set, then the
+ * OS's exit records since the last launch are copied to it. On IO, never blocking the start.
+ */
+fun TalosApp.applyDiagnostics() {
+    ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
+        Diagnostics.setPersist(uiPreferences.diagPersist.value)
+        runCatching { ExitRecords.logNew(this@applyDiagnostics, uiPreferences) }
+    }
 }
 
 /**
