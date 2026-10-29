@@ -9,6 +9,11 @@ final class DemoSmokeTests: XCTestCase {
     private enum ID {
         static let node = "smoke-node"
         static let kernelLog = "smoke-node-kernel-log"
+        static let containers = "smoke-node-containers"
+        static let containerRow = "smoke-container-row"
+        static let actionsMore = "smoke-actions-more"
+        static let settings = "smoke-settings"
+        static let settingsScreen = "smoke-settings-screen"
         static let logLines = "smoke-log-lines"
         static let kubeHome = "smoke-kube-home"
     }
@@ -29,6 +34,30 @@ final class DemoSmokeTests: XCTestCase {
         scrollTo(ID.kernelLog, in: app).tap()
 
         waitFor(ID.logLines, in: app)
+    }
+
+    func testTheTalosDemoListsANodesContainersAndOpensALog() {
+        let app = launch("demo")
+
+        scrollTo(ID.node, in: app).tap()
+        scrollTo(ID.containers, in: app).tap()
+        // Wait on the rows, not on the list's loading state.
+        waitFor(ID.containerRow, in: app).tap()
+
+        waitFor(ID.logLines, in: app)
+    }
+
+    func testTheOverviewOpensSettings() {
+        let app = launch("demo")
+
+        // Settings is a toolbar icon or, by default, an item behind the ⋯ menu.
+        waitFor(ID.actionsMore, in: app)
+        if !element(ID.settings, in: app).exists {
+            element(ID.actionsMore, in: app).tap()
+        }
+        waitFor(ID.settings, in: app).tap()
+
+        waitFor(ID.settingsScreen, in: app)
     }
 
     func testTheKubernetesDemoOpensItsHome() {

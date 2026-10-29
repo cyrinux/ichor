@@ -15,13 +15,18 @@ import androidx.compose.ui.test.printToString
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import name.levis.ichor.ui.components.SMOKE_ACTIONS_MORE
+import name.levis.ichor.ui.components.SMOKE_CONTAINER_ROW
 import name.levis.ichor.ui.components.SMOKE_KUBE_HOME
 import name.levis.ichor.ui.components.SMOKE_LOG_LINES
 import name.levis.ichor.ui.components.SMOKE_NODE
 import name.levis.ichor.ui.components.SMOKE_NODE_SCREEN
+import name.levis.ichor.ui.components.SMOKE_SETTINGS
+import name.levis.ichor.ui.components.SMOKE_SETTINGS_SCREEN
 import name.levis.ichor.ui.components.SMOKE_TOUR_SKIP
 import name.levis.ichor.ui.components.smokeMenuTag
 import name.levis.ichor.ui.node.NodeMenuEntry
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,6 +42,15 @@ class DemoSmokeTest {
     @get:Rule
     val compose = createEmptyComposeRule()
 
+    /**
+     * The tour shows once per install and the app data outlives a test: every test starts as a
+     * fresh install does, with the tour pending, whatever ran before it.
+     */
+    @Before
+    fun theTourIsPending() {
+        ApplicationProvider.getApplicationContext<TalosApp>().uiPreferences.setTourPending(true)
+    }
+
     private fun open(link: String): ActivityScenario<MainActivity> =
         ActivityScenario.launch(
             Intent(Intent.ACTION_VIEW, Uri.parse(link)).setClass(ApplicationProvider.getApplicationContext(), MainActivity::class.java),
@@ -45,14 +59,8 @@ class DemoSmokeTest {
     @Test
     fun theTalosDemoOpensANodeAndItsKernelLog() {
         open("ichor://demo").use {
-            // A fresh install opens the demo tour over the overview: leave it first.
-            waitFor(hasTestTag(SMOKE_TOUR_SKIP))
-            compose.onNode(hasTestTag(SMOKE_TOUR_SKIP)).performClick()
-            compose.waitUntilDoesNotExist(hasTestTag(SMOKE_TOUR_SKIP), TIMEOUT)
-
-            // The overview is a lazy list: the nodes card may be below the fold.
-            scrollTo(hasTestTag(SMOKE_NODE))
-            compose.onAllNodes(hasTestTag(SMOKE_NODE))[0].performClick()
+            skipTour()
+            openFirstNode()
 
             // The node screen's own list, once it shows (not the overview's, still there before).
             val kernelLog = hasTestTag(smokeMenuTag(NodeMenuEntry.KERNEL_LOG))
@@ -64,10 +72,58 @@ class DemoSmokeTest {
     }
 
     @Test
+    fun theTalosDemoListsANodesContainersAndOpensALog() {
+        open("ichor://demo").use {
+            skipTour()
+            openFirstNode()
+
+            val containers = hasTestTag(smokeMenuTag(NodeMenuEntry.TAB_CONTAINERS))
+            scrollTo(containers, within = hasTestTag(SMOKE_NODE_SCREEN))
+            compose.onNode(containers).performClick()
+
+            // Wait on the rows, not on the tab's loading state.
+            waitFor(hasTestTag(SMOKE_CONTAINER_ROW))
+            compose.onAllNodes(hasTestTag(SMOKE_CONTAINER_ROW))[0].performClick()
+
+            waitFor(hasTestTag(SMOKE_LOG_LINES))
+        }
+    }
+
+    @Test
+    fun theOverviewOpensSettings() {
+        open("ichor://demo").use {
+            skipTour()
+
+            // Settings is an app-bar icon or, by default, an item behind the ⋮ menu.
+            if (compose.onAllNodes(hasTestTag(SMOKE_SETTINGS)).fetchSemanticsNodes().isEmpty()) {
+                waitFor(hasTestTag(SMOKE_ACTIONS_MORE))
+                compose.onAllNodes(hasTestTag(SMOKE_ACTIONS_MORE))[0].performClick()
+            }
+            waitFor(hasTestTag(SMOKE_SETTINGS))
+            compose.onAllNodes(hasTestTag(SMOKE_SETTINGS))[0].performClick()
+
+            waitFor(hasTestTag(SMOKE_SETTINGS_SCREEN))
+        }
+    }
+
+    @Test
     fun theKubernetesDemoOpensItsHome() {
         open("ichor://demo/kube").use {
             waitFor(hasTestTag(SMOKE_KUBE_HOME))
         }
+    }
+
+    /** A fresh install opens the demo tour over the overview: leave it first. */
+    private fun skipTour() {
+        waitFor(hasTestTag(SMOKE_TOUR_SKIP))
+        compose.onNode(hasTestTag(SMOKE_TOUR_SKIP)).performClick()
+        compose.waitUntilDoesNotExist(hasTestTag(SMOKE_TOUR_SKIP), TIMEOUT)
+    }
+
+    /** The overview is a lazy list: the nodes card may be below the fold. */
+    private fun openFirstNode() {
+        scrollTo(hasTestTag(SMOKE_NODE))
+        compose.onAllNodes(hasTestTag(SMOKE_NODE))[0].performClick()
     }
 
     /** Waits for [matcher]; on a timeout the failure carries the screen's semantics tree. */

@@ -322,6 +322,7 @@ struct OverviewView: View {
                     }
                 }
                 .disabled(!enabled(action))
+                .smokeID(action == .settings ? SmokeID.settings : nil)
                 .demoTourTip(
                     action == .settings ? .settings : .actions,
                     active: tourActive && (action == .settings || action == tourActionsAnchor))
@@ -339,6 +340,7 @@ struct OverviewView: View {
                         }
                     }
                     .disabled(!enabled(action))
+                    .smokeID(action == .settings ? SmokeID.settings : nil)
                 }
                 if !menu.isEmpty { Divider() }
                 ClusterSubmenu(path: $path, shareIncident: { sharingIncident = true })
@@ -351,6 +353,7 @@ struct OverviewView: View {
                 Image(systemName: "ellipsis.circle")
             }
             .accessibilityLabel(Text("More"))
+            .accessibilityIdentifier(SmokeID.actionsMore)
             // Settings sits in this menu unless it was made an icon.
             .demoTourTip(.settings, active: tourActive && !barIcons.contains(.settings))
         }

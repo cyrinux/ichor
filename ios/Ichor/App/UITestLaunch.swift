@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 
 /// The anchors the demo-mode smoke test (IchorUITests/DemoSmokeTests.swift) waits for and taps,
 /// the same names as Android's SmokeTags.kt. Accessibility identifiers are not shown or read out
@@ -9,12 +10,34 @@ enum SmokeID {
     static let node = "smoke-node"
     /// The node hub's "Kernel log" entry.
     static let kernelLog = "smoke-node-kernel-log"
+    /// The node hub's "Containers" entry.
+    static let containers = "smoke-node-containers"
+    /// A container row of a node's containers list (it opens the container's log).
+    static let containerRow = "smoke-container-row"
+    /// The overview's ⋯ menu, the actions that are not icons behind it.
+    static let actionsMore = "smoke-actions-more"
+    /// The overview's Settings action: its icon, or its item in the ⋯ menu.
+    static let settings = "smoke-settings"
+    /// The Settings screen's list of pages.
+    static let settingsScreen = "smoke-settings-screen"
     /// The lines of a logs screen.
     static let logLines = "smoke-log-lines"
     /// The Kubernetes home of a cluster added from a kubeconfig.
     static let kubeHome = "smoke-kube-home"
     /// Why the launch could not add the demo (UITestLaunch.failure), in the test's element tree.
     static let launchError = "smoke-launch-error"
+}
+
+extension View {
+    /// The smoke test's anchor when the element has one, nothing otherwise.
+    @ViewBuilder
+    func smokeID(_ id: String?) -> some View {
+        if let id {
+            accessibilityIdentifier(id)
+        } else {
+            self
+        }
+    }
 }
 
 /// The UI test's launch (`ICHOR_UI_TEST` in XCUIApplication.launchEnvironment): "demo" adds the

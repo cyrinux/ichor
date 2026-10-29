@@ -81,6 +81,7 @@ struct PodsView: View {
                         ) {
                             ContainerRowView(row: row)
                         }
+                        .accessibilityIdentifier(SmokeID.containerRow)
                         .contextMenu {
                             if model.allows(.containerRestart) && !restarting {
                                 FeatureButton(
