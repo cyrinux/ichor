@@ -509,8 +509,8 @@ struct TalosClient: Sendable {
     /// listing per node: called when a screen opens or refreshes, not on a poll.
     func inventory() async throws -> ClusterInventory {
         // The apps that run no container come from where the other Kubernetes calls go.
-        try await Self.json {
-            [config, context, kubeConfig = self.kubeConfig, kubeContext = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        let (kubeConfig, kubeContext, kubeServer) = (self.kubeConfig, self.kubeContext, self.kubeAPIServer)
+        return try await Self.json { [config, context] in
             IchorgoClusterInventory(config, context, kubeConfig, kubeContext, kubeServer, $0)
         }
     }

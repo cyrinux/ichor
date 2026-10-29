@@ -57,17 +57,19 @@ final class InventoryTests: XCTestCase {
     }
 
     func testIdleAppsDecodeTheirState() throws {
-        let idle = try TalosJSON.decode(ClusterInventory.self, from: #"""
-            {"apps":[
-              {"id":"paperless-ngx","name":"Paperless-ngx","category":"productivity","icon":"paperless-ngx","known":true,
-               "version":"3.3.4","containers":0,"running":0,"images":[],"pods":[],"state":"notStarting",
-               "reason":"volume is faulted",
-               "workloads":[{"kind":"Deployment","namespace":"docs","name":"paperless","desired":1,"reason":"volume is faulted"}]},
-              {"id":"paperless-ai","name":"Paperless Ai","icon":"paperless-ai","known":true,"containers":0,"running":0,"state":"stopped",
-               "workloads":[{"kind":"Deployment","namespace":"docs","name":"paperless-ai","desired":0}]},
-              {"id":"zz-running","name":"Zz Running","known":true,"containers":1,"running":1,"state":"future"}
-            ]}
-            """#)
+        let idle = try TalosJSON.decode(
+            ClusterInventory.self,
+            from: #"""
+                {"apps":[
+                  {"id":"paperless-ngx","name":"Paperless-ngx","category":"productivity","icon":"paperless-ngx","known":true,
+                   "version":"3.3.4","containers":0,"running":0,"images":[],"pods":[],"state":"notStarting",
+                   "reason":"volume is faulted",
+                   "workloads":[{"kind":"Deployment","namespace":"docs","name":"paperless","desired":1,"reason":"volume is faulted"}]},
+                  {"id":"paperless-ai","name":"Paperless Ai","icon":"paperless-ai","known":true,"containers":0,"running":0,"state":"stopped",
+                   "workloads":[{"kind":"Deployment","namespace":"docs","name":"paperless-ai","desired":0}]},
+                  {"id":"zz-running","name":"Zz Running","known":true,"containers":1,"running":1,"state":"future"}
+                ]}
+                """#)
         let notStarting = idle.apps[0]
         XCTAssertTrue(notStarting.isNotStarting)
         XCTAssertFalse(notStarting.isStopped)
@@ -75,7 +77,10 @@ final class InventoryTests: XCTestCase {
         XCTAssertEqual(notStarting.reason, "volume is faulted")
         XCTAssertEqual(
             notStarting.workloads,
-            [InventoryWorkload(kind: "Deployment", namespace: "docs", name: "paperless", desired: 1, reason: "volume is faulted")])
+            [
+                InventoryWorkload(
+                    kind: "Deployment", namespace: "docs", name: "paperless", desired: 1, reason: "volume is faulted")
+            ])
         XCTAssertTrue(idle.apps[1].isStopped)
         XCTAssertFalse(idle.apps[1].needsAttention)
         // A state this app does not know reads as running.
@@ -83,7 +88,8 @@ final class InventoryTests: XCTestCase {
         XCTAssertTrue(idle.apps[2].workloads.isEmpty)
         // The overview shows running apps before stopped ones, even with an icon.
         XCTAssertEqual(
-            overviewTiles(idle.apps, limit: 6, remoteIcons: false).shown.map(\.id), ["paperless-ngx", "zz-running", "paperless-ai"])
+            overviewTiles(idle.apps, limit: 6, remoteIcons: false).shown.map(\.id),
+            ["paperless-ngx", "zz-running", "paperless-ai"])
     }
 
     func testUnknownCategoryIsOther() throws {
