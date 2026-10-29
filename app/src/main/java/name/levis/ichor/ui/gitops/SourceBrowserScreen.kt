@@ -295,9 +295,9 @@ private fun NotBrowsable(src: GitSource) {
     }
 }
 
-/** The Staged changes sheet, then the pull request sheet for all the files (the source follows [tracked]). */
+/** The Staged changes sheet, then the pull request sheet for all the files (the source follows [tracked]); [onEdit] null: the files are not opened from the sheet. */
 @Composable
-private fun StagedSheets(staged: StagedChanges, tracked: String, onEdit: (String) -> Unit) {
+fun StagedSheets(staged: StagedChanges, tracked: String, onEdit: ((String) -> Unit)?) {
     val state by staged.state.collectAsStateWithLifecycle()
     val form = state.form
     when {
@@ -312,9 +312,11 @@ private fun StagedSheets(staged: StagedChanges, tracked: String, onEdit: (String
         )
         state.open -> StagedChangesSheet(
             state,
-            onEdit = { path ->
-                staged.close()
-                onEdit(path)
+            onEdit = onEdit?.let { open ->
+                { path: String ->
+                    staged.close()
+                    open(path)
+                }
             },
             onRemove = staged::remove,
             onPropose = staged::openForm,

@@ -9,9 +9,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import name.levis.ichor.model.ClusterUpdates
 import name.levis.ichor.model.UpdateEditTarget
+import name.levis.ichor.model.UpdateProposalPlan
 import name.levis.ichor.model.UpdateRow
 import name.levis.ichor.model.gitHostJsonLacksToken
 import name.levis.ichor.model.updateItemJson
+import name.levis.ichor.model.updateProposalItemsJson
 import name.levis.ichor.model.updateSections
 import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichorgo.Ichorgo
@@ -66,6 +68,17 @@ class UpdatesRepository(
         val (host, _) = repoArgs()
         val item = updateItemJson(row, version)
         return go.kube { cfg, ctx, server -> TalosJson.decodeFromString(UpdateEditTarget.serializer(), Ichorgo.updateEditTarget(cfg, ctx, server, host, item)) }
+    }
+
+    /**
+     * One pull request for the [selection] (rows and the versions picked, `UpdateProposalPlan`):
+     * each file read at the request's branch with every edit applied, the title, the body's
+     * table, and the rows left out with why. Read only.
+     */
+    suspend fun proposalPlan(selection: List<Pair<UpdateRow, String>>): UpdateProposalPlan {
+        val (host, _) = repoArgs()
+        val items = updateProposalItemsJson(selection)
+        return go.kube { cfg, ctx, server -> TalosJson.decodeFromString(UpdateProposalPlan.serializer(), Ichorgo.updateProposalPlan(cfg, ctx, server, host, items)) }
     }
 
     /** The saved cluster repository's host (with its token) and ClusterUpdates' options naming it; blank without them. */

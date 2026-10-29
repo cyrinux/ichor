@@ -6111,4 +6111,14 @@
     <string name="updates_lookups_failed">Невдалих запитів: %1$d з %2$d</string>
     <string name="updates_skipped">Пропущено: %1$s (%2$s)</string>
     <string name="updates_asking_count">Запит до реєстрів (образи й чарти: %1$d)…</string>
+    <string name="updates_select">Вибрати</string>
+    <string name="updates_select_cancel">Скасувати вибір</string>
+    <string name="updates_select_hint">Позначте оновлення для одного pull request</string>
+    <string name="updates_planning">Читання файлів…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="one">Запропонувати %1$d оновлення</item>
+        <item quantity="few">Запропонувати %1$d оновлення</item>
+        <item quantity="many">Запропонувати %1$d оновлень</item>
+        <item quantity="other">Запропонувати %1$d оновлення</item>
+    </plurals>
 </resources>

@@ -5869,4 +5869,12 @@
     <string name="updates_lookups_failed">Lookups failed: %1$d of %2$d</string>
     <string name="updates_skipped">Skipped: %1$s (%2$s)</string>
     <string name="updates_asking_count">Asking the registries (images and charts: %1$d)…</string>
+    <string name="updates_select">Select</string>
+    <string name="updates_select_cancel">Cancel selection</string>
+    <string name="updates_select_hint">Tick the updates to propose in one pull request</string>
+    <string name="updates_planning">Reading the files…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="one">Propose %1$d update</item>
+        <item quantity="other">Propose %1$d updates</item>
+    </plurals>
 </resources>

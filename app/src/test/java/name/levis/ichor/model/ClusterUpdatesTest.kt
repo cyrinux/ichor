@@ -1,6 +1,7 @@
 package name.levis.ichor.model
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import name.levis.ichor.data.TalosJson
@@ -121,5 +122,44 @@ class ClusterUpdatesTest {
         val plain = QuickEdit.image(0, "api", "ghcr.io/example-org/api:2.1.0", "Deployment", "api")
         assertEquals(choices.indexOfFirst { it.container == "api" }, quickPrefillIndex(choices, plain))
         assertEquals("2.1.0", quickPrefillTag(plain))
+    }
+
+    @Test
+    fun aRowIsSelectedWithItsSmallestStepUnlessSomethingElseBumpsIt() {
+        val s = updateSections(updates)
+        assertEquals("6.7.1", defaultSelection(s.images[0]))
+        assertEquals("4.12.4", defaultSelection(s.charts[0]))
+        assertNull(defaultSelection(s.images[1]))
+    }
+
+    @Test
+    fun theSelectionIsSentAsItemsWithTheirVersions() {
+        val s = updateSections(updates)
+        val items = Json.parseToJsonElement(updateProposalItemsJson(listOf(s.images[0] to "6.9.2", s.charts[0] to "4.12.4"))) as JsonArray
+        assertEquals(2, items.size)
+        assertEquals("6.9.2", items[0].jsonObject["version"]?.jsonPrimitive?.content)
+        assertEquals("ghcr.io/stefanprodan/podinfo", items[0].jsonObject["repo"]?.jsonPrimitive?.content)
+        // A chart's own "version" (the running one) gives way to the one picked.
+        assertEquals("4.12.4", items[1].jsonObject["version"]?.jsonPrimitive?.content)
+        assertEquals("[]", updateProposalItemsJson(emptyList()))
+    }
+
+    @Test
+    fun thePlanDecodes() {
+        val plan = TalosJson.decodeFromString(
+            UpdateProposalPlan.serializer(),
+            """
+            {"source":{"repoURL":"ssh://git@git.example.test/example-org/fleet.git","tracked":"main","path":"apps"},"baseRef":"main",
+             "files":[{"path":"apps/podinfo/deployment.yaml","content":"b","original":"a","fileSha":"5ha",
+               "changes":[{"item":"ghcr.io/stefanprodan/podinfo","index":0,"line":17,"before":"image: x:1","after":"image: x:2"}]}],
+             "title":"Update 2 dependencies","message":"Update 2 dependencies","branch":"ichor/update-2-dependencies-0001","body":"| Name |",
+             "skipped":[{"item":"registry.example.test/coredns","index":1,"reason":"rendered by a chart"}]}
+            """.trimIndent(),
+        )
+        assertEquals("main", plan.baseRef)
+        assertEquals("a", plan.files[0].original)
+        assertEquals(17, plan.files[0].changes[0].line)
+        assertEquals(1, plan.skipped[0].index)
+        assertEquals("ssh://git@git.example.test/example-org/fleet.git", plan.source?.repoURL)
     }
 }

@@ -5864,4 +5864,12 @@
     <string name="updates_lookups_failed">Consultas fallidas: %1$d de %2$d</string>
     <string name="updates_skipped">Omitido: %1$s (%2$s)</string>
     <string name="updates_asking_count">Consultando los registros (imágenes y charts: %1$d)…</string>
+    <string name="updates_select">Seleccionar</string>
+    <string name="updates_select_cancel">Cancelar la selección</string>
+    <string name="updates_select_hint">Marca las actualizaciones que se propondrán en un solo pull request</string>
+    <string name="updates_planning">Leyendo los archivos…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="one">Proponer %1$d actualización</item>
+        <item quantity="other">Proponer %1$d actualizaciones</item>
+    </plurals>
 </resources>

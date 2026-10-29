@@ -6115,4 +6115,14 @@
     <string name="updates_lookups_failed">Неудачных запросов: %1$d из %2$d</string>
     <string name="updates_skipped">Пропущено: %1$s (%2$s)</string>
     <string name="updates_asking_count">Опрос реестров (образы и чарты: %1$d)…</string>
+    <string name="updates_select">Выбрать</string>
+    <string name="updates_select_cancel">Отменить выбор</string>
+    <string name="updates_select_hint">Отметьте обновления для одного pull request</string>
+    <string name="updates_planning">Чтение файлов…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="one">Предложить %1$d обновление</item>
+        <item quantity="few">Предложить %1$d обновления</item>
+        <item quantity="many">Предложить %1$d обновлений</item>
+        <item quantity="other">Предложить %1$d обновления</item>
+    </plurals>
 </resources>
