@@ -1,0 +1,186 @@
+{
+  "clusters": [
+    {
+      "key": "demo-lab",
+      "name": "lab",
+      "context": "lab",
+      "kube": false,
+      "tags": [],
+      "takenAt": 1799992800000,
+      "failures": 0,
+      "nodes": {
+        "10.0.0.31": {
+          "hostname": "lab-1",
+          "health": "READY"
+        }
+      },
+      "etcdChecked": true,
+      "etcdAlarms": [],
+      "amChecked": false,
+      "amIssues": null,
+      "checkupChecked": false,
+      "checkupIssues": null,
+      "dataChecked": false,
+      "dataIssues": null,
+      "gitopsChecked": false,
+      "gitopsIssues": null,
+      "storageChecked": false,
+      "storageIssues": null,
+      "sensorChecked": false,
+      "sensorIssues": null,
+      "pluginChecked": false,
+      "pluginIssues": null
+    },
+    {
+      "key": "demo-prod-eu",
+      "name": "prod-eu",
+      "context": "prod-eu",
+      "kube": false,
+      "tags": [
+        "prod",
+        "eu"
+      ],
+      "takenAt": 1799999760000,
+      "failures": 0,
+      "nodes": {
+        "10.0.0.11": {
+          "hostname": "prod-eu-cp-1",
+          "health": "READY"
+        },
+        "10.0.0.12": {
+          "hostname": "prod-eu-cp-2",
+          "health": "READY"
+        },
+        "10.0.0.13": {
+          "hostname": "prod-eu-worker-1",
+          "health": "UNREACHABLE"
+        }
+      },
+      "etcdChecked": true,
+      "etcdAlarms": [],
+      "amChecked": true,
+      "amIssues": {
+        "4f2a9c01": "critical|KubeNodeNotReady|prod-eu-worker-1"
+      },
+      "checkupChecked": false,
+      "checkupIssues": null,
+      "dataChecked": false,
+      "dataIssues": null,
+      "gitopsChecked": false,
+      "gitopsIssues": null,
+      "storageChecked": false,
+      "storageIssues": null,
+      "sensorChecked": false,
+      "sensorIssues": null,
+      "pluginChecked": false,
+      "pluginIssues": null
+    },
+    {
+      "key": "demo-staging",
+      "name": "staging",
+      "context": "staging",
+      "kube": false,
+      "tags": [
+        "staging"
+      ],
+      "takenAt": 1799999640000,
+      "failures": 0,
+      "nodes": {
+        "10.0.1.11": {
+          "hostname": "staging-cp-1",
+          "health": "READY"
+        },
+        "10.0.1.12": {
+          "hostname": "staging-worker-1",
+          "health": "READY"
+        }
+      },
+      "etcdChecked": true,
+      "etcdAlarms": [],
+      "amChecked": true,
+      "amIssues": {
+        "7c31e8d2": "warning|KubePodCrashLooping|shop/checkout"
+      },
+      "checkupChecked": false,
+      "checkupIssues": null,
+      "dataChecked": false,
+      "dataIssues": null,
+      "gitopsChecked": true,
+      "gitopsIssues": {},
+      "storageChecked": false,
+      "storageIssues": null,
+      "sensorChecked": false,
+      "sensorIssues": null,
+      "pluginChecked": false,
+      "pluginIssues": null
+    },
+    {
+      "key": "demo-edge",
+      "name": "edge",
+      "context": "edge",
+      "kube": false,
+      "tags": [
+        "prod"
+      ],
+      "takenAt": 1799999820000,
+      "failures": 0,
+      "nodes": {
+        "10.0.2.11": {
+          "hostname": "edge-1",
+          "health": "READY"
+        }
+      },
+      "etcdChecked": true,
+      "etcdAlarms": [],
+      "amChecked": false,
+      "amIssues": null,
+      "checkupChecked": false,
+      "checkupIssues": null,
+      "dataChecked": false,
+      "dataIssues": null,
+      "gitopsChecked": false,
+      "gitopsIssues": null,
+      "storageChecked": true,
+      "storageIssues": {},
+      "sensorChecked": false,
+      "sensorIssues": null,
+      "pluginChecked": false,
+      "pluginIssues": null
+    },
+    {
+      "key": "demo-dev",
+      "name": "dev",
+      "context": "dev",
+      "kube": true,
+      "tags": [],
+      "takenAt": 1799999700000,
+      "failures": 0,
+      "nodes": {
+        "dev-node-1": {
+          "hostname": "dev-node-1",
+          "health": "READY"
+        },
+        "dev-node-2": {
+          "hostname": "dev-node-2",
+          "health": "READY"
+        }
+      },
+      "etcdChecked": false,
+      "etcdAlarms": null,
+      "amChecked": false,
+      "amIssues": null,
+      "checkupChecked": false,
+      "checkupIssues": null,
+      "dataChecked": false,
+      "dataIssues": null,
+      "gitopsChecked": false,
+      "gitopsIssues": null,
+      "storageChecked": false,
+      "storageIssues": null,
+      "sensorChecked": false,
+      "sensorIssues": null,
+      "pluginChecked": false,
+      "pluginIssues": null
+    }
+  ]
+}
