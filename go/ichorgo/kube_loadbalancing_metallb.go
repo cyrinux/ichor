@@ -224,7 +224,7 @@ func lbAdvertisementRows(m *metallbState) []lbAdvertisement {
 
 	for _, a := range m.advertisements {
 		out = append(out, lbAdvertisement{
-			Name: a.Metadata.Name, Kind: a.Kind, Pools: nonNil(a.Spec.IPAddressPools), AllPools: a.allPools(),
+			Name: a.Metadata.Name, Controller: lbControllerMetalLB, Kind: a.Kind, Pools: nonNil(a.Spec.IPAddressPools), AllPools: a.allPools(),
 			NodeSelectors: len(a.Spec.NodeSelectors), Interfaces: nonNil(a.Spec.Interfaces), Peers: nonNil(a.Spec.Peers),
 			Communities: nonNil(a.Spec.Communities), LocalPref: a.Spec.LocalPref, AggregationLength: a.Spec.AggregationLength,
 		})

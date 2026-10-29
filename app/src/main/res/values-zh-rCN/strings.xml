@@ -4925,6 +4925,9 @@
     <string name="lb_adv_all_pools">所有地址池</string>
     <string name="lb_adv_pools">地址池：%1$s</string>
     <string name="lb_adv_via">通过 %1$s</string>
+    <string name="lb_adv_l2_disabled">不通告任何内容：cilium-config 中关闭了 L2 通告（enable-l2-announcements）。</string>
+    <string name="lb_adv_no_lb_ips">不通告任何 LoadBalancer 地址：未设置 loadBalancerIPs。</string>
+    <string name="lb_adv_no_service">没有匹配的 LoadBalancer Service。</string>
     <string name="lb_peer_asn">AS %1$s，本地 AS %2$s</string>
     <string name="lb_peer_sessions_unknown">会话状态未知：无法读取 speaker 的指标。</string>
     <string name="lb_peer_no_session">没有 speaker 报告与此对等体的会话。</string>
@@ -4940,6 +4943,7 @@
     <string name="checkup_lbPending_cause">已 %1$s 没有地址：%2$s</string>
     <string name="checkup_lbPoolUnadvertised">未通告</string>
     <string name="checkup_lbPoolUnadvertised_fix">MetalLB 分配了此地址池的地址，但没有任何对象通告它们：添加一个选择该地址池的 L2Advertisement 或 BGPAdvertisement。</string>
+    <string name="checkup_lbCiliumPoolUnannounced_fix">Cilium 分配此池的地址，但没有 CiliumL2AnnouncementPolicy 通告其 Service，且 BGP 已关闭：请添加一个带 loadBalancerIPs 并选中它们的策略。</string>
     <string name="checkup_lbConfigError">MetalLB 拒绝了其配置</string>
     <string name="checkup_lbConfigError_fix">修复消息中指出的问题（地址池重叠、对等体无效…）：在此之前 MetalLB 会保留其上一个有效配置。</string>
     <string name="checkup_lbBGPPeerDown">与 %1$s 的 BGP 会话已断开</string>

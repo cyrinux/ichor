@@ -34,6 +34,8 @@ func lbServiceRows(in lbInputs, now time.Time) []lbService {
 
 		if a, ok := announcers[s.Metadata.Namespace+"/"+s.Metadata.Name]; ok {
 			row.AnnouncedBy, row.Interfaces, row.Peers = a.node, a.interfaces, a.peers
+		} else if len(s.Status.LoadBalancer.Ingress) > 0 {
+			row.AnnouncedBy = in.ciliumL2.holderOf(s)
 		}
 
 		if row.Pending = len(row.Addresses) == 0 && s.Metadata.DeletionTimestamp == nil; row.Pending {

@@ -1,6 +1,242 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Announces nothing: L2 announcements are off in cilium-config (enable-l2-announcements)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N’annonce rien : les annonces L2 sont désactivées dans cilium-config (enable-l2-announcements)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No anuncia nada: los anuncios L2 están desactivados en cilium-config (enable-l2-announcements)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kündigt nichts an: L2-Ankündigungen sind in cilium-config deaktiviert (enable-l2-announcements)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non annuncia nulla: gli annunci L2 sono disattivati in cilium-config (enable-l2-announcements)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "何もアナウンスしません。cilium-config で L2 アナウンスが無効です (enable-l2-announcements)。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não anuncia nada: os anúncios L2 estão desativados no cilium-config (enable-l2-announcements)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ничего не анонсирует: L2-анонсы отключены в cilium-config (enable-l2-announcements)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не анонсує: L2-анонси вимкнено в cilium-config (enable-l2-announcements)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不通告任何内容：cilium-config 中关闭了 L2 通告（enable-l2-announcements）。"
+          }
+        }
+      }
+    },
+    "Announces no LoadBalancer address: loadBalancerIPs is not set." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N’annonce aucune adresse LoadBalancer : loadBalancerIPs n’est pas activé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No anuncia ninguna dirección LoadBalancer: loadBalancerIPs no está activado."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kündigt keine LoadBalancer-Adresse an: loadBalancerIPs ist nicht gesetzt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non annuncia alcun indirizzo LoadBalancer: loadBalancerIPs non è impostato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LoadBalancer アドレスをアナウンスしません。loadBalancerIPs が設定されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não anuncia nenhum endereço LoadBalancer: loadBalancerIPs não está definido."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не анонсирует адреса LoadBalancer: loadBalancerIPs не задан."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не анонсує адрес LoadBalancer: loadBalancerIPs не задано."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不通告任何 LoadBalancer 地址：未设置 loadBalancerIPs。"
+          }
+        }
+      }
+    },
+    "No LoadBalancer Service matches it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun Service LoadBalancer ne lui correspond."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún Service LoadBalancer coincide con ella."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein LoadBalancer-Service passt dazu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun Service LoadBalancer corrisponde."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一致する LoadBalancer Service がありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum Service LoadBalancer corresponde a ela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ни один Service LoadBalancer ей не соответствует."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден Service LoadBalancer їй не відповідає."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有匹配的 LoadBalancer Service。"
+          }
+        }
+      }
+    },
+    "Cilium hands out this pool’s addresses but no CiliumL2AnnouncementPolicy announces its Services, and BGP is off: add a policy with loadBalancerIPs that selects them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium distribue les adresses de ce pool mais aucune CiliumL2AnnouncementPolicy n’annonce ses Services, et BGP est désactivé : ajoutez une politique avec loadBalancerIPs qui les sélectionne."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium reparte las direcciones de este pool pero ninguna CiliumL2AnnouncementPolicy anuncia sus Services, y BGP está desactivado: añade una política con loadBalancerIPs que los seleccione."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium vergibt die Adressen dieses Pools, aber keine CiliumL2AnnouncementPolicy kündigt seine Services an, und BGP ist aus: Fügen Sie eine Policy mit loadBalancerIPs hinzu, die sie auswählt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium assegna gli indirizzi di questo pool ma nessuna CiliumL2AnnouncementPolicy annuncia i suoi Service, e BGP è disattivato: aggiungi una policy con loadBalancerIPs che li selezioni."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium はこのプールのアドレスを割り当てていますが、その Service をアナウンスする CiliumL2AnnouncementPolicy がなく、BGP も無効です。それらを選択する loadBalancerIPs 付きのポリシーを追加してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Cilium distribui os endereços deste pool, mas nenhuma CiliumL2AnnouncementPolicy anuncia seus Services, e o BGP está desativado: adicione uma política com loadBalancerIPs que os selecione."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium выдаёт адреса этого пула, но ни одна CiliumL2AnnouncementPolicy не анонсирует его Service, а BGP выключен: добавьте политику с loadBalancerIPs, которая их выбирает."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium видає адреси цього пулу, але жодна CiliumL2AnnouncementPolicy не анонсує його Service, а BGP вимкнено: додайте політику з loadBalancerIPs, яка їх вибирає."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium 分配此池的地址，但没有 CiliumL2AnnouncementPolicy 通告其 Service，且 BGP 已关闭：请添加一个带 loadBalancerIPs 并选中它们的策略。"
+          }
+        }
+      }
+    },
     "All clusters" : {
       "extractionState" : "manual",
       "localizations" : {

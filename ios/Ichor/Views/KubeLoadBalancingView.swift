@@ -170,20 +170,36 @@ private struct AdvertisementRow: View {
             HStack {
                 Text(verbatim: ad.name).font(.callout.monospaced())
                 Spacer()
-                Text(verbatim: ad.kind == "bgp" ? "BGP" : "L2").font(.caption)
+                let kind = ad.kind == "bgp" ? "BGP" : "L2"
+                Text(verbatim: ad.controller == "cilium" ? "Cilium \(kind)" : kind).font(.caption)
             }
-            Text(
-                verbatim: ad.allPools
-                    ? LoadBalancingText.advAllPools : LoadBalancingText.advPools(ad.pools.joined(separator: ", "))
-            )
-            .font(.caption).foregroundStyle(.secondary)
+            if ad.allPools || !ad.pools.isEmpty {
+                Text(
+                    verbatim: ad.allPools
+                        ? LoadBalancingText.advAllPools : LoadBalancingText.advPools(ad.pools.joined(separator: ", "))
+                )
+                .font(.caption).foregroundStyle(.secondary)
+            }
             let via = ad.interfaces.isEmpty ? ad.peers : ad.interfaces
             if !via.isEmpty {
                 Text(verbatim: LoadBalancingText.advVia(via.joined(separator: ", "))).font(.caption).foregroundStyle(
                     .secondary)
             }
+            if let reason = inactiveText {
+                Text(verbatim: reason).font(.caption).foregroundStyle(.red)
+            }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// Why a Cilium L2 policy announces nothing, nil when it works.
+    private var inactiveText: String? {
+        switch ad.inactive {
+        case "l2Disabled": LoadBalancingText.advL2Disabled
+        case "noLoadBalancerIPs": LoadBalancingText.advNoLBIPs
+        case "noService": LoadBalancingText.advNoService
+        default: nil
+        }
     }
 }
 

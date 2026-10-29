@@ -50,6 +50,10 @@ data class LbPool(
 @Serializable
 data class LbAdvertisement(
     val name: String = "",
+    /** metallb, or cilium for a CiliumL2AnnouncementPolicy. */
+    val controller: String = "",
+    /** Why a Cilium policy announces nothing: l2Disabled, noLoadBalancerIPs, noService; empty when it works. */
+    val inactive: String = "",
     /** l2 or bgp. */
     val kind: String = "",
     val pools: List<String> = emptyList(),

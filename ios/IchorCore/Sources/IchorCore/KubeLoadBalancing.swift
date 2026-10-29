@@ -85,23 +85,31 @@ public struct LBPool: Decodable, Hashable, Identifiable, Sendable {
     }
 }
 
-/// A MetalLB L2Advertisement (`kind` "l2") or BGPAdvertisement ("bgp"); `allPools` when it
-/// names none.
+/// A MetalLB L2Advertisement (`kind` "l2") or BGPAdvertisement ("bgp"), or a
+/// CiliumL2AnnouncementPolicy (`controller` "cilium"); `allPools` when it names none.
+/// `inactive`: why a Cilium policy announces nothing (l2Disabled, noLoadBalancerIPs,
+/// noService), empty when it works.
 public struct LBAdvertisement: Decodable, Hashable, Identifiable, Sendable {
     public let name: String
+    public let controller: String
+    public let inactive: String
     public let kind: String
     public let pools: [String]
     public let allPools: Bool
     public let interfaces: [String]
     public let peers: [String]
 
-    public var id: String { "\(kind)/\(name)" }
+    public var id: String { "\(controller)/\(kind)/\(name)" }
 
-    private enum CodingKeys: String, CodingKey { case name, kind, pools, allPools, interfaces, peers }
+    private enum CodingKeys: String, CodingKey {
+        case name, controller, inactive, kind, pools, allPools, interfaces, peers
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.field(.name, "")
+        controller = try c.field(.controller, "")
+        inactive = try c.field(.inactive, "")
         kind = try c.field(.kind, "")
         pools = try c.field(.pools, [])
         allPools = try c.field(.allPools, false)
