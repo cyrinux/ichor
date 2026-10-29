@@ -52,7 +52,31 @@ data class InventoryApp(
     val memory: Long = 0,
     val images: List<InventoryImage> = emptyList(),
     val pods: List<InventoryPod> = emptyList(),
+    /** "" with a running container, else [APP_STOPPED] or [APP_NOT_STARTING], from [workloads]. */
+    val state: String = "",
+    /** Why its pods do not start (the kubelet's or a warning event's words); "" when not known. */
+    val reason: String = "",
+    /** Its Deployments and StatefulSets without a ready pod. */
+    val workloads: List<InventoryWorkload> = emptyList(),
 )
+
+@Serializable
+data class InventoryWorkload(
+    val kind: String = "",
+    val namespace: String = "",
+    val name: String = "",
+    val desired: Int = 0,
+    val reason: String = "",
+)
+
+const val APP_STOPPED = "stopped"
+const val APP_NOT_STARTING = "notStarting"
+
+/** Scaled to zero on purpose: shown greyed out. */
+val InventoryApp.stopped: Boolean get() = state == APP_STOPPED
+
+/** Wants pods none of which is ready: a volume that does not attach, an image that does not pull. */
+val InventoryApp.notStarting: Boolean get() = state == APP_NOT_STARTING
 
 @Serializable
 data class InventoryImage(
@@ -90,8 +114,8 @@ val APP_CATEGORIES = listOf(
     "devops", "media", "home", "productivity", "ai", "web", OTHER_CATEGORY,
 )
 
-/** Worth a look: several versions of one image, or an image that is not pinned. */
-val InventoryApp.attention: Boolean get() = drift || unpinned
+/** Worth a look: several versions of one image, an image that is not pinned, or pods that do not start. */
+val InventoryApp.attention: Boolean get() = drift || unpinned || notStarting
 
 val List<InventoryApp>.attentionCount: Int get() = count { it.attention }
 
@@ -160,9 +184,9 @@ fun List<InventoryApp>.categoryCounts(): List<Pair<String, Int>> {
     return APP_CATEGORIES.mapNotNull { id -> counts[id]?.let { id to it } }
 }
 
-/** Up to [max] non-system apps for the overview card, those with a bundled icon first. */
+/** Up to [max] non-system apps for the overview card: running ones first, then those with a bundled icon. */
 fun List<InventoryApp>.overviewTiles(max: Int = 6): List<InventoryApp> =
-    filter { !it.system }.sortedBy { it.icon.isEmpty() }.take(max)
+    filter { !it.system }.sortedWith(compareBy({ it.stopped }, { it.icon.isEmpty() })).take(max)
 
 /** Up to two initials: of the first two words, else the first two letters. "?" when there are none. */
 fun monogram(name: String): String {

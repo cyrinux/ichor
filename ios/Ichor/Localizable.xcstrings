@@ -1,6 +1,20 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Not starting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Startet nicht" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No arranca" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ne démarre pas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non si avvia" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "起動できません" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não inicia" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не запускается" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не запускається" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法启动" } }
+      }
+    },
     "Tick the updates to propose in one pull request" : {
       "extractionState" : "manual",
       "localizations" : {

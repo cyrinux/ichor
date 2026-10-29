@@ -2003,6 +2003,7 @@
     <string name="apps_section_system">Kubernetes &amp; Talos</string>
     <string name="apps_section_unknown">Not recognised</string>
     <string name="apps_unpinned">Unpinned image</string>
+    <string name="apps_not_starting">Not starting</string>
     <string name="apps_stat_containers">Containers</string>
     <string name="apps_stat_nodes">Nodes</string>
     <string name="apps_stat_memory">Memory</string>

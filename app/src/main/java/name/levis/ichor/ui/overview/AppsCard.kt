@@ -31,7 +31,9 @@ import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.argocd.ArgoTileBadge
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.attentionCount
+import name.levis.ichor.model.notStarting
 import name.levis.ichor.model.overviewTiles
+import name.levis.ichor.model.stopped
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.apps.AppIconPlaceholder
 import name.levis.ichor.ui.apps.AppIconTile
@@ -60,7 +62,7 @@ fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<Stri
         is UiState.Loaded -> {
             val apps = state.data.apps
             if (apps.isEmpty()) return
-            val running = apps.count { !it.system }
+            val running = apps.count { !it.system && !it.stopped && !it.notStarting }
             val containers = apps.sumOf { it.containers }
             val subtitle = listOf(
                 pluralStringResource(R.plurals.apps_running, running, running),

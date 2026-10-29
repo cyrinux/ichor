@@ -353,6 +353,14 @@ func TestDemoInventory(t *testing.T) {
 		t.Errorf("the demo shows version drift on cilium: %+v", cilium)
 	}
 
+	if a := appByID(t, inv, "mealie"); a.State != appNotStarting || a.Reason != demoNotStartingReason || a.Version != "v3.3.2" {
+		t.Errorf("the demo shows an app not starting: %+v", a)
+	}
+
+	if a := appByID(t, inv, "stirling-pdf"); a.State != appStopped || len(a.Workloads) != 1 {
+		t.Errorf("the demo shows a stopped app: %+v", a)
+	}
+
 	if _, err := json.Marshal(inv); err != nil {
 		t.Fatal(err)
 	}

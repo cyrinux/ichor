@@ -508,7 +508,11 @@ struct TalosClient: Sendable {
     /// The apps running in the cluster, from every node's containers (os:reader). One container
     /// listing per node: called when a screen opens or refreshes, not on a poll.
     func inventory() async throws -> ClusterInventory {
-        try await Self.json { [config, context] in IchorgoClusterInventory(config, context, $0) }
+        // The apps that run no container come from where the other Kubernetes calls go.
+        try await Self.json {
+            [config, context, kubeConfig = self.kubeConfig, kubeContext = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoClusterInventory(config, context, kubeConfig, kubeContext, kubeServer, $0)
+        }
     }
 
     func etcd() async throws -> EtcdOverview {

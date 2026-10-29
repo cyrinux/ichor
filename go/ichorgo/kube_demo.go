@@ -16,8 +16,17 @@ func demoKubeWorkloads() []kubeWorkload {
 		{Kind: "Deployment", Namespace: "kube-system", Name: "coredns", Desired: 2, Ready: 2, Updated: 2, Available: 2, State: workloadReady, Created: created, Images: []string{"registry.k8s.io/coredns/coredns:v1.12.0"}},
 		{Kind: "DaemonSet", Namespace: "kube-system", Name: "kube-proxy", Desired: 5, Ready: 5, Updated: 5, Available: 5, State: workloadReady, Created: created, Images: []string{"registry.k8s.io/kube-proxy:v1.34.0"}},
 		{Kind: "DaemonSet", Namespace: "kube-system", Name: "flannel", Desired: 5, Ready: 5, Updated: 5, Available: 5, State: workloadReady, Created: created, Images: []string{"ghcr.io/flannel-io/flannel:v0.27.0"}},
+		// The inventory's idle apps: one that cannot be scheduled, one scaled to zero.
+		{Kind: "Deployment", Namespace: "home", Name: "mealie", Desired: 1, Updated: 1, State: workloadDegraded, Created: created, Images: []string{demoNotStartingImage}},
+		{Kind: "Deployment", Namespace: "tools", Name: "stirling-pdf", State: workloadScaledDown, Created: created, Images: []string{"docker.io/stirlingtools/stirling-pdf:1.4.0"}},
 	}
 }
+
+// The demo's app whose pod finds no node, and the scheduler's words for it.
+const (
+	demoNotStartingImage  = "ghcr.io/mealie-recipes/mealie:v3.3.2"
+	demoNotStartingReason = "0/5 nodes are available: 5 node(s) didn't match Pod's node affinity/selector. preemption: 0/5 nodes are available: 5 Preemption is not helpful for scheduling."
+)
 
 // demoPods are the Kubernetes pods of the built-in demo cluster.
 // The demo's pod that Docker Hub's pull limit stops, and the kubelet's words for it.

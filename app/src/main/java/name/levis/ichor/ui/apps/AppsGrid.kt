@@ -39,6 +39,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -57,6 +58,8 @@ import name.levis.ichor.model.categoryCounts
 import name.levis.ichor.model.driftVersions
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.groups
+import name.levis.ichor.model.notStarting
+import name.levis.ichor.model.stopped
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -186,15 +189,17 @@ private fun CountChip(label: String, count: Int, selected: Boolean, leading: (@C
 }
 
 /**
- * Icon, name and version; an amber dot when the app needs a look, and a badge on the icon when
- * its Argo CD app is critical or OutOfSync ([argo], null when not).
+ * Icon, name and version; an amber dot when the app needs a look (red when it does not start),
+ * and a badge on the icon when its Argo CD app is critical or OutOfSync ([argo], null when not).
+ * A stopped app is greyed out.
  */
 @Composable
 private fun AppTile(app: InventoryApp, argo: ServiceHealth?, onClick: () -> Unit) {
+    val colors = LocalStatusColors.current
     Surface(onClick = onClick, shape = AppCardShape, color = MaterialTheme.colorScheme.surfaceContainer) {
         Box {
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().alpha(if (app.stopped) STOPPED_ALPHA else 1f).padding(horizontal = 8.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box {
@@ -216,18 +221,21 @@ private fun AppTile(app: InventoryApp, argo: ServiceHealth?, onClick: () -> Unit
             if (app.attention) {
                 Box(
                     Modifier.align(Alignment.TopEnd).padding(10.dp).size(8.dp)
-                        .background(LocalStatusColors.current.warn, CircleShape),
+                        .background(if (app.notStarting) colors.bad else colors.warn, CircleShape),
                 )
             }
         }
     }
 }
 
-/** The version, or what is wrong with it in amber: several running, or not pinned. */
+/** The version, or what is wrong with it: not starting in red, stopped, several running or not pinned in amber. */
 @Composable
 private fun VersionLine(app: InventoryApp) {
-    val warn = LocalStatusColors.current.warn
+    val colors = LocalStatusColors.current
+    val warn = colors.warn
     val (text, color) = when {
+        app.notStarting -> stringResource(R.string.apps_not_starting) to colors.bad
+        app.stopped -> stringResource(R.string.pod_state_stopped) to MaterialTheme.colorScheme.onSurfaceVariant
         app.drift -> pluralStringResource(R.plurals.apps_versions, app.driftVersions, app.driftVersions) to warn
         app.unpinned -> ":latest" to warn
         else -> app.version.ifEmpty { "—" } to MaterialTheme.colorScheme.onSurfaceVariant
@@ -235,7 +243,7 @@ private fun VersionLine(app: InventoryApp) {
     Text(
         text,
         style = MaterialTheme.typography.labelSmall,
-        fontFamily = if (app.drift) null else FontFamily.Monospace,
+        fontFamily = if (app.drift || app.state.isNotEmpty()) null else FontFamily.Monospace,
         color = color,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -259,6 +267,9 @@ private fun SectionHeader(title: String, apps: List<InventoryApp>, open: Boolean
         }
     }
 }
+
+/** How much of a stopped app's tile shows: present, yet clearly not running. */
+internal const val STOPPED_ALPHA = 0.45f
 
 private const val FILTER_ALL = "all"
 private const val FILTER_ATTENTION = "attention"

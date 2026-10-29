@@ -80,5 +80,28 @@ func demoInventory(now int64) inventory {
 		}
 	}
 
-	return buildInventory(now, len(nodes), lists)
+	return withIdleWorkloads(buildInventory(now, len(nodes), lists), demoIdleWorkloads())
+}
+
+// demoIdleWorkloads are the demo's Deployments and StatefulSets without a ready pod.
+func demoIdleWorkloads() []idleWorkload {
+	var idle []idleWorkload
+
+	for _, w := range demoKubeWorkloads() {
+		if w.Ready > 0 || w.Kind == "DaemonSet" {
+			continue
+		}
+
+		reason := ""
+		if w.Desired > 0 {
+			reason = demoNotStartingReason
+		}
+
+		idle = append(idle, idleWorkload{
+			inventoryWorkload: inventoryWorkload{Kind: w.Kind, Namespace: w.Namespace, Name: w.Name, Desired: w.Desired, Reason: reason},
+			images:            w.Images,
+		})
+	}
+
+	return idle
 }

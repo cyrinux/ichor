@@ -1939,6 +1939,7 @@
     <string name="apps_section_system">Kubernetes と Talos</string>
     <string name="apps_section_unknown">未識別</string>
     <string name="apps_unpinned">固定されていないイメージ</string>
+    <string name="apps_not_starting">起動できません</string>
     <string name="apps_stat_containers">コンテナ</string>
     <string name="apps_stat_nodes">ノード</string>
     <string name="apps_stat_memory">メモリ</string>

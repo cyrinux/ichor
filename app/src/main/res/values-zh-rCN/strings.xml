@@ -1939,6 +1939,7 @@
     <string name="apps_section_system">Kubernetes 与 Talos</string>
     <string name="apps_section_unknown">未识别</string>
     <string name="apps_unpinned">未固定版本的镜像</string>
+    <string name="apps_not_starting">无法启动</string>
     <string name="apps_stat_containers">容器</string>
     <string name="apps_stat_nodes">节点</string>
     <string name="apps_stat_memory">内存</string>

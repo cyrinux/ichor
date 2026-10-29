@@ -612,7 +612,12 @@ var dataCommands = []command{
 		return out, err
 	}},
 	{name: "inventory", args: "", run: func(e env) (out string, err error) {
-		out, err = ichorgo.ClusterInventory(e.cfg, e.context)
+		out, err = ichorgo.ClusterInventory(e.cfg, e.context, e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "kube-inventory", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeInventory(e.cfg, e.context, e.kubeServer)
 
 		return out, err
 	}},

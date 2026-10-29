@@ -37,7 +37,10 @@ extension ClusterInventory {
 /// The amber of everything that needs a look, like the app's other warnings.
 let attentionColor = Color.orange
 
-/// An app in the grid: icon, name, and its version or what needs a look.
+/// How much of a stopped app's tile shows: present, yet clearly not running.
+let stoppedOpacity = 0.45
+
+/// An app in the grid: icon, name, and its version or what needs a look; greyed out when stopped.
 struct AppTile: View {
     let app: InventoryApp
     /// Its Argo CD Application is broken or drifting.
@@ -47,7 +50,9 @@ struct AppTile: View {
         VStack(spacing: 6) {
             AppIconView(app: app)
                 .overlay(alignment: .topTrailing) {
-                    if app.needsAttention { AttentionDot().offset(x: 3, y: -3) }
+                    if app.needsAttention {
+                        AttentionDot(color: app.isNotStarting ? .red : attentionColor).offset(x: 3, y: -3)
+                    }
                 }
                 .overlay(alignment: .bottomTrailing) {
                     if argoBadge { ArgoTileBadge().offset(x: 4, y: 4) }
@@ -61,6 +66,7 @@ struct AppTile: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
+        .opacity(app.isStopped ? stoppedOpacity : 1)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .padding(.horizontal, 6)
@@ -73,7 +79,11 @@ struct AppTile: View {
 
     @ViewBuilder
     private var versionLine: some View {
-        if app.drift {
+        if app.isNotStarting {
+            Text("Not starting").font(.caption2).foregroundStyle(.red)
+        } else if app.isStopped {
+            Text("Stopped").font(.caption2).foregroundStyle(.secondary)
+        } else if app.drift {
             Text("\(app.versionCount) versions").foregroundStyle(attentionColor)
         } else if app.unpinned {
             Text(verbatim: ":latest").foregroundStyle(attentionColor)
@@ -85,10 +95,11 @@ struct AppTile: View {
 
 struct AttentionDot: View {
     var size: CGFloat = 12
+    var color: Color = attentionColor
 
     var body: some View {
         Circle()
-            .fill(attentionColor)
+            .fill(color)
             .frame(width: size, height: size)
             .overlay { Circle().stroke(Color(.secondarySystemGroupedBackground), lineWidth: 2) }
             .accessibilityLabel(Text("Needs a look"))

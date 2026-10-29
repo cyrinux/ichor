@@ -53,8 +53,12 @@ public func categoryCounts(_ apps: [InventoryApp]) -> [AppCategoryCount] {
 /// remote one counts only when allowed), and how many are left out.
 public func overviewTiles(_ apps: [InventoryApp], limit: Int, remoteIcons: Bool) -> (shown: [InventoryApp], rest: Int) {
     let candidates = apps.filter { !$0.system }
-    let withIcon = candidates.filter { $0.iconSource(remoteIcons: remoteIcons) != .monogram }
-    let without = candidates.filter { $0.iconSource(remoteIcons: remoteIcons) == .monogram }
-    let shown = Array((withIcon + without).prefix(max(limit, 0)))
+    // Running apps first, those stopped on purpose last; each with icons first.
+    let ordered = [false, true].flatMap { stopped in
+        let group = candidates.filter { $0.isStopped == stopped }
+        return group.filter { $0.iconSource(remoteIcons: remoteIcons) != .monogram }
+            + group.filter { $0.iconSource(remoteIcons: remoteIcons) == .monogram }
+    }
+    let shown = Array(ordered.prefix(max(limit, 0)))
     return (shown, candidates.count - shown.count)
 }

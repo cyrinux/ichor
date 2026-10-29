@@ -28,7 +28,7 @@ extension TalosClient {
             case .inventory:
                 return kubeOnly
                     ? IchorgoKubeInventory(kubeConfig, kubeContext, kubeServer, error)
-                    : IchorgoClusterInventory(config, context, error)
+                    : IchorgoClusterInventory(config, context, kubeConfig, kubeContext, kubeServer, error)
             case .workloads: return IchorgoKubeWorkloads(kubeConfig, kubeContext, kubeServer, error)
             case .pods: return IchorgoKubePods(kubeConfig, kubeContext, kubeServer, error)
             case .cronJobs: return IchorgoKubeCronJobs(kubeConfig, kubeContext, kubeServer, error)
