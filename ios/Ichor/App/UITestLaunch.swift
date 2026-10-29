@@ -14,8 +14,6 @@ enum SmokeID {
     static let containers = "smoke-node-containers"
     /// A container row of a node's containers list (it opens the container's log).
     static let containerRow = "smoke-container-row"
-    /// The overview's ⋯ menu, the actions that are not icons behind it.
-    static let actionsMore = "smoke-actions-more"
     /// The overview's Settings action: its icon, or its item in the ⋯ menu.
     static let settings = "smoke-settings"
     /// The Settings screen's list of pages.

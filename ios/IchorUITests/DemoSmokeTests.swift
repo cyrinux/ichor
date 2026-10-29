@@ -11,7 +11,6 @@ final class DemoSmokeTests: XCTestCase {
         static let kernelLog = "smoke-node-kernel-log"
         static let containers = "smoke-node-containers"
         static let containerRow = "smoke-container-row"
-        static let actionsMore = "smoke-actions-more"
         static let settings = "smoke-settings"
         static let settingsScreen = "smoke-settings-screen"
         static let logLines = "smoke-log-lines"
@@ -48,13 +47,11 @@ final class DemoSmokeTests: XCTestCase {
     }
 
     func testTheOverviewOpensSettings() {
-        let app = launch("demo")
+        // Settings is in the ⋯ menu by default, and on a phone iOS folds the toolbar into its own
+        // overflow, whose items lose their identifiers: the bar is arranged with Settings as its
+        // only icon (the overview's @AppStorage("overview.bar"), "icons|menu").
+        let app = launch("demo", arguments: ["-overview.bar", "SETTINGS|"])
 
-        // Settings is a toolbar icon or, by default, an item behind the ⋯ menu.
-        waitFor(ID.actionsMore, in: app)
-        if !element(ID.settings, in: app).exists {
-            element(ID.actionsMore, in: app).tap()
-        }
         waitFor(ID.settings, in: app).tap()
 
         waitFor(ID.settingsScreen, in: app)
@@ -65,9 +62,10 @@ final class DemoSmokeTests: XCTestCase {
         waitFor(ID.kubeHome, in: app)
     }
 
-    private func launch(_ demo: String) -> XCUIApplication {
+    private func launch(_ demo: String, arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["ICHOR_UI_TEST"] = demo
+        app.launchArguments += arguments
         app.launch()
         return app
     }

@@ -17,7 +17,9 @@ an issue first so we can agree on the approach before you spend time on it.
 - The demo-mode smoke test (`DemoSmokeTest`, CI job `ui-smoke`) walks the demo cluster on an
   emulator; it runs on CI only (see docs/build.md to run it on an AVD). Four walks: overview →
   node → kernel log; overview → node → Containers → a container's log; overview → Settings
-  (through the ⋮ menu when Settings is not an icon); the Kubernetes demo's home. A moved anchor
+  (Android through the ⋮ menu where it sits by default; iOS launched with Settings as the bar's
+  only icon, since iOS folds a phone's toolbar into an overflow without identifiers); the
+  Kubernetes demo's home. A moved anchor
   moves its tag (`ui/components/SmokeTags.kt`), not the test. The iOS twin
   (`IchorUITests/DemoSmokeTests`) runs on macOS CI after the simulator build; its anchors are
   accessibility identifiers (`SmokeID` in `ios/Ichor/App/UITestLaunch.swift`), never labels.

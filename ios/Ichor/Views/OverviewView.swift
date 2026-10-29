@@ -353,7 +353,6 @@ struct OverviewView: View {
                 Image(systemName: "ellipsis.circle")
             }
             .accessibilityLabel(Text("More"))
-            .accessibilityIdentifier(SmokeID.actionsMore)
             // Settings sits in this menu unless it was made an icon.
             .demoTourTip(.settings, active: tourActive && !barIcons.contains(.settings))
         }
