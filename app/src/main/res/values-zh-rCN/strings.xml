@@ -5011,6 +5011,10 @@
     <string name="longhorn_salvage_risk">抢救可能丢失数据。选择要恢复其数据的副本；副本的时间戳并不保证一致性。</string>
     <string name="longhorn_salvage_choose">请明确选择副本。不会自动选择任何副本。</string>
     <string name="longhorn_salvage_unavailable">抢救需要一个已分离的故障卷以及可用的副本。</string>
+    <string name="longhorn_salvage_node_not_ready">不可用：节点未就绪。请恢复该节点后再抢救此副本。</string>
+    <string name="longhorn_salvage_node_missing">不可用：该节点已不在 Longhorn 中。</string>
+    <string name="longhorn_salvage_disk_unavailable">不可用：副本的磁盘缺失或不可调度。</string>
+    <string name="longhorn_salvage_deleting">不可用：副本正在删除。</string>
     <string name="longhorn_salvage_replica">%2$s 上的 %1$s · 健康：%3$s · 失败：%4$s</string>
     <string name="longhorn_salvage_requested">已请求抢救</string>
     <string name="longhorn_salvage_failed">无法抢救卷：%1$s</string>

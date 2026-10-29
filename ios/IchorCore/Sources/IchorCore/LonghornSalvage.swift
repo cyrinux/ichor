@@ -5,6 +5,9 @@ public struct LonghornSalvageReplica: Decodable, Identifiable, Sendable {
     public let healthyAt: Int64
     public let failedAt: Int64
     public let eligible: Bool
+    /// Why Longhorn would refuse to salvage from this replica (node-missing, node-not-ready,
+    /// disk-unavailable, deleting); empty when eligible.
+    public let blocked: String
     public var id: String { name }
 }
 public struct LonghornSalvagePreview: Decodable, Sendable {

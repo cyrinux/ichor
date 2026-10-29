@@ -1,8 +1,10 @@
 package name.levis.ichor.ui.dataservices
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
@@ -53,10 +55,22 @@ fun LonghornSalvageDialog(volume: LonghornVolume, actions: LonghornActions, onDi
                 Row {
                     Checkbox(checked = replica.name in selection, enabled = replica.eligible,
                         onCheckedChange = { checked -> selection = if (checked) selection + replica.name else selection - replica.name })
-                    Text(stringResource(R.string.longhorn_salvage_replica, replica.name, replica.node, agoOrNever(replica.healthyAt), agoOrNever(replica.failedAt)))
+                    Column {
+                        Text(stringResource(R.string.longhorn_salvage_replica, replica.name, replica.node, agoOrNever(replica.healthyAt), agoOrNever(replica.failedAt)))
+                        salvageBlockedText(replica.blocked)?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    }
                 }
             }
         }
         denial?.let { KubeDenialNote(it) }
     }
+}
+/** Why Longhorn would refuse to salvage from a replica, from the Go preview's blocked code. */
+internal fun salvageBlockedText(blocked: String): Int? = when (blocked) {
+    "" -> null
+    "node-not-ready" -> R.string.longhorn_salvage_node_not_ready
+    "node-missing" -> R.string.longhorn_salvage_node_missing
+    "disk-unavailable" -> R.string.longhorn_salvage_disk_unavailable
+    "deleting" -> R.string.longhorn_salvage_deleting
+    else -> R.string.longhorn_salvage_unavailable
 }
