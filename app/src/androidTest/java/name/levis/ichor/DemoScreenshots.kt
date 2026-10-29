@@ -59,7 +59,7 @@ class DemoScreenshots {
             Intent(Intent.ACTION_VIEW, Uri.parse("ichor://demo")).setClass(ApplicationProvider.getApplicationContext(), MainActivity::class.java),
         )
         val skip = hasTestTag(SMOKE_TOUR_SKIP)
-        compose.waitUntil(TIMEOUT) { exists(skip) || exists(hasTestTag(SMOKE_NODE)) }
+        waitFor(skip or hasTestTag(SMOKE_NODE))
         if (exists(skip)) {
             compose.onNode(skip).performClick()
             compose.waitUntilDoesNotExist(skip, TIMEOUT)
@@ -90,11 +90,14 @@ class DemoScreenshots {
         ParcelFileDescriptor.AutoCloseInputStream(output).use { it.readBytes() }
     }
 
+    /** Waits for [matcher]; on a timeout, failure.png and the semantics tree say what showed. */
     private fun waitFor(matcher: SemanticsMatcher) {
         try {
             compose.waitUntilAtLeastOneExists(matcher, TIMEOUT)
         } catch (e: ComposeTimeoutException) {
-            throw AssertionError("${e.message}\non screen:\n" + compose.onRoot(useUnmergedTree = true).printToString(), e)
+            shell("screencap -p $DIR/failure.png")
+            val tree = runCatching { compose.onRoot(useUnmergedTree = true).printToString() }.getOrElse { "no Compose root: $it" }
+            throw AssertionError("${e.message}\non screen:\n$tree", e)
         }
     }
 

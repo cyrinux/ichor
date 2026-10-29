@@ -45,12 +45,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # A phone-sized screen (the AVD's default is small): 1080 wide like the old captures,
-      # tall enough that the cropped image stays within the Play Store's 2:1 limit.
+      # A Pixel 4 (1080x2280, the AVD's default is small): 1080 wide like the old captures,
+      # and short enough that the image without its bars stays within the Play Store's 2:1.
       - name: Capture the screenshots on an emulator
         env:
-          EMULATOR_SIZE: 1080x2200
-          EMULATOR_DENSITY: "420"
+          EMULATOR_DEVICE: pixel_4
         run: nix shell nixpkgs#imagemagick --command scripts/ci-emulator.sh scripts/ci-screenshots.sh
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -66,5 +65,6 @@ jobs:
           name: screenshots-report
           path: |
             app/build/reports/screenshots.txt
+            app/build/reports/screenshots/
             ${{ runner.temp }}/emulator.log
           if-no-files-found: ignore

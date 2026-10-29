@@ -32,6 +32,9 @@ report="$ROOT/app/build/reports/screenshots.txt"
 mkdir -p "$(dirname "$report")"
 adb shell am instrument -w -r -e class name.levis.ichor.DemoScreenshots "$runner" | tee "$report"
 grep -q '^INSTRUMENTATION_CODE: -1' "$report" && grep -q '^OK (' "$report" || {
+  # What the test captured, a failure.png among them, for the job's failure artifact.
+  mkdir -p "$ROOT/app/build/reports/screenshots"
+  adb pull "$DEVICE_DIR/." "$ROOT/app/build/reports/screenshots/" >/dev/null 2>&1 || true
   echo "the screenshot test failed: see $report" >&2
   exit 1
 }

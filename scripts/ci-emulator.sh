@@ -5,8 +5,8 @@
 #
 #   scripts/ci-emulator.sh scripts/ui-smoke.sh
 #
-# EMULATOR_SIZE (e.g. 1080x2200) and EMULATOR_DENSITY override the screen after boot, for
-# scripts/ci-screenshots.sh: the default AVD screen is small and low density.
+# EMULATOR_DEVICE (an `avdmanager list device` id, e.g. pixel_4) sets the AVD's hardware
+# profile, for scripts/ci-screenshots.sh: the default AVD screen is small and low density.
 set -euo pipefail
 
 API="${EMULATOR_API:-34}"
@@ -21,7 +21,8 @@ mkdir -p "$ANDROID_AVD_HOME"
 
 yes | sdkmanager --licenses >/dev/null 2>&1 || true
 sdkmanager --install emulator platform-tools "$IMAGE" | tail -3
-echo no | avdmanager create avd --force -n smoke -k "$IMAGE" -p "$ANDROID_AVD_HOME/smoke.avd"
+echo no | avdmanager create avd --force -n smoke -k "$IMAGE" -p "$ANDROID_AVD_HOME/smoke.avd" \
+  ${EMULATOR_DEVICE:+-d "$EMULATOR_DEVICE"}
 [[ -f "$ANDROID_AVD_HOME/smoke.ini" ]] || { echo "avdmanager made no smoke.ini in $ANDROID_AVD_HOME" >&2; ls -la "$ANDROID_AVD_HOME" >&2; exit 1; }
 
 emulator -avd smoke -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none \
@@ -46,7 +47,5 @@ for scale in window_animation_scale transition_animation_scale animator_duration
   adb shell settings put global "$scale" 0
 done
 adb shell input keyevent 82 || true
-[[ -z "${EMULATOR_SIZE:-}" ]] || adb shell wm size "$EMULATOR_SIZE"
-[[ -z "${EMULATOR_DENSITY:-}" ]] || adb shell wm density "$EMULATOR_DENSITY"
 
 "$@"
