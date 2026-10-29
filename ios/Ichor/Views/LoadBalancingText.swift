@@ -54,7 +54,9 @@ enum LoadBalancingText {
     static var advL2Disabled: String {
         String(localized: "Announces nothing: L2 announcements are off in cilium-config (enable-l2-announcements).")
     }
-    static var advNoLBIPs: String { String(localized: "Announces no LoadBalancer address: loadBalancerIPs is not set.") }
+    static var advNoLBIPs: String {
+        String(localized: "Announces no LoadBalancer address: loadBalancerIPs is not set.")
+    }
     static var advNoService: String { String(localized: "No LoadBalancer Service matches it.") }
     static func peerASN(_ a: String, _ b: String) -> String { String(localized: "AS \(a), local AS \(b)") }
     static var peerSessionsUnknown: String {
