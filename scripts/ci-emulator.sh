@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Boots an API 34 aosp_atd x86_64 emulator with the hosted runner's own Android SDK
+# Boots an API 34 x86_64 emulator (aosp_atd unless EMULATOR_TARGET says otherwise) with the hosted runner's own Android SDK
 # ($ANDROID_HOME: sdkmanager, avdmanager, emulator, adb), runs the given command against it,
 # then shuts it down: android.yml's ui-smoke, without a third-party action. Needs /dev/kvm.
 #
@@ -10,7 +10,10 @@
 set -euo pipefail
 
 API="${EMULATOR_API:-34}"
-IMAGE="system-images;android-${API};aosp_atd;x86_64"
+# aosp_atd boots fastest but renders without hardware: its screencaps are black, so the
+# screenshots run on the plain AOSP image (EMULATOR_TARGET=default).
+TARGET="${EMULATOR_TARGET:-aosp_atd}"
+IMAGE="system-images;android-${API};${TARGET};x86_64"
 SDK="${ANDROID_HOME:?ANDROID_HOME is not set}"
 tools="$SDK/cmdline-tools/latest/bin"
 export PATH="$SDK/emulator:$SDK/platform-tools:$tools:$PATH"

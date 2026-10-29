@@ -47,9 +47,11 @@ jobs:
 
       # A Pixel 4 (1080x2280, the AVD's default is small): 1080 wide like the old captures,
       # and short enough that the image without its bars stays within the Play Store's 2:1.
+      # The plain AOSP image: aosp_atd's screencaps are black.
       - name: Capture the screenshots on an emulator
         env:
           EMULATOR_DEVICE: pixel_4
+          EMULATOR_TARGET: default
         run: nix shell nixpkgs#imagemagick --command scripts/ci-emulator.sh scripts/ci-screenshots.sh
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

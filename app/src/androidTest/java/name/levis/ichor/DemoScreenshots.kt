@@ -59,7 +59,10 @@ class DemoScreenshots {
             Intent(Intent.ACTION_VIEW, Uri.parse("ichor://demo")).setClass(ApplicationProvider.getApplicationContext(), MainActivity::class.java),
         )
         val skip = hasTestTag(SMOKE_TOUR_SKIP)
-        waitFor(skip or hasTestTag(SMOKE_NODE))
+        // The tour shows on the first open only; then the overview's list, its nodes maybe
+        // below the fold (a lazy list composes only what shows).
+        waitFor(skip or hasScrollToNodeAction())
+        compose.waitForIdle()
         if (exists(skip)) {
             compose.onNode(skip).performClick()
             compose.waitUntilDoesNotExist(skip, TIMEOUT)
