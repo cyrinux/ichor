@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.SwapHoriz
+import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -57,6 +58,8 @@ fun ClusterMenu(
     labels: ClusterLabels,
     onSelect: (String) -> Unit,
     onManage: () -> Unit,
+    /** "All clusters": every cluster's last check on one list, worst first. */
+    onFleet: () -> Unit,
     onDismiss: () -> Unit,
     /** "Upgrade cluster…": shown when the role can upgrade a Talos cluster. */
     onUpgradeCluster: () -> Unit = {},
@@ -111,6 +114,7 @@ fun ClusterMenu(
                             trailingIcon = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
                             onClick = { switching = true },
                         )
+                        ClusterMenuItem.FLEET -> Entry(R.string.fleet_title, Icons.Outlined.ViewAgenda, onDismiss, onFleet)
                         ClusterMenuItem.MANAGE -> Entry(R.string.clusters_manage, Icons.Outlined.Layers, onDismiss, onManage)
                         ClusterMenuItem.UPGRADE_CLUSTER -> Entry(R.string.cluster_upgrade_menu, Icons.Outlined.SystemUpdateAlt, onDismiss, onUpgradeCluster)
                         ClusterMenuItem.UPGRADE_KUBERNETES -> Entry(R.string.k8s_upgrade_menu, Icons.Outlined.Upgrade, onDismiss, onUpgradeKubernetes)

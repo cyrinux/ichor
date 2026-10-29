@@ -48,6 +48,8 @@ fun ManageClustersSheet(
     onActivity: ((ContextSummary) -> Unit)? = null,
     /** Settings → Git hosts, from the repository sheet of a cluster whose host has no token. */
     onGitHosts: (() -> Unit)? = null,
+    /** "All clusters": the fleet view, from the sheet's first row. */
+    onFleet: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -96,6 +98,12 @@ fun ManageClustersSheet(
             }
         },
         onDismiss = onClose,
+        onFleet = onFleet?.let { open ->
+            {
+                onClose()
+                open()
+            }
+        },
         onEndpoints = onEndpoints?.let { edit ->
             { cluster ->
                 onClose()

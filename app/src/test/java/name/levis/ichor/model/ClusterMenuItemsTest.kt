@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import name.levis.ichor.model.ClusterMenuItem.ADD_NODE
 import name.levis.ichor.model.ClusterMenuItem.ADD_TO_HOME
+import name.levis.ichor.model.ClusterMenuItem.FLEET
 import name.levis.ichor.model.ClusterMenuItem.INCIDENT_SUMMARY
 import name.levis.ichor.model.ClusterMenuItem.MANAGE
 import name.levis.ichor.model.ClusterMenuItem.RUNBOOKS
@@ -21,7 +22,7 @@ class ClusterMenuItemsTest {
     fun talosAdminGetsEveryGroupInOrder() {
         val admin = ContextSummary(name = "admin@lab", roles = listOf("os:admin"))
         assertEquals(
-            listOf(listOf(SWITCH, MANAGE), listOf(UPGRADE_CLUSTER, UPGRADE_KUBERNETES, ADD_NODE, UPDATES, RUNBOOKS), share),
+            listOf(listOf(SWITCH, FLEET, MANAGE), listOf(UPGRADE_CLUSTER, UPGRADE_KUBERNETES, ADD_NODE, UPDATES, RUNBOOKS), share),
             clusterMenuGroups(admin, canSwitch = true),
         )
     }
@@ -45,7 +46,7 @@ class ClusterMenuItemsTest {
     fun kubeconfigClusterOperatesWithRunbooksOnly() {
         val kube = ContextSummary(name = "kind-dev", kind = KIND_KUBE)
         assertEquals(
-            listOf(listOf(SWITCH, MANAGE), listOf(UPDATES, RUNBOOKS), share),
+            listOf(listOf(SWITCH, FLEET, MANAGE), listOf(UPDATES, RUNBOOKS), share),
             clusterMenuGroups(kube, canSwitch = true),
         )
     }
