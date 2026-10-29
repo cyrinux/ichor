@@ -5873,4 +5873,8 @@
         <item quantity="one">Proposer %1$d mise à jour</item>
         <item quantity="other">Proposer %1$d mises à jour</item>
     </plurals>
+    <string name="node_hub_unreachable_notice">Nœud injoignable</string>
+    <string name="node_hub_unreachable_network">Aucune route vers le nœud depuis ce téléphone</string>
+    <string name="node_hub_unreachable_credentials">Le nœud a répondu mais a refusé ce talosconfig</string>
+    <string name="history_uptime_observed">%1$s du temps vérifié · aucune vérification depuis %2$s</string>
 </resources>

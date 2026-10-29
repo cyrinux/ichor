@@ -38,9 +38,9 @@ struct NodeDetailView: View {
             NodeInspectSection(node: ref.address, open: $open)
             NodeTroubleshootSection(node: ref.address, open: $open)
             NodeOperateSection(
-                node: ref.address, maintenanceRunning: maintenanceRunning, open: $open,
+                node: ref.address, hostname: ref.hostname, maintenanceRunning: maintenanceRunning, open: $open,
                 showingReset: $showingReset, showingCordon: $showingCordon)
-            NodePowerSection(powerAction: $powerAction)
+            NodePowerSection(node: ref.address, powerAction: $powerAction)
         }
         .themedBackground()
         .navigationTitle(ref.hostname)
@@ -104,17 +104,23 @@ struct NodeDetailView: View {
         }
     }
 
-    /// Address (long press or swipe to copy), role, cordon and the uptime strip.
+    /// Address (long press or swipe to copy), role, cordon, Unreachable with why and when it
+    /// last answered for a node known not to answer, and the uptime strip.
     private var header: some View {
-        Section {
+        let reachability = model.reachability(of: ref.address)
+        return Section {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: ref.address).font(.body.monospaced()).textSelection(.enabled)
                     if !role.isEmpty { Text(role).font(.caption).foregroundStyle(.secondary) }
+                    if let reason = unreachableReason(reachability) {
+                        Text(verbatim: reason).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
                 // A maintenance of this node cordons it until it ends; otherwise the state is not known here.
                 if maintenanceRunning { StatusPill(label: String(localized: "Cordoned"), color: .orange) }
+                if reachability.isDown { StatusPill(label: String(localized: "Unreachable"), color: .red) }
             }
             .accessibilityElement(children: .combine)
             .contextMenu {
@@ -135,13 +141,34 @@ struct NodeDetailView: View {
             if let history, let uptime = history.node(ref.address),
                 uptime.uptimePercent != nil || !uptime.intervals.isEmpty
             {
-                NodeUptimeStrip(uptime: uptime, from: history.from, to: history.to, period: $period)
+                NodeUptimeStrip(
+                    uptime: uptime, from: history.from, to: history.to, period: $period,
+                    unchecked: history.uncheckedTail(uptime), downNow: reachability.isDown)
             }
         }
     }
 
     private var role: String {
         ref.role == "controlplane" ? String(localized: "control plane") : ref.role
+    }
+
+    /// Why a node known not to answer does not, by its error kind (else the core's words), and
+    /// when it last did; nil for a node that answers or is unknown.
+    private func unreachableReason(_ reachability: NodeReachability?) -> String? {
+        guard let reachability, !reachability.reachable else { return nil }
+        let reason: String? =
+            switch reachability.errorKind {
+            case "network": String(localized: "No route to the node from this phone")
+            case "tls", "auth": String(localized: "The node answered but refused this talosconfig")
+            default: reachability.error
+            }
+        let seen = reachability.lastSeen.map { at in
+            let ago = RelativeDateTimeFormatter().localizedString(
+                for: Date(timeIntervalSince1970: Double(at) / 1000), relativeTo: .now)
+            return String(localized: "Last seen \(ago)")
+        }
+        let parts = [reason, seen].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     // As in the node row's long press.

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Power
 import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.FeatureSupport
 import name.levis.ichor.model.NodeFeatures
+import name.levis.ichor.model.NodeReachability
+import name.levis.ichor.model.down
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.support
 import name.levis.ichor.ui.components.SectionTitle
@@ -57,25 +60,35 @@ data class NodeJump(val key: String, @StringRes val title: Int, val index: Int)
 
 /**
  * The titles [nodeSections] emits for [groups] (and Power when [power]), with their indices in
- * the list; [first] is the index of its first item (the screen's header comes before it).
+ * the list; [first] is the index of its first item (the screen's header comes before it);
+ * [wake]: Operate ends with the Wake-on-LAN row.
  */
-internal fun nodeJumpSections(groups: List<Pair<NodeMenuGroup, List<NodeMenuEntry>>>, power: Boolean, first: Int = 1): List<NodeJump> =
+internal fun nodeJumpSections(
+    groups: List<Pair<NodeMenuGroup, List<NodeMenuEntry>>>,
+    power: Boolean,
+    first: Int = 1,
+    wake: Boolean = false,
+): List<NodeJump> =
     buildList {
         var index = first
         groups.forEach { (group, entries) ->
             add(NodeJump(group.name, group.title, index))
-            index += 1 + if (group.tiled) 1 else entries.size
+            index += 1 + (if (group.tiled) 1 else entries.size) + (if (wake && group == NodeMenuGroup.OPERATE) 1 else 0)
         }
         if (power) add(NodeJump(POWER_KEY, R.string.node_menu_group_power, index))
     }
 
 private const val POWER_KEY = "power"
+private const val WAKE_KEY = "wake"
 
 /**
  * The node screen's sections, as items of its list: Status and Inspect as grids of tiles, the
  * entries that act on the node as rows, the power actions last. [groups] are the ones the role
  * leaves (see [nodeMenuGroups]); [busy] entries are disabled for another reason (e.g. an upgrade
  * elsewhere); [cordoned] is null when unknown; [powerActions] is empty for a role without them.
+ * On a node known not to answer ([reachability]), what goes through its Talos API is dimmed
+ * with "Node unreachable", the Kubernetes and local entries stay; [onWake] adds the
+ * Wake-on-LAN row at the end of Operate.
  */
 internal fun LazyListScope.nodeSections(
     groups: List<Pair<NodeMenuGroup, List<NodeMenuEntry>>>,
@@ -84,18 +97,23 @@ internal fun LazyListScope.nodeSections(
     cordoned: Boolean?,
     powerActions: List<PowerAction>,
     powerEnabled: Boolean,
+    reachability: NodeReachability?,
     onPick: (NodeMenuEntry) -> Unit,
     onPower: (PowerAction) -> Unit,
+    onWake: (() -> Unit)? = null,
 ) {
     val kubePods = groups.any { (_, entries) -> NodeMenuEntry.TAB_KUBE_PODS in entries }
+    val down = reachability.down
+    fun NodeMenuEntry.offline() = down && transport == NodeTransport.TALOS
     groups.forEach { (group, entries) ->
         item(key = group.name) { SectionTitle(stringResource(group.title), Modifier.padding(top = 8.dp)) }
         if (group.tiled) {
             item(key = "${group.name}-tiles") {
                 TileGrid(entries) { entry, modifier ->
-                    val notice = entry.notice(features)
+                    val offline = entry.offline()
+                    val notice = entry.notice(features, offline)
                     // A tab this Talos lacks stays reachable, dimmed: it says what it needs.
-                    val reachable = entry.tab != null || notice == null
+                    val reachable = !offline && (entry.tab != null || notice == null)
                     MenuTile(
                         label = stringResource(entry.label(cordoned, kubePods)),
                         icon = entry.icon,
@@ -109,7 +127,7 @@ internal fun LazyListScope.nodeSections(
             }
         } else {
             items(entries, key = { it.name }) { entry ->
-                val notice = entry.notice(features)
+                val notice = entry.notice(features, entry.offline())
                 Box(Modifier.testTag(smokeMenuTag(entry))) {
                     MenuRow(
                         label = stringResource(entry.label(cordoned, kubePods)),
@@ -120,6 +138,11 @@ internal fun LazyListScope.nodeSections(
                     )
                 }
             }
+            if (group == NodeMenuGroup.OPERATE && onWake != null) {
+                item(key = WAKE_KEY) {
+                    MenuRow(label = stringResource(R.string.wol_wake), icon = Icons.Outlined.Power, notice = null, enabled = true, onClick = onWake)
+                }
+            }
         }
     }
     if (powerActions.isNotEmpty()) {
@@ -128,8 +151,8 @@ internal fun LazyListScope.nodeSections(
             MenuRow(
                 label = stringResource(action.title),
                 icon = Icons.Outlined.PowerSettingsNew,
-                notice = null,
-                enabled = powerEnabled,
+                notice = if (down) stringResource(R.string.node_hub_unreachable_notice) else null,
+                enabled = powerEnabled && !down,
                 onClick = { onPower(action) },
                 color = MaterialTheme.colorScheme.error,
             )
@@ -137,10 +160,17 @@ internal fun LazyListScope.nodeSections(
     }
 }
 
-/** "Needs Talos vX or newer" when the node's Talos lacks what the entry [NodeMenuEntry.needs]. */
+/**
+ * "Node unreachable" when the entry needs a node that does not answer ([offline]; the Talos
+ * version is moot then), else "Needs Talos vX or newer" when its Talos lacks what it [NodeMenuEntry.needs].
+ */
 @Composable
-private fun NodeMenuEntry.notice(features: NodeFeatures?): String? =
-    (needs?.let { features.support(it) } ?: FeatureSupport.UNKNOWN).notice?.text()
+private fun NodeMenuEntry.notice(features: NodeFeatures?, offline: Boolean): String? =
+    if (offline) {
+        stringResource(R.string.node_hub_unreachable_notice)
+    } else {
+        (needs?.let { features.support(it) } ?: FeatureSupport.UNKNOWN).notice?.text()
+    }
 
 /** [entries] as rows of equal tiles, as many across as the width takes. */
 @Composable

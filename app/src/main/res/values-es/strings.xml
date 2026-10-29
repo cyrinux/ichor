@@ -5873,4 +5873,8 @@
         <item quantity="one">Proponer %1$d actualización</item>
         <item quantity="other">Proponer %1$d actualizaciones</item>
     </plurals>
+    <string name="node_hub_unreachable_notice">Nodo inaccesible</string>
+    <string name="node_hub_unreachable_network">No hay ruta hacia el nodo desde este teléfono</string>
+    <string name="node_hub_unreachable_credentials">El nodo respondió pero rechazó este talosconfig</string>
+    <string name="history_uptime_observed">%1$s del tiempo comprobado · sin comprobación desde hace %2$s</string>
 </resources>
