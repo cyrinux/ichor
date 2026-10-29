@@ -42,7 +42,8 @@ tour** shows it again.
   account, a kubeconfig or a Talos identity for the phone.
 - **GitOps:** Argo CD and Flux apps with the diff a sync would apply, Argo Rollouts, the files
   an app deploys at the revision the cluster runs, edits reviewed and opened as pull requests,
-  and a cluster repository for Talos machine config patches.
+  a cluster repository for Talos machine config patches, and the images and charts with a newer
+  version, one tap from the pull request that bumps them.
 - **Operators:** Longhorn, CloudNativePG, Garage, Rook Ceph, Velero, cert-manager, External
   Secrets, Sealed Secrets, ExternalDNS, Crossplane, Tailscale, Cluster API, Kyverno,
   Gatekeeper, KubeVirt, CAST AI and more, each with its findings in the cluster checkup, and

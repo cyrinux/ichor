@@ -36,9 +36,25 @@ struct GitOpsOverviewSection<Status, Placeholder: View, Content: View>: View {
         case .loaded(let status, _, _):
             if installed(status) {
                 Section {
-                    NavigationLink(value: route) { content(status) }
+                    NavigationLink(value: route) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            content(status)
+                            UpdatesCountLine()
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+/// "Updates available: N", once the Updates screen looked the cluster on screen up in this session.
+private struct UpdatesCountLine: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if let outdated = UpdatesSession.shared.outdated(for: UpdatesSession.key(model)), outdated > 0 {
+            Text("Updates available: \(outdated)").font(.caption).foregroundStyle(.secondary)
         }
     }
 }

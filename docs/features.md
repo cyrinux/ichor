@@ -141,6 +141,22 @@ Part of the [Ichor documentation](../README.md#documentation).
   pull or merge requests on a new branch, never commits to the branch itself. Nothing is
   cloned: each directory and file is one call to the forge's API. The demo cluster has a sample
   repository built in.
+- **Updates available:** **Updates…** in the cluster menu lists the images the cluster's
+  workloads run and the charts its Flux, Argo CD and Helm releases install, each with its newer
+  **patch**, **minor** and **major** version from its registry, Docker Hub, the Helm index or the
+  OCI tags. Private registries are asked with the pull secrets the workloads already use; the
+  first visit on a cluster asks before any registry is. The policy: a candidate keeps the tag's
+  shape (prefix such as `v`, suffix such as `-alpine`, the number of version parts), and a
+  prerelease is offered only when the running tag is one. An image or chart that Flux image
+  automation, Argo CD Image Updater, a semver range or a Renovate or Dependabot configuration of
+  the cluster repository already bumps shows that badge and no version. `latest`, digest-pinned,
+  rate-limited or unreachable ones are listed under **Not comparable** with the reason. Tapping
+  a version opens the file that sets it (the workload's manifest, its kustomization `images:`
+  entry, or the HelmRelease or Application) with the quick edit prefilled, then the usual review
+  and pull request, titled "Update podinfo to 6.7.1". An image a chart renders opens the chart's
+  first values file. The app never runs a bot, never merges, and checks nothing in the
+  background: the last answer is kept until the app is closed, and the GitOps card shows its
+  count.
 - **Try a Talos patch from Git:** on a Talos cluster, a Talos patch file opened in the cluster
   repository or an app's source (machine/cluster sections, or config documents such as
   `HostnameConfig`) shows **Try on a node…**: pick the node (the one the patch sets the hostname

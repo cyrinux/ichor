@@ -50,6 +50,7 @@ func screenCatalog(model: AppModel, nodes: [NodeOverview]) -> [ScreenSpec] {
     add("upgrade-cluster", String(localized: "Upgrade cluster"), operate, "arrow.up.circle", .clusterUpgrade(version: ""), when: upgrade)
     add("upgrade-kubernetes", String(localized: "Upgrade Kubernetes"), operate, "shippingbox", .k8sUpgrade, when: upgrade)
     add("join-node", String(localized: "Add a node"), operate, "plus.circle", .joinNode, when: talos)
+    add("updates", String(localized: "Updates"), operate, "arrow.up.square", .updates)
     add("runbooks", menuTitle(String(localized: "Runbooks…")), operate, "list.bullet.rectangle", .runbooks)
     let settings = String(localized: "Settings")
     for page in SettingsPage.visible(kubeconfig: model.allows(.kubeconfig)) {

@@ -298,7 +298,8 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
     public enum Op: String, Encodable, Sendable {
         /// keep: the live values of a diff written where the file holds the wanted ones;
         /// talos: a machine config patch written into a node's file of the cluster repository.
-        case image, replicas, keep, talos
+        /// path: the field path of the object kind/name set to value (an update's chart version).
+        case image, replicas, keep, talos, path
     }
 
     public let op: Op
@@ -324,11 +325,19 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
     public let hostname: String?
     public let create: Bool?
     public let skipped: [String]?
+    /// path: the dotted path of the field and the value it is set to.
+    public let path: String?
+    public let value: String?
+    /// The pull request's title and body when the edit names them (an update), "" for the
+    /// derived ones; not sent.
+    public let title: String
+    public let body: String
 
     public init(op: Op, documentIndex: Int, kind: String? = nil, name: String? = nil, container: String? = nil,
                 image: String? = nil, replicas: Int? = nil, kustomizeImage: String? = nil, kustomizeReplica: String? = nil,
                 changes: [DiffLiveChange]? = nil, label: String, patch: String? = nil, hostname: String? = nil,
-                create: Bool? = nil, skipped: [String]? = nil) {
+                create: Bool? = nil, skipped: [String]? = nil, path: String? = nil, value: String? = nil,
+                title: String = "", body: String = "") {
         self.op = op
         self.documentIndex = documentIndex
         self.kind = kind
@@ -344,6 +353,10 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
         self.hostname = hostname
         self.create = create
         self.skipped = skipped
+        self.path = path
+        self.value = value
+        self.title = title
+        self.body = body
     }
 
     /// A kept machine config change of hostname written into its file: plan says where and what.
@@ -360,7 +373,7 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case op, documentIndex, kind, name, container, image, replicas, kustomizeImage, kustomizeReplica, changes
-        case patch, hostname, create, skipped
+        case patch, hostname, create, skipped, path, value
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -379,6 +392,16 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
         try c.encodeIfPresent(hostname, forKey: .hostname)
         try c.encodeIfPresent(create, forKey: .create)
         try c.encodeIfPresent(skipped, forKey: .skipped)
+        try c.encodeIfPresent(path, forKey: .path)
+        try c.encodeIfPresent(value, forKey: .value)
+    }
+
+    /// The same edit, named for its pull request (an update's title and body).
+    public func titled(_ title: String, body: String) -> QuickEdit {
+        QuickEdit(op: op, documentIndex: documentIndex, kind: kind, name: name, container: container, image: image,
+                  replicas: replicas, kustomizeImage: kustomizeImage, kustomizeReplica: kustomizeReplica, changes: changes,
+                  label: label, patch: patch, hostname: hostname, create: create, skipped: skipped, path: path, value: value,
+                  title: title, body: body)
     }
 
     /// The JSON GitOpsQuickEdit takes.
@@ -416,7 +439,10 @@ public struct QuickEditResult: Decodable, Hashable, Sendable {
 /// The pull request's default title (English, like the Go core's): "Bump podinfo to 6.7.0",
 /// "Scale podinfo to 3".
 public func quickEditTitle(_ edit: QuickEdit) -> String {
+    if !edit.title.isEmpty { return edit.title }
     switch edit.op {
+    case .path:
+        return "Set \(edit.path ?? "") of \(edit.label) to \(edit.value ?? "")"
     case .image:
         let image = edit.image ?? ""
         // A kustomize entry's edit is the tag alone.
@@ -465,6 +491,26 @@ public func isValidImageTag(_ tag: String) -> Bool {
         c.isASCII && (("a"..."z").contains(c) || ("A"..."Z").contains(c) || ("0"..."9").contains(c) || c == "_")
     }
     return allowed(first) && tag.unicodeScalars.dropFirst().allSatisfy { allowed($0) || $0 == "." || $0 == "-" }
+}
+
+/// The image of targets a prefilled image edit sets (its kustomization entry, else its
+/// container of the same workload), nil for none. Same rule as Android (quickPrefillIndex).
+public func quickPrefillTarget(_ targets: [QuickEditImageTarget], edit: QuickEdit) -> QuickEditImageTarget? {
+    if let entry = edit.kustomizeImage {
+        return targets.first { target in
+            if case .kustomize(_, let name) = target.place { return name == entry }
+            return false
+        }
+    }
+    return targets.first { target in
+        guard case .container(_, let name) = target.place, name == edit.container else { return false }
+        return edit.name == nil || target.workloadName == edit.name
+    }
+}
+
+/// The tag a prefilled image edit sets: a kustomization entry's bare tag, else the image's.
+public func quickPrefillTag(_ edit: QuickEdit) -> String {
+    edit.kustomizeImage != nil ? edit.image ?? "" : imageTag(edit.image ?? "")
 }
 
 /// nil for "", for the optional keys of the edit JSON.

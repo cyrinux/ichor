@@ -20,15 +20,22 @@ struct SourceFileView: View {
     /// False when opened from a node's machine config (Compare with Git): no Try on a node there,
     /// it would stack a second editor.
     let allowTry: Bool
+    /// An update's image edit (Updates screen): the image sheet opens on it once the file loads
+    /// and can be quick edited.
+    let prefill: QuickEdit?
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil, allowTry: Bool = true) {
+    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil, allowTry: Bool = true, prefill: QuickEdit? = nil) {
         self.source = source
         self.path = path
         self.app = app
         self.line = line
         self.allowTry = allowTry
+        self.prefill = prefill
     }
+
+    /// The prefill's sheet was opened once: closing it does not bring it back.
+    @State private var prefillOpened = false
 
     @Environment(AppModel.self) private var model
     @Environment(GitHostStore.self) private var hosts
@@ -177,8 +184,13 @@ struct SourceFileView: View {
         if case .loaded(let file, _, _) = state, let quickTargets {
             switch sheet {
             case .image:
-                QuickEditImageSheet(targets: quickTargets.images, content: file.file.content, app: app) { edit in
-                    pendingQuickEdit = edit
+                QuickEditImageSheet(targets: quickTargets.images, content: file.file.content, app: app, prefill: prefill) { edit in
+                    // An update's title and body stay only while the edit is the one it asked for.
+                    if let prefill, prefill.image == edit.image, prefill.kustomizeImage == edit.kustomizeImage {
+                        pendingQuickEdit = edit.titled(prefill.title, body: prefill.body)
+                    } else {
+                        pendingQuickEdit = edit
+                    }
                     quickSheet = nil
                 }
             case .replicas:
@@ -245,6 +257,10 @@ struct SourceFileView: View {
             let encrypted = sops != nil
             talosPatch = model.activeIsKube || !allowTry ? nil : await Self.talosPatch(of: file, path: path)
             state = .loaded(SourceFileText(file: file, collapseSops: encrypted), at: Date())
+            if prefill != nil, !prefillOpened, editBlock == nil, !encrypted, !(quickTargets?.images.isEmpty ?? true) {
+                prefillOpened = true
+                quickSheet = .image
+            }
         } catch let missing as GitHostMissing {
             missingHost = missing.host
         } catch {
