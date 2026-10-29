@@ -18,6 +18,7 @@ const (
 	groupFluxKustomize = "kustomize.toolkit.fluxcd.io"
 	groupFluxHelm      = "helm.toolkit.fluxcd.io"
 	groupFluxSource    = "source.toolkit.fluxcd.io"
+	groupFluxImage     = "image.toolkit.fluxcd.io" // image automation: the updates read who bumps an image
 
 	// fluxRequestedAt asks a controller to reconcile now; it echoes the value back in
 	// status.lastHandledReconcileAt once done.

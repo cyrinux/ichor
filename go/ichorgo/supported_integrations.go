@@ -46,7 +46,7 @@ var integrationSpecs = sync.OnceValue(func() []integrationSpec {
 // group adds it here: TestIntegrationsCoverEveryGroup fails otherwise.
 var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "argo-cd", Name: "Argo CD", Website: "https://argo-cd.readthedocs.io", Groups: []string{groupArgo}, Resource: "applications"},
-	{ID: "flux", Name: "Flux", Website: "https://fluxcd.io", Groups: []string{groupFluxKustomize, groupFluxHelm, groupFluxSource}},
+	{ID: "flux", Name: "Flux", Website: "https://fluxcd.io", Groups: []string{groupFluxKustomize, groupFluxHelm, groupFluxSource, groupFluxImage}},
 	{ID: "cloudnative-pg", Name: "CloudNativePG", Website: "https://cloudnative-pg.io", Groups: []string{groupCNPG, groupBarmanPlug}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
 	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
