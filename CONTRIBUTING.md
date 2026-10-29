@@ -30,6 +30,11 @@ an issue first so we can agree on the approach before you spend time on it.
   (an AGP bump that renames checks, a category emptied), delete it, run the check twice (the
   first run writes it and stops) and review the diff in the PR.
 - No source file over 800 lines (`just length-check`); split it by domain instead.
+- Swift sources follow `ios/.swift-format` (4 spaces, 120 columns): the macOS CI `ios` job runs
+  `swift-format lint --strict` before the build and fails on any finding. Run `just ios-format`
+  on a Mac (it uses the selected Xcode's swift-format) and commit the result. Keep a pure reformat
+  in its own commit. A rule is turned off in the config only for a stated reason in the pull
+  request; a newer Xcode on the runner may need a one-time reformat.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app
   (GPL, AGPL, LGPL for statically linked code); ask in the issue first if unsure.
