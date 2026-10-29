@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only packet captures (see CaptureRepository), support bundles (see SupportBundleRepository), the pod log being shared (see PodLogSheet) and an exported vulnerability report (see ImageScanExport) can be shared. -->
+<!-- Only packet captures (see CaptureRepository), support bundles (see SupportBundleRepository), the pod log being shared (see PodLogSheet) an exported vulnerability report (see ImageScanExport) and the diagnostics zip (see DiagnosticsViewModel) can be shared. -->
 <paths>
     <files-path name="captures" path="captures/" />
     <files-path name="support" path="support/" />
     <cache-path name="logs" path="logs/" />
     <cache-path name="scans" path="scans/" />
+    <cache-path name="diagnostics" path="diagnostics/" />
 </paths>

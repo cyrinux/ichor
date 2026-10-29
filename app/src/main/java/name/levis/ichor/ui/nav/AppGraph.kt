@@ -9,6 +9,7 @@ import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.activity.ActivityScreen
+import name.levis.ichor.ui.diagnostics.DiagnosticsScreen
 import name.levis.ichor.ui.imagescan.SavedScansScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
@@ -51,6 +52,7 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
     }
     composable(Routes.FUNDING) { FundingScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.DIAGNOSTICS) { DiagnosticsScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.INTEGRATIONS) { IntegrationsScreen(onBack = { nav.popBackStack() }) }
     composable(
         Routes.DIAGNOSIS,
@@ -106,6 +108,7 @@ private fun settingsActions(nav: NavHostController, app: TalosApp) = SettingsAct
     onRotateCA = { nav.navigate(Routes.ROTATE_CA) },
     onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
     onActivity = { nav.navigate(Routes.activity()) },
+    onDiagnostics = { nav.navigate(Routes.DIAGNOSTICS) },
     onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
     onChangelog = { nav.navigate(Routes.CHANGELOG) },
     onLicenses = { nav.navigate(Routes.LICENSES) },

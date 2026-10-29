@@ -40,6 +40,7 @@ class SettingsActions(
     val onRotateCA: () -> Unit,
     val onSupportBundle: () -> Unit,
     val onActivity: () -> Unit,
+    val onDiagnostics: () -> Unit,
     val onIntegrations: () -> Unit,
     val onChangelog: () -> Unit,
     val onLicenses: () -> Unit,
@@ -83,7 +84,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
             SettingsPage.CLUSTERS ->
                 ClustersSection(stores.configs, actions.onReimport, actions.onIssueConfig, actions.onRotateCA, actions.onCleared)
             SettingsPage.SUPPORT ->
-                SupportSection(summary, actions.onSupportBundle, actions.onActivity, actions.onIntegrations)
+                SupportSection(summary, actions.onSupportBundle, actions.onActivity, actions.onIntegrations, actions.onDiagnostics)
             SettingsPage.ABOUT -> {
                 AboutSection(actions.onChangelog, actions.onLicenses, actions.onSupportedIntegrations, actions.onFunding, actions.onReplayTour)
                 UpdatesSection { app.updateManager }

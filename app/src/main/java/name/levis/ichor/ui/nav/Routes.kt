@@ -27,6 +27,7 @@ internal object Routes {
     const val RESOURCE_LIST = "resourcelist?addr={addr}&host={host}&ns={ns}&type={type}&sensitive={sensitive}"
     const val RESOURCE = "resource?addr={addr}&host={host}&ns={ns}&type={type}&id={id}&sensitive={sensitive}"
     const val SUPPORT_BUNDLE = "supportbundle"
+    const val DIAGNOSTICS = "diagnostics"
     const val INTEGRATIONS = "integrations"
     const val CHANGELOG = "changelog"
     const val LICENSES = "licenses"

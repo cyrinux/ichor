@@ -1,6 +1,9 @@
 package name.levis.ichor.ui.settings
 
 import name.levis.ichor.setStartupTrace
+import name.levis.ichor.setDiagPersist
+import android.os.Build
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +41,13 @@ private val REPORT_BUG_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/ne
 
 /** Settings → Support: support bundle, activity log, integration requests and bug reports. */
 @Composable
-fun SupportSection(summary: ContextSummary?, onSupportBundle: () -> Unit, onActivity: () -> Unit, onIntegrations: () -> Unit) {
+fun SupportSection(
+    summary: ContextSummary?,
+    onSupportBundle: () -> Unit,
+    onActivity: () -> Unit,
+    onIntegrations: () -> Unit,
+    onDiagnostics: () -> Unit,
+) {
     SectionTitle(stringResource(R.string.settings_section_support))
     // The core could not open its encrypted store: say so rather than lose the log quietly.
     val dataStoreProblem by (LocalContext.current.applicationContext as TalosApp).dataStoreProblem.collectAsStateWithLifecycle()
@@ -68,7 +77,34 @@ fun SupportSection(summary: ContextSummary?, onSupportBundle: () -> Unit, onActi
     OutlinedButton(onClick = { openInBrowser(context, REPORT_BUG_URL) }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.settings_report_bug))
     }
+    DiagnosticsSetting(context.applicationContext as TalosApp, onDiagnostics)
     StartupTraceSetting(context.applicationContext as TalosApp)
+}
+
+/**
+ * The redacted diagnostics log and the zip made from it: kept across launches or not (off by
+ * default), and "Export diagnostics…". Nothing leaves the phone unless the user shares it.
+ */
+@Composable
+private fun DiagnosticsSetting(app: TalosApp, onDiagnostics: () -> Unit) {
+    val persist by app.uiPreferences.diagPersist.collectAsStateWithLifecycle()
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.settings_diagnostics_title), style = MaterialTheme.typography.titleMedium)
+            MutedText(stringResource(R.string.settings_diagnostics_summary))
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) MutedText(stringResource(R.string.diagnostics_exits_unsupported))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_diagnostics_persist), style = MaterialTheme.typography.bodyLarge)
+                    MutedText(stringResource(R.string.settings_diagnostics_persist_summary))
+                }
+                Switch(checked = persist, onCheckedChange = app::setDiagPersist, modifier = Modifier.padding(start = 12.dp))
+            }
+            OutlinedButton(onClick = onDiagnostics, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.settings_diagnostics_open))
+            }
+        }
+    }
 }
 
 /** Opt-in: where a cold start's time goes, in logcat (tag Ichor.Startup), for a bug report. */
