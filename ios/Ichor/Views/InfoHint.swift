@@ -49,9 +49,9 @@ struct CustomIconHint: View {
     let link: URL
 
     /// The website's section on CronJobs: their icon, name and description labels.
-    static let cronJobsDocs = URL(string: "https://cyrinux.github.io/ichor/#cronjobs")!
+    static let cronJobsDocs = URL(string: "https://cyrinux.github.io/ichor/features.html#cronjobs")!
     /// The website's section on Argo CD: an app's own icon.
-    static let argoDocs = URL(string: "https://cyrinux.github.io/ichor/#argocd")!
+    static let argoDocs = URL(string: "https://cyrinux.github.io/ichor/features.html#argocd")!
 
     static let cronJobs: LocalizedStringKey =
         "Give a CronJob its own icon with the ichor.levis.name/icon label or annotation, set to a Dashboard Icons name such as postgresql. The ichor.levis.name/title and ichor.levis.name/description annotations set its name and a line of description.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nWithout one, Ichor picks the icon of the app its image belongs to, else a clock."
