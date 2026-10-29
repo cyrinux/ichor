@@ -11,6 +11,7 @@ struct CnpgList: View {
     @State private var problemsOnly: Bool?
     @State private var query = ""
     @State private var promotion: CnpgPromotionTarget?
+    @State private var removal: CnpgRemovalTarget?
     @State private var confirmLifecycle: CnpgLifecycleTarget?
     @State private var confirmBackup: CnpgCluster?
     @State private var running: Set<String> = []
@@ -62,6 +63,7 @@ struct CnpgList: View {
                     ClusterRow(
                         cluster: cluster, busy: running.contains(cluster.id), onBackup: { confirmBackup = cluster },
                         onPromote: { promotion = CnpgPromotionTarget(cluster: cluster, instance: $0) },
+                        onRemove: { removal = CnpgRemovalTarget(cluster: cluster, instance: $0) },
                         onLifecycle: { confirmLifecycle = CnpgLifecycleTarget(cluster: cluster, action: $0) })
                 }
             }
@@ -88,6 +90,12 @@ struct CnpgList: View {
                 Task { await promote(target.cluster, instance: target.instance) }
             }.loadsKubeActionAccess(namespace: target.cluster.namespace)
         }
+        .sheet(item: $removal) { target in
+            CnpgDestroySheet(cluster: target.cluster, instance: target.instance) {
+                removal = nil
+                Task { await remove(target.cluster, instance: target.instance) }
+            }.loadsKubeActionAccess(namespace: target.cluster.namespace)
+        }
         .sheet(item: $confirmLifecycle) { target in
             CnpgLifecycleSheet(target: target) {
                 confirmLifecycle = nil
@@ -107,6 +115,19 @@ struct CnpgList: View {
             await refresh()
         } catch {
             resultMessage = String(localized: "Could not promote \(cluster.label): \(error.localizedDescription)")
+        }
+    }
+
+    private func remove(_ cluster: CnpgCluster, instance: String) async {
+        guard let client = model.client, !running.contains(cluster.id) else { return }
+        running.insert(cluster.id)
+        defer { running.remove(cluster.id) }
+        do {
+            try await client.cnpgDestroy(namespace: cluster.namespace, name: cluster.name, instance: instance)
+            resultMessage = String(localized: "\(instance) removed: CloudNativePG creates a new replica")
+            await refresh()
+        } catch {
+            resultMessage = String(localized: "Could not remove \(instance): \(error.localizedDescription)")
         }
     }
 
@@ -146,6 +167,7 @@ private struct ClusterRow: View {
     let busy: Bool
     let onBackup: () -> Void
     let onPromote: (String) -> Void
+    let onRemove: (String) -> Void
     let onLifecycle: (CnpgLifecycleAction) -> Void
 
     var body: some View {
@@ -199,7 +221,7 @@ private struct ClusterRow: View {
                 "Primary",
                 value: switching ? "\(cluster.currentPrimary) → \(cluster.targetPrimary)" : cluster.currentPrimary)
         }
-        if !cluster.instancePods.isEmpty {
+        if !cluster.instancePods.isEmpty || !cluster.missingInstances.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Instances").font(.caption).foregroundStyle(.secondary)
                 ForEach(cluster.instancePods) { pod in
@@ -207,6 +229,13 @@ private struct ClusterRow: View {
                         HealthDot(health: pod.ready ? .ok : .critical, size: 8)
                         Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(
                             pod.ready ? .primary : Color.red)
+                    }
+                }
+                ForEach(cluster.missingInstances, id: \.self) { name in
+                    HStack(spacing: 6) {
+                        HealthDot(health: .critical, size: 8)
+                        Text(verbatim: "\(name) · \(String(localized: "no pod"))").font(.caption.monospaced())
+                            .foregroundStyle(Color.red)
                     }
                 }
             }
@@ -220,6 +249,15 @@ private struct ClusterRow: View {
             .disabled(busy).kubeGated(.cnpgPromote, in: cluster.namespace)
         }
         KubeDeniedNote(.cnpgPromote, in: cluster.namespace)
+        ForEach(cluster.removableInstances, id: \.self) { instance in
+            Button(role: .destructive) {
+                onRemove(instance)
+            } label: {
+                Text("Remove \(instance)")
+            }
+            .disabled(busy).kubeGated(.cnpgDestroy, in: cluster.namespace)
+        }
+        if !cluster.removableInstances.isEmpty { KubeDeniedNote(.cnpgDestroy, in: cluster.namespace) }
         CnpgLifecycleButtons(cluster: cluster, busy: busy, onAction: onLifecycle)
         LabeledContent("WAL archiving", value: archivingText)
         LabeledContent("Backups", value: backupMethod)

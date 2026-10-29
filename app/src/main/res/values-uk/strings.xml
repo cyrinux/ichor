@@ -5344,6 +5344,23 @@
     <string name="cnpg_promote_unavailable">Цей екземпляр неможливо підвищити в поточному стані кластера.</string>
     <string name="cnpg_promote_requested">Запитано підвищення до %1$s</string>
     <string name="cnpg_promote_failed">Не вдалося підвищити %1$s: %2$s</string>
+    <string name="cnpg_destroy_title">Прибрати екземпляр</string>
+    <string name="cnpg_destroy_instance">Прибрати %1$s</string>
+    <string name="cnpg_destroy_risk">Видаляє томи екземпляра, а потім його под, як kubectl cnpg destroy. Потім CloudNativePG клонує нову репліку з primary на наявний вузол.</string>
+    <string name="cnpg_destroy_pod">Под: %1$s</string>
+    <string name="cnpg_destroy_no_pod">Немає пода</string>
+    <string name="cnpg_destroy_node_gone">на вузлі %1$s, якого більше немає</string>
+    <string name="cnpg_destroy_node_present">на вузлі %1$s, що досі в кластері</string>
+    <string name="cnpg_destroy_node_none">не прив\'язаний до вузла</string>
+    <string name="cnpg_destroy_node_unknown">вузол невідомий</string>
+    <string name="cnpg_destroy_block_primary">Primary не можна прибрати, як і будь-який екземпляр, поки primary невідомий.</string>
+    <string name="cnpg_destroy_block_no_other_data">Primary не має тому: цей екземпляр може містити єдину копію даних.</string>
+    <string name="cnpg_destroy_block_not_found">У цього екземпляра не лишилося ні пода, ні тому.</string>
+    <string name="cnpg_destroy_warn_ready">Ця репліка справна: у кластері буде на одну копію менше, доки нова репліка не наздожене.</string>
+    <string name="cnpg_destroy_warn_node_present">Його вузол досі є: екземпляр може повернутися сам, щойно вузол полагодять.</string>
+    <string name="cnpg_destroy_done">%1$s прибрано: CloudNativePG створює нову репліку</string>
+    <string name="cnpg_destroy_failed">Не вдалося прибрати %1$s: %2$s</string>
+    <string name="cnpg_instance_no_pod">немає пода</string>
 
     <string name="cnpg_restart_primary">Перезапустити основний екземпляр</string>
     <string name="cnpg_hibernate_action">Приспати кластер</string>

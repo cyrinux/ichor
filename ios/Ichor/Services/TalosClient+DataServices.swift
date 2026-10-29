@@ -64,6 +64,18 @@ extension TalosClient {
             _ = IchorgoKubeCNPGPromote(config, context, kubeServer, namespace, name, instance, error)
         }
     }
+    func cnpgDestroyPreview(namespace: String, name: String, instance: String) async throws -> CnpgDestroyPreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeCNPGDestroyPreview(config, context, kubeServer, namespace, name, instance, $0)
+        }
+    }
+    /// Removes one instance like `kubectl cnpg destroy`: its PVCs, then its pod (os:admin).
+    func cnpgDestroy(namespace: String, name: String, instance: String) async throws {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeCNPGDestroy(config, context, kubeServer, namespace, name, instance, error)
+        }
+    }
     func volumeSnapshots(namespace: String = "") async throws -> VolumeSnapshots {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeVolumeSnapshots(config, context, kubeServer, namespace, $0)

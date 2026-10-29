@@ -5348,6 +5348,23 @@
     <string name="cnpg_promote_unavailable">Этот экземпляр нельзя повысить в текущем состоянии кластера.</string>
     <string name="cnpg_promote_requested">Запрошено повышение %1$s</string>
     <string name="cnpg_promote_failed">Не удалось повысить %1$s: %2$s</string>
+    <string name="cnpg_destroy_title">Удалить экземпляр</string>
+    <string name="cnpg_destroy_instance">Удалить %1$s</string>
+    <string name="cnpg_destroy_risk">Удаляет тома экземпляра, затем его под, как kubectl cnpg destroy. Затем CloudNativePG клонирует новую реплику с primary на существующий узел.</string>
+    <string name="cnpg_destroy_pod">Под: %1$s</string>
+    <string name="cnpg_destroy_no_pod">Нет пода</string>
+    <string name="cnpg_destroy_node_gone">на узле %1$s, которого больше нет</string>
+    <string name="cnpg_destroy_node_present">на узле %1$s, который ещё в кластере</string>
+    <string name="cnpg_destroy_node_none">не привязан к узлу</string>
+    <string name="cnpg_destroy_node_unknown">узел неизвестен</string>
+    <string name="cnpg_destroy_block_primary">Primary удалить нельзя, как и любой экземпляр, пока primary неизвестен.</string>
+    <string name="cnpg_destroy_block_no_other_data">У primary нет тома: этот экземпляр может хранить единственную копию данных.</string>
+    <string name="cnpg_destroy_block_not_found">У этого экземпляра не осталось ни пода, ни тома.</string>
+    <string name="cnpg_destroy_warn_ready">Эта реплика исправна: в кластере будет на одну копию меньше, пока новая реплика не догонит.</string>
+    <string name="cnpg_destroy_warn_node_present">Его узел ещё есть: экземпляр может вернуться сам, когда узел починят.</string>
+    <string name="cnpg_destroy_done">%1$s удалён: CloudNativePG создаёт новую реплику</string>
+    <string name="cnpg_destroy_failed">Не удалось удалить %1$s: %2$s</string>
+    <string name="cnpg_instance_no_pod">нет пода</string>
 
     <string name="cnpg_restart_primary">Перезапустить primary</string>
     <string name="cnpg_hibernate_action">Перевести кластер в спящий режим</string>

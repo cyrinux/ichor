@@ -33,6 +33,8 @@ enum class KubeAction(val wire: String) {
     /** A node's taints and labels. */
     EDIT_NODE_META("editNodeMeta"),
     CNPG_PROMOTE("cnpgPromote"),
+    /** Remove one instance: its PVCs, then its pod. */
+    CNPG_DESTROY("cnpgDestroy"),
     CNPG_RESTART_PRIMARY("cnpgRestartPrimary"),
     CNPG_HIBERNATE("cnpgHibernate"),
     LONGHORN_SALVAGE("longhornSalvage"),

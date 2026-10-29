@@ -63,6 +63,9 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
     val promoteBusy by actions.promoteBusy.collectAsStateWithLifecycle()
     var promotion by remember { mutableStateOf<Pair<CnpgCluster, String>?>(null) }
     promotion?.let { (cluster, instance) -> CnpgPromoteConfirmDialog(cluster, instance, actions, onDismiss = { promotion = null }, onConfirm = { actions.promote(cluster, instance); promotion = null }) }
+    val destroyBusy by actions.destroyBusy.collectAsStateWithLifecycle()
+    var removal by remember { mutableStateOf<Pair<CnpgCluster, String>?>(null) }
+    removal?.let { (cluster, instance) -> CnpgDestroyConfirmDialog(cluster, instance, actions, onDismiss = { removal = null }, onConfirm = { actions.destroy(cluster, instance); removal = null }) }
     var confirming by remember { mutableStateOf<CnpgCluster?>(null) }
     confirming?.let { c ->
         CnpgBackupConfirmDialog(
@@ -125,15 +128,16 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 onBackup = { confirming = c },
                 promoting = c.label in promoteBusy,
                 onPromote = { promotion = c to it },
-                lifecycleBusy = c.label in lifecycleBusy,
+                lifecycleBusy = c.label in lifecycleBusy || c.label in destroyBusy,
                 onLifecycle = { lifecycleTarget = c to it },
+                onDestroy = { removal = c to it },
             )
         }
     }
 }
 
 @Composable
-private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit) {
+private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit, onDestroy: (String) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().expandable(open, onToggle = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -155,24 +159,27 @@ private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, back
             }
             Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, tint = muted)
         }
-        if (open) Details(c, backingUp, onBackup, promoting, onPromote, lifecycleBusy, onLifecycle)
+        if (open) Details(c, backingUp, onBackup, promoting, onPromote, lifecycleBusy, onLifecycle, onDestroy)
     }
 }
 
 @Composable
-private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit) {
+private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit, onDestroy: (String) -> Unit) {
     Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         if (c.phase.isNotEmpty()) InfoRow(stringResource(R.string.cnpg_phase), listOf(c.phase, c.phaseReason).filter { it.isNotEmpty() }.joinToString(": "))
         if (c.currentPrimary.isNotEmpty()) {
             val primary = if (c.targetPrimary.isNotEmpty() && c.targetPrimary != c.currentPrimary) "${c.currentPrimary} → ${c.targetPrimary}" else c.currentPrimary
             InfoRow(stringResource(R.string.cnpg_primary), primary, mono = true)
         }
-        if (c.instancePods.isNotEmpty()) {
+        if (c.instancePods.isNotEmpty() || c.missingInstances.isNotEmpty()) {
             Text(stringResource(R.string.cnpg_instances), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             c.instancePods.forEach { DataPodLine(it.name, it.ready, it.node, it.phase, it.role, indent = 8.dp) }
+            val noPod = stringResource(R.string.cnpg_instance_no_pod)
+            c.missingInstances.forEach { DataPodLine(it, ready = false, node = "", phase = noPod, indent = 8.dp) }
         }
         CnpgLifecycleButtons(c, backingUp || promoting || lifecycleBusy, onLifecycle)
         CnpgPromoteButtons(c, backingUp || promoting || lifecycleBusy, onPromote)
+        CnpgDestroyButtons(c, backingUp || promoting || lifecycleBusy, onDestroy)
         InfoRow(stringResource(R.string.cnpg_archiving), archivingText(c.archiving))
         InfoRow(
             stringResource(R.string.cnpg_backups),

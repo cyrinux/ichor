@@ -5,6 +5,7 @@ import name.levis.ichor.model.LonghornAttachmentPreview
 import name.levis.ichor.model.LonghornEngineUpgradePreview
 import name.levis.ichor.model.LonghornSalvagePreview
 import name.levis.ichor.model.VolumeSnapshots
+import name.levis.ichor.model.CnpgDestroyPreview
 import name.levis.ichor.model.CnpgPromotePreview
 import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.DataServices
@@ -173,6 +174,15 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
 
     suspend fun cnpgPromote(namespace: String, name: String, instance: String) = go.kube { cfg, ctx, server ->
         Ichorgo.kubeCNPGPromote(cfg, ctx, server, namespace, name, instance)
+    }
+
+    suspend fun cnpgDestroyPreview(namespace: String, name: String, instance: String): CnpgDestroyPreview = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(CnpgDestroyPreview.serializer(), Ichorgo.kubeCNPGDestroyPreview(cfg, ctx, server, namespace, name, instance))
+    }
+
+    /** Removes [instance] of the cluster like `kubectl cnpg destroy`: its PVCs, then its pod (os:admin). */
+    suspend fun cnpgDestroy(namespace: String, name: String, instance: String) = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeCNPGDestroy(cfg, ctx, server, namespace, name, instance)
     }
 
     /** The backups of the Velero schedule [namespace]/[schedule], or the ones taken by hand when it is "" (os:admin). Never cached. */

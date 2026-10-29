@@ -5112,6 +5112,23 @@
     <string name="cnpg_promote_unavailable">This instance cannot be promoted in the cluster\'s current state.</string>
     <string name="cnpg_promote_requested">Promotion to %1$s requested</string>
     <string name="cnpg_promote_failed">Could not promote %1$s: %2$s</string>
+    <string name="cnpg_destroy_title">Remove instance</string>
+    <string name="cnpg_destroy_instance">Remove %1$s</string>
+    <string name="cnpg_destroy_risk">Deletes the instance\'s volumes, then its pod, like kubectl cnpg destroy. CloudNativePG then clones a new replica from the primary onto a node that exists.</string>
+    <string name="cnpg_destroy_pod">Pod: %1$s</string>
+    <string name="cnpg_destroy_no_pod">No pod</string>
+    <string name="cnpg_destroy_node_gone">on node %1$s, which no longer exists</string>
+    <string name="cnpg_destroy_node_present">on node %1$s, still in the cluster</string>
+    <string name="cnpg_destroy_node_none">not tied to a node</string>
+    <string name="cnpg_destroy_node_unknown">node unknown</string>
+    <string name="cnpg_destroy_block_primary">The primary cannot be removed, nor any instance while no primary is known.</string>
+    <string name="cnpg_destroy_block_no_other_data">The primary keeps no volume: this instance may hold the only copy of the data.</string>
+    <string name="cnpg_destroy_block_not_found">This instance has no pod and no volume left.</string>
+    <string name="cnpg_destroy_warn_ready">This replica is healthy: the cluster has one copy less until the new replica catches up.</string>
+    <string name="cnpg_destroy_warn_node_present">Its node is still there: the instance may come back on its own once the node is fixed.</string>
+    <string name="cnpg_destroy_done">%1$s removed: CloudNativePG creates a new replica</string>
+    <string name="cnpg_destroy_failed">Could not remove %1$s: %2$s</string>
+    <string name="cnpg_instance_no_pod">no pod</string>
 
     <string name="cnpg_restart_primary">Restart primary</string>
     <string name="cnpg_hibernate_action">Hibernate cluster</string>

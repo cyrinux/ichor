@@ -20,8 +20,9 @@ import name.levis.ichor.ui.uiText
 data class CnpgBackupResult(val label: String, val backup: String, val error: UiText?)
 
 /**
- * On-demand CloudNativePG backups, run in [scope] (a ViewModel's). [onChanged] runs after a
- * backup was created, to refresh the data services.
+ * CloudNativePG actions (backups, promotion, restart and hibernation, instance removal), run
+ * in [scope] (a ViewModel's). [onChanged] runs after an action was accepted, to refresh the
+ * data services.
  */
 class CnpgActions(
     private val scope: CoroutineScope,
@@ -32,7 +33,7 @@ class CnpgActions(
     val lifecycleBusy: StateFlow<Set<String>> get() = lifecycle.busy
     val lifecycleResults: Flow<CnpgLifecycleResult> get() = lifecycle.results
     fun lifecycle(cluster: CnpgCluster, action: CnpgLifecycleAction) {
-        if (cluster.label in busy.value || cluster.label in promoteBusy.value || cluster.label in lifecycleBusy.value) return
+        if (running(cluster)) return
         lifecycle.launch(cluster.label, {
             when (action) {
                 CnpgLifecycleAction.RESTART -> dataServices.cnpgRestartPrimary(cluster.namespace, cluster.name)
@@ -41,12 +42,28 @@ class CnpgActions(
             }
         }, { CnpgLifecycleResult(cluster.label, it.exceptionOrNull()?.uiText()) }, onChanged)
     }
+    private val removal = KeyedActions<CnpgDestroyResult>(scope)
+    val destroyBusy: StateFlow<Set<String>> get() = removal.busy
+    val destroyResults: Flow<CnpgDestroyResult> get() = removal.results
+    suspend fun destroyPreview(cluster: CnpgCluster, instance: String) = dataServices.cnpgDestroyPreview(cluster.namespace, cluster.name, instance)
+    fun destroy(cluster: CnpgCluster, instance: String) {
+        if (running(cluster)) return
+        removal.launch(cluster.label, { dataServices.cnpgDestroy(cluster.namespace, cluster.name, instance) }, {
+            CnpgDestroyResult(cluster.label, instance, it.exceptionOrNull()?.uiText())
+        }, onChanged)
+    }
+
+    /** One action at a time per cluster. */
+    private fun running(cluster: CnpgCluster): Boolean = cluster.label.let {
+        it in busy.value || it in promoteBusy.value || it in lifecycleBusy.value || it in destroyBusy.value
+    }
+
     private val promotion = KeyedActions<CnpgPromoteResult>(scope)
     val promoteBusy: StateFlow<Set<String>> get() = promotion.busy
     val promoteResults: Flow<CnpgPromoteResult> get() = promotion.results
     suspend fun preview(cluster: CnpgCluster, instance: String) = dataServices.cnpgPromotePreview(cluster.namespace, cluster.name, instance)
     fun promote(cluster: CnpgCluster, instance: String) {
-        if (cluster.label in busy.value || cluster.label in promoteBusy.value || cluster.label in lifecycleBusy.value) return
+        if (running(cluster)) return
         promotion.launch(cluster.label, { dataServices.cnpgPromote(cluster.namespace, cluster.name, instance) }, {
             CnpgPromoteResult(cluster.label, instance, it.exceptionOrNull()?.uiText())
         }, onChanged)
@@ -59,7 +76,7 @@ class CnpgActions(
     val results: Flow<CnpgBackupResult> get() = actions.results
 
     fun backup(cluster: CnpgCluster) {
-        if (cluster.label in busy.value || cluster.label in promoteBusy.value || cluster.label in lifecycleBusy.value) return
+        if (running(cluster)) return
         val key = cluster.label
         actions.launch(key, { dataServices.cnpgBackup(cluster.namespace, cluster.name) }, {
             CnpgBackupResult(key, it.getOrNull().orEmpty(), it.exceptionOrNull()?.uiText())

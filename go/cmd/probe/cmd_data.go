@@ -52,6 +52,13 @@ var dataCommands = []command{
 		err := ichorgo.KubeCNPGPromote(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
 		return "requested", err
 	}},
+	{name: "cnpg-destroy-preview", args: "NAMESPACE CLUSTER INSTANCE", run: func(e env) (string, error) {
+		return ichorgo.KubeCNPGDestroyPreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "cnpg-destroy", args: "NAMESPACE CLUSTER INSTANCE", run: func(e env) (string, error) {
+		err := ichorgo.KubeCNPGDestroy(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+		return "removed", err
+	}},
 	{name: "velero-backups", args: "NAMESPACE [SCHEDULE]", run: func(e env) (string, error) {
 		// velero-backups NAMESPACE [SCHEDULE]: a schedule's backups, or the ones taken by hand.
 		return ichorgo.KubeVeleroBackups(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))

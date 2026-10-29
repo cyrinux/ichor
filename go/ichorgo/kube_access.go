@@ -137,6 +137,14 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
 		{ssarAttributes{Verb: "get", Resource: "pods"}, true},
 	},
+	// kubectl cnpg destroy: the instance's PVCs, then its pod. Reading the volume's node is
+	// optional: without it the preview says the node is unknown.
+	"cnpgDestroy": {
+		{ssarAttributes{Verb: "delete", Resource: "persistentvolumeclaims"}, true},
+		{ssarAttributes{Verb: "delete", Resource: "pods"}, true},
+		{ssarAttributes{Verb: "list", Resource: "persistentvolumeclaims"}, true},
+		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
+	},
 	// Velero: a backup now is a Backup copied from the schedule; a deletion is a request the
 	// server carries out. SelfSubjectAccessReview cannot see Velero's own refusals (a paused
 	// schedule, a read-only storage location).
@@ -257,7 +265,7 @@ type accessNeed struct {
 // restartDaemonSet), scale (scaleStatefulSet), deletePod, execPod, debugPod, debugNode, suspendCronJob,
 // triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
-// fluxReconcileBucket), cordonNode, drainNode, autoscale, autoscaleKeda, cnpgPromote, createVolumeSnapshot,
+// fluxReconcileBucket), cordonNode, drainNode, autoscale, autoscaleKeda, cnpgPromote, cnpgDestroy, createVolumeSnapshot,
 // veleroBackupNow, veleroDeleteBackup, veleroRestore, vmStart, vmStop, vmRestart,
 // vmMigrate, vmPause, vmUnpause, vmConsole, and plugin:<id>:<action> for each action of a
 // built-in plugin (plugin_action.go). Answers are cached a few minutes.

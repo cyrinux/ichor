@@ -27,6 +27,10 @@ data class CnpgCluster(
     val currentPrimary: String = "",
     val targetPrimary: String = "",
     val instancePods: List<CnpgPod> = emptyList(),
+    /** Instances the operator marks failed. */
+    val failedInstances: List<String> = emptyList(),
+    /** Instances the operator knows (a volume left) that have no pod, such as an evicted primary. */
+    val missingInstances: List<String> = emptyList(),
     /** ok, failing, off or unknown. */
     val archiving: String = "",
     /** ok, failed, stale or none. */
