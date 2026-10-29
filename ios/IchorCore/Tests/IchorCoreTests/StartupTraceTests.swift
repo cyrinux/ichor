@@ -50,27 +50,17 @@ final class StartupTraceTests: XCTestCase {
 }
 
 /// The steps a test's ring sink received, behind a lock.
-private final class StepBox: @unchecked Sendable {
-    private let lock = NSLock()
-    private var received: [String] = []
-    private var timed = true
+private final class StepBox: Sendable {
+    private let state = Locked<(received: [String], timed: Bool)>(([], true))
 
     func add(_ step: String, _ ok: Bool) {
-        lock.lock()
-        defer { lock.unlock() }
-        received.append(step)
-        timed = timed && ok
+        state.withLock { s in
+            s.received.append(step)
+            s.timed = s.timed && ok
+        }
     }
 
-    var steps: [String] {
-        lock.lock()
-        defer { lock.unlock() }
-        return received
-    }
+    var steps: [String] { state.get().received }
 
-    var allTimed: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return timed
-    }
+    var allTimed: Bool { state.get().timed }
 }

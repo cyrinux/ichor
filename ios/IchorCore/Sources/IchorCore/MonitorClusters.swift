@@ -279,35 +279,33 @@ public func withDeadline<T: Sendable>(_ seconds: TimeInterval, _ work: @escaping
 }
 
 /// Resumes a continuation with the first result given, once, whichever comes first.
-private final class FirstResult<T: Sendable>: @unchecked Sendable {
-    private let lock = NSLock()
-    private var continuation: CheckedContinuation<T?, Never>?
-    private var done = false
-    private var value: T?
+private final class FirstResult<T: Sendable>: Sendable {
+    private struct State {
+        var continuation: CheckedContinuation<T?, Never>?
+        var done = false
+        var value: T?
+    }
+
+    private let state = Locked(State())
 
     func wait(_ continuation: CheckedContinuation<T?, Never>) {
-        lock.lock()
-        if done {
-            let value = value
-            lock.unlock()
-            continuation.resume(returning: value)
-            return
+        // Already finished: resume at once with its result, outside the lock.
+        let finished: T?? = state.withLock { s in
+            if s.done { return .some(s.value) }
+            s.continuation = continuation
+            return .none
         }
-        self.continuation = continuation
-        lock.unlock()
+        if case .some(let value) = finished { continuation.resume(returning: value) }
     }
 
     func finish(_ result: T?) {
-        lock.lock()
-        guard !done else {
-            lock.unlock()
-            return
+        let waiting: CheckedContinuation<T?, Never>? = state.withLock { s in
+            guard !s.done else { return nil }
+            s.done = true
+            s.value = result
+            defer { s.continuation = nil }
+            return s.continuation
         }
-        done = true
-        value = result
-        let waiting = continuation
-        continuation = nil
-        lock.unlock()
         waiting?.resume(returning: result)
     }
 }

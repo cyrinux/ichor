@@ -6,26 +6,22 @@ final class JSONSinkTests: XCTestCase {
         let n: Int
     }
 
-    private final class Box<T>: @unchecked Sendable {
-        var values: [T] = []
-    }
-
     func testEmitsDecodedItemsAndDropsTheRest() {
-        let items = Box<Item>()
-        let sink = JSONSink<Item>(item: { items.values.append($0) }, done: { _ in })
+        let items = Locked<[Item]>([])
+        let sink = JSONSink<Item>(item: { item in items.withLock { $0.append(item) } }, done: { _ in })
         sink.emit(#"{"n":1}"#)
         sink.emit(nil)
         sink.emit("not json")
         sink.emit(#"{"n":2}"#)
-        XCTAssertEqual(items.values, [Item(n: 1), Item(n: 2)])
+        XCTAssertEqual(items.get(), [Item(n: 1), Item(n: 2)])
     }
 
     func testFinishReportsOnlyARealError() {
-        let ends = Box<String?>()
-        let sink = JSONSink<Item>(item: { _ in }, done: { ends.values.append($0) })
+        let ends = Locked<[String?]>([])
+        let sink = JSONSink<Item>(item: { _ in }, done: { end in ends.withLock { $0.append(end) } })
         sink.finish("")
         sink.finish(nil)
         sink.finish("boom")
-        XCTAssertEqual(ends.values, [nil, nil, "boom"])
+        XCTAssertEqual(ends.get(), [nil, nil, "boom"])
     }
 }
