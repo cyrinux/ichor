@@ -53,6 +53,8 @@ var (
 // error says why (DataStoreStatus keeps it for the Support screen).
 func SetDataDir(dir string, key []byte) (err error) {
 	defer maskErr(&err)
+	// After the unlock below: the diagnostics ring moves to the new directory.
+	defer func() { diagDataDirChanged(dataDir()) }()
 
 	nodeNames.Lock()
 	defer nodeNames.Unlock()

@@ -12,11 +12,16 @@ import (
 )
 
 // What the mask learns about a cluster: the real names and addresses its results carry,
-// so they can be replaced consistently and mapped back.
+// so they can be replaced consistently and mapped back. The screenshot mask passes what it
+// is taught on to diagMask (diag.go), which learns even while screenshot mode is off.
 
 // learnConfig registers a talosconfig's contexts and addresses, in a stable order, so the
 // masked values the app holds map back even before any data call made them visible.
 func (m *privacyMask) learnConfig(configYAML string) {
+	if m == privacy {
+		diagMask.learnConfig(configYAML)
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -199,6 +204,10 @@ type hostEntry struct {
 // learnHosts names new hosts cp-N / worker-N / node-N, in address order so the same
 // cluster always gets the same names.
 func (m *privacyMask) learnHosts(entries []hostEntry) {
+	if m == privacy {
+		diagMask.learnHosts(entries)
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -270,6 +279,10 @@ func (m *privacyMask) learnHostLocked(hostname, role string) {
 }
 
 func (m *privacyMask) learnHost(hostname, role string) {
+	if m == privacy {
+		diagMask.learnHost(hostname, role)
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -279,6 +292,10 @@ func (m *privacyMask) learnHost(hostname, role string) {
 }
 
 func (m *privacyMask) learnDomains(domains ...string) {
+	if m == privacy {
+		diagMask.learnDomains(domains...)
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

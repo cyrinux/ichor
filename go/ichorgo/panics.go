@@ -1,13 +1,19 @@
 package ichorgo
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
 // A Go panic that reaches gomobile aborts the whole app, so none may leave the package:
 // exported functions recover in maskResult/maskErr, background runs with onPanic.
 // recover only works when called by the deferred function itself, hence one helper per use.
 
 func panicError(r any) error {
-	return fmt.Errorf("internal error: %v", r)
+	err := fmt.Errorf("internal error: %v", r)
+	diag(slog.LevelError, "api", "panic recovered", err)
+
+	return err
 }
 
 // recoverPanic turns a panic into *err (use with defer and a named result).

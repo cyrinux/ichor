@@ -48,7 +48,13 @@ func maskErr(err *error) {
 		*err = panicError(r)
 	}
 
-	if *err == nil || !privacy.isEnabled() {
+	if *err == nil {
+		return
+	}
+
+	diagCallFailed(*err)
+
+	if !privacy.isEnabled() {
 		return
 	}
 
@@ -171,6 +177,10 @@ func (l maskedSnapshotListener) OnDone(path string, size int64, sha256 string, e
 // Best effort, and only while the mask is on: it costs one extra call per overview.
 func learnClusterHosts(ctx context.Context, c *client.Client, nodes []nodeOverview, domains []string) {
 	if !privacy.isEnabled() {
+		// The diagnostics mask still learns the overview's own nodes (no extra call).
+		diagMask.learnDomains(domains...)
+		diagMask.learnHosts(overviewHostEntries(nodes))
+
 		return
 	}
 
@@ -183,6 +193,9 @@ func learnClusterHosts(ctx context.Context, c *client.Client, nodes []nodeOvervi
 // once the overview is complete.
 func learnNodeHost(n nodeOverview, domain string) {
 	if !privacy.isEnabled() {
+		diagMask.learnDomains(domain)
+		diagMask.learnHosts(overviewHostEntries([]nodeOverview{n}))
+
 		return
 	}
 
@@ -211,6 +224,19 @@ func clusterHostEntries(ctx context.Context, c *client.Client, nodes []nodeOverv
 
 	if via != "" {
 		entries = append(entries, clusterMembers(ctx, c, via)...)
+	}
+
+	return entries
+}
+
+// overviewHostEntries is clusterHostEntries without the member call.
+func overviewHostEntries(nodes []nodeOverview) []hostEntry {
+	entries := make([]hostEntry, 0, len(nodes))
+
+	for _, n := range nodes {
+		if n.Hostname != n.Node {
+			entries = append(entries, hostEntry{address: n.Node, hostname: n.Hostname, role: n.Role})
+		}
 	}
 
 	return entries
@@ -247,13 +273,16 @@ func learnSearchDomains(resolvers []*network.ResolverStatus) {
 // learnDiscoveredHosts names the discovered members like the overview's, so the masked
 // addresses the app gets back map to real ones when it adds them to the talosconfig.
 func learnDiscoveredHosts(nodes []discoveredNode) {
-	if !privacy.isEnabled() {
-		return
-	}
-
 	entries := make([]hostEntry, 0, len(nodes))
 	for _, n := range nodes {
 		entries = append(entries, hostEntry{address: n.Address, hostname: n.Hostname, role: n.Role})
+	}
+
+	// privacy.learnHosts passes them on to diagMask, which learns them either way.
+	if !privacy.isEnabled() {
+		diagMask.learnHosts(entries)
+
+		return
 	}
 
 	privacy.learnHosts(entries)

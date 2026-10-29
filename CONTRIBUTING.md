@@ -116,6 +116,13 @@ The trace carries step names, counts and durations only, but before posting numb
 issue, check that nothing identifies your clusters: write "~23 contexts" and "cluster B", not
 a context name, a hostname or an address.
 
+The Go core also keeps a diagnostics ring (`go/ichorgo/diag.go`): every failed exported call,
+recovered panic and startup step, plus anything logged through `log/slog`, redacted on write
+whatever the screenshot mode. Log a constant message and attributes that are numbers, bools,
+durations, counts, status codes, kinds or verbs: never a context, node, namespace, object
+name or URL. `just probe -data-dir DIR diag-tail [N]` prints it (DIR keeps it across runs),
+`just probe -data-dir DIR diag-export /tmp/diag.zip` writes the zip the apps will share.
+
 ## Reproducible builds
 
 Every release APK on GitHub can be rebuilt from its tag and must come out the same once the
