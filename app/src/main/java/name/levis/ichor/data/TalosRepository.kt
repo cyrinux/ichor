@@ -402,7 +402,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         if (configs.config.value?.activeSummary?.isKube == true) {
             go.kube { cfg, ctx, server -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.kubeInventory(cfg, ctx, server)) }
         } else {
-            call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx)) }
+            // The apps that run no container come from where the other Kubernetes calls go.
+            val kube = go.kubeTarget()
+            call { cfg, ctx ->
+                TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx, kube.yaml, kube.context, kube.server))
+            }
         }
     }
 

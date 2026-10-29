@@ -2004,6 +2004,7 @@
     <string name="apps_section_system">Kubernetes e Talos</string>
     <string name="apps_section_unknown">Non riconosciute</string>
     <string name="apps_unpinned">Immagine non fissata</string>
+    <string name="apps_not_starting">Non si avvia</string>
     <string name="apps_stat_containers">Container</string>
     <string name="apps_stat_nodes">Nodi</string>
     <string name="apps_stat_memory">Memoria</string>

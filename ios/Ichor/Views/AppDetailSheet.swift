@@ -72,11 +72,21 @@ struct AppDetailSheet: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             HStack(spacing: 6) {
+                if app.isNotStarting { Tag(String(localized: "Not starting"), color: .red) }
+                if app.isStopped { Tag(String(localized: "Stopped"), color: .secondary) }
                 if !app.version.isEmpty { Tag(app.version, mono: true) }
                 if app.drift {
                     Tag(String(localized: "\(app.versionCount) versions running"), color: attentionColor)
                 }
                 if app.unpinned { Tag(String(localized: "Unpinned image"), color: attentionColor) }
+            }
+            if !app.reason.isEmpty {
+                Text(verbatim: app.reason)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(6)
+                    .textSelection(.enabled)
             }
         }
         .frame(maxWidth: .infinity)

@@ -32,7 +32,7 @@ struct AppsCard: View {
     }
 
     private func content(apps: [InventoryApp], containers: Int) -> some View {
-        let running = apps.filter { !$0.system }.count
+        let running = apps.filter { !$0.system && $0.state == nil }.count
         let attention = apps.filter(\.needsAttention).count
         let tiles = overviewTiles(apps, limit: 6, remoteIcons: remoteIcons)
         return VStack(alignment: .leading, spacing: 10) {

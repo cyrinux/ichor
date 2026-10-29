@@ -117,6 +117,38 @@ class InventoryTest {
     }
 
     @Test
+    fun decodesIdleAppsAndTheirState() {
+        val idle = TalosJson.decodeFromString(
+            Inventory.serializer(),
+            """
+            {"apps":[
+              {"id":"paperless-ngx","name":"Paperless-ngx","category":"productivity","icon":"paperless-ngx","known":true,
+               "version":"3.3.4","containers":0,"running":0,"images":[],"pods":[],"state":"notStarting",
+               "reason":"volume is faulted",
+               "workloads":[{"kind":"Deployment","namespace":"docs","name":"paperless","desired":1,"reason":"volume is faulted"}]},
+              {"id":"paperless-ai","name":"Paperless Ai","icon":"paperless-ai","known":true,"containers":0,"running":0,
+               "state":"stopped","workloads":[{"kind":"Deployment","namespace":"docs","name":"paperless-ai","desired":0}]},
+              {"id":"zz-running","name":"Zz Running","icon":"","known":true,"containers":1,"running":1}
+            ]}
+            """.trimIndent(),
+        )
+        val notStarting = idle.apps[0]
+        assertTrue(notStarting.notStarting)
+        assertFalse(notStarting.stopped)
+        assertTrue(notStarting.attention)
+        assertEquals("volume is faulted", notStarting.reason)
+        assertEquals(InventoryWorkload("Deployment", "docs", "paperless", 1, "volume is faulted"), notStarting.workloads.single())
+        val stopped = idle.apps[1]
+        assertTrue(stopped.stopped)
+        assertFalse(stopped.attention)
+        // A running app has neither, and no workloads by default.
+        assertFalse(idle.apps[2].stopped || idle.apps[2].notStarting)
+        assertTrue(idle.apps[2].workloads.isEmpty())
+        // The overview shows running apps before stopped ones, even with an icon.
+        assertEquals(listOf("paperless-ngx", "zz-running", "paperless-ai"), idle.apps.overviewTiles().map { it.id })
+    }
+
+    @Test
     fun monogramTakesTwoInitials() {
         assertEquals("UK", monogram("Uptime Kuma"))
         assertEquals("NB", monogram("nightly-backup"))

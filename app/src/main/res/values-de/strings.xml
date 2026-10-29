@@ -1996,6 +1996,7 @@
     <string name="apps_section_system">Kubernetes &amp; Talos</string>
     <string name="apps_section_unknown">Nicht erkannt</string>
     <string name="apps_unpinned">Image nicht festgelegt</string>
+    <string name="apps_not_starting">Startet nicht</string>
     <string name="apps_stat_containers">Container</string>
     <string name="apps_stat_nodes">Nodes</string>
     <string name="apps_stat_memory">Speicher</string>

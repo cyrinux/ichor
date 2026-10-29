@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.WorkloadRef
 import name.levis.ichor.model.ref
 import name.levis.ichor.model.routePods
 import name.levis.ichor.ui.LoadingViewModel
@@ -11,8 +12,8 @@ import name.levis.ichor.ui.workloads.WorkloadRestarts
 
 /**
  * The Deployments, StatefulSets and DaemonSets running the app of the open detail sheet, to
- * restart them from there. Asks the Kubernetes API (os:admin) for its pods' owners: only
- * those pods and workloads are read, never a cluster-wide list.
+ * restart them from there. Asks the Kubernetes API (os:admin) for its pods' owners, and for
+ * the idle workloads the inventory names: only those are read, never a cluster-wide list.
  */
 class AppWorkloadsViewModel(private val kube: KubeRepository) : LoadingViewModel<List<KubeWorkload>>() {
     private var app: InventoryApp? = null
@@ -27,8 +28,14 @@ class AppWorkloadsViewModel(private val kube: KubeRepository) : LoadingViewModel
         // One deleted since drops out.
         found?.let { known -> return kube.workloadsNamed(known.map { it.ref }) }
         val pods = app?.routePods.orEmpty()
-        if (pods.isEmpty()) return emptyList()
-        return kube.appWorkloads(pods).also { found = it }
+        // Those that run nothing have no pod to lead to them: the inventory names them.
+        val idle = app?.workloads.orEmpty().map { WorkloadRef(it.kind, it.namespace, it.name) }
+        if (pods.isEmpty() && idle.isEmpty()) return emptyList()
+        val fromPods = if (pods.isEmpty()) emptyList() else kube.appWorkloads(pods)
+        val named = if (idle.isEmpty()) emptyList() else kube.workloadsNamed(idle)
+        return (fromPods + named).distinctBy { it.ref }
+            .sortedWith(compareBy({ it.namespace }, { it.name }, { it.kind }))
+            .also { found = it }
     }
 
     // Show the rollout starting: the controller already bumped the generation.

@@ -1998,6 +1998,7 @@
     <string name="apps_section_system">Kubernetes e Talos</string>
     <string name="apps_section_unknown">Não reconhecidos</string>
     <string name="apps_unpinned">Imagem não fixada</string>
+    <string name="apps_not_starting">Não inicia</string>
     <string name="apps_stat_containers">Contêineres</string>
     <string name="apps_stat_nodes">Nós</string>
     <string name="apps_stat_memory">Memória</string>

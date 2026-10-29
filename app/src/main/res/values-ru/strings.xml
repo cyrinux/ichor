@@ -2116,6 +2116,7 @@
     <string name="apps_section_system">Kubernetes и Talos</string>
     <string name="apps_section_unknown">Не распознаны</string>
     <string name="apps_unpinned">Незакреплённый образ</string>
+    <string name="apps_not_starting">Не запускается</string>
     <string name="apps_stat_containers">Контейнеры</string>
     <string name="apps_stat_nodes">Узлы</string>
     <string name="apps_stat_memory">Память</string>

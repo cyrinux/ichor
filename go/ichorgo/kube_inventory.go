@@ -21,6 +21,14 @@ func KubeInventory(configYAML, contextName, kubeServer string) (out string, err 
 	}
 
 	inv, err := withKube(target, func(ctx context.Context, k *kubeClient) (inventory, error) {
+		// Best effort, up to idleGrace past the pods: without it, the apps that run nothing are
+		// only left out.
+		idle := inBackground(func() []idleWorkload {
+			idle, _ := readIdleWorkloads(ctx, k) //nolint:errcheck
+
+			return idle
+		})
+
 		list, err := listPods(ctx, k)
 		if err != nil {
 			return inventory{}, err
@@ -28,7 +36,7 @@ func KubeInventory(configYAML, contextName, kubeServer string) (out string, err 
 
 		nodes := podContainersByNode(list.Pods)
 
-		return buildInventory(time.Now().UnixMilli(), len(nodes), nodes), nil
+		return withIdleWorkloads(buildInventory(time.Now().UnixMilli(), len(nodes), nodes), idle()), nil
 	})
 	if err != nil {
 		return "", err

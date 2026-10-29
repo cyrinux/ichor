@@ -69,11 +69,18 @@ struct AppWorkloadsSection: View {
         guard let client = model.client else { return }
         let known = found
         let pods = app.routePods
+        // Those that run nothing have no pod to lead to them: the inventory names them.
+        let idle = app.workloads.map { WorkloadRef(kind: $0.kind, namespace: $0.namespace, name: $0.name) }
         let result: LoadState<[KubeWorkload]> = await .from {
             // One deleted since drops out.
             if let known { return try await client.workloadsNamed(known.map(\.ref)) }
-            guard !pods.isEmpty else { return [] }
-            return try await client.appWorkloads(pods: pods)
+            var fromPods: [KubeWorkload] = []
+            if !pods.isEmpty { fromPods = try await client.appWorkloads(pods: pods) }
+            var named: [KubeWorkload] = []
+            if !idle.isEmpty { named = try await client.workloadsNamed(idle) }
+            var seen = Set<WorkloadRef>()
+            return (fromPods + named).filter { seen.insert($0.ref).inserted }
+                .sorted { ($0.namespace, $0.name, $0.kind) < ($1.namespace, $1.name, $1.kind) }
         }
         if found == nil, case .loaded(let workloads, _, _) = result { found = workloads }
         state = state.refreshed(with: result)

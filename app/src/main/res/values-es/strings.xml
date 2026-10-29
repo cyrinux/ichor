@@ -2004,6 +2004,7 @@
     <string name="apps_section_system">Kubernetes y Talos</string>
     <string name="apps_section_unknown">No reconocidas</string>
     <string name="apps_unpinned">Imagen sin fijar</string>
+    <string name="apps_not_starting">No arranca</string>
     <string name="apps_stat_containers">Contenedores</string>
     <string name="apps_stat_nodes">Nodos</string>
     <string name="apps_stat_memory">Memoria</string>

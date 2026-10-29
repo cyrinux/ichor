@@ -69,13 +69,20 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
     public let memory: UInt64
     public let images: [InventoryImage]
     public let pods: [InventoryPod]
+    /// Nil with a running container, else stopped or not starting, from `workloads`.
+    public let state: AppRunState?
+    /// Why its pods do not start (the kubelet's or a warning event's words); empty when not known.
+    public let reason: String
+    /// Its Deployments and StatefulSets without a ready pod.
+    public let workloads: [InventoryWorkload]
 
     public init(
         id: String, name: String, category: AppCategory = .other, icon: String? = nil, remoteIcon: String? = nil,
         iconURL: String? = nil, known: Bool = true, system: Bool = false, version: String = "", drift: Bool = false,
         unpinned: Bool = false,
         namespaces: [String] = [], nodes: [String] = [], containers: Int = 0, running: Int = 0, memory: UInt64 = 0,
-        images: [InventoryImage] = [], pods: [InventoryPod] = []
+        images: [InventoryImage] = [], pods: [InventoryPod] = [], state: AppRunState? = nil, reason: String = "",
+        workloads: [InventoryWorkload] = []
     ) {
         self.id = id
         self.name = name
@@ -95,11 +102,14 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
         self.memory = memory
         self.images = images
         self.pods = pods
+        self.state = state
+        self.reason = reason
+        self.workloads = workloads
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, category, icon, remoteIcon, iconURL = "iconUrl", known, system, version, drift, unpinned
-        case namespaces, nodes, containers, running, memory, images, pods
+        case namespaces, nodes, containers, running, memory, images, pods, state, reason, workloads
     }
 
     public init(from decoder: Decoder) throws {
@@ -122,10 +132,19 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
         memory = try c.field(.memory, 0)
         images = try c.field(.images, [])
         pods = try c.field(.pods, [])
+        state = AppRunState(rawValue: try c.field(.state, ""))
+        reason = try c.field(.reason, "")
+        workloads = try c.field(.workloads, [])
     }
 
-    /// Worth a look: versions drift, or the image is not pinned.
-    public var needsAttention: Bool { drift || unpinned }
+    /// Scaled to zero on purpose: shown greyed out.
+    public var isStopped: Bool { state == .stopped }
+
+    /// Wants pods none of which is ready: a volume that does not attach, an image that does not pull.
+    public var isNotStarting: Bool { state == .notStarting }
+
+    /// Worth a look: versions drift, the image is not pinned, or its pods do not start.
+    public var needsAttention: Bool { drift || unpinned || isNotStarting }
 
     /// Repositories running with more than one tag.
     public var driftingRepos: Set<String> {
@@ -137,6 +156,39 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
     public var versionCount: Int {
         let tags = Dictionary(grouping: images.filter { !$0.repo.isEmpty }, by: \.repo)
         return max(tags.values.map { Set($0.map(\.tag)).count }.max() ?? 1, 1)
+    }
+}
+
+/// Why an app runs no container; one the app does not know is ignored.
+public enum AppRunState: String, Sendable {
+    case stopped, notStarting
+}
+
+/// A Deployment or StatefulSet of an app without a ready pod.
+public struct InventoryWorkload: Decodable, Equatable, Sendable {
+    public let kind: String
+    public let namespace: String
+    public let name: String
+    public let desired: Int
+    public let reason: String
+
+    public init(kind: String, namespace: String, name: String, desired: Int = 0, reason: String = "") {
+        self.kind = kind
+        self.namespace = namespace
+        self.name = name
+        self.desired = desired
+        self.reason = reason
+    }
+
+    private enum CodingKeys: String, CodingKey { case kind, namespace, name, desired, reason }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.field(.kind, "")
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        desired = try c.field(.desired, 0)
+        reason = try c.field(.reason, "")
     }
 }
 
