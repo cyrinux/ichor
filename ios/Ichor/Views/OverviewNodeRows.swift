@@ -104,6 +104,7 @@ private struct NodeChip: View {
         }
         .foregroundStyle(node.status == .ready ? Color.primary : node.status.color)
         .accessibilityLabel(Text(verbatim: "\(node.hostname), \(node.status.label)"))
+        .accessibilityIdentifier(SmokeID.node)
     }
 }
 

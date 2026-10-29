@@ -22,6 +22,8 @@ enum DemoTour {
 
     /// At launch, before any tip is shown.
     static func configure() {
+        // A UI test taps through the demo: no coach mark may cover what it taps.
+        if UITestLaunch.active { Tips.hideAllTipsForTesting() }
         do {
             try Tips.configure([.displayFrequency(.immediate)])
         } catch {

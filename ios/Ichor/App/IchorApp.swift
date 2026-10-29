@@ -151,7 +151,16 @@ struct RootView: View {
             }
             // The "tap your security key" prompt, over the lock screen or whatever asked for a check.
             SecurityKeyPromptHost()
+            // A UI test whose demo could not be added says why (never set in a real launch).
+            if let failure = UITestLaunch.shared.failure {
+                Text(verbatim: failure)
+                    .padding()
+                    .background(.red.opacity(0.85))
+                    .accessibilityIdentifier(SmokeID.launchError)
+            }
         }
+        // A UI test's demo, once the configs are loaded (nothing in a real launch).
+        .task { await UITestLaunch.shared.prepare(model) }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .background: model.didEnterBackground()
