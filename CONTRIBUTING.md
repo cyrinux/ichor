@@ -47,7 +47,10 @@ function the apps call lives there, with the privacy masking, the audit log and 
 contexts. New transport or pure-logic code goes in its own package under `go/<domain>` (like
 `go/plugin`, or `go/gitforge`, the Git forge transport) or `go/internal/<name>` (like
 `go/internal/httpx`, the one outbound HTTP client), with its tests next to it; `ichorgo`
-imports it and keeps a thin wrapper per entry point.
+imports it and keeps a thin wrapper per entry point. `go/kube` is the Kubernetes transport
+only (requests, errors, the client cache, the follow loop): no kubeconfig parsing, demo
+data, masking or audit, which stay in the facade (`go/ichorgo/kube_alias.go` holds the
+wrappers).
 
 ## Facade contract
 
