@@ -102,3 +102,24 @@ func TestLonghornSalvageMissingAndDemo(t *testing.T) {
 		}
 	}
 }
+func TestLonghornSalvageBlockedReason(t *testing.T) {
+	nodes := "GET /apis/longhorn.io/v1beta2/namespaces/storage/nodes"
+	for _, tc := range []struct{ name, route, body, want string }{
+		{"eligible", "", "", ""},
+		{"node down", nodes, strings.Replace(salvageNodes, "True", "False", 1), "node-not-ready"},
+		{"disk unavailable", nodes, strings.Replace(salvageNodes, "disk-1", "disk-2", 1), "disk-unavailable"},
+		{"node gone", nodes, `{"items":[]}`, "node-missing"},
+		{"deleting", "GET /apis/longhorn.io/v1beta2/namespaces/storage/replicas", strings.Replace(salvageReplicas, `"namespace":"storage"},"spec":{"volumeName":"vol"`, `"namespace":"storage","deletionTimestamp":"2026-10-03T10:00:00Z"},"spec":{"volumeName":"vol"`, 1), "deleting"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f, k := salvageAPI(t)
+			if tc.route != "" {
+				f.answerWith(tc.route, 200, tc.body)
+			}
+			p, e := readLonghornSalvagePreview(context.Background(), k, "storage", "vol")
+			if e != nil || len(p.Replicas) != 1 || p.Replicas[0].Blocked != tc.want || p.Replicas[0].Eligible != (tc.want == "") {
+				t.Fatalf("%+v %v", p, e)
+			}
+		})
+	}
+}

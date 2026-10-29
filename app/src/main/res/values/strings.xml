@@ -5144,6 +5144,10 @@
     <string name="longhorn_salvage_risk">Salvage may lose data. Choose the replicas whose data you want to recover; their timestamps do not guarantee consistency.</string>
     <string name="longhorn_salvage_choose">Choose replicas explicitly. No replica is selected automatically.</string>
     <string name="longhorn_salvage_unavailable">Salvage requires a detached faulted volume and available replicas.</string>
+    <string name="longhorn_salvage_node_not_ready">Unavailable: the node is not ready. Bring it back to salvage this replica.</string>
+    <string name="longhorn_salvage_node_missing">Unavailable: the node is no longer in Longhorn.</string>
+    <string name="longhorn_salvage_disk_unavailable">Unavailable: the replica’s disk is missing or not schedulable.</string>
+    <string name="longhorn_salvage_deleting">Unavailable: the replica is being deleted.</string>
     <string name="longhorn_salvage_replica">%1$s on %2$s · healthy: %3$s · failed: %4$s</string>
     <string name="longhorn_salvage_requested">Salvage requested</string>
     <string name="longhorn_salvage_failed">Could not salvage volume: %1$s</string>

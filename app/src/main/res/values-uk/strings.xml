@@ -5376,6 +5376,10 @@
     <string name="longhorn_salvage_risk">Відновлення може призвести до втрати даних. Виберіть репліки для відновлення; їхні часові мітки не гарантують узгодженості.</string>
     <string name="longhorn_salvage_choose">Виберіть репліки явно. Жодна репліка не вибирається автоматично.</string>
     <string name="longhorn_salvage_unavailable">Для відновлення потрібні від’єднаний несправний том і доступні репліки.</string>
+    <string name="longhorn_salvage_node_not_ready">Недоступно: вузол не готовий. Поверніть його до роботи, щоб відновити цю репліку.</string>
+    <string name="longhorn_salvage_node_missing">Недоступно: вузла більше немає в Longhorn.</string>
+    <string name="longhorn_salvage_disk_unavailable">Недоступно: диск репліки відсутній або недоступний для розміщення.</string>
+    <string name="longhorn_salvage_deleting">Недоступно: репліка видаляється.</string>
     <string name="longhorn_salvage_replica">%1$s на %2$s · справна: %3$s · збій: %4$s</string>
     <string name="longhorn_salvage_requested">Запитано відновлення</string>
     <string name="longhorn_salvage_failed">Не вдалося відновити том: %1$s</string>

@@ -22,3 +22,15 @@ const val SMOKE_KUBE_HOME = "smoke-kube-home"
 
 /** A node screen's menu entry. */
 fun smokeMenuTag(entry: NodeMenuEntry) = "smoke-node-menu-${entry.name}"
+
+/** A container row of a node's Containers tab (it opens the container's log). */
+const val SMOKE_CONTAINER_ROW = "smoke-container-row"
+
+/** An app bar's ⋮ button, the actions that are not icons behind it. */
+const val SMOKE_ACTIONS_MORE = "smoke-actions-more"
+
+/** The overview's Settings action: its icon, or its item in the ⋮ menu. */
+const val SMOKE_SETTINGS = "smoke-settings"
+
+/** The Settings screen's list of pages. */
+const val SMOKE_SETTINGS_SCREEN = "smoke-settings-screen"
