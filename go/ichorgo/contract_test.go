@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -47,6 +48,33 @@ var contractFixtures = []struct {
 
 		return u
 	}},
+	{"update-proposal-plan", contractUpdatePlan},
+}
+
+// contractUpdatePlan is the demo's plan for podinfo, its exporter and ingress-nginx, its branch
+// frozen.
+func contractUpdatePlan() any {
+	u := demoClusterUpdates(contractNow)
+
+	var items []updateProposalItem
+
+	for _, v := range []any{u.Images[0], u.Images[1], u.Charts[0]} {
+		b, _ := json.Marshal(v) //nolint:errcheck
+
+		var it updateProposalItem
+		_ = json.Unmarshal(b, &it) //nolint:errcheck
+		it.Version = ""
+		items = append(items, it)
+	}
+
+	plan, err := planUpdateProposal(context.Background(), demoUpdateEditEnv(), demoUpdateProposalRepo(), items)
+	if err != nil {
+		panic(err)
+	}
+
+	plan.Branch = "ichor/update-3-dependencies-0001"
+
+	return plan
 }
 
 // contractJSON is v as a fixture: indented, map keys sorted (encoding/json does), lists cut to

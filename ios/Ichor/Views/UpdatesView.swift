@@ -19,6 +19,13 @@ struct UpdatesView: View {
     @State private var opened: UpdateFileRoute?
     @State private var editing: UpdateEditRoute?
     @State private var renderedHint = false
+    @Environment(StagedEdits.self) private var staged
+    /// Rows are being ticked for one pull request: the version each is proposed with, by row.
+    @State private var selecting = false
+    @State private var selected: [String: String] = [:]
+    @State private var planning = false
+    @State private var planError: String?
+    @State private var proposal: UpdateProposalRoute?
 
     private var demo: Bool { model.activeSummary?.demo == true }
     private var key: String { UpdatesSession.key(model) }
@@ -27,6 +34,15 @@ struct UpdatesView: View {
         content
             .navigationTitle("Updates")
             .toolbar {
+                if case .loaded = state {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(selecting ? LocalizedStringKey("Cancel") : LocalizedStringKey("Select")) {
+                            selecting.toggle()
+                            selected = [:]
+                            planError = nil
+                        }
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task { await fetch() }
@@ -59,6 +75,41 @@ struct UpdatesView: View {
             .navigationDestination(item: $editing) { file in
                 SourceEditView(source: file.source, path: file.path, app: file.app, quickEdit: file.edit)
             }
+            .safeAreaInset(edge: .bottom) {
+                if selecting { proposeBar }
+            }
+            .sheet(item: $proposal) { plan in
+                StagedChangesView(
+                    source: plan.source, target: plan.target, defaultTitle: plan.title, defaultBody: plan.body,
+                    notes: plan.notes, editable: false)
+            }
+    }
+
+    /// The selection's bar: "Propose N updates", and what went wrong planning it.
+    private var proposeBar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let planError {
+                Text(verbatim: planError).font(.caption).foregroundStyle(.red)
+            }
+            HStack(spacing: 8) {
+                if planning {
+                    ProgressView()
+                    Text("Reading the files…").font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Text("Tick the updates to propose in one pull request").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button {
+                    Task { await proposeSelected() }
+                } label: {
+                    Text("Propose \(selected.count) updates")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(selected.isEmpty || planning)
+            }
+        }
+        .padding()
+        .background(.bar)
     }
 
     @ViewBuilder private var content: some View {
@@ -122,9 +173,16 @@ struct UpdatesView: View {
         if !rows.isEmpty {
             Section(title) {
                 ForEach(rows) { row in
-                    UpdateRowView(row: row, resolving: resolving == row.id, note: notes[row.id]) { version in
-                        Task { await pick(row, version: version) }
-                    }
+                    UpdateRowView(
+                        row: row, resolving: resolving == row.id, note: notes[row.id], selecting: selecting,
+                        selectedVersion: selected[row.id], onToggle: { toggle(row) },
+                        onPick: { version in
+                            if selecting {
+                                if row.editable { selected[row.id] = version }
+                            } else {
+                                Task { await pick(row, version: version) }
+                            }
+                        })
                 }
             }
         }
@@ -180,6 +238,58 @@ struct UpdatesView: View {
             notes[row.id] = error.localizedDescription
         }
     }
+}
+
+extension UpdatesView {
+    /// Ticks row with its smallest step, or unticks it.
+    fileprivate func toggle(_ row: UpdateRow) {
+        if selected[row.id] != nil {
+            selected[row.id] = nil
+        } else if let version = defaultSelection(row) {
+            selected[row.id] = version
+        }
+    }
+
+    /// Plans one pull request for the rows ticked (UpdateProposalPlan), stages its files and
+    /// opens the staged changes prefilled; the rows left out get their reason as a note.
+    fileprivate func proposeSelected() async {
+        guard let client = model.client, !planning, case .loaded(let updates, _, _) = state else { return }
+        let sections = updateSections(updates)
+        let selection = (sections.images + sections.charts).compactMap { row in
+            selected[row.id].map { (row: row, version: $0) }
+        }
+        guard !selection.isEmpty else { return }
+        planning = true
+        planError = nil
+        defer { planning = false }
+        do {
+            let plan = try await client.updateProposalPlan(
+                selection, repo: model.activeClusterRepo, hosts: hosts, demo: demo)
+            for skip in plan.skipped where selection.indices.contains(skip.index) {
+                notes[selection[skip.index].row.id] = skip.reason
+            }
+            guard let source = plan.source, !plan.files.isEmpty else { return }
+            let key = StagedKey(source: source)
+            for file in plan.files { staged.stage(key, file.staged) }
+            selecting = false
+            selected = [:]
+            proposal = UpdateProposalRoute(
+                source: source, target: plan.baseRef, title: plan.title, body: plan.body,
+                notes: plan.skipped.map { "\($0.item): \($0.reason)" })
+        } catch {
+            planError = error.localizedDescription
+        }
+    }
+}
+
+/// The staged files of an update plan, with its pull request's title, body and branch.
+struct UpdateProposalRoute: Identifiable, Hashable {
+    let id = UUID()
+    let source: GitSource
+    let target: String
+    let title: String
+    let body: String
+    let notes: [String]
 }
 
 /// An update's file, at its line, with the image sheet prefilled (nil: a values file to edit by hand).

@@ -3,9 +3,32 @@ import IchorCore
 
 /// The files of the cluster repository staged for one pull request: each with its lines added
 /// and removed, opened again in the editor or removed; then Open pull request (ProposeSheet)
-/// for all of them. Kept for the session only, which the footer says.
+/// for all of them. Kept for the session only, which the footer says. From the Updates screen,
+/// the plan's title and body prefill the pull request and the rows left out are listed.
 struct StagedChangesView: View {
     let source: GitSource
+    /// The branch the request goes to, nil for the staging key's.
+    let target: String?
+    /// The pull request's title and description in place of the Go core's (an update plan's).
+    let defaultTitle: String?
+    let defaultBody: String?
+    /// What was left out of the pull request and why.
+    let notes: [String]
+    /// The files open again in the editor from here (the repository browser's staging).
+    let editable: Bool
+
+    // Explicit: the private @State properties make the memberwise init private.
+    init(
+        source: GitSource, target: String? = nil, defaultTitle: String? = nil, defaultBody: String? = nil,
+        notes: [String] = [], editable: Bool = true
+    ) {
+        self.source = source
+        self.target = target
+        self.defaultTitle = defaultTitle
+        self.defaultBody = defaultBody
+        self.notes = notes
+        self.editable = editable
+    }
 
     @Environment(\.dismiss) private var dismiss
     @Environment(StagedEdits.self) private var staged
@@ -28,6 +51,13 @@ struct StagedChangesView: View {
                         }
                 } footer: {
                     Text("Kept until the app is closed. Open one pull request for all of them.")
+                }
+                if !notes.isEmpty {
+                    Section("Not in this pull request") {
+                        ForEach(notes, id: \.self) { note in
+                            Text(verbatim: note).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 Section {
                     Button {
@@ -53,8 +83,8 @@ struct StagedChangesView: View {
             .sheet(isPresented: $proposing) {
                 ProposeSheet(
                     source: source, path: "", app: .repository,
-                    base: SourceEditBase(file: GitFile(path: ""), ref: key.baseRef), content: "",
-                    target: key.baseRef, files: files,
+                    base: SourceEditBase(file: GitFile(path: ""), ref: target ?? key.baseRef), content: "",
+                    target: target ?? key.baseRef, defaultTitle: defaultTitle, defaultBody: defaultBody, files: files,
                     onReload: { _ in },
                     onDone: {
                         proposing = false
@@ -66,20 +96,17 @@ struct StagedChangesView: View {
 
     private func row(_ file: StagedFile) -> some View {
         HStack(spacing: 8) {
-            Button {
-                editing = StagedPath(path: file.path)
-            } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: file.path.split(separator: "/").last.map(String.init) ?? file.path)
-                        .font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-                    Text(verbatim: file.path).font(.caption.monospaced()).foregroundStyle(.secondary)
-                        .lineLimit(1).truncationMode(.middle)
+            if editable {
+                Button {
+                    editing = StagedPath(path: file.path)
+                } label: {
+                    fileLabel(file)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .accessibilityHint(Text("Edit"))
+            } else {
+                fileLabel(file)
             }
-            .buttonStyle(.plain)
-            .accessibilityHint(Text("Edit"))
             if let c = counts[file] {
                 HStack(spacing: 6) {
                     Text(verbatim: "+\(c.added)").foregroundStyle(.statusOK)
@@ -95,6 +122,17 @@ struct StagedChangesView: View {
             .buttonStyle(.borderless)
             .accessibilityLabel(Text("Remove from the pull request"))
         }
+    }
+
+    private func fileLabel(_ file: StagedFile) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: file.path.split(separator: "/").last.map(String.init) ?? file.path)
+                .font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+            Text(verbatim: file.path).font(.caption.monospaced()).foregroundStyle(.secondary)
+                .lineLimit(1).truncationMode(.middle)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     /// Counts each staged file's lines, the ones not counted yet.

@@ -1,6 +1,245 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Tick the updates to propose in one pull request" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle die Updates, die in einem Pull Request vorgeschlagen werden" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Marca las actualizaciones que se propondrán en un solo pull request" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cochez les mises à jour à proposer dans une seule pull request" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Spunta gli aggiornamenti da proporre in un'unica pull request" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1 つのプルリクエストで提案する更新を選んでください" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Marque as atualizações a propor em um único pull request" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отметьте обновления для одного pull request" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Позначте оновлення для одного pull request" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "勾选要在一个拉取请求中提议的更新" } }
+      }
+    },
+    "Reading the files…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dateien werden gelesen…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Leyendo los archivos…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lecture des fichiers…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lettura dei file…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ファイルを読み込み中…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Lendo os arquivos…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Чтение файлов…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Читання файлів…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在读取文件…" } }
+      }
+    },
+    "Not in this pull request" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht in diesem Pull Request" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No incluido en este pull request" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas dans cette pull request" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non in questa pull request" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプルリクエストに含まれないもの" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fora deste pull request" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не вошло в этот pull request" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не ввійшло в цей pull request" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未包含在此拉取请求中" } }
+      }
+    },
+    "Propose %lld updates" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Propose %lld update"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Propose %lld updates"
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Update vorschlagen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Updates vorschlagen"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Proponer %lld actualización"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Proponer %lld actualizaciones"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Proposer %lld mise à jour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Proposer %lld mises à jour"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Proponi %lld aggiornamento"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Proponi %lld aggiornamenti"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 件の更新を提案"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Propor %lld atualização"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Propor %lld atualizações"
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Предложить %lld обновление"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Предложить %lld обновления"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Предложить %lld обновлений"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Предложить %lld обновления"
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Запропонувати %lld оновлення"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Запропонувати %lld оновлення"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Запропонувати %lld оновлень"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Запропонувати %lld оновлення"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "提议 %lld 个更新"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Updates…" : {
       "extractionState" : "manual",
       "localizations" : {

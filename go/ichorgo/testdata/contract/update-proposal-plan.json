@@ -1,0 +1,64 @@
+{
+  "baseRef": "main",
+  "body": "| Name | From | To | Kind | Source |\n|---|---|---|---|---|\n| `ghcr.io/stefanprodan/podinfo` | `6.7.0` | `6.7.1` | patch | https://ghcr.io/stefanprodan/podinfo |\n| `ghcr.io/example-org/podinfo-exporter` | `0.4.0` | `0.4.2` | patch | https://ghcr.io/example-org/podinfo-exporter |\n| `ingress-nginx` | `4.12.1` | `4.12.4` | patch | https://kubernetes.github.io/ingress-nginx |\n\nProposed from the Updates screen of Ichor.",
+  "branch": "ichor/update-3-dependencies-0001",
+  "files": [
+    {
+      "changes": [
+        {
+          "after": "image: ghcr.io/stefanprodan/podinfo:6.7.1",
+          "before": "image: ghcr.io/stefanprodan/podinfo:6.7.0",
+          "index": 0,
+          "item": "ghcr.io/stefanprodan/podinfo",
+          "line": 17
+        },
+        {
+          "after": "image: ghcr.io/example-org/podinfo-exporter:0.4.2",
+          "before": "image: ghcr.io/example-org/podinfo-exporter:0.4.0",
+          "index": 1,
+          "item": "ghcr.io/example-org/podinfo-exporter",
+          "line": 21
+        }
+      ],
+      "content": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: podinfo\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: podinfo\n  template:\n    metadata:\n      labels:\n        app: podinfo\n    spec:\n      containers:\n        - name: podinfo\n          image: ghcr.io/stefanprodan/podinfo:6.7.1\n          ports:\n            - containerPort: 9898\n        - name: exporter\n          image: ghcr.io/example-org/podinfo-exporter:0.4.2\n",
+      "fileSha": "0d1e2m3o40000000000000000000000000000000",
+      "original": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: podinfo\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: podinfo\n  template:\n    metadata:\n      labels:\n        app: podinfo\n    spec:\n      containers:\n        - name: podinfo\n          image: ghcr.io/stefanprodan/podinfo:6.7.0\n          ports:\n            - containerPort: 9898\n        - name: exporter\n          image: ghcr.io/example-org/podinfo-exporter:0.4.0\n",
+      "path": "apps/podinfo/deployment.yaml"
+    },
+    {
+      "changes": [
+        {
+          "after": "version: 4.12.4",
+          "before": "version: 4.12.1",
+          "index": 2,
+          "item": "ingress-nginx",
+          "line": 11
+        }
+      ],
+      "content": "apiVersion: helm.toolkit.fluxcd.io/v2\nkind: HelmRelease\nmetadata:\n  name: ingress-nginx\n  namespace: ingress-nginx\nspec:\n  interval: 1h\n  chart:\n    spec:\n      chart: ingress-nginx\n      version: 4.12.4\n      sourceRef:\n        kind: HelmRepository\n        name: ingress-nginx\n",
+      "fileSha": "0d1e2m3o40000000000000000000000000000000",
+      "original": "apiVersion: helm.toolkit.fluxcd.io/v2\nkind: HelmRelease\nmetadata:\n  name: ingress-nginx\n  namespace: ingress-nginx\nspec:\n  interval: 1h\n  chart:\n    spec:\n      chart: ingress-nginx\n      version: 4.12.1\n      sourceRef:\n        kind: HelmRepository\n        name: ingress-nginx\n",
+      "path": "apps/infra/ingress-nginx.yaml"
+    }
+  ],
+  "message": "Update 3 dependencies",
+  "skipped": [],
+  "source": {
+    "browsable": true,
+    "chart": "",
+    "fluxArtifact": true,
+    "fluxSource": {
+      "kind": "GitRepository",
+      "name": "flux-system",
+      "namespace": "flux-system"
+    },
+    "kind": "kustomize",
+    "path": "apps/podinfo",
+    "repoURL": "ssh://git@git.example.com/homelab/fleet.git",
+    "revision": "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+    "tracked": "main",
+    "valueFiles": [],
+    "webURL": "https://git.example.com/homelab/fleet"
+  },
+  "title": "Update 3 dependencies"
+}

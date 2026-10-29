@@ -156,7 +156,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   and pull request, titled "Update podinfo to 6.7.1". An image a chart renders opens the chart's
   first values file. The app never runs a bot, never merges, and checks nothing in the
   background: the last answer is kept until the app is closed, and the GitOps card shows its
-  count.
+  count. **Select** ticks several rows (each with its smallest step, a chip picks another) and
+  **Propose N updates** stages them as one pull request: each file is read once, two bumps of
+  one file make one file with two changed lines, and the description is a table of each bump
+  (name, from, to, patch/minor/major, its registry or chart repository). A row rendered by a
+  chart, missing from Git or in another repository is left out with the reason, and the pull
+  request opens for the rest.
 - **Dependency updates:** the Cluster repository sheet of the active cluster tells whether the
   repository already has a dependency-update bot (a Renovate configuration, a workflow running
   it, or Dependabot's). When it has none, **Propose a configuration…** shows a `renovate.json`
