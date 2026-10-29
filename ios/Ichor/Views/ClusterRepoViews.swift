@@ -143,6 +143,10 @@ struct ClusterRepoSheet: View {
                 } footer: {
                     Text("Edits are never committed to the branch: each one opens a pull or merge request.")
                 }
+                // The active cluster only: a proposal is recorded in the active cluster's audit log.
+                if model.activeSummary?.fingerprint == context.fingerprint, let active = model.activeClusterRepo {
+                    UpdateBotSection(repo: active)
+                }
                 if saved != nil {
                     Section {
                         Button("Delete", role: .destructive) {

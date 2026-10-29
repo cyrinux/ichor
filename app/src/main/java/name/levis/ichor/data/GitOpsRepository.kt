@@ -36,6 +36,7 @@ import name.levis.ichor.model.TalosConfigPatch
 import name.levis.ichor.model.TalosRepoCompare
 import name.levis.ichor.model.TalosWriteBackPlan
 import name.levis.ichor.model.TalosRepoFiles
+import name.levis.ichor.model.UpdateBotConfig
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.GitSource
@@ -391,6 +392,40 @@ class GitOpsRepository(
         val host = forgeHost(repo.host)
         return withContext(Dispatchers.IO) { decodeGitRepoInfo(Ichorgo.gitForgeRepo(host, repo.repoURL, repo.branch)) }
     }
+
+    /**
+     * Whether [repo] (at its branch head) has a dependency-update bot configured, else the
+     * configuration drafted for it (UpdateBotConfig), with [GitSource] to propose it to.
+     */
+    suspend fun updateBotConfig(repo: ClusterRepo): Pair<GitSource, UpdateBotConfig> {
+        val info = repoInfo(repo)
+        val src = repoSource(repo, info)
+        val host = forgeHost(repo.host)
+        val cfg = withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(
+                UpdateBotConfig.serializer(),
+                Ichorgo.updateBotConfig(host, repo.repoURL, src.tracked, repo.talosDir, repo.kubernetesDir),
+            )
+        }
+        return src to cfg
+    }
+
+    /** Opens the pull request adding [cfg]'s draft to [src]'s branch, with [form]'s title, message and description. */
+    suspend fun proposeUpdateBot(src: GitSource, cfg: UpdateBotConfig, title: String, message: String, body: String, branch: String, draft: Boolean): GitProposalResult =
+        propose(
+            src,
+            GitProposal(
+                path = cfg.draft.path,
+                content = cfg.draft.content,
+                fileSha = "",
+                baseRef = src.tracked,
+                message = message,
+                title = title,
+                body = body,
+                branch = branch,
+                draft = draft,
+            ),
+        )
 
     /** The active cluster's repository as a source of the source browser, at its branch head. */
     suspend fun clusterRepoSource(): GitSource {

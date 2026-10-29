@@ -5491,6 +5491,15 @@
     <string name="repo_check_can_push">このトークンはプッシュできます。編集するとプルリクエストが作成されます。</string>
     <string name="repo_check_read_only">このトークンは読み取りのみです。プルリクエストは拒否されます。</string>
     <string name="repo_edits_are_proposals">編集がブランチに直接コミットされることはありません。編集ごとにプルリクエストまたはマージリクエストが作成されます。</string>
+    <string name="repo_update_bot_title">依存関係の更新</string>
+    <string name="repo_update_bot_checking">依存関係更新ボットを探しています…</string>
+    <string name="repo_update_bot_present">ボットが設定されています: %1$s</string>
+    <string name="repo_update_bot_none">このリポジトリには更新ボットがありません。</string>
+    <string name="repo_update_bot_propose">設定を提案…</string>
+    <string name="repo_update_bot_failed">リポジトリを読み取れませんでした: %1$s</string>
+    <string name="repo_update_bot_sheet_title">依存関係更新ボットの設定を追加</string>
+    <string name="repo_update_bot_sheet_body">見つかったファイルをもとに %1$s を作成しました。内容を確認してからプルリクエストを開いてください。マージするまで何も変わりません。</string>
+    <string name="repo_update_bot_continue">プルリクエストへ進む</string>
     <string name="source_search">リポジトリ内を検索</string>
     <string name="source_search_field">検索するテキスト</string>
     <string name="source_search_close">検索を閉じる</string>

@@ -22,12 +22,15 @@ struct ProposeSheet: View {
     /// The title and commit message of a quick edit ("Bump podinfo to 6.7.0"), nil for the Go
     /// core's.
     let defaultTitle: String?
+    /// The description in place of the Go core's (a drafted file's notes), nil for its.
+    let defaultBody: String?
     /// The staged files proposed together, in place of path and content; empty for one file.
     let files: [StagedFile]
 
     // Explicit: the private @State properties make the memberwise init private.
     init(source: GitSource, path: String, app: GitOpsAppRef, base: SourceEditBase, content: String, target: String,
-         defaultTitle: String? = nil, files: [StagedFile] = [], onReload: @escaping (String) -> Void, onDone: @escaping () -> Void) {
+         defaultTitle: String? = nil, defaultBody: String? = nil, files: [StagedFile] = [],
+         onReload: @escaping (String) -> Void, onDone: @escaping () -> Void) {
         self.source = source
         self.path = path
         self.app = app
@@ -36,6 +39,7 @@ struct ProposeSheet: View {
         self.onReload = onReload
         self.onDone = onDone
         self.defaultTitle = defaultTitle
+        self.defaultBody = defaultBody
         self.files = files
         _target = State(initialValue: target)
     }
@@ -180,6 +184,7 @@ struct ProposeSheet: View {
             title = defaultTitle
             message = defaultTitle
         }
+        if let defaultBody { details = defaultBody }
         let cluster = model.activeSummary?.name ?? ""
         let loaded: GitProposalDefaults?
         if app.isRepository {

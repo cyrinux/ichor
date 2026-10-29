@@ -147,6 +147,10 @@ var dataCommands = []command{
 
 		return ichorgo.GitOpsEditCheck(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), string(content), flag.Arg(6))
 	}},
+	{name: "updatebot-config", args: "HOSTJSON REPO REF TALOSDIR KUBEDIR", noConfig: true, run: func(env) (string, error) {
+		// Whether the repository has a dependency-update bot, else a renovate.json drafted for it.
+		return ichorgo.UpdateBotConfig(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5))
+	}},
 	{name: "git-request", args: "HOSTJSON REPO NUMBER", run: func(env) (string, error) {
 		n, err := strconv.Atoi(flag.Arg(3))
 		if err != nil {
