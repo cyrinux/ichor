@@ -5,7 +5,7 @@ struct OverviewView: View {
     /// The navigation path, so row swipes can open screens directly.
     @Binding var path: [Route]
 
-    @Environment(AppModel.self) private var model
+    @Environment(AppModel.self) var model
     @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
     /// `state` is only what the last background check saw (a seed), until the cluster answers.
@@ -23,23 +23,23 @@ struct OverviewView: View {
     @State private var inventory: LoadState<ClusterInventory> = .loading
     /// Longhorn, Garage, CloudNativePG: only asked when the inventory shows one of them and the
     /// role may use the Kubernetes API (nil hides the section); hints are their catalog ids.
-    @State private var dataServices: LoadState<DataServices>?
-    @State private var dataHints = ""
+    @State var dataServices: LoadState<DataServices>?
+    @State var dataHints = ""
     /// The active CRD plugins of Data services (kube-green...), asked with the same hints; their
     /// lines join the card. Empty until they answer, or when they cannot be asked.
-    @State private var dataPlugins: [PluginDetectItem] = []
+    @State var dataPlugins: [PluginDetectItem] = []
     /// The other active CRD plugins, tools of the Kubernetes screens section.
-    @State private var toolPlugins: [PluginDetectItem] = []
+    @State var toolPlugins: [PluginDetectItem] = []
     /// The installed plugins (no cluster call, see PluginCatalogCache): those of Data services
     /// (Rook, MariaDB...) hint the card too.
-    @State private var pluginCatalog = PluginCatalog()
+    @State var pluginCatalog = PluginCatalog()
     /// Argo CD: only asked when the inventory shows it and the role may use the Kubernetes API.
-    @State private var argo: LoadState<ArgoStatus>?
+    @State var argo: LoadState<ArgoStatus>?
     /// Flux: likewise, only when the inventory shows it.
-    @State private var flux: LoadState<FluxStatus>?
+    @State var flux: LoadState<FluxStatus>?
     /// The Alertmanager's alerts: only asked when the role may use the Kubernetes API; nil until
     /// one is found (none hides the section).
-    @State private var alerts: LoadState<AMAlerts>?
+    @State var alerts: LoadState<AMAlerts>?
     /// Finding the public IPs Talos does not know (AppModel.detectPublicIPs).
     @State private var confirmDetectIPs = false
     @State private var detectIPsError: String?
@@ -459,7 +459,7 @@ struct OverviewView: View {
     }
 
     /// What the loaded overview belongs to: the context and the screenshot mode generation.
-    private var loadID: String { "\(model.activeContext)#\(model.dataGeneration)" }
+    var loadID: String { "\(model.activeContext)#\(model.dataGeneration)" }
 
     /// Restarts (or stops) the live sampling when one of its conditions changes.
     private var liveID: String {
@@ -691,81 +691,6 @@ struct OverviewView: View {
             Task { await loadFlux(with: client, id: id, inventory: apps) }
             await loadDataServices(with: client, id: id, inventory: apps)
         }
-    }
-
-    /// Only for clusters whose inventory shows Argo CD, and roles that may use the Kubernetes API.
-    /// The answer is shared (ArgoCDStore) with the Argo CD screens and the Apps grid's badges.
-    private func loadArgo(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
-        guard model.allows(.workloads), argoCDHinted(apps) else {
-            argo = nil
-            return
-        }
-        if argo == nil { argo = .loading }
-        let key = model.argoKey
-        let cluster = model.activeSummary
-        let loaded: LoadState<ArgoStatus> = await .from { try await ArgoCDStore.shared.load(with: client, key: key, cluster: cluster) }
-        guard id == loadID else { return }
-        argo = (argo ?? .loading).refreshed(with: loaded)
-    }
-
-    /// Only for clusters whose inventory shows Flux, and roles that may use the Kubernetes API.
-    /// The answer is shared (FluxStore) with the Flux screens and the Flux tile's sheet.
-    private func loadFlux(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
-        guard model.allows(.workloads), fluxHinted(apps) else {
-            flux = nil
-            return
-        }
-        if flux == nil { flux = .loading }
-        let key = model.fluxKey
-        let loaded: LoadState<FluxStatus> = await .from { try await FluxStore.shared.load(with: client, key: key) }
-        guard id == loadID else { return }
-        flux = (flux ?? .loading).refreshed(with: loaded)
-    }
-
-    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or another data service
-    /// (a Data services plugin's app among them), and roles that may use the Kubernetes API: others make
-    /// no Kubernetes call. A failed refresh keeps what was shown (with its error noted).
-    private func loadDataServices(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
-        var catalog = PluginCatalog()
-        if model.allows(.workloads) { catalog = await PluginCatalogCache.load(with: client) }
-        guard id == loadID else { return }
-        pluginCatalog = catalog
-        let hints = dataServiceHints(apps, plugins: catalog)
-        guard model.allows(.workloads), !hints.isEmpty else {
-            dataServices = nil
-            dataPlugins = []
-            toolPlugins = []
-            return
-        }
-        dataHints = hints
-        if dataServices == nil { dataServices = .loading }
-        async let detected = LoadState<PluginDetect>.from { try await client.pluginDetect(hints: hints) }
-        let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: hints) }
-        let plugins = await detected
-        guard id == loadID else { return }
-        dataServices = (dataServices ?? .loading).refreshed(with: loaded)
-        // A failed ask keeps the lines shown.
-        if case .loaded(let detect, _, _) = plugins { (dataPlugins, toolPlugins) = (detect.dataServicePlugins, detect.homeTiles) }
-    }
-
-    /// Only for roles that may use the Kubernetes API, and clusters with an Alertmanager (searched
-    /// once per cluster, see AlertsStore). A failure shows on the card only once one was found.
-    private func loadAlerts(with client: TalosClient, id: String) async {
-        guard model.allows(.workloads) else {
-            alerts = nil
-            return
-        }
-        let key = model.alertsKey
-        let fingerprint = model.activeSummary?.fingerprint ?? ""
-        let loaded: LoadState<AMAlerts>?
-        do {
-            let read = try await AlertsStore.shared.load(with: client, key: key, fingerprint: fingerprint)
-            loaded = read.map { LoadState<AMAlerts>.loaded($0, at: Date()) }
-        } catch {
-            loaded = alerts == nil ? nil : .failed(error.localizedDescription)
-        }
-        guard id == loadID else { return }
-        alerts = loaded.map { (alerts ?? .loading).refreshed(with: $0) }
     }
 
     /// Sections the cluster has nothing for (the same checks as their loading), left out of the
