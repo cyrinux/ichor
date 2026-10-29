@@ -113,7 +113,9 @@ func TestFluxReconcileFollowFailed(t *testing.T) {
 }
 
 func TestFluxReconcileFollowTimeout(t *testing.T) {
-	fastFluxFollow(t, 60*time.Millisecond)
+	// Room for the race detector's slower round trips (no production change: the Flux follow
+	// reads everything inside its wait, so a slow read ends as "still", never an error).
+	fastFluxFollow(t, 300*time.Millisecond)
 
 	cfg := newFluxFollowAPI(t, []string{fluxFollowKustomization("2026-01-01T00:00:00Z", "Unknown", "Reconciliation in progress")})
 

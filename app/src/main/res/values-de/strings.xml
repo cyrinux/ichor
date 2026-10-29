@@ -5134,6 +5134,10 @@
     <string name="longhorn_salvage_risk">Die Rettung kann Datenverlust verursachen. Wählen Sie die wiederherzustellenden Replikate; ihre Zeitstempel garantieren keine Konsistenz.</string>
     <string name="longhorn_salvage_choose">Wählen Sie Replikate ausdrücklich aus. Keines wird automatisch ausgewählt.</string>
     <string name="longhorn_salvage_unavailable">Die Rettung erfordert ein getrenntes fehlerhaftes Volume und verfügbare Replikate.</string>
+    <string name="longhorn_salvage_node_not_ready">Nicht verfügbar: Der Knoten ist nicht bereit. Bringen Sie ihn zurück, um dieses Replikat zu retten.</string>
+    <string name="longhorn_salvage_node_missing">Nicht verfügbar: Der Knoten ist nicht mehr in Longhorn.</string>
+    <string name="longhorn_salvage_disk_unavailable">Nicht verfügbar: Der Datenträger des Replikats fehlt oder ist nicht planbar.</string>
+    <string name="longhorn_salvage_deleting">Nicht verfügbar: Das Replikat wird gelöscht.</string>
     <string name="longhorn_salvage_replica">%1$s auf %2$s · gesund: %3$s · Fehler: %4$s</string>
     <string name="longhorn_salvage_requested">Rettung angefordert</string>
     <string name="longhorn_salvage_failed">Volume konnte nicht gerettet werden: %1$s</string>

@@ -45,9 +45,14 @@ struct LonghornSalvageSheet: View {
                                         }
                                     })
                             ) {
-                                Text(
-                                    "\(replica.name) on \(replica.node) · healthy: \(relativeTime(replica.healthyAt)) · failed: \(relativeTime(replica.failedAt))"
-                                )
+                                VStack(alignment: .leading) {
+                                    Text(
+                                        "\(replica.name) on \(replica.node) · healthy: \(relativeTime(replica.healthyAt)) · failed: \(relativeTime(replica.failedAt))"
+                                    )
+                                    if let reason = blockedText(replica.blocked) {
+                                        Text(reason).font(.caption).foregroundStyle(.statusBad)
+                                    }
+                                }
                             }.disabled(!replica.eligible)
                         }
                     }
@@ -73,6 +78,18 @@ struct LonghornSalvageSheet: View {
             do {
                 preview = try await client.longhornSalvagePreview(namespace: volume.namespace, name: volume.name)
             } catch { self.error = error.localizedDescription }
+        }
+    }
+
+    /// Why Longhorn would refuse to salvage from a replica, from the Go preview's blocked code.
+    private func blockedText(_ blocked: String) -> LocalizedStringKey? {
+        switch blocked {
+        case "": nil
+        case "node-not-ready": "Unavailable: the node is not ready. Bring it back to salvage this replica."
+        case "node-missing": "Unavailable: the node is no longer in Longhorn."
+        case "disk-unavailable": "Unavailable: the replica’s disk is missing or not schedulable."
+        case "deleting": "Unavailable: the replica is being deleted."
+        default: "Salvage requires a detached faulted volume and available replicas."
         }
     }
 }

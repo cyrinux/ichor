@@ -5143,6 +5143,10 @@
     <string name="longhorn_salvage_risk">Il recupero può perdere dati. Scegli le repliche da recuperare; i loro timestamp non garantiscono la coerenza.</string>
     <string name="longhorn_salvage_choose">Scegli le repliche esplicitamente. Nessuna viene selezionata automaticamente.</string>
     <string name="longhorn_salvage_unavailable">Il recupero richiede un volume scollegato guasto e repliche disponibili.</string>
+    <string name="longhorn_salvage_node_not_ready">Non disponibile: il nodo non è pronto. Riportalo online per recuperare questa replica.</string>
+    <string name="longhorn_salvage_node_missing">Non disponibile: il nodo non è più in Longhorn.</string>
+    <string name="longhorn_salvage_disk_unavailable">Non disponibile: il disco della replica manca o non è pianificabile.</string>
+    <string name="longhorn_salvage_deleting">Non disponibile: la replica è in fase di eliminazione.</string>
     <string name="longhorn_salvage_replica">%1$s su %2$s · sana: %3$s · errore: %4$s</string>
     <string name="longhorn_salvage_requested">Recupero richiesto</string>
     <string name="longhorn_salvage_failed">Impossibile recuperare il volume: %1$s</string>

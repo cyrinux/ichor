@@ -5015,6 +5015,10 @@
     <string name="longhorn_salvage_risk">サルベージではデータが失われる可能性があります。データを復旧するレプリカを選択してください。タイムスタンプは整合性を保証しません。</string>
     <string name="longhorn_salvage_choose">レプリカを明示的に選択してください。自動では選択されません。</string>
     <string name="longhorn_salvage_unavailable">サルベージには、デタッチされた障害状態のボリュームと利用可能なレプリカが必要です。</string>
+    <string name="longhorn_salvage_node_not_ready">利用不可: ノードが準備完了ではありません。このレプリカをサルベージするにはノードを復旧してください。</string>
+    <string name="longhorn_salvage_node_missing">利用不可: ノードは Longhorn に存在しません。</string>
+    <string name="longhorn_salvage_disk_unavailable">利用不可: レプリカのディスクが見つからないか、スケジュールできません。</string>
+    <string name="longhorn_salvage_deleting">利用不可: レプリカは削除中です。</string>
     <string name="longhorn_salvage_replica">%2$s 上の %1$s · 正常：%3$s · 失敗：%4$s</string>
     <string name="longhorn_salvage_requested">サルベージを要求しました</string>
     <string name="longhorn_salvage_failed">ボリュームをサルベージできませんでした：%1$s</string>

@@ -5384,6 +5384,10 @@
     <string name="longhorn_salvage_risk">Спасение тома может привести к потере данных. Выберите реплики, данные которых нужно восстановить; их метки времени не гарантируют согласованность.</string>
     <string name="longhorn_salvage_choose">Выберите реплики явно. Автоматически не выбирается ни одна.</string>
     <string name="longhorn_salvage_unavailable">Для спасения нужен отключённый неисправный том и доступные реплики.</string>
+    <string name="longhorn_salvage_node_not_ready">Недоступно: узел не готов. Верните его в строй, чтобы спасти эту реплику.</string>
+    <string name="longhorn_salvage_node_missing">Недоступно: узла больше нет в Longhorn.</string>
+    <string name="longhorn_salvage_disk_unavailable">Недоступно: диск реплики отсутствует или недоступен для размещения.</string>
+    <string name="longhorn_salvage_deleting">Недоступно: реплика удаляется.</string>
     <string name="longhorn_salvage_replica">%1$s на %2$s · исправна: %3$s · сбой: %4$s</string>
     <string name="longhorn_salvage_requested">Спасение тома запрошено</string>
     <string name="longhorn_salvage_failed">Не удалось спасти том: %1$s</string>
