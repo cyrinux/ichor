@@ -6092,4 +6092,27 @@
     <string name="pod_sweep_started">Очистка идёт в фоне: следите за ней в уведомлении</string>
     <string name="pod_sweep_busy">Очистка мёртвых подов уже выполняется</string>
     <string name="pod_sweep_background">Выполняется в фоне: эту панель можно закрыть.</string>
+    <string name="updates_title">Обновления</string>
+    <string name="updates_menu">Обновления…</string>
+    <string name="updates_section_images">Образы</string>
+    <string name="updates_section_charts">Чарты</string>
+    <string name="updates_section_not_comparable">Несравнимые</string>
+    <string name="updates_chip_patch">патч %1$s</string>
+    <string name="updates_chip_minor">минорная %1$s</string>
+    <string name="updates_chip_major">мажорная %1$s</string>
+    <string name="updates_badge_flux">Автоматизация образов Flux</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">Следует диапазону semver</string>
+    <string name="updates_badge_bot">Бот настроен</string>
+    <string name="updates_empty">Всё работает на самой новой версии, которую допускает политика</string>
+    <string name="updates_consent_title">Опросить реестры?</string>
+    <string name="updates_consent_body">Приложение спрашивает у реестров образов, какие теги существуют; для приватных реестров используются ваши pull secrets.</string>
+    <string name="updates_consent_continue">Опросить</string>
+    <string name="updates_asking">Опрос реестров…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">Доступные обновления: %1$d</string>
+    <string name="updates_rendered">Сгенерировано чартом: задайте тег в его values</string>
+    <string name="updates_lookups_failed">Неудачных запросов: %1$d из %2$d</string>
+    <string name="updates_skipped">Пропущено: %1$s (%2$s)</string>
+    <string name="updates_asking_count">Опрос реестров (образы и чарты: %1$d)…</string>
 </resources>

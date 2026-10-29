@@ -6088,4 +6088,27 @@
     <string name="pod_sweep_started">Прибирання у фоні: стежте за ним у сповіщенні</string>
     <string name="pod_sweep_busy">Прибирання мертвих подів уже триває</string>
     <string name="pod_sweep_background">Триває у фоні: цю панель можна закрити.</string>
+    <string name="updates_title">Оновлення</string>
+    <string name="updates_menu">Оновлення…</string>
+    <string name="updates_section_images">Образи</string>
+    <string name="updates_section_charts">Чарти</string>
+    <string name="updates_section_not_comparable">Не порівнювані</string>
+    <string name="updates_chip_patch">патч %1$s</string>
+    <string name="updates_chip_minor">мінорна %1$s</string>
+    <string name="updates_chip_major">мажорна %1$s</string>
+    <string name="updates_badge_flux">Автоматизація образів Flux</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">Слідує діапазону semver</string>
+    <string name="updates_badge_bot">Бот налаштовано</string>
+    <string name="updates_empty">Усе працює на найновішій версії, яку дозволяє політика</string>
+    <string name="updates_consent_title">Запитати реєстри?</string>
+    <string name="updates_consent_body">Застосунок запитує в реєстрів образів, які теги існують; для приватних реєстрів використовуються ваші pull secrets.</string>
+    <string name="updates_consent_continue">Запитати</string>
+    <string name="updates_asking">Запит до реєстрів…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">Доступні оновлення: %1$d</string>
+    <string name="updates_rendered">Згенеровано чартом: змініть тег у його values</string>
+    <string name="updates_lookups_failed">Невдалих запитів: %1$d з %2$d</string>
+    <string name="updates_skipped">Пропущено: %1$s (%2$s)</string>
+    <string name="updates_asking_count">Запит до реєстрів (образи й чарти: %1$d)…</string>
 </resources>

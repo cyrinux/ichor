@@ -10,6 +10,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.KubePermissions
+import name.levis.ichor.data.UpdateLookupConsent
+import name.levis.ichor.data.UpdatesRepository
 import name.levis.ichor.data.RunbookManager
 import name.levis.ichor.data.RunbookRepository
 import name.levis.ichor.data.CARotationManager
@@ -181,6 +183,11 @@ class TalosApp : Application() {
     val nodeLifecycleRepository by lazy { NodeLifecycleRepository(goCall) }
     val kubeRepository by lazy { KubeRepository(goCall) }
     val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore, clusterRepos, proposals) }
+
+    /** The Updates screen's lookups: kept in memory for the session. */
+    val updatesRepository by lazy {
+        UpdatesRepository(goCall, gitOpsRepository, gitHostStore, UpdateLookupConsent(getSharedPreferences(UpdateLookupConsent.FILE, Context.MODE_PRIVATE)))
+    }
 
     /** The pull requests opened from the phone, per cluster; no token in them. */
     val proposals by lazy { ProposalsStore(getSharedPreferences(ProposalsStore.FILE, Context.MODE_PRIVATE)) }

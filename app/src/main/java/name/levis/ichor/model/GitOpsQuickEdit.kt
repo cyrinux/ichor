@@ -100,12 +100,23 @@ data class QuickEdit(
     val skipped: List<String> = emptyList(),
     /** [OP_TALOS]: the first changed path, for the title (not sent to the core). */
     val firstPath: String = "",
+    /** [OP_PATH]: the dotted [path] of the field set to [value]. */
+    val path: String = "",
+    val value: String = "",
+    /** The pull request's title and body when the edit names them (an update), else derived (not sent to the core). */
+    val title: String = "",
+    val body: String = "",
 ) {
     companion object {
         const val OP_IMAGE = "image"
         const val OP_REPLICAS = "replicas"
         const val OP_KEEP = "keep"
         const val OP_TALOS = "talos"
+        const val OP_PATH = "path"
+
+        /** The field [path] of the object [kind]/[name] (document [documentIndex]) set to [value]. */
+        fun path(documentIndex: Int, kind: String, name: String, path: String, value: String) =
+            QuickEdit(OP_PATH, documentIndex, name = name, targetKind = kind, targetName = name, path = path, value = value)
 
         /** A kept machine config change of [hostname] written into its file: [plan] says where and what. */
         fun talos(hostname: String, plan: TalosWriteBackPlan, firstPath: String) = QuickEdit(
@@ -168,6 +179,10 @@ fun quickEditJson(edit: QuickEdit): String = buildJsonObject {
             put("create", edit.create)
             put("skipped", QuickJson.encodeToJsonElement(ListSerializer(String.serializer()), edit.skipped))
         }
+        edit.op == QuickEdit.OP_PATH -> {
+            put("path", edit.path)
+            put("value", edit.value)
+        }
         edit.op == QuickEdit.OP_KEEP -> put("changes", QuickJson.encodeToJsonElement(ListSerializer(DiffLiveChange.serializer()), edit.changes))
         edit.op == QuickEdit.OP_REPLICAS -> {
             if (edit.kustomizeReplica.isNotEmpty()) put("kustomizeReplica", edit.kustomizeReplica)
@@ -193,7 +208,7 @@ fun decodeQuickEdit(json: String?): QuickEdit? {
     return runCatching { QuickJson.decodeFromString(QuickEdit.serializer(), json) }.getOrNull()
         ?.takeIf {
             it.op == QuickEdit.OP_IMAGE || it.op == QuickEdit.OP_REPLICAS || it.op == QuickEdit.OP_KEEP && it.changes.isNotEmpty() ||
-                it.op == QuickEdit.OP_TALOS && it.patch.isNotBlank()
+                it.op == QuickEdit.OP_TALOS && it.patch.isNotBlank() || it.op == QuickEdit.OP_PATH && it.path.isNotBlank()
         }
 }
 
@@ -205,7 +220,8 @@ fun decodeQuickEditResult(json: String): QuickEditResult = QuickJson.decodeFromS
  * The pull request's default title for [edit] (English: it is text of the repository, not of
  * the app): "Bump podinfo to 6.7.0", "Scale podinfo to 3".
  */
-fun quickEditTitle(edit: QuickEdit): String = when (edit.op) {
+fun quickEditTitle(edit: QuickEdit): String = if (edit.title.isNotBlank()) edit.title else when (edit.op) {
+    QuickEdit.OP_PATH -> "Set ${edit.path} of ${edit.name.ifEmpty { "object" }} to ${edit.value}"
     QuickEdit.OP_TALOS -> "Keep ${edit.hostname}'s config change in Git: ${edit.firstPath}".trimEnd(' ', ':')
     QuickEdit.OP_KEEP -> "Keep live changes of ${edit.targetKind.ifEmpty { "object" }} ${edit.name}".trimEnd()
     QuickEdit.OP_REPLICAS -> "Scale ${edit.name.ifEmpty { "workload" }} to ${edit.replicas}"
@@ -217,10 +233,15 @@ fun quickEditTitle(edit: QuickEdit): String = when (edit.op) {
 
 /**
  * The pull request prefilled for [draft]: titled (and its commit message) after a quick edit
- * ([quickTitle]) while the draft is still exactly what it made ([quickDraft]), else [defaults].
+ * ([quickTitle], and its [quickBody] when it has one) while the draft is still exactly what it
+ * made ([quickDraft]), else [defaults].
  */
-fun quickProposalDefaults(defaults: GitProposalDefaults, quickDraft: String?, quickTitle: String?, draft: String): GitProposalDefaults =
-    if (quickDraft != null && !quickTitle.isNullOrBlank() && draft == quickDraft) defaults.copy(title = quickTitle, message = quickTitle) else defaults
+fun quickProposalDefaults(defaults: GitProposalDefaults, quickDraft: String?, quickTitle: String?, draft: String, quickBody: String? = null): GitProposalDefaults =
+    if (quickDraft != null && !quickTitle.isNullOrBlank() && draft == quickDraft) {
+        defaults.copy(title = quickTitle, message = quickTitle, body = quickBody?.takeIf { it.isNotBlank() } ?: defaults.body)
+    } else {
+        defaults
+    }
 
 /**
  * The repository of [image], without its tag or digest: "ghcr.io/org/app:1.2@sha256:…" gives
@@ -319,6 +340,17 @@ fun quickImageChoices(targets: QuickEditTargets): List<QuickImageChoice> {
     }
     return kustomize + containers
 }
+
+/** The choice of [choices] a prefilled image [edit] targets (its kustomization entry, else its container), -1 for none. */
+fun quickPrefillIndex(choices: List<QuickImageChoice>, edit: QuickEdit): Int =
+    if (edit.kustomizeImage.isNotEmpty()) {
+        choices.indexOfFirst { it.kustomizeImage == edit.kustomizeImage }
+    } else {
+        choices.indexOfFirst { !it.isKustomize && it.container == edit.container && (edit.targetName.isEmpty() || it.workload == edit.targetName) }
+    }
+
+/** The tag a prefilled image [edit] sets: a kustomization entry's bare tag, else the image's. */
+fun quickPrefillTag(edit: QuickEdit): String = if (edit.kustomizeImage.isNotEmpty()) edit.image else imageTag(edit.image)
 
 /** One replica count the replicas sheet can set: a workload, or a kustomization `replicas:` entry ([kustomizeReplica]). */
 data class QuickReplicaChoice(

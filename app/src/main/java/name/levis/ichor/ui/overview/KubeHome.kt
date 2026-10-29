@@ -168,6 +168,8 @@ class KubeHomeNavigation(
     val onSearch: () -> Unit,
     /** The cluster's runbooks. */
     val onRunbooks: () -> Unit,
+    /** The Updates screen: images and charts with a newer version. */
+    val onUpdates: () -> Unit,
     /** The apps screen, on those that need a look when [attention]. */
     val onApps: (attention: Boolean) -> Unit,
     /** Opens a pinned object's screen, like its share link. */
@@ -299,6 +301,7 @@ fun KubeHomeScreen(
                                 onManage = { showClusters = true },
                                 onDismiss = { clusterMenu = false },
                                 onRunbooks = nav.onRunbooks,
+                                onUpdates = nav.onUpdates,
                             )
                         }
                     }

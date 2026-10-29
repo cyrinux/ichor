@@ -97,8 +97,8 @@ data class SourceEdit(
     val changed: Boolean get() = draft != original
 }
 
-/** A quick edit's result: the [draft] it made and the pull request [title] it names. */
-data class QuickDraft(val draft: String, val title: String)
+/** A quick edit's result: the [draft] it made and the pull request [title] (and [body], "" for the default) it names. */
+data class QuickDraft(val draft: String, val title: String, val body: String = "")
 
 /** The editor screen: the file being read, or why it cannot be edited ([block]). */
 data class SourceEditState(val edit: UiState<SourceEdit> = UiState.Loading, val block: ProposeBlock? = null)
@@ -217,7 +217,7 @@ class SourceEditViewModel(
             .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
         // Live values the file does not set (an overlay or a patch does) are named on the review.
         val skipped = result.skipped.takeIf { it.isNotEmpty() }?.let { UiText.Res(R.string.gitops_keep_skipped, it.joinToString("; ")) }
-        return edit.copy(draft = result.content, review = review, quick = QuickDraft(result.content, quickEditTitle(quick)), notice = skipped)
+        return edit.copy(draft = result.content, review = review, quick = QuickDraft(result.content, quickEditTitle(quick), quick.body), notice = skipped)
     }
 
     private fun updateEdit(transform: (SourceEdit) -> SourceEdit) = _state.update { s ->
@@ -286,7 +286,7 @@ class SourceEditViewModel(
         val edit = current ?: return
         if (edit.form != null) return updateEdit { it.copy(formOpen = true) }
         val fixed = proposalBaseRef(edit.source.tracked)
-        val d = quickProposalDefaults(edit.defaults, edit.quick?.draft, edit.quick?.title, edit.draft)
+        val d = quickProposalDefaults(edit.defaults, edit.quick?.draft, edit.quick?.title, edit.draft, edit.quick?.body)
         val form = ProposeForm(
             title = d.title,
             message = d.message,

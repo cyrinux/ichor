@@ -147,11 +147,16 @@ internal object Routes {
 
     /**
      * One file of source [idx] of an Argo CD or Flux app; [path] from the repository root, [line]
-     * (1-based) scrolled to and highlighted, 0 for none.
+     * (1-based) scrolled to and highlighted, 0 for none; [quick] (a quick edit's JSON, "" for
+     * none) opens its sheet prefilled (an update from the Updates screen).
      */
-    const val GITOPS_FILE = "gitops-file?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}&line={line}"
-    fun gitOpsFile(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String, line: Int = 0) =
-        "gitops-file?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}&line=$line"
+    const val GITOPS_FILE = "gitops-file?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}&line={line}&quick={quick}"
+    fun gitOpsFile(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String, line: Int = 0, quick: String = "") =
+        "gitops-file?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}&line=$line" +
+            "&quick=${Uri.encode(quick)}"
+
+    /** The Updates screen: the active cluster's images and charts with a newer version. */
+    const val UPDATES = "updates"
 
     /**
      * The editor of the file [path] of source [idx]: the draft stays in its view model, never here.

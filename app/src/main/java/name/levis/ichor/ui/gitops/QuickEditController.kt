@@ -34,6 +34,8 @@ data class QuickSheet(
     val suggestions: QuickSuggestions = QuickSuggestions(),
     val applying: Boolean = false,
     val error: UiText? = null,
+    /** The edit an update asks for: the image sheet opens on its container and tag. */
+    val prefill: QuickEdit? = null,
 )
 
 /**
@@ -55,11 +57,14 @@ class QuickEditController(
 
     /** The app whose file is shown. */
     var target: SourceTarget? = null
+
+    /** An update's edit (Updates screen): prefills the image sheet, and names the pull request when applied as is. */
+    var prefill: QuickEdit? = null
     private var suggestions: QuickSuggestions? = null
     private var job: Job? = null
 
     fun open(kind: QuickSheetKind) {
-        _sheet.value = QuickSheet(kind, suggestions ?: QuickSuggestions())
+        _sheet.value = QuickSheet(kind, suggestions ?: QuickSuggestions(), prefill = prefill.takeIf { kind == QuickSheetKind.IMAGE })
         if (kind == QuickSheetKind.IMAGE && suggestions == null) loadSuggestions()
     }
 
@@ -74,7 +79,10 @@ class QuickEditController(
     }
 
     /** Rewrites the file with [edit] off the main thread: unchanged says so, else [applied] carries it. */
-    fun applyEdit(edit: QuickEdit) {
+    fun applyEdit(asked: QuickEdit) {
+        // The update's title and body stay only while the edit is the one it asked for.
+        val edit = prefill?.takeIf { it.image == asked.image && it.kustomizeImage == asked.kustomizeImage }
+            ?.let { asked.copy(title = it.title, body = it.body) } ?: asked
         val text = content() ?: return
         val current = _sheet.value ?: return
         if (current.applying) return

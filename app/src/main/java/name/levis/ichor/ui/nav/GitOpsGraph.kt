@@ -26,6 +26,8 @@ import name.levis.ichor.ui.gitops.SourceFileScreen
 import name.levis.ichor.ui.gitops.SourceTarget
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.settings.SettingsPage
+import name.levis.ichor.ui.updates.UpdateOpen
+import name.levis.ichor.ui.updates.UpdatesScreen
 
 /** Argo CD and Flux: their apps, sync windows and diffs. */
 internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
@@ -144,7 +146,19 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }
+    composable(Routes.UPDATES) {
+        UpdatesScreen(onBack = { nav.popBackStack() }, onOpen = { open -> nav.navigate(updateRoute(open)) })
+    }
     sourceGraph(nav)
+}
+
+/** Where a tapped update goes: its file with the image sheet prefilled, or the editor on a field's edit. */
+private fun updateRoute(open: UpdateOpen): String {
+    val a = open.app
+    return when (open) {
+        is UpdateOpen.File -> Routes.gitOpsFile(a.tool, a.kind, a.namespace, a.name, open.sourceIndex, open.path, open.line, open.prefill?.let(::encodeQuickEdit).orEmpty())
+        is UpdateOpen.Edit -> Routes.gitOpsEdit(a.tool, a.kind, a.namespace, a.name, open.sourceIndex, open.path, encodeQuickEdit(open.edit))
+    }
 }
 
 /** The route of the file [path] of [t]'s files, [line] highlighted (0 for none). */
@@ -213,7 +227,8 @@ private fun NavGraphBuilder.sourceScreens(
         fileRoute,
         arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
             navArgument("line") { type = NavType.IntType; defaultValue = 0 } +
-            navArgument("noTry") { type = NavType.BoolType; defaultValue = false },
+            navArgument("noTry") { type = NavType.BoolType; defaultValue = false } +
+            navArgument("quick") { type = NavType.StringType; defaultValue = "" },
     ) { entry ->
         val t = target(entry.arguments)
         val path = entry.arguments?.getString("path").orEmpty()
@@ -223,6 +238,7 @@ private fun NavGraphBuilder.sourceScreens(
             target = t,
             path = path,
             line = entry.arguments?.getInt("line")?.takeIf { it > 0 },
+            prefill = decodeQuickEdit(entry.arguments?.getString("quick")),
             onBack = { nav.popBackStack() },
             onAddToken = onAddToken,
             onEdit = { nav.navigate(sourceEditRoute(t, path)) },

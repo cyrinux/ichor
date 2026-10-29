@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import name.levis.ichor.TalosApp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,7 +59,19 @@ internal fun <T> GitOpsCardFrame(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            is UiState.Loaded -> body(state.data)
+            is UiState.Loaded -> {
+                body(state.data)
+                UpdatesCount()
+            }
         }
     }
+}
+
+/** "Updates available: N" once the Updates screen looked this cluster up in this session. */
+@Composable
+private fun UpdatesCount() {
+    val talos = LocalContext.current.applicationContext as? TalosApp ?: return
+    val outdated by talos.updatesRepository.outdated.collectAsStateWithLifecycle()
+    val count = outdated[talos.updatesRepository.clusterKey()] ?: return
+    if (count > 0) MutedText(stringResource(R.string.updates_card_count, count))
 }

@@ -5708,4 +5708,27 @@
     <string name="pod_sweep_started">正在后台清理：可在通知中查看进度</string>
     <string name="pod_sweep_busy">已有一个失效 Pod 清理正在运行</string>
     <string name="pod_sweep_background">在后台运行：可以关闭此面板。</string>
+    <string name="updates_title">更新</string>
+    <string name="updates_menu">更新…</string>
+    <string name="updates_section_images">镜像</string>
+    <string name="updates_section_charts">Chart</string>
+    <string name="updates_section_not_comparable">无法比较</string>
+    <string name="updates_chip_patch">补丁 %1$s</string>
+    <string name="updates_chip_minor">次版本 %1$s</string>
+    <string name="updates_chip_major">主版本 %1$s</string>
+    <string name="updates_badge_flux">Flux 镜像自动化</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">遵循 semver 范围</string>
+    <string name="updates_badge_bot">已配置机器人</string>
+    <string name="updates_empty">所有内容都运行在策略允许的最新版本</string>
+    <string name="updates_consent_title">查询镜像仓库？</string>
+    <string name="updates_consent_body">应用会向镜像仓库查询有哪些标签；私有仓库会使用你的拉取密钥。</string>
+    <string name="updates_consent_continue">查询</string>
+    <string name="updates_asking">正在查询镜像仓库…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">可用更新：%1$d</string>
+    <string name="updates_rendered">由 chart 渲染：请在其 values 中设置标签</string>
+    <string name="updates_lookups_failed">查询失败：%1$d / %2$d</string>
+    <string name="updates_skipped">已跳过：%1$s（%2$s）</string>
+    <string name="updates_asking_count">正在查询镜像仓库（镜像和 chart：%1$d）…</string>
 </resources>

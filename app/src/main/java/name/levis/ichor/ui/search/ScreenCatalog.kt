@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -92,6 +93,7 @@ fun screenCatalog(cluster: ContextSummary, nodes: List<NodeOverview> = emptyList
         ScreenSpec("upgrade-cluster", R.string.cluster_upgrade_menu, o, Icons.Outlined.SystemUpdateAlt) { Routes.clusterUpgrade() }.takeIf { upgrade },
         ScreenSpec("upgrade-kubernetes", R.string.k8s_upgrade_menu, o, Icons.Outlined.Upgrade) { Routes.K8S_UPGRADE }.takeIf { upgrade },
         ScreenSpec("join-node", R.string.join_node_menu, o, Icons.Outlined.AddCircleOutline) { Routes.JOIN_NODE }.takeIf { talos },
+        ScreenSpec("updates", R.string.updates_title, o, Icons.Outlined.Update) { Routes.UPDATES },
         ScreenSpec("runbooks", R.string.runbooks_menu, o, Icons.Outlined.Checklist) { Routes.RUNBOOKS },
     )
     val settings = visibleSettingsPages(cluster).map { page ->

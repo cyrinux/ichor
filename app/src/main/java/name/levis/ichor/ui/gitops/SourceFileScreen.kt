@@ -103,6 +103,8 @@ fun SourceFileScreen(
     onEdit: (() -> Unit)? = null,
     onQuickEdit: ((QuickEdit) -> Unit)? = null,
     line: Int? = null,
+    /** An update's image edit (Updates screen): the image sheet opens on it once the file allows quick edits. */
+    prefill: QuickEdit? = null,
     /** A Talos patch file tried on the node picked: the machine config screen opens with it. */
     onTryPatch: ((node: NodeOverview, patch: PatchPrefill) -> Unit)? = null,
 ) {
@@ -136,6 +138,13 @@ fun SourceFileScreen(
     val view = (state.file as? UiState.Loaded)?.data
     // Quick edits follow Edit's rules: offered only when the file can be proposed.
     val quick = state.quick?.takeIf { view != null && !view.file.truncated && onEdit != null && onQuickEdit != null && state.editBlock == null }
+    var prefillOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(quick != null, prefill) {
+        if (quick == null || prefill == null || prefillOpened || !quick.canEditImage) return@LaunchedEffect
+        prefillOpened = true
+        vm.quick.prefill = prefill
+        vm.quick.open(QuickSheetKind.IMAGE)
+    }
     val sheet = quickSheet
     if (quick != null && sheet != null) {
         when (sheet.kind) {

@@ -5708,4 +5708,27 @@
     <string name="pod_sweep_started">バックグラウンドでクリーンアップ中です。通知で進行状況を確認できます</string>
     <string name="pod_sweep_busy">停止した Pod のクリーンアップはすでに実行中です</string>
     <string name="pod_sweep_background">バックグラウンドで実行されます。このシートは閉じてもかまいません。</string>
+    <string name="updates_title">アップデート</string>
+    <string name="updates_menu">アップデート…</string>
+    <string name="updates_section_images">イメージ</string>
+    <string name="updates_section_charts">チャート</string>
+    <string name="updates_section_not_comparable">比較できない</string>
+    <string name="updates_chip_patch">パッチ %1$s</string>
+    <string name="updates_chip_minor">マイナー %1$s</string>
+    <string name="updates_chip_major">メジャー %1$s</string>
+    <string name="updates_badge_flux">Flux イメージ自動化</string>
+    <string name="updates_badge_argo">Argo CD Image Updater</string>
+    <string name="updates_badge_range">semver 範囲に従う</string>
+    <string name="updates_badge_bot">ボット設定済み</string>
+    <string name="updates_empty">すべてがポリシーで許される最新バージョンで動いています</string>
+    <string name="updates_consent_title">レジストリに問い合わせますか？</string>
+    <string name="updates_consent_body">アプリはイメージレジストリに存在するタグを問い合わせます。プライベートレジストリにはプルシークレットが使われます。</string>
+    <string name="updates_consent_continue">問い合わせる</string>
+    <string name="updates_asking">レジストリに問い合わせ中…</string>
+    <string name="updates_running_newest">%1$s → %2$s</string>
+    <string name="updates_card_count">利用可能なアップデート：%1$d</string>
+    <string name="updates_rendered">チャートで生成されています：values でタグを設定してください</string>
+    <string name="updates_lookups_failed">失敗した問い合わせ：%1$d / %2$d</string>
+    <string name="updates_skipped">スキップ：%1$s（%2$s）</string>
+    <string name="updates_asking_count">レジストリに問い合わせ中（イメージとチャート：%1$d）…</string>
 </resources>
