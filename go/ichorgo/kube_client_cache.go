@@ -1,7 +1,6 @@
 package ichorgo
 
 import (
-	"context"
 	"errors"
 	"sync"
 	"time"
@@ -142,79 +141,4 @@ func (c *kubeClientCache) forgetConfig(config, context string) {
 			entry.client.close()
 		}
 	}
-}
-
-// openKubeClientForContext fetches an admin kubeconfig from Talos (bounded by callTimeout)
-// and probes the API server addresses (bounded by kubeProbeTimeout). A cluster added from a
-// kubeconfig uses its own context, at its own server only.
-func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
-	if isKubeconfig(target.config) {
-		return openStoredKubeClient(target)
-	}
-
-	var (
-		endpoints []string
-		omni      *kubeClient
-	)
-
-	kubeconfig, err := withSession(target.config, target.context, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		// Through Omni: its kube proxy, with an Omni sign-in (no Talos admin kubeconfig).
-		if s.signing != nil {
-			k, err := omniKubeClient(ctx, s)
-			omni = k
-
-			return "", err
-		}
-
-		endpoints = s.context.Endpoints
-
-		return fetchKubeconfig(ctx, s)
-	})
-	if omni != nil || err != nil {
-		return omni, err
-	}
-
-	return openKubeClient(context.Background(), kubeconfig, endpoints, target.server)
-}
-
-// openStoredKubeClient opens a cluster added from a kubeconfig. A context that signs in
-// through a method gets its token source; the first token is minted before probing, so a
-// needed sign-in is reported as such rather than as an unreachable server.
-func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
-	sc, err := signInContext(target.config, target.context)
-	if err != nil {
-		return nil, err
-	}
-
-	if sc.method == nil {
-		kubeconfig, err := kubeContextYAML(target.config, target.context)
-		if err != nil {
-			return nil, err
-		}
-
-		return openKubeClient(context.Background(), kubeconfig, nil, target.server)
-	}
-
-	tokens := kubeAuth.source(sc.key, sc.method)
-
-	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
-	defer cancel()
-
-	if _, err := tokens.get(ctx); err != nil {
-		return nil, err
-	}
-
-	kubeconfig, err := kubeContextYAMLWithoutUser(target.config, target.context)
-	if err != nil {
-		return nil, err
-	}
-
-	creds, err := parseKubeconfig(kubeconfig)
-	if err != nil {
-		return nil, err
-	}
-
-	creds.token, creds.tokens = "", tokens
-
-	return openKubeClientCreds(context.Background(), creds, nil, target.server)
 }
