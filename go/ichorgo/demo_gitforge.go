@@ -44,6 +44,24 @@ spec:
           image: ghcr.io/stefanprodan/podinfo:6.7.0
           ports:
             - containerPort: 9898
+        - name: exporter
+          image: ghcr.io/example-org/podinfo-exporter:0.4.0
+`,
+	// The demo's ingress-nginx chart, applied by the infra Kustomization (UpdateEditTarget).
+	"apps/infra/ingress-nginx.yaml": `apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: ingress-nginx
+      version: 4.12.1
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
 `,
 	"apps/podinfo/hpa.yaml": `apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

@@ -26,6 +26,12 @@ func demoClusterUpdates(now time.Time) clusterUpdates {
 		Candidate: cand("6.7.0", "6.7.1", "6.9.2", "", "ghcr.io"),
 		Edit:      &updateEdit{Op: "image", Kind: "Deployment", Name: "podinfo", Container: "podinfo", Image: "ghcr.io/stefanprodan/podinfo:6.7.1"},
 	}
+	// Its sidecar is in the same file: selected together, the two make one file of the plan.
+	exporter := &updateImage{
+		Repo: "ghcr.io/example-org/podinfo-exporter", Tag: "0.4.0", Workloads: workload("Deployment", "demo", "podinfo", "exporter"),
+		Owner: podinfo.Owner, Candidate: cand("0.4.0", "0.4.2", "", "", "ghcr.io"),
+		Edit: &updateEdit{Op: "image", Kind: "Deployment", Name: "podinfo", Container: "exporter", Image: "ghcr.io/example-org/podinfo-exporter:0.4.2"},
+	}
 	nginx := &updateImage{
 		Repo: "nginx", Tag: "1.27.4-alpine", Workloads: workload("Deployment", "demo", "hello-ichor", "nginx"), Owner: argo,
 		Candidate: upstream.Candidate{Current: "1.27.4-alpine", Patch: "1.27.5-alpine", Shape: "x.y.z-alpine", Source: "Docker Hub"},
@@ -41,7 +47,7 @@ func demoClusterUpdates(now time.Time) clusterUpdates {
 	return clusterUpdates{
 		At: now.UnixMilli(),
 		Images: []*updateImage{
-			podinfo, nginx, coredns,
+			podinfo, exporter, nginx, coredns,
 			{
 				Repo: "ghcr.io/example-org/worker", Tag: "2.3.0", Workloads: workload("Deployment", "demo", "worker", "worker"), Owner: argo,
 				Candidate: cand("2.3.0", "2.3.1", "", "", "ghcr.io"), AutomatedBy: "argocd-image-updater",
