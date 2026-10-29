@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -52,20 +53,29 @@ fun <A : Enum<A>> ActionBarActions(
     /** Marks where an action is (its icon, else the ⋮ button its menu is behind), for a coach mark. */
     marker: (A) -> Modifier = { Modifier },
     groups: ActionGroups<A>? = null,
+    /** The smoke test's anchor (SmokeTags.kt) for an action, on its icon or its menu item. */
+    testTag: (A) -> String? = { null },
 ) {
+    fun tagged(action: A): Modifier = testTag(action)?.let { Modifier.testTag(it) } ?: Modifier
     bar.icons.filter(offered).forEach { action ->
-        TooltipIconButton(look.icon(action), look.label(action), onClick = { onClick(action) }, modifier = marker(action), enabled = enabled(action) && refusal(action) == null)
+        TooltipIconButton(
+            look.icon(action),
+            look.label(action),
+            onClick = { onClick(action) },
+            modifier = marker(action).then(tagged(action)),
+            enabled = enabled(action) && refusal(action) == null,
+        )
     }
     var open by remember { mutableStateOf(false) }
     val inMenu = bar.menu.filter(offered).fold<A, Modifier>(Modifier) { acc, action -> acc.then(marker(action)) }
     Box {
-        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true }, modifier = inMenu)
+        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true }, modifier = inMenu.testTag(SMOKE_ACTIONS_MORE))
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             val close = { open = false }
             val menu = bar.menu.filter(offered)
             val item: @Composable (A) -> Unit = { action ->
                 val refused = refusal(action)
-                MenuAction(look.icon(action), look.label(action), close, { onClick(action) }, enabled(action) && refused == null, refused)
+                MenuAction(look.icon(action), look.label(action), close, { onClick(action) }, enabled(action) && refused == null, refused, tagged(action))
             }
             if (groups == null) {
                 menu.forEach { item(it) }
@@ -94,8 +104,17 @@ private fun MenuSectionHeader(title: String) {
 }
 
 @Composable
-private fun MenuAction(icon: ImageVector, label: String, close: () -> Unit, onClick: () -> Unit, enabled: Boolean = true, reason: String? = null) {
+private fun MenuAction(
+    icon: ImageVector,
+    label: String,
+    close: () -> Unit,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    reason: String? = null,
+    modifier: Modifier = Modifier,
+) {
     DropdownMenuItem(
+        modifier = modifier,
         text = {
             if (reason == null) {
                 Text(label)

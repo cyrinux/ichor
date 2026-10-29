@@ -23,7 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 STRINGS = ROOT / "docs-i18n"
-PAGES = ["index.html", "privacy.html"]
+PAGES = ["index.html", "features.html", "privacy.html"]
 LANGUAGES = ["fr", "es", "uk", "de", "it", "zh-Hans", "ja", "pt-BR", "ru"]
 SITE = "https://cyrinux.github.io/ichor/"
 
@@ -135,7 +135,7 @@ def localize_urls(html: str, lang: str, page: str) -> str:
 
     def asset(match: re.Match) -> str:
         url = match.group(2)
-        local = url.startswith("#") or url in ("./", *PAGES)
+        local = url.startswith("#") or url.split("#")[0] in ("./", *PAGES)
         if local or re.match(r"^[a-z][a-z0-9+.-]*:|^/", url):
             return match.group(0)
         return f'{match.group(1)}="../{url}"'

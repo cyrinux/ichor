@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Captures the phone's current screen over adb for the website and the store listings.
 #
-#   scripts/screenshot.sh NAME     capture one screen as NAME
+#   scripts/screenshot.sh NAME         capture one screen as NAME
+#   scripts/screenshot.sh NAME FILE    crop FILE, a screencap of the same device, instead
+#                                      (scripts/ci-screenshots.sh, on the CI emulator)
 #
 # Turn on Settings > Privacy > Screenshot mode in the app first, so no real addresses or
 # node names end up in the images. The status and navigation bars are cropped off (their
@@ -17,7 +19,8 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 store="$root/fastlane/metadata/android/en-US/images/phoneScreenshots"
 site="$root/docs/screenshots"
 
-name="${1:?usage: $0 NAME}"
+name="${1:?usage: $0 NAME [FILE]}"
+from="${2:-}"
 [[ "$name" =~ ^[a-z0-9-]+$ ]] || { echo "NAME must be lowercase letters, digits and dashes" >&2; exit 1; }
 command -v magick >/dev/null || { echo "ImageMagick (magick) is required" >&2; exit 1; }
 adb get-state >/dev/null
@@ -30,7 +33,7 @@ nav="$(sed -nE 's/.*navigationBars frame=\[0,([0-9]+)\]\[[0-9]+,[0-9]+\].*/\1/p'
 mkdir -p "$store" "$site"
 raw="$(mktemp --suffix=.png)"
 trap 'rm -f "$raw"' EXIT
-adb exec-out screencap -p > "$raw"
+if [[ -n "$from" ]]; then cp "$from" "$raw"; else adb exec-out screencap -p > "$raw"; fi
 height="$(magick identify -format '%h' "$raw")"
 width="$(magick identify -format '%w' "$raw")"
 top="${top:-0}"

@@ -81,6 +81,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.ui.fleet.AllClustersRow
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.adjacentContext
@@ -271,6 +272,8 @@ fun ClusterSheet(
     kubeServers: Map<String, String> = emptyMap(),
     /** Saves a cluster's API address ("" to use the kubeconfig's again); null: not offered. */
     onKubeServer: ((ContextSummary, String) -> Unit)? = null,
+    /** "All clusters" at the top (the fleet view); null: not offered. */
+    onFleet: (() -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var addressing by remember { mutableStateOf<ContextSummary?>(null) }
@@ -289,6 +292,7 @@ fun ClusterSheet(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
             )
+            onFleet?.let { open -> AllClustersRow { scope.launch { sheetState.hide() }.invokeOnCompletion { open() } } }
             // A long list in sections, per provider and account; a short one as it is.
             val groups = remember(contexts, labels.masked) { clusterGroups(contexts, labels.masked) }
             val row: @Composable (ContextSummary) -> Unit = { context ->

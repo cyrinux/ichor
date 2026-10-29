@@ -99,7 +99,8 @@ struct NodeStatusSection: View {
             // "Pods" next to "Kubernetes pods" would read as the same list: these are Talos's containers.
             tabRow(
                 .pods, title: model.allows(.workloads) ? String(localized: "Containers") : nil,
-                systemImage: "shippingbox.circle", support: support(.containers, .containers))
+                systemImage: "shippingbox.circle", support: support(.containers, .containers),
+                smokeID: SmokeID.containers)
             // Cgroups (a copy of /sys/fs/cgroup) only exists for admin configs.
             if model.allows(.cgroups) {
                 tabRow(.cgroups, systemImage: "square.3.layers.3d", support: support(.cgroups))
@@ -113,12 +114,13 @@ struct NodeStatusSection: View {
 
     private func tabRow(
         _ tab: NodeTabsView.Tab, title: String? = nil, systemImage: String,
-        support: FeatureSupport = FeatureSupport(supported: true)
+        support: FeatureSupport = FeatureSupport(supported: true), smokeID: String? = nil
     ) -> some View {
         NavigationLink(value: Route.nodeTab(ref, tab: tab)) {
             NodeHubRowLabel(title: title ?? tab.label, systemImage: systemImage, support: support)
         }
         .disabled(!support.supported)
+        .smokeID(smokeID)
     }
 
     private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {

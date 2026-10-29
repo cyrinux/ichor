@@ -5934,4 +5934,31 @@
     <string name="diagnostics_clear">Clear log</string>
     <string name="diagnostics_clear_title">Clear the diagnostics log?</string>
     <string name="diagnostics_clear_body">Every entry of the log is deleted, and its file on this phone if it is kept. The system\'s exit records stay.</string>
+    <string name="fleet_title">All clusters</string>
+    <string name="fleet_refresh">Check every cluster now</string>
+    <string name="fleet_row_hint">Every cluster\'s last check, worst first</string>
+    <string name="fleet_summary_attention">Need attention: %1$d</string>
+    <string name="fleet_summary_unchecked">Not checked: %1$d</string>
+    <string name="fleet_summary_fine">Fine: %1$d</string>
+    <string name="fleet_critical">Critical: %1$d</string>
+    <string name="fleet_warnings">Warnings: %1$d</string>
+    <string name="fleet_finding">%1$s: %2$s</string>
+    <string name="fleet_checked">Checked %1$s</string>
+    <string name="fleet_last_checked">Last checked %1$s</string>
+    <string name="fleet_never_checked">Never checked</string>
+    <string name="fleet_tone_bad">Needs attention</string>
+    <string name="fleet_tone_warn">Degraded</string>
+    <string name="fleet_tone_unknown">Not checked</string>
+    <string name="fleet_tone_ok">Fine</string>
+    <string name="fleet_track_reach">Connection</string>
+    <string name="fleet_track_alert">Alert</string>
+    <string name="fleet_track_sensor">Temperature</string>
+    <string name="fleet_track_other">Finding</string>
+    <string name="fleet_alerts_off">Background checks are off, so no cluster is checked and this list stays as it is. Turn on alerts to fill it.</string>
+    <string name="fleet_alerts_settings">Alerts settings</string>
+    <string name="fleet_failed">The list could not be built from the last checks.</string>
+    <string name="fleet_empty">No cluster yet.</string>
+    <string name="fleet_demo_hint">The demo\'s made-up clusters: a tap goes back to the demo.</string>
+    <string name="fleet_one_cluster">The list grows with each cluster you add.</string>
+    <string name="fleet_track_etcd" translatable="false">etcd</string>
 </resources>

@@ -15,8 +15,12 @@ an issue first so we can agree on the approach before you spend time on it.
   `IchorgoFooBar(` in Swift, `.fooBar(` on a handle), so a new facade function needs no
   allowlist: call it from an app or a test in the same pull request, or delete it.
 - The demo-mode smoke test (`DemoSmokeTest`, CI job `ui-smoke`) walks the demo cluster on an
-  emulator; it runs on CI only (see docs/build.md to run it on an AVD). When a screen's anchor
-  moves, move its test tag (`ui/components/SmokeTags.kt`), not the test's waits. The iOS twin
+  emulator; it runs on CI only (see docs/build.md to run it on an AVD). Four walks: overview →
+  node → kernel log; overview → node → Containers → a container's log; overview → Settings
+  (Android through the ⋮ menu where it sits by default; iOS launched with Settings as the bar's
+  only icon, since iOS folds a phone's toolbar into an overflow without identifiers); the
+  Kubernetes demo's home. A moved anchor
+  moves its tag (`ui/components/SmokeTags.kt`), not the test. The iOS twin
   (`IchorUITests/DemoSmokeTests`) runs on macOS CI after the simulator build; its anchors are
   accessibility identifiers (`SmokeID` in `ios/Ichor/App/UITestLaunch.swift`), never labels.
 - A govulncheck finding (`just vuln`) means a known vulnerability is reachable from the Go
@@ -47,7 +51,10 @@ function the apps call lives there, with the privacy masking, the audit log and 
 contexts. New transport or pure-logic code goes in its own package under `go/<domain>` (like
 `go/plugin`, or `go/gitforge`, the Git forge transport) or `go/internal/<name>` (like
 `go/internal/httpx`, the one outbound HTTP client), with its tests next to it; `ichorgo`
-imports it and keeps a thin wrapper per entry point.
+imports it and keeps a thin wrapper per entry point. `go/kube` is the Kubernetes transport
+only (requests, errors, the client cache, the follow loop): no kubeconfig parsing, demo
+data, masking or audit, which stay in the facade (`go/ichorgo/kube_alias.go` holds the
+wrappers).
 
 ## Facade contract
 

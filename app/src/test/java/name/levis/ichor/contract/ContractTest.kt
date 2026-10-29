@@ -15,6 +15,8 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.ClusterUpdates
 import name.levis.ichor.model.DiagEntry
+import name.levis.ichor.model.FleetSummary
+import name.levis.ichor.model.FleetTone
 import name.levis.ichor.model.UpdateProposalPlan
 import name.levis.ichor.model.updateSections
 import name.levis.ichor.model.FluxStatus
@@ -53,6 +55,7 @@ class ContractTest {
         "cluster-updates" to Row(ClusterUpdates.serializer()) { assertTrue(updateSections(it).images.isNotEmpty()) },
         "update-proposal-plan" to Row(UpdateProposalPlan.serializer()) { assertEquals(2, it.files[0].changes.size) },
         "diag-entries" to Row(ListSerializer(DiagEntry.serializer())) { assertEquals("ClusterOverview", it[0].attrs.getValue("fn").content) },
+        "fleet-summary" to Row(FleetSummary.serializer()) { assertEquals(FleetTone.BAD, it.worst); assertEquals("nodes", it.clusters[0].topFinding?.track) },
     )
 
     /** Every default written out, so the re-encoded object names every key the model reads. */

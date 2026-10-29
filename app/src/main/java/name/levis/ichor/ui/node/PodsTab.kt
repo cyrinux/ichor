@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -65,6 +66,7 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.FeatureMenuItem
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SMOKE_CONTAINER_ROW
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
@@ -208,6 +210,7 @@ private fun ContainerItem(
     // Tapping a container opens its log; a long press (or ⋮) its actions.
     Row(
         Modifier.fillMaxWidth()
+            .testTag(SMOKE_CONTAINER_ROW)
             .combinedClickable(
                 role = Role.Button,
                 onClickLabel = stringResource(R.string.common_open),

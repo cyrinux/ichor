@@ -322,6 +322,7 @@ struct OverviewView: View {
                     }
                 }
                 .disabled(!enabled(action))
+                .smokeID(action == .settings ? SmokeID.settings : nil)
                 .demoTourTip(
                     action == .settings ? .settings : .actions,
                     active: tourActive && (action == .settings || action == tourActionsAnchor))
@@ -339,6 +340,7 @@ struct OverviewView: View {
                         }
                     }
                     .disabled(!enabled(action))
+                    .smokeID(action == .settings ? SmokeID.settings : nil)
                 }
                 if !menu.isEmpty { Divider() }
                 ClusterSubmenu(path: $path, shareIncident: { sharingIncident = true })

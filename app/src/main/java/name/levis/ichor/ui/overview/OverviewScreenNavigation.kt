@@ -80,6 +80,8 @@ class OverviewScreenNavigation(
     val onActivity: (cluster: String) -> Unit,
     /** The search across clusters. */
     val onSearch: () -> Unit,
+    /** Every cluster's last check on one list (the fleet view). */
+    val onFleet: () -> Unit,
     /** The cluster's runbooks. */
     val onRunbooks: () -> Unit,
     /** The Updates screen: images and charts with a newer version. */
@@ -127,6 +129,7 @@ class OverviewScreenNavigation(
         onAllNodes = onKubeNodes,
         onActivity = onActivity,
         onSearch = onSearch,
+        onFleet = onFleet,
         onRunbooks = onRunbooks,
         onUpdates = onUpdates,
         onApps = onApps,
