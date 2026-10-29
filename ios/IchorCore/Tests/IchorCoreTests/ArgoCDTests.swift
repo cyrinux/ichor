@@ -6,61 +6,61 @@ final class ArgoCDTests: XCTestCase {
     // whose pod crash-loops on a node that is down, a failed sync on an owned app, a sync
     // running through its waves, a drifting app with auto-sync paused and a prune pending.
     private let json = #"""
-    {"installed":true,"version":"v3.4.5","appSetsError":"","apps":[
-     {"namespace":"argocd","name":"demo-worker","project":"apps","owner":null,"level":"critical","health":"Degraded",
-      "healthMessage":"Deployment \"worker\" exceeded its progress deadline","sync":"Synced","revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
-      "refreshing":"","sources":[{"repo":"https://git.example.com/homelab/gitops.git","path":"apps/worker","chart":"","targetRevision":"main"}],
-      "destination":{"server":"https://kubernetes.default.svc","name":"","namespace":"demo"},"autoSync":{"enabled":true,"prune":false,"selfHeal":true},
-      "syncOptions":["CreateNamespace=true"],
-      "operation":{"phase":"Succeeded","message":"successfully synced","startedAt":1000,"finishedAt":41000,"initiatedBy":"automated","revision":"4be1d0c",
-       "retryCount":0,"dryRun":false,"done":3,"total":3,"wave":0,"waves":[0],"failed":[]},
-      "conditions":[],"resources":[
-       {"group":"","kind":"ConfigMap","namespace":"demo","name":"worker-config","sync":"Synced","health":"","healthMessage":"","wave":0,"hook":false,"prune":false,"syncResult":"Synced"},
-       {"group":"apps","kind":"Deployment","namespace":"demo","name":"worker","sync":"Synced","health":"Degraded","wave":0,"syncResult":"Synced"}],
-      "revisionUrl":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
-      "history":[{"id":12,"revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","url":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","targetRevision":"main","chart":"","deployedAt":5000,"initiatedBy":"automated"}],
-      "images":["busybox:1.37"],"externalURLs":[],"reconciledAt":9000,
-      "unhealthyPods":[{"namespace":"demo","name":"worker-7f9c","status":"CrashLoopBackOff","healthy":false,"ready":0,"containers":1,"restarts":14,"node":"worker-2","owner":"ReplicaSet/worker-7f","created":1,"images":["busybox:1.37"]}]},
-     {"namespace":"argocd","name":"grafana","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"critical","icon":"grafana",
-      "health":"Healthy","sync":"OutOfSync","revision":"8.5.2","sources":[{"repo":"https://grafana.github.io/helm-charts","chart":"grafana","targetRevision":"8.6.0"}],
-      "destination":{"namespace":"monitoring"},"autoSync":{"enabled":true,"prune":true},"syncOptions":["ServerSideApply=true"],
-      "operation":{"phase":"Failed","message":"one or more objects failed to apply","startedAt":1000,"finishedAt":2000,"done":3,"total":4,"waves":[0],
-       "failed":[{"kind":"Deployment","namespace":"monitoring","name":"grafana","message":"spec.template.spec.containers[0].image: Required value"}]},
-      "conditions":[{"type":"SyncError","message":"Failed sync attempt to 8.6.0"}],
-      "resources":[{"kind":"Service","namespace":"monitoring","name":"grafana","sync":"Synced","health":"Healthy","syncResult":"Synced"},
-                   {"group":"apps","kind":"Deployment","namespace":"monitoring","name":"grafana","sync":"OutOfSync","health":"Healthy","syncResult":"SyncFailed"}],
-      "history":[{"id":31,"revision":"8.5.2","targetRevision":"8.5.2","chart":"grafana","deployedAt":7000}]},
-     {"namespace":"argocd","name":"longhorn","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"warning","icon":"longhorn",
-      "health":"Progressing","healthMessage":"Waiting for rollout to finish","sync":"OutOfSync","revision":"1.12.0",
-      "sources":[{"repo":"https://charts.longhorn.io","chart":"longhorn","targetRevision":"1.12.1"}],"destination":{"namespace":"longhorn-system"},
-      "autoSync":{"enabled":true,"prune":true},"syncOptions":["ServerSideApply=true"],
-      "operation":{"phase":"Running","message":"waiting for healthy state","startedAt":1000,"done":5,"total":9,"wave":1,"waves":[-1,0,1,2],"failed":[]},
-      "resources":[
-       {"group":"apiextensions.k8s.io","kind":"CustomResourceDefinition","name":"volumes.longhorn.io","sync":"Synced","wave":-1,"syncResult":"Synced"},
-       {"kind":"ConfigMap","namespace":"longhorn-system","name":"longhorn-default-setting","sync":"Synced","wave":0,"syncResult":"Synced"},
-       {"group":"apps","kind":"DaemonSet","namespace":"longhorn-system","name":"longhorn-manager","sync":"OutOfSync","health":"Progressing","wave":1},
-       {"group":"apps","kind":"Deployment","namespace":"longhorn-system","name":"longhorn-ui","sync":"OutOfSync","wave":2},
-       {"group":"batch","kind":"Job","namespace":"longhorn-system","name":"longhorn-post-upgrade","sync":"OutOfSync","wave":2,"hook":true}]},
-     {"namespace":"argocd","name":"cert-manager","project":"infra","level":"warning","icon":"cert-manager","health":"Healthy","sync":"OutOfSync",
-      "revision":"v1.18.2","sources":[{"repo":"https://charts.jetstack.io","chart":"cert-manager","targetRevision":"v1.19.0"}],
-      "destination":{"namespace":"cert-manager"},"syncOptions":["CreateNamespace=true","ServerSideApply=true"],
-      "operation":{"phase":"Succeeded","done":5,"total":5,"waves":[0],"failed":[]},
-      "resources":[
-       {"group":"apps","kind":"Deployment","namespace":"cert-manager","name":"cert-manager","sync":"OutOfSync","health":"Healthy","wave":0},
-       {"kind":"ConfigMap","namespace":"cert-manager","name":"cert-manager-legacy","sync":"OutOfSync","prune":true}],
-      "history":[{"id":9,"revision":"v1.18.2","chart":"cert-manager","deployedAt":3000},{"id":8,"revision":"v1.18.1","chart":"cert-manager","deployedAt":2000}]},
-     {"namespace":"argocd","name":"cilium","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"ok","icon":"cilium",
-      "health":"Healthy","sync":"Synced","revision":"1.18.2","sources":[{"chart":"cilium","targetRevision":"1.18.2"}],"destination":{"namespace":"kube-system"},
-      "autoSync":{"enabled":true},"resources":[{"kind":"ConfigMap","namespace":"kube-system","name":"cilium-config","sync":"Synced"}]},
-     {"namespace":"argocd","name":"nightly-reports","project":"apps","level":"idle","health":"Suspended","sync":"Synced","destination":{"namespace":"reports"},
-      "autoSync":{"enabled":true},"futureField":1}],
-     "appSets":[{"namespace":"argocd","name":"infra","level":"critical","apps":4,"conditions":[
-       {"type":"ErrorOccurred","status":"False","message":"Successfully generated parameters"},
-       {"type":"ResourcesUpToDate","status":"True","message":"ApplicationSet up to date"}]},
-      {"namespace":"argocd","name":"broken","level":"critical","apps":0,"conditions":[{"type":"ErrorOccurred","status":"True","message":"repo not found"}]}],
-     "projects":[{"namespace":"argocd","name":"apps","description":"Self-hosted applications","syncWindows":0},
-                 {"namespace":"argocd","name":"infra","description":"Cluster infrastructure","syncWindows":1}]}
-    """#
+        {"installed":true,"version":"v3.4.5","appSetsError":"","apps":[
+         {"namespace":"argocd","name":"demo-worker","project":"apps","owner":null,"level":"critical","health":"Degraded",
+          "healthMessage":"Deployment \"worker\" exceeded its progress deadline","sync":"Synced","revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+          "refreshing":"","sources":[{"repo":"https://git.example.com/homelab/gitops.git","path":"apps/worker","chart":"","targetRevision":"main"}],
+          "destination":{"server":"https://kubernetes.default.svc","name":"","namespace":"demo"},"autoSync":{"enabled":true,"prune":false,"selfHeal":true},
+          "syncOptions":["CreateNamespace=true"],
+          "operation":{"phase":"Succeeded","message":"successfully synced","startedAt":1000,"finishedAt":41000,"initiatedBy":"automated","revision":"4be1d0c",
+           "retryCount":0,"dryRun":false,"done":3,"total":3,"wave":0,"waves":[0],"failed":[]},
+          "conditions":[],"resources":[
+           {"group":"","kind":"ConfigMap","namespace":"demo","name":"worker-config","sync":"Synced","health":"","healthMessage":"","wave":0,"hook":false,"prune":false,"syncResult":"Synced"},
+           {"group":"apps","kind":"Deployment","namespace":"demo","name":"worker","sync":"Synced","health":"Degraded","wave":0,"syncResult":"Synced"}],
+          "revisionUrl":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+          "history":[{"id":12,"revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","url":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","targetRevision":"main","chart":"","deployedAt":5000,"initiatedBy":"automated"}],
+          "images":["busybox:1.37"],"externalURLs":[],"reconciledAt":9000,
+          "unhealthyPods":[{"namespace":"demo","name":"worker-7f9c","status":"CrashLoopBackOff","healthy":false,"ready":0,"containers":1,"restarts":14,"node":"worker-2","owner":"ReplicaSet/worker-7f","created":1,"images":["busybox:1.37"]}]},
+         {"namespace":"argocd","name":"grafana","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"critical","icon":"grafana",
+          "health":"Healthy","sync":"OutOfSync","revision":"8.5.2","sources":[{"repo":"https://grafana.github.io/helm-charts","chart":"grafana","targetRevision":"8.6.0"}],
+          "destination":{"namespace":"monitoring"},"autoSync":{"enabled":true,"prune":true},"syncOptions":["ServerSideApply=true"],
+          "operation":{"phase":"Failed","message":"one or more objects failed to apply","startedAt":1000,"finishedAt":2000,"done":3,"total":4,"waves":[0],
+           "failed":[{"kind":"Deployment","namespace":"monitoring","name":"grafana","message":"spec.template.spec.containers[0].image: Required value"}]},
+          "conditions":[{"type":"SyncError","message":"Failed sync attempt to 8.6.0"}],
+          "resources":[{"kind":"Service","namespace":"monitoring","name":"grafana","sync":"Synced","health":"Healthy","syncResult":"Synced"},
+                       {"group":"apps","kind":"Deployment","namespace":"monitoring","name":"grafana","sync":"OutOfSync","health":"Healthy","syncResult":"SyncFailed"}],
+          "history":[{"id":31,"revision":"8.5.2","targetRevision":"8.5.2","chart":"grafana","deployedAt":7000}]},
+         {"namespace":"argocd","name":"longhorn","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"warning","icon":"longhorn",
+          "health":"Progressing","healthMessage":"Waiting for rollout to finish","sync":"OutOfSync","revision":"1.12.0",
+          "sources":[{"repo":"https://charts.longhorn.io","chart":"longhorn","targetRevision":"1.12.1"}],"destination":{"namespace":"longhorn-system"},
+          "autoSync":{"enabled":true,"prune":true},"syncOptions":["ServerSideApply=true"],
+          "operation":{"phase":"Running","message":"waiting for healthy state","startedAt":1000,"done":5,"total":9,"wave":1,"waves":[-1,0,1,2],"failed":[]},
+          "resources":[
+           {"group":"apiextensions.k8s.io","kind":"CustomResourceDefinition","name":"volumes.longhorn.io","sync":"Synced","wave":-1,"syncResult":"Synced"},
+           {"kind":"ConfigMap","namespace":"longhorn-system","name":"longhorn-default-setting","sync":"Synced","wave":0,"syncResult":"Synced"},
+           {"group":"apps","kind":"DaemonSet","namespace":"longhorn-system","name":"longhorn-manager","sync":"OutOfSync","health":"Progressing","wave":1},
+           {"group":"apps","kind":"Deployment","namespace":"longhorn-system","name":"longhorn-ui","sync":"OutOfSync","wave":2},
+           {"group":"batch","kind":"Job","namespace":"longhorn-system","name":"longhorn-post-upgrade","sync":"OutOfSync","wave":2,"hook":true}]},
+         {"namespace":"argocd","name":"cert-manager","project":"infra","level":"warning","icon":"cert-manager","health":"Healthy","sync":"OutOfSync",
+          "revision":"v1.18.2","sources":[{"repo":"https://charts.jetstack.io","chart":"cert-manager","targetRevision":"v1.19.0"}],
+          "destination":{"namespace":"cert-manager"},"syncOptions":["CreateNamespace=true","ServerSideApply=true"],
+          "operation":{"phase":"Succeeded","done":5,"total":5,"waves":[0],"failed":[]},
+          "resources":[
+           {"group":"apps","kind":"Deployment","namespace":"cert-manager","name":"cert-manager","sync":"OutOfSync","health":"Healthy","wave":0},
+           {"kind":"ConfigMap","namespace":"cert-manager","name":"cert-manager-legacy","sync":"OutOfSync","prune":true}],
+          "history":[{"id":9,"revision":"v1.18.2","chart":"cert-manager","deployedAt":3000},{"id":8,"revision":"v1.18.1","chart":"cert-manager","deployedAt":2000}]},
+         {"namespace":"argocd","name":"cilium","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"ok","icon":"cilium",
+          "health":"Healthy","sync":"Synced","revision":"1.18.2","sources":[{"chart":"cilium","targetRevision":"1.18.2"}],"destination":{"namespace":"kube-system"},
+          "autoSync":{"enabled":true},"resources":[{"kind":"ConfigMap","namespace":"kube-system","name":"cilium-config","sync":"Synced"}]},
+         {"namespace":"argocd","name":"nightly-reports","project":"apps","level":"idle","health":"Suspended","sync":"Synced","destination":{"namespace":"reports"},
+          "autoSync":{"enabled":true},"futureField":1}],
+         "appSets":[{"namespace":"argocd","name":"infra","level":"critical","apps":4,"conditions":[
+           {"type":"ErrorOccurred","status":"False","message":"Successfully generated parameters"},
+           {"type":"ResourcesUpToDate","status":"True","message":"ApplicationSet up to date"}]},
+          {"namespace":"argocd","name":"broken","level":"critical","apps":0,"conditions":[{"type":"ErrorOccurred","status":"True","message":"repo not found"}]}],
+         "projects":[{"namespace":"argocd","name":"apps","description":"Self-hosted applications","syncWindows":0},
+                     {"namespace":"argocd","name":"infra","description":"Cluster infrastructure","syncWindows":1}]}
+        """#
 
     private var status: ArgoStatus { get throws { try TalosJSON.decode(ArgoStatus.self, from: json) } }
 
@@ -139,11 +139,13 @@ final class ArgoCDTests: XCTestCase {
         XCTAssertEqual(s.healthCounts.map(\.health), [.healthy, .progressing, .suspended, .degraded])
         XCTAssertEqual(s.healthCounts.map(\.count), [3, 1, 1, 1])
 
-        XCTAssertEqual(filterArgoApps(s.apps, filter: .outOfSync, query: "").map(\.name), ["grafana", "cert-manager", "longhorn"])
+        XCTAssertEqual(
+            filterArgoApps(s.apps, filter: .outOfSync, query: "").map(\.name), ["grafana", "cert-manager", "longhorn"])
         XCTAssertEqual(filterArgoApps(s.apps, filter: .all, query: "jetstack").map(\.name), ["cert-manager"])
         XCTAssertEqual(filterArgoApps(s.apps, filter: .all, query: "MONITORING").map(\.name), ["grafana"])
         XCTAssertTrue(filterArgoApps(s.apps, filter: .failed, query: "cilium").isEmpty)
-        XCTAssertEqual(syncAllCandidates(s.apps).map(\.name), ["grafana", "cert-manager"], "longhorn is already syncing")
+        XCTAssertEqual(
+            syncAllCandidates(s.apps).map(\.name), ["grafana", "cert-manager"], "longhorn is already syncing")
     }
 
     func testGrouping() throws {
@@ -177,8 +179,11 @@ final class ArgoCDTests: XCTestCase {
     func testLikelyCause() throws {
         let worker = try app("demo-worker")
         XCTAssertEqual(worker.likelyCause(downNodes: ["worker-2"]), .nodeDown(node: "worker-2", pod: "worker-7f9c"))
-        XCTAssertEqual(worker.likelyCause(downNodes: []), .pod(name: "worker-7f9c", status: "CrashLoopBackOff", node: "worker-2"))
-        XCTAssertEqual(try app("grafana").likelyCause(downNodes: []), .message("spec.template.spec.containers[0].image: Required value"))
+        XCTAssertEqual(
+            worker.likelyCause(downNodes: []), .pod(name: "worker-7f9c", status: "CrashLoopBackOff", node: "worker-2"))
+        XCTAssertEqual(
+            try app("grafana").likelyCause(downNodes: []),
+            .message("spec.template.spec.containers[0].image: Required value"))
         XCTAssertEqual(try app("longhorn").likelyCause(downNodes: []), .message("Waiting for rollout to finish"))
         XCTAssertNil(try app("cert-manager").likelyCause(downNodes: []), "drifting only: nothing more to say")
         XCTAssertNil(try app("cilium").likelyCause(downNodes: ["worker-2"]))
@@ -188,7 +193,9 @@ final class ArgoCDTests: XCTestCase {
         XCTAssertEqual(try app("demo-worker").revisionLabel, "4be1d0c")
         XCTAssertEqual(try app("grafana").revisionLabel, "grafana@8.5.2")
         XCTAssertEqual(try app("demo-worker").history[0].label, "4be1d0c")
-        XCTAssertEqual(try app("demo-worker").revisionURL, "https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d")
+        XCTAssertEqual(
+            try app("demo-worker").revisionURL,
+            "https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d")
         XCTAssertEqual(try app("demo-worker").history[0].url, try app("demo-worker").revisionURL)
         XCTAssertEqual(try app("grafana").revisionURL, "")
         XCTAssertEqual(try app("grafana").history[0].url, "")
@@ -208,8 +215,11 @@ final class ArgoCDTests: XCTestCase {
         XCTAssertFalse(defaults.applyOutOfSyncOnly)
         var opts = ArgoSyncOptions(prune: true)
         opts.resources = [ArgoResourceRef(group: "apps", kind: "Deployment", namespace: "a", name: "b")]
-        XCTAssertEqual(opts.json, #"{"applyOutOfSyncOnly":false,"dryRun":false,"force":false,"historyId":0,"prune":true,"replace":false,"#
-            + #""resources":[{"group":"apps","kind":"Deployment","name":"b","namespace":"a"}],"serverSideApply":false}"#)
+        XCTAssertEqual(
+            opts.json,
+            #"{"applyOutOfSyncOnly":false,"dryRun":false,"force":false,"historyId":0,"prune":true,"replace":false,"#
+                + #""resources":[{"group":"apps","kind":"Deployment","name":"b","namespace":"a"}],"serverSideApply":false}"#
+        )
         XCTAssertEqual(ArgoAction.hardRefresh.rawValue, "hardRefresh")
     }
 

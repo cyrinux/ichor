@@ -50,13 +50,15 @@ final class LocalModelStore: Sendable {
     /// The model's file when it is on the phone, complete.
     func file(for id: String) -> URL? {
         guard let url = target(for: id),
-              let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 0 else { return nil }
+            let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 0
+        else { return nil }
         return url
     }
 
     func imported() -> [String] {
         guard let folder = directory?.appendingPathComponent("imported", isDirectory: true),
-              let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return [] }
+            let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path)
+        else { return [] }
         return names.filter { !$0.hasPrefix(".") }.sorted().map { Self.importedPrefix + $0 }
     }
 
@@ -72,7 +74,8 @@ final class LocalModelStore: Sendable {
     /// Free space for a download, as iOS counts it for something the user asked for.
     var freeBytes: Int64 {
         guard let directory,
-              let values = try? directory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]) else { return 0 }
+            let values = try? directory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        else { return 0 }
         return values.volumeAvailableCapacityForImportantUsage ?? 0
     }
 
@@ -87,7 +90,9 @@ final class LocalModelStore: Sendable {
         let handle = try FileHandle(forReadingFrom: source)
         let magic = try handle.read(upToCount: 4)
         try handle.close()
-        guard magic == Data("GGUF".utf8) else { throw TalosError(message: String(localized: "This is not a GGUF model file.")) }
+        guard magic == Data("GGUF".utf8) else {
+            throw TalosError(message: String(localized: "This is not a GGUF model file."))
+        }
         let folder = directory.appendingPathComponent("imported", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let target = folder.appendingPathComponent(name)
@@ -166,7 +171,7 @@ final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @uncheck
     override private init() {
         super.init()
         let config = URLSessionConfiguration.background(withIdentifier: Self.identifier)
-        config.isDiscretionary = false // the user asked for it now
+        config.isDiscretionary = false  // the user asked for it now
         config.sessionSendsLaunchEvents = true
         config.allowsConstrainedNetworkAccess = false
         session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
@@ -178,7 +183,9 @@ final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @uncheck
             for task in tasks {
                 guard let job = Self.parse(task.taskDescription) else { continue }
                 let done = task.countOfBytesReceived
-                Task { @MainActor in ModelDownloads.shared.set(job.id, .downloading(done: done, allowMetered: job.metered)) }
+                Task { @MainActor in
+                    ModelDownloads.shared.set(job.id, .downloading(done: done, allowMetered: job.metered))
+                }
             }
         }
     }
@@ -212,18 +219,25 @@ final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @uncheck
 
     // MARK: URLSessionDownloadDelegate
 
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64,
-                    totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+    func urlSession(
+        _ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64,
+        totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64
+    ) {
         guard let job = Self.parse(downloadTask.taskDescription) else { return }
-        Task { @MainActor in ModelDownloads.shared.set(job.id, .downloading(done: totalBytesWritten, allowMetered: job.metered)) }
+        Task { @MainActor in
+            ModelDownloads.shared.set(job.id, .downloading(done: totalBytesWritten, allowMetered: job.metered))
+        }
     }
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let id = Self.parse(downloadTask.taskDescription)?.id,
-              let model = LocalModelStore.shared.info(id),
-              let target = LocalModelStore.shared.target(for: id) else { return }
+            let model = LocalModelStore.shared.info(id),
+            let target = LocalModelStore.shared.target(for: id)
+        else { return }
         if let http = downloadTask.response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
-            Task { @MainActor in ModelDownloads.shared.set(id, .failed(String(localized: "The download failed. Try again."))) }
+            Task { @MainActor in
+                ModelDownloads.shared.set(id, .failed(String(localized: "The download failed. Try again.")))
+            }
             return
         }
         // The file is gone once this returns: move it first, check it after.
@@ -245,7 +259,13 @@ final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @uncheck
                 try? FileManager.default.removeItem(at: part)
             }
             Task { @MainActor in
-                ModelDownloads.shared.set(id, ok ? nil : .failed(String(localized: "The downloaded file is not the expected one and was deleted. Try again.")))
+                ModelDownloads.shared.set(
+                    id,
+                    ok
+                        ? nil
+                        : .failed(
+                            String(localized: "The downloaded file is not the expected one and was deleted. Try again.")
+                        ))
                 ModelDownloads.shared.changed()
             }
         }
@@ -260,7 +280,9 @@ final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @uncheck
         }
         // Cancelled by the user: nothing to say.
         guard nsError.code != NSURLErrorCancelled else { return }
-        Task { @MainActor in ModelDownloads.shared.set(id, .failed(String(localized: "The download failed. Try again."))) }
+        Task { @MainActor in
+            ModelDownloads.shared.set(id, .failed(String(localized: "The download failed. Try again.")))
+        }
     }
 
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
@@ -292,7 +314,8 @@ final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @uncheck
     }
 
     private static func resumeWasMetered(_ id: String) -> Bool {
-        resumeURL(for: id).map { FileManager.default.fileExists(atPath: $0.appendingPathExtension("metered").path) } ?? false
+        resumeURL(for: id).map { FileManager.default.fileExists(atPath: $0.appendingPathExtension("metered").path) }
+            ?? false
     }
 
     private static func clearResumeData(for id: String) {

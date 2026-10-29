@@ -40,25 +40,32 @@ final class StagedEditsTests: XCTestCase {
     }
 
     func testTheKeyIsTheBranchTheFilesAreProposedTo() {
-        let source = GitSource(repoURL: key.repoURL, tracked: "main", revision: "0123456789abcdef0123456789abcdef01234567")
+        let source = GitSource(
+            repoURL: key.repoURL, tracked: "main", revision: "0123456789abcdef0123456789abcdef01234567")
         XCTAssertEqual(StagedKey(source: source), key)
     }
 
     func testSeveralFilesAreTitledAfterTheirCommonDirectory() {
-        XCTAssertEqual(stagedDefaultsPath(["apps/podinfo/deployment.yaml", "apps/podinfo/kustomization.yaml"]), "apps/podinfo")
+        XCTAssertEqual(
+            stagedDefaultsPath(["apps/podinfo/deployment.yaml", "apps/podinfo/kustomization.yaml"]), "apps/podinfo")
         XCTAssertEqual(stagedDefaultsPath(["apps/podinfo/deployment.yaml", "apps/grafana/values.yaml"]), "apps")
         XCTAssertEqual(stagedDefaultsPath(["talconfig.yaml", "clusters/lab/flux.yaml"]), "talconfig.yaml")
         XCTAssertEqual(stagedDefaultsPath(["apps/a.yaml"]), "apps/a.yaml")
     }
 
     func testTheOptionsCarryTheFilesOnlyWhenThereAre() throws {
-        let one = GitProposal(repoURL: key.repoURL, baseRef: "main", path: "a.yaml", content: "a: 1\n", fileSha: "s",
-                              message: "m", branch: "", title: "t", body: "", draft: false)
+        let one = GitProposal(
+            repoURL: key.repoURL, baseRef: "main", path: "a.yaml", content: "a: 1\n", fileSha: "s",
+            message: "m", branch: "", title: "t", body: "", draft: false)
         XCTAssertFalse(try one.optionsJSON().contains("\"files\""))
 
-        let several = GitProposal(repoURL: key.repoURL, baseRef: "main", path: "", content: "", fileSha: "", message: "m",
-                                  branch: "", title: "t", body: "", draft: false,
-                                  files: [file("apps/a.yaml").proposal, StagedFile(path: "apps/new.yaml", original: "", fileSha: "", draft: "c: 3\n").proposal])
+        let several = GitProposal(
+            repoURL: key.repoURL, baseRef: "main", path: "", content: "", fileSha: "", message: "m",
+            branch: "", title: "t", body: "", draft: false,
+            files: [
+                file("apps/a.yaml").proposal,
+                StagedFile(path: "apps/new.yaml", original: "", fileSha: "", draft: "c: 3\n").proposal,
+            ])
         let json = try JSONSerialization.jsonObject(with: Data(several.optionsJSON().utf8)) as? [String: Any]
         let files = json?["files"] as? [[String: Any]]
         XCTAssertEqual(files?.count, 2)
@@ -69,7 +76,9 @@ final class StagedEditsTests: XCTestCase {
     }
 
     func testTheResultReadsItsCommits() throws {
-        let result = try TalosJSON.decode(GitProposalResult.self, from: #"{"url":"u","number":4,"branch":"b","commit":"c2","commits":["c1","c2"],"forge":"github"}"#)
+        let result = try TalosJSON.decode(
+            GitProposalResult.self,
+            from: #"{"url":"u","number":4,"branch":"b","commit":"c2","commits":["c1","c2"],"forge":"github"}"#)
         XCTAssertEqual(result.commits, ["c1", "c2"])
     }
 }

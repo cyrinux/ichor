@@ -15,7 +15,9 @@ struct NetPolicyDetailSheet: View {
                 Section("Applies to") {
                     Text(verbatim: policy.subjectScope.text).font(.callout.monospaced()).textSelection(.enabled)
                     if !policy.subjectNamespace.isEmpty {
-                        LabeledContent("Namespace") { Text(verbatim: policy.subjectNamespace).font(.callout.monospaced()) }
+                        LabeledContent("Namespace") {
+                            Text(verbatim: policy.subjectNamespace).font(.callout.monospaced())
+                        }
                     }
                 }
                 if !policy.nodes {
@@ -132,7 +134,8 @@ private struct NetRuleRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Tag(rule.action.label, color: rule.action.color)
-            Text(direction == .ingress ? LocalizedStringKey("From") : LocalizedStringKey("To")).font(.caption).foregroundStyle(.secondary)
+            Text(direction == .ingress ? LocalizedStringKey("From") : LocalizedStringKey("To")).font(.caption)
+                .foregroundStyle(.secondary)
             ChipFlow {
                 if rule.peers.isEmpty {
                     Tag(String(localized: "Anyone"))
@@ -151,9 +154,13 @@ private struct NetRuleRow: View {
                 }
             }
             ForEach(rule.l7, id: \.self) { line in
-                Label { Text(verbatim: line).font(.caption.monospaced()) } icon: { Image(systemName: "text.magnifyingglass") }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Label {
+                    Text(verbatim: line).font(.caption.monospaced())
+                } icon: {
+                    Image(systemName: "text.magnifyingglass")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)

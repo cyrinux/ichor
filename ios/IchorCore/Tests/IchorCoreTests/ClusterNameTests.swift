@@ -32,7 +32,8 @@ final class ClusterNameTests: XCTestCase {
         XCTAssertEqual(keepClusterNames(saved: saved, fingerprints: ["fp-prod", "fp-lab"]), ["fp-prod": "Prod"])
     }
 
-    private let eks = ContextSummary(name: "arn:aws:eks:eu-north-1:731942086515:cluster/orbit-prod-eu", fingerprint: "fp-eks")
+    private let eks = ContextSummary(
+        name: "arn:aws:eks:eu-north-1:731942086515:cluster/orbit-prod-eu", fingerprint: "fp-eks")
     private let gke = ContextSummary(name: "gke_lumen-sandbox-42_europe-west4_lumen-gke-blue", fingerprint: "fp-gke")
 
     func testEksArnIsParsed() {
@@ -48,9 +49,13 @@ final class ClusterNameTests: XCTestCase {
 
     func testEksDiscoveryNameIsParsed() {
         let many = parseCloudContext("dev-eks-eu-west-1.eu-west-1.488739384012.eks")
-        XCTAssertEqual(many, CloudContext(provider: CloudContext.eks, location: "eu-west-1", owner: "488739384012", cluster: "dev-eks-eu-west-1"))
+        XCTAssertEqual(
+            many,
+            CloudContext(
+                provider: CloudContext.eks, location: "eu-west-1", owner: "488739384012", cluster: "dev-eks-eu-west-1"))
         let one = parseCloudContext("orbit_prod.us-gov-west-1.eks")
-        XCTAssertEqual(one, CloudContext(provider: CloudContext.eks, location: "us-gov-west-1", owner: "", cluster: "orbit_prod"))
+        XCTAssertEqual(
+            one, CloudContext(provider: CloudContext.eks, location: "us-gov-west-1", owner: "", cluster: "orbit_prod"))
         XCTAssertNil(parseCloudContext("prod.lab.eks"))
         XCTAssertNil(parseCloudContext("prod.eu-west-1.123.eks"))
     }
@@ -90,7 +95,9 @@ final class ClusterNameTests: XCTestCase {
         XCTAssertNil(labels.cloud(gke))
     }
 
-    private func kube(name: String = "ctx", auth: String = "cert", server: String = "https://10.0.0.1:6443") -> ContextSummary {
+    private func kube(name: String = "ctx", auth: String = "cert", server: String = "https://10.0.0.1:6443")
+        -> ContextSummary
+    {
         ContextSummary(name: name, kind: ContextKind.kube, endpoints: [server], auth: auth)
     }
 
@@ -117,7 +124,8 @@ final class ClusterNameTests: XCTestCase {
     }
 
     func testDiscoveryProvidersShowTheirCloudLogo() {
-        XCTAssertEqual(kubeDiscoverProviders.map(discoveryLogo), ["aws", "google-cloud", "azure", "digital-ocean", "rancher"])
+        XCTAssertEqual(
+            kubeDiscoverProviders.map(discoveryLogo), ["aws", "google-cloud", "azure", "digital-ocean", "rancher"])
         XCTAssertEqual(discoveryLogo("other"), "kubernetes")
         XCTAssertEqual(discoveryLogo("omni"), "talos")
     }

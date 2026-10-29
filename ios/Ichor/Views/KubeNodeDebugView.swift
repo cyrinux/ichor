@@ -26,8 +26,10 @@ struct KubeNodeDebugView: View {
             case .setup:
                 Form {
                     Section {
-                        Text("A privileged pod runs on \(node) in namespace \(namespace), in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods.")
-                            .font(.callout)
+                        Text(
+                            "A privileged pod runs on \(node) in namespace \(namespace), in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods."
+                        )
+                        .font(.callout)
                         KubeDeniedNote(.debugNode, in: namespace)
                     }
                     Section("Image") {
@@ -69,14 +71,17 @@ struct KubeNodeDebugView: View {
     /// Root on the node: with the app lock on, a fresh Face ID first, like a Talos shell.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Root shell on \(node)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Root shell on \(node)"))
+        {
             error = failure
             return
         }
         error = nil
         let (node, namespace, image) = (node, namespace, image.trimmingCharacters(in: .whitespaces))
         shell.start { listener, cols, rows in
-            client.startNodeDebug(node: node, namespace: namespace, image: image, cols: cols, rows: rows, listener: listener)
+            client.startNodeDebug(
+                node: node, namespace: namespace, image: image, cols: cols, rows: rows, listener: listener)
         }
     }
 }

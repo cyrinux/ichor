@@ -83,9 +83,13 @@ struct LonghornActionButtons: View {
 
     var body: some View {
         ForEach(actions, id: \.self) { action in
-            Button(role: inMenu && action == .evict ? .destructive : nil) { onAction(action) } label: { LonghornActionLabel(action: action) }
-                .tint(color(for: action))
-                .kubeGated(action.kubeAction, in: namespace)
+            Button(role: inMenu && action == .evict ? .destructive : nil) {
+                onAction(action)
+            } label: {
+                LonghornActionLabel(action: action)
+            }
+            .tint(color(for: action))
+            .kubeGated(action.kubeAction, in: namespace)
         }
     }
 
@@ -131,12 +135,15 @@ struct LonghornReplicaSheet: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Replicas now: \(volume.replicasDesired) wanted, \(volume.replicasHealthy) healthy.")
                         if count > volume.replicasDesired {
-                            Text("Longhorn builds the new replicas from a healthy one: disk and network IO while it copies.")
+                            Text(
+                                "Longhorn builds the new replicas from a healthy one: disk and network IO while it copies."
+                            )
                         } else if count < volume.replicasDesired {
                             Text("Longhorn removes the extra replicas: fewer copies survive a node or disk failure.")
                         }
                         if count == 1 {
-                            Text("With a single replica, losing its node or disk loses the data.").foregroundStyle(attentionColor)
+                            Text("With a single replica, losing its node or disk loses the data.").foregroundStyle(
+                                attentionColor)
                         }
                     }
                 }

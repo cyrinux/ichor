@@ -94,7 +94,8 @@ struct PluginImportSheet: View {
             case .file:
                 Button("Choose a file") { pickingFile = true }
                     .disabled(busy)
-                    .fileImporter(isPresented: $pickingFile, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
+                    .fileImporter(isPresented: $pickingFile, allowedContentTypes: [.yaml, .plainText, .data, .item]) {
+                        result in
                         switch result {
                         case .success(let url): readFile(url)
                         case .failure(let error): failure = error.localizedDescription
@@ -118,12 +119,16 @@ struct PluginImportSheet: View {
                                 Task { await scanned(text) }
                             }
                             .navigationTitle("Scan a plugin QR code")
-                            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { scanning = false } } }
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { scanning = false } }
+                            }
                         }
                     }
-                Text("A code holding an ichor://plugin link or the plugin file itself, over several codes when it is large (just qr-parts).")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "A code holding an ichor://plugin link or the plugin file itself, over several codes when it is large (just qr-parts)."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             }
             if busy {
                 HStack {
@@ -254,7 +259,9 @@ private struct ConsentSections: View {
         } header: {
             Text("It can change")
         } footer: {
-            Text("It reads with your own Kubernetes access and never calls anything but the Kubernetes API. Turn it off or remove it at any time in Settings → Plugins.")
+            Text(
+                "It reads with your own Kubernetes access and never calls anything but the Kubernetes API. Turn it off or remove it at any time in Settings → Plugins."
+            )
         }
     }
 }

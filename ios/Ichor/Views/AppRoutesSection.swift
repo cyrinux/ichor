@@ -48,8 +48,12 @@ private struct AppRouteLine: View {
     var body: some View {
         HStack(spacing: 4) {
             if let url = URL(string: route.url) {
-                Button { openURL(url) } label: { labels }
-                    .buttonStyle(.plain)
+                Button {
+                    openURL(url)
+                } label: {
+                    labels
+                }
+                .buttonStyle(.plain)
             } else {
                 labels
             }

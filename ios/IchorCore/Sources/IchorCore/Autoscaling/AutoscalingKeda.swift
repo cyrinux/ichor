@@ -23,10 +23,15 @@ public struct ScaledObjectRow: Decodable, Equatable, Hashable, Identifiable, Sen
 
     public var id: String { "\(namespace)/\(name)" }
 
-    public init(namespace: String = "", name: String = "", target: AutoscaleTarget = AutoscaleTarget(), min: Int = 0, max: Int = 0,
-                current: Int = 0, desired: Int = 0, triggers: [KedaTrigger] = [], fallbackReplicas: Int = 0, paused: Bool = false,
-                pausedReplicas: Int? = nil, ready: Bool = false, active: Bool = false, fallback: Bool = false, message: String = "",
-                hpaName: String = "", state: AutoscaleState = .ok) {
+    public init(
+        namespace: String = "", name: String = "", target: AutoscaleTarget = AutoscaleTarget(), min: Int = 0,
+        max: Int = 0,
+        current: Int = 0, desired: Int = 0, triggers: [KedaTrigger] = [], fallbackReplicas: Int = 0,
+        paused: Bool = false,
+        pausedReplicas: Int? = nil, ready: Bool = false, active: Bool = false, fallback: Bool = false,
+        message: String = "",
+        hpaName: String = "", state: AutoscaleState = .ok
+    ) {
         self.namespace = namespace
         self.name = name
         self.target = target
@@ -68,7 +73,8 @@ public struct ScaledObjectRow: Decodable, Equatable, Hashable, Identifiable, Sen
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, target, min, max, current, desired, triggers, fallbackReplicas, paused, pausedReplicas, ready, active, fallback, message, hpaName, state
+        case namespace, name, target, min, max, current, desired, triggers, fallbackReplicas, paused, pausedReplicas,
+            ready, active, fallback, message, hpaName, state
     }
 }
 
@@ -84,8 +90,11 @@ public struct ScaledJobRow: Decodable, Equatable, Hashable, Identifiable, Sendab
 
     public var id: String { "\(namespace)/\(name)" }
 
-    public init(namespace: String = "", name: String = "", triggers: [KedaTrigger] = [], maxReplicaCount: Int = 0, paused: Bool = false,
-                ready: Bool = false, message: String = "", state: AutoscaleState = .ok) {
+    public init(
+        namespace: String = "", name: String = "", triggers: [KedaTrigger] = [], maxReplicaCount: Int = 0,
+        paused: Bool = false,
+        ready: Bool = false, message: String = "", state: AutoscaleState = .ok
+    ) {
         self.namespace = namespace
         self.name = name
         self.triggers = triggers
@@ -108,7 +117,9 @@ public struct ScaledJobRow: Decodable, Equatable, Hashable, Identifiable, Sendab
         state = try c.wire(.state)
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, triggers, maxReplicaCount, paused, ready, message, state }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, triggers, maxReplicaCount, paused, ready, message, state
+    }
 }
 
 /// One trigger: its type and the one setting the user recognises. Never a secret.

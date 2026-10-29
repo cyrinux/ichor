@@ -31,16 +31,22 @@ struct KubeResourceListView: View {
         self.resource = resource
         let columns = KubeResourceColumns()
         _columns = State(initialValue: columns)
-        _list = State(initialValue: PagedList<KubeResourceRow>(base: "browser|\(resource.id)", persist: false) { client, namespace, token in
-            let page = try await client.resourcePage(resource, namespace: namespace, token: token)
-            await columns.update(page.columns)
-            return page.page
-        })
+        _list = State(
+            initialValue: PagedList<KubeResourceRow>(base: "browser|\(resource.id)", persist: false) {
+                client, namespace, token in
+                let page = try await client.resourcePage(resource, namespace: namespace, token: token)
+                await columns.update(page.columns)
+                return page.page
+            })
     }
 
     var body: some View {
-        let control = resource.namespaced ? scope.control(model: model) : KubeScopeControl(scope: KubeScope(), namespaces: nil) { _ in }
-        KubeListFrame(control: control, list: list, query: query, namespaces: resourceRowNamespaces, scoped: resource.namespaced) { load in
+        let control =
+            resource.namespaced
+            ? scope.control(model: model) : KubeScopeControl(scope: KubeScope(), namespaces: nil) { _ in }
+        KubeListFrame(
+            control: control, list: list, query: query, namespaces: resourceRowNamespaces, scoped: resource.namespaced
+        ) { load in
             rows(load, showNamespace: resource.namespaced && control.scope.namespace == nil)
         }
         .searchable(text: $query, prompt: Text("Name or any column"))
@@ -61,7 +67,9 @@ struct KubeResourceListView: View {
         .task(id: kubeNamespacesKey(model)) {
             if resource.namespaced { await scope.loadNamespaces(model: model) }
         }
-        .task(id: LiveTrigger(source: kubeNamespacesKey(model), settles: list.settles, active: scenePhase == .active)) { await follow() }
+        .task(id: LiveTrigger(source: kubeNamespacesKey(model), settles: list.settles, active: scenePhase == .active)) {
+            await follow()
+        }
     }
 
     private struct LiveTrigger: Hashable {
@@ -77,7 +85,8 @@ struct KubeResourceListView: View {
     /// never lists more than what was already shown; events never (their own stream).
     private func follow() async {
         guard scenePhase == .active, list.settles > 0, resource.resource != "events",
-              case .loaded(let load, _, _) = list.state, let shown = list.scope else { return }
+            case .loaded(let load, _, _) = list.state, let shown = list.scope
+        else { return }
         let namespace = resource.namespaced ? shown.namespace : nil
         guard namespace != nil || !load.hasMore else { return }
         while !Task.isCancelled {
@@ -105,7 +114,9 @@ struct KubeResourceListView: View {
                             Task { await list.refresh(model: model) }
                         }
                     } label: {
-                        KubeResourceRowView(row: row, columns: columns.columns, indices: indices, showNamespace: showNamespace, now: now)
+                        KubeResourceRowView(
+                            row: row, columns: columns.columns, indices: indices, showNamespace: showNamespace, now: now
+                        )
                     }
                 }
                 if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
@@ -117,7 +128,11 @@ struct KubeResourceListView: View {
         }
         .emptyOverlay(shown.isEmpty, query: query) {
             ContentUnavailableView {
-                Label { Text(verbatim: resource.kind) } icon: { Image(systemName: "square.grid.3x3") }
+                Label {
+                    Text(verbatim: resource.kind)
+                } icon: {
+                    Image(systemName: "square.grid.3x3")
+                }
             } description: {
                 Text("Nothing here.")
             }
@@ -178,7 +193,8 @@ private struct KubeResourceRowView: View {
             let (column, value) = item.element
             let shown = browserCellAge(value, type: column.type, now: now).map(localizedDuration) ?? value
             let tone = kubeCellTone(column: column.name, value: value)
-            let separator = item.offset == 0 ? Text(verbatim: "") : Text(verbatim: "  ·  ").foregroundStyle(Color.secondary)
+            let separator =
+                item.offset == 0 ? Text(verbatim: "") : Text(verbatim: "  ·  ").foregroundStyle(Color.secondary)
             let label = Text(verbatim: "\(column.name) ").foregroundStyle(Color.secondary)
             let valueText = Text(verbatim: shown).foregroundStyle(tone.color ?? Color.primary)
             return text + separator + label + valueText

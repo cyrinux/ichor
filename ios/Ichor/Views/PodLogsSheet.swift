@@ -56,7 +56,9 @@ struct PodLogsSheet: View {
                 if following {
                     FollowList(follower: follower, display: $display)
                 } else {
-                    LoadStateView(state: state, retry: { refreshes += 1 }) { text in LogText(lines: podLogLines(text), previous: previous) }
+                    LoadStateView(state: state, retry: { refreshes += 1 }) { text in
+                        LogText(lines: podLogLines(text), previous: previous)
+                    }
                 }
             }
             .themedBackground()
@@ -81,21 +83,33 @@ struct PodLogsSheet: View {
                     }
                     Menu {
                         if !following, case .loaded(let text, _, _) = state, !text.isEmpty {
-                            Button { copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
+                            Button {
+                                copy(text)
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                            }
                             ShareLink(item: text) { Label("Share", systemImage: "square.and.arrow.up") }
                         }
-                        Button { forwarding = true } label: {
+                        Button {
+                            forwarding = true
+                        } label: {
                             Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
                         }
-                        KubeGatedMenuButton(String(localized: "Shell"), systemImage: "terminal", action: .execPod, in: pod.namespace) {
+                        KubeGatedMenuButton(
+                            String(localized: "Shell"), systemImage: "terminal", action: .execPod, in: pod.namespace
+                        ) {
                             shelling = true
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
                     if !following {
-                        Button { refreshes += 1 } label: { Image(systemName: "arrow.clockwise") }
-                            .accessibilityLabel(Text("Refresh"))
+                        Button {
+                            refreshes += 1
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .accessibilityLabel(Text("Refresh"))
                     }
                 }
             }
@@ -129,7 +143,8 @@ struct PodLogsSheet: View {
                 Toggle(isOn: $previous) {
                     VStack(alignment: .leading) {
                         Text("Previous run")
-                        Text("The log of the container's last run before it restarted.").font(.caption).foregroundStyle(.secondary)
+                        Text("The log of the container's last run before it restarted.").font(.caption).foregroundStyle(
+                            .secondary)
                         if !shown.lastTermination.isEmpty {
                             Text("Last stop: \(shown.lastTermination)").font(.caption).foregroundStyle(.statusWarn)
                         }
@@ -185,7 +200,9 @@ struct PodLogsSheet: View {
         guard !detailAsked, pod.containerNames.isEmpty else { return false }
         detailAsked = true
         state = .loading
-        guard let full = try? await client.pod(namespace: pod.namespace, name: pod.name), !Task.isCancelled else { return false }
+        guard let full = try? await client.pod(namespace: pod.namespace, name: pod.name), !Task.isCancelled else {
+            return false
+        }
         detail = full
         guard full.containerNames.count > 1, container.isEmpty else { return false }
         containers = full.containerNames

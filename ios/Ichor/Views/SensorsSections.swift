@@ -13,9 +13,11 @@ struct SensorsSection: View {
     var body: some View {
         Section {
             if sensors.throttled {
-                Text("Cores run well below their top speed under the performance governor, or a sensor is above its max.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Cores run well below their top speed under the performance governor, or a sensor is above its max."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             SectionError(message: sensors.sensorsError)
             // By position: two chips of one driver (two NVMe drives) share chip and label.
@@ -69,7 +71,9 @@ struct SensorsSection: View {
             Text(verbatim: (governors + ["\(first.minMhz)–\(first.maxMhz) MHz"]).joined(separator: "  ·  "))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), alignment: .leading)], alignment: .leading, spacing: 2) {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 110), alignment: .leading)], alignment: .leading, spacing: 2
+            ) {
                 ForEach(sensors.cpuFreq) { f in
                     Text(verbatim: "cpu\(f.cpu) \(f.currentMhz) MHz").font(.caption.monospaced())
                 }
@@ -125,11 +129,15 @@ struct PCISection: View {
             SectionError(message: sensors.errors["pci"])
             ForEach(sensors.pci) { device in
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(verbatim: device.product.isEmpty ? (device.subclass.isEmpty ? device.id : device.subclass) : device.product)
-                    Text(verbatim: [device.vendor, device.subclass.isEmpty ? device.class : device.subclass]
-                        .filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        verbatim: device.product.isEmpty
+                            ? (device.subclass.isEmpty ? device.id : device.subclass) : device.product)
+                    Text(
+                        verbatim: [device.vendor, device.subclass.isEmpty ? device.class : device.subclass]
+                            .filter { !$0.isEmpty }.joined(separator: "  ·  ")
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     Text(verbatim: [device.id, device.driver].filter { !$0.isEmpty }.joined(separator: "  ·  "))
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)

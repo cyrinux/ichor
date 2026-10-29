@@ -15,7 +15,9 @@ struct ProposeInGitButton: View {
     var body: some View {
         if model.activeClusterRepo != nil {
             VStack(spacing: 6) {
-                Button { proposing = true } label: {
+                Button {
+                    proposing = true
+                } label: {
                     Text(label).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -63,29 +65,38 @@ struct ProposeInGitSheet: View {
                     Section("Changed values") {
                         ForEach(planned.patch.changes) { change in
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: change.path.isEmpty ? change.kind : change.path).font(.callout.monospaced())
+                                Text(verbatim: change.path.isEmpty ? change.kind : change.path).font(
+                                    .callout.monospaced())
                                 if change.removed {
-                                    Text("Removed on the node: remove it from the repository by hand.").font(.caption).foregroundStyle(.secondary)
+                                    Text("Removed on the node: remove it from the repository by hand.").font(.caption)
+                                        .foregroundStyle(.secondary)
                                 } else {
                                     Text(verbatim: "\(change.from?.display ?? "—") → \(change.to?.display ?? "—")")
                                         .font(.caption.monospaced()).foregroundStyle(.secondary)
                                 }
                             }
                         }
-                        ForEach(planned.patch.notes, id: \.self) { Text(verbatim: $0).font(.caption).foregroundStyle(.secondary) }
+                        ForEach(planned.patch.notes, id: \.self) {
+                            Text(verbatim: $0).font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                     Section {
-                        Text(planned.plan.create ? "Creates \(planned.plan.file): the repository has no file for this node."
-                                                 : "Written into \(planned.plan.file)")
+                        Text(
+                            planned.plan.create
+                                ? "Creates \(planned.plan.file): the repository has no file for this node."
+                                : "Written into \(planned.plan.file)")
                         ForEach(planned.plan.skipped, id: \.path) { skip in
                             SectionError(message: String(localized: "\(skip.path) skipped: \(skip.why)"))
                         }
                         if planned.plan.patch.isEmpty {
-                            Text("Every changed value is set by a shared patch: edit those files instead.").foregroundStyle(.secondary)
+                            Text("Every changed value is set by a shared patch: edit those files instead.")
+                                .foregroundStyle(.secondary)
                         } else {
                             NavigationLink {
-                                RepoEditView(repo: repo, path: planned.plan.file,
-                                             quickEdit: .talos(hostname: hostname, plan: planned.plan, firstPath: planned.patch.firstPath))
+                                RepoEditView(
+                                    repo: repo, path: planned.plan.file,
+                                    quickEdit: .talos(
+                                        hostname: hostname, plan: planned.plan, firstPath: planned.patch.firstPath))
                             } label: {
                                 Text("Review the pull request")
                             }
@@ -107,11 +118,13 @@ struct ProposeInGitSheet: View {
         do {
             let patch = try await TalosClient.talosConfigPatchFrom(base: base, draft: draft)
             guard !patch.touchesSecrets else {
-                state = .failed(String(localized: "This change touches a secret: secrets are never written to the repository."))
+                state = .failed(
+                    String(localized: "This change touches a secret: secrets are never written to the repository."))
                 return
             }
-            let plan = try await TalosClient.talosWriteBackPlan(repo, hostname: hostname, role: role ?? configRole(base), patch: patch.patch,
-                                                                hosts: hosts, demo: demo)
+            let plan = try await TalosClient.talosWriteBackPlan(
+                repo, hostname: hostname, role: role ?? configRole(base), patch: patch.patch,
+                hosts: hosts, demo: demo)
             state = .loaded(WriteBackPlanned(patch: patch, plan: plan), at: Date())
         } catch {
             state = .failed(error.localizedDescription)

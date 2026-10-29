@@ -17,7 +17,8 @@ extension TalosClient {
     /// The Trivy Operator's reports on the pods' images; `available` false without it.
     func imageScanOperatorReports(pods: [RoutePod]) async throws -> OperatorReports {
         let encoded = try TalosJSON.encode(pods)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoImageScanOperatorReports(config, context, kubeServer, encoded, $0)
         }
     }
@@ -25,7 +26,9 @@ extension TalosClient {
     /// Starts a scan of the pods' images and of `images`, refs with no pod behind them (a node's
     /// system images). The stream finishes after `done`; `stop` ends it early, and `done` follows
     /// once Go deleted the scan Job.
-    func imageScan(pods: [RoutePod], images: [String] = [], scanner: ImageScanner, app: String, cluster: String) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
+    func imageScan(pods: [RoutePod], images: [String] = [], scanner: ImageScanner, app: String, cluster: String) throws
+        -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void)
+    {
         let encoded = try TalosJSON.encode(pods)
         let options = try imageScanOptions(images: images, scanner: scanner, app: app, cluster: cluster)
         let (stream, continuation) = AsyncStream.makeStream(of: ImageScanEvent.self)
@@ -39,7 +42,7 @@ extension TalosClient {
         let run = IchorgoStartImageScan(kubeConfig, kubeContext, kubeAPIServer, encoded, options, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole scan
+            _ = bridge  // keep the listener alive for the whole scan
         }
         return (stream, { run?.cancel() })
     }
@@ -76,8 +79,10 @@ private final class ImageScanBridge: NSObject, IchorgoImageScanListenerProtocol,
     private let progress: @Sendable (ImageScanProgress) -> Void
     private let done: @Sendable (ImageScanReport?, String, String?) -> Void
 
-    init(progress: @escaping @Sendable (ImageScanProgress) -> Void,
-         done: @escaping @Sendable (ImageScanReport?, String, String?) -> Void) {
+    init(
+        progress: @escaping @Sendable (ImageScanProgress) -> Void,
+        done: @escaping @Sendable (ImageScanReport?, String, String?) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }

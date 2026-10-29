@@ -32,18 +32,21 @@ struct CronJobsList: View {
                 KubeDeniedSection(actions: [.triggerCronJob, .suspendCronJob], namespace: selected ?? "")
                 ForEach(shown) { cronJob in
                     Section {
-                        CronJobRow(cronJob: cronJob, showNamespace: selected == nil,
-                                   expanded: expanded.contains(cronJob.id),
-                                   triggering: triggering.contains(cronJob.id),
-                                   suspending: suspending.contains(cronJob.id),
-                                   kubeGreen: kubeGreen,
-                                   onToggle: { toggle(cronJob) },
-                                   onRun: { confirm = cronJob },
-                                   onSuspend: { confirmSuspend = cronJob })
-                            .contextMenu {
-                                ShareLinkButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name))
-                                PinButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name), label: cronJob.name)
-                            }
+                        CronJobRow(
+                            cronJob: cronJob, showNamespace: selected == nil,
+                            expanded: expanded.contains(cronJob.id),
+                            triggering: triggering.contains(cronJob.id),
+                            suspending: suspending.contains(cronJob.id),
+                            kubeGreen: kubeGreen,
+                            onToggle: { toggle(cronJob) },
+                            onRun: { confirm = cronJob },
+                            onSuspend: { confirmSuspend = cronJob }
+                        )
+                        .contextMenu {
+                            ShareLinkButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name))
+                            PinButton(
+                                target: .cronJob(namespace: cronJob.namespace, name: cronJob.name), label: cronJob.name)
+                        }
                     }
                 }
                 if load.hasMore && query.isEmpty {
@@ -57,31 +60,39 @@ struct CronJobsList: View {
                 }
             }
             .listSectionSpacing(.compact)
-            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No CronJobs", systemImage: "clock.arrow.circlepath") }
+            .emptyOverlay(shown.isEmpty, query: query) {
+                ContentUnavailableView("No CronJobs", systemImage: "clock.arrow.circlepath")
+            }
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
-        .confirmationDialog(confirm.map { String(localized: "Run \($0.displayName) now?") } ?? "",
-                            isPresented: $confirm.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirm) { cronJob in
+        .confirmationDialog(
+            confirm.map { String(localized: "Run \($0.displayName) now?") } ?? "",
+            isPresented: $confirm.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirm
+        ) { cronJob in
             Button("Run") { Task { await trigger(cronJob) } }
             Button("Cancel", role: .cancel) {}
         } message: { cronJob in
             confirmMessage(cronJob)
         }
-        .confirmationDialog(confirmSuspend.map { suspendTitle($0) } ?? "",
-                            isPresented: $confirmSuspend.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirmSuspend) { cronJob in
+        .confirmationDialog(
+            confirmSuspend.map { suspendTitle($0) } ?? "",
+            isPresented: $confirmSuspend.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirmSuspend
+        ) { cronJob in
             // Argo CD self-heal would put spec.suspend back: offer to freeze its app first.
             if let healer = healer(cronJob) {
                 Button(String(localized: "Freeze \(healer.app.name) 1 h first")) {
                     Task { await setSuspended(cronJob, !cronJob.suspended, freezeFirst: healer) }
                 }
             }
-            Button(cronJob.suspended ? String(localized: "Resume") : String(localized: "Suspend"),
-                   role: cronJob.suspended ? nil : ButtonRole.destructive) {
+            Button(
+                cronJob.suspended ? String(localized: "Resume") : String(localized: "Suspend"),
+                role: cronJob.suspended ? nil : ButtonRole.destructive
+            ) {
                 Task { await setSuspended(cronJob, !cronJob.suspended) }
             }
             Button("Cancel", role: .cancel) {}
@@ -109,11 +120,18 @@ struct CronJobsList: View {
     }
 
     private func suspendMessage(_ cronJob: KubeCronJob) -> Text {
-        var text = cronJob.suspended
-            ? Text("Its schedule starts again in \(cronJob.namespace). Missed runs may start at once, depending on its starting deadline.")
+        var text =
+            cronJob.suspended
+            ? Text(
+                "Its schedule starts again in \(cronJob.namespace). Missed runs may start at once, depending on its starting deadline."
+            )
             : Text("No new run starts on schedule until it is resumed; a run in progress goes on. Run now still works.")
         if let healer = healer(cronJob) {
-            text = text + Text(verbatim: "\n\n") + Text("\(healer.app.name) deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze \(healer.app.name) first to keep your change for a while.")
+            text =
+                text + Text(verbatim: "\n\n")
+                + Text(
+                    "\(healer.app.name) deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze \(healer.app.name) first to keep your change for a while."
+                )
         }
         if let warning = kubeGreenChangeWarning(kubeGreen) {
             text = text + Text(verbatim: "\n\n") + Text(verbatim: warning)
@@ -123,25 +141,32 @@ struct CronJobsList: View {
 
     /// The Argo CD app that would undo a suspend or resume, from the status already loaded.
     private func healer(_ cronJob: KubeCronJob) -> ArgoSelfHealer? {
-        ArgoCDStore.shared.selfHealer(kind: "CronJob", namespace: cronJob.namespace, name: cronJob.name, key: model.argoKey)
+        ArgoCDStore.shared.selfHealer(
+            kind: "CronJob", namespace: cronJob.namespace, name: cronJob.name, key: model.argoKey)
     }
 
     private func suspendTitle(_ cronJob: KubeCronJob) -> String {
-        cronJob.suspended ? String(localized: "Resume \(cronJob.displayName)?") : String(localized: "Suspend \(cronJob.displayName)?")
+        cronJob.suspended
+            ? String(localized: "Resume \(cronJob.displayName)?") : String(localized: "Suspend \(cronJob.displayName)?")
     }
 
-    private func setSuspended(_ cronJob: KubeCronJob, _ suspend: Bool, freezeFirst healer: ArgoSelfHealer? = nil) async {
+    private func setSuspended(_ cronJob: KubeCronJob, _ suspend: Bool, freezeFirst healer: ArgoSelfHealer? = nil) async
+    {
         guard let client = model.client, !suspending.contains(cronJob.id) else { return }
         suspending.insert(cronJob.id)
         defer { suspending.remove(cronJob.id) }
-        if let healer, let failure = await ArgoCDStore.shared.freezeForHandChange(
-            healer, reason: suspend ? String(localized: "suspend") : String(localized: "resume"), with: client) {
+        if let healer,
+            let failure = await ArgoCDStore.shared.freezeForHandChange(
+                healer, reason: suspend ? String(localized: "suspend") : String(localized: "resume"), with: client)
+        {
             resultMessage = failure
             return
         }
         do {
             try await client.suspendCronJob(cronJob, suspend: suspend)
-            resultMessage = suspend ? String(localized: "\(cronJob.displayName) is suspended")
+            resultMessage =
+                suspend
+                ? String(localized: "\(cronJob.displayName) is suspended")
                 : String(localized: "\(cronJob.displayName) is resumed")
             await load()
         } catch {
@@ -234,7 +259,8 @@ private struct CronJobRow: View {
                 Text(verbatim: cronJob.displayName)
                     .font(.headline)
                     .lineLimit(1)
-                let subtitle = [cronJob.title.isEmpty ? nil : cronJob.name, showNamespace ? cronJob.namespace : nil].compactMap { $0 }
+                let subtitle = [cronJob.title.isEmpty ? nil : cronJob.name, showNamespace ? cronJob.namespace : nil]
+                    .compactMap { $0 }
                 if !subtitle.isEmpty {
                     Text(verbatim: subtitle.joined(separator: " · "))
                         .font(.caption.monospaced())
@@ -251,7 +277,11 @@ private struct CronJobRow: View {
 
     private var timing: some View {
         HStack(spacing: 8) {
-            MetaChip(symbol: "clock", text: Text(verbatim: [cronJob.schedule, cronJob.timeZone].filter { !$0.isEmpty }.joined(separator: " · ")), mono: true)
+            MetaChip(
+                symbol: "clock",
+                text: Text(
+                    verbatim: [cronJob.schedule, cronJob.timeZone].filter { !$0.isEmpty }.joined(separator: " · ")),
+                mono: true)
             if cronJob.suspended {
                 MetaChip(symbol: "pause.circle", text: Text("suspended"), color: .orange)
             } else if Date(epochMillis: cronJob.nextRun) > .now {
@@ -264,7 +294,9 @@ private struct CronJobRow: View {
     @ViewBuilder private var lastRun: some View {
         if let run = cronJob.runs.first {
             let ago = relativeTime(run.started)
-            let duration = run.duration.map { Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow)) }
+            let duration = run.duration.map {
+                Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow))
+            }
             (Text("last run \(ago)") + Text(verbatim: duration.map { " · \($0)" } ?? ""))
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -284,7 +316,8 @@ private struct CronJobRow: View {
             }
             .buttonStyle(.borderless)
             .kubeGated(.suspendCronJob, in: cronJob.namespace)
-            .accessibilityLabel(cronJob.suspended ? Text("Resume \(cronJob.displayName)") : Text("Suspend \(cronJob.displayName)"))
+            .accessibilityLabel(
+                cronJob.suspended ? Text("Resume \(cronJob.displayName)") : Text("Suspend \(cronJob.displayName)"))
         }
     }
 
@@ -384,7 +417,10 @@ private struct RunList: View {
                             .lineLimit(1)
                             .truncationMode(.middle)
                         let ago = relativeTime(run.started)
-                        let duration = run.duration.map { Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow)) }
+                        let duration = run.duration.map {
+                            Duration.seconds($0).formatted(
+                                .units(allowed: [.hours, .minutes, .seconds], width: .narrow))
+                        }
                         (Text(run.runState.label) + Text(verbatim: " · \(ago)" + (duration.map { " · \($0)" } ?? "")))
                             .font(.caption)
                             .foregroundStyle(.secondary)

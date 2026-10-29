@@ -35,13 +35,17 @@ extension ShareTarget {
         if kube, [Target.node, .etcd, .health, .storage, .hardware].contains(target) { return nil }
         if target == .node || target == .storage || target == .hardware {
             guard let nodes = try? await client?.overview().nodes,
-                  let node = nodes.first(where: { !addr.isEmpty && $0.node == addr || !host.isEmpty && $0.hostname == host })
+                let node = nodes.first(where: {
+                    !addr.isEmpty && $0.node == addr || !host.isEmpty && $0.hostname == host
+                })
             else { return nil }
             if target == .storage { return .storage(node: node.node, hostname: node.hostname) }
             if target == .hardware { return .hardware(node: node.node, hostname: node.hostname) }
             let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
             // A link that names a tab opens the tabs on it; one without (or an unknown one) the hub.
-            guard let shown = NodeTabsView.Tab.allCases.first(where: { $0.rawValue.lowercased() == tab }) else { return .node(ref) }
+            guard let shown = NodeTabsView.Tab.allCases.first(where: { $0.rawValue.lowercased() == tab }) else {
+                return .node(ref)
+            }
             return .nodeTab(ref, tab: shown)
         }
         return switch target {
@@ -55,7 +59,10 @@ extension ShareTarget {
         case .fluxApp: .fluxApp(kind: kind, namespace: namespace, name: name)
         case .workloads, .workload, .pod, .cronJob: kubeFocus.map { Route.kubernetes($0) }
         // A plugin finding's alert: the plugin's screen.
-        case .data: pluginID.map { Route.plugin(id: $0) } ?? .dataServices(hints: "", downNodes: [], kind: dataServiceKind, solo: dataServiceKind?.opensAlone == true)
+        case .data:
+            pluginID.map { Route.plugin(id: $0) }
+                ?? .dataServices(
+                    hints: "", downNodes: [], kind: dataServiceKind, solo: dataServiceKind?.opensAlone == true)
         case .checkup: .checkup
         case .alerts: .alerts
         }
@@ -66,7 +73,8 @@ extension ShareTarget {
     private func kubeNodeRoute(client: TalosClient?) async -> Route? {
         let name = addr.isEmpty ? host : addr
         guard !name.isEmpty, let nodes = try? await client?.kubeNodes().nodes,
-              nodes.contains(where: { $0.name == name }) else { return nil }
+            nodes.contains(where: { $0.name == name })
+        else { return nil }
         return .kubeNodes(filter: nil, nodes: nodes, query: name)
     }
 }

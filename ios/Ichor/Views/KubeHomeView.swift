@@ -112,8 +112,10 @@ struct KubeHomeView: View {
                 AlertsOfferSection()
                 if model.activeSummary?.demo == true {
                     Section {
-                        Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
-                            .font(.callout).foregroundStyle(.secondary)
+                        Text(
+                            "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
+                        )
+                        .font(.callout).foregroundStyle(.secondary)
                     }
                 }
                 HistorySinceSection(look: look)
@@ -125,7 +127,9 @@ struct KubeHomeView: View {
                 ForEach(layout.visible) { card in section(card, overview: overview) }
                 if layout.visible.isEmpty {
                     Section {
-                        Button { customizing = true } label: {
+                        Button {
+                            customizing = true
+                        } label: {
                             Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
                         }
                     }
@@ -158,20 +162,36 @@ struct KubeHomeView: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
                 ForEach(bar.icons.filter(offered)) { action in
-                    Button { open(action) } label: {
-                        Label { action.title } icon: { Image(systemName: action.systemImage) }
+                    Button {
+                        open(action)
+                    } label: {
+                        Label {
+                            action.title
+                        } icon: {
+                            Image(systemName: action.systemImage)
+                        }
                     }
                 }
                 Menu {
                     let menu = bar.menu.filter(offered)
                     ForEach(menu) { action in
-                        Button { open(action) } label: {
-                            Label { action.title } icon: { Image(systemName: action.systemImage) }
+                        Button {
+                            open(action)
+                        } label: {
+                            Label {
+                                action.title
+                            } icon: {
+                                Image(systemName: action.systemImage)
+                            }
                         }
                     }
                     if !menu.isEmpty { Divider() }
                     ClusterSubmenu(path: $path, shareIncident: { sharingIncident = true })
-                    Button { customizing = true } label: { Label("Customize home", systemImage: "pencil") }
+                    Button {
+                        customizing = true
+                    } label: {
+                        Label("Customize home", systemImage: "pencil")
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -238,9 +258,10 @@ struct KubeHomeView: View {
         case .pinned:
             if !pins.isEmpty {
                 // No Talos nodes here: a pinned node shows without its state.
-                PinnedSection(pins: pins.pins, nodes: [], argo: argoStatus, flux: fluxStatus,
-                              masked: model.privacyMask, open: open,
-                              unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
+                PinnedSection(
+                    pins: pins.pins, nodes: [], argo: argoStatus, flux: fluxStatus,
+                    masked: model.privacyMask, open: open,
+                    unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
             }
         case .summary:
             summarySection(overview)
@@ -254,8 +275,9 @@ struct KubeHomeView: View {
             toolsSection
         case .dataServices:
             if let dataServices {
-                DataServicesSection(state: dataServices, hints: "", apps: inventoryApps, downNodes: notReadyNodes(overview),
-                                    plugins: plugins.dataServicePlugins, families: [.data])
+                DataServicesSection(
+                    state: dataServices, hints: "", apps: inventoryApps, downNodes: notReadyNodes(overview),
+                    plugins: plugins.dataServicePlugins, families: [.data])
             }
         case .argoCD:
             if let argo {
@@ -274,12 +296,15 @@ struct KubeHomeView: View {
     private func summarySection(_ overview: KubeNodesOverview) -> some View {
         Section {
             if let ctx = model.activeSummary {
-                KubeSummaryCard(name: model.activeLabel, context: ctx, overview: overview,
-                                usage: Array(top.values), whoAmI: whoAmI)
+                KubeSummaryCard(
+                    name: model.activeLabel, context: ctx, overview: overview,
+                    usage: Array(top.values), whoAmI: whoAmI)
                 if ctx.usesKubeToken {
                     Button("How to create a service account") { showingServiceAccountHelp = true }
                 }
-                NavigationLink { CheckupView() } label: {
+                NavigationLink {
+                    CheckupView()
+                } label: {
                     toolLabel(KubeHomeAction.checkup)
                 }
                 NavigationLink(value: Route.capacity) {
@@ -329,13 +354,17 @@ struct KubeHomeView: View {
                 Spacer()
                 if !overview.forbidden { Text(verbatim: "\(overview.nodes.count)") }
                 if dense {
-                    Button { path.append(.kubeNodes(filter: nil, nodes: overview.nodes)) } label: {
+                    Button {
+                        path.append(.kubeNodes(filter: nil, nodes: overview.nodes))
+                    } label: {
                         Image(systemName: "chevron.right")
                     }
                     .accessibilityLabel(Text("Show all nodes"))
                 }
                 if !dense && !overview.forbidden && !overview.nodes.isEmpty {
-                    Button { withAnimation { nodesExpanded.toggle() } } label: {
+                    Button {
+                        withAnimation { nodesExpanded.toggle() }
+                    } label: {
                         Image(systemName: nodesExpanded ? "chevron.up" : "chevron.down")
                     }
                     .accessibilityLabel(nodesExpanded ? Text("Show less") : Text("Show all"))
@@ -415,7 +444,9 @@ struct KubeHomeView: View {
     /// Best effort, as on the Talos overview: a first failure (credentials that may not list every
     /// pod) hides the apps section; a failed refresh keeps the apps shown.
     private func loadInventory(with client: TalosClient, id: String) async {
-        if case .loading? = inventory { inventory = model.seeded(LoadState<ClusterInventory>.loading, from: .inventory) }
+        if case .loading? = inventory {
+            inventory = model.seeded(LoadState<ClusterInventory>.loading, from: .inventory)
+        }
         let loaded: LoadState<ClusterInventory> = await .from { try await model.fetch(.inventory, with: client) }
         guard id == loadID else { return }
         switch (loaded, inventory) {
@@ -464,7 +495,9 @@ struct KubeHomeView: View {
         if inventory == nil { absent.insert(.apps) }
         if case .loaded(let status, _, _)? = argo, !status.installed { absent.insert(.argoCD) }
         if case .loaded(let status, _, _)? = flux, !status.installed { absent.insert(.flux) }
-        if case .loaded(let services, _, _)? = dataServices, services.detected.isEmpty, plugins.dataServicePlugins.isEmpty {
+        if case .loaded(let services, _, _)? = dataServices, services.detected.isEmpty,
+            plugins.dataServicePlugins.isEmpty
+        {
             absent.insert(.dataServices)
         }
         if AlertsStore.shared.absent(for: model.alertsKey) { absent.insert(.alerts) }
@@ -540,7 +573,9 @@ struct KubeHomeView: View {
         let key = model.alertsKey
         let fingerprint = model.activeSummary?.fingerprint ?? ""
         do {
-            guard let read = try await AlertsStore.shared.load(with: client, key: key, fingerprint: fingerprint) else { return nil }
+            guard let read = try await AlertsStore.shared.load(with: client, key: key, fingerprint: fingerprint) else {
+                return nil
+            }
             return .loaded(read, at: Date())
         } catch {
             return alerts == nil ? nil : .failed(error.localizedDescription)
@@ -550,7 +585,9 @@ struct KubeHomeView: View {
     /// The Argo CD status, nil when Argo CD is not installed.
     private func loadArgo(with client: TalosClient) async -> LoadState<ArgoStatus>? {
         let key = model.argoKey
-        let loaded: LoadState<ArgoStatus> = await .from { try await ArgoCDStore.shared.load(with: client, key: key, cluster: model.activeSummary) }
+        let loaded: LoadState<ArgoStatus> = await .from {
+            try await ArgoCDStore.shared.load(with: client, key: key, cluster: model.activeSummary)
+        }
         if case .loaded(let status, _, _) = loaded, !status.installed { return nil }
         return loaded
     }
@@ -568,7 +605,11 @@ struct KubeHomeView: View {
     /// none, from a listing of the pods (no hint, no inventory).
     private func shownDataServices(_ loaded: LoadState<DataServices>) -> LoadState<DataServices>? {
         // The card lists storage, databases and backups; the other systems are tools in their family.
-        if case .loaded(let services, _, _) = loaded, services.detected(.data).isEmpty, plugins.dataServicePlugins.isEmpty { return nil }
+        if case .loaded(let services, _, _) = loaded, services.detected(.data).isEmpty,
+            plugins.dataServicePlugins.isEmpty
+        {
+            return nil
+        }
         return loaded
     }
 
@@ -613,9 +654,13 @@ private struct KubeExpiryBanner: View {
     var body: some View {
         let days = daysUntil(notAfter)
         Label {
-            Text(days < 0
-                 ? String(localized: "The kubeconfig credentials have expired. Import a new kubeconfig.")
-                 : String(localized: "The kubeconfig credentials expire \(localizedCertExpiry(notAfter)). Import a new kubeconfig before then."))
+            Text(
+                days < 0
+                    ? String(localized: "The kubeconfig credentials have expired. Import a new kubeconfig.")
+                    : String(
+                        localized:
+                            "The kubeconfig credentials expire \(localizedCertExpiry(notAfter)). Import a new kubeconfig before then."
+                    ))
         } icon: {
             Image(systemName: "exclamationmark.triangle.fill")
         }

@@ -21,7 +21,9 @@ extension TalosClient {
     /// Starts rotating the context's Talos API CA (StartTalosCARotation). The talosconfigs it
     /// hands over are credentials: they only go through the stream, never logged. `proceed`
     /// tells Go the transition one is stored; `stop` ends the run before its next step.
-    func startCARotation() -> (events: AsyncStream<CARotationEvent>, proceed: @Sendable () -> Void, stop: @Sendable () -> Void) {
+    func startCARotation() -> (
+        events: AsyncStream<CARotationEvent>, proceed: @Sendable () -> Void, stop: @Sendable () -> Void
+    ) {
         let (stream, continuation) = AsyncStream.makeStream(of: CARotationEvent.self)
         let bridge = CARotationBridge(
             progress: { continuation.yield(.progress($0)) },
@@ -33,7 +35,7 @@ extension TalosClient {
         )
         let run = IchorgoStartTalosCARotation(config, context, bridge)
         continuation.onTermination = { _ in
-            _ = bridge // keep the listener alive for the whole run
+            _ = bridge  // keep the listener alive for the whole run
         }
         return (stream, { run?.proceed() }, { run?.cancel() })
     }
@@ -42,7 +44,8 @@ extension TalosClient {
     static func fingerprintLineage() async -> [String: String]? {
         let json = try? await run { IchorgoFingerprintLineageExport($0) }
         guard let json, let lineage = try? JSONDecoder().decode([String: String].self, from: Data(json.utf8)),
-              !lineage.isEmpty else { return nil }
+            !lineage.isEmpty
+        else { return nil }
         return lineage
     }
 
@@ -61,9 +64,11 @@ private final class CARotationBridge: NSObject, IchorgoTalosCARotationListenerPr
     private let talosconfig: @Sendable (String, Bool) -> Void
     private let done: @Sendable (String?) -> Void
 
-    init(progress: @escaping @Sendable (CARotationProgress) -> Void,
-         talosconfig: @escaping @Sendable (String, Bool) -> Void,
-         done: @escaping @Sendable (String?) -> Void) {
+    init(
+        progress: @escaping @Sendable (CARotationProgress) -> Void,
+        talosconfig: @escaping @Sendable (String, Bool) -> Void,
+        done: @escaping @Sendable (String?) -> Void
+    ) {
         self.progress = progress
         self.talosconfig = talosconfig
         self.done = done

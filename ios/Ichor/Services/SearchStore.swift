@@ -48,7 +48,9 @@ final class SearchStore {
         let extra = activeEntries(model: model)
         let demo = contexts.contains(where: \.demo) ? TalosClient.demoSearchEntries() : []
         entries = await Task.detached(priority: .userInitiated) {
-            searchEntries(contexts: contexts, activeContext: active, read: { LastKnownStore.read(fingerprint: $0, key: $1) }, active: extra) + demo
+            searchEntries(
+                contexts: contexts, activeContext: active, read: { LastKnownStore.read(fingerprint: $0, key: $1) },
+                active: extra) + demo
         }.value
         nodes = searchOverviewNodes(entries, context: active)
         nothingKnown = entries.isEmpty
@@ -82,7 +84,9 @@ final class SearchStore {
             guard !Task.isCancelled else { return }
             let ranked = (try? await TalosClient.search(entries: entries, query: text)) ?? .empty
             var matched = ScreenMatches.empty
-            if !catalog.isEmpty, let found = try? await TalosClient.searchScreens(entries: catalog, query: text) { matched = found }
+            if !catalog.isEmpty, let found = try? await TalosClient.searchScreens(entries: catalog, query: text) {
+                matched = found
+            }
             guard !Task.isCancelled else { return }
             results = ranked
             screens = matched
@@ -112,7 +116,8 @@ final class SearchStore {
         for domain in domains {
             do {
                 let json = try await client.rawJSON(domain)
-                fetched[domain.key] = SearchEntry(cluster: cluster, context: context.name, key: domain.key, at: Date(), json: json)
+                fetched[domain.key] = SearchEntry(
+                    cluster: cluster, context: context.name, key: domain.key, at: Date(), json: json)
             } catch {
                 refreshError = error.localizedDescription
             }
@@ -132,10 +137,12 @@ final class SearchStore {
         let cluster = searchCluster(of: context)
         var out = Array(fetched.values).filter { $0.cluster == cluster }
         if let argo = ArgoCDStore.shared.status(for: model.argoKey), argo.installed {
-            out.append(SearchEntry(cluster: cluster, context: context.name, key: "argocd", at: Date(), json: argo.searchJSON))
+            out.append(
+                SearchEntry(cluster: cluster, context: context.name, key: "argocd", at: Date(), json: argo.searchJSON))
         }
         if let flux = FluxStore.shared.status(for: model.fluxKey), flux.installed {
-            out.append(SearchEntry(cluster: cluster, context: context.name, key: "flux", at: Date(), json: flux.searchJSON))
+            out.append(
+                SearchEntry(cluster: cluster, context: context.name, key: "flux", at: Date(), json: flux.searchJSON))
         }
         return out.sorted { $0.key < $1.key }
     }

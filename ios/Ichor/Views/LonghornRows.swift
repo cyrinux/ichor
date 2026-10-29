@@ -16,13 +16,16 @@ struct LonghornVolumeRow: View {
         ResourceRow(health: volume.health, title: volume.label, subtitle: facts, trailing: trailing) {
             // 0 is also what an engine that could not be read gives: the facts line says it rebuilds.
             if volume.rebuilding > 0 && volume.rebuildProgress > 0 {
-                ProgressLine(label: String(localized: "Rebuilding \(volume.rebuildProgress)%"), percent: volume.rebuildProgress)
+                ProgressLine(
+                    label: String(localized: "Rebuilding \(volume.rebuildProgress)%"), percent: volume.rebuildProgress)
             }
             if volume.backingUp {
-                ProgressLine(label: String(localized: "Backing up \(volume.backupProgress)%"), percent: volume.backupProgress)
+                ProgressLine(
+                    label: String(localized: "Backing up \(volume.backupProgress)%"), percent: volume.backupProgress)
             }
             if volume.restoring {
-                ProgressLine(label: String(localized: "Restoring \(volume.restoreProgress)%"), percent: volume.restoreProgress)
+                ProgressLine(
+                    label: String(localized: "Restoring \(volume.restoreProgress)%"), percent: volume.restoreProgress)
             }
             if !volume.scheduleError.isEmpty {
                 Text(verbatim: volume.scheduleError).font(.caption).foregroundStyle(.secondary).lineLimit(2)
@@ -33,7 +36,8 @@ struct LonghornVolumeRow: View {
             if volume.engineUpgrading {
                 Text("Engine upgrading").font(.caption).foregroundStyle(.secondary)
             } else if volume.engineOutdated && !volume.engineLabel.isEmpty && !availableEngine.isEmpty {
-                Text("Engine \(volume.engineLabel), \(availableEngine) available").font(.caption).foregroundStyle(.secondary)
+                Text("Engine \(volume.engineLabel), \(availableEngine) available").font(.caption).foregroundStyle(
+                    .secondary)
             }
         }
         .accessibilityElement(children: .combine)
@@ -79,8 +83,10 @@ struct LonghornBackupTargetRow: View {
     let target: LonghornBackupTarget
 
     var body: some View {
-        ResourceRow(health: target.available ? .ok : .critical, title: String(localized: "Backup target"),
-                    subtitle: target.url, mono: false) {
+        ResourceRow(
+            health: target.available ? .ok : .critical, title: String(localized: "Backup target"),
+            subtitle: target.url, mono: false
+        ) {
             if !target.available && !target.message.isEmpty {
                 Text(verbatim: target.message).font(.caption).foregroundStyle(.statusBad)
             }
@@ -101,14 +107,19 @@ struct LonghornNodeRow: View {
         ResourceRow(health: health, title: node.name, subtitle: state, trailing: trailing) {
             ForEach(Array(node.disks.enumerated()), id: \.offset) { _, disk in
                 VStack(alignment: .leading, spacing: 2) {
-                    MeterRow(label: longhornDiskLabel(disk.path),
-                             fraction: disk.maximum > 0 ? Double(disk.scheduled) / Double(disk.maximum) : 0,
-                             value: "\(formatBytes(disk.scheduled)) / \(formatBytes(disk.maximum))")
+                    MeterRow(
+                        label: longhornDiskLabel(disk.path),
+                        fraction: disk.maximum > 0 ? Double(disk.scheduled) / Double(disk.maximum) : 0,
+                        value: "\(formatBytes(disk.scheduled)) / \(formatBytes(disk.maximum))")
                     if (sharedPath == nil && !disk.path.isEmpty) || !disk.schedulable {
-                        Text(verbatim: [sharedPath == nil ? disk.path.nonEmpty : nil,
-                                        disk.schedulable ? nil : String(localized: "scheduling disabled")].compactMap { $0 }.joined(separator: " · "))
-                            .font(.caption)
-                            .foregroundStyle(disk.schedulable ? Color.secondary : attentionColor)
+                        Text(
+                            verbatim: [
+                                sharedPath == nil ? disk.path.nonEmpty : nil,
+                                disk.schedulable ? nil : String(localized: "scheduling disabled"),
+                            ].compactMap { $0 }.joined(separator: " · ")
+                        )
+                        .font(.caption)
+                        .foregroundStyle(disk.schedulable ? Color.secondary : attentionColor)
                     }
                 }
             }

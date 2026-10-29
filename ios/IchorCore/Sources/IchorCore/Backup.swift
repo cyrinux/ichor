@@ -159,9 +159,11 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     /// "Record actions in the cluster" (a Kubernetes Event per change); nil: off.
     public var auditEvents: Bool?
 
-    public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
-                wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil,
-                repository: ClusterRepo? = nil, auditEvents: Bool? = nil) {
+    public init(
+        name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
+        wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil,
+        repository: ClusterRepo? = nil, auditEvents: Bool? = nil
+    ) {
         self.name = name
         self.color = color
         self.vpnOnly = vpnOnly
@@ -212,7 +214,9 @@ public func backupPayloadFormat(hasProposals: Bool = false, hasPlugins: Bool = f
 }
 
 /// The proposals to back up: the clusters' records as stored, nil when there are none.
-public func backupProposals(_ stored: [String: [GitProposalRecord]], fingerprints: [String]) -> [String: [GitProposalRecord]]? {
+public func backupProposals(_ stored: [String: [GitProposalRecord]], fingerprints: [String]) -> [String:
+    [GitProposalRecord]]?
+{
     let kept = ProposalsStore.keep(stored, fingerprints: fingerprints).filter { !$0.value.isEmpty }
     return kept.isEmpty ? nil : kept
 }
@@ -261,20 +265,24 @@ public func backupPassphraseProblem(_ passphrase: String, again: String) -> Back
 
 /// The per-cluster settings of this device, as a backup stores them (only clusters still in `fingerprints`).
 /// `wakeOnLan` is keyed by `wolKey`.
-public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int],
-                           kubeServers: [String: String], vpnOnly: Set<String> = [],
-                           wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:],
-                           repos: [String: ClusterRepo] = [:], auditEvents: Set<String> = []) -> [String: BackupCluster] {
+public func backupClusters(
+    fingerprints: [String], names: [String: String], colors: [String: Int],
+    kubeServers: [String: String], vpnOnly: Set<String> = [],
+    wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:],
+    repos: [String: ClusterRepo] = [:], auditEvents: Set<String> = []
+) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
         var wol: [String: BackupWolTarget] = [:]
         for (key, target) in wakeOnLan where key.hasPrefix(fp + "|") {
-            wol[String(key.dropFirst(fp.count + 1))] = BackupWolTarget(mac: target.mac, broadcast: target.broadcast, port: target.port)
+            wol[String(key.dropFirst(fp.count + 1))] = BackupWolTarget(
+                mac: target.mac, broadcast: target.broadcast, port: target.port)
         }
-        out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
-                                vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
-                                kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 },
-                                repository: repos[fp], auditEvents: auditEvents.contains(fp) ? true : nil)
+        out[fp] = BackupCluster(
+            name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
+            vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
+            kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 },
+            repository: repos[fp], auditEvents: auditEvents.contains(fp) ? true : nil)
     }
     return out
 }
@@ -315,7 +323,8 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
             let node = node.trimmingCharacters(in: .whitespaces)
             let broadcast = (wol.broadcast ?? "").trimmingCharacters(in: .whitespaces)
             guard !node.isEmpty, !broadcast.contains("|"), isWolAddress(broadcast),
-                  let target = decodeWolTarget(encodeWolTarget(WolTarget(mac: wol.mac, broadcast: broadcast, port: wol.port ?? wolDefaultPort)))
+                let target = decodeWolTarget(
+                    encodeWolTarget(WolTarget(mac: wol.mac, broadcast: broadcast, port: wol.port ?? wolDefaultPort)))
             else { continue }
             wakeOnLan[wolKey(fingerprint: fp, node: node)] = target
         }
@@ -326,8 +335,9 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
             kubeServers[fp] = server
         }
     }
-    return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly,
-                            wakeOnLan: wakeOnLan, kubeAccess: kubeAccess, repos: repos, auditEvents: auditEvents)
+    return RestoredClusters(
+        names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly,
+        wakeOnLan: wakeOnLan, kubeAccess: kubeAccess, repos: repos, auditEvents: auditEvents)
 }
 
 /// The sign-ins of a restored payload for the clusters it restored (`fingerprints`), empty

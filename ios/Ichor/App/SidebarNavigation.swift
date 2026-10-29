@@ -28,8 +28,14 @@ struct SidebarNavigation<Detail: View>: View {
                 }
                 Section {
                     ForEach(SidebarSection.shown(kubeReads: model.allows(.workloads))) { section in
-                        Button { path = section.route(cluster: model.activeContext).map { [$0] } ?? [] } label: {
-                            Label { section.title } icon: { Image(systemName: section.systemImage) }
+                        Button {
+                            path = section.route(cluster: model.activeContext).map { [$0] } ?? []
+                        } label: {
+                            Label {
+                                section.title
+                            } icon: {
+                                Image(systemName: section.systemImage)
+                            }
                         }
                     }
                 } header: {

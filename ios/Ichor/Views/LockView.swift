@@ -17,8 +17,12 @@ struct LockView: View {
             if available {
                 Text("Ichor is locked").font(.headline).accessibilityAddTraits(.isHeader)
                 if let keys = model.securityKeys {
-                    Text(keys.required ? String(localized: "Tap your security key to open Ichor.") : String(localized: "Tap your security key, or use Face ID or the passcode."))
-                        .foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    Text(
+                        keys.required
+                            ? String(localized: "Tap your security key to open Ichor.")
+                            : String(localized: "Tap your security key, or use Face ID or the passcode.")
+                    )
+                    .foregroundStyle(.secondary).multilineTextAlignment(.center)
                 }
                 if let error { Text(error).foregroundStyle(.statusBad).multilineTextAlignment(.center) }
                 Button("Unlock") { Task { await unlock() } }.buttonStyle(.borderedProminent)
@@ -44,7 +48,9 @@ struct LockView: View {
                 model.setLockEnabled(false)
             }
         } message: {
-            Text("Without one of them the stored configs cannot be read. Delete them to start over and import your talosconfig again.")
+            Text(
+                "Without one of them the stored configs cannot be read. Delete them to start over and import your talosconfig again."
+            )
         }
     }
 

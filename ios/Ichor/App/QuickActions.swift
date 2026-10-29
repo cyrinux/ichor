@@ -61,8 +61,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     /// iOS relaunched the app for the model download's background session (ModelDownloadSession).
-    func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
-                     completionHandler: @escaping () -> Void) {
+    func application(
+        _ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
+        completionHandler: @escaping () -> Void
+    ) {
         guard identifier == ModelDownloadSession.identifier else {
             completionHandler()
             return
@@ -73,7 +75,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
     /// iPhone: portrait, except while a wide screen holds landscape (OrientationLock); iPad: all.
     @MainActor
-    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?)
+        -> UIInterfaceOrientationMask
+    {
         OrientationLock.shared.mask
     }
 }
@@ -81,7 +85,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 /// A quick action or share link launching the app (cold start) or brought to it while it runs.
 @MainActor
 final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    func scene(
+        _ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions
+    ) {
         if let item = connectionOptions.shortcutItem { open(item) }
         if let url = connectionOptions.urlContexts.first?.url { open(url) }
         // A Spotlight result launching the app.

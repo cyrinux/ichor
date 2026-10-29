@@ -12,21 +12,25 @@ final class ScreenEntryTests: XCTestCase {
     }
 
     func testMissingFieldsDefault() throws {
-        let matches = try TalosJSON.decode(ScreenMatches.self, from: #"{"results":[{"id":"runbooks","title":"Runbooks"}]}"#)
+        let matches = try TalosJSON.decode(
+            ScreenMatches.self, from: #"{"results":[{"id":"runbooks","title":"Runbooks"}]}"#)
         XCTAssertEqual(matches.total, 1)
         XCTAssertEqual(matches.results.first?.subtitle, "")
         XCTAssertEqual(matches.results.first?.score, 0)
     }
 
     func testEncodesTheCatalogAsGoTakesIt() throws {
-        let entries = ScreenEntries(screens: [ScreenEntry(id: "settings/alerts", title: "Settings → Alerts", section: "Settings")])
+        let entries = ScreenEntries(screens: [
+            ScreenEntry(id: "settings/alerts", title: "Settings → Alerts", section: "Settings")
+        ])
         let decoded = try TalosJSON.decode(ScreenEntries.self, from: entries.json)
         XCTAssertEqual(decoded, entries)
         XCTAssertTrue(entries.json.contains(#""screens""#))
     }
 
     func testNodesComeFromTheActiveClustersOverview() throws {
-        let overview = ClusterOverview(context: "lab", nodes: [NodeOverview(node: "10.0.0.1", hostname: "node-a", reachable: true)])
+        let overview = ClusterOverview(
+            context: "lab", nodes: [NodeOverview(node: "10.0.0.1", hostname: "node-a", reachable: true)])
         let blob = try TalosJSON.encode(overview)
         let entries = [
             SearchEntry(cluster: "a", context: "other", key: "overview", at: Int64(0), json: blob),

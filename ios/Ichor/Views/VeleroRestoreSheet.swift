@@ -97,7 +97,8 @@ struct VeleroRestoreSheet: View {
     private func launch() async {
         guard let client = model.client else { return }
         do {
-            restoreName = try await client.veleroRestore(namespace: target.namespace, backup: target.name, options: options)
+            restoreName = try await client.veleroRestore(
+                namespace: target.namespace, backup: target.name, options: options)
         } catch {
             launchError = error.localizedDescription
         }
@@ -107,7 +108,9 @@ struct VeleroRestoreSheet: View {
 
     @ViewBuilder private var choices: some View {
         Section {
-            Text("Restoring creates the backup's objects again. Target namespaces that do not exist are created; ones that exist get the backup's objects merged in, overwriting them with update.").foregroundStyle(.statusWarn)
+            Text(
+                "Restoring creates the backup's objects again. Target namespaces that do not exist are created; ones that exist get the backup's objects merged in, overwriting them with update."
+            ).foregroundStyle(.statusWarn)
         }
         if preview == nil && loadError == nil { Section { ProgressView() } }
         if let loadError { Section { ErrorLine(error: loadError) } }
@@ -128,16 +131,21 @@ struct VeleroRestoreSheet: View {
                         Text("Choose the namespaces to restore")
                         ForEach(p.includedNamespaces.filter { $0 != "*" }, id: \.self) { ns in
                             VStack(alignment: .leading, spacing: 4) {
-                                Toggle(ns, isOn: Binding(
-                                    get: { selected.contains(ns) },
-                                    set: { selected = $0 ? selected.union([ns]) : selected.subtracting([ns]) }))
+                                Toggle(
+                                    ns,
+                                    isOn: Binding(
+                                        get: { selected.contains(ns) },
+                                        set: { selected = $0 ? selected.union([ns]) : selected.subtracting([ns]) }))
                                 if selected.contains(ns) {
-                                    TextField(String(localized: "empty: same name"), text: Binding(
-                                        get: { targets[ns] ?? "" },
-                                        set: { targets[ns] = $0.trimmingCharacters(in: .whitespaces) }))
-                                        .font(.callout.monospaced())
-                                        .autocorrectionDisabled()
-                                        .textInputAutocapitalization(.never)
+                                    TextField(
+                                        String(localized: "empty: same name"),
+                                        text: Binding(
+                                            get: { targets[ns] ?? "" },
+                                            set: { targets[ns] = $0.trimmingCharacters(in: .whitespaces) })
+                                    )
+                                    .font(.callout.monospaced())
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.never)
                                 }
                             }
                         }
@@ -160,17 +168,33 @@ struct VeleroRestoreSheet: View {
         }
         Section(typedConfirmationPrompt(target.name)) {
             TextField("Backup name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
-            Button(role: .destructive) { Task { await launch() } } label: { Text("Restore") }
-                .disabled(preview?.canRestore != true || nothingPicked || !typedConfirmationMatches(typed, token: target.name) || denial != nil)
+            Button(role: .destructive) {
+                Task { await launch() }
+            } label: {
+                Text("Restore")
+            }
+            .disabled(
+                preview?.canRestore != true || nothingPicked || !typedConfirmationMatches(typed, token: target.name)
+                    || denial != nil)
             KubeDeniedNote(.veleroRestore, in: target.namespace)
         }
     }
 
     @ViewBuilder private func holds(_ p: VeleroRestorePreview) -> some View {
-        LabeledContent("Phase", value: [p.phase, p.completedAt > 0 ? relativeTime(p.completedAt) : nil, veleroRestoreCountsText(errors: p.errors, warnings: p.warnings)].compactMap { $0 }.joined(separator: " · "))
-        LabeledContent("Namespaces", value: p.includedNamespaces.filter { $0 != "*" }.isEmpty ? String(localized: "all") : p.includedNamespaces.filter { $0 != "*" }.joined(separator: ", "))
+        LabeledContent(
+            "Phase",
+            value: [
+                p.phase, p.completedAt > 0 ? relativeTime(p.completedAt) : nil,
+                veleroRestoreCountsText(errors: p.errors, warnings: p.warnings),
+            ].compactMap { $0 }.joined(separator: " · "))
+        LabeledContent(
+            "Namespaces",
+            value: p.includedNamespaces.filter { $0 != "*" }.isEmpty
+                ? String(localized: "all") : p.includedNamespaces.filter { $0 != "*" }.joined(separator: ", "))
         LabeledContent("Items", value: "\(p.totalItems)")
-        LabeledContent("Volume snapshots", value: p.volumeSnapshots == 0 ? String(localized: "no volume snapshots") : "\(p.volumeSnapshots)")
+        LabeledContent(
+            "Volume snapshots",
+            value: p.volumeSnapshots == 0 ? String(localized: "no volume snapshots") : "\(p.volumeSnapshots)")
         if !p.storageLocation.isEmpty { LabeledContent("Storage location", value: p.storageLocation) }
     }
 
@@ -181,18 +205,32 @@ struct VeleroRestoreSheet: View {
             if let launchError { ErrorLine(error: launchError) }
             if let restore {
                 LabeledContent("Restore", value: restore.name)
-                LabeledContent("Phase", value: [restore.phase, veleroRestoreCountsText(errors: restore.errors, warnings: restore.warnings)].compactMap { $0 }.joined(separator: " · "))
+                LabeledContent(
+                    "Phase",
+                    value: [restore.phase, veleroRestoreCountsText(errors: restore.errors, warnings: restore.warnings)]
+                        .compactMap { $0 }.joined(separator: " · "))
                 if restore.totalItems > 0 {
                     // String arguments: the catalog's key is "%@ of %@ items".
-                    LabeledContent("Progress", value: String(localized: "\(String(restore.itemsRestored)) of \(String(restore.totalItems)) items"))
+                    LabeledContent(
+                        "Progress",
+                        value: String(
+                            localized: "\(String(restore.itemsRestored)) of \(String(restore.totalItems)) items"))
                 }
-                ForEach(restore.validationErrors, id: \.self) { Text(verbatim: $0).font(.caption).foregroundStyle(.red) }
-                if !restore.failureReason.isEmpty { Text(verbatim: restore.failureReason).font(.caption).foregroundStyle(.red) }
+                ForEach(restore.validationErrors, id: \.self) {
+                    Text(verbatim: $0).font(.caption).foregroundStyle(.red)
+                }
+                if !restore.failureReason.isEmpty {
+                    Text(verbatim: restore.failureReason).font(.caption).foregroundStyle(.red)
+                }
                 if restore.running {
-                    HStack(spacing: 8) { ProgressView(); Text("restoring…").font(.caption).foregroundStyle(.secondary) }
+                    HStack(spacing: 8) {
+                        ProgressView(); Text("restoring…").font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             } else if launchError == nil {
-                HStack(spacing: 8) { ProgressView(); Text("Restore \(restoreName ?? "") started") }
+                HStack(spacing: 8) {
+                    ProgressView(); Text("Restore \(restoreName ?? "") started")
+                }
             }
         }
     }
@@ -200,7 +238,8 @@ struct VeleroRestoreSheet: View {
     private func restoreReasonText(_ reason: VeleroRestoreReason) -> String {
         switch reason {
         case .partiallyFailed: String(localized: "The backup completed with errors: some items may be missing")
-        case .locationUnavailable: String(localized: "The backup's storage location is unavailable: its data cannot be read")
+        case .locationUnavailable:
+            String(localized: "The backup's storage location is unavailable: its data cannot be read")
         case .expired: String(localized: "The backup has expired: its data is gone")
         case .restoreRunning: String(localized: "A restore of this backup is already running")
         case .allNamespaces: String(localized: "This backup holds every namespace: restoring it restores them all")
@@ -210,7 +249,9 @@ struct VeleroRestoreSheet: View {
 
 /// "2 errors, 3 warnings", nil when both are 0.
 private func veleroRestoreCountsText(errors: Int, warnings: Int) -> String? {
-    let parts = [errors > 0 ? String(localized: "\(errors) errors") : nil,
-                 warnings > 0 ? String(localized: "\(warnings) warnings") : nil].compactMap { $0 }
+    let parts = [
+        errors > 0 ? String(localized: "\(errors) errors") : nil,
+        warnings > 0 ? String(localized: "\(warnings) warnings") : nil,
+    ].compactMap { $0 }
     return parts.isEmpty ? nil : parts.joined(separator: ", ")
 }

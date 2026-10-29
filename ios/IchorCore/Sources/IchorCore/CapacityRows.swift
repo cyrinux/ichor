@@ -39,15 +39,16 @@ public extension CapacityWorkload {
     /// unknown QoS is never shown).
     func details(against majority: CapacityMajority) -> [CapacityWorkloadDetail] {
         let showsClass = classKey != majority.priorityClass
-        let classPart: CapacityWorkloadDetail? = if !showsClass {
-            nil
-        } else if noPriorityClass {
-            .noPriorityClass
-        } else if priorityClassName.isEmpty {
-            nil
-        } else {
-            .priorityClass(priorityClassName)
-        }
+        let classPart: CapacityWorkloadDetail? =
+            if !showsClass {
+                nil
+            } else if noPriorityClass {
+                .noPriorityClass
+            } else if priorityClassName.isEmpty {
+                nil
+            } else {
+                .priorityClass(priorityClassName)
+            }
         let priorityPart: CapacityWorkloadDetail? = priority != majority.priority ? .priority(priority) : nil
         let qosPart: CapacityWorkloadDetail? = qos != .unknown && qos != majority.qos ? .qos(qos) : nil
         return [classPart, priorityPart, qosPart].compactMap { $0 }

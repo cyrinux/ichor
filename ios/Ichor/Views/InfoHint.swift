@@ -20,7 +20,9 @@ struct InfoHint: View {
     }
 
     var body: some View {
-        Button { open = true } label: {
+        Button {
+            open = true
+        } label: {
             Image(systemName: "info.circle")
                 .imageScale(.medium)
                 .foregroundStyle(.secondary)
@@ -51,8 +53,10 @@ struct CustomIconHint: View {
     /// The website's section on Argo CD: an app's own icon.
     static let argoDocs = URL(string: "https://cyrinux.github.io/ichor/#argocd")!
 
-    static let cronJobs: LocalizedStringKey = "Give a CronJob its own icon with the ichor.levis.name/icon label or annotation, set to a Dashboard Icons name such as postgresql. The ichor.levis.name/title and ichor.levis.name/description annotations set its name and a line of description.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nWithout one, Ichor picks the icon of the app its image belongs to, else a clock."
-    static let argo: LocalizedStringKey = "An app Ichor does not recognise can bring its own logo with the ichor.levis.name/icon annotation: a Dashboard Icons name, an https link to a PNG or WebP (downloaded only when icon downloads are on) or the image itself, inline in base64. A label holds a Dashboard Icons name only.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana"
+    static let cronJobs: LocalizedStringKey =
+        "Give a CronJob its own icon with the ichor.levis.name/icon label or annotation, set to a Dashboard Icons name such as postgresql. The ichor.levis.name/title and ichor.levis.name/description annotations set its name and a line of description.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nWithout one, Ichor picks the icon of the app its image belongs to, else a clock."
+    static let argo: LocalizedStringKey =
+        "An app Ichor does not recognise can bring its own logo with the ichor.levis.name/icon annotation: a Dashboard Icons name, an https link to a PNG or WebP (downloaded only when icon downloads are on) or the image itself, inline in base64. A label holds a Dashboard Icons name only.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana"
 
     var body: some View {
         HStack(spacing: 0) {

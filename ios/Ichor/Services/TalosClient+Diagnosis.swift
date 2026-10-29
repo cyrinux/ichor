@@ -32,7 +32,9 @@ final class DiagnosisReport: @unchecked Sendable {
     /// Sends the report and the note to the model and streams its answer; cancelling the
     /// consuming task stops waiting for it. An empty model means the provider's default, an
     /// empty baseURL its own API.
-    func ask(provider: String, settings: AIProviderSettings, language: String, note: String) -> AsyncStream<DiagnosisEvent> {
+    func ask(provider: String, settings: AIProviderSettings, language: String, note: String) -> AsyncStream<
+        DiagnosisEvent
+    > {
         TalosClient.bridged { continuation in
             let bridge = DiagnosisBridge(
                 answer: { continuation.yield(.answer($0)) },
@@ -41,8 +43,9 @@ final class DiagnosisReport: @unchecked Sendable {
                     continuation.finish()
                 }
             )
-            let run = go.ask(provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
-                             language: language, note: note, listener: bridge)
+            let run = go.ask(
+                provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
+                language: language, note: note, listener: bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
@@ -75,7 +78,8 @@ extension TalosClient {
     func collectHealthExplanation(lines: [String], failure: String, anonymize: Bool) async throws -> DiagnosisReport {
         let linesJSON = try TalosJSON.encode(lines)
         let report: DiagnosisReport? = try await Self.run { [config, context, kubeServer] error in
-            IchorgoCollectHealthExplanation(config, context, kubeServer, linesJSON, failure, anonymize, error).map(DiagnosisReport.init)
+            IchorgoCollectHealthExplanation(config, context, kubeServer, linesJSON, failure, anonymize, error).map(
+                DiagnosisReport.init)
         }
         guard let report else { throw TalosError(message: "CollectHealthExplanation returned no report") }
         return report

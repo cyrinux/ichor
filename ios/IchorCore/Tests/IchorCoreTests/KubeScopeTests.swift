@@ -45,7 +45,9 @@ final class KubeScopeTests: XCTestCase {
 
     func testChoicesFromTheClusterElseTheLoadedRows() {
         let typed = KubeScope(namespace: "typed", chosen: true)
-        XCTAssertEqual(scopeChoices(listed: KubeNamespaces(namespaces: ["b", "a"]), loaded: ["x"], scope: typed), ["a", "b", "typed"])
+        XCTAssertEqual(
+            scopeChoices(listed: KubeNamespaces(namespaces: ["b", "a"]), loaded: ["x"], scope: typed),
+            ["a", "b", "typed"])
         XCTAssertEqual(scopeChoices(listed: nil, loaded: ["y", "x"], scope: KubeScope()), ["x", "y"])
         XCTAssertEqual(scopeChoices(listed: KubeNamespaces(forbidden: true), loaded: ["x"], scope: KubeScope()), ["x"])
         XCTAssertEqual(matchingNamespaces(["argocd", "kube-system"], query: "SYSTEM"), ["kube-system"])
@@ -66,7 +68,8 @@ final class KubeScopeTests: XCTestCase {
     }
 
     func testDecodesTheGoNamespaces() throws {
-        let ns = try TalosJSON.decode(KubeNamespaces.self, from: #"{"namespaces":["a"],"forbidden":false,"contextNamespace":"default"}"#)
+        let ns = try TalosJSON.decode(
+            KubeNamespaces.self, from: #"{"namespaces":["a"],"forbidden":false,"contextNamespace":"default"}"#)
         XCTAssertEqual(ns.namespaces, ["a"])
         XCTAssertEqual(ns.contextNamespace, "default")
         XCTAssertFalse(ns.forbidden)
@@ -75,19 +78,29 @@ final class KubeScopeTests: XCTestCase {
     }
 
     func testDecodesPages() throws {
-        let pods = try TalosJSON.decode(KubePodPage.self, from: #"{"pods":[{"namespace":"a","name":"x"}],"continue":"6869","remaining":1500,"complete":false}"#)
-            .page(detailed: false)
+        let pods = try TalosJSON.decode(
+            KubePodPage.self,
+            from: #"{"pods":[{"namespace":"a","name":"x"}],"continue":"6869","remaining":1500,"complete":false}"#
+        )
+        .page(detailed: false)
         XCTAssertEqual(pods.continueToken, "6869")
         XCTAssertEqual(pods.remaining, 1500)
         XCTAssertFalse(pods.complete)
         XCTAssertFalse(pods.detailed)
         XCTAssertEqual(pods.items.map(\.name), ["x"])
 
-        let workloads = try TalosJSON.decode(KubeWorkloadPage.self, from: #"{"workloads":[{"kind":"Deployment","namespace":"a","name":"web"}],"continue":"","remaining":0,"complete":true}"#).page
+        let workloads = try TalosJSON.decode(
+            KubeWorkloadPage.self,
+            from:
+                #"{"workloads":[{"kind":"Deployment","namespace":"a","name":"web"}],"continue":"","remaining":0,"complete":true}"#
+        ).page
         XCTAssertTrue(workloads.complete)
         XCTAssertEqual(workloads.items.map(\.id), ["Deployment/a/web"])
 
-        let cronJobs = try TalosJSON.decode(KubeCronJobPage.self, from: #"{"cronJobs":[{"namespace":"a","name":"backup"}],"continue":"ab","remaining":-1,"complete":false}"#).page
+        let cronJobs = try TalosJSON.decode(
+            KubeCronJobPage.self,
+            from: #"{"cronJobs":[{"namespace":"a","name":"backup"}],"continue":"ab","remaining":-1,"complete":false}"#
+        ).page
         XCTAssertEqual(cronJobs.remaining, -1)
         XCTAssertEqual(cronJobs.continueToken, "ab")
     }
@@ -113,7 +126,9 @@ final class KubeScopeTests: XCTestCase {
         let fetch: @Sendable (String, String) async throws -> KubePage<KubeWorkload> = { kind, token in
             asked.add("\(kind)=\(token)")
             if kind == "Deployment" && token.isEmpty {
-                return KubePage(items: [KubeWorkload(kind: kind, namespace: "a", name: "web")], continueToken: "d1", remaining: 1, complete: false)
+                return KubePage(
+                    items: [KubeWorkload(kind: kind, namespace: "a", name: "web")], continueToken: "d1", remaining: 1,
+                    complete: false)
             }
             if kind == "Deployment" { return KubePage(items: [KubeWorkload(kind: kind, namespace: "a", name: "api")]) }
             return KubePage(items: [KubeWorkload(kind: kind, namespace: "a", name: kind.lowercased())])
@@ -134,7 +149,8 @@ final class KubeScopeTests: XCTestCase {
 
     func testWorkloadTokens() {
         XCTAssertEqual(parseWorkloadToken(""), ["Deployment": "", "StatefulSet": "", "DaemonSet": ""])
-        XCTAssertEqual(parseWorkloadToken("StatefulSet=ab;DaemonSet=cd;Bogus=1"), ["StatefulSet": "ab", "DaemonSet": "cd"])
+        XCTAssertEqual(
+            parseWorkloadToken("StatefulSet=ab;DaemonSet=cd;Bogus=1"), ["StatefulSet": "ab", "DaemonSet": "cd"])
         XCTAssertEqual(workloadToken(["DaemonSet": "b", "Deployment": "a"]), "Deployment=a;DaemonSet=b")
     }
 
@@ -159,9 +175,12 @@ final class KubeScopeTests: XCTestCase {
         XCTAssertEqual(filterPods(pods, namespace: nil, query: "nginx", searchImages: false).map(\.name), [])
         XCTAssertEqual(filterPods(pods, namespace: nil, query: "nginx").map(\.name), ["web-1"])
 
-        let workloads = [KubeWorkload(kind: "Deployment", namespace: "b", name: "web", state: "ready"),
-                         KubeWorkload(kind: "Deployment", namespace: "a", name: "api", state: "degraded")]
-        XCTAssertEqual(filterWorkloads(workloads, namespace: nil, query: "", sorted: false).map(\.name), ["web", "api"])
+        let workloads = [
+            KubeWorkload(kind: "Deployment", namespace: "b", name: "web", state: "ready"),
+            KubeWorkload(kind: "Deployment", namespace: "a", name: "api", state: "degraded"),
+        ]
+        XCTAssertEqual(
+            filterWorkloads(workloads, namespace: nil, query: "", sorted: false).map(\.name), ["web", "api"])
         let crons = [KubeCronJob(namespace: "b", name: "z"), KubeCronJob(namespace: "a", name: "y")]
         XCTAssertEqual(filterCronJobs(crons, namespace: nil, query: "", sorted: false).map(\.name), ["z", "y"])
         XCTAssertEqual(filterCronJobs(crons, namespace: nil, query: "").map(\.name), ["y", "z"])

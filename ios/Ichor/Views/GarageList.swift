@@ -23,18 +23,21 @@ struct GarageList: View {
             ForEach(status.instances) { instance in
                 // The operator declares the layout of the clusters it drives: the app shows it, the GarageNode objects change it.
                 let managed = status.clusters.contains { $0.instance == instance.label }
-                InstanceSection(instance: instance, setting: setting, managed: managed,
-                                onTranquility: { confirm = $0 },
-                                onEditRole: { editing = RoleEdit(instance: instance, nodeID: $0.nodeID) },
-                                onRemoveRole: { removal = RoleRemoval(instance: instance, node: $0) })
+                InstanceSection(
+                    instance: instance, setting: setting, managed: managed,
+                    onTranquility: { confirm = $0 },
+                    onEditRole: { editing = RoleEdit(instance: instance, nodeID: $0.nodeID) },
+                    onRemoveRole: { removal = RoleRemoval(instance: instance, node: $0) })
             }
         }
         .refreshable { await refresh() }
         .themedBackground()
-        .confirmationDialog(confirm.map(\.title) ?? "",
-                            isPresented: $confirm.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirm) { request in
+        .confirmationDialog(
+            confirm.map(\.title) ?? "",
+            isPresented: $confirm.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirm
+        ) { request in
             Button {
                 Task { await setTranquility(request) }
             } label: {
@@ -43,17 +46,23 @@ struct GarageList: View {
             Button("Cancel", role: .cancel) {}
         } message: { request in
             if request.fullSpeed {
-                Text("The node resyncs missing blocks without pausing between them: faster recovery, but more disk and network IO while it catches up.")
+                Text(
+                    "The node resyncs missing blocks without pausing between them: faster recovery, but more disk and network IO while it catches up."
+                )
             } else {
                 Text("The node goes back to Garage's default resync pace, lighter on disk and network IO.")
             }
         }
-        .confirmationDialog(removal.map { Text("Remove \($0.node.label) from the layout?") } ?? Text(""),
-                            isPresented: $removal.isPresent(), titleVisibility: .visible, presenting: removal) { request in
+        .confirmationDialog(
+            removal.map { Text("Remove \($0.node.label) from the layout?") } ?? Text(""),
+            isPresented: $removal.isPresent(), titleVisibility: .visible, presenting: removal
+        ) { request in
             Button("Remove from layout", role: .destructive) { Task { await stageRemoval(request) } }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
-            Text("The removal is staged only: once the layout is applied, the node's data moves to the other nodes. You can revert it before then.")
+            Text(
+                "The removal is staged only: once the layout is applied, the node's data moves to the other nodes. You can revert it before then."
+            )
         }
         .sheet(item: $editing) { edit in
             GarageRoleSheet(instance: edit.instance, nodeID: edit.nodeID, known: nil) { _ in
@@ -79,12 +88,14 @@ struct GarageList: View {
         defer { setting.remove(request.id) }
         do {
             try await client.garageSetTranquility(request.instance, node: request.node.nodeID, value: request.value)
-            resultMessage = request.fullSpeed
+            resultMessage =
+                request.fullSpeed
                 ? String(localized: "\(request.node.label) now resyncs at full speed")
                 : String(localized: "\(request.node.label) is back to the default resync speed")
             await refresh()
         } catch {
-            resultMessage = String(localized: "Could not change the resync speed of \(request.node.label): \(error.localizedDescription)")
+            resultMessage = String(
+                localized: "Could not change the resync speed of \(request.node.label): \(error.localizedDescription)")
         }
     }
 }
@@ -106,7 +117,8 @@ private struct OperatorSection: View {
                         HealthDot(health: op.health)
                         Text(verbatim: op.label).font(.subheadline.monospaced()).lineLimit(1)
                         Spacer()
-                        Text(String(localized: "\(op.ready)/\(op.desired) ready")).font(.caption).foregroundStyle(.secondary)
+                        Text(String(localized: "\(op.ready)/\(op.desired) ready")).font(.caption).foregroundStyle(
+                            .secondary)
                     }
                     if !op.reasons.isEmpty {
                         Text(verbatim: op.reasons.map(reasonText).joined(separator: " · "))
@@ -118,23 +130,37 @@ private struct OperatorSection: View {
             }
             ForEach(status.clusters) { c in
                 NavigationLink {
-                    KubeObjectView(resource: KubeAPIResource(group: Self.group, version: status.version, resource: "garageclusters", kind: "GarageCluster"), namespace: c.namespace, name: c.name)
+                    KubeObjectView(
+                        resource: KubeAPIResource(
+                            group: Self.group, version: status.version, resource: "garageclusters",
+                            kind: "GarageCluster"), namespace: c.namespace, name: c.name)
                 } label: {
-                    OperatorRow(label: c.label, phase: c.phase, health: c.health, details: clusterDetails(c), problems: c.reasons.map(reasonText) + c.conditions.map(\.message))
+                    OperatorRow(
+                        label: c.label, phase: c.phase, health: c.health, details: clusterDetails(c),
+                        problems: c.reasons.map(reasonText) + c.conditions.map(\.message))
                 }
             }
             ForEach(status.buckets) { b in
                 NavigationLink {
-                    KubeObjectView(resource: KubeAPIResource(group: Self.group, version: Self.v1, resource: "garagebuckets", kind: "GarageBucket"), namespace: b.namespace, name: b.name)
+                    KubeObjectView(
+                        resource: KubeAPIResource(
+                            group: Self.group, version: Self.v1, resource: "garagebuckets", kind: "GarageBucket"),
+                        namespace: b.namespace, name: b.name)
                 } label: {
-                    OperatorRow(label: b.label, phase: b.phase, health: b.health, details: bucketDetails(b), problems: b.reasons.map(reasonText) + b.conditions.map(\.message))
+                    OperatorRow(
+                        label: b.label, phase: b.phase, health: b.health, details: bucketDetails(b),
+                        problems: b.reasons.map(reasonText) + b.conditions.map(\.message))
                 }
             }
             ForEach(status.keys) { k in
-                OperatorRow(label: k.label, phase: k.phase, health: k.health, details: keyDetails(k), problems: k.reasons.map(reasonText))
+                OperatorRow(
+                    label: k.label, phase: k.phase, health: k.health, details: keyDetails(k),
+                    problems: k.reasons.map(reasonText))
             }
             ForEach(status.nodes) { n in
-                OperatorRow(label: n.label, phase: n.phase, health: n.health, details: nodeDetails(n), problems: n.reasons.map(reasonText))
+                OperatorRow(
+                    label: n.label, phase: n.phase, health: n.health, details: nodeDetails(n),
+                    problems: n.reasons.map(reasonText))
             }
             if status.truncated {
                 Label {
@@ -153,7 +179,11 @@ private struct OperatorSection: View {
     private func clusterDetails(_ c: GarageClusterStatus) -> String {
         var parts: [String] = []
         if c.storageReplicas > 0 || c.gatewayReplicas > 0 {
-            parts.append(String(localized: "Storage \(c.storageReadyReplicas)/\(c.storageReplicas) · gateways \(c.gatewayReadyReplicas)/\(c.gatewayReplicas)"))
+            parts.append(
+                String(
+                    localized:
+                        "Storage \(c.storageReadyReplicas)/\(c.storageReplicas) · gateways \(c.gatewayReadyReplicas)/\(c.gatewayReplicas)"
+                ))
         }
         if !c.garageVersion.isEmpty { parts.append(String(localized: "Version") + " " + c.garageVersion) }
         parts.append(String(localized: "Layout v\(c.layoutVersion)"))
@@ -164,9 +194,10 @@ private struct OperatorSection: View {
         var parts: [String] = []
         if !b.size.isEmpty { parts.append(b.size) }
         if let q = b.quotaUsage {
-            parts.append(q.sizeLimit > 0
-                ? String(localized: "\(formatBytes(q.sizeBytes)) of \(formatBytes(q.sizeLimit))")
-                : formatBytes(q.sizeBytes))
+            parts.append(
+                q.sizeLimit > 0
+                    ? String(localized: "\(formatBytes(q.sizeBytes)) of \(formatBytes(q.sizeLimit))")
+                    : formatBytes(q.sizeBytes))
             if q.objectCount > 0 { parts.append(String(localized: "\(q.objectCount.formatted()) objects")) }
         }
         if !b.websiteURL.isEmpty { parts.append(b.websiteURL) }
@@ -196,9 +227,10 @@ private struct OperatorSection: View {
         if !n.capacity.isEmpty { parts.append(n.capacity) }
         if n.gateway { parts.append(String(localized: "gateway")) }
         if !n.connected {
-            parts.append(n.lastSeenSecs >= 0
-                ? String(localized: "not connected, last seen \(localizedDuration(n.lastSeenSecs)) ago")
-                : String(localized: "not connected"))
+            parts.append(
+                n.lastSeenSecs >= 0
+                    ? String(localized: "not connected, last seen \(localizedDuration(n.lastSeenSecs)) ago")
+                    : String(localized: "not connected"))
         }
         if !n.inLayout { parts.append(String(localized: "not in layout")) }
         return parts.joined(separator: " · ")
@@ -301,7 +333,8 @@ private struct TranquilityRequest: Identifiable {
         guard instance.detailed, !instance.pod.isEmpty, node.up, node.storage, !node.nodeID.isEmpty else { return nil }
         self.instance = instance
         self.node = node
-        value = Int(node.tranquility == GarageTranquility.fullSpeed ? GarageTranquility.standard : GarageTranquility.fullSpeed)
+        value = Int(
+            node.tranquility == GarageTranquility.fullSpeed ? GarageTranquility.standard : GarageTranquility.fullSpeed)
     }
 }
 
@@ -335,26 +368,36 @@ private struct InstanceSection: View {
             if instance.storageNodes > 0 || instance.partitions > 0 {
                 HStack(alignment: .top, spacing: 12) {
                     if instance.storageNodes > 0 {
-                        GarageTile(count: instance.storageNodesUp, of: instance.storageNodes,
-                                   label: String(localized: "Storage nodes"), shortColor: .statusWarn)
+                        GarageTile(
+                            count: instance.storageNodesUp, of: instance.storageNodes,
+                            label: String(localized: "Storage nodes"), shortColor: .statusWarn)
                     }
                     if instance.partitions > 0 {
-                        GarageTile(count: instance.partitionsAllOk, of: instance.partitions,
-                                   label: String(localized: "Replicated partitions"), shortColor: .statusWarn)
-                        GarageTile(count: instance.partitionsQuorum, of: instance.partitions,
-                                   label: String(localized: "Write quorum"), shortColor: .statusBad)
+                        GarageTile(
+                            count: instance.partitionsAllOk, of: instance.partitions,
+                            label: String(localized: "Replicated partitions"), shortColor: .statusWarn)
+                        GarageTile(
+                            count: instance.partitionsQuorum, of: instance.partitions,
+                            label: String(localized: "Write quorum"), shortColor: .statusBad)
                     }
                 }
             }
             if instance.resyncErrors > 0 {
-                Text(verbatim: String(localized: "Resync queue \(max(0, instance.resyncQueue).formatted()) · failing \(instance.resyncErrors.formatted())"))
-                    .font(.callout)
-                    .monospacedDigit()
-                    .foregroundStyle(.statusBad)
+                Text(
+                    verbatim: String(
+                        localized:
+                            "Resync queue \(max(0, instance.resyncQueue).formatted()) · failing \(instance.resyncErrors.formatted())"
+                    )
+                )
+                .font(.callout)
+                .monospacedDigit()
+                .foregroundStyle(.statusBad)
             }
             DisclosureGroup {
                 if instance.storageNodes > 0 {
-                    LabeledContent("Storage nodes", value: String(localized: "\(instance.storageNodesUp)/\(instance.storageNodes) up"))
+                    LabeledContent(
+                        "Storage nodes",
+                        value: String(localized: "\(instance.storageNodesUp)/\(instance.storageNodes) up"))
                 }
                 if instance.partitions > 0 {
                     LabeledContent("Fully replicated", value: "\(instance.partitionsAllOk)/\(instance.partitions)")
@@ -363,10 +406,13 @@ private struct InstanceSection: View {
                 if instance.resyncQueue >= 0 { LabeledContent("Resync queue", value: instance.resyncQueue.formatted()) }
                 if instance.resyncErrors >= 0 {
                     LabeledContent("Blocks failing to resync") {
-                        Text(verbatim: instance.resyncErrors.formatted()).foregroundStyle(instance.resyncErrors > 0 ? Color.statusBad : Color.secondary)
+                        Text(verbatim: instance.resyncErrors.formatted()).foregroundStyle(
+                            instance.resyncErrors > 0 ? Color.statusBad : Color.secondary)
                     }
                 }
-                if instance.tableSyncQueue >= 0 { LabeledContent("Metadata sync queue", value: instance.tableSyncQueue.formatted()) }
+                if instance.tableSyncQueue >= 0 {
+                    LabeledContent("Metadata sync queue", value: instance.tableSyncQueue.formatted())
+                }
                 LabeledContent("Pods", value: String(localized: "\(instance.podsReady)/\(instance.pods) ready"))
                 if !instance.version.isEmpty { LabeledContent("Version", value: instance.version) }
             } label: {
@@ -400,27 +446,47 @@ private struct InstanceSection: View {
                 NodeRow(node: node, busy: busy)
                     .swipeActions(edge: .trailing) {
                         if let request, !busy {
-                            Button { onTranquility(request) } label: { TranquilityLabel(fullSpeed: request.fullSpeed) }
-                                .tint(request.fullSpeed ? .orange : .blue)
+                            Button {
+                                onTranquility(request)
+                            } label: {
+                                TranquilityLabel(fullSpeed: request.fullSpeed)
+                            }
+                            .tint(request.fullSpeed ? .orange : .blue)
                         }
                     }
                     .contextMenu {
                         if let request, !busy {
-                            Button { onTranquility(request) } label: { TranquilityLabel(fullSpeed: request.fullSpeed) }
+                            Button {
+                                onTranquility(request)
+                            } label: {
+                                TranquilityLabel(fullSpeed: request.fullSpeed)
+                            }
                         }
                         if editable {
-                            Button { onEditRole(node) } label: {
-                                if node.storage { Label("Change role…", systemImage: "slider.horizontal.3") } else { Label("Add to layout…", systemImage: "plus.circle") }
+                            Button {
+                                onEditRole(node)
+                            } label: {
+                                if node.storage {
+                                    Label("Change role…", systemImage: "slider.horizontal.3")
+                                } else {
+                                    Label("Add to layout…", systemImage: "plus.circle")
+                                }
                             }
                             if node.storage {
-                                Button(role: .destructive) { onRemoveRole(node) } label: { Label("Remove from layout", systemImage: "minus.circle") }
+                                Button(role: .destructive) {
+                                    onRemoveRole(node)
+                                } label: {
+                                    Label("Remove from layout", systemImage: "minus.circle")
+                                }
                             }
                         }
                     }
             }
         } header: {
-            SectionHeader(title: instance.label, pill: StatusPill(label: instance.state.label, color: instance.state.health.color))
-                .textCase(nil)
+            SectionHeader(
+                title: instance.label, pill: StatusPill(label: instance.state.label, color: instance.state.health.color)
+            )
+            .textCase(nil)
         }
     }
 }
@@ -434,10 +500,14 @@ private struct GarageTile: View {
     let shortColor: Color
 
     var body: some View {
-        StatTile(icon: nil, value: "\(count) / \(of)", label: label, meter: {
-            AnyView(ProgressView(value: Double(min(max(count, 0), of)), total: Double(max(of, 1)))
-                .tint(count >= of ? Color.statusOK : shortColor))
-        })
+        StatTile(
+            icon: nil, value: "\(count) / \(of)", label: label,
+            meter: {
+                AnyView(
+                    ProgressView(value: Double(min(max(count, 0), of)), total: Double(max(of, 1)))
+                        .tint(count >= of ? Color.statusOK : shortColor))
+            }
+        )
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -472,8 +542,9 @@ private struct NodeRow: View {
         ResourceRow(health: health, title: node.label, subtitle: details, trailing: trailing) {
             if node.dataTotal > 0 {
                 let used = node.dataTotal - node.dataAvail
-                MeterRow(label: String(localized: "data"), fraction: Double(used) / Double(node.dataTotal),
-                         value: "\(formatBytes(used)) / \(formatBytes(node.dataTotal))")
+                MeterRow(
+                    label: String(localized: "data"), fraction: Double(used) / Double(node.dataTotal),
+                    value: "\(formatBytes(used)) / \(formatBytes(node.dataTotal))")
             }
         }
         .accessibilityElement(children: .combine)
@@ -491,14 +562,17 @@ private struct NodeRow: View {
     private var details: String {
         var parts: [String] = []
         if !node.up {
-            parts.append(node.lastSeenSecs >= 0
-                ? String(localized: "down, last seen \(localizedDuration(node.lastSeenSecs)) ago")
-                : String(localized: "down"))
+            parts.append(
+                node.lastSeenSecs >= 0
+                    ? String(localized: "down, last seen \(localizedDuration(node.lastSeenSecs)) ago")
+                    : String(localized: "down"))
         }
         if !node.kubeNode.isEmpty { parts.append(String(localized: "on \(node.kubeNode)")) }
         if !node.zone.isEmpty { parts.append(String(localized: "zone \(node.zone)")) }
         if !node.storage { parts.append(String(localized: "not in layout")) }
-        if node.resyncErrors > 0 { parts.append(String(localized: "Blocks failing to resync") + " " + node.resyncErrors.formatted()) }
+        if node.resyncErrors > 0 {
+            parts.append(String(localized: "Blocks failing to resync") + " " + node.resyncErrors.formatted())
+        }
         if !node.statsError.isEmpty && node.up { parts.append(String(localized: "no statistics: \(node.statsError)")) }
         if node.tranquility == GarageTranquility.fullSpeed {
             parts.append(String(localized: "resync: full speed"))

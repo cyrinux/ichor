@@ -13,7 +13,8 @@ enum Authenticator {
     /// Returns nil on success, or a message to show.
     static func authenticate(reason: String) async -> String? {
         if let enrolment = SecurityKeyStore.current {
-            return await SecurityKeyPrompts.shared.request(reason: reason, allowBiometric: !enrolment.required && isAvailable)
+            return await SecurityKeyPrompts.shared.request(
+                reason: reason, allowBiometric: !enrolment.required && isAvailable)
         }
         return await biometric(reason: reason)
     }

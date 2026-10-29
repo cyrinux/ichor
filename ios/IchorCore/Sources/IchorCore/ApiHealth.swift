@@ -70,8 +70,8 @@ public struct ApiHealthReport: Decodable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case status, version, ready, live, uptimeSeconds, windowSeconds, requestRate, errorRate, throttledRate,
-             rejectedRate, inflightRead, inflightMutate, queued, watches, watchEventRate, etcdLatencyMs, clients,
-             priorities, requests, watchedKinds, objects, queuedRequests, metricsError
+            rejectedRate, inflightRead, inflightMutate, queued, watches, watchEventRate, etcdLatencyMs, clients,
+            priorities, requests, watchedKinds, objects, queuedRequests, metricsError
     }
 
     /// The checks that failed, readyz first, each once.

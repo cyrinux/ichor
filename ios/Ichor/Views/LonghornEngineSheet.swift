@@ -29,9 +29,12 @@ struct LonghornEngineSheet: View {
                 if let p = preview {
                     Section {
                         if p.live {
-                            Text("Live upgrade: the volume stays attached, and its replicas double for a moment.").foregroundStyle(.statusWarn)
+                            Text("Live upgrade: the volume stays attached, and its replicas double for a moment.")
+                                .foregroundStyle(.statusWarn)
                         } else {
-                            Text("Offline upgrade: the volume is detached, so the engine is replaced before its next attach.")
+                            Text(
+                                "Offline upgrade: the volume is detached, so the engine is replaced before its next attach."
+                            )
                         }
                         LabeledContent {
                             Text(verbatim: p.currentImage.or("—")).monospaced().lineLimit(2)
@@ -43,15 +46,25 @@ struct LonghornEngineSheet: View {
                     }
                     Section("Engine image") {
                         ForEach(p.images) { image in
-                            Button { selected = image.image } label: { imageRow(image, current: p.currentImage) }
-                                .disabled(!image.selectable || image.image == p.currentImage)
+                            Button {
+                                selected = image.image
+                            } label: {
+                                imageRow(image, current: p.currentImage)
+                            }
+                            .disabled(!image.selectable || image.image == p.currentImage)
                         }
                     }
                 }
                 Section(typedConfirmationPrompt(volume.name)) {
                     TextField("Volume name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
-                    Button { onConfirm(selected) } label: { Text("Upgrade engine") }
-                        .disabled(preview?.accepts(selected) != true || !typedConfirmationMatches(typed, token: volume.name) || denial != nil)
+                    Button {
+                        onConfirm(selected)
+                    } label: {
+                        Text("Upgrade engine")
+                    }
+                    .disabled(
+                        preview?.accepts(selected) != true || !typedConfirmationMatches(typed, token: volume.name)
+                            || denial != nil)
                     KubeDeniedNote(.longhornEngineUpgrade, in: volume.namespace)
                 }
             }

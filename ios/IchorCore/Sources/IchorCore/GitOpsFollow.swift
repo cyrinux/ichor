@@ -29,7 +29,9 @@ public struct ArgoSyncProgress: Codable, Equatable, Sendable {
     /// Unix ms.
     public let at: Int64
 
-    public init(phase: String, message: String = "", wave: Int = 0, waves: Int = 0, done: Int = 0, total: Int = 0, at: Int64 = 0) {
+    public init(
+        phase: String, message: String = "", wave: Int = 0, waves: Int = 0, done: Int = 0, total: Int = 0, at: Int64 = 0
+    ) {
         self.phase = phase
         self.message = message
         self.wave = wave

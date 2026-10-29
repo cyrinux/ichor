@@ -69,8 +69,10 @@ struct MultiNodeReviewSheet: View {
             }
         }
         .fullScreenCover(item: $applying, onDismiss: runClosed) { mode in
-            MultiApplyView(nodes: changing.map(\.node), edits: edits, mode: mode, base: base, draft: draft,
-                           roles: Dictionary((candidates.value ?? []).map { ($0.node, $0.role) }, uniquingKeysWith: { a, _ in a })) { didFail in
+            MultiApplyView(
+                nodes: changing.map(\.node), edits: edits, mode: mode, base: base, draft: draft,
+                roles: Dictionary((candidates.value ?? []).map { ($0.node, $0.role) }, uniquingKeysWith: { a, _ in a })
+            ) { didFail in
                 if didFail { failed = true }
             }
         }
@@ -137,7 +139,11 @@ struct MultiNodeReviewSheet: View {
                 }
             }
             if preview.changing.isEmpty {
-                Section { Text("None of these nodes would change: the edits do not fit them, or they already have the change.").note() }
+                Section {
+                    Text(
+                        "None of these nodes would change: the edits do not fit them, or they already have the change."
+                    ).note()
+                }
             } else {
                 Section {
                     ForEach(preview.applyModes) { mode in
@@ -145,7 +151,9 @@ struct MultiNodeReviewSheet: View {
                     }
                     if let message { Text(verbatim: message).font(.footnote).foregroundStyle(.statusBad) }
                 } footer: {
-                    Text("Nodes changed: \(preview.changing.count) of \(preview.nodes.count). Applied one after the other, workers first, control planes last.")
+                    Text(
+                        "Nodes changed: \(preview.changing.count) of \(preview.nodes.count). Applied one after the other, workers first, control planes last."
+                    )
                 }
             }
         }
@@ -156,7 +164,11 @@ struct MultiNodeReviewSheet: View {
         switch mode {
         case .auto: String(localized: "The change is applied now and stays: nothing reverts it.")
         case .staged: String(localized: "The change is saved on the node and takes effect at its next reboot.")
-        case .reboot: String(localized: "Each node applies the change and reboots, one after the other: the next one starts once the previous one is back.")
+        case .reboot:
+            String(
+                localized:
+                    "Each node applies the change and reboots, one after the other: the next one starts once the previous one is back."
+            )
         }
     }
 
@@ -170,7 +182,9 @@ struct MultiNodeReviewSheet: View {
     }
 
     private func loadPreview() async {
-        guard let client = model.client, let nodes = candidates.value?.map(\.node).filter(selected.contains), !nodes.isEmpty else { return }
+        guard let client = model.client, let nodes = candidates.value?.map(\.node).filter(selected.contains),
+            !nodes.isEmpty
+        else { return }
         preview = .loading
         preview = await .from { try await client.previewMachineConfigMulti(nodes: nodes, edits: edits) }
     }
@@ -179,7 +193,9 @@ struct MultiNodeReviewSheet: View {
     private func start(_ mode: ConfigApplyMode) async {
         message = nil
         if model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Apply the machine config of \(cluster)")) {
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Apply the machine config of \(cluster)"))
+        {
             message = failure
             return
         }
@@ -236,14 +252,19 @@ struct MultiApplyView: View {
                     ForEach(progress?.nodes ?? []) { n in row(n) }
                 } footer: {
                     if (progress?.nodes ?? []).contains(where: proposable) {
-                        Text("Write the change into each node's file of the cluster repository: one pull request per node.")
+                        Text(
+                            "Write the change into each node's file of the cluster repository: one pull request per node."
+                        )
                     }
                 }
                 if let outcome {
                     Section {
                         Label {
-                            Text(verbatim: outcome.map { $0.isEmpty ? String(localized: "The config could not be applied.") : $0 }
-                                 ?? String(localized: "Every node has the change."))
+                            Text(
+                                verbatim: outcome.map {
+                                    $0.isEmpty ? String(localized: "The config could not be applied.") : $0
+                                }
+                                    ?? String(localized: "Every node has the change."))
                         } icon: {
                             Image(systemName: outcome == nil ? "checkmark.seal.fill" : "xmark.octagon.fill")
                                 .foregroundStyle(outcome == nil ? Color.statusOK : Color.statusBad)
@@ -274,7 +295,8 @@ struct MultiApplyView: View {
     /// Whether n's file can be given the change: the run is over, n took it, and its file is
     /// found by hostname.
     private func proposable(_ n: MultiConfigNodeState) -> Bool {
-        outcome != nil && n.nodeState == .done && !n.hostname.isEmpty && !draft.isEmpty && model.activeClusterRepo != nil
+        outcome != nil && n.nodeState == .done && !n.hostname.isEmpty && !draft.isEmpty
+            && model.activeClusterRepo != nil
     }
 
     private func row(_ n: MultiConfigNodeState) -> some View {
@@ -336,7 +358,8 @@ struct MultiApplyView: View {
         guard !started else { return }
         started = true
         guard !job.isActive else {
-            refused = String(localized: "A config change is already being applied on several nodes: wait for it to end.")
+            refused = String(
+                localized: "A config change is already being applied on several nodes: wait for it to end.")
             onOutcome(true)
             return
         }

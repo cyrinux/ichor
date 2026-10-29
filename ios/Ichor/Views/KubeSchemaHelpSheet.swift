@@ -22,10 +22,14 @@ struct YamlSchemaHelpButtons: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            Button { open(.explain) } label: {
+            Button {
+                open(.explain)
+            } label: {
                 Label("Explain field", systemImage: "questionmark.circle")
             }
-            Button { open(.add) } label: {
+            Button {
+                open(.add)
+            } label: {
                 Label("Add field", systemImage: "plus.circle")
             }
         }
@@ -180,7 +184,8 @@ private struct KubeSchemaChildRow: View {
                 Text(verbatim: child.description).font(.caption).foregroundStyle(.secondary)
             }
             if !child.enumValues.isEmpty {
-                Text(verbatim: child.enumValues.joined(separator: "  ·  ")).font(.caption.monospaced()).foregroundStyle(.secondary)
+                Text(verbatim: child.enumValues.joined(separator: "  ·  ")).font(.caption.monospaced()).foregroundStyle(
+                    .secondary)
             }
         }
         .accessibilityElement(children: .combine)

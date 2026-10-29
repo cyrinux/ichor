@@ -27,7 +27,8 @@ public struct ConfigSummary: Codable, Equatable, Sendable {
     /// either end. Same rule as Android.
     public func adjacentContext(to active: String, step: Int) -> String? {
         guard step != 0, let index = contexts.firstIndex(where: { $0.name == active }),
-              contexts.indices.contains(index + step) else { return nil }
+            contexts.indices.contains(index + step)
+        else { return nil }
         return contexts[index + step].name
     }
 
@@ -100,11 +101,14 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     /// addresses): nothing to reach until one is added or found on the network.
     public var needsEndpoint: Bool { endpoints.isEmpty && !demo && !isKube }
 
-    public init(name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
-                endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
-                demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
-                user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
-                signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil, authKey: String? = nil) {
+    public init(
+        name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
+        endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
+        demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
+        user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
+        signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil,
+        authKey: String? = nil
+    ) {
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -214,8 +218,8 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
     public let unmetConditions: [UnmetCondition]
     /// Capacity; 0 when the node did not say.
     public let cpuCount: Int
-    public let memTotal: UInt64 // bytes
-    public let memAvailable: UInt64 // bytes
+    public let memTotal: UInt64  // bytes
+    public let memAvailable: UInt64  // bytes
     /// Internet-facing addresses, IPv4 first; empty when none (or from an older core).
     public let publicIPs: [String]
     /// An unreachable node shown with what it said last: when that was (epoch ms). Never
@@ -235,7 +239,8 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
 
     /// Worth a full row even in the collapsed nodes section: down, not ready, or reporting a problem.
     public var needsAttention: Bool {
-        health != .ready || !unmetConditions.isEmpty || !(error ?? "").trimmingCharacters(in: .whitespaces).isEmpty || cordoned
+        health != .ready || !unmetConditions.isEmpty || !(error ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+            || cordoned
     }
 
     public init(
@@ -309,7 +314,7 @@ public struct UnmetCondition: Codable, Equatable, Hashable, Sendable {
 public struct ServiceInfo: Decodable, Equatable, Identifiable, Sendable {
     public let id: String
     public let state: String
-    public let health: String // healthy | unhealthy | unknown
+    public let health: String  // healthy | unhealthy | unknown
     public let message: String?
     public let lastEvent: String?
     public let lastChange: Int64?
@@ -396,7 +401,8 @@ public struct LogTail: Decodable, Equatable, Sendable {
 
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
-    case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig, packetCapture, upgrade
+    case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig,
+        packetCapture, upgrade
     case etcdMemberActions, resourceBrowser, supportBundle, workloads, cgroups, reset, containerRestart
 
     public var label: String {
@@ -435,8 +441,10 @@ public enum Feature: CaseIterable, Sendable {
         // The Kubernetes API is reached with the admin kubeconfig Talos only issues to os:admin.
         // The cgroup tree is a MachineService/Copy of /sys/fs/cgroup, admin-only too.
         // Restarting one container (MachineService/Restart) is admin-only.
-        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade, .etcdMemberActions, .workloads, .cgroups, .reset,
-             .containerRestart: ["os:admin"]
+        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade, .etcdMemberActions, .workloads,
+            .cgroups, .reset,
+            .containerRestart:
+            ["os:admin"]
         // Reading resources (COSI state) is open to every role; Talos itself filters what a
         // reader may see of the sensitive ones. A support bundle too: the parts the role cannot
         // read (machine config: os:admin, etcd status: os:operator) are left out and noted in it.
@@ -498,7 +506,7 @@ public struct KubeSpanNode: Decodable, Equatable, Identifiable, Sendable {
 public struct KubeSpanPeer: Decodable, Equatable, Identifiable, Sendable {
     public let publicKey: String
     public let label: String
-    public let state: String // up | down | unknown
+    public let state: String  // up | down | unknown
     public let endpoint: String
     public let rx: Int64
     public let tx: Int64

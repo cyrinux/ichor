@@ -15,7 +15,8 @@ struct PromTargetsList: View {
                     .font(.headline)
                     .foregroundStyle(targets.down > 0 ? Color.statusWarn : Color.primary)
                 if targets.unknown > 0 {
-                    Text(verbatim: PromMonitoringText.notScrapedYet("\(targets.unknown)")).font(.footnote).foregroundStyle(.secondary)
+                    Text(verbatim: PromMonitoringText.notScrapedYet("\(targets.unknown)")).font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
                 if targets.truncated {
                     Text(verbatim: PromMonitoringText.targetsTruncated).font(.footnote).foregroundStyle(.secondary)
@@ -24,7 +25,9 @@ struct PromTargetsList: View {
             }
             if pools.isEmpty {
                 Section {
-                    Label { Text(verbatim: PromMonitoringText.allTargetsUp) } icon: {
+                    Label {
+                        Text(verbatim: PromMonitoringText.allTargetsUp)
+                    } icon: {
                         Image(systemName: "checkmark.circle").foregroundStyle(Color.statusOK)
                     }
                 }
@@ -41,8 +44,11 @@ struct PromTargetsList: View {
                     HStack {
                         Text(verbatim: pool.label).lineLimit(1).truncationMode(.middle)
                         Spacer()
-                        Text(verbatim: PromMonitoringText.poolDown("\(pool.down)", "\(pool.up + pool.down + pool.unknown)"))
-                            .monospacedDigit()
+                        Text(
+                            verbatim: PromMonitoringText.poolDown(
+                                "\(pool.down)", "\(pool.up + pool.down + pool.unknown)")
+                        )
+                        .monospacedDigit()
                     }
                 }
             }
@@ -61,15 +67,21 @@ private struct PromTargetRow: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             if !target.lastError.isEmpty {
-                Text(verbatim: target.lastError).font(.caption.monospaced()).foregroundStyle(Color.statusBad).lineLimit(4)
+                Text(verbatim: target.lastError).font(.caption.monospaced()).foregroundStyle(Color.statusBad).lineLimit(
+                    4)
             }
-            Text(verbatim: promAgo(target.lastScrape).map(PromMonitoringText.lastScrape) ?? PromMonitoringText.neverScraped)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                verbatim: promAgo(target.lastScrape).map(PromMonitoringText.lastScrape)
+                    ?? PromMonitoringText.neverScraped
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
             if !target.pod.isEmpty {
-                Text(verbatim: PromMonitoringText.podLine("\(target.namespace)/\(target.pod)")).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: PromMonitoringText.podLine("\(target.namespace)/\(target.pod)")).font(.caption)
+                    .foregroundStyle(.secondary)
             } else if !target.service.isEmpty {
-                Text(verbatim: PromMonitoringText.serviceLine("\(target.namespace)/\(target.service)")).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: PromMonitoringText.serviceLine("\(target.namespace)/\(target.service)")).font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)
@@ -85,9 +97,11 @@ struct PromRulesList: View {
         List {
             Section {
                 Text(verbatim: PromMonitoringText.ruleCounts("\(counts.groups)", "\(counts.rules)")).font(.headline)
-                Text(verbatim: PromMonitoringText.ruleStates("\(counts.firing)", "\(counts.pending)", "\(counts.errors)"))
-                    .font(.callout)
-                    .foregroundStyle(counts.errors > 0 ? Color.statusBad : Color.secondary)
+                Text(
+                    verbatim: PromMonitoringText.ruleStates("\(counts.firing)", "\(counts.pending)", "\(counts.errors)")
+                )
+                .font(.callout)
+                .foregroundStyle(counts.errors > 0 ? Color.statusBad : Color.secondary)
                 if rules.truncated {
                     Text(verbatim: PromMonitoringText.rulesTruncated).font(.footnote).foregroundStyle(.secondary)
                 }
@@ -117,18 +131,27 @@ private struct PromRuleGroupSection: View {
                 if let link = group.ruleLink {
                     KubeObjectLinkRow(link: link) { KubeObjectLinkLabel(link: link) }
                 } else if !group.file.isEmpty {
-                    Text(verbatim: group.file).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(2).truncationMode(.middle)
+                    Text(verbatim: group.file).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(2)
+                        .truncationMode(.middle)
                 }
                 ForEach(Array(group.rules.enumerated()), id: \.offset) { _, rule in
                     PromRuleRow(rule: rule)
                 }
             } label: {
                 HStack(spacing: 8) {
-                    Text(verbatim: group.name).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2).truncationMode(.middle)
+                    Text(verbatim: group.name).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2)
+                        .truncationMode(.middle)
                     Spacer(minLength: 4)
-                    if group.errors > 0 { PromCountChip(count: group.errors, color: Color.statusBad, label: PromMonitoringText.errorsLabel) }
-                    if group.firing > 0 { PromCountChip(count: group.firing, color: Color.statusWarn, label: String(localized: "Firing")) }
-                    if group.pending > 0 { PromCountChip(count: group.pending, color: .secondary, label: String(localized: "Pending")) }
+                    if group.errors > 0 {
+                        PromCountChip(
+                            count: group.errors, color: Color.statusBad, label: PromMonitoringText.errorsLabel)
+                    }
+                    if group.firing > 0 {
+                        PromCountChip(count: group.firing, color: Color.statusWarn, label: String(localized: "Firing"))
+                    }
+                    if group.pending > 0 {
+                        PromCountChip(count: group.pending, color: .secondary, label: String(localized: "Pending"))
+                    }
                 }
             }
         }
@@ -190,21 +213,32 @@ struct PromOperatorList: View {
     var body: some View {
         List {
             if !status.error.isEmpty {
-                Section { Text(verbatim: CheckupText.checkupSectionError(status.error)).font(.footnote).foregroundStyle(Color.statusBad) }
+                Section {
+                    Text(verbatim: CheckupText.checkupSectionError(status.error)).font(.footnote).foregroundStyle(
+                        Color.statusBad)
+                }
             }
             Section {
                 ForEach(status.prometheuses) { server in
-                    KubeObjectLinkRow(link: PromOperatorStatus.link(prometheus: server)) { PromServerRow(server: server) }
+                    KubeObjectLinkRow(link: PromOperatorStatus.link(prometheus: server)) {
+                        PromServerRow(server: server)
+                    }
                 }
-                if status.prometheuses.isEmpty { Text(verbatim: PromMonitoringText.noObjects).foregroundStyle(.secondary) }
+                if status.prometheuses.isEmpty {
+                    Text(verbatim: PromMonitoringText.noObjects).foregroundStyle(.secondary)
+                }
             } header: {
                 Text(verbatim: "Prometheus")
             }
             Section {
                 ForEach(status.alertmanagers) { server in
-                    KubeObjectLinkRow(link: PromOperatorStatus.link(alertmanager: server)) { PromServerRow(server: server) }
+                    KubeObjectLinkRow(link: PromOperatorStatus.link(alertmanager: server)) {
+                        PromServerRow(server: server)
+                    }
                 }
-                if status.alertmanagers.isEmpty { Text(verbatim: PromMonitoringText.noObjects).foregroundStyle(.secondary) }
+                if status.alertmanagers.isEmpty {
+                    Text(verbatim: PromMonitoringText.noObjects).foregroundStyle(.secondary)
+                }
             } header: {
                 Text(verbatim: "Alertmanager")
             }
@@ -253,7 +287,8 @@ private struct PromServerRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(verbatim: server.id).font(.subheadline.monospaced().weight(.semibold)).lineLimit(1).truncationMode(.middle)
+                Text(verbatim: server.id).font(.subheadline.monospaced().weight(.semibold)).lineLimit(1).truncationMode(
+                    .middle)
                 Spacer()
                 StatusPill(label: server.health.label, color: server.health.color)
             }
@@ -262,7 +297,8 @@ private struct PromServerRow: View {
                     .font(.caption)
                     .foregroundStyle(server.available < server.desired ? Color.statusWarn : Color.secondary)
                 if server.shards > 1 {
-                    Text(verbatim: PromMonitoringText.shards("\(server.shards)")).font(.caption).foregroundStyle(.secondary)
+                    Text(verbatim: PromMonitoringText.shards("\(server.shards)")).font(.caption).foregroundStyle(
+                        .secondary)
                 }
                 if !server.version.isEmpty { Tag(server.version, mono: true) }
                 if server.paused { Tag(PromMonitoringText.paused, color: Color.statusWarn) }

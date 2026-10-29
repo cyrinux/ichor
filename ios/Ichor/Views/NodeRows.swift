@@ -14,8 +14,9 @@ struct NodeListRow: View {
 
     var body: some View {
         let ref = node.ref
-        let row = NodeOverviewRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs), sharedVersion: sharedVersion,
-                                  throttled: node.reachable && model.throttledNodes.contains(node.node))
+        let row = NodeOverviewRow(
+            node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs), sharedVersion: sharedVersion,
+            throttled: node.reachable && model.throttledNodes.contains(node.node))
         Group {
             if node.reachable {
                 // Beside the Nodes list on an iPad, pushed everywhere else.
@@ -27,31 +28,51 @@ struct NodeListRow: View {
         }
         .swipeActions(edge: .leading) {
             if node.reachable {
-                Button { path.append(.nodeLive(ref)) } label: { Label("Live", systemImage: "chart.xyaxis.line") }
-                    .tint(.blue)
+                Button {
+                    path.append(.nodeLive(ref))
+                } label: {
+                    Label("Live", systemImage: "chart.xyaxis.line")
+                }
+                .tint(.blue)
             }
         }
         .swipeActions(edge: .trailing) {
             if node.reachable {
                 if model.allows(.power) {
-                    Button { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot", systemImage: "power") }
-                        .tint(.red)
-                    Button { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down", systemImage: "power") }
-                        .tint(.orange)
+                    Button {
+                        path.append(.nodePower(ref, .reboot))
+                    } label: {
+                        Label("Reboot", systemImage: "power")
+                    }
+                    .tint(.red)
+                    Button {
+                        path.append(.nodePower(ref, .shutdown))
+                    } label: {
+                        Label("Shut down", systemImage: "power")
+                    }
+                    .tint(.orange)
                 }
                 if model.allows(.debugShell) {
-                    Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                    Button {
+                        path.append(.debugShell(node: node.node, hostname: node.hostname))
+                    } label: {
                         Label("Shell", systemImage: "apple.terminal")
                     }
                     .tint(.indigo)
                 }
-                Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+                Button {
+                    path.append(.logs(node: node.node, hostname: node.hostname, service: nil))
+                } label: {
                     Label("Logs", systemImage: "text.alignleft")
                 }
             } else if let targets = wakeTargets, !targets.isEmpty {
                 // Down: the phone can still power it on over the LAN.
-                Button { WakeOnLanCenter.shared.wake(node, targets: targets) } label: { Label("Wake (Wake-on-LAN)", systemImage: "power.circle") }
-                    .tint(.green)
+                Button {
+                    WakeOnLanCenter.shared.wake(node, targets: targets)
+                } label: {
+                    Label("Wake (Wake-on-LAN)", systemImage: "power.circle")
+                }
+                .tint(.green)
             }
         }
         .contextMenu { NodeMenu(node: node, path: $path) }
@@ -77,36 +98,66 @@ struct NodeMenu: View {
     var body: some View {
         let ref = node.ref
         if node.reachable {
-            Button { path.append(.nodeLive(ref)) } label: { Label("Live graphs", systemImage: "chart.xyaxis.line") }
-            Button { path.append(.node(ref)) } label: { Label("Services and logs", systemImage: "list.bullet") }
-            Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+            Button {
+                path.append(.nodeLive(ref))
+            } label: {
+                Label("Live graphs", systemImage: "chart.xyaxis.line")
+            }
+            Button {
+                path.append(.node(ref))
+            } label: {
+                Label("Services and logs", systemImage: "list.bullet")
+            }
+            Button {
+                path.append(.logs(node: node.node, hostname: node.hostname, service: nil))
+            } label: {
                 Label("Kernel log", systemImage: "text.alignleft")
             }
             if model.allows(.debugShell) {
-                Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                Button {
+                    path.append(.debugShell(node: node.node, hostname: node.hostname))
+                } label: {
                     Label("Debug shell", systemImage: "apple.terminal")
                 }
             }
             // Through the Kubernetes API (os:admin, like the workloads).
             if model.allows(.workloads) {
-                Button { path.append(.drain(node: node.node, hostname: node.hostname)) } label: {
+                Button {
+                    path.append(.drain(node: node.node, hostname: node.hostname))
+                } label: {
                     Label("Drain…", systemImage: "rectangle.portrait.and.arrow.right")
                 }
                 // Only when the node said whether it is cordoned: the entry names what it does.
                 if node.cordonKnown {
-                    Button { path.append(.nodeCordon(ref)) } label: {
-                        Label(node.cordoned ? String(localized: "Uncordon…") : String(localized: "Cordon…"), systemImage: "nosign")
+                    Button {
+                        path.append(.nodeCordon(ref))
+                    } label: {
+                        Label(
+                            node.cordoned ? String(localized: "Uncordon…") : String(localized: "Cordon…"),
+                            systemImage: "nosign")
                     }
                 }
             }
             if model.allows(.power) {
-                Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
-                Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }
+                Button(role: .destructive) {
+                    path.append(.nodePower(ref, .reboot))
+                } label: {
+                    Label("Reboot…", systemImage: "power")
+                }
+                Button(role: .destructive) {
+                    path.append(.nodePower(ref, .shutdown))
+                } label: {
+                    Label("Shut down…", systemImage: "power")
+                }
             }
         }
         // Needs no role: the phone sends the packet itself, the Talos API is not involved.
         WakeOnLanMenuItems(node: node)
-        Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
+        Button {
+            UIPasteboard.general.string = node.node
+        } label: {
+            Label("Copy IP", systemImage: "doc.on.doc")
+        }
     }
 }
 
@@ -148,9 +199,11 @@ struct NodeOverviewRow: View {
                 }
             }
             if node.reachable {
-                Text([role, node.version == sharedVersion ? "" : node.version, node.stage, node.arch]
-                    .filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                    .font(.caption)
+                Text(
+                    [role, node.version == sharedVersion ? "" : node.version, node.stage, node.arch]
+                        .filter { !$0.isEmpty }.joined(separator: "  ·  ")
+                )
+                .font(.caption)
             } else if let lastSeen = node.lastSeenDate {
                 // Not answering, known from before: what it was, dimmed, and since when.
                 Text([role, node.version, node.arch].filter { !$0.isEmpty }.joined(separator: "  ·  "))

@@ -33,22 +33,30 @@ public enum SpotlightItems {
 
     /// One item per cluster of `contexts` (the `active` context standing for its own), named as
     /// on screen; none for a context without a `clusterID`, which no share link can name.
-    public static func clusters(_ contexts: [ContextSummary], active: String?, labels: ClusterLabels) -> [SpotlightItem] {
+    public static func clusters(_ contexts: [ContextSummary], active: String?, labels: ClusterLabels) -> [SpotlightItem]
+    {
         clusterContexts(contexts, active: active).filter { !$0.clusterID.isEmpty }.map { context in
             let label = labels.of(context)
-            return SpotlightItem(kind: .cluster, title: label, clusterLabel: label, domain: clustersDomain,
-                                 target: ShareTarget(cluster: context.clusterID, target: .cluster))
+            return SpotlightItem(
+                kind: .cluster, title: label, clusterLabel: label, domain: clustersDomain,
+                target: ShareTarget(cluster: context.clusterID, target: .cluster))
         }
     }
 
     /// The Argo CD apps of `context`'s cluster; none without a `clusterID`.
-    public static func argoApps(_ apps: [ArgoApp], of context: ContextSummary, labels: ClusterLabels) -> [SpotlightItem] {
-        appItems(apps.map { ShareTarget.argoApp(namespace: $0.namespace, name: $0.name) }, kind: .argoApp, of: context, labels: labels)
+    public static func argoApps(_ apps: [ArgoApp], of context: ContextSummary, labels: ClusterLabels) -> [SpotlightItem]
+    {
+        appItems(
+            apps.map { ShareTarget.argoApp(namespace: $0.namespace, name: $0.name) }, kind: .argoApp, of: context,
+            labels: labels)
     }
 
     /// The Flux apps of `context`'s cluster; none without a `clusterID`.
-    public static func fluxApps(_ apps: [FluxApp], of context: ContextSummary, labels: ClusterLabels) -> [SpotlightItem] {
-        appItems(apps.map { ShareTarget.fluxApp(kind: $0.kind, namespace: $0.namespace, name: $0.name) }, kind: .fluxApp, of: context, labels: labels)
+    public static func fluxApps(_ apps: [FluxApp], of context: ContextSummary, labels: ClusterLabels) -> [SpotlightItem]
+    {
+        appItems(
+            apps.map { ShareTarget.fluxApp(kind: $0.kind, namespace: $0.namespace, name: $0.name) }, kind: .fluxApp,
+            of: context, labels: labels)
     }
 
     /// Of the clusters whose apps were indexed (`indexed`), those no longer on the phone: their
@@ -65,8 +73,10 @@ public enum SpotlightItems {
         return appShareLink(web: identifier)
     }
 
-    private static func appItems(_ targets: [ShareTarget], kind: SpotlightItem.Kind, of context: ContextSummary,
-                                 labels: ClusterLabels) -> [SpotlightItem] {
+    private static func appItems(
+        _ targets: [ShareTarget], kind: SpotlightItem.Kind, of context: ContextSummary,
+        labels: ClusterLabels
+    ) -> [SpotlightItem] {
         guard !context.clusterID.isEmpty else { return [] }
         let label = labels.of(context)
         let domain = appsDomain(cluster: context.clusterID, kind: kind)

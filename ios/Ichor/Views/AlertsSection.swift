@@ -101,7 +101,8 @@ struct AlertsSection: View {
                 .font(.caption)
                 .monospacedDigit()
                 // The worst firing groups, at most two.
-                ForEach(alerts.groups.filter { $0.active > 0 && $0.severity.rank <= AMSeverity.warning.rank }.prefix(2)) { group in
+                ForEach(alerts.groups.filter { $0.active > 0 && $0.severity.rank <= AMSeverity.warning.rank }.prefix(2))
+                { group in
                     HStack(spacing: 8) {
                         Image(systemName: group.severity.symbol).foregroundStyle(group.severity.color).font(.caption)
                             .accessibilityHidden(true)

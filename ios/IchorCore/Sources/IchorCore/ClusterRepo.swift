@@ -36,8 +36,9 @@ public struct ClusterRepo: Codable, Hashable, Sendable {
     public var host: String { normalizedGitHost(repoURL) }
 
     /// The demo cluster's built-in repository (demoClusterRepoURL in the Go core).
-    public static let demo = ClusterRepo(repoURL: "https://git.home.example/example-org/cluster-config",
-                                         talosDir: "talos", kubernetesDir: "kubernetes")
+    public static let demo = ClusterRepo(
+        repoURL: "https://git.home.example/example-org/cluster-config",
+        talosDir: "talos", kubernetesDir: "kubernetes")
 }
 
 /// What GitForgeRepo tells of a repository: its default branch, the head of the branch read
@@ -51,8 +52,10 @@ public struct GitRepoInfo: Decodable, Equatable, Sendable {
     public let canPush: Bool
     public let forge: String
 
-    public init(defaultBranch: String = "", branch: String = "", headSha: String = "", webURL: String = "",
-                isPrivate: Bool = false, canPush: Bool = false, forge: String = "") {
+    public init(
+        defaultBranch: String = "", branch: String = "", headSha: String = "", webURL: String = "",
+        isPrivate: Bool = false, canPush: Bool = false, forge: String = ""
+    ) {
         self.defaultBranch = defaultBranch
         self.branch = branch
         self.headSha = headSha
@@ -94,8 +97,9 @@ private func cleanRepoDir(_ dir: String) -> String {
 public func normalizeClusterRepo(_ repo: ClusterRepo) -> ClusterRepo? {
     let url = repo.repoURL.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !url.isEmpty else { return nil }
-    return ClusterRepo(repoURL: url, branch: repo.branch.trimmingCharacters(in: .whitespaces),
-                       talosDir: cleanRepoDir(repo.talosDir), kubernetesDir: cleanRepoDir(repo.kubernetesDir))
+    return ClusterRepo(
+        repoURL: url, branch: repo.branch.trimmingCharacters(in: .whitespaces),
+        talosDir: cleanRepoDir(repo.talosDir), kubernetesDir: cleanRepoDir(repo.kubernetesDir))
 }
 
 /// The https page of a repository address typed as https, ssh or scp-like (git@host:org/repo.git).
@@ -119,8 +123,9 @@ public func repoWebURL(_ repoURL: String) -> String {
 /// the forge at info's head commit (the viewer's "at commit" and the file sha checks work).
 public func repoSource(_ repo: ClusterRepo, info: GitRepoInfo) -> GitSource {
     let tracked = [info.branch, repo.branch, info.defaultBranch].first { !$0.isEmpty } ?? ""
-    return GitSource(repoURL: repo.repoURL, webURL: info.webURL.isEmpty ? repoWebURL(repo.repoURL) : info.webURL,
-                     tracked: tracked, revision: info.headSha, path: "", kind: .directory, browsable: true)
+    return GitSource(
+        repoURL: repo.repoURL, webURL: info.webURL.isEmpty ? repoWebURL(repo.repoURL) : info.webURL,
+        tracked: tracked, revision: info.headSha, path: "", kind: .directory, browsable: true)
 }
 
 /// The repositories saved per cluster fingerprint, as UserDefaults keeps them (JSON).
@@ -128,7 +133,9 @@ public enum ClusterRepoStore {
     public static let key = "clusterRepos"
 
     public static func decode(_ data: Data?) -> [String: ClusterRepo] {
-        guard let data, let saved = try? JSONDecoder().decode([String: ClusterRepo].self, from: data) else { return [:] }
+        guard let data, let saved = try? JSONDecoder().decode([String: ClusterRepo].self, from: data) else {
+            return [:]
+        }
         return saved.compactMapValues(normalizeClusterRepo)
     }
 

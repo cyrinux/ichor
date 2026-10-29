@@ -2,18 +2,25 @@ import XCTest
 @testable import IchorCore
 
 final class ConfigSummaryCacheTests: XCTestCase {
-    private let talos = ConfigSummary(current: "lab", contexts: [
-        ContextSummary(name: "lab", fingerprint: "fp-lab", clusterID: "c-lab", endpoints: ["10.0.0.2"],
-                       roles: ["os:admin"], certNotAfter: 1_900_000_000),
-    ])
-    private let kube = ConfigSummary(current: "edge", contexts: [
-        ContextSummary(name: "edge", kind: ContextKind.kube, fingerprint: "fp-edge", endpoints: ["https://10.0.1.2:6443"],
-                       namespace: "default", auth: "token"),
-    ])
+    private let talos = ConfigSummary(
+        current: "lab",
+        contexts: [
+            ContextSummary(
+                name: "lab", fingerprint: "fp-lab", clusterID: "c-lab", endpoints: ["10.0.0.2"],
+                roles: ["os:admin"], certNotAfter: 1_900_000_000)
+        ])
+    private let kube = ConfigSummary(
+        current: "edge",
+        contexts: [
+            ContextSummary(
+                name: "edge", kind: ContextKind.kube, fingerprint: "fp-edge", endpoints: ["https://10.0.1.2:6443"],
+                namespace: "default", auth: "token")
+        ])
 
     private func record(generation: Int = 0, kube: ConfigSummary? = nil) throws -> ConfigSummaryRecord {
-        try ConfigSummaryRecord(talosDigest: "t1", kubeDigest: kube == nil ? "" : "k1", maskGeneration: generation,
-                                summaries: StoredSummaries(talos: talos, kube: kube))
+        try ConfigSummaryRecord(
+            talosDigest: "t1", kubeDigest: kube == nil ? "" : "k1", maskGeneration: generation,
+            summaries: StoredSummaries(talos: talos, kube: kube))
     }
 
     func testRoundTripsThroughStorage() throws {

@@ -58,9 +58,15 @@ struct PluginTileLink<Label: View>: View {
 
     var body: some View {
         if let native = item.nativeScreen {
-            NavigationLink { PluginNativeDestination(screen: native) } label: { label() }
+            NavigationLink {
+                PluginNativeDestination(screen: native)
+            } label: {
+                label()
+            }
         } else if item.category == pluginCategoryDataServices {
-            NavigationLink(value: Route.dataServicesPlugin(hints: hints, downNodes: downNodes, plugin: item.id)) { label() }
+            NavigationLink(value: Route.dataServicesPlugin(hints: hints, downNodes: downNodes, plugin: item.id)) {
+                label()
+            }
         } else {
             NavigationLink(value: Route.plugin(id: item.id)) { label() }
         }

@@ -15,7 +15,9 @@ struct IntegrationRequestView: View {
             List {
                 Section {
                 } footer: {
-                    Text("Operators running on this cluster that Ichor does not show yet. Pick the API groups you would like to see: Ichor opens a pre-filled GitHub issue you review before sending. Only group, version and kind names go in, never namespaces or object names.")
+                    Text(
+                        "Operators running on this cluster that Ichor does not show yet. Pick the API groups you would like to see: Ichor opens a pre-filled GitHub issue you review before sending. Only group, version and kind names go in, never namespaces or object names."
+                    )
                 }
                 if report.families.isEmpty {
                     Section {
@@ -25,7 +27,9 @@ struct IntegrationRequestView: View {
                 }
                 ForEach(report.families) { IntegrationFamilySection(family: $0, browsing: $browsing) }
                 Section {
-                    Button { browsing = IntegrationLinks.newRequest } label: {
+                    Button {
+                        browsing = IntegrationLinks.newRequest
+                    } label: {
                         Label("Suggest something else", systemImage: "plus.bubble")
                     }
                 } footer: {
@@ -60,7 +64,9 @@ private struct IntegrationFamilySection: View {
     var body: some View {
         Section {
             ForEach(family.groups) { group in
-                Button { toggle(group.name) } label: {
+                Button {
+                    toggle(group.name)
+                } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
                         Image(systemName: picked.contains(group.name) ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(picked.contains(group.name) ? Color.accentColor : Color.secondary)
@@ -100,7 +106,8 @@ private struct IntegrationFamilySection: View {
 
     private func request() async {
         do {
-            let url = try await TalosClient.integrationIssueURL(repo: IntegrationLinks.repo, family: family.picking(picked), app: IntegrationLinks.app)
+            let url = try await TalosClient.integrationIssueURL(
+                repo: IntegrationLinks.repo, family: family.picking(picked), app: IntegrationLinks.app)
             error = nil
             browsing = url
         } catch {
@@ -113,7 +120,9 @@ private struct IntegrationFamilySection: View {
 enum IntegrationLinks {
     /// "owner/name", from the project's GitHub URL.
     static let repo = String(ProjectLinks.repo.path.drop(while: { $0 == "/" }))
-    static let newRequest = ProjectLinks.repo.appendingPathComponent("issues/new").appending(queryItems: [URLQueryItem(name: "template", value: "integration.yml")])
+    static let newRequest = ProjectLinks.repo.appendingPathComponent("issues/new").appending(queryItems: [
+        URLQueryItem(name: "template", value: "integration.yml")
+    ])
     static let reportBug = ProjectLinks.repo.appendingPathComponent("issues/new/choose")
 
     /// "Ichor 1.4.0 (iOS)", at the end of the request's notes.

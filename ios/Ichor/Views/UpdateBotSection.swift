@@ -75,8 +75,10 @@ private struct UpdateBotDraftView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("The app wrote \(config.draft.path) for the files it found. Read it, then open a pull request: nothing changes until you merge it.")
-                        .font(.footnote)
+                    Text(
+                        "The app wrote \(config.draft.path) for the files it found. Read it, then open a pull request: nothing changes until you merge it."
+                    )
+                    .font(.footnote)
                     ForEach(config.notes, id: \.self) { Text(verbatim: "• \($0)").font(.footnote) }
                 }
                 Section {
@@ -101,15 +103,17 @@ private struct UpdateBotDraftView: View {
             }
             .sheet(isPresented: $proposing) {
                 // A new file: read at the branch it goes to, with no sha, so the commit creates it.
-                ProposeSheet(source: source, path: config.draft.path, app: .repository,
-                             base: SourceEditBase(file: GitFile(path: config.draft.path), ref: source.tracked),
-                             content: config.draft.content, target: source.tracked,
-                             defaultTitle: String(localized: "Add a dependency-update bot configuration"),
-                             defaultBody: config.proposalBody,
-                             onReload: { _ in }, onDone: {
-                                 proposing = false
-                                 dismiss()
-                             })
+                ProposeSheet(
+                    source: source, path: config.draft.path, app: .repository,
+                    base: SourceEditBase(file: GitFile(path: config.draft.path), ref: source.tracked),
+                    content: config.draft.content, target: source.tracked,
+                    defaultTitle: String(localized: "Add a dependency-update bot configuration"),
+                    defaultBody: config.proposalBody,
+                    onReload: { _ in },
+                    onDone: {
+                        proposing = false
+                        dismiss()
+                    })
             }
         }
     }

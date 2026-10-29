@@ -26,7 +26,8 @@ struct IchorApp: App {
         KubeAuthStore.register()
         // GKE's Sign in with Google, when the build carries Ichor's iOS client
         // (Config/GoogleSignIn.xcconfig): the option appears on the GKE sign-in sheet.
-        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GoogleSignInClientID") as? String, !clientID.isEmpty {
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GoogleSignInClientID") as? String, !clientID.isEmpty
+        {
             IchorgoSetGoogleSignInClient("ios", clientID)
         }
         // The on-device model: nothing is loaded until the user asks it a question.
@@ -395,66 +396,66 @@ struct MainNavigation: View {
 
     var body: some View {
         shell
-        // Wake-on-LAN settings and results, for the node menus of every screen.
-        .wakeOnLanPresenter()
-        // The screenshot mode switching (under its cover): the screens pushed with the old names
-        // go, the settings pages the switch was flipped on stay.
-        .onChange(of: model.maskTransition) { _, switching in
-            guard switching else { return }
-            path = pathKeptOnMaskSwitch(path) { route in
-                if case .settingsPage = route { return true }
-                return route == .settings
+            // Wake-on-LAN settings and results, for the node menus of every screen.
+            .wakeOnLanPresenter()
+            // The screenshot mode switching (under its cover): the screens pushed with the old names
+            // go, the settings pages the switch was flipped on stay.
+            .onChange(of: model.maskTransition) { _, switching in
+                guard switching else { return }
+                path = pathKeptOnMaskSwitch(path) { route in
+                    if case .settingsPage = route { return true }
+                    return route == .settings
+                }
             }
-        }
-        .onChange(of: NotificationRouter.shared.pendingRenewal) { _, pending in
-            if pending { openRenewal() }
-        }
-        .onChange(of: NotificationRouter.shared.pendingCluster) { _, pending in
-            if pending != nil { openCluster() }
-        }
-        .onChange(of: NotificationRouter.shared.pendingHome) { _, pending in
-            guard pending else { return }
-            NotificationRouter.shared.pendingHome = false
-            path = []
-        }
-        .onChange(of: NotificationRouter.shared.pendingArgoWindows) { _, pending in
-            if pending { openArgoWindows() }
-        }
-        .onChange(of: NotificationRouter.shared.pendingShareLink) { _, pending in
-            if pending != nil { openShareLink() }
-        }
-        .onChange(of: NotificationRouter.shared.pendingSearch) { _, pending in
-            if pending { openSearch() }
-        }
-        .onChange(of: NotificationRouter.shared.pendingOperation) { _, pending in
-            if pending != nil { openOperation() }
-        }
-        // Mounted under the lock screen once unlocked: a link waits for the next unlock.
-        .onChange(of: model.lock.locked) { _, locked in
-            if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
-            if !locked, NotificationRouter.shared.pendingSearch { openSearch() }
-            if !locked, NotificationRouter.shared.pendingOperation != nil { openOperation() }
-            if !locked { openImport() }
-        }
-        .onChange(of: NotificationRouter.shared.pendingImportText) { _, pending in
-            if pending != nil { openImport() }
-        }
-        .onChange(of: NotificationRouter.shared.pendingGitOps) { _, pending in
-            if pending != nil { openGitOps() }
-        }
-        .onAppear {
-            if NotificationRouter.shared.pendingRenewal { openRenewal() }
-            if NotificationRouter.shared.pendingCluster != nil { openCluster() }
-            if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
-            if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
-            if NotificationRouter.shared.pendingSearch { openSearch() }
-            if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
-            if NotificationRouter.shared.pendingOperation != nil { openOperation() }
-            openImport()
-        }
-        .messageAlert($freezeMessage)
-        .messageAlert($linkMessage)
-        .restoresReceivedBackup()
+            .onChange(of: NotificationRouter.shared.pendingRenewal) { _, pending in
+                if pending { openRenewal() }
+            }
+            .onChange(of: NotificationRouter.shared.pendingCluster) { _, pending in
+                if pending != nil { openCluster() }
+            }
+            .onChange(of: NotificationRouter.shared.pendingHome) { _, pending in
+                guard pending else { return }
+                NotificationRouter.shared.pendingHome = false
+                path = []
+            }
+            .onChange(of: NotificationRouter.shared.pendingArgoWindows) { _, pending in
+                if pending { openArgoWindows() }
+            }
+            .onChange(of: NotificationRouter.shared.pendingShareLink) { _, pending in
+                if pending != nil { openShareLink() }
+            }
+            .onChange(of: NotificationRouter.shared.pendingSearch) { _, pending in
+                if pending { openSearch() }
+            }
+            .onChange(of: NotificationRouter.shared.pendingOperation) { _, pending in
+                if pending != nil { openOperation() }
+            }
+            // Mounted under the lock screen once unlocked: a link waits for the next unlock.
+            .onChange(of: model.lock.locked) { _, locked in
+                if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
+                if !locked, NotificationRouter.shared.pendingSearch { openSearch() }
+                if !locked, NotificationRouter.shared.pendingOperation != nil { openOperation() }
+                if !locked { openImport() }
+            }
+            .onChange(of: NotificationRouter.shared.pendingImportText) { _, pending in
+                if pending != nil { openImport() }
+            }
+            .onChange(of: NotificationRouter.shared.pendingGitOps) { _, pending in
+                if pending != nil { openGitOps() }
+            }
+            .onAppear {
+                if NotificationRouter.shared.pendingRenewal { openRenewal() }
+                if NotificationRouter.shared.pendingCluster != nil { openCluster() }
+                if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
+                if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
+                if NotificationRouter.shared.pendingSearch { openSearch() }
+                if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
+                if NotificationRouter.shared.pendingOperation != nil { openOperation() }
+                openImport()
+            }
+            .messageAlert($freezeMessage)
+            .messageAlert($linkMessage)
+            .restoresReceivedBackup()
     }
 
     /// A regular-width iPad: the clusters and sections in a sidebar beside the stack. Elsewhere
@@ -478,8 +479,12 @@ struct MainNavigation: View {
     /// The screen of each route, for both shells.
     @ViewBuilder private func destination(_ route: Route) -> some View {
         switch route {
-        case .node(let ref): NodeDetailView(ref: ref).recordsOpened(.node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
-        case .nodeLive(let ref): NodeTabsView(ref: ref, initialTab: .live).recordsOpened(.node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
+        case .node(let ref):
+            NodeDetailView(ref: ref).recordsOpened(
+                .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
+        case .nodeLive(let ref):
+            NodeTabsView(ref: ref, initialTab: .live).recordsOpened(
+                .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
         case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
         case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
         case .k8sUpgrade: K8sUpgradePlanView()
@@ -488,9 +493,13 @@ struct MainNavigation: View {
             if model.activeSummary?.omni == true { BootMediaView(path: $path) } else { JoinNodeView(path: $path) }
         case .bootMedia: BootMediaView(path: $path)
         case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
-        case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab).recordsOpened(.node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
-        case .nodes(let filter, let nodes, let selected): NodesView(nodes: nodes, filter: filter, selected: selected, path: $path)
-        case .kubeNodes(let filter, let nodes, let query): KubeNodesView(nodes: nodes, filter: filter, query: query, path: $path)
+        case .nodeTab(let ref, let tab):
+            NodeTabsView(ref: ref, initialTab: tab).recordsOpened(
+                .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
+        case .nodes(let filter, let nodes, let selected):
+            NodesView(nodes: nodes, filter: filter, selected: selected, path: $path)
+        case .kubeNodes(let filter, let nodes, let query):
+            KubeNodesView(nodes: nodes, filter: filter, query: query, path: $path)
         case .logs(let node, let hostname, let service):
             LogsView(node: node, hostname: hostname, service: service)
         case .containerLogs(let node, let hostname, let container):
@@ -508,10 +517,13 @@ struct MainNavigation: View {
             ReplaceControlPlaneView(memberId: memberId, node: node, hostname: hostname)
         case .kubespan: KubeSpanView()
         case .workloads: KubernetesView()
-        case .kubernetes(let focus): KubernetesView(focus: focus).recordsOpened(focus.shareTarget, label: focus.name, detail: focus.namespace)
+        case .kubernetes(let focus):
+            KubernetesView(focus: focus).recordsOpened(focus.shareTarget, label: focus.name, detail: focus.namespace)
         case .networkTest: KubernetesView(networkTest: true)
-        case .dataServices(let hints, let downNodes, let kind, let solo): DataServicesView(hints: hints, downNodes: downNodes, selected: kind, solo: solo)
-        case .dataServicesPlugin(let hints, let downNodes, let plugin): DataServicesView(hints: hints, downNodes: downNodes, plugin: plugin)
+        case .dataServices(let hints, let downNodes, let kind, let solo):
+            DataServicesView(hints: hints, downNodes: downNodes, selected: kind, solo: solo)
+        case .dataServicesPlugin(let hints, let downNodes, let plugin):
+            DataServicesView(hints: hints, downNodes: downNodes, plugin: plugin)
         case .plugin(let id): PluginView(pluginID: id)
         case .argoCD(let downNodes, let selected): ArgoCDView(downNodes: downNodes, selected: selected)
         case .argoWindows: ArgoWindowsView()
@@ -567,18 +579,22 @@ struct MainNavigation: View {
             return
         }
         guard let client = model.client else {
-            freezeMessage = String(localized: "Could not extend the freeze: \(String(localized: "the cluster cannot be reached now."))")
+            freezeMessage = String(
+                localized: "Could not extend the freeze: \(String(localized: "the cluster cannot be reached now."))")
             return
         }
         Task {
-            let project = extend.project, namespace = extend.namespace
+            let project = extend.project
+            let namespace = extend.namespace
             let options = ArgoFreezeOptions(minutes: freezeExtendMinutes, window: extend.window)
             do {
                 try await client.argoFreeze(namespace: namespace, project: project, action: .extend, options: options)
                 let until = Date(epochMillis: extend.end).addingTimeInterval(TimeInterval(freezeExtendMinutes * 60))
-                freezeMessage = String(localized: "Freeze extended until \(until.formatted(date: .omitted, time: .shortened)).")
+                freezeMessage = String(
+                    localized: "Freeze extended until \(until.formatted(date: .omitted, time: .shortened)).")
                 // The windows screen and the next reminder (the extended window has a new id).
-                let key = model.argoKey, cluster = model.activeSummary
+                let key = model.argoKey
+                let cluster = model.activeSummary
                 _ = try? await ArgoCDStore.shared.load(with: client, key: key, cluster: cluster)
             } catch {
                 freezeMessage = String(localized: "Could not extend the freeze: \(error.localizedDescription)")
@@ -609,7 +625,8 @@ struct MainNavigation: View {
             return Route.upgrade(node: target.node, hostname: target.hostname)
         case .maintenance:
             guard let target = MaintenanceJob.shared.target else { return nil }
-            return target.kube ? Route.drain(node: target.node, hostname: target.hostname)
+            return target.kube
+                ? Route.drain(node: target.node, hostname: target.hostname)
                 : Route.maintenance(node: target.node, hostname: target.hostname)
         case .configTry:
             guard let target = ConfigTryJob.shared.target else { return nil }
@@ -672,7 +689,8 @@ struct MainNavigation: View {
     /// cluster), then the screen it names over it: a share link, a search result.
     private func open(_ target: ShareTarget, action: AlertActionRequest? = nil) async {
         guard let context = model.summary?.contexts.context(forCluster: target.cluster, active: model.activeContext),
-              model.selectCluster(fingerprint: context.fingerprint) else {
+            model.selectCluster(fingerprint: context.fingerprint)
+        else {
             linkMessage = String(localized: "This link is for a cluster that isn’t on this phone")
             return
         }
@@ -682,7 +700,8 @@ struct MainNavigation: View {
         let generation = model.dataGeneration
         path = []
         guard let route = await target.route(client: model.client, kube: model.activeIsKube),
-              !model.maskTransition, generation == model.dataGeneration else { return }
+            !model.maskTransition, generation == model.dataGeneration
+        else { return }
         let shown = await splitRoute(actionRoute(route, for: action))
         guard !model.maskTransition, generation == model.dataGeneration else { return }
         path = [shown]
@@ -697,9 +716,12 @@ struct MainNavigation: View {
         case .argoApp(let namespace, let name):
             return .argoCD(downNodes: [], selected: ArgoAppRoute(namespace: namespace, name: name, downNodes: []))
         case .fluxApp(let kind, let namespace, let name):
-            return .flux(downNodes: [], selected: FluxAppRoute(kind: kind, namespace: namespace, name: name, downNodes: []))
+            return .flux(
+                downNodes: [], selected: FluxAppRoute(kind: kind, namespace: namespace, name: name, downNodes: []))
         case .node(let ref):
-            guard !model.activeIsKube, let overview = try? await model.client?.overview(), overview.outage == nil else { return route }
+            guard !model.activeIsKube, let overview = try? await model.client?.overview(), overview.outage == nil else {
+                return route
+            }
             return .nodes(filter: nil, nodes: overview.nodes.overviewOrder, selected: ref)
         default:
             return route
@@ -709,14 +731,18 @@ struct MainNavigation: View {
     /// The node hub with its reboot confirmation for an alert's Reboot (when this config may
     /// power nodes); `route` otherwise.
     private func actionRoute(_ route: Route, for action: AlertActionRequest?) -> Route {
-        guard let action, let ref = route.nodeRef, action.isReboot(node: ref.address), model.allows(.power) else { return route }
+        guard let action, let ref = route.nodeRef, action.isReboot(node: ref.address), model.allows(.power) else {
+            return route
+        }
         return .nodePower(ref, .reboot)
     }
 
     /// From a config file opened with Ichor: the import screen, which previews it (and takes
     /// the text from NotificationRouter itself, also when it is already on screen).
     private func openImport() {
-        guard !model.lock.locked, NotificationRouter.shared.pendingImportText != nil, path.last != .importConfig else { return }
+        guard !model.lock.locked, NotificationRouter.shared.pendingImportText != nil, path.last != .importConfig else {
+            return
+        }
         path.append(.importConfig)
     }
 
@@ -726,10 +752,11 @@ struct MainNavigation: View {
         guard let destination = NotificationRouter.shared.pendingGitOps else { return }
         NotificationRouter.shared.pendingGitOps = nil
         guard model.allows(.workloads) else { return }
-        let route: Route = switch destination {
-        case .argoCD: .argoCD(downNodes: [])
-        case .flux: .flux(downNodes: [])
-        }
+        let route: Route =
+            switch destination {
+            case .argoCD: .argoCD(downNodes: [])
+            case .flux: .flux(downNodes: [])
+            }
         if path.last != route { path.append(route) }
     }
 

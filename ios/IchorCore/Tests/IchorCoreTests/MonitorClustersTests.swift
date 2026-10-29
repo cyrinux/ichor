@@ -24,7 +24,8 @@ final class MonitorClustersTests: XCTestCase {
     func testTurnedOffClustersAreSkipped() {
         XCTAssertEqual(monitoredContexts(contexts, active: nil, unwatched: ["fc"]).map(\.name), ["home-admin", "edge"])
         // Off on any context of a cluster turns the cluster off, whichever context checks it.
-        XCTAssertEqual(monitoredContexts(contexts, active: "home-admin", unwatched: ["fb"]).map(\.name), ["lab", "edge"])
+        XCTAssertEqual(
+            monitoredContexts(contexts, active: "home-admin", unwatched: ["fb"]).map(\.name), ["lab", "edge"])
         XCTAssertFalse(watchedInBackground(contexts[0], contexts: contexts, unwatched: ["fb"]))
         XCTAssertTrue(watchedInBackground(contexts[2], contexts: contexts, unwatched: ["fb"]))
     }
@@ -43,7 +44,8 @@ final class MonitorClustersTests: XCTestCase {
         XCTAssertTrue(clusterFlagged(contexts[0], contexts: contexts, members: on))
         XCTAssertFalse(clusterFlagged(contexts[2], contexts: contexts, members: on))
         // Off from the other context clears both.
-        XCTAssertEqual(settingClusterFlag(false, for: contexts[0], contexts: contexts, members: on.union(["fc"])), ["fc"])
+        XCTAssertEqual(
+            settingClusterFlag(false, for: contexts[0], contexts: contexts, members: on.union(["fc"])), ["fc"])
         XCTAssertEqual(settingClusterFlag(true, for: ContextSummary(name: "x"), contexts: contexts, members: []), [])
     }
 
@@ -56,15 +58,17 @@ final class MonitorClustersTests: XCTestCase {
     }
 
     func testSeededAuditEventClusters() {
-        let withDemo = contexts + [ContextSummary(name: "demo", fingerprint: "fz", demo: true), ContextSummary(name: "blank")]
+        let withDemo =
+            contexts + [ContextSummary(name: "demo", fingerprint: "fz", demo: true), ContextSummary(name: "blank")]
         XCTAssertEqual(seededAuditEventClusters(legacyOn: true, contexts: withDemo), ["fa", "fb", "fc", "fd"])
         XCTAssertEqual(seededAuditEventClusters(legacyOn: false, contexts: withDemo), [])
         XCTAssertEqual(seededAuditEventClusters(legacyOn: nil, contexts: withDemo), [])
     }
 
     private func snapshot(_ context: String) -> ClusterSnapshot {
-        ClusterSnapshot(context: context, takenAt: Date(timeIntervalSince1970: 1_000),
-                        nodes: ["10.0.0.2": NodeState(hostname: "cp-1", health: .ready, reason: "")])
+        ClusterSnapshot(
+            context: context, takenAt: Date(timeIntervalSince1970: 1_000),
+            nodes: ["10.0.0.2": NodeState(hostname: "cp-1", health: .ready, reason: "")])
     }
 
     func testLegacySnapshotGoesToTheActiveCluster() {
@@ -105,15 +109,22 @@ final class MonitorClustersTests: XCTestCase {
 
     func testWidgetClusters() {
         let labels = ClusterLabels(names: ["fc": "Lab"])
-        XCTAssertEqual(widgetClusters(contexts, active: "home-reader", labels: labels),
-                       [WidgetCluster(id: "home", name: "home-reader"), WidgetCluster(id: "lab", name: "Lab"),
-                        WidgetCluster(id: "fd", name: "edge")])
-        let linked = widgetClusters(contexts, active: nil, labels: labels) { $0.clusterID.isEmpty ? nil : "link-\($0.clusterID)" }
+        XCTAssertEqual(
+            widgetClusters(contexts, active: "home-reader", labels: labels),
+            [
+                WidgetCluster(id: "home", name: "home-reader"), WidgetCluster(id: "lab", name: "Lab"),
+                WidgetCluster(id: "fd", name: "edge"),
+            ])
+        let linked = widgetClusters(contexts, active: nil, labels: labels) {
+            $0.clusterID.isEmpty ? nil : "link-\($0.clusterID)"
+        }
         XCTAssertEqual(linked.map(\.link), ["link-home", "link-lab", nil])
     }
 
     func testAppShareLink() {
-        XCTAssertEqual(appShareLink(web: "https://example.org/ichor/open/#v=1&c=abc&t=cluster"), "ichor://open?v=1&c=abc&t=cluster")
+        XCTAssertEqual(
+            appShareLink(web: "https://example.org/ichor/open/#v=1&c=abc&t=cluster"), "ichor://open?v=1&c=abc&t=cluster"
+        )
         XCTAssertNil(appShareLink(web: "https://example.org/ichor/open/"))
     }
 
@@ -160,7 +171,8 @@ final class MonitorClustersTests: XCTestCase {
         let first = evaluateReachability(previous: nil, reachable: false, runs: 0, enabled: true)
         XCTAssertNil(first.alert)
         XCTAssertNotNil(evaluateReachability(previous: first.next, reachable: false, runs: 0, enabled: true).alert)
-        XCTAssertNil(evaluateReachability(previous: Reachability(misses: 8), reachable: false, runs: 99, enabled: true).alert)
+        XCTAssertNil(
+            evaluateReachability(previous: Reachability(misses: 8), reachable: false, runs: 99, enabled: true).alert)
     }
 
     func testUnreachableAlertCategoryAndActions() {
@@ -169,7 +181,9 @@ final class MonitorClustersTests: XCTestCase {
         XCTAssertEqual(alertKind(key: "node:10.0.0.2"), "node")
         XCTAssertEqual(alertActions(key: "unreachable", problem: true, canWake: true), [.snooze])
         XCTAssertTrue(alertActionSets(kind: "cluster").contains([.snooze]))
-        XCTAssertEqual(alertCategory(kind: alertKind(key: "unreachable"), actions: [.snooze], hideDetails: false), "alert.cluster.snooze")
+        XCTAssertEqual(
+            alertCategory(kind: alertKind(key: "unreachable"), actions: [.snooze], hideDetails: false),
+            "alert.cluster.snooze")
     }
 
     func testNotificationIDsDifferPerCluster() {

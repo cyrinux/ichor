@@ -46,7 +46,8 @@ final class ClusterUpgradeJob {
         let run = client.startClusterUpgrade(version: version, drain: drain, acknowledged: acknowledged)
         handle = run
         task = Task {
-            var result: String? = String(localized: "The upgrade ended without an answer: open the plan again to see where each node stands.")
+            var result: String? = String(
+                localized: "The upgrade ended without an answer: open the plan again to see where each node stands.")
             for await event in run.events {
                 switch event {
                 case .progress(let update): progress = update
@@ -57,7 +58,9 @@ final class ClusterUpgradeJob {
             task = nil
             handle = nil
             endBackgroundTask()
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.foregroundNotification])
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
+                Self.foregroundNotification
+            ])
             UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
             announce(result ?? String(localized: "Every node runs \(version)."))
         }
@@ -80,7 +83,9 @@ final class ClusterUpgradeJob {
         guard isActive else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Keep Ichor open")
-        content.body = String(localized: "The cluster upgrade stops while Ichor is in the background. Open it until every node is upgraded.")
+        content.body = String(
+            localized:
+                "The cluster upgrade stops while Ichor is in the background. Open it until every node is upgraded.")
         content.sound = .default
         let request = UNNotificationRequest(identifier: Self.foregroundNotification, content: content, trigger: nil)
         Task { try? await UNUserNotificationCenter.current().add(request) }

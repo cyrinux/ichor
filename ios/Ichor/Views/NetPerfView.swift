@@ -24,7 +24,8 @@ struct NetPerfView: View {
                     savedSections(report)
                 } else {
                     setupSections(nodes.filter(\.ready))
-                    NetPerfTrendSection(history: session.history, client: session.setup.client, server: session.setup.server)
+                    NetPerfTrendSection(
+                        history: session.history, client: session.setup.client, server: session.setup.server)
                     historySection
                 }
             }
@@ -48,9 +49,11 @@ struct NetPerfView: View {
     @ViewBuilder
     private func setupSections(_ ready: [NetPerfNode]) -> some View {
         Section {
-            Text("Measures TCP throughput and latency from one node to another with netperf, like cilium connectivity perf. The test runs in a temporary namespace, deleted afterwards.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            Text(
+                "Measures TCP throughput and latency from one node to another with netperf, like cilium connectivity perf. The test runs in a temporary namespace, deleted afterwards."
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
         }
         if ready.isEmpty {
             Section { Text("No ready node to test.").foregroundStyle(.secondary) }
@@ -70,9 +73,11 @@ struct NetPerfView: View {
                 Toggle(isOn: $session.setup.hostNetwork) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Also test the host network")
-                        Text("Node to node, outside the CNI. The test namespace then needs the privileged pod security level.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Text(
+                            "Node to node, outside the CNI. The test namespace then needs the privileged pod security level."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                 }
             } header: {
@@ -101,14 +106,19 @@ struct NetPerfView: View {
         if !session.history.isEmpty {
             Section {
                 ForEach(session.history, id: \.started) { report in
-                    Button { session.viewing = report } label: {
+                    Button {
+                        session.viewing = report
+                    } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("\(report.client) → \(report.server) · \(report.seconds) s")
                                 .font(.subheadline.monospaced())
                                 .foregroundStyle(.primary)
-                            Text(verbatim: ([testedAt(report)] + [headline(report)].compactMap { $0 }).joined(separator: "  ·  "))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            Text(
+                                verbatim: ([testedAt(report)] + [headline(report)].compactMap { $0 }).joined(
+                                    separator: "  ·  ")
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -150,7 +160,8 @@ struct NetPerfView: View {
 
     /// Up to three nodes fit side by side; more go in a menu that lists every hostname.
     @ViewBuilder
-    private func nodePicker(_ title: LocalizedStringKey, nodes: [NetPerfNode], selection: Binding<String>) -> some View {
+    private func nodePicker(_ title: LocalizedStringKey, nodes: [NetPerfNode], selection: Binding<String>) -> some View
+    {
         if nodes.count > 3 {
             Picker(title, selection: selection) { nodeOptions(nodes) }
                 .pickerStyle(.menu)
@@ -171,9 +182,12 @@ struct NetPerfView: View {
     }
 
     private func confirmationMessage(_ setup: NetPerfSetup) -> Text {
-        let text = Text("netperf pods run on \(setup.client) and \(setup.server) in a temporary namespace. The link between them is saturated for about \(setup.seconds * setup.steps) seconds, then the namespace is deleted.")
+        let text = Text(
+            "netperf pods run on \(setup.client) and \(setup.server) in a temporary namespace. The link between them is saturated for about \(setup.seconds * setup.steps) seconds, then the namespace is deleted."
+        )
         guard setup.hostNetwork else { return text }
-        return text + Text(verbatim: "\n\n") + Text("For the host network, the namespace is created with the privileged pod security level.")
+        return text + Text(verbatim: "\n\n")
+            + Text("For the host network, the namespace is created with the privileged pod security level.")
     }
 
     private func load() async {
@@ -262,8 +276,8 @@ private struct NetPerfResultRow: View {
                     Text(verbatim: result.error).font(.caption).foregroundStyle(.statusBad)
                 } else if test == NetPerfTest.latency, let l = result.latency {
                     let rate = result.transactionRate.formatted(.number.precision(.fractionLength(0)))
-                    (Text("p50 \(formatMicros(l.p50)) · p90 \(formatMicros(l.p90)) · p99 \(formatMicros(l.p99))") +
-                        Text(verbatim: "  ·  ") + Text("\(rate) round trips/s"))
+                    (Text("p50 \(formatMicros(l.p50)) · p90 \(formatMicros(l.p90)) · p99 \(formatMicros(l.p99))")
+                        + Text(verbatim: "  ·  ") + Text("\(rate) round trips/s"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -291,11 +305,16 @@ func netPerfTestLabel(_ test: String) -> String {
 
 /// What the (i) next to each part of the test explains.
 private enum NetPerfHint {
-    static let nodes: LocalizedStringKey = "The server node runs netserver and waits. The client node runs netperf, which connects to it and sends: throughput is measured from the client to the server.\n\nSwap the two nodes to measure the other direction. Choosing the same node twice measures its own network stack, not a link."
-    static let paths: LocalizedStringKey = "Pod to pod goes through the CNI: virtual interfaces, overlay or encapsulation, eBPF, encryption such as WireGuard or KubeSpan. Host to host uses the nodes’ own addresses and skips all of it.\n\nPod to pod much slower than host to host: the gap is what the CNI costs. Both slow: look at the link itself (NIC, switch, MTU, distance between sites)."
-    static let duration: LocalizedStringKey = "How long each measurement lasts. Longer runs smooth out bursts and TCP’s ramp-up, but keep the link busy for longer.\n\nThe test makes 2 measurements one after the other, throughput then latency, and 4 with the host network."
-    static let throughput: LocalizedStringKey = "netperf TCP_STREAM: one TCP connection sends as fast as it can for the whole duration, so this is the bandwidth a single flow gets.\n\nOn a healthy path it comes close to the link speed: about 940 Mbit/s on 1 GbE, 9.4 Gbit/s on 10 GbE. Encryption, a small MTU or a busy CPU lower it. Several flows together can reach more."
-    static let latency: LocalizedStringKey = "netperf TCP_RR: one byte goes to the server and back, again and again on one connection. Each value is a full round trip, both network stacks included.\n\np50 is the median: half of the round trips were faster. p90: 9 in 10 were faster. p99: only the slowest 1 in 100 took longer, where jitter and retransmits show. A p99 far above p50 means an uneven link.\n\nRound trips/s is how many completed each second, one after the other. On a LAN expect tens to a few hundred µs; between sites, milliseconds."
+    static let nodes: LocalizedStringKey =
+        "The server node runs netserver and waits. The client node runs netperf, which connects to it and sends: throughput is measured from the client to the server.\n\nSwap the two nodes to measure the other direction. Choosing the same node twice measures its own network stack, not a link."
+    static let paths: LocalizedStringKey =
+        "Pod to pod goes through the CNI: virtual interfaces, overlay or encapsulation, eBPF, encryption such as WireGuard or KubeSpan. Host to host uses the nodes’ own addresses and skips all of it.\n\nPod to pod much slower than host to host: the gap is what the CNI costs. Both slow: look at the link itself (NIC, switch, MTU, distance between sites)."
+    static let duration: LocalizedStringKey =
+        "How long each measurement lasts. Longer runs smooth out bursts and TCP’s ramp-up, but keep the link busy for longer.\n\nThe test makes 2 measurements one after the other, throughput then latency, and 4 with the host network."
+    static let throughput: LocalizedStringKey =
+        "netperf TCP_STREAM: one TCP connection sends as fast as it can for the whole duration, so this is the bandwidth a single flow gets.\n\nOn a healthy path it comes close to the link speed: about 940 Mbit/s on 1 GbE, 9.4 Gbit/s on 10 GbE. Encryption, a small MTU or a busy CPU lower it. Several flows together can reach more."
+    static let latency: LocalizedStringKey =
+        "netperf TCP_RR: one byte goes to the server and back, again and again on one connection. Each value is a full round trip, both network stacks included.\n\np50 is the median: half of the round trips were faster. p90: 9 in 10 were faster. p99: only the slowest 1 in 100 took longer, where jitter and retransmits show. A p99 far above p50 means an uneven link.\n\nRound trips/s is how many completed each second, one after the other. On a LAN expect tens to a few hundred µs; between sites, milliseconds."
 }
 
 /// A section title with its (i).

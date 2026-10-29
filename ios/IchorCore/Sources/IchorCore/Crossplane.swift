@@ -36,7 +36,8 @@ public struct Crossplane: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case installed, version, error, packages, definitions, composites, claims, managed, managedTotal, truncated, counts
+        case installed, version, error, packages, definitions, composites, claims, managed, managedTotal, truncated,
+            counts
     }
 }
 
@@ -178,7 +179,8 @@ public struct CrossplaneDefinition: Decodable, Equatable, Identifiable, Sendable
         claimKind = try c.field(.claimKind, "")
         claimPlural = try c.field(.claimPlural, "")
         versions = try c.field(.versions, [])
-        established = try c.field(.established, CrossplaneCondition(status: "", reason: "", message: "", lastTransition: 0))
+        established = try c.field(
+            .established, CrossplaneCondition(status: "", reason: "", message: "", lastTransition: 0))
         offered = try c.field(.offered, CrossplaneCondition(status: "", reason: "", message: "", lastTransition: 0))
         compositions = try c.field(.compositions, 0)
         compositionNames = try c.field(.compositionNames, [])
@@ -233,7 +235,8 @@ public struct CrossplaneObject: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case composition, resources, claim, composite, providerConfig, externalName, paused, ready, synced, lastTransition, health, reasons
+        case composition, resources, claim, composite, providerConfig, externalName, paused, ready, synced,
+            lastTransition, health, reasons
     }
 }
 
@@ -266,10 +269,11 @@ public extension Array where Element == CrossplaneObject {
             case .critical: match = o.health == .critical
             case .warning: match = o.health == .warning
             }
-            return match && (q.isEmpty
-                || o.ref.kind.localizedCaseInsensitiveContains(q)
-                || o.ref.name.localizedCaseInsensitiveContains(q)
-                || o.externalName.localizedCaseInsensitiveContains(q))
+            return match
+                && (q.isEmpty
+                    || o.ref.kind.localizedCaseInsensitiveContains(q)
+                    || o.ref.name.localizedCaseInsensitiveContains(q)
+                    || o.externalName.localizedCaseInsensitiveContains(q))
         }
     }
 }

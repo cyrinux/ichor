@@ -6,11 +6,13 @@ final class OverviewSeedTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 100_000)
 
     private var talos: ClusterSnapshot {
-        ClusterSnapshot(context: "lab", takenAt: now.addingTimeInterval(-60), nodes: [
-            "192.0.2.12": NodeState(hostname: "worker-2", health: .unreachable, reason: "connection refused"),
-            "192.0.2.10": NodeState(hostname: "cp-1", health: .ready),
-            "192.0.2.11": NodeState(hostname: "worker-1", health: .notReady, reason: "Ready: KubeletNotReady"),
-        ])
+        ClusterSnapshot(
+            context: "lab", takenAt: now.addingTimeInterval(-60),
+            nodes: [
+                "192.0.2.12": NodeState(hostname: "worker-2", health: .unreachable, reason: "connection refused"),
+                "192.0.2.10": NodeState(hostname: "cp-1", health: .ready),
+                "192.0.2.11": NodeState(hostname: "worker-1", health: .notReady, reason: "Ready: KubeletNotReady"),
+            ])
     }
 
     func testOverviewSeedHasEachNodeAndItsHealth() {
@@ -28,10 +30,12 @@ final class OverviewSeedTests: XCTestCase {
     }
 
     func testKubeSeedHasEachNodeAndItsPressure() {
-        let snapshot = ClusterSnapshot(context: "cloud", takenAt: now, nodes: [
-            "node-b": NodeState(hostname: "node-b", health: .notReady, reason: "MemoryPressure; DiskPressure"),
-            "node-a": NodeState(hostname: "node-a", health: .ready),
-        ], kube: true)
+        let snapshot = ClusterSnapshot(
+            context: "cloud", takenAt: now,
+            nodes: [
+                "node-b": NodeState(hostname: "node-b", health: .notReady, reason: "MemoryPressure; DiskPressure"),
+                "node-a": NodeState(hostname: "node-a", health: .ready),
+            ], kube: true)
         let seed = snapshot.kubeNodesSeed()
         XCTAssertEqual(seed.nodes.map(\.name), ["node-a", "node-b"])
         XCTAssertTrue(seed.nodes[0].ready)
@@ -44,6 +48,7 @@ final class OverviewSeedTests: XCTestCase {
         XCTAssertFalse(talos.seedable(kube: false, masked: true, now: now))
         XCTAssertFalse(talos.seedable(kube: true, masked: false, now: now))
         XCTAssertFalse(talos.seedable(kube: false, masked: false, now: now.addingTimeInterval(monitorSeedMaxAge + 60)))
-        XCTAssertFalse(ClusterSnapshot(context: "lab", takenAt: now, nodes: [:]).seedable(kube: false, masked: false, now: now))
+        XCTAssertFalse(
+            ClusterSnapshot(context: "lab", takenAt: now, nodes: [:]).seedable(kube: false, masked: false, now: now))
     }
 }

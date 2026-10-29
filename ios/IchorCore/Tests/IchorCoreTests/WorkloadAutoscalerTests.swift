@@ -9,18 +9,24 @@ final class WorkloadAutoscalerTests: XCTestCase {
     }
 
     func testLabelNamesTheScaledObjectAndItsPause() {
-        let keda = WorkloadAutoscaler(by: "keda", name: "worker-so", min: 0, max: 10, current: 0, desired: 0, paused: true, state: "paused")
+        let keda = WorkloadAutoscaler(
+            by: "keda", name: "worker-so", min: 0, max: 10, current: 0, desired: 0, paused: true, state: "paused")
         XCTAssertEqual(keda.label, "KEDA worker-so · paused at 0")
         XCTAssertFalse(keda.stateOk)
     }
 
     func testDecodesFromTheGoCoreAndToleratesItsAbsence() throws {
-        let with = try JSONDecoder().decode(KubeWorkload.self, from: Data(
-            #"{"kind":"Deployment","namespace":"shop","name":"web","autoscaler":{"by":"keda","name":"worker-so","min":0,"max":10,"current":2,"desired":2,"paused":true,"state":"paused"}}"#.utf8))
+        let with = try JSONDecoder().decode(
+            KubeWorkload.self,
+            from: Data(
+                #"{"kind":"Deployment","namespace":"shop","name":"web","autoscaler":{"by":"keda","name":"worker-so","min":0,"max":10,"current":2,"desired":2,"paused":true,"state":"paused"}}"#
+                    .utf8))
         XCTAssertEqual(with.autoscaler?.label, "KEDA worker-so · paused at 2")
 
-        let without = try JSONDecoder().decode(KubeWorkload.self, from: Data(
-            #"{"kind":"Deployment","namespace":"shop","name":"plain"}"#.utf8))
+        let without = try JSONDecoder().decode(
+            KubeWorkload.self,
+            from: Data(
+                #"{"kind":"Deployment","namespace":"shop","name":"plain"}"#.utf8))
         XCTAssertNil(without.autoscaler)
     }
 }

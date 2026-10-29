@@ -19,8 +19,9 @@ struct ImageScanReportView: View {
     @State private var message: String?
 
     private var filter: VulnFilter {
-        VulnFilter(fixableOnly: fixableOnly, severities: Set(VulnSeverity.allCases).subtracting(hidden),
-                   newOnly: newOnly && report.newSummary.total > 0)
+        VulnFilter(
+            fixableOnly: fixableOnly, severities: Set(VulnSeverity.allCases).subtracting(hidden),
+            newOnly: newOnly && report.newSummary.total > 0)
     }
 
     var body: some View {
@@ -77,7 +78,9 @@ struct ImageScanReportView: View {
         do {
             let json = try reportJSON.nonEmpty ?? String(decoding: JSONEncoder().encode(report), as: UTF8.self)
             let content = try await TalosClient.imageScanExport(json, format: format)
-            shared = SharedReport(url: try writeSharedReport(content, name: imageScanFilename(app: appName, date: Date(), format: format)))
+            shared = SharedReport(
+                url: try writeSharedReport(content, name: imageScanFilename(app: appName, date: Date(), format: format))
+            )
         } catch {
             message = String(localized: "Export failed: \(error.localizedDescription)")
         }
@@ -92,12 +95,16 @@ private struct ImageSection: View {
     var body: some View {
         Section {
             let meta = [image.os, String(image.digest.prefix(19))].filter { !$0.isEmpty }
-            if !meta.isEmpty { Text(verbatim: meta.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
+            if !meta.isEmpty {
+                Text(verbatim: meta.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
             if image.previousScannedAt > 0 {
-                Text("Previous scan \(dateTimeText(image.previousScannedAt))").font(.caption).foregroundStyle(.secondary)
+                Text("Previous scan \(dateTimeText(image.previousScannedAt))").font(.caption).foregroundStyle(
+                    .secondary)
             }
             if !image.pods.isEmpty {
-                Text("Pods: \(image.pods.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Text("Pods: \(image.pods.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
             if !image.error.isEmpty {
                 Text(verbatim: imageScanErrorText(image.error)).font(.callout).foregroundStyle(.statusBad)
@@ -105,8 +112,10 @@ private struct ImageSection: View {
                 if image.summary.total > 0 { SeverityChips(summary: image.summary) }
                 if image.newSummary.total > 0 { NewFindingsLine(summary: image.newSummary, hasPrevious: true) }
                 if image.summary.os > 0, !image.os.isEmpty {
-                    Text("\(String(image.summary.os)) come from the OS packages (\(image.os)): a newer base image fixes those with a fix.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(
+                        "\(String(image.summary.os)) come from the OS packages (\(image.os)): a newer base image fixes those with a fix."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                 }
                 let groups = image.byPackage(filter)
                 if image.vulnerabilities.isEmpty {
@@ -130,11 +139,13 @@ private struct PackageLine: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            (Text(verbatim: first.package).font(.callout.monospaced()) + Text(verbatim: " \(first.installed)").font(.caption).foregroundStyle(.secondary))
+            (Text(verbatim: first.package).font(.callout.monospaced())
+                + Text(verbatim: " \(first.installed)").font(.caption).foregroundStyle(.secondary))
                 .lineLimit(1)
                 .truncationMode(.middle)
             if first.class != "os-pkgs", !first.target.isEmpty {
-                Text(verbatim: first.target).font(.caption2).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                Text(verbatim: first.target).font(.caption2).foregroundStyle(.secondary).lineLimit(1).truncationMode(
+                    .middle)
             }
         }
     }
@@ -150,7 +161,9 @@ private struct VulnLine: View {
             VStack(alignment: .leading, spacing: 6) {
                 if !vuln.description.isEmpty { Text(verbatim: vuln.description).font(.caption) }
                 if vuln.score > 0 {
-                    Text(verbatim: "CVSS \(String(format: "%.1f", vuln.score)) \(vuln.vector)").font(.caption2.monospaced()).foregroundStyle(.secondary)
+                    Text(verbatim: "CVSS \(String(format: "%.1f", vuln.score)) \(vuln.vector)").font(
+                        .caption2.monospaced()
+                    ).foregroundStyle(.secondary)
                 }
                 if let url = URL(string: vuln.url), url.scheme == "https" || url.scheme == "http" {
                     Link("Open the advisory", destination: url).font(.caption)
@@ -166,10 +179,15 @@ private struct VulnLine: View {
                     Text(verbatim: vuln.id).font(.caption.monospaced())
                     if vuln.new { Tag(String(localized: "new"), color: .statusWarn) }
                     Spacer(minLength: 4)
-                    Text(verbatim: vuln.fixable ? String(localized: "fixed in \(vuln.fixed)") : String(localized: "no fix yet"))
-                        .font(.caption2)
-                        .foregroundStyle(vuln.fixable ? AnyShapeStyle(Color.statusOK) : AnyShapeStyle(HierarchicalShapeStyle.secondary))
-                        .lineLimit(1)
+                    Text(
+                        verbatim: vuln.fixable
+                            ? String(localized: "fixed in \(vuln.fixed)") : String(localized: "no fix yet")
+                    )
+                    .font(.caption2)
+                    .foregroundStyle(
+                        vuln.fixable ? AnyShapeStyle(Color.statusOK) : AnyShapeStyle(HierarchicalShapeStyle.secondary)
+                    )
+                    .lineLimit(1)
                 }
                 if !vuln.title.isEmpty {
                     Text(verbatim: vuln.title).font(.caption).foregroundStyle(.secondary).lineLimit(expanded ? nil : 1)
@@ -208,9 +226,12 @@ private let sharedReportLifetime: TimeInterval = 3600
 private func writeSharedReport(_ content: String, name: String) throws -> URL {
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent("scans", isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-    let old = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+    let old =
+        (try? FileManager.default.contentsOfDirectory(
+            at: folder, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
     for file in old {
-        let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+        let modified =
+            (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
         if Date().timeIntervalSince(modified) > sharedReportLifetime { try? FileManager.default.removeItem(at: file) }
     }
     let url = folder.appendingPathComponent(name)

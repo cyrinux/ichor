@@ -9,18 +9,23 @@ final class SectionJumpTests: XCTestCase {
     ]
 
     func testOneHeaderAtTheTopIsCurrent() {
-        XCTAssertEqual(SectionJump.current(sections: sections, visibleTops: ["nodes": 100], top: 100, previous: nil), "nodes")
+        XCTAssertEqual(
+            SectionJump.current(sections: sections, visibleTops: ["nodes": 100], top: 100, previous: nil), "nodes")
     }
 
     func testTheLastReachedHeaderWinsOverEarlierOnes() {
         let tops = ["summary": -300.0, "nodes": 90, "workloads": 600]
-        XCTAssertEqual(SectionJump.current(sections: sections, visibleTops: tops, top: 100, previous: "summary"), "nodes")
+        XCTAssertEqual(
+            SectionJump.current(sections: sections, visibleTops: tops, top: 100, previous: "summary"), "nodes")
     }
 
     func testHeadersAllBelowTheTopMeanTheSectionBeforeThem() {
         // Scrolling back up through the nodes: only the workloads header is in view, low on screen.
-        XCTAssertEqual(SectionJump.current(sections: sections, visibleTops: ["workloads": 500], top: 100, previous: "workloads"), "nodes")
-        XCTAssertEqual(SectionJump.current(sections: sections, visibleTops: ["summary": 300], top: 100, previous: nil), "summary")
+        XCTAssertEqual(
+            SectionJump.current(sections: sections, visibleTops: ["workloads": 500], top: 100, previous: "workloads"),
+            "nodes")
+        XCTAssertEqual(
+            SectionJump.current(sections: sections, visibleTops: ["summary": 300], top: 100, previous: nil), "summary")
     }
 
     func testNoHeaderInViewKeepsThePrevious() {
@@ -32,7 +37,8 @@ final class SectionJumpTests: XCTestCase {
     }
 
     func testUnknownIdsAreIgnored() {
-        XCTAssertEqual(SectionJump.current(sections: sections, visibleTops: ["other": 0], top: 0, previous: "summary"), "summary")
+        XCTAssertEqual(
+            SectionJump.current(sections: sections, visibleTops: ["other": 0], top: 0, previous: "summary"), "summary")
     }
 
     func testSectionAtMapsTheEndsAndClamps() {

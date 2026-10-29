@@ -53,7 +53,9 @@ struct ReplaceControlPlaneView: View {
                 }
                 step(plan, .resetOrPowerOff, number: 3, title: "Reset the old node") { resetRow(plan) }
                 step(plan, .bootNewNode, number: 4, title: "Boot the new node") { bootRows(plan) }
-                step(plan, .waitMember, number: 5, title: "Wait for the new member", done: join == .joined) { waitRows(plan) }
+                step(plan, .waitMember, number: 5, title: "Wait for the new member", done: join == .joined) {
+                    waitRows(plan)
+                }
             }
             .refreshable { await load() }
             .themedBackground()
@@ -69,19 +71,26 @@ struct ReplaceControlPlaneView: View {
 
     private func header(_ plan: CpReplacePlan) -> some View {
         Section {
-            Text(verbatim: plan.member.hostname.isEmpty ? (hostname.isEmpty ? plan.member.id : hostname) : plan.member.hostname)
-                .font(.headline)
+            Text(
+                verbatim: plan.member.hostname.isEmpty
+                    ? (hostname.isEmpty ? plan.member.id : hostname) : plan.member.hostname
+            )
+            .font(.headline)
             if !plan.member.node.isEmpty {
                 Text(verbatim: plan.member.node).font(.caption.monospaced()).foregroundStyle(.secondary)
             }
             LabeledContent("Member ID") { Text(verbatim: plan.member.id).font(.caption.monospaced()) }
         } footer: {
-            Text("Each step asks for its own confirmation. The steps are read from the cluster: leave and come back at any time.")
+            Text(
+                "Each step asks for its own confirmation. The steps are read from the cluster: leave and come back at any time."
+            )
         }
     }
 
-    private func step<Content: View>(_ plan: CpReplacePlan, _ step: CpStep, number: Int, title: LocalizedStringKey, done: Bool = false,
-                                     @ViewBuilder content: () -> Content) -> some View {
+    private func step<Content: View>(
+        _ plan: CpReplacePlan, _ step: CpStep, number: Int, title: LocalizedStringKey, done: Bool = false,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         let state = done ? CpStepState.done : plan.state(step)
         let detail = plan.step(step).detail
         return Section {
@@ -92,7 +101,8 @@ struct ReplaceControlPlaneView: View {
                 StepStateBadge(state: state)
             }
             if !detail.isEmpty {
-                Text(verbatim: detail).font(.footnote).foregroundStyle(state == .blocked ? Color.statusBad : Color.secondary)
+                Text(verbatim: detail).font(.footnote).foregroundStyle(
+                    state == .blocked ? Color.statusBad : Color.secondary)
             }
             content()
         }
@@ -101,10 +111,14 @@ struct ReplaceControlPlaneView: View {
     @ViewBuilder
     private func resetRow(_ plan: CpReplacePlan) -> some View {
         if resetRunning {
-            HStack { ProgressView(); Text("Working…") }
+            HStack {
+                ProgressView(); Text("Working…")
+            }
         } else if plan.state(.resetOrPowerOff) == .skipped {
-            Text("The old node does not answer, so it cannot be reset from here: power it off yourself if it still runs.")
-                .font(.footnote).foregroundStyle(.secondary)
+            Text(
+                "The old node does not answer, so it cannot be reset from here: power it off yourself if it still runs."
+            )
+            .font(.footnote).foregroundStyle(.secondary)
         } else if plan.state(.resetOrPowerOff) == .ready {
             Button("Reset…", role: .destructive) { resetting = true }
         }
@@ -114,8 +128,13 @@ struct ReplaceControlPlaneView: View {
     private func bootRows(_ plan: CpReplacePlan) -> some View {
         if !plan.template.node.isEmpty {
             let name = plan.template.hostname.isEmpty ? plan.template.node : plan.template.hostname
-            Text(String(localized: "Boot the new machine from a Talos image (maintenance mode), then apply the machine config of \(name) to it from a laptop. Joining a node from the phone comes later."))
-                .font(.footnote).foregroundStyle(.secondary)
+            Text(
+                String(
+                    localized:
+                        "Boot the new machine from a Talos image (maintenance mode), then apply the machine config of \(name) to it from a laptop. Joining a node from the phone comes later."
+                )
+            )
+            .font(.footnote).foregroundStyle(.secondary)
             Text(verbatim: applyConfigCommand).font(.caption.monospaced()).textSelection(.enabled)
             NavigationLink {
                 MachineConfigView(node: plan.template.node, hostname: name)
@@ -132,7 +151,9 @@ struct ReplaceControlPlaneView: View {
         case .joined:
             Text("The new member joined: etcd is healthy.").foregroundStyle(.statusOK)
         case .waiting(let detail):
-            HStack { ProgressView(); Text("Waiting for a new healthy etcd member…") }
+            HStack {
+                ProgressView(); Text("Waiting for a new healthy etcd member…")
+            }
             if !detail.isEmpty { Text(verbatim: detail).font(.footnote).foregroundStyle(.secondary) }
             Button("Stop waiting") { stopWait() }
         case .failed(let error):
@@ -148,10 +169,12 @@ struct ReplaceControlPlaneView: View {
     @ViewBuilder
     private var removeSheet: some View {
         if let client = model.client, case .loaded(let plan, _, _) = state {
-            EtcdRemoveMemberSheet(member: EtcdMember(id: plan.member.id, hostname: plan.member.hostname),
-                                  throughNode: plan.template.node.isEmpty ? nil : plan.template.node,
-                                  client: client, lockEnabled: model.lock.enabled,
-                                  remove: { try await client.controlPlaneReplaceRemove(memberID: $0) }) { name in
+            EtcdRemoveMemberSheet(
+                member: EtcdMember(id: plan.member.id, hostname: plan.member.hostname),
+                throughNode: plan.template.node.isEmpty ? nil : plan.template.node,
+                client: client, lockEnabled: model.lock.enabled,
+                remove: { try await client.controlPlaneReplaceRemove(memberID: $0) }
+            ) { name in
                 removing = false
                 message = String(localized: "\(name) was removed from etcd")
                 Task { await load() }
@@ -184,7 +207,9 @@ struct ReplaceControlPlaneView: View {
 
     private func performReset(_ request: NodeResetSheet.Request, name: String) async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(name)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(name)"))
+        {
             message = failure
             return
         }

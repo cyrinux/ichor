@@ -51,9 +51,11 @@ struct SourceBrowserView: View {
                 LoadStateView(state: state, retry: load) { tree in content(tree) }
             }
         }
-        .modifier(SourceSearchable(enabled: source.read != .unreadable, query: $query) {
-            Task { await search() }
-        })
+        .modifier(
+            SourceSearchable(enabled: source.read != .unreadable, query: $query) {
+                Task { await search() }
+            }
+        )
         .onChange(of: query) { _, text in
             if text.isEmpty { searched = nil }
         }
@@ -65,7 +67,9 @@ struct SourceBrowserView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if let url = hosts.browserURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: dir, dir: true)) {
+                if let url = hosts.browserURL(
+                    gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: dir, dir: true))
+                {
                     Link(destination: url) { Label("Open in browser", systemImage: "safari") }
                 }
             }
@@ -82,7 +86,9 @@ struct SourceBrowserView: View {
             }
             if !stagedPaths.isEmpty {
                 Section {
-                    Button { showingStaged = true } label: {
+                    Button {
+                        showingStaged = true
+                    } label: {
                         Label("Staged changes (\(String(stagedPaths.count)))", systemImage: "square.and.pencil")
                     }
                 }
@@ -97,15 +103,24 @@ struct SourceBrowserView: View {
                 }
                 ForEach(entries) { entry in
                     if entry.isDir {
-                        NavigationLink { SourceBrowserView(source: source, dir: entry.path, app: app) } label: {
-                            Label { Text(verbatim: entry.name).font(.callout.monospaced()) } icon: {
+                        NavigationLink {
+                            SourceBrowserView(source: source, dir: entry.path, app: app)
+                        } label: {
+                            Label {
+                                Text(verbatim: entry.name).font(.callout.monospaced())
+                            } icon: {
                                 Image(systemName: "folder").foregroundStyle(.tint)
                             }
                         }
                     } else {
-                        NavigationLink { SourceFileView(source: source, path: entry.path, app: app) } label: {
+                        NavigationLink {
+                            SourceFileView(source: source, path: entry.path, app: app)
+                        } label: {
                             HStack {
-                                Label { Text(verbatim: entry.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle) } icon: {
+                                Label {
+                                    Text(verbatim: entry.name).font(.callout.monospaced()).lineLimit(1).truncationMode(
+                                        .middle)
+                                } icon: {
                                     Image(systemName: "doc.text").foregroundStyle(.secondary)
                                 }
                                 Spacer(minLength: 8)
@@ -117,7 +132,8 @@ struct SourceBrowserView: View {
                                     Image(systemName: "lock.fill").font(.caption).foregroundStyle(.secondary)
                                         .accessibilityLabel(Text("Encrypted with SOPS"))
                                 }
-                                Text(verbatim: formatBytes(entry.size)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                                Text(verbatim: formatBytes(entry.size)).font(.caption.monospacedDigit())
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -135,7 +151,8 @@ struct SourceBrowserView: View {
             HStack(spacing: 4) {
                 crumb(Text("Repository root"), path: "", current: crumbs.isEmpty)
                 ForEach(crumbs, id: \.path) { step in
-                    Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary).accessibilityHidden(true)
+                    Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary).accessibilityHidden(
+                        true)
                     crumb(Text(verbatim: step.name), path: step.path, current: step.path == crumbs.last?.path)
                 }
             }
@@ -147,7 +164,11 @@ struct SourceBrowserView: View {
         if current {
             label.fontWeight(.semibold).accessibilityAddTraits(.isHeader)
         } else {
-            Button { dir = path } label: { label }.buttonStyle(.borderless)
+            Button {
+                dir = path
+            } label: {
+                label
+            }.buttonStyle(.borderless)
         }
     }
 
@@ -180,7 +201,9 @@ struct SourceBrowserView: View {
                     Section {
                         ForEach(result.byFile, id: \.path) { group in
                             ForEach(group.hits) { hit in
-                                NavigationLink { SourceFileView(source: source, path: hit.path, app: app, line: hit.line) } label: {
+                                NavigationLink {
+                                    SourceFileView(source: source, path: hit.path, app: app, line: hit.line)
+                                } label: {
                                     SourceHitRow(hit: hit)
                                 }
                             }
@@ -256,7 +279,10 @@ private struct SourceSearchable: ViewModifier {
     func body(content: Content) -> some View {
         if enabled {
             content
-                .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Find in repository"))
+                .searchable(
+                    text: $query, placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: Text("Find in repository")
+                )
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
                 .onSubmit(of: .search, submit)
@@ -277,13 +303,16 @@ struct SourceHeader: View {
         VStack(alignment: .leading, spacing: 4) {
             if let url = hosts.browserURL(source.webURL) {
                 Link(destination: url) {
-                    Label { Text(verbatim: source.repoURL).lineLimit(2).truncationMode(.middle) } icon: {
+                    Label {
+                        Text(verbatim: source.repoURL).lineLimit(2).truncationMode(.middle)
+                    } icon: {
                         Image(systemName: "arrow.up.forward.square")
                     }
                     .font(.callout.monospaced())
                 }
             } else {
-                Text(verbatim: source.repoURL).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle).textSelection(.enabled)
+                Text(verbatim: source.repoURL).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
+                    .textSelection(.enabled)
             }
             let commit = shortRevision(sha.isEmpty ? source.revision : sha)
             HStack(spacing: 8) {
@@ -306,12 +335,20 @@ struct GitHostMissingView: View {
 
     var body: some View {
         ContentUnavailableView {
-            Label { Text(verbatim: host) } icon: { Image(systemName: "key") }
+            Label {
+                Text(verbatim: host)
+            } icon: {
+                Image(systemName: "key")
+            }
         } description: {
             Text("Add a token for \(host) to browse this repository.")
         } actions: {
-            NavigationLink { SettingsPageView(page: .gitHosts) } label: { Text("Add a token") }
-                .buttonStyle(.borderedProminent)
+            NavigationLink {
+                SettingsPageView(page: .gitHosts)
+            } label: {
+                Text("Add a token")
+            }
+            .buttonStyle(.borderedProminent)
             if let url = hosts.browserURL(page) {
                 Link(destination: url) { Text("Open in browser") }
             }

@@ -114,7 +114,7 @@ public struct QRPartCollector: Sendable {
             let json = try part(text)
             if json.isEmpty { return isCollecting ? .notPartWhileCollecting : .notPart }
             guard let decoded = try? JSONDecoder().decode(QRPart.self, from: Data(json.utf8)),
-                  decoded.total > 0, (1...decoded.total).contains(decoded.index)
+                decoded.total > 0, (1...decoded.total).contains(decoded.index)
             else { return .failed(.invalid) }
             parsed = decoded
         } catch {

@@ -18,7 +18,9 @@ public struct SearchEntry: Codable, Equatable, Sendable {
     }
 
     public init(cluster: String, context: String, key: String, at: Date, json: String) {
-        self.init(cluster: cluster, context: context, key: key, at: Int64((at.timeIntervalSince1970 * 1000).rounded()), json: json)
+        self.init(
+            cluster: cluster, context: context, key: key, at: Int64((at.timeIntervalSince1970 * 1000).rounded()),
+            json: json)
     }
 }
 
@@ -50,7 +52,9 @@ public struct SearchResult: Decodable, Equatable, Identifiable, Sendable {
     public var id: String { "\(cluster)|\(kind)|\(namespace)|\(name)" }
     public var date: Date { Date(epochMillis: at) }
 
-    private enum CodingKeys: String, CodingKey { case cluster, context, kind, namespace, name, detail, at, score, target }
+    private enum CodingKeys: String, CodingKey {
+        case cluster, context, kind, namespace, name, detail, at, score, target
+    }
 
     // Go leaves out an empty namespace and a missing target.
     public init(from decoder: Decoder) throws {
@@ -128,7 +132,10 @@ public func searchEntries(
         for keys in searchKeys {
             if cluster == activeCluster, activeKinds.contains(searchKind(of: keys[0])) { continue }
             if let found = first(in: byCluster[cluster] ?? [], keys: keys, read: read) {
-                out.append(SearchEntry(cluster: cluster, context: found.context.name, key: found.entry.key, at: found.entry.at, json: found.entry.json))
+                out.append(
+                    SearchEntry(
+                        cluster: cluster, context: found.context.name, key: found.entry.key, at: found.entry.at,
+                        json: found.entry.json))
             }
         }
         if cluster == activeCluster { out += active }
@@ -136,8 +143,10 @@ public func searchEntries(
     return out
 }
 
-private func first(in contexts: [ContextSummary], keys: [String],
-                   read: (String, String) -> LastKnownEntry?) -> (context: ContextSummary, entry: LastKnownEntry)? {
+private func first(
+    in contexts: [ContextSummary], keys: [String],
+    read: (String, String) -> LastKnownEntry?
+) -> (context: ContextSummary, entry: LastKnownEntry)? {
     for key in keys {
         for context in contexts {
             if let entry = read(context.fingerprint, key) { return (context, entry) }
@@ -152,7 +161,9 @@ public func searchKind(of key: String) -> String {
 }
 
 /// The results grouped by cluster, the active one first, then in the order of their best match.
-public func searchSections(_ results: [SearchResult], activeCluster: String) -> [(cluster: String, context: String, results: [SearchResult])] {
+public func searchSections(_ results: [SearchResult], activeCluster: String) -> [(
+    cluster: String, context: String, results: [SearchResult]
+)] {
     var order: [String] = []
     var grouped: [String: [SearchResult]] = [:]
     for result in results {
@@ -212,7 +223,9 @@ extension ArgoStatus {
     /// The apps as SearchSnapshots reads them, under the "argocd" key.
     public var searchJSON: String {
         let apps = apps.map {
-            SearchApp(kind: "Application", namespace: $0.namespace, name: $0.name, project: $0.project, level: $0.level.wire, health: $0.health.rawValue)
+            SearchApp(
+                kind: "Application", namespace: $0.namespace, name: $0.name, project: $0.project, level: $0.level.wire,
+                health: $0.health.rawValue)
         }
         return (try? TalosJSON.encode(SearchApps(apps: apps))) ?? #"{"apps":[]}"#
     }
@@ -221,7 +234,10 @@ extension ArgoStatus {
 extension FluxStatus {
     /// The apps as SearchSnapshots reads them, under the "flux" key.
     public var searchJSON: String {
-        let apps = apps.map { SearchApp(kind: $0.kind, namespace: $0.namespace, name: $0.name, project: "", level: $0.level.wire, health: "") }
+        let apps = apps.map {
+            SearchApp(
+                kind: $0.kind, namespace: $0.namespace, name: $0.name, project: "", level: $0.level.wire, health: "")
+        }
         return (try? TalosJSON.encode(SearchApps(apps: apps))) ?? #"{"apps":[]}"#
     }
 }

@@ -39,7 +39,7 @@ public func ageRecipientLines(_ text: String) -> [String] {
 /// checksum (one case only). Plugin keys (age1yubikey1…, age1tag1…) and SSH keys are not.
 public func isAgeRecipient(_ line: String) -> Bool {
     let lower = line.lowercased()
-    guard line == lower || line == line.uppercased() else { return false } // mixed case is invalid bech32
+    guard line == lower || line == line.uppercased() else { return false }  // mixed case is invalid bech32
     guard lower.count == ageRecipientLength, lower.hasPrefix("age1") else { return false }
     var values: [UInt8] = []
     for char in lower.dropFirst(4) {

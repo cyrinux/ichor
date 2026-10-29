@@ -27,17 +27,23 @@ struct UpdateRowView: View {
             }
             .font(.caption).foregroundStyle(.secondary)
             if let owner = row.owner, !owner.name.isEmpty {
-                Text(verbatim: "\(owner.kind) \(owner.namespace)/\(owner.name)").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(verbatim: "\(owner.kind) \(owner.namespace)/\(owner.name)").font(.caption).foregroundStyle(
+                    .secondary
+                ).lineLimit(1)
             }
             if let automation = row.automation {
                 StatusPill(label: automationLabel(automation), color: .accentColor)
             } else if !row.candidates.isEmpty {
                 HStack(spacing: 8) {
                     ForEach(row.candidates, id: \.self) { candidate in
-                        Button { onPick(candidate.version) } label: { Text(chipLabel(candidate)).lineLimit(1) }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                            .disabled(!row.editable || resolving)
+                        Button {
+                            onPick(candidate.version)
+                        } label: {
+                            Text(chipLabel(candidate)).lineLimit(1)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .disabled(!row.editable || resolving)
                     }
                 }
             } else if !row.reason.isEmpty {

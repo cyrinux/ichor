@@ -24,8 +24,10 @@ struct PodShellView: View {
             case .setup:
                 Form {
                     Section {
-                        Text("Opens a terminal in the running container of \(pod), like kubectl exec -it. Leave the command empty to run bash, or sh when the image has no bash.")
-                            .font(.callout)
+                        Text(
+                            "Opens a terminal in the running container of \(pod), like kubectl exec -it. Leave the command empty to run bash, or sh when the image has no bash."
+                        )
+                        .font(.callout)
                     }
                     Section {
                         Toggle("Debug container", isOn: $debug).kubeGated(.debugPod, in: namespace)
@@ -38,7 +40,9 @@ struct PodShellView: View {
                         } header: {
                             Text("Image")
                         } footer: {
-                            Text("For images without a shell (distroless): adds a temporary container that sees this pod's processes. Kubernetes keeps it in the pod until the pod is deleted.")
+                            Text(
+                                "For images without a shell (distroless): adds a temporary container that sees this pod's processes. Kubernetes keeps it in the pod until the pod is deleted."
+                            )
                         }
                     } else {
                         Section("Command") {
@@ -81,7 +85,9 @@ struct PodShellView: View {
     /// A shell can read the container's secrets: with the app lock on, it asks like the node's.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Shell in \(pod)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Shell in \(pod)"))
+        {
             error = failure
             return
         }
@@ -90,11 +96,13 @@ struct PodShellView: View {
         let image = debug ? debugImage.trimmingCharacters(in: .whitespaces) : ""
         shell.start { listener, cols, rows in
             if image.isEmpty {
-                client.startPodShell(namespace: namespace, pod: pod, container: container, command: command,
-                                     cols: cols, rows: rows, listener: listener)
+                client.startPodShell(
+                    namespace: namespace, pod: pod, container: container, command: command,
+                    cols: cols, rows: rows, listener: listener)
             } else {
-                client.startPodDebug(namespace: namespace, pod: pod, targetContainer: container, image: image,
-                                     cols: cols, rows: rows, listener: listener)
+                client.startPodDebug(
+                    namespace: namespace, pod: pod, targetContainer: container, image: image,
+                    cols: cols, rows: rows, listener: listener)
             }
         }
     }

@@ -23,8 +23,10 @@ struct OverviewBannerSections: View {
         }
         if model.activeSummary?.demo == true {
             Section {
-                Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
-                    .font(.callout).foregroundStyle(.secondary)
+                Text(
+                    "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
+                )
+                .font(.callout).foregroundStyle(.secondary)
             }
         }
         if showsSwitcherTip {
@@ -50,9 +52,11 @@ private struct CertExpiryBanner: View {
         let days = daysUntil(notAfter)
         NavigationLink(value: Route.issueConfig(renew: true)) {
             Label {
-                Text(days < 0
-                     ? String(localized: "The client certificate expired \(-days) days ago.")
-                     : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig."))
+                Text(
+                    days < 0
+                        ? String(localized: "The client certificate expired \(-days) days ago.")
+                        : String(
+                            localized: "The client certificate expires in \(days) days. Generate a new talosconfig."))
             } icon: {
                 Image(systemName: "exclamationmark.triangle.fill")
             }

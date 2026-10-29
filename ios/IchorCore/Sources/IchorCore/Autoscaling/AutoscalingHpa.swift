@@ -20,9 +20,13 @@ public struct HpaRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
 
     public var id: String { "\(namespace)/\(name)" }
 
-    public init(namespace: String = "", name: String = "", target: AutoscaleTarget = AutoscaleTarget(), min: Int = 0, max: Int = 0,
-                current: Int = 0, desired: Int = 0, metrics: [HpaMetric] = [], conditions: HpaConditions = HpaConditions(),
-                atMax: Bool = false, lastScaleAt: Int64 = 0, managedBy: String = "", scaledObject: String = "", state: AutoscaleState = .ok) {
+    public init(
+        namespace: String = "", name: String = "", target: AutoscaleTarget = AutoscaleTarget(), min: Int = 0,
+        max: Int = 0,
+        current: Int = 0, desired: Int = 0, metrics: [HpaMetric] = [], conditions: HpaConditions = HpaConditions(),
+        atMax: Bool = false, lastScaleAt: Int64 = 0, managedBy: String = "", scaledObject: String = "",
+        state: AutoscaleState = .ok
+    ) {
         self.namespace = namespace
         self.name = name
         self.target = target
@@ -58,7 +62,8 @@ public struct HpaRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, target, min, max, current, desired, metrics, conditions, atMax, lastScaleAt, managedBy, scaledObject, state
+        case namespace, name, target, min, max, current, desired, metrics, conditions, atMax, lastScaleAt, managedBy,
+            scaledObject, state
     }
 }
 
@@ -97,7 +102,9 @@ public struct HpaConditions: Decodable, Equatable, Hashable, Sendable {
     public let scalingLimited: Bool
     public let message: String
 
-    public init(ableToScale: Bool = false, scalingActive: Bool = false, scalingLimited: Bool = false, message: String = "") {
+    public init(
+        ableToScale: Bool = false, scalingActive: Bool = false, scalingLimited: Bool = false, message: String = ""
+    ) {
         self.ableToScale = ableToScale
         self.scalingActive = scalingActive
         self.scalingLimited = scalingLimited

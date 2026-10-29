@@ -12,25 +12,34 @@ struct ArgoSection: View {
     let downNodes: Set<String>
 
     var body: some View {
-        GitOpsOverviewSection(title: "GitOps", route: .argoCD(downNodes: downNodes), app: app ?? argoCDTile, state: state,
-                              installed: { $0.installed && !$0.apps.isEmpty }) {
+        GitOpsOverviewSection(
+            title: "GitOps", route: .argoCD(downNodes: downNodes), app: app ?? argoCDTile, state: state,
+            installed: { $0.installed && !$0.apps.isEmpty }
+        ) {
             ArgoHealthBar(counts: [(health: .healthy, count: 1)])
             Text(verbatim: "GitOps apps healthy").font(.caption)
-        } content: { content($0) }
+        } content: {
+            content($0)
+        }
     }
 
     private func content(_ status: ArgoStatus) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            GitOpsSectionHeader(app: app ?? argoCDTile, title: "GitOps", count: status.apps.count,
-                                attention: status.problems.count)
+            GitOpsSectionHeader(
+                app: app ?? argoCDTile, title: "GitOps", count: status.apps.count,
+                attention: status.problems.count)
             ArgoHealthBar(counts: status.healthCounts)
             if let next = status.activeFreezes.first {
-                Label(status.activeFreezes.count == 1
-                      ? String(localized: "1 freeze · ends \(freezeClock(next.window.endsAt))")
-                      : String(localized: "\(status.activeFreezes.count) freezes · next ends \(freezeClock(next.window.endsAt))"),
-                      systemImage: "snowflake")
-                    .font(.caption)
-                    .foregroundStyle(.blue)
+                Label(
+                    status.activeFreezes.count == 1
+                        ? String(localized: "1 freeze · ends \(freezeClock(next.window.endsAt))")
+                        : String(
+                            localized:
+                                "\(status.activeFreezes.count) freezes · next ends \(freezeClock(next.window.endsAt))"),
+                    systemImage: "snowflake"
+                )
+                .font(.caption)
+                .foregroundStyle(.blue)
             }
             if status.allCalm && status.running.isEmpty {
                 Text("All apps synced and healthy").font(.caption).foregroundStyle(.secondary)
@@ -92,9 +101,12 @@ struct ArgoSection: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(app.level.color).font(.caption)
             VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: "\(app.name) · \(app.lastSyncFailed ? String(localized: "sync failed") : app.health.broken ? app.health.label : app.sync.label)")
-                    .font(.caption.weight(.semibold))
-                    .lineLimit(1)
+                Text(
+                    verbatim:
+                        "\(app.name) · \(app.lastSyncFailed ? String(localized: "sync failed") : app.health.broken ? app.health.label : app.sync.label)"
+                )
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
                 if let cause = app.likelyCause(downNodes: downNodes) {
                     Text(verbatim: cause.text)
                         .font(.caption)

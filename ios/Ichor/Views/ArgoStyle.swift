@@ -178,12 +178,16 @@ struct ArgoBadge: View {
     let color: Color
 
     var body: some View {
-        Label { Text(verbatim: label) } icon: { Image(systemName: symbol) }
-            .font(.subheadline.weight(.semibold))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .foregroundStyle(color)
-            .background(color.opacity(0.15), in: Capsule())
+        Label {
+            Text(verbatim: label)
+        } icon: {
+            Image(systemName: symbol)
+        }
+        .font(.subheadline.weight(.semibold))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .foregroundStyle(color)
+        .background(color.opacity(0.15), in: Capsule())
     }
 }
 
@@ -192,7 +196,9 @@ struct ArgoOwnerBadge: View {
     let owner: ArgoOwner
 
     var body: some View {
-        Label { Text(verbatim: owner.name).lineLimit(1) } icon: {
+        Label {
+            Text(verbatim: owner.name).lineLimit(1)
+        } icon: {
             Image(systemName: owner.kind == "ApplicationSet" ? "square.stack.3d.down.right" : "arrow.up.forward.square")
         }
         .labelStyle(.titleAndIcon)
@@ -211,7 +217,8 @@ struct ArgoHealthBar: View {
     var height: CGFloat = 8
 
     var body: some View {
-        SegmentBar(segments: counts.map { (color: $0.health.color, count: $0.count, label: $0.health.label) }, height: height)
+        SegmentBar(
+            segments: counts.map { (color: $0.health.color, count: $0.count, label: $0.health.label) }, height: height)
     }
 }
 

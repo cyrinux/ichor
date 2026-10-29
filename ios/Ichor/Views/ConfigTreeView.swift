@@ -89,8 +89,10 @@ struct ConfigTreeView: View {
             case .add(let target): ConfigAddFieldSheet(doc: target.doc, parent: target.node, apply: apply)
             }
         }
-        .confirmationDialog(Text("Remove \(removing?.node.key ?? "")?"), isPresented: $removing.isPresent(),
-                            titleVisibility: .visible, presenting: removing) { target in
+        .confirmationDialog(
+            Text("Remove \(removing?.node.key ?? "")?"), isPresented: $removing.isPresent(),
+            titleVisibility: .visible, presenting: removing
+        ) { target in
             Button("Remove", role: .destructive) {
                 Task { message = await apply(.remove(doc: target.doc, path: target.node.path)) }
             }
@@ -115,7 +117,9 @@ struct ConfigTreeView: View {
                 Text(verbatim: document.title)
                 Spacer()
                 if editing && root.canAdd {
-                    Button { handle(.add(root), doc: document.index) } label: {
+                    Button {
+                        handle(.add(root), doc: document.index)
+                    } label: {
                         Label(root.addLabel, systemImage: "plus").labelStyle(.iconOnly)
                     }
                 }
@@ -170,8 +174,12 @@ struct ConfigNodeRow: View {
                     }
                 }
             } else if context.editing && !node.isRedacted {
-                Button { context.act(.edit(node)) } label: { details.contentShape(Rectangle()) }
-                    .buttonStyle(.plain)
+                Button {
+                    context.act(.edit(node))
+                } label: {
+                    details.contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             } else {
                 details
                     .contentShape(Rectangle())
@@ -224,9 +232,17 @@ struct ConfigNodeRow: View {
     private var actions: some View {
         Menu {
             if node.canAdd {
-                Button { context.act(.add(node)) } label: { Label(node.addLabel, systemImage: "plus") }
+                Button {
+                    context.act(.add(node))
+                } label: {
+                    Label(node.addLabel, systemImage: "plus")
+                }
             }
-            Button(role: .destructive) { context.act(.remove(node)) } label: { Label("Remove", systemImage: "trash") }
+            Button(role: .destructive) {
+                context.act(.remove(node))
+            } label: {
+                Label("Remove", systemImage: "trash")
+            }
         } label: {
             Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
         }
@@ -235,7 +251,8 @@ struct ConfigNodeRow: View {
 
     /// Device-only pasteboard; a revealed secret expires from it after two minutes.
     private func copyValue() {
-        let options: [UIPasteboard.OptionsKey: Any] = context.revealed
+        let options: [UIPasteboard.OptionsKey: Any] =
+            context.revealed
             ? [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)]
             : [.localOnly: true]
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: node.value ?? ""]], options: options)

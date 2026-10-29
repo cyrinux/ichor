@@ -33,7 +33,8 @@ struct NodeTabsView: View {
 
     /// The raw values are the share link's tab names, lowercased.
     enum Tab: String, CaseIterable {
-        case services = "Services", resources = "Resources", live = "Live", processes = "Processes", pods = "Pods", cgroups = "Cgroups"
+        case services = "Services", resources = "Resources", live = "Live", processes = "Processes", pods = "Pods",
+            cgroups = "Cgroups"
 
         var label: String {
             switch self {
@@ -55,7 +56,9 @@ struct NodeTabsView: View {
             .pickerStyle(.segmented)
             .padding()
 
-            if let history, let uptime = history.node(ref.address), uptime.uptimePercent != nil || !uptime.intervals.isEmpty {
+            if let history, let uptime = history.node(ref.address),
+                uptime.uptimePercent != nil || !uptime.intervals.isEmpty
+            {
                 NodeUptimeStrip(uptime: uptime, from: history.from, to: history.to, period: $period)
                     .padding(.horizontal)
                     .padding(.bottom, 8)
@@ -70,14 +73,16 @@ struct NodeTabsView: View {
         .task { await model.loadFeatures(node: ref.address) }
         // Masked like the screen in screenshot mode: reloaded when it changes.
         .task(id: "\(period.rawValue)#\(model.dataGeneration)") {
-            history = await HistoryStore.query(cluster: model.activeSummary.map(monitorClusterKey) ?? "", period: period)
+            history = await HistoryStore.query(
+                cluster: model.activeSummary.map(monitorClusterKey) ?? "", period: period)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if running {
                     ProgressView()
                 } else {
-                    ShareLinkButton(target: .node(address: ref.address, hostname: ref.hostname, tab: tab.rawValue.lowercased()))
+                    ShareLinkButton(
+                        target: .node(address: ref.address, hostname: ref.hostname, tab: tab.rawValue.lowercased()))
                 }
             }
             // The node itself (its hub), whatever the tab on screen.
@@ -85,17 +90,21 @@ struct NodeTabsView: View {
                 PinButton(target: .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
             }
         }
-        .confirmationDialog(serviceRequest.map { confirmationTitle($0) } ?? "",
-                            isPresented: $serviceRequest.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: serviceRequest) { request in
+        .confirmationDialog(
+            serviceRequest.map { confirmationTitle($0) } ?? "",
+            isPresented: $serviceRequest.isPresent(),
+            titleVisibility: .visible,
+            presenting: serviceRequest
+        ) { request in
             Button(request.action.localizedTitle, role: request.action == .start ? nil : ButtonRole.destructive) {
                 Task { await perform(request) }
             }
             Button("Cancel", role: .cancel) {}
         } message: { request in
             if isCriticalService(request.service) && request.action != .start {
-                Text("\(request.service) is a critical system service: stopping or restarting it can make the node unreachable or disrupt the cluster.")
+                Text(
+                    "\(request.service) is a critical system service: stopping or restarting it can make the node unreachable or disrupt the cluster."
+                )
             } else {
                 Text(request.action.localizedDetails)
             }
@@ -119,17 +128,19 @@ struct NodeTabsView: View {
         case .services:
             LoadStateView(state: services, retry: loadServices) { list in
                 List(list) { svc in serviceRow(svc) }
-                .refreshable { await loadServices() }
-                .themedBackground()
+                    .refreshable { await loadServices() }
+                    .themedBackground()
             }
             .task { if case .loading = services { await loadServices() } }
         case .resources:
             LoadStateView(state: resources, retry: loadResources) {
-                ResourcesList(resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil,
-                              memory: history?.memory(of: ref.address) ?? [], window: historyWindow) { tab = .cgroups }
+                ResourcesList(
+                    resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil,
+                    memory: history?.memory(of: ref.address) ?? [], window: historyWindow
+                ) { tab = .cgroups }
             }
-                .refreshable { await loadResources() }
-                .task { if case .loading = resources { await loadResources() } }
+            .refreshable { await loadResources() }
+            .task { if case .loading = resources { await loadResources() } }
         case .live:
             LiveView(node: ref.address, stats: live)
         case .processes:
@@ -138,7 +149,9 @@ struct NodeTabsView: View {
             }
         case .pods:
             FeatureGated(support: support(.containers)) {
-                PodsView(node: ref.address, hostname: ref.hostname, monitor: pods, restartSupport: support(.containerRestart))
+                PodsView(
+                    node: ref.address, hostname: ref.hostname, monitor: pods, restartSupport: support(.containerRestart)
+                )
             }
         case .cgroups:
             CgroupsView(node: ref.address, monitor: cgroups)
@@ -148,7 +161,8 @@ struct NodeTabsView: View {
     private func loadServices() async {
         guard let client = model.client else { return }
         services = model.seeded(services, from: .services(node: ref.address))
-        services = services.refreshed(with: await .from { try await model.fetch(.services(node: ref.address), with: client) })
+        services = services.refreshed(
+            with: await .from { try await model.fetch(.services(node: ref.address), with: client) })
     }
 
     private func loadResources() async {
@@ -158,7 +172,8 @@ struct NodeTabsView: View {
             Task { pressure = pressure.refreshed(with: await .from { try await client.cgroups(node: ref.address) }) }
         }
         resources = model.seeded(resources, from: .resources(node: ref.address))
-        resources = resources.refreshed(with: await .from { try await model.fetch(.resources(node: ref.address), with: client) })
+        resources = resources.refreshed(
+            with: await .from { try await model.fetch(.resources(node: ref.address), with: client) })
         // Best-effort: a node that cannot answer shows the error in its row.
         do {
             clock = try await client.nodeTime(node: ref.address)
@@ -194,7 +209,9 @@ extension NodeTabsView {
         .swipeActions(edge: .trailing) {
             if model.allows(.serviceControl) && support(.serviceControl).supported && !running {
                 ForEach(serviceActions(state: svc.state)) { action in
-                    Button { serviceRequest = ServiceRequest(service: svc.id, action: action) } label: {
+                    Button {
+                        serviceRequest = ServiceRequest(service: svc.id, action: action)
+                    } label: {
                         Label(action.localizedTitle, systemImage: action.symbol)
                     }
                     .tint(action.tint)
@@ -204,8 +221,10 @@ extension NodeTabsView {
         .contextMenu {
             if model.allows(.serviceControl) && !running {
                 ForEach(serviceActions(state: svc.state)) { action in
-                    FeatureButton(title: action.localizedTitle, systemImage: action.symbol, support: support(.serviceControl),
-                                  role: action == .start ? nil : ButtonRole.destructive) {
+                    FeatureButton(
+                        title: action.localizedTitle, systemImage: action.symbol, support: support(.serviceControl),
+                        role: action == .start ? nil : ButtonRole.destructive
+                    ) {
                         serviceRequest = ServiceRequest(service: svc.id, action: action)
                     }
                 }

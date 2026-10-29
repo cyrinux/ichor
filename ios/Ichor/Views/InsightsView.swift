@@ -71,11 +71,15 @@ private struct InsightsContent: View {
                 Text("Baseline: \(time(at))").font(.caption)
                 Button("Delete baseline", role: .destructive) { Task { await session.deleteBaseline() } }
             } else {
-                Text("Reference: first reachable node of each role. Save a baseline to track changes on the same nodes.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "Reference: first reachable node of each role. Save a baseline to track changes on the same nodes."
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
         } footer: {
-            Text("Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown.")
+            Text(
+                "Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown."
+            )
         }
         if let snapshot = session.snapshot {
             Section {
@@ -83,15 +87,22 @@ private struct InsightsContent: View {
                 if session.changes.isEmpty { Text("No differences in comparable fields.") }
             }
             ForEach(session.changes) { change in
-                DriftChangeSection(change: change, fixDestination: change.fix.map { (fix: DriftFix) -> AnyView in
-                    let known = snapshot.nodes.first { $0.node == change.node }?.hostname ?? ""
-                    let hostname = change.nodeName.isEmpty ? known : change.nodeName
-                    return AnyView(MachineConfigView(node: change.node, hostname: hostname.isEmpty ? change.node : hostname, fix: fix))
-                })
+                DriftChangeSection(
+                    change: change,
+                    fixDestination: change.fix.map { (fix: DriftFix) -> AnyView in
+                        let known = snapshot.nodes.first { $0.node == change.node }?.hostname ?? ""
+                        let hostname = change.nodeName.isEmpty ? known : change.nodeName
+                        return AnyView(
+                            MachineConfigView(
+                                node: change.node, hostname: hostname.isEmpty ? change.node : hostname, fix: fix))
+                    })
             }
             ForEach(snapshot.nodes.filter { !$0.errors.isEmpty }) { node in
-                Text(verbatim: "\(node.hostname): \(node.errors.keys.sorted().map { "\($0): \(node.errors[$0] ?? "")" }.joined(separator: "; "))")
-                    .font(.caption).foregroundStyle(.statusBad)
+                Text(
+                    verbatim:
+                        "\(node.hostname): \(node.errors.keys.sorted().map { "\($0): \(node.errors[$0] ?? "")" }.joined(separator: "; "))"
+                )
+                .font(.caption).foregroundStyle(.statusBad)
             }
         }
     }
@@ -120,15 +131,19 @@ private struct InsightsContent: View {
         }
         if let doc = session.document {
             Section {
-                ForEach(incidentTimeline(doc.entries.reversed().filter { showMetrics || $0.kind != "metrics" })) { item in
+                ForEach(incidentTimeline(doc.entries.reversed().filter { showMetrics || $0.kind != "metrics" })) {
+                    item in
                     IncidentTimelineRow(item: item, startedAt: doc.startedAt, time: time)
                 }
             } header: {
                 SectionHeader(title: String(localized: "Timeline"), subtitle: recordingLine(doc), pill: timelineMenu)
             }
-        } else { Text("No saved recording.") }
+        } else {
+            Text("No saved recording.")
+        }
     }
-    private static let recordNote: LocalizedStringKey = "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation."
+    private static let recordNote: LocalizedStringKey =
+        "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation."
     /// The recorded range and the count of discarded entries, on one muted line.
     private func recordingLine(_ doc: IncidentDocument) -> String {
         let range = "\(time(doc.startedAt)) — \(time(doc.updatedAt))"
@@ -174,7 +189,9 @@ private struct IncidentTimelineRow: View {
     /// The node and the span of the run (newest first, as the timeline is).
     private func runSubtitle(_ entries: [IncidentEntry]) -> String {
         guard let first = entries.first, let last = entries.last else { return "" }
-        let span = incidentOffset(at: last.at, startedAt: startedAt) + " – " + incidentOffset(at: first.at, startedAt: startedAt)
+        let span =
+            incidentOffset(at: last.at, startedAt: startedAt) + " – "
+            + incidentOffset(at: first.at, startedAt: startedAt)
         return [first.node, span].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 }
@@ -254,15 +271,17 @@ private struct IncidentEvidenceCard: View {
     private var ready: Bool? { detail["ready"] as? Bool }
     private var reachable: Bool? { detail["reachable"] as? Bool }
     private var warning: Bool {
-        entry.severity == "warning" || entry.severity == "error" ||
-        (entry.kind == "status" && (ready == false || reachable == false)) ||
-        (entry.kind == "service" && value("health") == "unhealthy") ||
-        (entry.evidenceMetrics.map { !$0.errors.isEmpty || $0.network.contains { $0.errors > 0 || $0.drops > 0 } } ?? false)
+        entry.severity == "warning" || entry.severity == "error"
+            || (entry.kind == "status" && (ready == false || reachable == false))
+            || (entry.kind == "service" && value("health") == "unhealthy")
+            || (entry.evidenceMetrics.map {
+                !$0.errors.isEmpty || $0.network.contains { $0.errors > 0 || $0.drops > 0 }
+            } ?? false)
     }
     private var positive: Bool {
-        !warning && (entry.kind == "recovered" ||
-        (entry.kind == "status" && ready == true && reachable == true) ||
-        (entry.kind == "service" && value("health") == "healthy"))
+        !warning
+            && (entry.kind == "recovered" || (entry.kind == "status" && ready == true && reachable == true)
+                || (entry.kind == "service" && value("health") == "healthy"))
     }
     private var color: Color { warning ? .red : positive ? .green : .blue }
     private var icon: String {
@@ -298,7 +317,9 @@ private struct IncidentEvidenceCard: View {
                     if let omitted = entry.metricsOmitted, omitted > 0 {
                         Text("Additional device or error entries omitted: \(omitted)").font(.caption)
                     }
-                } else { Text("This older sample has incomplete details. Record a new session to see formatted metrics.") }
+                } else {
+                    Text("This older sample has incomplete details. Record a new session to see formatted metrics.")
+                }
             case "status":
                 if !value("stage").isEmpty { Text("Stage: \(value("stage"))") }
                 if !value("error").isEmpty { Text(verbatim: value("error")).foregroundStyle(.statusBad) }

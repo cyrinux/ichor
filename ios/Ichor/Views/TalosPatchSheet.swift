@@ -61,17 +61,25 @@ struct TalosPatchNodeSheet: View {
                     Text("No node of this cluster answers.").foregroundStyle(.secondary)
                 }
                 ForEach(nodes) { node in
-                    Button { picked = node.node } label: { row(node) }
-                        .foregroundStyle(.primary)
-                        .accessibilityAddTraits(picked == node.node ? .isSelected : [])
+                    Button {
+                        picked = node.node
+                    } label: {
+                        row(node)
+                    }
+                    .foregroundStyle(.primary)
+                    .accessibilityAddTraits(picked == node.node ? .isSelected : [])
                 }
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
                     if !info.hostnames.isEmpty, let picked, picked != meant?.node {
-                        Text("This patch is for \(info.hostnames.joined(separator: ", ")): another node would get its settings.")
-                            .foregroundStyle(.statusWarn)
+                        Text(
+                            "This patch is for \(info.hostnames.joined(separator: ", ")): another node would get its settings."
+                        )
+                        .foregroundStyle(.statusWarn)
                     }
-                    Text("The review shows what changes on that node. When the patch only sets values, it can be taken to other nodes from there.")
+                    Text(
+                        "The review shows what changes on that node. When the patch only sets values, it can be taken to other nodes from there."
+                    )
                 }
             }
             Section {

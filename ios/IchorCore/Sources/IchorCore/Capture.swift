@@ -20,8 +20,10 @@ public struct PacketSummary: Decodable, Equatable, Identifiable, Sendable {
     /// 1-based, as shown.
     public var number: Int { n + 1 }
 
-    public init(n: Int, ts: Int64 = 0, len: Int = 0, src: String = "", dst: String = "", proto: String = "", info: String = "",
-                node: String = "") {
+    public init(
+        n: Int, ts: Int64 = 0, len: Int = 0, src: String = "", dst: String = "", proto: String = "", info: String = "",
+        node: String = ""
+    ) {
         self.n = n
         self.ts = ts
         self.len = len
@@ -146,7 +148,9 @@ public let pcapPageSize = 500
 public let liveCaptureRows = 2_000
 
 /// Appends packets to the live list, keeping the newest `limit`.
-public func appendPackets(_ list: [PacketSummary], _ new: [PacketSummary], limit: Int = liveCaptureRows) -> [PacketSummary] {
+public func appendPackets(_ list: [PacketSummary], _ new: [PacketSummary], limit: Int = liveCaptureRows)
+    -> [PacketSummary]
+{
     let all = list + new
     return all.count > limit ? Array(all.suffix(limit)) : all
 }
@@ -196,9 +200,11 @@ public struct CaptureOptions: Equatable, Sendable {
     /// The second node's interface, "" for the same as `interface`.
     public var peerInterface: String
 
-    public init(interface: String = "", filter: String = "", promiscuous: Bool = false,
-                duration: CaptureDuration = .s30, sizeLimit: CaptureSizeLimit = .mib20, snapLen: Int = 0,
-                peer: String = "", peerHostname: String = "", peerInterface: String = "") {
+    public init(
+        interface: String = "", filter: String = "", promiscuous: Bool = false,
+        duration: CaptureDuration = .s30, sizeLimit: CaptureSizeLimit = .mib20, snapLen: Int = 0,
+        peer: String = "", peerHostname: String = "", peerInterface: String = ""
+    ) {
         self.interface = interface
         self.filter = filter
         self.promiscuous = promiscuous
@@ -231,7 +237,9 @@ public enum CaptureOptionsProblem: Equatable, Sendable {
 
 /// Why the capture cannot start yet; nil when it can. `filterError` is ValidateCaptureFilter's
 /// answer for `validatedFilter` ("" = valid); a stale answer counts as still checking.
-public func captureOptionsProblem(_ options: CaptureOptions, validatedFilter: String?, filterError: String) -> CaptureOptionsProblem? {
+public func captureOptionsProblem(_ options: CaptureOptions, validatedFilter: String?, filterError: String)
+    -> CaptureOptionsProblem?
+{
     if options.interface.trimmingCharacters(in: .whitespaces).isEmpty { return .noInterface }
     let filter = options.trimmedFilter
     if filter.isEmpty { return nil }
@@ -246,7 +254,8 @@ public func captureInterfaces(_ links: [NetLink], includeVirtual: Bool) -> [NetL
         if link.type == "loopback" || link.name == "lo" { return 3 }
         return (link.virtual || !link.kind.isEmpty ? 1 : 0) + (link.isUp ? 0 : 1)
     }
-    return links
+    return
+        links
         .filter { includeVirtual || !$0.virtual }
         .sorted { a, b in
             let (ra, rb) = (rank(a), rank(b))
@@ -257,7 +266,8 @@ public func captureInterfaces(_ links: [NetLink], includeVirtual: Bool) -> [NetL
 /// "<host>-<iface>-<yyyyMMdd-HHmmss>.pcap", with characters that are awkward in file names
 /// replaced by "-".
 public func captureFilename(hostname: String, interface: String, date: Date, timeZone: TimeZone = .current) -> String {
-    return "\(captureFileSafe(hostname, fallback: "node"))-\(captureFileSafe(interface, fallback: "any"))-\(fileTimestamp(date, format: "yyyyMMdd-HHmmss", timeZone: timeZone)).pcap"
+    return
+        "\(captureFileSafe(hostname, fallback: "node"))-\(captureFileSafe(interface, fallback: "any"))-\(fileTimestamp(date, format: "yyyyMMdd-HHmmss", timeZone: timeZone)).pcap"
 }
 
 private func captureFileSafe(_ text: String, fallback: String) -> String {
@@ -330,8 +340,11 @@ public struct PairNodeStats: Decodable, Equatable, Sendable, Identifiable {
 
 /// A two-node capture's file: "<host-a>_<host-b>-<iface>-<stamp>.pcap" (pcapng inside, which
 /// readers detect).
-public func pairCaptureFilename(hostname: String, peerHostname: String, interface: String, date: Date,
-                                timeZone: TimeZone = .current) -> String {
-    captureFilename(hostname: "\(captureFileSafe(hostname, fallback: "node"))_\(captureFileSafe(peerHostname, fallback: "node"))",
-                    interface: interface, date: date, timeZone: timeZone)
+public func pairCaptureFilename(
+    hostname: String, peerHostname: String, interface: String, date: Date,
+    timeZone: TimeZone = .current
+) -> String {
+    captureFilename(
+        hostname: "\(captureFileSafe(hostname, fallback: "node"))_\(captureFileSafe(peerHostname, fallback: "node"))",
+        interface: interface, date: date, timeZone: timeZone)
 }

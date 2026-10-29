@@ -48,7 +48,8 @@ final class TopologyLayoutTests: XCTestCase {
         let layout = topologyLayout(topology, width: 300)
         let a = try XCTUnwrap(layout.nodes["a"])
         let b = try XCTUnwrap(layout.nodes["b"])
-        XCTAssertEqual(layout.middle(of: topology.links[0], in: topology), MapPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2))
+        XCTAssertEqual(
+            layout.middle(of: topology.links[0], in: topology), MapPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2))
         // Across sites the middle is pushed right like its control point, by half the bow.
         let middle = try XCTUnwrap(layout.middle(of: topology.links[1], in: topology))
         XCTAssertGreaterThan(middle.x, try XCTUnwrap(layout.nodes["a"]).x)
@@ -73,7 +74,9 @@ final class TopologyLayoutTests: XCTestCase {
     }
 
     func testQuadraticEnds() {
-        let a = MapPoint(x: 0, y: 0), c = MapPoint(x: 10, y: 0), b = MapPoint(x: 10, y: 10)
+        let a = MapPoint(x: 0, y: 0)
+        let c = MapPoint(x: 10, y: 0)
+        let b = MapPoint(x: 10, y: 10)
         XCTAssertEqual(quadratic(a, c, b, t: 0), a)
         XCTAssertEqual(quadratic(a, c, b, t: 1), b)
         XCTAssertEqual(quadratic(a, c, b, t: 0.5), MapPoint(x: 7.5, y: 2.5))

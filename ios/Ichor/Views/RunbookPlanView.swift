@@ -35,8 +35,10 @@ struct RunbookPlanView: View {
                         Text("Another runbook is running: open it from its row or its Live Activity.")
                             .font(.footnote).foregroundStyle(.secondary)
                     } else if !plan.canRun(continueIDs: continueIDs) {
-                        Text("A step the cluster refuses would stop the run: let it through with Continue on error to run the rest.")
-                            .font(.footnote).foregroundStyle(.secondary)
+                        Text(
+                            "A step the cluster refuses would stop the run: let it through with Continue on error to run the rest."
+                        )
+                        .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
             } else if failure == nil {
@@ -65,7 +67,8 @@ struct RunbookPlanView: View {
 
     private func start(_ plan: RunbookPlan) {
         guard let yaml, let client = model.client else { return }
-        if job.start(id: id, fingerprint: fingerprint, yaml: yaml, plan: plan, continueIDs: continueIDs, client: client) {
+        if job.start(id: id, fingerprint: fingerprint, yaml: yaml, plan: plan, continueIDs: continueIDs, client: client)
+        {
             path.append(.runbookRun(id: id))
         }
     }
@@ -91,12 +94,14 @@ struct RunbookPlanSections: View {
             ForEach(Array(plan.steps.enumerated()), id: \.element.id) { index, step in
                 RunbookPlanStepRow(index: index, step: step)
                 if editable, !step.allowed, !step.continueOnError {
-                    Toggle("Continue on error", isOn: Binding(
-                        get: { continueIDs.contains(step.id) },
-                        set: { on in
-                            if on { continueIDs.insert(step.id) } else { continueIDs.remove(step.id) }
-                        }
-                    ))
+                    Toggle(
+                        "Continue on error",
+                        isOn: Binding(
+                            get: { continueIDs.contains(step.id) },
+                            set: { on in
+                                if on { continueIDs.insert(step.id) } else { continueIDs.remove(step.id) }
+                            }
+                        ))
                 }
             }
         } header: {

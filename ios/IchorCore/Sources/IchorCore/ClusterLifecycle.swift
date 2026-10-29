@@ -53,7 +53,8 @@ public struct ClusterLifecycle: Decodable, Equatable, Sendable {
     /// The API version the object summary reads for `kind`: the served Cluster API one (the
     /// reader's default when it named none), Sidero Metal's fixed one.
     public func apiVersion(_ kind: LifecycleKind) -> String {
-        kind.group == LifecycleKind.capiGroup ? (version.isEmpty ? LifecycleKind.capiDefaultVersion : version) : LifecycleKind.sideroVersion
+        kind.group == LifecycleKind.capiGroup
+            ? (version.isEmpty ? LifecycleKind.capiDefaultVersion : version) : LifecycleKind.sideroVersion
     }
 
     /// The machines by cluster (its namespace too: two clusters may share a name), the clusters
@@ -82,7 +83,9 @@ public struct ClusterLifecycleCounts: Decodable, Equatable, Sendable {
     public let warning: Int
     public let critical: Int
 
-    public init(clusters: Int = 0, machines: Int = 0, servers: Int = 0, ok: Int = 0, warning: Int = 0, critical: Int = 0) {
+    public init(
+        clusters: Int = 0, machines: Int = 0, servers: Int = 0, ok: Int = 0, warning: Int = 0, critical: Int = 0
+    ) {
         self.clusters = clusters
         self.machines = machines
         self.servers = servers
@@ -198,7 +201,8 @@ public struct CapiCluster: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, phase, paused, endpoint, infraKind, controlPlaneKind, infrastructureReady, controlPlaneReady
+        case namespace, name, phase, paused, endpoint, infraKind, controlPlaneKind, infrastructureReady,
+            controlPlaneReady
         case controlPlane, workers, versions, conditions, failureReason, failureMessage, health, reasons
     }
 }
@@ -254,7 +258,8 @@ public struct CapiMachine: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, cluster, controlPlane, deployment, phase, node, version, addresses, lastUpdated, createdAt, stuck
+        case namespace, name, cluster, controlPlane, deployment, phase, node, version, addresses, lastUpdated,
+            createdAt, stuck
         case failureReason, failureMessage, conditions, health, reasons
     }
 }
@@ -285,7 +290,9 @@ public struct CapiMachineDeployment: Decodable, Equatable, Identifiable, Sendabl
         health = try c.wire(.health)
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, cluster, phase, desired, ready, available, version, health }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, cluster, phase, desired, ready, available, version, health
+    }
 }
 
 /// A Sidero Metal bare-metal server.
@@ -325,7 +332,8 @@ public struct SideroServer: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, hostname, accepted, cordoned, inUse, isClean, power, addresses, serverClasses, cpu, memoryBytes, health
+        case name, hostname, accepted, cordoned, inUse, isClean, power, addresses, serverClasses, cpu, memoryBytes,
+            health
     }
 }
 

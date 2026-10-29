@@ -62,8 +62,11 @@ struct ProposalsSection: View {
                 HStack {
                     HealthDot(health: status.health)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: view?.state?.title.isEmpty == false ? view!.state!.title : (record.title.isEmpty ? record.path : record.title))
-                            .lineLimit(1)
+                        Text(
+                            verbatim: view?.state?.title.isEmpty == false
+                                ? view!.state!.title : (record.title.isEmpty ? record.path : record.title)
+                        )
+                        .lineLimit(1)
                         Text(verbatim: "#\(record.number)").font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -72,10 +75,16 @@ struct ProposalsSection: View {
             }
             .buttonStyle(.plain)
             if let error = view?.error { Text(verbatim: error).font(.caption).foregroundStyle(.secondary) }
-            if stored != nil, record.stateAt > 0 { Text(verbatim: storedLine(record)).font(.caption).foregroundStyle(.secondary) }
+            if stored != nil, record.stateAt > 0 {
+                Text(verbatim: storedLine(record)).font(.caption).foregroundStyle(.secondary)
+            }
             if let reconcile, status == .merged || status == .otherRevision {
-                Text(status == .merged ? "Merged, not deployed yet." : "Merged; the app runs another commit (a newer one, or this one is not applied yet).")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    status == .merged
+                        ? "Merged, not deployed yet."
+                        : "Merged; the app runs another commit (a newer one, or this one is not applied yet)."
+                )
+                .font(.caption).foregroundStyle(.secondary)
                 Button("Reconcile now", action: reconcile).buttonStyle(.bordered)
             }
         }

@@ -8,8 +8,9 @@ final class AlertActionsTests: XCTestCase {
         XCTAssertEqual(alertActions(key: "etcd:abc:NOSPACE", problem: true, canWake: true), [.snooze])
         XCTAssertEqual(alertActions(key: "data:longhorn|pvc-1", problem: true, canWake: false), [.snooze])
         XCTAssertEqual(alertActions(key: "gitops:argocd|argocd/shop", problem: true, canWake: false), [.sync, .snooze])
-        XCTAssertEqual(alertActions(key: "gitops:flux|HelmRelease flux-system/ingress", problem: true, canWake: false),
-                       [.reconcile, .snooze])
+        XCTAssertEqual(
+            alertActions(key: "gitops:flux|HelmRelease flux-system/ingress", problem: true, canWake: false),
+            [.reconcile, .snooze])
         XCTAssertEqual(alertActions(key: "checkup:pods|crash|shop/web", problem: true, canWake: false), [.snooze])
         XCTAssertEqual(alertActions(key: "am:f00d", problem: true, canWake: false), [.silence, .snooze])
         XCTAssertEqual(alertActions(key: "cert", problem: true, canWake: false), [.snooze])
@@ -28,17 +29,23 @@ final class AlertActionsTests: XCTestCase {
 
     func testCategories() {
         XCTAssertEqual(alertCategory(kind: "node", actions: [], hideDetails: false), "alert.node")
-        XCTAssertEqual(alertCategory(kind: "node", actions: [.reboot, .snooze], hideDetails: false), "alert.node.reboot")
-        XCTAssertEqual(alertCategory(kind: "node", actions: [.wake, .reboot, .snooze], hideDetails: true), "alert.node.wake-reboot.private")
+        XCTAssertEqual(
+            alertCategory(kind: "node", actions: [.reboot, .snooze], hideDetails: false), "alert.node.reboot")
+        XCTAssertEqual(
+            alertCategory(kind: "node", actions: [.wake, .reboot, .snooze], hideDetails: true),
+            "alert.node.wake-reboot.private")
         XCTAssertEqual(alertCategory(kind: "etcd", actions: [.snooze], hideDetails: false), "alert.etcd.snooze")
-        XCTAssertEqual(alertCategory(kind: "alertmanager", actions: [.silence, .snooze], hideDetails: true),
-                       "alert.alertmanager.silence.private")
+        XCTAssertEqual(
+            alertCategory(kind: "alertmanager", actions: [.silence, .snooze], hideDetails: true),
+            "alert.alertmanager.silence.private")
     }
 
     /// Every action set an alert can get has its category registered.
     func testEveryActionSetIsRegistered() {
-        let keys = ["node:a", "etcd:m:x", "cert", "data:s|l", "gitops:argocd|n/a", "gitops:flux|Kustomization n/a",
-                    "gitops:other|n/a", "checkup:s|k|x", "am:f"]
+        let keys = [
+            "node:a", "etcd:m:x", "cert", "data:s|l", "gitops:argocd|n/a", "gitops:flux|Kustomization n/a",
+            "gitops:other|n/a", "checkup:s|k|x", "am:f",
+        ]
         for key in keys {
             for wake in [false, true] {
                 let prefix = String(key.split(separator: ":").first ?? "")
@@ -109,10 +116,12 @@ final class AlertActionsTests: XCTestCase {
     func testMonitorSkipsSnoozedKeys() {
         let start = Date(timeIntervalSince1970: 1_000_000)
         func snapshot(_ health: NodeHealth, at date: Date) -> ClusterSnapshot {
-            ClusterSnapshot(context: "home", takenAt: date, nodes: [
-                "10.0.0.2": NodeState(hostname: "cp-1", health: .ready, reason: ""),
-                "10.0.0.3": NodeState(hostname: "worker-1", health: health, reason: ""),
-            ])
+            ClusterSnapshot(
+                context: "home", takenAt: date,
+                nodes: [
+                    "10.0.0.2": NodeState(hostname: "cp-1", health: .ready, reason: ""),
+                    "10.0.0.3": NodeState(hostname: "worker-1", health: health, reason: ""),
+                ])
         }
         let first = evaluate(previous: nil, current: snapshot(.ready, at: start), now: start)
         let down = evaluate(previous: first.next, current: snapshot(.unreachable, at: start), now: start)

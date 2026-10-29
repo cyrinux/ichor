@@ -29,7 +29,9 @@ final class CastAIPlansTests: XCTestCase {
         """
     }
 
-    private var status: CastAIStatus { get throws { try XCTUnwrap(try TalosJSON.decode(DataServices.self, from: json).castai) } }
+    private var status: CastAIStatus {
+        get throws { try XCTUnwrap(try TalosJSON.decode(DataServices.self, from: json).castai) }
+    }
 
     func testDecodesPlans() throws {
         let s = try status
@@ -82,7 +84,8 @@ final class CastAIPlansTests: XCTestCase {
     }
 
     func testPlansErrorIsKeptApart() throws {
-        let s = try XCTUnwrap(try TalosJSON.decode(DataServices.self, from: #"{"castai":{"plansError":"forbidden"}}"#).castai)
+        let s = try XCTUnwrap(
+            try TalosJSON.decode(DataServices.self, from: #"{"castai":{"plansError":"forbidden"}}"#).castai)
         XCTAssertEqual(s.plansError, "forbidden")
         XCTAssertEqual(s.error, "")
         XCTAssertEqual(s.summary.health, .ok)

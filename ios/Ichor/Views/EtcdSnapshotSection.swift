@@ -32,14 +32,17 @@ final class EtcdSnapshotJob {
 
     var isBusy: Bool { task != nil || file != nil }
 
-    func start(client: TalosClient, node: String, hostname: String, context: String, expected: Int64,
-               encryption: SnapshotEncryption, lockEnabled: Bool) {
+    func start(
+        client: TalosClient, node: String, hostname: String, context: String, expected: Int64,
+        encryption: SnapshotEncryption, lockEnabled: Bool
+    ) {
         guard !isBusy else { return }
         saved = nil
         message = nil
         task = Task {
-            await run(client: client, node: node, hostname: hostname, context: context,
-                      expected: expected, encryption: encryption, lockEnabled: lockEnabled)
+            await run(
+                client: client, node: node, hostname: hostname, context: context,
+                expected: expected, encryption: encryption, lockEnabled: lockEnabled)
             task = nil
         }
     }
@@ -56,13 +59,14 @@ final class EtcdSnapshotJob {
         switch result {
         case .success(let url):
             if let pending {
-                saved = Saved(name: url.lastPathComponent, size: pending.size, sha256: pending.sha256, mode: pending.mode)
+                saved = Saved(
+                    name: url.lastPathComponent, size: pending.size, sha256: pending.sha256, mode: pending.mode)
             }
             message = nil
         case .failure(let error):
             message = error.localizedDescription
         }
-        discard() // after a move only the empty temporary folder is left
+        discard()  // after a move only the empty temporary folder is left
     }
 
     func moveCancelled() {
@@ -70,9 +74,13 @@ final class EtcdSnapshotJob {
         discard()
     }
 
-    private func run(client: TalosClient, node: String, hostname: String, context: String, expected: Int64,
-                     encryption: SnapshotEncryption, lockEnabled: Bool) async {
-        if lockEnabled, let failure = await Authenticator.authenticate(reason: String(localized: "Save an etcd snapshot")) {
+    private func run(
+        client: TalosClient, node: String, hostname: String, context: String, expected: Int64,
+        encryption: SnapshotEncryption, lockEnabled: Bool
+    ) async {
+        if lockEnabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Save an etcd snapshot"))
+        {
             message = failure
             return
         }
@@ -84,8 +92,10 @@ final class EtcdSnapshotJob {
             message = error.localizedDescription
             return
         }
-        let url = folder.appendingPathComponent(etcdSnapshotFilename(context: context, hostname: hostname, date: Date(),
-                                                                     encrypted: encryption.mode != .none))
+        let url = folder.appendingPathComponent(
+            etcdSnapshotFilename(
+                context: context, hostname: hostname, date: Date(),
+                encrypted: encryption.mode != .none))
         transfer = Transfer(hostname: hostname, bytes: 0, expected: expected)
         var outcome: SnapshotEvent?
         for await event in client.etcdSnapshot(node: node, destPath: url.path, encryption: encryption) {
@@ -150,7 +160,9 @@ struct EtcdSnapshotSection: View {
                 Button("Save snapshot…") { confirming = true }
                     .disabled(target == nil || job.isBusy)
                     .sheet(isPresented: $confirming) {
-                        SnapshotProtectionSheet(hostname: target.map(name(of:)) ?? "", savedKeys: model.activeSnapshotKeys) { encryption in
+                        SnapshotProtectionSheet(
+                            hostname: target.map(name(of:)) ?? "", savedKeys: model.activeSnapshotKeys
+                        ) { encryption in
                             confirming = false
                             if case .keys(let keys) = encryption { model.setSnapshotKeys(keys) }
                             start(encryption)
@@ -175,8 +187,10 @@ struct EtcdSnapshotSection: View {
                 }
                 DisclosureGroup("How to restore") {
                     let commands = snapshotRestoreCommands(fileName: saved.name, mode: saved.mode, sha256: saved.sha256)
-                    Text("Copy the file to a machine with talosctl access, then run these commands (replace <control-plane-ip>).")
-                        .font(.caption)
+                    Text(
+                        "Copy the file to a machine with talosctl access, then run these commands (replace <control-plane-ip>)."
+                    )
+                    .font(.caption)
                     Text(verbatim: commands).font(.caption2.monospaced()).textSelection(.enabled)
                     Button("Copy commands") { UIPasteboard.general.string = commands }
                 }
@@ -184,7 +198,9 @@ struct EtcdSnapshotSection: View {
         } header: {
             Text("Backup").sectionTarget("snapshot")
         } footer: {
-            Text("Saves a snapshot of the etcd database to a file you choose, to recover the cluster with talosctl bootstrap --recover-from.")
+            Text(
+                "Saves a snapshot of the etcd database to a file you choose, to recover the cluster with talosctl bootstrap --recover-from."
+            )
         }
     }
 
@@ -218,8 +234,9 @@ struct EtcdSnapshotSection: View {
 
     private func start(_ encryption: SnapshotEncryption) {
         guard let client = model.client, let target else { return }
-        job.start(client: client, node: target.node, hostname: hostnames[target.memberId] ?? target.node,
-                  context: model.activeContext, expected: target.dbSize, encryption: encryption,
-                  lockEnabled: model.lock.enabled)
+        job.start(
+            client: client, node: target.node, hostname: hostnames[target.memberId] ?? target.node,
+            context: model.activeContext, expected: target.dbSize, encryption: encryption,
+            lockEnabled: model.lock.enabled)
     }
 }

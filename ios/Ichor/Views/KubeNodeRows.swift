@@ -34,11 +34,15 @@ struct KubeNodeMenu: View {
 
     var body: some View {
         // Cluster-wide: the access the screen loaded for "" (see loadsKubeActionAccess).
-        KubeGatedMenuButton(node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign",
-                            action: .cordonNode) {
+        KubeGatedMenuButton(
+            node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign",
+            action: .cordonNode
+        ) {
             cordoning = node
         }
-        KubeGatedMenuButton(String(localized: "Drain…"), systemImage: "rectangle.portrait.and.arrow.right", action: .drainNode) {
+        KubeGatedMenuButton(
+            String(localized: "Drain…"), systemImage: "rectangle.portrait.and.arrow.right", action: .drainNode
+        ) {
             path.append(.drain(node: node.name, hostname: node.name))
         }
         KubeGatedMenuButton(String(localized: "Taints and labels…"), systemImage: "tag", action: .editNodeMeta) {
@@ -47,8 +51,10 @@ struct KubeNodeMenu: View {
         if nodeDebug {
             // The pod's namespace, not the cluster-wide answer this screen loaded: offered unless
             // refused there; the shell's screen asks about it.
-            KubeGatedMenuButton(String(localized: "Debug shell…"), systemImage: "terminal", action: .debugNode,
-                                in: NodeDebugKeys.namespace) {
+            KubeGatedMenuButton(
+                String(localized: "Debug shell…"), systemImage: "terminal", action: .debugNode,
+                in: NodeDebugKeys.namespace
+            ) {
                 path.append(.kubeNodeDebug(node: node.name))
             }
         }
@@ -149,9 +155,11 @@ private struct KubeCordonDialogs: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .confirmationDialog(String(localized: "Kubernetes scheduling on \(cordoning?.name ?? "")"),
-                                isPresented: Binding(get: { cordoning != nil }, set: { if !$0 { cordoning = nil } }),
-                                titleVisibility: .visible, presenting: cordoning) { node in
+            .confirmationDialog(
+                String(localized: "Kubernetes scheduling on \(cordoning?.name ?? "")"),
+                isPresented: Binding(get: { cordoning != nil }, set: { if !$0 { cordoning = nil } }),
+                titleVisibility: .visible, presenting: cordoning
+            ) { node in
                 if node.cordoned {
                     Button("Uncordon") { Task { await cordon(node, on: false) } }
                 } else {
@@ -159,7 +167,9 @@ private struct KubeCordonDialogs: ViewModifier {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: { _ in
-                Text("A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again.")
+                Text(
+                    "A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again."
+                )
             }
             .alert(message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
                 Button("OK", role: .cancel) {}
@@ -175,7 +185,9 @@ private struct KubeCordonDialogs: ViewModifier {
         }
         do {
             try await client.kubeNodeCordon(kubeNode: node.name, on: on)
-            message = on ? String(localized: "\(node.name) is cordoned: no new pods are scheduled on it.")
+            message =
+                on
+                ? String(localized: "\(node.name) is cordoned: no new pods are scheduled on it.")
                 : String(localized: "\(node.name) is uncordoned: pods can be scheduled on it again.")
         } catch {
             message = error.localizedDescription

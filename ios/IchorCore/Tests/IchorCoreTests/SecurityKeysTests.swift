@@ -3,8 +3,9 @@ import XCTest
 
 final class SecurityKeysTests: XCTestCase {
     private func key(_ id: UInt8, wrapped: Data? = nil, uv: Bool = false) -> EnrolledKey {
-        EnrolledKey(credentialId: Data([id, id]), publicKey: Data(repeating: 1, count: 64), label: "Security key",
-                    enrolledAt: Date(timeIntervalSince1970: 1_700_000_000), wrappedDek: wrapped, uv: uv)
+        EnrolledKey(
+            credentialId: Data([id, id]), publicKey: Data(repeating: 1, count: 64), label: "Security key",
+            enrolledAt: Date(timeIntervalSince1970: 1_700_000_000), wrappedDek: wrapped, uv: uv)
     }
 
     func testEnrolmentRoundTripsThroughJson() {
@@ -28,7 +29,8 @@ final class SecurityKeysTests: XCTestCase {
     }
 
     func testKeysAreReplacedByCredentialIdAndReleasedWithoutWraps() {
-        let record = SecurityKeyEnrolment.create().with(key(1)).with(key(1, wrapped: Data([9]), uv: true)).with(key(2, wrapped: Data([8])))
+        let record = SecurityKeyEnrolment.create().with(key(1)).with(key(1, wrapped: Data([9]), uv: true)).with(
+            key(2, wrapped: Data([8])))
         XCTAssertEqual(record.keys.count, 2)
         XCTAssertEqual(record.key(credentialId: Data([1, 1]))?.wrappedDek, Data([9]))
         XCTAssertTrue(record.key(credentialId: Data([1, 1]))?.uv == true)
@@ -60,12 +62,13 @@ final class SecurityKeysTests: XCTestCase {
         XCTAssertEqual(reason(SecurityKeyAssertion(key: enrolled, secret: nil, uv: false)), .noSecret)
         XCTAssertEqual(reason(SecurityKeyAssertion(key: key(1), secret: secret, uv: false)), .notWrapped)
         XCTAssertEqual(reason(SecurityKeyAssertion(key: enrolled, secret: secret, uv: true)), .uvChanged)
-        XCTAssertEqual(reason(SecurityKeyAssertion(key: key(1, wrapped: Data([1, 2, 3])), secret: secret, uv: false)), .damaged)
+        XCTAssertEqual(
+            reason(SecurityKeyAssertion(key: key(1, wrapped: Data([1, 2, 3])), secret: secret, uv: false)), .damaged)
     }
 
     func testAuthenticatorDataHeadParsesFlagsAndCount() {
         var data = Data(repeating: 0xAB, count: 32)
-        data.append(0x05) // UP + UV
+        data.append(0x05)  // UP + UV
         data.append(contentsOf: [0, 0, 1, 2])
         let head = AuthenticatorDataHead(data)
         XCTAssertEqual(head?.rpIdHash, Data(repeating: 0xAB, count: 32))
@@ -88,6 +91,9 @@ final class SecurityKeysTests: XCTestCase {
         XCTAssertEqual(SealedBlob.unwrap(blob), combined)
         XCTAssertFalse(SealedBlob.isSealed(combined))
         XCTAssertNil(SealedBlob.unwrap(combined))
-        XCTAssertFalse(SealedBlob.isSealed(SealedBlob.magic + Data(repeating: 0, count: SealedBlob.nonceSize + SealedBlob.tagSize)), "too short to hold a box")
+        XCTAssertFalse(
+            SealedBlob.isSealed(
+                SealedBlob.magic + Data(repeating: 0, count: SealedBlob.nonceSize + SealedBlob.tagSize)),
+            "too short to hold a box")
     }
 }

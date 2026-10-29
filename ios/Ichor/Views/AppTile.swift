@@ -25,7 +25,8 @@ extension AppCategory {
 extension ClusterInventory {
     /// "12 apps · 31 containers · 5 nodes", or "4 of 5 nodes" when some did not answer.
     var localizedSummary: String {
-        let nodesPart = answered < nodes
+        let nodesPart =
+            answered < nodes
             ? String(localized: "\(answered) of \(nodes) nodes")
             : String(localized: "\(answered) nodes")
         return [String(localized: "\(apps.count) apps"), String(localized: "\(containers) containers"), nodesPart]
@@ -63,7 +64,9 @@ struct AppTile: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .padding(.horizontal, 6)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(
+            Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .combine)
     }
@@ -111,7 +114,9 @@ struct FilterChip: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .foregroundStyle(selected ? AnyShapeStyle(Color.white) : AnyShapeStyle(HierarchicalShapeStyle.primary))
-            .background(selected ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color(.tertiarySystemFill)), in: Capsule())
+            .background(
+                selected ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color(.tertiarySystemFill)), in: Capsule()
+            )
             // A 44 pt touch target around the smaller capsule.
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())

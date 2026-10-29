@@ -24,7 +24,9 @@ public enum ServiceAccountRole: String, CaseIterable, Sendable {
 }
 
 /// The templates in the core's order, each with its role; unknown ids dropped.
-public func knownServiceAccountTemplates(_ templates: [ServiceAccountTemplate]) -> [(role: ServiceAccountRole, template: ServiceAccountTemplate)] {
+public func knownServiceAccountTemplates(_ templates: [ServiceAccountTemplate]) -> [(
+    role: ServiceAccountRole, template: ServiceAccountTemplate
+)] {
     templates.compactMap { template in ServiceAccountRole(rawValue: template.id).map { ($0, template) } }
 }
 

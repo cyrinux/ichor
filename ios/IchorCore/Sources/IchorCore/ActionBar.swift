@@ -1,7 +1,8 @@
 import Foundation
 
 /// An action a screen's toolbar offers. Raw values are the Android enum's names, the saved form.
-public protocol BarAction: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable where RawValue == String, AllCases == [Self] {
+public protocol BarAction: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable
+where RawValue == String, AllCases == [Self] {
     /// The `@AppStorage` key the screen's encoded bar is kept under.
     static var barStorageKey: String { get }
     /// How many of `allCases` (in that order) are icons by default; the rest are in the menu.
@@ -77,7 +78,8 @@ public enum KubernetesAction: String, BarAction {
         case .resources, .helm, .storage, .services, .jobs, .events, .share: .explore
         case .checkup, .capacity, .apiHealth, .networkPolicies, .flows: .health
         case .admissionPolicies, .autoscaling, .virtualMachines, .crossplane, .tailscale, .argoRollouts,
-             .clusterLifecycle, .dataServices, .certManager, .castai: .installed
+            .clusterLifecycle, .dataServices, .certManager, .castai:
+            .installed
         }
     }
 
@@ -203,18 +205,23 @@ public struct ActionBar<Action: BarAction>: Equatable, Sendable {
     public func toMenu(_ action: Action) -> ActionBar {
         guard icons.contains(action) else { return self }
         let rest = order.filter { $0 != action }
-        return ActionBar(order: Array(rest.prefix(iconCount - 1)) + [action] + rest.dropFirst(iconCount - 1), iconCount: iconCount - 1)
+        return ActionBar(
+            order: Array(rest.prefix(iconCount - 1)) + [action] + rest.dropFirst(iconCount - 1),
+            iconCount: iconCount - 1)
     }
 
     /// Shows a menu action as the last icon.
     public func toBar(_ action: Action) -> ActionBar {
         guard menu.contains(action) else { return self }
         let rest = order.filter { $0 != action }
-        return ActionBar(order: Array(rest.prefix(iconCount)) + [action] + rest.dropFirst(iconCount), iconCount: iconCount + 1)
+        return ActionBar(
+            order: Array(rest.prefix(iconCount)) + [action] + rest.dropFirst(iconCount), iconCount: iconCount + 1)
     }
 
     /// The editor's rows: the icons, the menu line, then the menu.
-    public var slots: [ActionBarSlot<Action>] { icons.map(ActionBarSlot<Action>.action) + [.menuLine] + menu.map(ActionBarSlot<Action>.action) }
+    public var slots: [ActionBarSlot<Action>] {
+        icons.map(ActionBarSlot<Action>.action) + [.menuLine] + menu.map(ActionBarSlot<Action>.action)
+    }
 
     /// The same as a SwiftUI `onMove` over `slots`: an action dragged across the menu line
     /// moves between the icons and the menu. The line itself does not move.
@@ -231,13 +238,15 @@ public struct ActionBar<Action: BarAction>: Equatable, Sendable {
 
     /// "HEALTH,EVENTS|METRICS,SETTINGS": the icons, then the menu after the bar.
     public var encoded: String {
-        icons.map(\.rawValue).joined(separator: ",") + String(Self.separator) + menu.map(\.rawValue).joined(separator: ",")
+        icons.map(\.rawValue).joined(separator: ",") + String(Self.separator)
+            + menu.map(\.rawValue).joined(separator: ",")
     }
 
     /// Reads `encoded`'s form; unknown or repeated names are skipped, missing actions go last in the menu.
     public static func parse(_ text: String?) -> ActionBar {
         guard let text, !text.trimmingCharacters(in: .whitespaces).isEmpty,
-              let cut = text.firstIndex(of: separator) else { return ActionBar() }
+            let cut = text.firstIndex(of: separator)
+        else { return ActionBar() }
         let icons = unique(names(text[..<cut]))
         let menu = unique(names(text[text.index(after: cut)...]).filter { !icons.contains($0) })
         let known = icons + menu

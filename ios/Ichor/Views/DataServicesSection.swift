@@ -54,13 +54,21 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     case .snapshots, .backupJobs: head = String(localized: "\(summary.total) backup items")
     case .castai:
         let castai = services.castai
-        let saving = castai.flatMap { $0.compared > 0 && $0.cpuDeltaMilli != 0 ? String(localized: "\(formatMilliCores($0.cpuDeltaMilli, signed: true)) CPU") : nil }
-        let stuck = castai.flatMap { $0.stuck.isEmpty ? nil : String(localized: "stuck nodes: \(String($0.stuck.count))") }
-        return [String(localized: "\(summary.total) workloads right-sized"), saving, attention, stuck].compactMap { $0 }.joined(separator: " · ")
+        let saving = castai.flatMap {
+            $0.compared > 0 && $0.cpuDeltaMilli != 0
+                ? String(localized: "\(formatMilliCores($0.cpuDeltaMilli, signed: true)) CPU") : nil
+        }
+        let stuck = castai.flatMap {
+            $0.stuck.isEmpty ? nil : String(localized: "stuck nodes: \(String($0.stuck.count))")
+        }
+        return [String(localized: "\(summary.total) workloads right-sized"), saving, attention, stuck].compactMap { $0 }
+            .joined(separator: " · ")
     case .garage:
         // One Garage cluster: its own state says more than "1 cluster".
         if let single = services.garage?.instances.first, services.garage?.instances.count == 1 {
-            let nodes = single.storageNodes > 0 ? String(localized: "\(single.storageNodesUp)/\(single.storageNodes) nodes up") : nil
+            let nodes =
+                single.storageNodes > 0
+                ? String(localized: "\(single.storageNodesUp)/\(single.storageNodes) nodes up") : nil
             return [single.state.label, nodes].compactMap { $0 }.joined(separator: " · ")
         }
         head = String(localized: "\(summary.total) clusters")
@@ -75,9 +83,11 @@ struct LikelyCauseBanner: View {
     var body: some View {
         if !causes.isEmpty {
             Label {
-                Text(verbatim: causes.map {
-                    String(localized: "\($0.node) is not ready") + ": " + String(localized: "the likely cause of \($0.problems) problems")
-                }.joined(separator: "\n"))
+                Text(
+                    verbatim: causes.map {
+                        String(localized: "\($0.node) is not ready") + ": "
+                            + String(localized: "the likely cause of \($0.problems) problems")
+                    }.joined(separator: "\n"))
             } icon: {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
@@ -103,7 +113,9 @@ struct DataServicesSection: View {
     var families: Set<ServiceFamily> = Set(ServiceFamily.allCases)
 
     private var hinted: [DataServiceKind] {
-        DataServiceKind.allCases.filter { families.contains($0.family) && hints.split(separator: ",").map(String.init).contains($0.catalogID) }
+        DataServiceKind.allCases.filter {
+            families.contains($0.family) && hints.split(separator: ",").map(String.init).contains($0.catalogID)
+        }
     }
 
     var body: some View {
@@ -150,10 +162,12 @@ struct DataServicesSection: View {
     /// The shared header with one pill, "3 need a look" (the worst state when no count says
     /// it); the likely cause stays on the Data services screen, the nodes say which one is down.
     private func header(_ services: DataServices) -> some View {
-        SectionHeader(title: String(localized: "Data services"),
-                      subtitle: String(localized: "\(services.detected.count + plugins.count) systems"), pill: pill(services))
-            .font(.headline)
-            .padding(.vertical, 4)
+        SectionHeader(
+            title: String(localized: "Data services"),
+            subtitle: String(localized: "\(services.detected.count + plugins.count) systems"), pill: pill(services)
+        )
+        .font(.headline)
+        .padding(.vertical, 4)
     }
 
     @ViewBuilder private func pill(_ services: DataServices) -> some View {

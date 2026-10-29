@@ -11,7 +11,8 @@ struct CaptureView: View {
     init(node: String, hostname: String, peer: String = "", peerHostname: String = "") {
         self.node = node
         self.hostname = hostname
-        _options = State(initialValue: CaptureOptions(peer: peer, peerHostname: peerHostname.isEmpty ? peer : peerHostname))
+        _options = State(
+            initialValue: CaptureOptions(peer: peer, peerHostname: peerHostname.isEmpty ? peer : peerHostname))
     }
 
     @Environment(AppModel.self) private var model
@@ -43,7 +44,9 @@ struct CaptureView: View {
         .toolbar {
             if session.isRunning {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button { confirmLeave = true } label: {
+                    Button {
+                        confirmLeave = true
+                    } label: {
                         Label("Back", systemImage: "chevron.backward")
                     }
                 }
@@ -91,14 +94,17 @@ struct CaptureView: View {
                 Picker("Duration", selection: $options.duration) {
                     ForEach(CaptureDuration.allCases) { Text($0.localizedLabel).tag($0) }
                 }
-                Picker(options.isPaired ? String(localized: "Maximum size, per node") : String(localized: "Maximum size"),
-                       selection: $options.sizeLimit) {
+                Picker(
+                    options.isPaired ? String(localized: "Maximum size, per node") : String(localized: "Maximum size"),
+                    selection: $options.sizeLimit
+                ) {
                     ForEach(CaptureSizeLimit.allCases) { Text(verbatim: "\($0.rawValue) MiB").tag($0) }
                 }
                 Toggle(isOn: $options.promiscuous) {
                     VStack(alignment: .leading) {
                         Text("Promiscuous mode")
-                        Text("Also capture traffic not addressed to this node.").font(.caption).foregroundStyle(.secondary)
+                        Text("Also capture traffic not addressed to this node.").font(.caption).foregroundStyle(
+                            .secondary)
                     }
                 }
             }
@@ -106,7 +112,9 @@ struct CaptureView: View {
                 Button("Start capture") { Task { await start() } }
                     .disabled(problem != nil)
             } footer: {
-                Text("The capture is saved on this phone. It can contain sensitive traffic (tokens, internal names): share it with care.")
+                Text(
+                    "The capture is saved on this phone. It can contain sensitive traffic (tokens, internal names): share it with care."
+                )
             }
         }
         .themedBackground()
@@ -116,10 +124,15 @@ struct CaptureView: View {
     @ViewBuilder private var peerSection: some View {
         if !peers.isEmpty || options.isPaired {
             Section {
-                Picker("Second node", selection: Binding(get: { options.peer }, set: { peer in
-                    options.peer = peer
-                    options.peerHostname = peers.first { $0.node == peer }?.hostname ?? peer
-                })) {
+                Picker(
+                    "Second node",
+                    selection: Binding(
+                        get: { options.peer },
+                        set: { peer in
+                            options.peer = peer
+                            options.peerHostname = peers.first { $0.node == peer }?.hostname ?? peer
+                        })
+                ) {
                     Text("None").tag("")
                     // A prefilled node shows even before the list loads.
                     if options.isPaired, !peers.contains(where: { $0.node == options.peer }) {
@@ -128,16 +141,20 @@ struct CaptureView: View {
                     ForEach(peers) { n in Text(verbatim: n.hostname.isEmpty ? n.node : n.hostname).tag(n.node) }
                 }
                 if options.isPaired {
-                    TextField(String(localized: "Interface on \(options.peerHostname)"), text: $options.peerInterface,
-                              prompt: Text(verbatim: options.interface))
-                        .font(.body.monospaced())
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    TextField(
+                        String(localized: "Interface on \(options.peerHostname)"), text: $options.peerInterface,
+                        prompt: Text(verbatim: options.interface)
+                    )
+                    .font(.body.monospaced())
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
                 }
             } header: {
                 Text("Second node")
             } footer: {
-                Text("Capture on a second node at the same time, such as both ends of a link: one file, each packet marked with its node.")
+                Text(
+                    "Capture on a second node at the same time, such as both ends of a link: one file, each packet marked with its node."
+                )
             }
         }
     }
@@ -155,7 +172,8 @@ struct CaptureView: View {
             Text(message).font(.footnote).foregroundStyle(.statusBad)
             Button("Retry") { Task { await loadLinks() } }
         case .loaded(let all, _, _):
-            let shown = captureInterfaces(all, includeVirtual: showVirtual || all.first { $0.name == options.interface }?.virtual == true)
+            let shown = captureInterfaces(
+                all, includeVirtual: showVirtual || all.first { $0.name == options.interface }?.virtual == true)
             Picker("Interface", selection: $options.interface) {
                 ForEach(shown) { link in
                     Text(verbatim: link.isUp ? link.name : "\(link.name) (\(String(localized: "down")))").tag(link.name)
@@ -191,7 +209,9 @@ struct CaptureView: View {
         } header: {
             Text("Filter")
         } footer: {
-            Text("tcpdump syntax, e.g. host 192.0.2.1 and tcp port 443. The Talos API port (50000) is never captured: it carries the capture itself.")
+            Text(
+                "tcpdump syntax, e.g. host 192.0.2.1 and tcp port 443. The Talos API port (50000) is never captured: it carries the capture itself."
+            )
         }
     }
 
@@ -273,11 +293,15 @@ private struct CaptureLiveView: View {
             statsBar
             ScrollViewReader { proxy in
                 List(session.packets) { packet in
-                    Button { if !session.isRunning { selected = packet } } label: { PacketRow(packet: packet) }
-                        .buttonStyle(.plain)
-                        .monoFont()
-                        .id(packet.n)
-                        .onAppear { if packet.n == session.packets.last?.n { follow = true } }
+                    Button {
+                        if !session.isRunning { selected = packet }
+                    } label: {
+                        PacketRow(packet: packet)
+                    }
+                    .buttonStyle(.plain)
+                    .monoFont()
+                    .id(packet.n)
+                    .onAppear { if packet.n == session.packets.last?.n { follow = true } }
                 }
                 .listStyle(.plain)
                 .scalableMonoText(.capture)
@@ -320,7 +344,8 @@ private struct CaptureLiveView: View {
                 Text("\(session.packetCount) packets").font(.subheadline.monospacedDigit())
                 Text(verbatim: formatBytes(session.bytes)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 ForEach(session.nodeStats) { n in
-                    Text("\(n.hostname): \(n.packets) packets").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    Text("\(n.hostname): \(n.packets) packets").font(.caption.monospacedDigit()).foregroundStyle(
+                        .secondary)
                 }
                 if let gap = session.clockGapMs { ClockGapNote(gapMs: gap) }
             }
@@ -362,9 +387,11 @@ struct ClockGapNote: View {
     let gapMs: Int64
 
     var body: some View {
-        Text("The two nodes' clocks are \(gapMs) ms apart: packets of one node can be that much out of order against the other's.")
-            .font(.caption)
-            .foregroundStyle(gapMs >= clockGapWarnMs ? Color.statusWarn : .secondary)
+        Text(
+            "The two nodes' clocks are \(gapMs) ms apart: packets of one node can be that much out of order against the other's."
+        )
+        .font(.caption)
+        .foregroundStyle(gapMs >= clockGapWarnMs ? Color.statusWarn : .secondary)
     }
 }
 
@@ -379,8 +406,11 @@ struct PacketRow: View {
                 if !packet.node.isEmpty {
                     Text(verbatim: packet.node).fontWeight(.semibold).foregroundStyle(.secondary).lineLimit(1)
                 }
-                Text(Date(epochMillis: packet.ts), format: .dateTime.hour().minute().second().secondFraction(.fractional(3)))
-                    .foregroundStyle(.secondary)
+                Text(
+                    Date(epochMillis: packet.ts),
+                    format: .dateTime.hour().minute().second().secondFraction(.fractional(3))
+                )
+                .foregroundStyle(.secondary)
                 Text(verbatim: packet.proto.isEmpty ? "?" : packet.proto)
                     .fontWeight(.semibold)
                     .foregroundStyle(packet.protoKind.color)
@@ -403,7 +433,8 @@ struct CaptureFileActions: View {
     let onDelete: () -> Void
 
     var body: some View {
-        LocalFileActions(url: url, contentType: .pcap, wrapperOptions: .immediate,
-                         deleteTitle: Text("Delete this capture?"), onDelete: onDelete)
+        LocalFileActions(
+            url: url, contentType: .pcap, wrapperOptions: .immediate,
+            deleteTitle: Text("Delete this capture?"), onDelete: onDelete)
     }
 }

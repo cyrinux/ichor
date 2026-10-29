@@ -14,8 +14,11 @@ public struct VpaRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
 
     public var id: String { "\(namespace)/\(name)" }
 
-    public init(namespace: String = "", name: String = "", target: AutoscaleTarget = AutoscaleTarget(), updateMode: String = "",
-                containers: [VpaContainer] = [], recommendationProvided: Bool = false, message: String = "", state: AutoscaleState = .ok) {
+    public init(
+        namespace: String = "", name: String = "", target: AutoscaleTarget = AutoscaleTarget(), updateMode: String = "",
+        containers: [VpaContainer] = [], recommendationProvided: Bool = false, message: String = "",
+        state: AutoscaleState = .ok
+    ) {
         self.namespace = namespace
         self.name = name
         self.target = target
@@ -38,7 +41,9 @@ public struct VpaRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
         state = try c.wire(.state)
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, target, updateMode, containers, recommendationProvided, message, state }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, target, updateMode, containers, recommendationProvided, message, state
+    }
 }
 
 /// The recommender's answer for one container next to its live requests ("" when unread).
@@ -55,8 +60,11 @@ public struct VpaContainer: Decodable, Equatable, Hashable, Identifiable, Sendab
 
     public var id: String { name }
 
-    public init(name: String = "", cpuTarget: String = "", memoryTarget: String = "", cpuLower: String = "", cpuUpper: String = "",
-                memoryLower: String = "", memoryUpper: String = "", cpuRequest: String = "", memoryRequest: String = "") {
+    public init(
+        name: String = "", cpuTarget: String = "", memoryTarget: String = "", cpuLower: String = "",
+        cpuUpper: String = "",
+        memoryLower: String = "", memoryUpper: String = "", cpuRequest: String = "", memoryRequest: String = ""
+    ) {
         self.name = name
         self.cpuTarget = cpuTarget
         self.memoryTarget = memoryTarget

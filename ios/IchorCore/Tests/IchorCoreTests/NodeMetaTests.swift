@@ -3,13 +3,13 @@ import XCTest
 
 final class NodeMetaTests: XCTestCase {
     private let readJSON = """
-    {"node":"worker-1","resourceVersion":"4242",
-    "taints":[{"key":"maintenance","value":"true","effect":"NoSchedule","timeAdded":1700000000,"protected":false},
-    {"key":"node-role.kubernetes.io/control-plane","effect":"NoSchedule","timeAdded":0,"protected":true},
-    {"key":"node.kubernetes.io/unschedulable","effect":"NoSchedule","protected":true}],
-    "labels":[{"key":"example.com/pool","value":"general","protected":false},
-    {"key":"topology.kubernetes.io/zone","value":"zone-a","protected":true}]}
-    """
+        {"node":"worker-1","resourceVersion":"4242",
+        "taints":[{"key":"maintenance","value":"true","effect":"NoSchedule","timeAdded":1700000000,"protected":false},
+        {"key":"node-role.kubernetes.io/control-plane","effect":"NoSchedule","timeAdded":0,"protected":true},
+        {"key":"node.kubernetes.io/unschedulable","effect":"NoSchedule","protected":true}],
+        "labels":[{"key":"example.com/pool","value":"general","protected":false},
+        {"key":"topology.kubernetes.io/zone","value":"zone-a","protected":true}]}
+        """
 
     private func read() throws -> KubeNodeMeta {
         try TalosJSON.decode(KubeNodeMeta.self, from: readJSON)
@@ -19,10 +19,12 @@ final class NodeMetaTests: XCTestCase {
         let meta = try read()
         XCTAssertEqual(meta.node, "worker-1")
         XCTAssertEqual(meta.resourceVersion, "4242")
-        XCTAssertEqual(meta.taints.map(\.display), [
-            "maintenance=true:NoSchedule", "node-role.kubernetes.io/control-plane:NoSchedule",
-            "node.kubernetes.io/unschedulable:NoSchedule",
-        ])
+        XCTAssertEqual(
+            meta.taints.map(\.display),
+            [
+                "maintenance=true:NoSchedule", "node-role.kubernetes.io/control-plane:NoSchedule",
+                "node.kubernetes.io/unschedulable:NoSchedule",
+            ])
         XCTAssertEqual(meta.taints[0].timeAdded, 1_700_000_000)
         XCTAssertEqual(meta.taints[1].value, "")
         XCTAssertTrue(meta.taints[2].isCordon)
@@ -35,10 +37,12 @@ final class NodeMetaTests: XCTestCase {
         XCTAssertFalse(draft.hasChanges)
         XCTAssertFalse(draft.touchesProtected)
         let edits = draft.edits
-        XCTAssertEqual(edits.taints, [
-            NodeTaintEdit(key: "maintenance", value: "true", effect: "NoSchedule"),
-            NodeTaintEdit(key: "node-role.kubernetes.io/control-plane", effect: "NoSchedule"),
-        ], "the full list, the cordon's taint left out")
+        XCTAssertEqual(
+            edits.taints,
+            [
+                NodeTaintEdit(key: "maintenance", value: "true", effect: "NoSchedule"),
+                NodeTaintEdit(key: "node-role.kubernetes.io/control-plane", effect: "NoSchedule"),
+            ], "the full list, the cordon's taint left out")
         XCTAssertTrue(edits.setLabels.isEmpty)
         XCTAssertTrue(edits.removeLabels.isEmpty)
     }
@@ -50,9 +54,11 @@ final class NodeMetaTests: XCTestCase {
         XCTAssertTrue(draft.hasTaintChanges)
         XCTAssertFalse(draft.hasLabelChanges)
         XCTAssertFalse(draft.touchesProtected)
-        XCTAssertEqual(try draft.edits.json(), """
-        {"removeLabels":[],"resourceVersion":"4242","setLabels":{},"taints":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane","value":""}]}
-        """)
+        XCTAssertEqual(
+            try draft.edits.json(),
+            """
+            {"removeLabels":[],"resourceVersion":"4242","setLabels":{},"taints":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane","value":""}]}
+            """)
     }
 
     func testLabelEditsAreDeltas() throws {
@@ -89,7 +95,9 @@ final class NodeMetaTests: XCTestCase {
         draft.setTaint(NodeTaint(key: "maintenance", value: "later", effect: "NoExecute"))
         XCTAssertEqual(draft.taints.filter { $0.key == "maintenance" }.map(\.value), ["later"])
         // Changing a protected one needs force.
-        draft.setTaint(NodeTaint(key: "node-role.kubernetes.io/control-plane", value: "x", effect: "NoSchedule"), replacing: meta.taints[1])
+        draft.setTaint(
+            NodeTaint(key: "node-role.kubernetes.io/control-plane", value: "x", effect: "NoSchedule"),
+            replacing: meta.taints[1])
         XCTAssertTrue(draft.taints.first { $0.key == "node-role.kubernetes.io/control-plane" }?.protected ?? false)
         XCTAssertTrue(draft.touchesProtected)
     }
@@ -99,20 +107,23 @@ final class NodeMetaTests: XCTestCase {
         XCTAssertTrue(NodeMetaDraft.editable(meta.taints[0], showProtected: false))
         XCTAssertFalse(NodeMetaDraft.editable(meta.taints[1], showProtected: false))
         XCTAssertTrue(NodeMetaDraft.editable(meta.taints[1], showProtected: true))
-        XCTAssertFalse(NodeMetaDraft.editable(meta.taints[2], showProtected: true), "the cordon's taint is Cordon / Uncordon's")
+        XCTAssertFalse(
+            NodeMetaDraft.editable(meta.taints[2], showProtected: true), "the cordon's taint is Cordon / Uncordon's")
         XCTAssertFalse(NodeMetaDraft.editable(meta.labels[1], showProtected: false))
         XCTAssertTrue(NodeMetaDraft.editable(meta.labels[1], showProtected: true))
         XCTAssertEqual(NodeTaintEffect.allCases.map(\.rawValue), ["NoSchedule", "PreferNoSchedule", "NoExecute"])
     }
 
     func testDecodesThePlan() throws {
-        let plan = try TalosJSON.decode(NodeMetaPlan.self, from: """
-        {"node":"worker-1",
-        "labels":{"added":[{"key":"workload","value":"web"}],"removed":[],"changed":[{"key":"example.com/pool","from":"general","to":"batch"}]},
-        "taints":{"added":[{"key":"maintenance","value":"true","effect":"NoExecute"}],"removed":[{"key":"maintenance","value":"true","effect":"NoSchedule"}]},
-        "evicts":[{"namespace":"shop","name":"web-1","owner":"ReplicaSet/web-5d9"}],
-        "blockers":[],"warnings":["1 pods will be evicted at once"],"noChange":false}
-        """)
+        let plan = try TalosJSON.decode(
+            NodeMetaPlan.self,
+            from: """
+                {"node":"worker-1",
+                "labels":{"added":[{"key":"workload","value":"web"}],"removed":[],"changed":[{"key":"example.com/pool","from":"general","to":"batch"}]},
+                "taints":{"added":[{"key":"maintenance","value":"true","effect":"NoExecute"}],"removed":[{"key":"maintenance","value":"true","effect":"NoSchedule"}]},
+                "evicts":[{"namespace":"shop","name":"web-1","owner":"ReplicaSet/web-5d9"}],
+                "blockers":[],"warnings":["1 pods will be evicted at once"],"noChange":false}
+                """)
         XCTAssertEqual(plan.labels.added.map(\.display), ["workload=web"])
         XCTAssertEqual(plan.labels.changed.map(\.display), ["example.com/pool: general → batch"])
         XCTAssertEqual(plan.taints.added.map(\.display), ["maintenance=true:NoExecute"])
@@ -123,17 +134,21 @@ final class NodeMetaTests: XCTestCase {
     }
 
     func testPlanBlockersAndNoChange() throws {
-        let blocked = try TalosJSON.decode(NodeMetaPlan.self, from: """
-        {"node":"worker-1","labels":{"added":[{"key":"kubernetes.io/bad","value":"x"}]},
-        "blockers":["metadata.labels: Invalid value"]}
-        """)
+        let blocked = try TalosJSON.decode(
+            NodeMetaPlan.self,
+            from: """
+                {"node":"worker-1","labels":{"added":[{"key":"kubernetes.io/bad","value":"x"}]},
+                "blockers":["metadata.labels: Invalid value"]}
+                """)
         XCTAssertFalse(blocked.hasTaintChanges)
         XCTAssertFalse(blocked.canApply)
         XCTAssertFalse(blocked.isStale)
-        let stale = try TalosJSON.decode(NodeMetaPlan.self, from: """
-        {"node":"worker-1","taints":{"changed":[{"key":"maintenance","effect":"NoSchedule","from":"true","to":"later"}]},
-        "blockers":["the node changed since it was read, reload"],"warnings":["the node changed since it was read, reload"]}
-        """)
+        let stale = try TalosJSON.decode(
+            NodeMetaPlan.self,
+            from: """
+                {"node":"worker-1","taints":{"changed":[{"key":"maintenance","effect":"NoSchedule","from":"true","to":"later"}]},
+                "blockers":["the node changed since it was read, reload"],"warnings":["the node changed since it was read, reload"]}
+                """)
         XCTAssertTrue(stale.isStale)
         XCTAssertEqual(stale.taints.changed.map(\.display), ["maintenance:NoSchedule: true → later"])
         let none = try TalosJSON.decode(NodeMetaPlan.self, from: #"{"node":"worker-1","noChange":true}"#)

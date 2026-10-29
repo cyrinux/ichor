@@ -4,9 +4,9 @@ import XCTest
 final class ReadProgressTests: XCTestCase {
     func testDecodesGoJSON() throws {
         let json = """
-        {"running":true,"done":5,"total":17,"steps":[{"id":"api","state":"done","ms":120},\
-        {"id":"storage","state":"running","count":12,"total":40},{"id":"helm","state":"pending"},{"id":"x","state":"odd"}]}
-        """
+            {"running":true,"done":5,"total":17,"steps":[{"id":"api","state":"done","ms":120},\
+            {"id":"storage","state":"running","count":12,"total":40},{"id":"helm","state":"pending"},{"id":"x","state":"odd"}]}
+            """
         let progress = try XCTUnwrap(ReadProgress.decode(json))
         XCTAssertTrue(progress.running)
         XCTAssertEqual(progress.fraction ?? 0, 5.0 / 17.0, accuracy: 0.0001)

@@ -24,8 +24,10 @@ public struct FluxStatus: Decodable, Equatable, Sendable {
     public let apps: [FluxApp]
     public let sources: [FluxSource]
 
-    public init(installed: Bool = true, version: String = "", helmError: String = "", sourcesError: String = "",
-                apps: [FluxApp] = [], sources: [FluxSource] = []) {
+    public init(
+        installed: Bool = true, version: String = "", helmError: String = "", sourcesError: String = "",
+        apps: [FluxApp] = [], sources: [FluxSource] = []
+    ) {
         self.installed = installed
         self.version = version
         self.helmError = helmError
@@ -152,8 +154,10 @@ public struct FluxApp: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, namespace, name, level, icon, remoteIcon, ready, reason, message, reconciling, pending, stalled, suspended
-        case owner, source, sourceURL, path, chart, chartVersion, targetNamespace, interval, prune, revision, attemptedRevision
+        case kind, namespace, name, level, icon, remoteIcon, ready, reason, message, reconciling, pending, stalled,
+            suspended
+        case owner, source, sourceURL, path, chart, chartVersion, targetNamespace, interval, prune, revision,
+            attemptedRevision
         case dependsOn, failures, conditions, resources, history, unhealthyPods, reconciledAt
         case driftMode, drifted, driftMessage, driftAt
     }

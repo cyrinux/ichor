@@ -17,7 +17,11 @@ extension ClusterSnapshot {
                 ready: state.health == .ready
             )
         }
-        return ClusterOverview(context: context, nodes: nodes.sorted { ($0.hostname.isEmpty ? $0.node : $0.hostname) < ($1.hostname.isEmpty ? $1.node : $1.hostname) })
+        return ClusterOverview(
+            context: context,
+            nodes: nodes.sorted {
+                ($0.hostname.isEmpty ? $0.node : $0.hostname) < ($1.hostname.isEmpty ? $1.node : $1.hostname)
+            })
     }
 
     /// The Kubernetes nodes this check of a kubeconfig cluster saw.

@@ -28,8 +28,10 @@ struct DebugShellView: View {
             case .setup:
                 Form {
                     Section {
-                        Text("Runs the image as a privileged container on \(hostname), with host access, and opens a terminal in it. Talos pulls the image first if the node does not have it.")
-                            .font(.callout)
+                        Text(
+                            "Runs the image as a privileged container on \(hostname), with host access, and opens a terminal in it. Talos pulls the image first if the node does not have it."
+                        )
+                        .font(.callout)
                     }
                     Section("Image") {
                         TextField("Image", text: $image).font(.body.monospaced())
@@ -86,7 +88,9 @@ struct DebugShellView: View {
     /// With the app lock on, a privileged shell needs a fresh Face ID / passcode, like reboot.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Debug shell on \(hostname)")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Debug shell on \(hostname)"))
+        {
             error = failure
             return
         }
@@ -120,7 +124,9 @@ private struct DebugSnippetsSheet: View {
                 ForEach(groupedDebugSnippets(snippets), id: \.group) { section in
                     Section(Self.title(section.group)) {
                         ForEach(section.snippets) { snippet in
-                            Button { onPick(snippet) } label: {
+                            Button {
+                                onPick(snippet)
+                            } label: {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(snippet.label).foregroundStyle(.primary)
                                     Text(snippet.display)
@@ -186,7 +192,8 @@ final class DebugShell {
     var statusLine: String? {
         switch state {
         case .starting(let status): status
-        case .exited(let code, let message): code >= 0 && message.isEmpty ? String(localized: "Exited with code \(code)") : message
+        case .exited(let code, let message):
+            code >= 0 && message.isEmpty ? String(localized: "Exited with code \(code)") : message
         default: nil
         }
     }

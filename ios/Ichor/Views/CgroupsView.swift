@@ -23,7 +23,8 @@ final class CgroupMonitor {
                 let next = try await client.cgroups(node: node)
                 previous = current
                 current = next
-                history = Array((history + [PressureSample(at: next.at, pressure: next.pressure)]).suffix(Self.historyPoints))
+                history = Array(
+                    (history + [PressureSample(at: next.at, pressure: next.pressure)]).suffix(Self.historyPoints))
                 error = nil
             } catch {
                 if !Task.isCancelled { self.error = error.localizedDescription }
@@ -61,7 +62,9 @@ struct CgroupsView: View {
                 }
                 .pickerStyle(.segmented)
             } footer: {
-                Text("CPU as a share of one core and disk I/O since the last refresh, every 10 s; pressure over the last 10 s. Tap a group to open it.")
+                Text(
+                    "CPU as a share of one core and disk I/O since the last refresh, every 10 s; pressure over the last 10 s. Tap a group to open it."
+                )
             }
             if monitor.history.count >= 2 {
                 Section { PressureChart(samples: monitor.history) }
@@ -69,7 +72,8 @@ struct CgroupsView: View {
             if let current = monitor.current {
                 let open = expanded ?? defaultExpandedCgroups(current)
                 Section {
-                    ForEach(cgroupRows(previous: monitor.previous, current: current, expanded: open, sort: sort)) { row in
+                    ForEach(cgroupRows(previous: monitor.previous, current: current, expanded: open, sort: sort)) {
+                        row in
                         let toggle: () -> Void = {
                             guard row.hasChildren else { return }
                             expanded = open.symmetricDifference([row.id])
@@ -116,7 +120,10 @@ private struct CgroupRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(verbatim: row.node.name)
-                        .font(row.node.kind == "service" || row.node.kind == "pod" ? Font.subheadline.weight(.semibold) : Font.subheadline)
+                        .font(
+                            row.node.kind == "service" || row.node.kind == "pod"
+                                ? Font.subheadline.weight(.semibold) : Font.subheadline
+                        )
                         .lineLimit(1)
                     Spacer()
                     Text(verbatim: row.cpuPercent.map { String(format: "%.1f%%", $0) } ?? "—")
@@ -143,10 +150,14 @@ private struct CgroupRowView: View {
 
     private var noteParts: [Text] {
         let n = row.node
-        let waiting = n.pressure.map { p in
-            [(String(localized: "CPU"), p.cpu.some10), (String(localized: "Memory"), p.memory.some10), (String(localized: "Disk I/O"), p.io.some10)]
+        let waiting =
+            n.pressure.map { p in
+                [
+                    (String(localized: "CPU"), p.cpu.some10), (String(localized: "Memory"), p.memory.some10),
+                    (String(localized: "Disk I/O"), p.io.some10),
+                ]
                 .filter { pressureLevel($0.1) != .ok }
-        } ?? []
+            } ?? []
         var parts: [Text] = []
         if n.memMax > 0 { parts.append(Text("limit \(formatBytes(n.memMax))")) }
         if let io = row.ioPerSecond, io >= 1024 { parts.append(Text("disk \(formatBytes(UInt64(io)))/s")) }
@@ -176,9 +187,11 @@ private struct PressureChart: View {
     @State private var selection: Date?
 
     private var series: [(label: String, color: Color, value: KeyPath<CgroupPressure, CgroupPSI>)] {
-        [(String(localized: "CPU"), ChartPalette.first, \.cpu),
-         (String(localized: "Memory"), ChartPalette.second, \.memory),
-         (String(localized: "Disk I/O"), ChartPalette.third, \.io)]
+        [
+            (String(localized: "CPU"), ChartPalette.first, \.cpu),
+            (String(localized: "Memory"), ChartPalette.second, \.memory),
+            (String(localized: "Disk I/O"), ChartPalette.third, \.io),
+        ]
     }
 
     private var shown: PressureSample? {
@@ -193,7 +206,8 @@ private struct PressureChart: View {
                 Text("Pressure").font(.subheadline.weight(.semibold))
                 Spacer()
                 if selection != nil, let shown, let last = samples.last {
-                    Text("\(Int(last.date.timeIntervalSince(shown.date)))s ago").font(.caption2).foregroundStyle(.secondary)
+                    Text("\(Int(last.date.timeIntervalSince(shown.date)))s ago").font(.caption2).foregroundStyle(
+                        .secondary)
                 }
             }
             HStack(spacing: 14) {
@@ -201,18 +215,24 @@ private struct PressureChart: View {
                     HStack(spacing: 6) {
                         Circle().fill(s.color).frame(width: 8, height: 8)
                         Text(verbatim: s.label).font(.caption).foregroundStyle(.secondary)
-                        Text(verbatim: shown.map { String(format: "%.1f%%", $0.pressure[keyPath: s.value].some10) } ?? "—")
-                            .font(.subheadline.weight(.semibold))
-                            .monospacedDigit()
+                        Text(
+                            verbatim: shown.map { String(format: "%.1f%%", $0.pressure[keyPath: s.value].some10) }
+                                ?? "—"
+                        )
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
                     }
                 }
             }
             Chart {
                 ForEach(series, id: \.label) { s in
                     ForEach(samples) { p in
-                        LineMark(x: .value("Time", p.date), y: .value("Pressure", p.pressure[keyPath: s.value].some10), series: .value("Series", s.label))
-                            .foregroundStyle(s.color)
-                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                        LineMark(
+                            x: .value("Time", p.date), y: .value("Pressure", p.pressure[keyPath: s.value].some10),
+                            series: .value("Series", s.label)
+                        )
+                        .foregroundStyle(s.color)
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                     }
                 }
                 if selection != nil, let shown {

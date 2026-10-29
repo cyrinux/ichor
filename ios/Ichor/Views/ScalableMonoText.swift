@@ -67,11 +67,14 @@ private struct ScalableMonoText: ViewModifier {
     func body(content: Content) -> some View {
         let shown = MonoTextScale.clamp(factor * Double(pinch), base: base)
         content
-            .environment(\.monoTextScale, MonoTextScale(
-                size: base * CGFloat(shown),
-                larger: { factor = MonoTextScale.clamp(factor + MonoTextScale.step, base: base) },
-                smaller: { factor = MonoTextScale.clamp(factor - MonoTextScale.step, base: base) }
-            ))
+            .environment(
+                \.monoTextScale,
+                MonoTextScale(
+                    size: base * CGFloat(shown),
+                    larger: { factor = MonoTextScale.clamp(factor + MonoTextScale.step, base: base) },
+                    smaller: { factor = MonoTextScale.clamp(factor - MonoTextScale.step, base: base) }
+                )
+            )
             .simultaneousGesture(
                 MagnifyGesture()
                     .updating($pinch) { value, state, _ in state = value.magnification }

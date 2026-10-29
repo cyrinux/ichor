@@ -12,8 +12,11 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
     public let security: SecurityInfo?
     public let errors: [String: String]
 
-    public init(system: SystemInfo? = nil, processors: [ProcessorInfo] = [], memory: [MemoryModule] = [], disks: [DiskInfo] = [],
-                extensions: [ExtensionInfo] = [], security: SecurityInfo? = nil, errors: [String: String] = [:]) {
+    public init(
+        system: SystemInfo? = nil, processors: [ProcessorInfo] = [], memory: [MemoryModule] = [],
+        disks: [DiskInfo] = [],
+        extensions: [ExtensionInfo] = [], security: SecurityInfo? = nil, errors: [String: String] = [:]
+    ) {
         self.system = system
         self.processors = processors
         self.memory = memory
@@ -53,8 +56,10 @@ public struct SystemInfo: Decodable, Equatable, Sendable {
     public let sku: String
     public let biosVersion: String
 
-    public init(manufacturer: String = "", product: String = "", version: String = "", serial: String = "",
-                uuid: String = "", sku: String = "", biosVersion: String = "") {
+    public init(
+        manufacturer: String = "", product: String = "", version: String = "", serial: String = "",
+        uuid: String = "", sku: String = "", biosVersion: String = ""
+    ) {
         self.manufacturer = manufacturer
         self.product = product
         self.version = version
@@ -76,8 +81,10 @@ public struct ProcessorInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(socket)/\(model)" }
 
-    public init(socket: String = "CPU 0", manufacturer: String = "", model: String = "", cores: UInt32 = 0,
-                threads: UInt32 = 0, maxSpeedMhz: UInt32 = 0, bootSpeedMhz: UInt32 = 0) {
+    public init(
+        socket: String = "CPU 0", manufacturer: String = "", model: String = "", cores: UInt32 = 0,
+        threads: UInt32 = 0, maxSpeedMhz: UInt32 = 0, bootSpeedMhz: UInt32 = 0
+    ) {
         self.socket = socket
         self.manufacturer = manufacturer
         self.model = model
@@ -101,8 +108,10 @@ public struct MemoryModule: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(slot)/\(bank)/\(serial)" }
 
-    public init(slot: String, bank: String = "", sizeMib: UInt32, type: String = "", speed: UInt32 = 0,
-                manufacturer: String = "", serial: String = "") {
+    public init(
+        slot: String, bank: String = "", sizeMib: UInt32, type: String = "", speed: UInt32 = 0,
+        manufacturer: String = "", serial: String = ""
+    ) {
         self.slot = slot
         self.bank = bank
         self.sizeMib = sizeMib
@@ -131,8 +140,12 @@ public struct DiskInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, devPath: String = "", model: String = "", serial: String = "", size: UInt64 = 0, type: String = "ssd",
-                wwid: String = "", busPath: String = "", systemDisk: Bool = false, readonly: Bool = false, transport: String = "") {
+    public init(
+        name: String, devPath: String = "", model: String = "", serial: String = "", size: UInt64 = 0,
+        type: String = "ssd",
+        wwid: String = "", busPath: String = "", systemDisk: Bool = false, readonly: Bool = false,
+        transport: String = ""
+    ) {
         self.name = name
         self.devPath = devPath
         self.model = model
@@ -191,9 +204,11 @@ public struct SecurityInfo: Decodable, Equatable, Sendable {
     public let fipsState: String
     public let moduleSignatureEnforced: Bool
 
-    public init(secureBoot: Bool = false, bootedWithUki: Bool = false, ukiSigningKeyFingerprint: String = "",
-                pcrSigningKeyFingerprint: String = "", selinuxState: String = "", fipsState: String = "",
-                moduleSignatureEnforced: Bool = false) {
+    public init(
+        secureBoot: Bool = false, bootedWithUki: Bool = false, ukiSigningKeyFingerprint: String = "",
+        pcrSigningKeyFingerprint: String = "", selinuxState: String = "", fipsState: String = "",
+        moduleSignatureEnforced: Bool = false
+    ) {
         self.secureBoot = secureBoot
         self.bootedWithUki = bootedWithUki
         self.ukiSigningKeyFingerprint = ukiSigningKeyFingerprint

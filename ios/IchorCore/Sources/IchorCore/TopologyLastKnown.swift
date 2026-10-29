@@ -12,7 +12,8 @@ public func mergeLastKnown(current: ClusterTopology, previous: ClusterTopology?,
     guard let previous else { return current }
     let previousMillis = Int64((previousAt.timeIntervalSince1970 * 1000).rounded())
     return current.nodes.filter { $0.error != nil && !$0.node.isEmpty }.reduce(current) { map, node in
-        guard let before = previous.nodes.first(where: { node.node == $0.node || $0.addresses.contains(node.node) }) else { return map }
+        guard let before = previous.nodes.first(where: { node.node == $0.node || $0.addresses.contains(node.node) })
+        else { return map }
         let beforeSite = previous.sites.first { $0.nodes.contains(before.id) }
         return map.lastKnown(node.id, before: before, beforeSite: beforeSite, beforeAt: previousMillis)
     }
@@ -20,17 +21,22 @@ public func mergeLastKnown(current: ClusterTopology, previous: ClusterTopology?,
 
 private extension ClusterTopology {
     func lastKnown(_ id: String, before: TopologyNode, beforeSite: TopologySite?, beforeAt: Int64) -> ClusterTopology {
-        guard let seen = before.lastSeen ?? (before.queried && before.error == nil ? beforeAt : nil) else { return self }
+        guard let seen = before.lastSeen ?? (before.queried && before.error == nil ? beforeAt : nil) else {
+            return self
+        }
         // Another node of this map goes by that name: two chips must not say the same.
         guard !before.hostname.isEmpty,
-              !nodes.contains(where: { $0.id != id && $0.hostname.caseInsensitiveCompare(before.hostname) == .orderedSame })
+            !nodes.contains(where: {
+                $0.id != id && $0.hostname.caseInsensitiveCompare(before.hostname) == .orderedSame
+            })
         else { return self }
         let filled = nodes.map { n -> TopologyNode in
             guard n.id == id else { return n }
             return TopologyNode(
                 id: n.id, node: n.node, hostname: before.hostname, role: n.role.isEmpty ? before.role : n.role,
                 addresses: n.addresses, zone: n.zone.isEmpty ? before.zone : n.zone,
-                region: n.region.isEmpty ? before.region : n.region, country: n.country.isEmpty ? before.country : n.country,
+                region: n.region.isEmpty ? before.region : n.region,
+                country: n.country.isEmpty ? before.country : n.country,
                 site: n.site, kubespan: n.kubespan, queried: n.queried, error: n.error, lastSeen: seen
             )
         }
@@ -41,13 +47,14 @@ private extension ClusterTopology {
     /// LAN, or, when it is alone on its own network here, that site named as it was.
     func backTo(_ id: String, beforeSite: TopologySite?) -> ClusterTopology {
         guard let beforeSite, beforeSite.kind != "node", !beforeSite.label.isEmpty,
-              let current = sites.first(where: { $0.nodes.contains(id) }),
-              current.kind != beforeSite.kind || current.label != beforeSite.label
+            let current = sites.first(where: { $0.nodes.contains(id) }),
+            current.kind != beforeSite.kind || current.label != beforeSite.label
         else { return self }
         guard let same = sites.first(where: { $0.kind == beforeSite.kind && $0.label == beforeSite.label }) else {
             guard current.kind == "node" else { return self }
-            let named = TopologySite(id: current.id, label: beforeSite.label, kind: beforeSite.kind,
-                                     country: current.country.isEmpty ? beforeSite.country : current.country, nodes: current.nodes)
+            let named = TopologySite(
+                id: current.id, label: beforeSite.label, kind: beforeSite.kind,
+                country: current.country.isEmpty ? beforeSite.country : current.country, nodes: current.nodes)
             return ClusterTopology(nodes: nodes, links: links, sites: sites.map { $0.id == current.id ? named : $0 })
         }
         let moved = sites.compactMap { s -> TopologySite? in
@@ -56,16 +63,18 @@ private extension ClusterTopology {
                 return TopologySite(id: s.id, label: s.label, kind: s.kind, country: s.country, nodes: s.nodes + [id])
             case current.id:
                 let rest = s.nodes.filter { $0 != id }
-                return rest.isEmpty ? nil : TopologySite(id: s.id, label: s.label, kind: s.kind, country: s.country, nodes: rest)
+                return rest.isEmpty
+                    ? nil : TopologySite(id: s.id, label: s.label, kind: s.kind, country: s.country, nodes: rest)
             default:
                 return s
             }
         }
         let placed = nodes.map { n -> TopologyNode in
             guard n.id == id else { return n }
-            return TopologyNode(id: n.id, node: n.node, hostname: n.hostname, role: n.role, addresses: n.addresses,
-                                zone: n.zone, region: n.region, country: n.country, site: same.id,
-                                kubespan: n.kubespan, queried: n.queried, error: n.error, lastSeen: n.lastSeen)
+            return TopologyNode(
+                id: n.id, node: n.node, hostname: n.hostname, role: n.role, addresses: n.addresses,
+                zone: n.zone, region: n.region, country: n.country, site: same.id,
+                kubespan: n.kubespan, queried: n.queried, error: n.error, lastSeen: n.lastSeen)
         }
         return ClusterTopology(nodes: placed, links: links, sites: moved)
     }

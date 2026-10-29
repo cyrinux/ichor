@@ -2,13 +2,17 @@ import XCTest
 @testable import IchorCore
 
 final class EtcdLagTests: XCTestCase {
-    private func status(_ node: String, leader: Bool = false, index: UInt64, applied: UInt64? = nil, error: String? = nil) throws -> EtcdNodeStatus {
+    private func status(
+        _ node: String, leader: Bool = false, index: UInt64, applied: UInt64? = nil, error: String? = nil
+    ) throws -> EtcdNodeStatus {
         let appliedField = applied.map { #","raftAppliedIndex":\#($0)"# } ?? ""
         let errorField = error.map { #""\#($0)""# } ?? "null"
-        return try TalosJSON.decode(EtcdNodeStatus.self, from: """
-        {"node":"\(node)","error":\(errorField),"memberId":"\(node)","isLeader":\(leader),"isLearner":false,"dbSize":1,"dbSizeInUse":1,
-         "raftIndex":\(index),"raftTerm":1\(appliedField),"version":"3.6","errors":[]}
-        """)
+        return try TalosJSON.decode(
+            EtcdNodeStatus.self,
+            from: """
+                {"node":"\(node)","error":\(errorField),"memberId":"\(node)","isLeader":\(leader),"isLearner":false,"dbSize":1,"dbSizeInUse":1,
+                 "raftIndex":\(index),"raftTerm":1\(appliedField),"version":"3.6","errors":[]}
+                """)
     }
 
     func testFollowerCloseToTheLeaderIsNotLagging() throws {

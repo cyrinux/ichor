@@ -61,7 +61,8 @@ public let gitHostAliasLimit = 16
 public func parseGitHostAliases(_ text: String, host: String = "") -> [String] {
     let own = normalizedGitHost(host)
     var seen = Set<String>()
-    let names = text
+    let names =
+        text
         .split(whereSeparator: { $0 == "," || $0 == ";" || $0.isWhitespace })
         .map { normalizedGitHost(String($0)) }
         .filter { !$0.isEmpty && $0 != own && seen.insert($0).inserted }
@@ -142,8 +143,9 @@ public func gitHostJSON(host: String, kind: GitHostKind, token: String, aliases:
         let aliases: [String]?
     }
     let names = aliases.map(normalizedGitHost).filter { !$0.isEmpty }
-    let wire = Wire(kind: kind.rawValue, baseURL: "https://\(normalizedGitHost(host))", token: token,
-                    aliases: names.isEmpty ? nil : names)
+    let wire = Wire(
+        kind: kind.rawValue, baseURL: "https://\(normalizedGitHost(host))", token: token,
+        aliases: names.isEmpty ? nil : names)
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
     // Encoding strings cannot fail.
@@ -197,12 +199,14 @@ public extension Array where Element == GitHost {
         let end = rest.firstIndex(of: "/") ?? rest.endIndex
         let name = gitHostName(normalizedGitHost(String(rest[..<end])))
         guard !name.isEmpty, !contains(where: { gitHostName(normalizedGitHost($0.host)) == name }),
-              let host = first(where: { $0.matches(name) }) else { return url }
+            let host = first(where: { $0.matches(name) })
+        else { return url }
         let base = normalizedGitHost(host.host)
         var path = String(rest[end...])
         if host.kind == .gitlab || host.kind == .auto && base.contains("gitlab") {
-            path = path.replacingOccurrences(of: #"(?<!/-)/commit/([0-9a-f]{7,64})$"#, with: "/-/commit/$1",
-                                             options: .regularExpression)
+            path = path.replacingOccurrences(
+                of: #"(?<!/-)/commit/([0-9a-f]{7,64})$"#, with: "/-/commit/$1",
+                options: .regularExpression)
         }
         return prefix + base + path
     }

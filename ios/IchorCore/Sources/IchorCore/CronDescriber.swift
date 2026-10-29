@@ -31,9 +31,10 @@ public enum CronDescriber {
         let expanded = macros[trimmed.lowercased()] ?? trimmed
         let fields = expanded.split(whereSeparator: \.isWhitespace).map(String.init)
         guard fields.count == 5,
-              let minute = number(fields[0], in: 0...59),
-              let hour = number(fields[1], in: 0...23),
-              fields[3] == "*" else { return .raw(trimmed) }
+            let minute = number(fields[0], in: 0...59),
+            let hour = number(fields[1], in: 0...23),
+            fields[3] == "*"
+        else { return .raw(trimmed) }
         switch (fields[2], fields[4]) {
         case ("*", "*"):
             return .daily(hour: hour, minute: minute)
@@ -49,7 +50,8 @@ public enum CronDescriber {
     }
 
     private static func number(_ field: String, in range: ClosedRange<Int>) -> Int? {
-        guard !field.isEmpty, field.allSatisfy({ $0.isASCII && $0.isNumber }), let n = Int(field), range.contains(n) else { return nil }
+        guard !field.isEmpty, field.allSatisfy({ $0.isASCII && $0.isNumber }), let n = Int(field), range.contains(n)
+        else { return nil }
         return n
     }
 

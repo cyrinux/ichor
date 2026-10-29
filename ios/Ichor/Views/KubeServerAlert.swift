@@ -32,7 +32,9 @@ private struct KubeServerAlert: ViewModifier {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Used instead of the kubeconfig’s address, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.")
+                Text(
+                    "Used instead of the kubeconfig’s address, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device."
+                )
             }
             .messageAlert($error)
             .onChange(of: context) { _, opened in

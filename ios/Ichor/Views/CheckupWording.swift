@@ -143,19 +143,22 @@ extension CheckupFinding {
         case .pvFailed: return CheckupText.checkupPvFailed
         case .pvReleased: return CheckupText.checkupPvReleased(f.extra)
         case .deprecatedAPI:
-            return f.extra.isEmpty ? CheckupText.checkupDeprecatedAPIUnplanned : CheckupText.checkupDeprecatedAPI(f.extra)
+            return f.extra.isEmpty
+                ? CheckupText.checkupDeprecatedAPIUnplanned : CheckupText.checkupDeprecatedAPI(f.extra)
         case .webhookDown, .webhookSkipped: return CheckupText.checkupWebhook(f.reason, f.extra)
         case .policyEngineDown: return CheckupText.checkupPolicyEngineDown(f.name)
         case .policyNotReady: return CheckupText.checkupPolicyNotReady(f.name)
         case .policyBlocks: return CheckupText.checkupPolicyBlocks(f.extra, f.name)
         case .policyFailures: return CheckupText.checkupPolicyFailures(f.name, "\(f.count)")
-        case .nodeRequestsHigh: return CheckupText.checkupNodeRequestsHigh(checkupPercent(f.value), checkupResource(f.extra))
+        case .nodeRequestsHigh:
+            return CheckupText.checkupNodeRequestsHigh(checkupPercent(f.value), checkupResource(f.extra))
         case .nodePodsFull: return CheckupText.checkupNodePodsFull("\(f.count)", limit)
         case .noRoomToDrain: return CheckupText.checkupNoRoomToDrain(checkupResource(f.extra))
         case .quotaNearLimit: return CheckupText.checkupQuotaNearLimit(checkupPercent(f.value), f.extra)
         case .nodeNotReady: return CheckupText.checkupNodeNotReady
         case .nodePressure: return CheckupText.checkupNodePressure(f.extra)
-        case .nodeCordoned: return age.isEmpty ? CheckupText.checkupNodeCordonedPlain : CheckupText.checkupNodeCordoned(age)
+        case .nodeCordoned:
+            return age.isEmpty ? CheckupText.checkupNodeCordonedPlain : CheckupText.checkupNodeCordoned(age)
         case .nodeVersionSkew: return CheckupText.checkupNodeVersionSkew(f.extra, f.reason)
         case .lbPending:
             guard let cause = LBCause(rawValue: f.reason) else { return CheckupText.checkupLbPending(age) }
@@ -182,13 +185,16 @@ extension CheckupFinding {
         case .crossplaneDefinitionNotEstablished: return CheckupText.checkupCrossplaneDefinitionNotEstablished
         case .tailscaleOperatorDown: return CheckupText.checkupTailscaleOperatorDown(f.extra)
         case .tailscaleConnectorNotReady where f.reason == "ProxyClassMissing",
-             .tailscaleProxyGroupDown where f.reason == "ProxyClassMissing":
+            .tailscaleProxyGroupDown where f.reason == "ProxyClassMissing":
             // Ready, but naming a ProxyClass that does not exist: its next proxy cannot start.
             return CheckupText.checkupTailscaleProxyClassMissing
         case .tailscaleConnectorNotReady:
-            return f.extra.isEmpty ? CheckupText.checkupTailscaleConnectorNotReadyPlain : CheckupText.checkupTailscaleConnectorNotReady(f.extra)
+            return f.extra.isEmpty
+                ? CheckupText.checkupTailscaleConnectorNotReadyPlain
+                : CheckupText.checkupTailscaleConnectorNotReady(f.extra)
         case .tailscaleProxyGroupDown:
-            return f.extra.isEmpty ? CheckupText.checkupTailscaleProxyGroupDownPlain : CheckupText.checkupTailscaleProxyGroupDown(f.extra)
+            return f.extra.isEmpty
+                ? CheckupText.checkupTailscaleProxyGroupDownPlain : CheckupText.checkupTailscaleProxyGroupDown(f.extra)
         case .tailscaleProxyClassNotReady: return CheckupText.checkupTailscaleProxyClassNotReady("\(f.count)")
         case .capiClusterFailed: return CheckupText.checkupCapiClusterFailed
         case .capiClusterProvisioning: return CheckupText.checkupCapiClusterProvisioning(age.isEmpty ? "-" : age)
@@ -196,15 +202,21 @@ extension CheckupFinding {
         case .capiMachineStuck:
             let phase = f.extra.split(separator: "/").last.map(String.init) ?? f.extra
             return CheckupText.checkupCapiMachineStuck(phase, age.isEmpty ? "-" : age)
-        case .capiWorkersShort: return CheckupText.checkupCapiWorkersShort(String(Int(f.value.rounded())), String(Int(f.limit.rounded())))
+        case .capiWorkersShort:
+            return CheckupText.checkupCapiWorkersShort(String(Int(f.value.rounded())), String(Int(f.limit.rounded())))
         case .sideroServerOff: return CheckupText.checkupSideroServerOff
         case .sideroServerUnaccepted:
-            return f.name.isEmpty ? CheckupText.checkupSideroServerUnacceptedMore("\(f.count)") : CheckupText.checkupSideroServerUnaccepted
-        case .sopsDecryptionFailed where f.reason == "ReconciliationFailed": return CheckupText.checkupSopsDecryptionNotConfigured
+            return f.name.isEmpty
+                ? CheckupText.checkupSideroServerUnacceptedMore("\(f.count)")
+                : CheckupText.checkupSideroServerUnaccepted
+        case .sopsDecryptionFailed where f.reason == "ReconciliationFailed":
+            return CheckupText.checkupSopsDecryptionNotConfigured
         case .sopsDecryptionFailed:
-            return f.extra.isEmpty ? CheckupText.checkupSopsDecryptionFailedNoKey : CheckupText.checkupSopsDecryptionFailed(f.extra)
+            return f.extra.isEmpty
+                ? CheckupText.checkupSopsDecryptionFailedNoKey : CheckupText.checkupSopsDecryptionFailed(f.extra)
         case .routeCertExpired: return CheckupText.checkupRouteCertExpired(f.reason.isEmpty ? "-" : f.reason)
-        case .routeCertExpiring: return CheckupText.checkupRouteCertExpiring("\(f.count)", f.reason.isEmpty ? "-" : f.reason)
+        case .routeCertExpiring:
+            return CheckupText.checkupRouteCertExpiring("\(f.count)", f.reason.isEmpty ? "-" : f.reason)
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatch(f.reason.isEmpty ? "-" : f.reason)
         // In the plugin's words, already translated by Go.
         case .plugin: return f.plugin?.headline ?? kindName
@@ -294,9 +306,11 @@ extension CheckupFinding {
         case .capiWorkersShort: return CheckupText.checkupCapiWorkersShortFix
         case .sideroServerOff: return CheckupText.checkupSideroServerOffFix
         case .sideroServerUnaccepted: return CheckupText.checkupSideroServerUnacceptedFix
-        case .sopsDecryptionFailed where reason == "ReconciliationFailed": return CheckupText.checkupSopsDecryptionNotConfiguredFix
+        case .sopsDecryptionFailed where reason == "ReconciliationFailed":
+            return CheckupText.checkupSopsDecryptionNotConfiguredFix
         case .sopsDecryptionFailed:
-            return extra.isEmpty ? CheckupText.checkupSopsDecryptionFailedNoKeyFix : CheckupText.checkupSopsDecryptionFailedFix
+            return extra.isEmpty
+                ? CheckupText.checkupSopsDecryptionFailedNoKeyFix : CheckupText.checkupSopsDecryptionFailedFix
         case .routeCertExpired: return CheckupText.checkupRouteCertExpiredFix
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiringFix
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatchFix

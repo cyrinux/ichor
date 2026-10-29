@@ -73,15 +73,17 @@ public struct ImageScanTarget: Hashable, Sendable {
 
     /// A pod, by the images it runs.
     public static func pod(namespace: String, name: String) -> ImageScanTarget {
-        ImageScanTarget(id: objectScanID(kind: "Pod", namespace: namespace, name: name), name: name,
-                        pods: [RoutePod(namespace: namespace, pod: name)])
+        ImageScanTarget(
+            id: objectScanID(kind: "Pod", namespace: namespace, name: name), name: name,
+            pods: [RoutePod(namespace: namespace, pod: name)])
     }
 
     /// A workload, by its spec's image refs (once each, in order).
     public static func workload(kind: String, namespace: String, name: String, images: [String]) -> ImageScanTarget {
         var seen = Set<String>()
         let refs = images.filter { !$0.isEmpty && seen.insert($0).inserted }
-        return ImageScanTarget(id: objectScanID(kind: kind, namespace: namespace, name: name), name: name,
-                               images: refs, byRefs: true)
+        return ImageScanTarget(
+            id: objectScanID(kind: kind, namespace: namespace, name: name), name: name,
+            images: refs, byRefs: true)
     }
 }

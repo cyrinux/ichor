@@ -39,8 +39,10 @@ struct RunbookImportSheet: View {
                 if let checked {
                     RunbookPlanSections(plan: checked.plan, continueIDs: .constant([]), editable: false)
                     Section {
-                        Text("Keeping it runs nothing: you run it from its plan, one confirmation per destructive step.")
-                            .foregroundStyle(.secondary)
+                        Text(
+                            "Keeping it runs nothing: you run it from its plan, one confirmation per destructive step."
+                        )
+                        .foregroundStyle(.secondary)
                     }
                     failureSection
                 } else {
@@ -98,7 +100,8 @@ struct RunbookImportSheet: View {
             case .file:
                 Button("Choose a file") { pickingFile = true }
                     .disabled(busy)
-                    .fileImporter(isPresented: $pickingFile, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
+                    .fileImporter(isPresented: $pickingFile, allowedContentTypes: [.yaml, .plainText, .data, .item]) {
+                        result in
                         switch result {
                         case .success(let url): readFile(url)
                         case .failure(let error): failure = error.localizedDescription

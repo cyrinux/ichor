@@ -26,7 +26,8 @@ struct KubeNodeLossSheet: View {
         guard case .loaded(let plan, _, _) = state else {
             return worst.isEmpty ? CapacityText.capacityWhatIf : CapacityText.capacityLossTitle(worst)
         }
-        return plan.nodes.count > 1 ? CapacityText.capacityLossTitleMulti(plan.node) : CapacityText.capacityLossTitle(plan.node)
+        return plan.nodes.count > 1
+            ? CapacityText.capacityLossTitleMulti(plan.node) : CapacityText.capacityLossTitle(plan.node)
     }
 
     var body: some View {
@@ -38,7 +39,9 @@ struct KubeNodeLossSheet: View {
                     pending(plan)
                     if !plan.suggestions.isEmpty { suggestions(plan) }
                     Section {
-                        ForEach(plan.assumptions, id: \.self) { Text(verbatim: $0).font(.caption).foregroundStyle(.secondary) }
+                        ForEach(plan.assumptions, id: \.self) {
+                            Text(verbatim: $0).font(.caption).foregroundStyle(.secondary)
+                        }
                     } header: {
                         Text(verbatim: CapacityText.capacityLossEstimate)
                     }
@@ -71,7 +74,9 @@ struct KubeNodeLossSheet: View {
                 Text(verbatim: CapacityText.capacityLossWorst(worst)).font(.callout)
                 ChipFlow(spacing: 8) {
                     ForEach(candidates) { c in
-                        Button { toggle(c.name) } label: {
+                        Button {
+                            toggle(c.name)
+                        } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: selected.contains(c.name) ? "checkmark.circle.fill" : "circle")
                                 Text(verbatim: CapacityText.capacityLossCandidate(c.name, "\(c.pending)"))
@@ -80,7 +85,8 @@ struct KubeNodeLossSheet: View {
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(
-                                selected.contains(c.name) ? Color.statusOK.opacity(0.15) : Color.secondary.opacity(0.12),
+                                selected.contains(c.name)
+                                    ? Color.statusOK.opacity(0.15) : Color.secondary.opacity(0.12),
                                 in: Capsule())
                         }
                         .buttonStyle(.plain)
@@ -89,14 +95,20 @@ struct KubeNodeLossSheet: View {
                     }
                 }
                 if selected.count > 1 {
-                    Button { Task { await load() } } label: {
+                    Button {
+                        Task { await load() }
+                    } label: {
                         Text(verbatim: CapacityText.capacityLossSimulate("\(selected.count)"))
                     }
                     .buttonStyle(.borderedProminent)
                 }
             }
-            Text(verbatim: CapacityText.capacityLossLost("\(plan.podsLost)", formatCPU(plan.cpuLost), formatBytes(Int64(plan.memoryLost)), "\(plan.daemonSetPods)"))
-                .font(.callout).foregroundStyle(.secondary)
+            Text(
+                verbatim: CapacityText.capacityLossLost(
+                    "\(plan.podsLost)", formatCPU(plan.cpuLost), formatBytes(Int64(plan.memoryLost)),
+                    "\(plan.daemonSetPods)")
+            )
+            .font(.callout).foregroundStyle(.secondary)
             Text(verbatim: CapacityText.capacityLossPlaced("\(plan.placed.count)"))
         }
     }
@@ -105,7 +117,8 @@ struct KubeNodeLossSheet: View {
         Section {
             ForEach(plan.preempted) { p in
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: CapacityText.capacityLossPreemptedRow("\(p.namespace)/\(p.name)", p.by)).font(.callout.monospaced())
+                    Text(verbatim: CapacityText.capacityLossPreemptedRow("\(p.namespace)/\(p.name)", p.by)).font(
+                        .callout.monospaced())
                     if p.pdbViolated {
                         Text(verbatim: CapacityText.capacityLossPdbViolated).font(.caption).foregroundStyle(.statusWarn)
                     }
@@ -140,10 +153,14 @@ struct KubeNodeLossSheet: View {
     private func suggestions(_ plan: NodeLossPlan) -> some View {
         Section {
             ForEach(plan.suggestions) { s in
-                Button { scaling = s } label: { SuggestionRow(suggestion: s) }
-                    .buttonStyle(.plain)
-                    .disabled(s.scaleResource == nil || s.pdbBlocks)
-                    .accessibilityHint(Text(verbatim: CapacityText.capacityLossOpenScale))
+                Button {
+                    scaling = s
+                } label: {
+                    SuggestionRow(suggestion: s)
+                }
+                .buttonStyle(.plain)
+                .disabled(s.scaleResource == nil || s.pdbBlocks)
+                .accessibilityHint(Text(verbatim: CapacityText.capacityLossOpenScale))
             }
         } header: {
             Text(verbatim: CapacityText.capacityLossSuggestionsTitle)
@@ -186,18 +203,24 @@ private struct SuggestionRow: View {
         let s = suggestion
         let subject = "\(s.kind) \(s.namespace)/\(s.name)"
         VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: s.pdbBlocks ? subject : CapacityText.capacityLossSuggestion(subject, "\(s.replicas)", "\(s.scaleTo)"))
-                .font(.callout.monospaced())
-            Text(verbatim: CapacityText.capacityLossSuggestionDetail(
-                s.noPriorityClass ? CapacityText.capacityNoClass : s.priorityClassName,
-                "\(s.priority)",
-                formatCPU(s.freesCPU),
-                formatBytes(Int64(s.freesMemory))))
-                .font(.caption).foregroundStyle(.secondary)
+            Text(
+                verbatim: s.pdbBlocks
+                    ? subject : CapacityText.capacityLossSuggestion(subject, "\(s.replicas)", "\(s.scaleTo)")
+            )
+            .font(.callout.monospaced())
+            Text(
+                verbatim: CapacityText.capacityLossSuggestionDetail(
+                    s.noPriorityClass ? CapacityText.capacityNoClass : s.priorityClassName,
+                    "\(s.priority)",
+                    formatCPU(s.freesCPU),
+                    formatBytes(Int64(s.freesMemory)))
+            )
+            .font(.caption).foregroundStyle(.secondary)
             if s.pdbBlocks {
                 Text(verbatim: CapacityText.capacityLossPdbBlocks).font(.caption).foregroundStyle(.statusWarn)
             } else if !s.pdb.isEmpty {
-                Text(verbatim: CapacityText.capacityLossPdbMin("\(s.pdbMinAvailable)")).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: CapacityText.capacityLossPdbMin("\(s.pdbMinAvailable)")).font(.caption).foregroundStyle(
+                    .secondary)
             }
             if s.scaleResource == nil {
                 Text(verbatim: CapacityText.capacityLossNoScale).font(.caption).foregroundStyle(.secondary)
@@ -222,8 +245,10 @@ private struct CapacityScaleSheet: View {
         KubeObjectScaleSheet(resource: resource, namespace: namespace, name: name, denial: denial) {}
             .task {
                 guard let client = model.client,
-                      let access = try? await client.kubeCan(verb: "patch", group: resource.group, resource: resource.scaleResource,
-                                                             namespace: namespace, name: name) else { return }
+                    let access = try? await client.kubeCan(
+                        verb: "patch", group: resource.group, resource: resource.scaleResource,
+                        namespace: namespace, name: name)
+                else { return }
                 denial = access.isDenied ? access : nil
             }
     }

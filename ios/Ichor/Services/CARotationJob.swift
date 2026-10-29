@@ -40,7 +40,8 @@ final class CARotationJob {
     /// Starts rotating `context`'s CA; false while one runs. `store` puts a talosconfig Go
     /// handed over in place of the context's credentials.
     @discardableResult
-    func start(client: TalosClient, context: String, store: @escaping @MainActor (String) async throws -> Void) -> Bool {
+    func start(client: TalosClient, context: String, store: @escaping @MainActor (String) async throws -> Void) -> Bool
+    {
         guard !isRunning else { return false }
         let run = client.startCARotation()
         proceedRun = run.proceed
@@ -63,7 +64,9 @@ final class CARotationJob {
             proceedRun = nil
             stopRun = nil
             background.end()
-            if let state { OperationNotice.post(.caRotation, title: Self.title(state), body: state.error ?? Self.doneBody) }
+            if let state {
+                OperationNotice.post(.caRotation, title: Self.title(state), body: state.error ?? Self.doneBody)
+            }
         }
         return true
     }
@@ -113,7 +116,10 @@ extension CARotationJob {
     }
 
     static var doneBody: String {
-        String(localized: "Every node now trusts the new CA only, and this phone’s talosconfig uses it. Issue new talosconfigs for your other devices and for talosctl.")
+        String(
+            localized:
+                "Every node now trusts the new CA only, and this phone’s talosconfig uses it. Issue new talosconfigs for your other devices and for talosctl."
+        )
     }
 
     static func step(_ state: State) -> String {
@@ -132,7 +138,8 @@ extension OperationActivities {
             return OperationContent(title: title, step: CARotationJob.doneBody, phase: .succeeded)
         }
         let step = state.last.map { max($0.step - 1, 0) }
-        return OperationContent(title: title, step: CARotationJob.step(state), done: step, total: state.last?.total,
-                                buttons: OperationButton.offered(for: .caRotation, stopping: state.stopping))
+        return OperationContent(
+            title: title, step: CARotationJob.step(state), done: step, total: state.last?.total,
+            buttons: OperationButton.offered(for: .caRotation, stopping: state.stopping))
     }
 }

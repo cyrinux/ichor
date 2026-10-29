@@ -45,11 +45,15 @@ struct WakeOnLanMenuItems: View {
         if let fingerprint = model.wakeOnLanFingerprint {
             let targets = WakeOnLanStore.shared.wakeTargets(fingerprint: fingerprint, node: node.node)
             if !targets.isEmpty {
-                Button { WakeOnLanCenter.shared.wake(node, targets: targets) } label: {
+                Button {
+                    WakeOnLanCenter.shared.wake(node, targets: targets)
+                } label: {
                     Label("Wake (Wake-on-LAN)", systemImage: "power.circle")
                 }
             }
-            Button { WakeOnLanCenter.shared.editing = node } label: {
+            Button {
+                WakeOnLanCenter.shared.editing = node
+            } label: {
                 Label("Wake-on-LAN…", systemImage: "cable.connector")
             }
         }
@@ -101,9 +105,11 @@ struct WakeOnLanSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Powers the node on by sending a magic packet from this phone. The phone must reach the node's network, directly or through a router that forwards the packet. Kept on this device only.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Powers the node on by sending a magic packet from this phone. The phone must reach the node's network, directly or through a router that forwards the packet. Kept on this device only."
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 }
                 Section {
                     TextField("MAC address", text: $mac, prompt: Text(verbatim: "aa:bb:cc:dd:ee:ff"))
@@ -128,11 +134,13 @@ struct WakeOnLanSheet: View {
                     if error == .mac { Text("Not a MAC address (e.g. aa:bb:cc:dd:ee:ff)").foregroundStyle(.statusBad) }
                 }
                 Section {
-                    TextField("Broadcast address (optional)", text: $broadcast, prompt: Text(verbatim: wolDefaultBroadcast))
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onChange(of: broadcast) { error = nil }
+                    TextField(
+                        "Broadcast address (optional)", text: $broadcast, prompt: Text(verbatim: wolDefaultBroadcast)
+                    )
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .onChange(of: broadcast) { error = nil }
                 } header: {
                     Text("Broadcast address (optional)")
                 } footer: {
@@ -143,13 +151,15 @@ struct WakeOnLanSheet: View {
                     }
                 }
                 Section {
-                    TextField("UDP port (optional, 9 by default)", text: $port, prompt: Text(verbatim: "\(wolDefaultPort)"))
-                        .keyboardType(.numberPad)
-                        .onChange(of: port) { _, text in
-                            let digits = String(text.filter(\.isASCII).filter(\.isNumber).prefix(5))
-                            if digits != text { port = digits }
-                            error = nil
-                        }
+                    TextField(
+                        "UDP port (optional, 9 by default)", text: $port, prompt: Text(verbatim: "\(wolDefaultPort)")
+                    )
+                    .keyboardType(.numberPad)
+                    .onChange(of: port) { _, text in
+                        let digits = String(text.filter(\.isASCII).filter(\.isNumber).prefix(5))
+                        if digits != text { port = digits }
+                        error = nil
+                    }
                 } header: {
                     Text("UDP port (optional, 9 by default)")
                 } footer: {
@@ -186,7 +196,9 @@ struct WakeOnLanSheet: View {
     /// The node's MACs read now while it is up (and remembered on the way).
     private func readLive() async {
         if saved == nil && mac.isEmpty, let only = links.count == 1 ? links.first : nil { mac = only.mac }
-        guard node.reachable, let client = model.client, let network = try? await client.network(node: node.node) else { return }
+        guard node.reachable, let client = model.client, let network = try? await client.network(node: node.node) else {
+            return
+        }
         let macs = seenMacs(network.links)
         live = macs
         store.record(macs, fingerprint: fingerprint, node: node.node)

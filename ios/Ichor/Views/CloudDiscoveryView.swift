@@ -17,7 +17,10 @@ struct CloudDiscoveryView: View {
     let onFound: (DiscoveredClusters) -> Void
 
     /// Opens on `provider`, one of kubeDiscoverProviders.
-    init(provider: String = kubeDiscoverProviders[0], initialValues: [String: String] = [:], onFound: @escaping (DiscoveredClusters) -> Void) {
+    init(
+        provider: String = kubeDiscoverProviders[0], initialValues: [String: String] = [:],
+        onFound: @escaping (DiscoveredClusters) -> Void
+    ) {
         self.onFound = onFound
         _provider = State(initialValue: provider)
         _values = State(initialValue: initialValues)
@@ -59,13 +62,16 @@ struct CloudDiscoveryView: View {
         !fields.isEmpty && kubeFieldsComplete(visibleFields, values: values) && (!choosing || !pickedRoles.isEmpty)
     }
     private var actionLabel: String {
-        google ? String(localized: "Sign in with Google") :
-            kubeDiscoverNeedsSignIn(fields) && !choosing ? String(localized: "Sign in and find clusters") : String(localized: "Find clusters")
+        google
+            ? String(localized: "Sign in with Google")
+            : kubeDiscoverNeedsSignIn(fields) && !choosing
+                ? String(localized: "Sign in and find clusters") : String(localized: "Find clusters")
     }
     /// The hints of the fields shown; discovery's IAM Identity Center explains itself with the
     /// regions' hint, the sign-in sheet's start URL hint names fields it does not have.
     private var hints: [String] {
-        fields.filter { !(fields.contains(kubeAWSRegionsField) && $0 == kubeAWSStartURLField) }.compactMap(KubeAuthWording.fieldHint)
+        fields.filter { !(fields.contains(kubeAWSRegionsField) && $0 == kubeAWSStartURLField) }.compactMap(
+            KubeAuthWording.fieldHint)
     }
 
     /// The credentials the provider takes (GKE: a service account key or gcloud user credentials).
@@ -85,7 +91,9 @@ struct CloudDiscoveryView: View {
                         }
                     }
                 } footer: {
-                    Text("Ichor lists the account's clusters with these credentials, then signs the clusters you add in with them. They stay on this device, sealed, and in your encrypted backups. Prefer a dedicated identity with read-only access.")
+                    Text(
+                        "Ichor lists the account's clusters with these credentials, then signs the clusters you add in with them. They stay on this device, sealed, and in your encrypted backups. Prefer a dedicated identity with read-only access."
+                    )
                 }
                 .disabled(working)
                 if sets.count > 1 {
@@ -105,10 +113,14 @@ struct CloudDiscoveryView: View {
                 if choosing {
                     Section("Choose the accounts and roles to look in") {
                         ForEach(roleChoices, id: \.self) { choice in
-                            Toggle(isOn: Binding(
-                                get: { pickedRoles.contains(choice) },
-                                set: { on in if on { pickedRoles.insert(choice) } else { pickedRoles.remove(choice) } }
-                            )) {
+                            Toggle(
+                                isOn: Binding(
+                                    get: { pickedRoles.contains(choice) },
+                                    set: { on in
+                                        if on { pickedRoles.insert(choice) } else { pickedRoles.remove(choice) }
+                                    }
+                                )
+                            ) {
                                 VStack(alignment: .leading) {
                                     Text(verbatim: choice.label)
                                     Text(verbatim: choice.accountId).font(.footnote).foregroundStyle(.secondary)
@@ -122,14 +134,18 @@ struct CloudDiscoveryView: View {
                     Section {
                         Button("Scan credentials QR code") { scanning = true }.disabled(working)
                     } footer: {
-                        Text("This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account.")
+                        Text(
+                            "This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account."
+                        )
                     }
                 }
                 if provider == "eks" && fields.contains(kubeAWSStartURLField) && !choosing {
                     Section {
                         Button("Scan ~/.aws/config QR code") { scanning = true }.disabled(working)
                     } footer: {
-                        Text("Scan your ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). It holds no secret: only the start URL, region, account and role. The first profile that uses IAM Identity Center is taken.")
+                        Text(
+                            "Scan your ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). It holds no secret: only the start URL, region, account and role. The first profile that uses IAM Identity Center is taken."
+                        )
                     }
                 }
                 if !hints.isEmpty {
@@ -158,7 +174,9 @@ struct CloudDiscoveryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { cancelSignIn(); work?.cancel(); dismiss() }
+                    Button("Cancel", role: .cancel) {
+                        cancelSignIn(); work?.cancel(); dismiss()
+                    }
                 }
             }
         }
@@ -175,7 +193,9 @@ struct CloudDiscoveryView: View {
             }
         }
         // Another provider: its own fields, nothing typed for the previous one carried over.
-        .onChange(of: provider) { option = 0; resetCredentials() }
+        .onChange(of: provider) {
+            option = 0; resetCredentials()
+        }
         // A scanned credential picks its option and value together: keep what fits the new option.
         .onChange(of: option) {
             guard didLoad else { return }
@@ -211,7 +231,9 @@ struct CloudDiscoveryView: View {
         do {
             fieldsByProvider = try await TalosClient.discoverFields()
             optionsByProvider = try await TalosClient.discoverOptions()
-            if !didLoad, !initialFields.isEmpty { option = sets.firstIndex { !initialFields.isDisjoint(with: $0) } ?? 0 }
+            if !didLoad, !initialFields.isEmpty {
+                option = sets.firstIndex { !initialFields.isDisjoint(with: $0) } ?? 0
+            }
             didLoad = true
         } catch {
             self.error = error.localizedDescription
@@ -221,8 +243,10 @@ struct CloudDiscoveryView: View {
     private func findClusters() {
         guard !working && complete else { return }
         error = nil
-        let secrets = google ? kubeGoogleSignInSecretsJSON(projects: values["gcpProjects"] ?? "") :
-            kubeSecretsJSON(fields: fields, values: values)
+        let secrets =
+            google
+            ? kubeGoogleSignInSecretsJSON(projects: values["gcpProjects"] ?? "")
+            : kubeSecretsJSON(fields: fields, values: values)
         if choosing {
             let picked = roleChoices.filter(pickedRoles.contains)
             var withRoles = values
@@ -261,7 +285,10 @@ struct CloudDiscoveryView: View {
             let route = try await TalosClient.classifyImportText(decoded)
             if provider == "eks" {
                 guard route.isEksIdentityCenter else {
-                    error = String(localized: "Scan an ~/.aws/config that signs in with IAM Identity Center (an sso-session, or a profile with sso_start_url).")
+                    error = String(
+                        localized:
+                            "Scan an ~/.aws/config that signs in with IAM Identity Center (an sso-session, or a profile with sso_start_url)."
+                    )
                     return
                 }
                 option = sets.firstIndex { $0.contains(kubeAWSStartURLField) } ?? 0
@@ -329,9 +356,13 @@ private struct DiscoverProgressRow: View {
                 ProgressView(value: fraction)
                 Group {
                     if regions {
-                        Text("Scanned \(String(progress.scanned)) of \(String(progress.projects)) regions · \(String(progress.clusters)) clusters found")
+                        Text(
+                            "Scanned \(String(progress.scanned)) of \(String(progress.projects)) regions · \(String(progress.clusters)) clusters found"
+                        )
                     } else {
-                        Text("Scanned \(String(progress.scanned)) of \(String(progress.projects)) projects · \(String(progress.clusters)) clusters found")
+                        Text(
+                            "Scanned \(String(progress.scanned)) of \(String(progress.projects)) projects · \(String(progress.clusters)) clusters found"
+                        )
                     }
                 }
                 .font(.footnote).foregroundStyle(.secondary)

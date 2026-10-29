@@ -61,7 +61,9 @@ struct GitHostSheet: View {
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
                 } footer: {
-                    Text("Other names Argo CD or Flux use for this server, such as an SSH or in-cluster address. Separate them with commas. The token is still only sent to the host above.")
+                    Text(
+                        "Other names Argo CD or Flux use for this server, such as an SSH or in-cluster address. Separate them with commas. The token is still only sent to the host above."
+                    )
                 }
                 Section {
                     Button {

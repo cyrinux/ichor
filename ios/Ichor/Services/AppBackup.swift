@@ -15,9 +15,11 @@ enum AppBackup {
     /// and Git tokens go in only with `includeSecrets`. The payload is never logged.
     /// As an age file (`format` .age), it is sealed with either `passphrase` or `recipients`
     /// (age1… public keys, one per line), the other one empty.
-    static func create(model: AppModel, ai: AISettings, gitHosts: GitHostStore, passphrase: String,
-                       includeSecrets: Bool, format: BackupFileFormat = .ichor,
-                       recipients: String = "") async throws -> Data {
+    static func create(
+        model: AppModel, ai: AISettings, gitHosts: GitHostStore, passphrase: String,
+        includeSecrets: Bool, format: BackupFileFormat = .ichor,
+        recipients: String = ""
+    ) async throws -> Data {
         guard model.hasConfig, let summary = model.summary else {
             throw TalosError(message: String(localized: "No talosconfig is stored."))
         }
@@ -53,8 +55,9 @@ enum AppBackup {
             pins: backupPins(fingerprints: fingerprints) { PinStore.shared.pins(for: $0) },
             gitHosts: gitHosts.hosts.isEmpty ? nil : gitHosts.hosts,
             ai: aiBackup.settings,
-            secrets: backupSecrets(include: includeSecrets, aiKeys: aiBackup.keys,
-                                   gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:]),
+            secrets: backupSecrets(
+                include: includeSecrets, aiKeys: aiBackup.keys,
+                gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:]),
             proposals: proposals,
             plugins: plugins,
             fingerprintLineage: lineage
@@ -88,8 +91,10 @@ enum AppBackup {
     /// `BackupError.wrongPassphrase` for a wrong passphrase, so the user can try again. The
     /// answer says what became of the backup's plugins, nil when it has none.
     @discardableResult
-    static func restore(_ file: Data, passphrase: String, model: AppModel, ai: AISettings,
-                        gitHosts: GitHostStore) async throws -> String? {
+    static func restore(
+        _ file: Data, passphrase: String, model: AppModel, ai: AISettings,
+        gitHosts: GitHostStore
+    ) async throws -> String? {
         let json = try await localized { try await TalosClient.decryptBackup(file, passphrase: passphrase) }
         guard let payload = try? JSONDecoder().decode(BackupPayload.self, from: Data(json.utf8)) else {
             throw BackupError.invalidContent
@@ -98,9 +103,11 @@ enum AppBackup {
         // Before the configs are parsed: a cluster whose CA was rotated keeps its fingerprint.
         await TalosClient.restoreFingerprintLineage(payload.fingerprintLineage)
         // Both configs first: on failure nothing else changed. The screenshot mode re-parses them after.
-        try await model.replace(talos: restoredTalosconfig(payload), kube: restoredKubeconfig(payload),
-                                activeIndex: payload.activeContextIndex)
-        let restored = restoredClusters(payload.clusters, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? [])
+        try await model.replace(
+            talos: restoredTalosconfig(payload), kube: restoredKubeconfig(payload),
+            activeIndex: payload.activeContextIndex)
+        let restored = restoredClusters(
+            payload.clusters, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? [])
         // Checked like a typed one: an address the Go core refuses is dropped.
         var kubeServers: [String: String] = [:]
         for (fp, server) in restored.kubeServers {
@@ -108,9 +115,10 @@ enum AppBackup {
                 kubeServers[fp] = normalized
             }
         }
-        model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers,
-                                     vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess, repos: restored.repos,
-                                     auditEvents: restored.auditEvents)
+        model.restoreClusterSettings(
+            names: restored.names, colors: restored.colors, kubeServers: kubeServers,
+            vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess, repos: restored.repos,
+            auditEvents: restored.auditEvents)
         // After the configs: the sign-ins of the kubeconfig and Omni clusters restored.
         KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.signInFingerprints))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)
@@ -164,8 +172,9 @@ enum AppBackup {
         guard settings?.storageWarnPercent != nil || settings?.storageCriticalPercent != nil else { return }
         let current = BackgroundMonitor.storageThresholds
         // StorageThresholds clamps them like the Settings sliders.
-        BackgroundMonitor.storageThresholds = StorageThresholds(warn: settings?.storageWarnPercent ?? current.warn,
-                                                                crit: settings?.storageCriticalPercent ?? current.crit)
+        BackgroundMonitor.storageThresholds = StorageThresholds(
+            warn: settings?.storageWarnPercent ?? current.warn,
+            crit: settings?.storageCriticalPercent ?? current.crit)
     }
 
     /// The sign-ins of the kubeconfig and Omni clusters as a backup keeps them (what the user entered,
@@ -213,7 +222,8 @@ extension BackupError: @retroactive LocalizedError {
         case .passphraseShort: String(localized: "Use at least \(backupMinPassphrase) characters.")
         case .wrongPassphrase: String(localized: "Wrong passphrase, or the file is damaged.")
         case .notBackup: String(localized: "This file is not an Ichor backup.")
-        case .unsupported: String(localized: "This backup was made by a newer version of Ichor. Update the app to restore it.")
+        case .unsupported:
+            String(localized: "This backup was made by a newer version of Ichor. Update the app to restore it.")
         case .invalidContent: String(localized: "The backup opened but its content is not valid.")
         case .needsIdentity: String(localized: "This backup opens with your age key on a computer.")
         }

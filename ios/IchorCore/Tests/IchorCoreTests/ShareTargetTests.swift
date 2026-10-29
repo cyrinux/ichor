@@ -30,7 +30,8 @@ final class ShareTargetTests: XCTestCase {
     }
 
     func testGoJSONDecodes() throws {
-        let json = #"{"cluster":"lablablablablabl","target":"flux-app","kind":"HelmRelease","ns":"flux-system","name":"podinfo"}"#
+        let json =
+            #"{"cluster":"lablablablablabl","target":"flux-app","kind":"HelmRelease","ns":"flux-system","name":"podinfo"}"#
         let target = try TalosJSON.decode(ShareTarget.self, from: json)
         var want = ShareTarget.fluxApp(kind: "HelmRelease", namespace: "flux-system", name: "podinfo")
         want.cluster = "lablablablablabl"
@@ -40,7 +41,8 @@ final class ShareTargetTests: XCTestCase {
     func testEncodedForGoWithoutEmptyFields() throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
-        let json = String(decoding: try encoder.encode(ShareTarget.argoApp(namespace: "argocd", name: "guestbook")), as: UTF8.self)
+        let json = String(
+            decoding: try encoder.encode(ShareTarget.argoApp(namespace: "argocd", name: "guestbook")), as: UTF8.self)
         XCTAssertEqual(json, #"{"name":"guestbook","ns":"argocd","target":"argo-app"}"#)
     }
 
@@ -52,12 +54,15 @@ final class ShareTargetTests: XCTestCase {
     func testKubernetesTargetsFocusTheirTabAndRow() {
         XCTAssertEqual(ShareTarget.kubernetes(tab: .cronJobs).kubeFocus, KubeFocus(tab: .cronJobs))
         XCTAssertEqual(ShareTarget(target: .workloads, tab: "network").kubeFocus, KubeFocus(tab: .workloads))
-        XCTAssertEqual(ShareTarget.workload(kind: "StatefulSet", namespace: "db", name: "postgres").kubeFocus,
-                       KubeFocus(tab: .workloads, id: "StatefulSet/db/postgres", namespace: "db", name: "postgres"))
-        XCTAssertEqual(ShareTarget.pod(namespace: "db", name: "postgres-0").kubeFocus,
-                       KubeFocus(tab: .pods, id: "db/postgres-0", namespace: "db", name: "postgres-0"))
-        XCTAssertEqual(ShareTarget.cronJob(namespace: "ops", name: "backup").kubeFocus,
-                       KubeFocus(tab: .cronJobs, id: "ops/backup", namespace: "ops", name: "backup"))
+        XCTAssertEqual(
+            ShareTarget.workload(kind: "StatefulSet", namespace: "db", name: "postgres").kubeFocus,
+            KubeFocus(tab: .workloads, id: "StatefulSet/db/postgres", namespace: "db", name: "postgres"))
+        XCTAssertEqual(
+            ShareTarget.pod(namespace: "db", name: "postgres-0").kubeFocus,
+            KubeFocus(tab: .pods, id: "db/postgres-0", namespace: "db", name: "postgres-0"))
+        XCTAssertEqual(
+            ShareTarget.cronJob(namespace: "ops", name: "backup").kubeFocus,
+            KubeFocus(tab: .cronJobs, id: "ops/backup", namespace: "ops", name: "backup"))
         XCTAssertNil(ShareTarget.argoApp(namespace: "argocd", name: "guestbook").kubeFocus)
     }
 
@@ -73,9 +78,12 @@ final class ShareTargetTests: XCTestCase {
 
     func testDataAlertSystemsMapToCatalogIDs() {
         let systems = ["longhorn", "garage", "cnpg", "certmanager", "velero", "castai"]
-        XCTAssertEqual(systems.map { DataServiceKind(alertKey: "\($0)|x")?.catalogID },
-                       ["longhorn", "garage", "cloudnative-pg", "cert-manager",
-                        "velero", "castai"])
+        XCTAssertEqual(
+            systems.map { DataServiceKind(alertKey: "\($0)|x")?.catalogID },
+            [
+                "longhorn", "garage", "cloudnative-pg", "cert-manager",
+                "velero", "castai",
+            ])
         XCTAssertNil(DataServiceKind(alertKey: "other|x"))
         // An older snapshot's Ceph, Dragonfly, MariaDB or Percona alert names a system that is a plugin now.
         XCTAssertNil(DataServiceKind(alertKey: "ceph|rook-ceph/rook-ceph"))
@@ -85,10 +93,13 @@ final class ShareTargetTests: XCTestCase {
     }
 
     func testAlertsOpenWhatTheyAreAbout() {
-        let talos = ClusterSnapshot(context: "lab", takenAt: Date(), nodes: ["10.0.0.2": NodeState(hostname: "cp-1", health: .notReady)])
+        let talos = ClusterSnapshot(
+            context: "lab", takenAt: Date(), nodes: ["10.0.0.2": NodeState(hostname: "cp-1", health: .notReady)])
         var kube = talos
         kube.kube = true
-        func target(_ key: String, _ snapshot: ClusterSnapshot = talos) -> ShareTarget? { .forAlert(key: key, snapshot: snapshot) }
+        func target(_ key: String, _ snapshot: ClusterSnapshot = talos) -> ShareTarget? {
+            .forAlert(key: key, snapshot: snapshot)
+        }
         XCTAssertEqual(target("node:10.0.0.2"), .node(address: "10.0.0.2", hostname: "cp-1", tab: ""))
         XCTAssertEqual(target("etcd:cp-1:NOSPACE"), .screen(.etcd))
         XCTAssertNil(target("cert"))
@@ -96,8 +107,9 @@ final class ShareTargetTests: XCTestCase {
         XCTAssertEqual(target("data:velero|BackupStorageLocation/default"), .data(.velero))
         XCTAssertEqual(target("data:other|x"), .data(nil))
         XCTAssertEqual(target("gitops:argocd|argocd/guestbook"), .argoApp(namespace: "argocd", name: "guestbook"))
-        XCTAssertEqual(target("gitops:flux|HelmRelease flux-system/podinfo"),
-                       .fluxApp(kind: "HelmRelease", namespace: "flux-system", name: "podinfo"))
+        XCTAssertEqual(
+            target("gitops:flux|HelmRelease flux-system/podinfo"),
+            .fluxApp(kind: "HelmRelease", namespace: "flux-system", name: "podinfo"))
         XCTAssertEqual(target("checkup:pods|CrashLoopBackOff|db/postgres-0"), .screen(.checkup))
         XCTAssertEqual(target("am:a1c3e5f7a9b1c3d5"), .screen(.alerts))
         XCTAssertEqual(try TalosJSON.decode(ShareTarget.self, from: #"{"target":"alerts"}"#), .screen(.alerts))

@@ -22,9 +22,12 @@ struct SearchView: View {
         List {
             if !model.keepLastKnown {
                 Section {
-                    Label("Turn on “Keep last known state” in Settings to search your other clusters too", systemImage: "info.circle")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Label(
+                        "Turn on “Keep last known state” in Settings to search your other clusters too",
+                        systemImage: "info.circle"
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 }
             }
             if let error = store.refreshError {
@@ -50,8 +53,10 @@ struct SearchView: View {
         .overlay { emptyState }
         .navigationTitle("Search clusters")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $text, isPresented: $presented, placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: Text("Pods, workloads, nodes, apps…"))
+        .searchable(
+            text: $text, isPresented: $presented, placement: .navigationBarDrawer(displayMode: .always),
+            prompt: Text("Pods, workloads, nodes, apps…")
+        )
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
         .onChange(of: text) { _, value in
@@ -93,7 +98,8 @@ struct SearchView: View {
     @ViewBuilder
     private var openedSection: some View {
         let contexts = model.summary?.contexts ?? []
-        let opened = RecentTargetStore.shared.list.known(clusterIDs: Set(contexts.map(\.clusterID).filter { !$0.isEmpty }))
+        let opened = RecentTargetStore.shared.list.known(
+            clusterIDs: Set(contexts.map(\.clusterID).filter { !$0.isEmpty }))
         if !opened.isEmpty {
             Section("Recently opened") {
                 ForEach(opened) { recent in
@@ -121,9 +127,12 @@ struct SearchView: View {
 
     /// "Pod · default", plus the cluster's name when it is not the one on screen.
     private func openedDetail(_ recent: RecentTarget, contexts: [ContextSummary]) -> String {
-        let cluster = recent.target.cluster == model.activeSummary?.clusterID ? nil
+        let cluster =
+            recent.target.cluster == model.activeSummary?.clusterID
+            ? nil
             : contexts.first { $0.clusterID == recent.target.cluster }.map { model.labels.of($0) }
-        return [searchKindName(recent.target.target.rawValue), recent.detail, cluster ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
+        return [searchKindName(recent.target.target.rawValue), recent.detail, cluster ?? ""].filter { !$0.isEmpty }
+            .joined(separator: " · ")
     }
 
     @ViewBuilder

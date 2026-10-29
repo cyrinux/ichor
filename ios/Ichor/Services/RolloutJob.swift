@@ -70,7 +70,8 @@ final class RolloutJob {
                     status = latest
                     failures = 0
                     if latest.manual {
-                        return .failed(String(localized: "Its pods are replaced only when deleted: the restart replaces none."))
+                        return .failed(
+                            String(localized: "Its pods are replaced only when deleted: the restart replaces none."))
                     }
                     if let ended = FollowOutcome.rollout(latest) { return ended }
                 case .done(let error):

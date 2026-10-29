@@ -17,10 +17,13 @@ struct NoEndpointsView: View {
                     .font(.system(size: 44))
                     .foregroundStyle(.tint)
                     .accessibilityHidden(true)
-                Text("No endpoint yet").font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
-                Text("This talosconfig lists no address to reach the cluster. Search the networks around the phone for its nodes, or add a node's address.")
-                    .font(.callout)
-                    .multilineTextAlignment(.center)
+                Text("No endpoint yet").font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(
+                    .isHeader)
+                Text(
+                    "This talosconfig lists no address to reach the cluster. Search the networks around the phone for its nodes, or add a node's address."
+                )
+                .font(.callout)
+                .multilineTextAlignment(.center)
                 Button("Search the local network") { scanning = true }
                     .buttonStyle(.borderedProminent)
                     .padding(.top, 8)

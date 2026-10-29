@@ -77,8 +77,10 @@ public struct ArgoNetNode: Decodable, Equatable, Identifiable, Sendable {
     /// The app's own resource: false for a shared Gateway or route, pods and nodes.
     public let managed: Bool
 
-    public init(id: String, layer: ArgoNetLayer, kind: ArgoNetKind, namespace: String = "", name: String,
-                detail: String = "", health: ServiceHealth = .ok, url: String = "", managed: Bool = false) {
+    public init(
+        id: String, layer: ArgoNetLayer, kind: ArgoNetKind, namespace: String = "", name: String,
+        detail: String = "", health: ServiceHealth = .ok, url: String = "", managed: Bool = false
+    ) {
         self.id = id
         self.layer = layer
         self.kind = kind
@@ -109,8 +111,9 @@ public struct ArgoNetNode: Decodable, Equatable, Identifiable, Sendable {
 
     /// The same box with another health (a node Talos reports down).
     func with(health: ServiceHealth, detail: String) -> ArgoNetNode {
-        ArgoNetNode(id: id, layer: layer, kind: kind, namespace: namespace, name: name, detail: detail,
-                    health: health, url: url, managed: managed)
+        ArgoNetNode(
+            id: id, layer: layer, kind: kind, namespace: namespace, name: name, detail: detail,
+            health: health, url: url, managed: managed)
     }
 
     private enum CodingKeys: String, CodingKey { case id, layer, kind, namespace, name, detail, health, url, managed }
@@ -167,7 +170,8 @@ public struct ArgoNetProblem: Decodable, Equatable, Sendable {
         case .node: detail == "SchedulingDisabled" ? .nodeCordoned(name) : .nodeNotReady(name)
         case .pod: .pod(name, detail)
         case .service: .serviceWithoutPods(name)
-        case .ingress, .httpRoute, .grpcRoute, .tlsRoute, .ingressRoute, .ingressRouteTCP, .gateway: .noHealthyBackend(kind.rawValue, name)
+        case .ingress, .httpRoute, .grpcRoute, .tlsRoute, .ingressRoute, .ingressRouteTCP, .gateway:
+            .noHealthyBackend(kind.rawValue, name)
         case .host, .loadBalancer, .unknown: .other(kind.rawValue, name, detail)
         }
     }
@@ -220,7 +224,8 @@ public extension ArgoNetwork {
             guard layer == .pod, !expanded, members.count > limit else {
                 return ArgoNetColumn(layer: layer, nodes: members, hidden: [])
             }
-            return ArgoNetColumn(layer: layer, nodes: Array(members.prefix(limit)), hidden: Array(members.dropFirst(limit)))
+            return ArgoNetColumn(
+                layer: layer, nodes: Array(members.prefix(limit)), hidden: Array(members.dropFirst(limit)))
         }
     }
 
@@ -231,8 +236,9 @@ public extension ArgoNetwork {
         var order: [String] = []
         var merged: [String: ArgoNetEdge] = [:]
         for edge in edges {
-            let shown = ArgoNetEdge(from: hidden.contains(edge.from) ? Self.morePodsID : edge.from,
-                                    to: hidden.contains(edge.to) ? Self.morePodsID : edge.to, health: edge.health)
+            let shown = ArgoNetEdge(
+                from: hidden.contains(edge.from) ? Self.morePodsID : edge.from,
+                to: hidden.contains(edge.to) ? Self.morePodsID : edge.to, health: edge.health)
             if let known = merged[shown.id] {
                 merged[shown.id] = ArgoNetEdge(from: shown.from, to: shown.to, health: min(known.health, shown.health))
             } else {
@@ -262,7 +268,8 @@ public extension ArgoNetwork {
     /// The graph with the nodes Talos reports down (by hostname) critical, the hops to them
     /// too, and such a node as the problem when the graph has none deeper.
     func marking(down hostnames: Set<String>) -> ArgoNetwork {
-        let down = Set(nodes.filter { $0.kind == .node && hostnames.contains($0.name) && $0.health != .critical }.map(\.id))
+        let down = Set(
+            nodes.filter { $0.kind == .node && hostnames.contains($0.name) && $0.health != .critical }.map(\.id))
         guard !down.isEmpty else { return self }
         let marked = nodes.map { down.contains($0.id) ? $0.with(health: .critical, detail: "NotReady") : $0 }
         let hops = edges.map { down.contains($0.to) ? ArgoNetEdge(from: $0.from, to: $0.to, health: .critical) : $0 }
@@ -276,8 +283,10 @@ public extension ArgoNetwork {
     func node(_ id: String) -> ArgoNetNode? { nodes.first { $0.id == id } }
 
     /// From id, following the hops whose `next` end is reached, through their `step` end.
-    private func walk(from id: String, next: (ArgoNetEdge) -> String,
-                      step: (ArgoNetEdge) -> String) -> (nodes: Set<String>, edges: [ArgoNetEdge]) {
+    private func walk(
+        from id: String, next: (ArgoNetEdge) -> String,
+        step: (ArgoNetEdge) -> String
+    ) -> (nodes: Set<String>, edges: [ArgoNetEdge]) {
         var seen: Set<String> = [id]
         var lit: [ArgoNetEdge] = []
         var queue = [id]

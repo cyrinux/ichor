@@ -8,13 +8,14 @@ final class PluginActionTests: XCTestCase {
 
     /// A button with every param type: a required string, an int and an enum with defaults, a bool.
     private func resize() throws -> PluginActionItem {
-        try item(#"""
-        {"id":"resize","label":"Resize","enabled":true,"confirm":"typedName","params":[
-          {"name":"reason","label":"Reason","type":"string"},
-          {"name":"replicas","label":"Replicas","type":"int","default":3},
-          {"name":"tier","label":"Tier","type":"enum","values":["small","large"],"default":"small"},
-          {"name":"force","label":"Force","type":"bool","default":false}]}
-        """#)
+        try item(
+            #"""
+            {"id":"resize","label":"Resize","enabled":true,"confirm":"typedName","params":[
+              {"name":"reason","label":"Reason","type":"string"},
+              {"name":"replicas","label":"Replicas","type":"int","default":3},
+              {"name":"tier","label":"Tier","type":"enum","values":["small","large"],"default":"small"},
+              {"name":"force","label":"Force","type":"bool","default":false}]}
+            """#)
     }
 
     // MARK: - Button
@@ -55,7 +56,8 @@ final class PluginActionTests: XCTestCase {
         XCTAssertEqual(params.map(\.defaultValue), [nil, .int(3), .string("small"), .bool(false)])
         XCTAssertEqual(params.map(\.required), [true, false, false, false])
         // A default of another type is no default.
-        let odd = try item(#"{"id":"a","label":"A","params":[{"name":"n","label":"N","type":"int","default":"three"}]}"#)
+        let odd = try item(
+            #"{"id":"a","label":"A","params":[{"name":"n","label":"N","type":"int","default":"three"}]}"#)
         XCTAssertNil(odd.params[0].defaultValue)
         XCTAssertTrue(odd.params[0].required)
     }
@@ -153,7 +155,8 @@ final class PluginActionTests: XCTestCase {
 
     func testRunStaysOnTheObjectItWasAskedOn() {
         let weekend = PluginRef(group: "kube-green.com", resource: "sleepinfos", namespace: "demo-lab", name: "weekend")
-        let elsewhere = PluginRef(group: "kube-green.com", resource: "sleepinfos", namespace: "demo-shop", name: "weekend")
+        let elsewhere = PluginRef(
+            group: "kube-green.com", resource: "sleepinfos", namespace: "demo-shop", name: "weekend")
         let run = PluginActionRun(target: weekend)
         XCTAssertTrue(run.applies(to: weekend, usable: true))
         // The same name in another namespace is another object.
@@ -169,22 +172,26 @@ final class PluginActionTests: XCTestCase {
     }
 
     func testRowsAreKeyedByTheirObject() throws {
-        let card = try TalosJSON.decode(PluginCard.self, from: #"""
-        {"id":"list","type":"list","rows":[
-          {"title":"a","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}},
-          {"title":"note"},
-          {"title":"a again","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}},
-          {"title":"b","ref":{"resource":"widgets","namespace":"demo-lab","name":"b"}}]}
-        """#)
+        let card = try TalosJSON.decode(
+            PluginCard.self,
+            from: #"""
+                {"id":"list","type":"list","rows":[
+                  {"title":"a","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}},
+                  {"title":"note"},
+                  {"title":"a again","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}},
+                  {"title":"b","ref":{"resource":"widgets","namespace":"demo-lab","name":"b"}}]}
+                """#)
         let ids = card.rowGroups.flatMap(\.rows).map(\.id)
         XCTAssertEqual(ids, ["/widgets/demo-lab/a", "#1", "#2", "/widgets/demo-lab/b"])
         XCTAssertEqual(Set(ids).count, ids.count)
         // Rows that move keep their id.
-        let moved = try TalosJSON.decode(PluginCard.self, from: #"""
-        {"id":"list","type":"list","rows":[
-          {"title":"b","ref":{"resource":"widgets","namespace":"demo-lab","name":"b"}},
-          {"title":"a","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}}]}
-        """#)
+        let moved = try TalosJSON.decode(
+            PluginCard.self,
+            from: #"""
+                {"id":"list","type":"list","rows":[
+                  {"title":"b","ref":{"resource":"widgets","namespace":"demo-lab","name":"b"}},
+                  {"title":"a","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}}]}
+                """#)
         XCTAssertEqual(moved.rowGroups.flatMap(\.rows).map(\.id), ["/widgets/demo-lab/b", "/widgets/demo-lab/a"])
     }
 
@@ -197,17 +204,22 @@ final class PluginActionTests: XCTestCase {
     }
 
     func testChangedSinceChecked() {
-        let failure = PluginActionFailure(message: "Kubernetes API (409 Conflict): SleepInfo weekend changed since it was checked: refresh and try again")
-        XCTAssertEqual(failure, .changed(detail: "SleepInfo weekend changed since it was checked: refresh and try again"))
+        let failure = PluginActionFailure(
+            message:
+                "Kubernetes API (409 Conflict): SleepInfo weekend changed since it was checked: refresh and try again")
+        XCTAssertEqual(
+            failure, .changed(detail: "SleepInfo weekend changed since it was checked: refresh and try again"))
         XCTAssertTrue(failure.staleObject)
     }
 
     func testParamErrorNamesTheParam() throws {
         // As ActionParams returns it, and inside a 422.
-        XCTAssertEqual(PluginActionFailure(message: #"parameter "size": want an integer, got "big""#),
-                       .invalidParam(name: "size", detail: #"want an integer, got "big""#))
-        XCTAssertEqual(PluginActionFailure(message: #"Kubernetes API (422 Invalid): parameter "tier": is required"#),
-                       .invalidParam(name: "tier", detail: "is required"))
+        XCTAssertEqual(
+            PluginActionFailure(message: #"parameter "size": want an integer, got "big""#),
+            .invalidParam(name: "size", detail: #"want an integer, got "big""#))
+        XCTAssertEqual(
+            PluginActionFailure(message: #"Kubernetes API (422 Invalid): parameter "tier": is required"#),
+            .invalidParam(name: "tier", detail: "is required"))
         XCTAssertFalse(PluginActionFailure(message: #"parameter "tier": is required"#).staleObject)
         let action = try resize()
         XCTAssertEqual(action.paramLabel("tier"), "Tier")
@@ -217,11 +229,15 @@ final class PluginActionTests: XCTestCase {
 
     func testDemoForbiddenAndOther() {
         XCTAssertEqual(PluginActionFailure(message: "this action is unavailable in the demo cluster"), .demo)
-        XCTAssertEqual(PluginActionFailure(message: "Kubernetes API: permission denied: sleepinfos is forbidden"),
-                       .forbidden(detail: "sleepinfos is forbidden"))
-        XCTAssertEqual(PluginActionFailure(message: "Kubernetes API (409 Conflict): the object has been modified"),
-                       .other("Kubernetes API (409 Conflict): the object has been modified"))
-        XCTAssertEqual(PluginActionFailure(message: "Kubernetes API: not found: weekend"), .other("Kubernetes API: not found: weekend"))
+        XCTAssertEqual(
+            PluginActionFailure(message: "Kubernetes API: permission denied: sleepinfos is forbidden"),
+            .forbidden(detail: "sleepinfos is forbidden"))
+        XCTAssertEqual(
+            PluginActionFailure(message: "Kubernetes API (409 Conflict): the object has been modified"),
+            .other("Kubernetes API (409 Conflict): the object has been modified"))
+        XCTAssertEqual(
+            PluginActionFailure(message: "Kubernetes API: not found: weekend"),
+            .other("Kubernetes API: not found: weekend"))
         XCTAssertEqual(PluginActionFailure(message: ""), .other(""))
     }
 }

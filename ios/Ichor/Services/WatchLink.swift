@@ -42,9 +42,10 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     private static func payload() -> WatchPayload {
         let defaults = SharedStore.defaults
         let active = SharedSnapshot.activeCluster(from: defaults)
-        return watchPayload(clusters: SharedSnapshot.clusters(from: defaults),
-                            snapshots: SharedSnapshot.loadAll(from: defaults), active: active,
-                            masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled), sentAt: Date())
+        return watchPayload(
+            clusters: SharedSnapshot.clusters(from: defaults),
+            snapshots: SharedSnapshot.loadAll(from: defaults), active: active,
+            masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled), sentAt: Date())
     }
 
     private func setPending(_ value: Bool) {
@@ -63,7 +64,9 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
 
     // MARK: - WCSessionDelegate
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+    func session(
+        _ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?
+    ) {
         guard activationState == .activated else { return }
         // A watch paired or the app installed since the last send gets the current state too.
         if takePending() || session.isWatchAppInstalled { send() }

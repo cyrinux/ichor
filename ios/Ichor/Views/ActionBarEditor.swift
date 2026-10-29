@@ -32,7 +32,11 @@ struct ActionBarSection<Action: BarAction & BarActionLook>: View {
                         .foregroundStyle(.secondary)
                         .moveDisabled(true)
                 case .action(let action):
-                    BarRow(action: action, inMenu: bar.menu.contains(action)) { save(bar.toBar(action)) } toMenu: { save(bar.toMenu(action)) }
+                    BarRow(action: action, inMenu: bar.menu.contains(action)) {
+                        save(bar.toBar(action))
+                    } toMenu: {
+                        save(bar.toMenu(action))
+                    }
                 }
             }
             .onMove { source, destination in save(bar.moving(fromOffsets: source, toOffset: destination)) }
@@ -90,7 +94,9 @@ private struct BarRow<Action: BarActionLook>: View {
                         group.font(.caption).foregroundStyle(.secondary)
                     }
                 }
-            } icon: { Image(systemName: action.systemImage) }
+            } icon: {
+                Image(systemName: action.systemImage)
+            }
             Spacer()
             if inMenu {
                 Button(action: toBar) { Image(systemName: "arrow.up.circle") }

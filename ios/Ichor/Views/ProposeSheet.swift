@@ -28,9 +28,11 @@ struct ProposeSheet: View {
     let files: [StagedFile]
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String, app: GitOpsAppRef, base: SourceEditBase, content: String, target: String,
-         defaultTitle: String? = nil, defaultBody: String? = nil, files: [StagedFile] = [],
-         onReload: @escaping (String) -> Void, onDone: @escaping () -> Void) {
+    init(
+        source: GitSource, path: String, app: GitOpsAppRef, base: SourceEditBase, content: String, target: String,
+        defaultTitle: String? = nil, defaultBody: String? = nil, files: [StagedFile] = [],
+        onReload: @escaping (String) -> Void, onDone: @escaping () -> Void
+    ) {
         self.source = source
         self.path = path
         self.app = app
@@ -102,8 +104,10 @@ struct ProposeSheet: View {
             if let failure { failureSection(failure) }
             if asksTarget {
                 Section {
-                    Text("This app follows \(source.tracked), which is not a branch. Name the branch the pull request goes to.")
-                        .font(.footnote)
+                    Text(
+                        "This app follows \(source.tracked), which is not a branch. Name the branch the pull request goes to."
+                    )
+                    .font(.footnote)
                     branchField("Target branch", text: $target)
                 } header: {
                     Text("Target branch")
@@ -212,20 +216,24 @@ struct ProposeSheet: View {
             let proposal: GitProposal
             if files.isEmpty {
                 let sha = try await lockSha(client, baseRef: baseRef)
-                proposal = GitProposal(repoURL: source.repoURL, baseRef: baseRef, path: path, content: content, fileSha: sha,
-                                       message: message, branch: newBranch, title: title, body: details, draft: draft)
+                proposal = GitProposal(
+                    repoURL: source.repoURL, baseRef: baseRef, path: path, content: content, fileSha: sha,
+                    message: message, branch: newBranch, title: title, body: details, draft: draft)
             } else {
-                proposal = GitProposal(repoURL: source.repoURL, baseRef: baseRef, path: "", content: "", fileSha: "",
-                                       message: message, branch: newBranch, title: title, body: details, draft: draft,
-                                       files: files.map(\.proposal))
+                proposal = GitProposal(
+                    repoURL: source.repoURL, baseRef: baseRef, path: "", content: "", fileSha: "",
+                    message: message, branch: newBranch, title: title, body: details, draft: draft,
+                    files: files.map(\.proposal))
             }
             let opened = try await client.propose(proposal, on: source, hosts: hosts, demo: demo)
             result = opened
             let paths = files.isEmpty ? path : files.map(\.path).joined(separator: ", ")
             // Kept on the phone: the app page tells when it is merged and deployed.
-            model.rememberProposal(GitProposalRecord(tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name,
-                                                     repoURL: source.repoURL, path: paths, title: title, url: opened.url,
-                                                     number: opened.number, branch: opened.branch, commit: opened.commit, forge: opened.forge))
+            model.rememberProposal(
+                GitProposalRecord(
+                    tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name,
+                    repoURL: source.repoURL, path: paths, title: title, url: opened.url,
+                    number: opened.number, branch: opened.branch, commit: opened.commit, forge: opened.forge))
             // Proposed: no longer waiting with the staged files.
             if app.isRepository {
                 let key = StagedKey(source: source)
@@ -275,15 +283,18 @@ private struct ProposalResultView: View {
                         Text("\(app.toolLabel) applies it once it is merged, at its next reconcile.")
                     }
                 }
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             }
             if let url = webURL(result.url) {
                 Section {
                     Link(destination: url) { Label("Open", systemImage: "safari") }
-                    Button { copy(result.url) } label: {
-                        Label(copied ? LocalizedStringKey("Copied") : LocalizedStringKey("Copy link"),
-                              systemImage: copied ? "checkmark" : "doc.on.doc")
+                    Button {
+                        copy(result.url)
+                    } label: {
+                        Label(
+                            copied ? LocalizedStringKey("Copied") : LocalizedStringKey("Copy link"),
+                            systemImage: copied ? "checkmark" : "doc.on.doc")
                     }
                 }
             }

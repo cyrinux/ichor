@@ -18,47 +18,61 @@ struct KubeconfigSection: View {
             Toggle(isOn: Binding(get: { nodeDebug }, set: { on in Task { await setNodeDebug(on) } })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Node debug shell")
-                    Text("On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Vulnerability scanner")
-                Text("What “Scan images” runs in the cluster: Trivy, or Grype, run in the cluster the same way; Grype’s database is Anchore’s. The report and its exports are the same.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "What “Scan images” runs in the cluster: Trivy, or Grype, run in the cluster the same way; Grype’s database is Anchore’s. The report and its exports are the same."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 Picker("Vulnerability scanner", selection: $imageScanner) {
                     ForEach(ImageScanner.allCases) { Text(verbatim: $0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
             }
-            Button(busy ? String(localized: "Exporting…") : String(localized: "Export kubeconfig…")) { Task { await export() } }
-                .disabled(busy)
+            Button(busy ? String(localized: "Exporting…") : String(localized: "Export kubeconfig…")) {
+                Task { await export() }
+            }
+            .disabled(busy)
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         } header: {
             Text("Kubernetes")
         } footer: {
             if model.activeIsKube {
-                Text("The kubeconfig of this cluster, as it was imported. Anyone with this file has the access it grants: keep it private.")
+                Text(
+                    "The kubeconfig of this cluster, as it was imported. Anyone with this file has the access it grants: keep it private."
+                )
             } else {
-                Text("Anyone with this file has full access to the Kubernetes cluster: keep it private. Use it with kubectl or any Kubernetes client.")
+                Text(
+                    "Anyone with this file has full access to the Kubernetes cluster: keep it private. Use it with kubectl or any Kubernetes client."
+                )
             }
         }
-        .fileExporter(isPresented: $exporting, document: document, contentType: .yaml,
-                      defaultFilename: "kubeconfig-\(model.activeContext).yaml") { result in
+        .fileExporter(
+            isPresented: $exporting, document: document, contentType: .yaml,
+            defaultFilename: "kubeconfig-\(model.activeContext).yaml"
+        ) { result in
             switch result {
             case .success: message = String(localized: "Saved.")
             case .failure(let error): message = error.localizedDescription
             }
-            document = nil // don't keep the credential around
+            document = nil  // don't keep the credential around
         }
     }
 
     /// Root on the nodes: with the app lock on, turning it on asks for Face ID first.
     private func setNodeDebug(_ on: Bool) async {
-        if on, model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Node debug shell")) {
+        if on, model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Node debug shell"))
+        {
             message = failure
             return
         }
@@ -67,7 +81,9 @@ struct KubeconfigSection: View {
 
     private func export() async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Export kubeconfig")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Export kubeconfig"))
+        {
             message = failure
             return
         }
@@ -76,7 +92,8 @@ struct KubeconfigSection: View {
         do {
             // A cluster added from a kubeconfig: its own context, from the stored kubeconfig.
             if model.activeIsKube {
-                document = YAMLDocument(text: try await TalosClient.exportKubeContext(stored: client.config, context: client.context))
+                document = YAMLDocument(
+                    text: try await TalosClient.exportKubeContext(stored: client.config, context: client.context))
             } else {
                 document = YAMLDocument(text: try await client.kubeconfig())
             }

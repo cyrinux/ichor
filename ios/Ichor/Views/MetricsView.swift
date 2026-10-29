@@ -47,7 +47,9 @@ struct MetricsView: View {
     private var fingerprint: String { model.activeSummary?.fingerprint ?? "" }
 
     /// What the panels show: a change reloads them (and restarts the minute refresh).
-    private struct Shown: Equatable { let loaded: Bool; let source: PromSource?; let panels: [PromPanel]; let range: MetricsRange }
+    private struct Shown: Equatable {
+        let loaded: Bool; let source: PromSource?; let panels: [PromPanel]; let range: MetricsRange
+    }
 
     var body: some View {
         Group {
@@ -64,15 +66,27 @@ struct MetricsView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if ai.enabled, let source = config.source, let client = model.client {
-                    Button { chat.open(client: client, source: source, current: nil); chatOpen = true } label: { Image(systemName: "sparkles") }
-                        .accessibilityLabel(Text("Ask AI for a panel"))
+                    Button {
+                        chat.open(client: client, source: source, current: nil); chatOpen = true
+                    } label: {
+                        Image(systemName: "sparkles")
+                    }
+                    .accessibilityLabel(Text("Ask AI for a panel"))
                 }
                 if config.source != nil {
-                    Button { editing = PromPanel() } label: { Image(systemName: "plus") }
-                        .accessibilityLabel(Text("Add panel"))
+                    Button {
+                        editing = PromPanel()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(Text("Add panel"))
                 }
-                Button { sourceOpen = true } label: { Image(systemName: "slider.horizontal.3") }
-                    .accessibilityLabel(Text("Metrics source"))
+                Button {
+                    sourceOpen = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel(Text("Metrics source"))
             }
         }
         .task(id: fingerprint) { await load() }
@@ -84,24 +98,37 @@ struct MetricsView: View {
             }
         }
         .sheet(item: $editing) { panel in
-            PanelEditorSheet(initial: panel, presets: presets, preview: preview, chat: ai.enabled ? chat : nil, sourceLabel: config.source?.label ?? "",
-                             openChat: { draft in
-                                 if let client = model.client, let source = config.source { chat.open(client: client, source: source, current: draft) }
-                             }) { saved in
-                let stored = saved.id.isEmpty ? PromPanel(id: UUID().uuidString, title: saved.title, query: saved.query, unit: saved.unit, legend: saved.legend) : saved
+            PanelEditorSheet(
+                initial: panel, presets: presets, preview: preview, chat: ai.enabled ? chat : nil,
+                sourceLabel: config.source?.label ?? "",
+                openChat: { draft in
+                    if let client = model.client, let source = config.source {
+                        chat.open(client: client, source: source, current: draft)
+                    }
+                }
+            ) { saved in
+                let stored =
+                    saved.id.isEmpty
+                    ? PromPanel(
+                        id: UUID().uuidString, title: saved.title, query: saved.query, unit: saved.unit,
+                        legend: saved.legend) : saved
                 save(config.saving(stored))
             }
         }
         // The editor opens with the proposed panel once the chat sheet is gone (one sheet at a time).
-        .sheet(isPresented: $chatOpen, onDismiss: { if let picked { editing = picked.panel(id: ""); self.picked = nil } }) {
+        .sheet(
+            isPresented: $chatOpen, onDismiss: { if let picked { editing = picked.panel(id: ""); self.picked = nil } }
+        ) {
             PanelChatSheet(model: chat, sourceLabel: config.source?.label ?? "") { proposed in
                 picked = proposed
                 chatOpen = false
             }
         }
         .sheet(isPresented: $sourceOpen) {
-            SourceSheet(current: config.source, discovered: discovered, discovering: discovering, discoveryError: discoveryError,
-                        discover: { await discover(autoSelect: false) }, test: test, save: setSource)
+            SourceSheet(
+                current: config.source, discovered: discovered, discovering: discovering,
+                discoveryError: discoveryError,
+                discover: { await discover(autoSelect: false) }, test: test, save: setSource)
         }
         .themedBackground()
         .allowsLandscape()
@@ -112,7 +139,9 @@ struct MetricsView: View {
             Section {
                 Text("Source: \(source.label)").font(.footnote).foregroundStyle(.secondary)
                 // The source's own health: down targets, rule groups, the prometheus-operator.
-                NavigationLink { PromMonitoringView(source: source) } label: {
+                NavigationLink {
+                    PromMonitoringView(source: source)
+                } label: {
                     Label(PromMonitoringText.entry, systemImage: "waveform.path.ecg")
                 }
                 Picker("Range", selection: $range) {
@@ -123,12 +152,16 @@ struct MetricsView: View {
                 if results.values.contains(where: { isPromRefused($0.error) }) {
                     // The backend answered 401 or 403: the tenant or the credentials need changing.
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials.")
-                            .foregroundStyle(.red).font(.footnote)
+                        Text(
+                            "The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials."
+                        )
+                        .foregroundStyle(.red).font(.footnote)
                         Button("Change tenant or credentials") { sourceOpen = true }
                     }
                 }
-                if config.panels.isEmpty { Text("No panels yet: add one from a preset or write PromQL.").foregroundStyle(.secondary) }
+                if config.panels.isEmpty {
+                    Text("No panels yet: add one from a preset or write PromQL.").foregroundStyle(.secondary)
+                }
             }
             ForEach(Array(config.panels.enumerated()), id: \.element.id) { index, panel in
                 Section {
@@ -140,7 +173,9 @@ struct MetricsView: View {
                         Menu {
                             Button("Edit") { editing = panel }
                             if index > 0 { Button("Move up") { save(config.moving(panel.id, by: -1)) } }
-                            if index < config.panels.count - 1 { Button("Move down") { save(config.moving(panel.id, by: 1)) } }
+                            if index < config.panels.count - 1 {
+                                Button("Move down") { save(config.moving(panel.id, by: 1)) }
+                            }
                             Button("Delete", role: .destructive) {
                                 var next = config
                                 next.panels.removeAll { $0.id == panel.id }
@@ -164,9 +199,14 @@ struct MetricsView: View {
                 ProgressView("Looking for Prometheus in the cluster…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ContentUnavailableView {
-                    Label("No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster", systemImage: "chart.xyaxis.line")
+                    Label(
+                        "No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster",
+                        systemImage: "chart.xyaxis.line")
                 } description: {
-                    Text(discoveryError ?? String(localized: "Pick a Service by hand, or set the URL of a server the phone can reach."))
+                    Text(
+                        discoveryError
+                            ?? String(
+                                localized: "Pick a Service by hand, or set the URL of a server the phone can reach."))
                 } actions: {
                     Button("Set up a source") { sourceOpen = true }
                     Button("Search the cluster again") { Task { await discover(autoSelect: true) } }
@@ -205,7 +245,11 @@ struct MetricsView: View {
             let checked = try await TalosClient.normalizePromSource(source)
             var next = config
             next.source = checked
-            if next.panels.isEmpty { next.panels = presets.map { PromPanel(id: UUID().uuidString, title: $0.title, query: $0.query, unit: $0.unit, legend: $0.legend) } }
+            if next.panels.isEmpty {
+                next.panels = presets.map {
+                    PromPanel(id: UUID().uuidString, title: $0.title, query: $0.query, unit: $0.unit, legend: $0.legend)
+                }
+            }
             results = [:]
             save(next)
             return nil
@@ -228,7 +272,9 @@ struct MetricsView: View {
 
     private func preview(_ panel: PromPanel) async -> Result<PromResult, Error> {
         guard let client = model.client, let source = config.source else {
-            return .failure(TalosError(message: String(localized: "No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster")))
+            return .failure(
+                TalosError(
+                    message: String(localized: "No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster")))
         }
         return await Self.run(client, source, panel.query, range)
     }
@@ -259,13 +305,16 @@ struct MetricsView: View {
                 switch outcome {
                 case .success(let result): results[panel.id] = PanelResult(result: result)
                 case .failure(let error):
-                    results[panel.id] = PanelResult(result: results[panel.id]?.result, error: error.localizedDescription)
+                    results[panel.id] = PanelResult(
+                        result: results[panel.id]?.result, error: error.localizedDescription)
                 }
             }
         }
     }
 
-    private static func run(_ client: TalosClient, _ source: PromSource, _ query: String, _ range: MetricsRange) async -> Result<PromResult, Error> {
+    private static func run(_ client: TalosClient, _ source: PromSource, _ query: String, _ range: MetricsRange) async
+        -> Result<PromResult, Error>
+    {
         let end = Int64(Date().timeIntervalSince1970)
         do {
             return .success(try await client.promRange(source, query: query, start: end - range.seconds, end: end))
@@ -299,12 +348,14 @@ struct PromChartView: View {
             if result.series.isEmpty {
                 Text("No data for this range.").foregroundStyle(.secondary)
             } else {
-                TimeSeriesChart(title: panel.title.isEmpty ? panel.query : panel.title, times: result.times,
-                                lines: result.series.map { ($0.legend(panel.legend), $0.values) },
-                                format: { formatMetric($0, unit: panel.unit) })
+                TimeSeriesChart(
+                    title: panel.title.isEmpty ? panel.query : panel.title, times: result.times,
+                    lines: result.series.map { ($0.legend(panel.legend), $0.values) },
+                    format: { formatMetric($0, unit: panel.unit) })
             }
             if result.truncated {
-                Text("Series shown: \(result.series.count) of \(result.total)").font(.caption).foregroundStyle(.secondary)
+                Text("Series shown: \(result.series.count) of \(result.total)").font(.caption).foregroundStyle(
+                    .secondary)
             }
             ForEach(result.warnings, id: \.self) { Text($0).font(.caption).foregroundStyle(.secondary) }
         }
@@ -354,9 +405,13 @@ struct TimeSeriesChart: View {
     /// The scrubbed time, else the last one any line has a value at.
     private var shownIndex: Int? {
         if let selection, !dates.isEmpty {
-            return dates.indices.min { abs(dates[$0].timeIntervalSince(selection)) < abs(dates[$1].timeIntervalSince(selection)) }
+            return dates.indices.min {
+                abs(dates[$0].timeIntervalSince(selection)) < abs(dates[$1].timeIntervalSince(selection))
+            }
         }
-        return times.indices.reversed().first { i in lines.contains { $0.values.indices.contains(i) && $0.values[i] != nil } }
+        return times.indices.reversed().first { i in
+            lines.contains { $0.values.indices.contains(i) && $0.values[i] != nil }
+        }
     }
 
     var body: some View {
@@ -378,22 +433,30 @@ struct TimeSeriesChart: View {
                 }
             }
             .chartYScale(domain: bottom...upper)
-            .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
-                AxisGridLine()
-                AxisValueLabel { if let v = value.as(Double.self) { Text(format(v)) } }
-            } }
-            .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { AxisValueLabel(format: .dateTime.hour().minute()) } }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
+                    AxisGridLine()
+                    AxisValueLabel { if let v = value.as(Double.self) { Text(format(v)) } }
+                }
+            }
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 3)) { AxisValueLabel(format: .dateTime.hour().minute()) }
+            }
             .chartXSelection(value: $selection)
             .chartHeight(140)
             .accessibilityLabel(Text("Chart of \(title) over time"))
             ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
                 HStack(spacing: 8) {
                     if lines.count > 1 { Circle().fill(color(li)).frame(width: 8, height: 8) }
-                    Text(verbatim: line.label).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                    Text(verbatim: line.label).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(
+                        .middle)
                     Spacer()
-                    Text(verbatim: shown.flatMap { line.values.indices.contains($0) ? line.values[$0] : nil }.map(format) ?? "—")
-                        .font(lines.count > 1 ? .callout : .title2.weight(.semibold))
-                        .monospacedDigit()
+                    Text(
+                        verbatim: shown.flatMap { line.values.indices.contains($0) ? line.values[$0] : nil }.map(format)
+                            ?? "—"
+                    )
+                    .font(lines.count > 1 ? .callout : .title2.weight(.semibold))
+                    .monospacedDigit()
                 }
             }
         }

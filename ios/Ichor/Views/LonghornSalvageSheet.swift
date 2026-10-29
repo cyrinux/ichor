@@ -21,7 +21,9 @@ struct LonghornSalvageSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Salvage may lose data. Choose the replicas whose data you want to recover; their timestamps do not guarantee consistency.").foregroundStyle(.statusWarn)
+                    Text(
+                        "Salvage may lose data. Choose the replicas whose data you want to recover; their timestamps do not guarantee consistency."
+                    ).foregroundStyle(.statusWarn)
                     Text("Choose replicas explicitly. No replica is selected automatically.")
                 }
                 if preview == nil && error == nil { ProgressView() }
@@ -32,18 +34,34 @@ struct LonghornSalvageSheet: View {
                         if !p.canSalvage { Text("Salvage requires a detached faulted volume and available replicas.") }
                         if !p.error.isEmpty { ErrorLine(error: p.error) }
                         ForEach(p.replicas) { replica in
-                            Toggle(isOn: Binding(get: { selection.contains(replica.name) }, set: { checked in
-                                if checked { selection.insert(replica.name) } else { selection.remove(replica.name) }
-                            })) {
-                                Text("\(replica.name) on \(replica.node) · healthy: \(relativeTime(replica.healthyAt)) · failed: \(relativeTime(replica.failedAt))")
+                            Toggle(
+                                isOn: Binding(
+                                    get: { selection.contains(replica.name) },
+                                    set: { checked in
+                                        if checked {
+                                            selection.insert(replica.name)
+                                        } else {
+                                            selection.remove(replica.name)
+                                        }
+                                    })
+                            ) {
+                                Text(
+                                    "\(replica.name) on \(replica.node) · healthy: \(relativeTime(replica.healthyAt)) · failed: \(relativeTime(replica.failedAt))"
+                                )
                             }.disabled(!replica.eligible)
                         }
                     }
                 }
                 Section(typedConfirmationPrompt(volume.name)) {
                     TextField("Volume name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
-                    Button { onConfirm(selection) } label: { Text("Salvage volume") }
-                        .disabled(preview?.accepts(selection) != true || !typedConfirmationMatches(typed, token: volume.name) || denial != nil)
+                    Button {
+                        onConfirm(selection)
+                    } label: {
+                        Text("Salvage volume")
+                    }
+                    .disabled(
+                        preview?.accepts(selection) != true || !typedConfirmationMatches(typed, token: volume.name)
+                            || denial != nil)
                     KubeDeniedNote(.longhornSalvage, in: volume.namespace)
                 }
             }
@@ -52,8 +70,9 @@ struct LonghornSalvageSheet: View {
         }
         .task(id: volume.id) {
             guard let client = model.client else { error = String(localized: "Not connected"); return }
-            do { preview = try await client.longhornSalvagePreview(namespace: volume.namespace, name: volume.name) }
-            catch { self.error = error.localizedDescription }
+            do {
+                preview = try await client.longhornSalvagePreview(namespace: volume.namespace, name: volume.name)
+            } catch { self.error = error.localizedDescription }
         }
     }
 }

@@ -15,8 +15,9 @@ struct ArgoWaveTimeline: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(steps) { step in
-                ArgoWaveStepView(step: step, last: step.id == steps.last?.id, running: running,
-                                 selecting: selecting, selection: $selection)
+                ArgoWaveStepView(
+                    step: step, last: step.id == steps.last?.id, running: running,
+                    selecting: selecting, selection: $selection)
             }
         }
         .padding(.vertical, 6)
@@ -36,15 +37,23 @@ private struct ArgoWaveStepView: View {
     private static let collapsedCount = 5
 
     var body: some View {
-        let open = expanded || step.state == .current || step.state == .failed || step.resources.count <= Self.collapsedCount + 1
+        let open =
+            expanded || step.state == .current || step.state == .failed
+            || step.resources.count <= Self.collapsedCount + 1
         let shown = open ? step.resources : Array(step.resources.prefix(Self.collapsedCount))
         HStack(alignment: .top, spacing: 12) {
             marker
             VStack(alignment: .leading, spacing: 6) {
                 header
                 ForEach(shown) { resource in
-                    ArgoResourceLine(resource: resource, selecting: selecting, selected: selection.contains(resource.id)) {
-                        if selection.contains(resource.id) { selection.remove(resource.id) } else { selection.insert(resource.id) }
+                    ArgoResourceLine(
+                        resource: resource, selecting: selecting, selected: selection.contains(resource.id)
+                    ) {
+                        if selection.contains(resource.id) {
+                            selection.remove(resource.id)
+                        } else {
+                            selection.insert(resource.id)
+                        }
                     }
                 }
                 if !open {
@@ -83,7 +92,8 @@ private struct ArgoWaveStepView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text("Wave \(step.wave)").font(.subheadline.weight(.semibold)).monospacedDigit().accessibilityAddTraits(.isHeader)
+            Text("Wave \(step.wave)").font(.subheadline.weight(.semibold)).monospacedDigit().accessibilityAddTraits(
+                .isHeader)
             if step.hasHooks {
                 Text("hooks")
                     .font(.caption2.weight(.medium))

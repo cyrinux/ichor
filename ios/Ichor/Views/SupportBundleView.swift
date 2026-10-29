@@ -36,13 +36,17 @@ struct SupportBundleView: View {
     private func content(_ list: [NodeOverview]) -> some View {
         List {
             Section {
-                Label("The bundle contains logs and cluster details. It is NOT masked by screenshot mode: review it before sharing.",
-                      systemImage: "exclamationmark.triangle.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.statusWarn)
-                Text("Parts your talosconfig role cannot read are left out and noted in the bundle (machine config needs os:admin, etcd status os:operator).")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Label(
+                    "The bundle contains logs and cluster details. It is NOT masked by screenshot mode: review it before sharing.",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .font(.footnote)
+                .foregroundStyle(.statusWarn)
+                Text(
+                    "Parts your talosconfig role cannot read are left out and noted in the bundle (machine config needs os:admin, etcd status os:operator)."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             }
             switch job.state {
             case .running:
@@ -61,15 +65,20 @@ struct SupportBundleView: View {
         let allChosen = chosen.count == all.count
         Section {
             ForEach(list) { node in
-                Button { toggle(node.node) } label: {
+                Button {
+                    toggle(node.node)
+                } label: {
                     HStack {
                         Image(systemName: selected.contains(node.node) ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(selected.contains(node.node) ? Color.accentColor : Color.secondary)
                             .accessibilityHidden(true)
                         VStack(alignment: .leading) {
                             Text(verbatim: node.hostname).foregroundStyle(.primary)
-                            Text(verbatim: node.reachable ? node.node : "\(node.node)  ·  \(NodeHealth.unreachable.label)")
-                                .font(.caption.monospaced()).foregroundStyle(.secondary)
+                            Text(
+                                verbatim: node.reachable
+                                    ? node.node : "\(node.node)  ·  \(NodeHealth.unreachable.label)"
+                            )
+                            .font(.caption.monospaced()).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -144,8 +153,11 @@ struct SupportBundleView: View {
                 if let url = directory?.appendingPathComponent(file.name) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(verbatim: file.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-                        Text(verbatim: "\(file.modified.formatted(date: .abbreviated, time: .shortened)) · \(formatBytes(file.size))")
-                            .font(.caption).foregroundStyle(.secondary)
+                        Text(
+                            verbatim:
+                                "\(file.modified.formatted(date: .abbreviated, time: .shortened)) · \(formatBytes(file.size))"
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
                         SupportBundleActions(url: url, onDelete: loadFiles)
                     }
                 }
@@ -185,12 +197,15 @@ struct SupportBundleView: View {
     private func start(_ all: [String]) async {
         guard let client = model.client else { return }
         message = nil
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Create a support bundle")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Create a support bundle"))
+        {
             message = failure
             return
         }
-        job.start(client: client, context: model.activeContext, cluster: model.activeSummary.map(monitorClusterKey) ?? "",
-                  nodes: supportSelection(all))
+        job.start(
+            client: client, context: model.activeContext, cluster: model.activeSummary.map(monitorClusterKey) ?? "",
+            nodes: supportSelection(all))
     }
 }
 
@@ -209,7 +224,8 @@ private struct SupportNodeRow: View {
                     Text("waiting").font(.caption).foregroundStyle(.secondary)
                 case .collecting(let progress):
                     if progress.total > 0 {
-                        Text(verbatim: "\(progress.done) / \(progress.total)").font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                        Text(verbatim: "\(progress.done) / \(progress.total)").font(.caption).monospacedDigit()
+                            .foregroundStyle(.secondary)
                     }
                 case .done:
                     Text("done").font(.caption).foregroundStyle(.secondary)

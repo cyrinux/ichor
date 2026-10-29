@@ -37,17 +37,23 @@ struct FluxAppView: View {
             if let app = status.app(kind: kind, namespace: namespace, name: name) {
                 content(app, status: status)
             } else {
-                ContentUnavailableView("App not found", systemImage: "questionmark.app",
-                                       description: Text("\(name) is no longer a Flux \(kind) of this cluster."))
-                    .themedBackground()
+                ContentUnavailableView(
+                    "App not found", systemImage: "questionmark.app",
+                    description: Text("\(name) is no longer a Flux \(kind) of this cluster.")
+                )
+                .themedBackground()
             }
         }
         .gitOpsPolling(key: model.fluxKey, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
         .navigationTitle(Text(verbatim: name))
         .clusterScreenTitle(Text(verbatim: name))
         .toolbar {
-            ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .fluxApp(kind: kind, namespace: namespace, name: name)) }
-            ToolbarItem(placement: .primaryAction) { PinButton(target: .fluxApp(kind: kind, namespace: namespace, name: name), label: name) }
+            ToolbarItem(placement: .primaryAction) {
+                ShareLinkButton(target: .fluxApp(kind: kind, namespace: namespace, name: name))
+            }
+            ToolbarItem(placement: .primaryAction) {
+                PinButton(target: .fluxApp(kind: kind, namespace: namespace, name: name), label: name)
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .messageAlert($message)
@@ -58,15 +64,19 @@ struct FluxAppView: View {
 
     private func content(_ app: FluxApp, status: FluxStatus) -> some View {
         List {
-            FluxHero(app: app, source: status.source(of: app), busy: busy, act: { act($0, on: app) }, correctDrift: {
-                correctingDrift = true
-                confirm = .force
-            })
+            FluxHero(
+                app: app, source: status.source(of: app), busy: busy, act: { act($0, on: app) },
+                correctDrift: {
+                    correctingDrift = true
+                    confirm = .force
+                })
             let tree = status.dependencyTree(of: app)
             if !tree.isEmpty { FluxDependsOnTree(tree: tree, downNodes: downNodes) }
             if app.isKustomization {
                 Section {
-                    NavigationLink { FluxDiffView(target: app.target) } label: {
+                    NavigationLink {
+                        FluxDiffView(target: app.target)
+                    } label: {
                         Label("Show diff", systemImage: "plus.forwardslash.minus")
                     }
                 } footer: {
@@ -75,7 +85,9 @@ struct FluxAppView: View {
             }
             FluxSourceSection(sources: gitSources, app: .flux(kind: app.kind, namespace: app.namespace, name: app.name))
             // The pull requests opened from the phone for it; a merged one not running yet reconciles with its source from here.
-            ProposalsSection(app: .flux(kind: app.kind, namespace: app.namespace, name: app.name), refresh: app.revision) {
+            ProposalsSection(
+                app: .flux(kind: app.kind, namespace: app.namespace, name: app.name), refresh: app.revision
+            ) {
                 act(.reconcileWithSource, on: app)
             }
             FluxConditionsSection(app: app)
@@ -90,19 +102,29 @@ struct FluxAppView: View {
         .themedBackground()
         // Again once another revision is applied.
         .task(id: app.revision) { await loadSources(app) }
-        .confirmationDialog(confirm.map { $0.title(for: app.name) } ?? "",
-                            isPresented: $confirm.isPresent(),
-                            titleVisibility: .visible, presenting: confirm) { action in
-            Button(correctingDrift && action == .force ? String(localized: "Correct drift") : action.label, role: action == .suspend ? ButtonRole.destructive : nil) {
+        .confirmationDialog(
+            confirm.map { $0.title(for: app.name) } ?? "",
+            isPresented: $confirm.isPresent(),
+            titleVisibility: .visible, presenting: confirm
+        ) { action in
+            Button(
+                correctingDrift && action == .force ? String(localized: "Correct drift") : action.label,
+                role: action == .suspend ? ButtonRole.destructive : nil
+            ) {
                 Task { await run(action, on: app) }
             }
             Button("Cancel", role: .cancel) {}
         } message: { action in
-            let explanation = correctingDrift && action == .force
-                ? String(localized: "The helm-controller found objects that no longer match the release. A forced upgrade applies the release again now and puts them back.")
+            let explanation =
+                correctingDrift && action == .force
+                ? String(
+                    localized:
+                        "The helm-controller found objects that no longer match the release. A forced upgrade applies the release again now and puts them back."
+                )
                 : action.explanation(for: app.name)
-            Text(verbatim: [explanation, action == .suspend ? app.ownerNotice : nil]
-                .compactMap { $0 }.joined(separator: "\n\n"))
+            Text(
+                verbatim: [explanation, action == .suspend ? app.ownerNotice : nil]
+                    .compactMap { $0 }.joined(separator: "\n\n"))
         }
     }
 
@@ -129,7 +151,9 @@ struct FluxAppView: View {
     /// The Source rows: left out when the sources cannot be read, the rest of the screen stands alone.
     private func loadSources(_ app: FluxApp) async {
         guard let client = model.client else { return }
-        if let read = try? await client.gitOpsSource(tool: "flux", kind: app.kind, namespace: app.namespace, name: app.name) {
+        if let read = try? await client.gitOpsSource(
+            tool: "flux", kind: app.kind, namespace: app.namespace, name: app.name)
+        {
             gitSources = read
         }
     }
@@ -138,8 +162,9 @@ struct FluxAppView: View {
     /// once), once the object is read.
     private func takeAlertAction() {
         guard let request = NotificationRouter.shared.alertActionRequest,
-              request.isReconcile(kind: kind, namespace: namespace, name: name),
-              case .loaded(let status, _, _) = state else { return }
+            request.isReconcile(kind: kind, namespace: namespace, name: name),
+            case .loaded(let status, _, _) = state
+        else { return }
         NotificationRouter.shared.alertActionRequest = nil
         if status.app(kind: kind, namespace: namespace, name: name) != nil {
             correctingDrift = false
@@ -159,7 +184,9 @@ struct FluxAppView: View {
         if failure == nil, action == .reconcile || action == .reconcileWithSource {
             GitOpsOperationJob.shared.followFluxReconcile(client: client, target: app.target)
         }
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
         await load()
     }
 }

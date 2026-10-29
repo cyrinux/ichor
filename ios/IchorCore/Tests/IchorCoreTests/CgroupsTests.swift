@@ -3,23 +3,30 @@ import XCTest
 
 final class CgroupsTests: XCTestCase {
     private func report(at: Int64, etcdCPU: UInt64, kubeletCPU: UInt64, etcdIO: UInt64 = 0) -> CgroupReport {
-        CgroupReport(at: at, root: CgroupNode(name: ".", children: [
-            CgroupNode(name: "podruntime", memCurrent: 300, children: [
-                CgroupNode(name: "etcd", kind: "service", memCurrent: 200, cpuUsec: etcdCPU, ioWrite: etcdIO,
-                           pressure: CgroupPressure(io: CgroupPSI(some10: 30))),
-                CgroupNode(name: "kubelet", kind: "service", memCurrent: 100, cpuUsec: kubeletCPU),
-            ]),
-            CgroupNode(name: "init", kind: "service", memCurrent: 50),
-        ]))
+        CgroupReport(
+            at: at,
+            root: CgroupNode(
+                name: ".",
+                children: [
+                    CgroupNode(
+                        name: "podruntime", memCurrent: 300,
+                        children: [
+                            CgroupNode(
+                                name: "etcd", kind: "service", memCurrent: 200, cpuUsec: etcdCPU, ioWrite: etcdIO,
+                                pressure: CgroupPressure(io: CgroupPSI(some10: 30))),
+                            CgroupNode(name: "kubelet", kind: "service", memCurrent: 100, cpuUsec: kubeletCPU),
+                        ]),
+                    CgroupNode(name: "init", kind: "service", memCurrent: 50),
+                ]))
     }
 
     func testDecodesGoJSONWithOmittedFields() throws {
         let json = """
-        {"at":1,"pressure":{"cpu":{"some10":1.5,"some60":1,"full10":0,"full60":0},"memory":{"some10":0,"some60":0,"full10":0,"full60":0},"io":{"some10":0,"some60":0,"full10":0,"full60":0}},
-         "hotspots":[{"resource":"io","name":"etcd","parent":"podruntime","some10":7}],
-         "alerts":[{"kind":"oomKill","name":"apid","parent":"system","count":2},{"kind":"memoryLimit","name":"kubepods","parent":".","percent":95}],
-         "root":{"name":".","kind":"group","children":[{"name":"init","kind":"service","memCurrent":10}]}}
-        """
+            {"at":1,"pressure":{"cpu":{"some10":1.5,"some60":1,"full10":0,"full60":0},"memory":{"some10":0,"some60":0,"full10":0,"full60":0},"io":{"some10":0,"some60":0,"full10":0,"full60":0}},
+             "hotspots":[{"resource":"io","name":"etcd","parent":"podruntime","some10":7}],
+             "alerts":[{"kind":"oomKill","name":"apid","parent":"system","count":2},{"kind":"memoryLimit","name":"kubepods","parent":".","percent":95}],
+             "root":{"name":".","kind":"group","children":[{"name":"init","kind":"service","memCurrent":10}]}}
+            """
         let r = try TalosJSON.decode(CgroupReport.self, from: json)
         XCTAssertEqual(r.pressure.cpu.some10, 1.5)
         XCTAssertEqual(r.mostAffected("io"), "etcd (podruntime)")
@@ -31,7 +38,8 @@ final class CgroupsTests: XCTestCase {
     }
 
     func testCollapsedTreeShowsTopGroupsOnly() {
-        let rows = cgroupRows(previous: nil, current: report(at: 1000, etcdCPU: 0, kubeletCPU: 0), expanded: [], sort: .memory)
+        let rows = cgroupRows(
+            previous: nil, current: report(at: 1000, etcdCPU: 0, kubeletCPU: 0), expanded: [], sort: .memory)
         XCTAssertEqual(rows.map(\.node.name), ["podruntime", "init"])
         XCTAssertNil(rows[0].cpuPercent)
     }
@@ -49,13 +57,15 @@ final class CgroupsTests: XCTestCase {
     }
 
     func testCounterResetHasNoRate() {
-        let rows = cgroupRows(previous: report(at: 1000, etcdCPU: 9_000_000, kubeletCPU: 0),
-                              current: report(at: 2000, etcdCPU: 1, kubeletCPU: 0), expanded: ["podruntime"], sort: .memory)
+        let rows = cgroupRows(
+            previous: report(at: 1000, etcdCPU: 9_000_000, kubeletCPU: 0),
+            current: report(at: 2000, etcdCPU: 1, kubeletCPU: 0), expanded: ["podruntime"], sort: .memory)
         XCTAssertNil(rows.first { $0.node.name == "etcd" }?.cpuPercent)
     }
 
     func testPressureSortAndLevels() {
-        let rows = cgroupRows(previous: nil, current: report(at: 1, etcdCPU: 0, kubeletCPU: 0), expanded: ["podruntime"], sort: .pressure)
+        let rows = cgroupRows(
+            previous: nil, current: report(at: 1, etcdCPU: 0, kubeletCPU: 0), expanded: ["podruntime"], sort: .pressure)
         XCTAssertEqual(rows[1].node.name, "etcd")
         XCTAssertEqual(pressureLevel(4.99), .ok)
         XCTAssertEqual(pressureLevel(5), .warn)
@@ -63,13 +73,19 @@ final class CgroupsTests: XCTestCase {
     }
 
     func testDefaultExpansionKeepsKubepodsClosed() {
-        let r = CgroupReport(at: 0, root: CgroupNode(name: ".", children: [
-            CgroupNode(name: "kubepods", children: [
-                CgroupNode(name: "burstable", children: [CgroupNode(name: "ns/p", kind: "pod")]),
-                CgroupNode(name: "ns/g", kind: "pod"),
-            ]),
-            CgroupNode(name: "init", kind: "service"),
-        ]))
+        let r = CgroupReport(
+            at: 0,
+            root: CgroupNode(
+                name: ".",
+                children: [
+                    CgroupNode(
+                        name: "kubepods",
+                        children: [
+                            CgroupNode(name: "burstable", children: [CgroupNode(name: "ns/p", kind: "pod")]),
+                            CgroupNode(name: "ns/g", kind: "pod"),
+                        ]),
+                    CgroupNode(name: "init", kind: "service"),
+                ]))
         let rows = cgroupRows(previous: nil, current: r, expanded: defaultExpandedCgroups(r), sort: .memory)
         // kubepods stays closed: its pods are the Pods tab's.
         XCTAssertEqual(rows.map(\.node.name), ["kubepods", "init"])

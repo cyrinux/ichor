@@ -7,8 +7,10 @@ import Security
 enum AppSupport {
     /// `<Application Support>/name`, created if needed and excluded from backup.
     static func excludedFolder(_ name: String) throws -> URL {
-        var url = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            .appendingPathComponent(name, isDirectory: true)
+        var url = try FileManager.default.url(
+            for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+        )
+        .appendingPathComponent(name, isDirectory: true)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
@@ -18,9 +20,13 @@ enum AppSupport {
 
     /// `<Application Support>/name` when it already exists; nothing is created.
     static func existingFolder(_ name: String) -> URL? {
-        guard let url = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        guard
+            let url = try? FileManager.default.url(
+                for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false
+            )
             .appendingPathComponent(name, isDirectory: true),
-            FileManager.default.fileExists(atPath: url.path) else { return nil }
+            FileManager.default.fileExists(atPath: url.path)
+        else { return nil }
         return url
     }
 }

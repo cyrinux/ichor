@@ -31,7 +31,8 @@ struct DiscoveredNodesSheet: View {
     @State private var adding = false
     @State private var error: String?
 
-    init(nodes: [DiscoveredNode], add: @escaping ([DiscoveredNode]) async throws -> Void, notNow: @escaping () -> Void) {
+    init(nodes: [DiscoveredNode], add: @escaping ([DiscoveredNode]) async throws -> Void, notNow: @escaping () -> Void)
+    {
         self.nodes = nodes
         self.add = add
         self.notNow = notNow
@@ -43,7 +44,9 @@ struct DiscoveredNodesSheet: View {
             List {
                 Section {
                     ForEach(nodes) { node in
-                        Button { toggle(node) } label: {
+                        Button {
+                            toggle(node)
+                        } label: {
                             HStack {
                                 Image(systemName: selected.contains(node.address) ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(selected.contains(node.address) ? Color.accentColor : .secondary)
@@ -58,7 +61,9 @@ struct DiscoveredNodesSheet: View {
                         .accessibilityAddTraits(selected.contains(node.address) ? .isSelected : [])
                     }
                 } footer: {
-                    Text("Cluster discovery knows these nodes, but the talosconfig does not list them. Add the ones to show and manage here.")
+                    Text(
+                        "Cluster discovery knows these nodes, but the talosconfig does not list them. Add the ones to show and manage here."
+                    )
                 }
                 if let error {
                     Section { Text(error).foregroundStyle(.statusBad) }

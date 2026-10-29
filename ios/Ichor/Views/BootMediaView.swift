@@ -16,8 +16,10 @@ struct BootMediaView: View {
     var body: some View {
         List {
             Section {
-                Text("Your phone cannot serve a network boot itself. Start the new machine with one of these: it then waits in maintenance mode, and Add a node takes it from there.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "Your phone cannot serve a network boot itself. Start the new machine with one of these: it then waits in maintenance mode, and Add a node takes it from there."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
             }
             switch media {
             case .loading:
@@ -69,8 +71,12 @@ struct BootMediaView: View {
             .pickerStyle(.segmented)
             Toggle("Secure Boot", isOn: Binding(get: { secureBoot }, set: { set(secureBoot: $0) }))
             ForEach(media.warnings, id: \.self) { warning in
-                Label { Text(verbatim: warning) } icon: { Image(systemName: "info.circle") }
-                    .font(.footnote).foregroundStyle(.secondary)
+                Label {
+                    Text(verbatim: warning)
+                } icon: {
+                    Image(systemName: "info.circle")
+                }
+                .font(.footnote).foregroundStyle(.secondary)
             }
         }
     }
@@ -79,15 +85,25 @@ struct BootMediaView: View {
     private func mediaSections(_ media: BootMedia) -> some View {
         BootMediaCard(
             title: String(localized: "Laptop on the machine's network: run booter"), values: media.booterValues,
-            hint: String(localized: "Serves the network boot (DHCP proxy and TFTP) from a Linux machine of the same network. Then power on the new machine with network boot.")
+            hint: String(
+                localized:
+                    "Serves the network boot (DHCP proxy and TFTP) from a Linux machine of the same network. Then power on the new machine with network boot."
+            )
         )
-        BootMediaCard(title: String(localized: "USB stick or virtual media: ISO"), values: [BootValue(label: "", text: media.iso)])
-        BootMediaCard(title: String(localized: "iPXE or UEFI HTTP boot: script URL"), values: [BootValue(label: "", text: media.ipxe)])
-        BootMediaCard(title: String(localized: "Your own PXE server: kernel, initramfs, command line"), values: media.pxeFileValues)
+        BootMediaCard(
+            title: String(localized: "USB stick or virtual media: ISO"), values: [BootValue(label: "", text: media.iso)]
+        )
+        BootMediaCard(
+            title: String(localized: "iPXE or UEFI HTTP boot: script URL"),
+            values: [BootValue(label: "", text: media.ipxe)])
+        BootMediaCard(
+            title: String(localized: "Your own PXE server: kernel, initramfs, command line"),
+            values: media.pxeFileValues)
         if let omni = media.omni {
             BootMediaCard(
                 title: String(localized: "Omni: join the instance"), values: omni.values,
-                hint: String(localized: "Boots a machine that joins this Omni instance, then shows up among its machines."),
+                hint: String(
+                    localized: "Boots a machine that joins this Omni instance, then shows up among its machines."),
                 sensitive: true
             )
         }

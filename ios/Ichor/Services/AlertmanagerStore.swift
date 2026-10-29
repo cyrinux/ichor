@@ -11,7 +11,8 @@ enum AlertmanagerStore {
 
     static func read(_ fingerprint: String) -> AlertmanagerConfig {
         guard let data = Keychain.read(account(fingerprint)),
-              let config = try? JSONDecoder().decode(AlertmanagerConfig.self, from: data) else { return AlertmanagerConfig() }
+            let config = try? JSONDecoder().decode(AlertmanagerConfig.self, from: data)
+        else { return AlertmanagerConfig() }
         return config
     }
 
@@ -65,7 +66,9 @@ final class AlertsStore {
 
     /// The alerts for the home card, nil when the cluster has no Alertmanager (asked once per key
     /// unless `search` is set).
-    func load(with client: TalosClient, key: String, fingerprint: String, search: Bool = false) async throws -> AMAlerts? {
+    func load(with client: TalosClient, key: String, fingerprint: String, search: Bool = false) async throws
+        -> AMAlerts?
+    {
         if key != self.key { reset(key) }
         if noneFound && !search { return nil }
         guard let source = try await AlertmanagerStore.resolve(fingerprint, with: client) else {

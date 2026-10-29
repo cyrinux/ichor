@@ -17,8 +17,10 @@ struct MaintenanceRunView: View {
                     Label {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Keep Ichor open until the maintenance ends").fontWeight(.semibold)
-                            Text("Ichor drives every step: in the background iOS pauses it, and the maintenance stalls.")
-                                .font(.footnote).foregroundStyle(.secondary)
+                            Text(
+                                "Ichor drives every step: in the background iOS pauses it, and the maintenance stalls."
+                            )
+                            .font(.footnote).foregroundStyle(.secondary)
                         }
                     } icon: {
                         Image(systemName: "iphone").foregroundStyle(.orange)
@@ -47,7 +49,9 @@ struct MaintenanceRunView: View {
             Button("Stop", role: .destructive) { job.requestStop() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The run stops after the current step. \(hostname) stays cordoned: uncordon it from its menu when ready.")
+            Text(
+                "The run stops after the current step. \(hostname) stays cordoned: uncordon it from its menu when ready."
+            )
         }
     }
 
@@ -61,7 +65,11 @@ struct MaintenanceRunView: View {
                     Image(systemName: "checkmark.seal.fill").foregroundStyle(.statusOK)
                 }
             case .failed(let error)?:
-                Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad) }
+                Label {
+                    Text(verbatim: error)
+                } icon: {
+                    Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad)
+                }
             case nil:
                 EmptyView()
             }

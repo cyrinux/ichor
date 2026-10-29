@@ -18,8 +18,10 @@ public struct HelmReleaseSummary: Decodable, Equatable, Hashable, Identifiable, 
 
     public var id: String { "\(namespace)/\(name)" }
 
-    public init(name: String, namespace: String, revision: Int = 1, status: String = "deployed", chart: String = "",
-                chartVersion: String = "", appVersion: String = "", updated: Int64 = 0) {
+    public init(
+        name: String, namespace: String, revision: Int = 1, status: String = "deployed", chart: String = "",
+        chartVersion: String = "", appVersion: String = "", updated: Int64 = 0
+    ) {
         self.name = name
         self.namespace = namespace
         self.revision = revision
@@ -30,7 +32,9 @@ public struct HelmReleaseSummary: Decodable, Equatable, Hashable, Identifiable, 
         self.updated = updated
     }
 
-    private enum CodingKeys: String, CodingKey { case name, namespace, revision, status, chart, chartVersion, appVersion, updated }
+    private enum CodingKeys: String, CodingKey {
+        case name, namespace, revision, status, chart, chartVersion, appVersion, updated
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -107,8 +111,10 @@ public struct HelmReleaseDetail: Decodable, Equatable, Sendable {
     /// Newest first.
     public let history: [HelmRevision]
 
-    public init(summary: HelmReleaseSummary, description: String = "", notes: String = "", values: String = "",
-                manifest: String = "", history: [HelmRevision] = []) {
+    public init(
+        summary: HelmReleaseSummary, description: String = "", notes: String = "", values: String = "",
+        manifest: String = "", history: [HelmRevision] = []
+    ) {
         self.summary = summary
         self.description = description
         self.notes = notes
@@ -137,7 +143,9 @@ public func filterHelmReleases(_ releases: [HelmReleaseSummary], query: String) 
     let needle = query.trimmingCharacters(in: .whitespaces)
     guard !needle.isEmpty else { return releases }
     return releases.filter { release in
-        [release.name, release.namespace, release.chart].contains { $0.range(of: needle, options: .caseInsensitive) != nil }
+        [release.name, release.namespace, release.chart].contains {
+            $0.range(of: needle, options: .caseInsensitive) != nil
+        }
     }
 }
 
@@ -211,8 +219,10 @@ public struct HelmRollbackHook: Decodable, Equatable, Hashable, Identifiable, Se
 
     public var id: String { "\(event)/\(kind)/\(name)" }
 
-    public init(name: String, kind: String, event: String, weight: Int = 0, deletePolicies: [String] = [],
-                error: String = "") {
+    public init(
+        name: String, kind: String, event: String, weight: Int = 0, deletePolicies: [String] = [],
+        error: String = ""
+    ) {
         self.name = name
         self.kind = kind
         self.event = event
@@ -274,11 +284,13 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
     /// The chart's pre- and post-rollback hooks, in Helm's order (event, weight, name).
     public let hooks: [HelmRollbackHook]
 
-    public init(namespace: String = "", name: String = "", from: Int = 0, to: Int = 0, fromChart: String = "",
-                toChart: String = "", fromAppVersion: String = "", toAppVersion: String = "",
-                changes: [HelmRollbackChange] = [], unchanged: Int = 0, fluxOwner: String = "", blockers: [String] = [],
-                force: Bool = false, historyMax: Int = 0, prune: [Int] = [], workloads: Int = 0,
-                hooks: [HelmRollbackHook] = []) {
+    public init(
+        namespace: String = "", name: String = "", from: Int = 0, to: Int = 0, fromChart: String = "",
+        toChart: String = "", fromAppVersion: String = "", toAppVersion: String = "",
+        changes: [HelmRollbackChange] = [], unchanged: Int = 0, fluxOwner: String = "", blockers: [String] = [],
+        force: Bool = false, historyMax: Int = 0, prune: [Int] = [], workloads: Int = 0,
+        hooks: [HelmRollbackHook] = []
+    ) {
         self.namespace = namespace
         self.name = name
         self.from = from
@@ -299,7 +311,8 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, from, to, fromChart, toChart, fromAppVersion, toAppVersion, changes, unchanged, fluxOwner, blockers
+        case namespace, name, from, to, fromChart, toChart, fromAppVersion, toAppVersion, changes, unchanged, fluxOwner,
+            blockers
         case force, historyMax, prune, workloads, hooks
     }
 

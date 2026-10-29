@@ -28,15 +28,19 @@ struct SnapshotProtectionSheet: View {
                     }
                     .pickerStyle(.segmented)
                 } footer: {
-                    Text("The snapshot from \(hostname) contains every Kubernetes Secret. Encrypt it with age: it can then be restored from any Unix machine with the age and talosctl commands.")
+                    Text(
+                        "The snapshot from \(hostname) contains every Kubernetes Secret. Encrypt it with age: it can then be restored from any Unix machine with the age and talosctl commands."
+                    )
                 }
                 switch mode {
                 case .keys: keysSection
                 case .passphrase: passphraseSection
                 case .none:
                     Section {
-                        Text("The snapshot contains every Kubernetes Secret in clear. Anyone with the file can read them: keep it somewhere safe and delete it when no longer needed.")
-                            .foregroundStyle(.statusBad)
+                        Text(
+                            "The snapshot contains every Kubernetes Secret in clear. Anyone with the file can read them: keep it somewhere safe and delete it when no longer needed."
+                        )
+                        .foregroundStyle(.statusBad)
                     }
                 }
             }
@@ -72,7 +76,9 @@ struct SnapshotProtectionSheet: View {
         } header: {
             Text("Public keys, one per line")
         } footer: {
-            Text("An age key (age1…), an SSH key (ssh-ed25519, ssh-rsa, for example ~/.ssh/id_ed25519.pub) or a YubiKey key (age1tag1…, from age-plugin-yubikey). Only the matching private keys can decrypt the snapshot; the phone cannot.")
+            Text(
+                "An age key (age1…), an SSH key (ssh-ed25519, ssh-rsa, for example ~/.ssh/id_ed25519.pub) or a YubiKey key (age1tag1…, from age-plugin-yubikey). Only the matching private keys can decrypt the snapshot; the phone cannot."
+            )
         }
     }
 
@@ -123,7 +129,7 @@ struct SnapshotProtectionSheet: View {
         guard !Task.isCancelled else { return }
         do {
             let checked = try await TalosClient.checkSnapshotRecipients(text)
-            guard !Task.isCancelled else { return } // a newer text is being checked
+            guard !Task.isCancelled else { return }  // a newer text is being checked
             recipients = checked
         } catch {
             guard !Task.isCancelled else { return }

@@ -36,7 +36,7 @@ public struct ClusterInventory: Decodable, Equatable, Sendable {
 /// The catalog categories; one the app does not know is `other`.
 public enum AppCategory: String, CaseIterable, Sendable {
     case system, networking, storage, observability, security, database, messaging, devops,
-         media, home, productivity, ai, web, other
+        media, home, productivity, ai, web, other
 }
 
 public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
@@ -72,7 +72,8 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
 
     public init(
         id: String, name: String, category: AppCategory = .other, icon: String? = nil, remoteIcon: String? = nil,
-        iconURL: String? = nil, known: Bool = true, system: Bool = false, version: String = "", drift: Bool = false, unpinned: Bool = false,
+        iconURL: String? = nil, known: Bool = true, system: Bool = false, version: String = "", drift: Bool = false,
+        unpinned: Bool = false,
         namespaces: [String] = [], nodes: [String] = [], containers: Int = 0, running: Int = 0, memory: UInt64 = 0,
         images: [InventoryImage] = [], pods: [InventoryPod] = []
     ) {

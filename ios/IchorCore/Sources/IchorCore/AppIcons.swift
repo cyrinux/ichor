@@ -48,7 +48,7 @@ public func remoteIconURL(slug: String) -> URL? {
 /// over its 50 MB package limit); empty for an invalid slug.
 public func remoteIconURLs(slug: String) -> [URL] {
     guard let primary = remoteIconURL(slug: slug),
-          let mirror = URL(string: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/\(slug).webp")
+        let mirror = URL(string: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/\(slug).webp")
     else { return [] }
     return [primary, mirror]
 }
@@ -64,12 +64,14 @@ public func customIconSource(_ value: String, remoteIcons: Bool) -> AppIconSourc
         let header = "data:image/\(type);base64,"
         guard value.hasPrefix(header) else { continue }
         guard let data = Data(base64Encoded: String(value.dropFirst(header.count))),
-              !data.isEmpty, data.count <= customIconMaxBytes else { return nil }
+            !data.isEmpty, data.count <= customIconMaxBytes
+        else { return nil }
         return .inline(data)
     }
     guard remoteIcons, value.count <= 2048, value.hasPrefix("https://"),
-          let components = URLComponents(string: value), components.host?.isEmpty == false,
-          components.user == nil, components.password == nil, let url = components.url else { return nil }
+        let components = URLComponents(string: value), components.host?.isEmpty == false,
+        components.user == nil, components.password == nil, let url = components.url
+    else { return nil }
     return .url(url)
 }
 
@@ -79,7 +81,8 @@ public func monogramInitials(_ name: String) -> String {
     let words = name.split { " -_./".contains($0) }
         .map { $0.filter { $0.isLetter || $0.isNumber } }
         .filter { !$0.isEmpty }
-    let initials = words.count >= 2 ? String(words[0].prefix(1) + words[1].prefix(1)) : String(words.first?.prefix(2) ?? "")
+    let initials =
+        words.count >= 2 ? String(words[0].prefix(1) + words[1].prefix(1)) : String(words.first?.prefix(2) ?? "")
     return initials.isEmpty ? "?" : initials.uppercased()
 }
 

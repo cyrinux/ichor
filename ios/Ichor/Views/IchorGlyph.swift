@@ -79,10 +79,11 @@ private struct IchorGlyphShape: Shape {
         }
         path.addCurve(to: CGPoint(x: 256, y: 100), control1: CGPoint(x: 360, y: 144), control2: CGPoint(x: 322, y: 100))
         path.closeSubpath()
-        path.addLines(IchorGlyphShape.points([
-            (162, 184), (256, 210), (350, 184), (344, 232), (302, 250), (280, 250),
-            (280, 350), (232, 350), (232, 250), (210, 250), (168, 232),
-        ]))
+        path.addLines(
+            IchorGlyphShape.points([
+                (162, 184), (256, 210), (350, 184), (344, 232), (302, 250), (280, 250),
+                (280, 350), (232, 350), (232, 250), (210, 250), (168, 232),
+            ]))
         path.closeSubpath()
         return path
     }()
@@ -92,7 +93,8 @@ private struct IchorGlyphShape: Shape {
         path.move(to: CGPoint(x: 256, y: 380))
         path.addCurve(to: CGPoint(x: 214, y: 456), control1: CGPoint(x: 256, y: 380), control2: CGPoint(x: 214, y: 430))
         // The round bottom: from the left point to the right one, through the bottom.
-        path.addRelativeArc(center: CGPoint(x: 256, y: 456), radius: 42, startAngle: .degrees(180), delta: .degrees(-180))
+        path.addRelativeArc(
+            center: CGPoint(x: 256, y: 456), radius: 42, startAngle: .degrees(180), delta: .degrees(-180))
         path.addCurve(to: CGPoint(x: 256, y: 380), control1: CGPoint(x: 298, y: 430), control2: CGPoint(x: 256, y: 380))
         path.closeSubpath()
         return path

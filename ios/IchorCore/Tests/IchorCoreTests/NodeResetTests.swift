@@ -3,10 +3,12 @@ import XCTest
 
 final class NodeResetTests: XCTestCase {
     func testPlanDecoding() throws {
-        let plan = try TalosJSON.decode(NodeResetPlan.self, from: """
-        {"node":"10.0.0.1","hostname":"cp-1","role":"controlplane","etcdMember":{"id":"a1","healthy":true},
-         "lastControlPlane":true,"blockers":["it is the only control plane"],"warnings":[],"userDisks":["/dev/sdb"]}
-        """)
+        let plan = try TalosJSON.decode(
+            NodeResetPlan.self,
+            from: """
+                {"node":"10.0.0.1","hostname":"cp-1","role":"controlplane","etcdMember":{"id":"a1","healthy":true},
+                 "lastControlPlane":true,"blockers":["it is the only control plane"],"warnings":[],"userDisks":["/dev/sdb"]}
+                """)
         XCTAssertEqual(plan.hostname, "cp-1")
         XCTAssertTrue(plan.isControlPlane)
         XCTAssertEqual(plan.etcdMember, NodeResetPlan.Member(id: "a1", healthy: true))
@@ -16,9 +18,11 @@ final class NodeResetTests: XCTestCase {
     }
 
     func testWorkerWithoutMemberOrLists() throws {
-        let plan = try TalosJSON.decode(NodeResetPlan.self, from: """
-        {"node":"10.0.0.5","role":"worker","etcdMember":null,"blockers":null}
-        """)
+        let plan = try TalosJSON.decode(
+            NodeResetPlan.self,
+            from: """
+                {"node":"10.0.0.5","role":"worker","etcdMember":null,"blockers":null}
+                """)
         XCTAssertNil(plan.etcdMember)
         XCTAssertFalse(plan.isControlPlane)
         XCTAssertTrue(plan.allowed)

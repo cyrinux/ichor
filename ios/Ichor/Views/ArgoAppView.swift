@@ -47,17 +47,23 @@ struct ArgoAppView: View {
             if let app = status.app(namespace: namespace, name: name) {
                 content(app, status: status)
             } else {
-                ContentUnavailableView("App not found", systemImage: "questionmark.app",
-                                       description: Text("\(name) is no longer an Argo CD Application of this cluster."))
-                    .themedBackground()
+                ContentUnavailableView(
+                    "App not found", systemImage: "questionmark.app",
+                    description: Text("\(name) is no longer an Argo CD Application of this cluster.")
+                )
+                .themedBackground()
             }
         }
         .gitOpsPolling(key: model.argoKey, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
         .navigationTitle(Text(verbatim: name))
         .clusterScreenTitle(Text(verbatim: name))
         .toolbar {
-            ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .argoApp(namespace: namespace, name: name)) }
-            ToolbarItem(placement: .primaryAction) { PinButton(target: .argoApp(namespace: namespace, name: name), label: name) }
+            ToolbarItem(placement: .primaryAction) {
+                ShareLinkButton(target: .argoApp(namespace: namespace, name: name))
+            }
+            ToolbarItem(placement: .primaryAction) {
+                PinButton(target: .argoApp(namespace: namespace, name: name), label: name)
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .messageAlert($message)
@@ -73,12 +79,15 @@ struct ArgoAppView: View {
         let windows = status.freezeWindows(of: app).map(\.window)
         let ichorWindows = windows.filter { $0.ichor != nil }
         return List {
-            ArgoHero(app: app, busy: busy,
-                     sync: { syncSheet = SyncRequest(resources: []) },
-                     act: { action in Task { await run(action, on: app) } },
-                     terminate: { confirmTerminate = true })
+            ArgoHero(
+                app: app, busy: busy,
+                sync: { syncSheet = SyncRequest(resources: []) },
+                act: { action in Task { await run(action, on: app) } },
+                terminate: { confirmTerminate = true })
             Section {
-                NavigationLink { FluxDiffView(argo: app.namespace, name: app.name) } label: {
+                NavigationLink {
+                    FluxDiffView(argo: app.namespace, name: app.name)
+                } label: {
                     Label("Show diff", systemImage: "plus.forwardslash.minus")
                 }
             } footer: {
@@ -90,21 +99,31 @@ struct ArgoAppView: View {
             }
             GitOpsSourceSection(sources: gitSources, app: .argo(namespace: namespace, name: name))
             // The pull requests opened from the phone for it; a merged one not running yet syncs from here.
-            ProposalsSection(app: .argo(namespace: namespace, name: name), refresh: app.revision) { syncSheet = SyncRequest(resources: []) }
-            ArgoFreezeSection(app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
-                              freeze: { freezeSheet = true },
-                              extend: {
-                                  // The window ending last is the one "until" shows.
-                                  guard let project, let window = ichorWindows.max(by: { $0.endsAt < $1.endsAt }) else { return }
-                                  Task { await freeze(.extend, on: project, options: [ArgoFreezeOptions(minutes: freezeExtendMinutes, window: window.id)]) }
-                              },
-                              unfreeze: { confirmUnfreeze = true })
+            ProposalsSection(app: .argo(namespace: namespace, name: name), refresh: app.revision) {
+                syncSheet = SyncRequest(resources: [])
+            }
+            ArgoFreezeSection(
+                app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
+                freeze: { freezeSheet = true },
+                extend: {
+                    // The window ending last is the one "until" shows.
+                    guard let project, let window = ichorWindows.max(by: { $0.endsAt < $1.endsAt }) else { return }
+                    Task {
+                        await freeze(
+                            .extend, on: project,
+                            options: [ArgoFreezeOptions(minutes: freezeExtendMinutes, window: window.id)])
+                    }
+                },
+                unfreeze: { confirmUnfreeze = true })
             ArgoConditionsSection(app: app, downNodes: downNodes)
             if let op = app.operation {
-                ArgoOperationSection(operation: op, canTerminate: app.canTerminate, app: (namespace: app.namespace, name: app.name)) { confirmTerminate = true }
+                ArgoOperationSection(
+                    operation: op, canTerminate: app.canTerminate, app: (namespace: app.namespace, name: app.name)
+                ) { confirmTerminate = true }
             }
-            ArgoNetworkSection(model: network, downNodes: downNodes, pods: app.unhealthyPods,
-                               openNode: { openNode = $0 }, changed: { Task { await load() } })
+            ArgoNetworkSection(
+                model: network, downNodes: downNodes, pods: app.unhealthyPods,
+                openNode: { openNode = $0 }, changed: { Task { await load() } })
             if !app.resources.isEmpty { timeline(app) }
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             if !app.history.isEmpty { ArgoHistorySection(app: app) { confirmRollback = $0 } }
@@ -117,18 +136,23 @@ struct ArgoAppView: View {
             if selecting { selectionBar(app) }
         }
         .sheet(isPresented: $freezeSheet) {
-            ArgoFreezeSheet(app: app, status: status,
-                            freeze: { project, options in await freeze(.freeze, on: project, options: [options]) },
-                            pauseInstead: app.canChangeSpec && app.autoSync.enabled ? { await run(.autoSyncOff, on: app) } : nil)
+            ArgoFreezeSheet(
+                app: app, status: status,
+                freeze: { project, options in await freeze(.freeze, on: project, options: [options]) },
+                pauseInstead: app.canChangeSpec && app.autoSync.enabled ? { await run(.autoSyncOff, on: app) } : nil)
         }
-        .confirmationDialog(String(localized: "End the freeze?"), isPresented: $confirmUnfreeze, titleVisibility: .visible) {
+        .confirmationDialog(
+            String(localized: "End the freeze?"), isPresented: $confirmUnfreeze, titleVisibility: .visible
+        ) {
             let unfreeze = ichorWindows.map { ArgoFreezeOptions(window: $0.id) }
             if let project {
                 Button(String(localized: "End")) { Task { await freeze(.unfreeze, on: project, options: unfreeze) } }
                 if app.sync == .outOfSync && app.canSync {
                     Button(String(localized: "End and sync now")) {
                         Task {
-                            if await freeze(.unfreeze, on: project, options: unfreeze) { await run(.sync, on: app, options: ArgoSyncOptions(defaultsFor: app)) }
+                            if await freeze(.unfreeze, on: project, options: unfreeze) {
+                                await run(.sync, on: app, options: ArgoSyncOptions(defaultsFor: app))
+                            }
                         }
                     }
                 }
@@ -148,7 +172,10 @@ struct ArgoAppView: View {
         .sheet(item: $confirmRollback) { entry in
             HostnameConfirmationSheet(
                 title: String(localized: "Roll \(app.name) back to \(entry.label)?"),
-                message: String(localized: "Argo CD syncs \(entry.label) now. Auto-sync stays paused, so the app stays on it until you sync again."),
+                message: String(
+                    localized:
+                        "Argo CD syncs \(entry.label) now. Auto-sync stays paused, so the app stays on it until you sync again."
+                ),
                 hostname: app.name,
                 actionTitle: String(localized: "Roll back")
             ) {
@@ -156,8 +183,10 @@ struct ArgoAppView: View {
                 Task { await run(.rollback, on: app, options: ArgoSyncOptions(historyId: entry.id)) }
             }
         }
-        .confirmationDialog(String(localized: "Terminate the sync of \(app.name)?"), isPresented: $confirmTerminate,
-                            titleVisibility: .visible) {
+        .confirmationDialog(
+            String(localized: "Terminate the sync of \(app.name)?"), isPresented: $confirmTerminate,
+            titleVisibility: .visible
+        ) {
             Button("Terminate", role: .destructive) { Task { await run(.terminate, on: app) } }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -211,9 +240,12 @@ struct ArgoAppView: View {
         guard let client = model.client else { return }
         let key = model.argoKey
         // The network graph is read alongside, so the two refresh together.
-        let graph = self.network, appNamespace = self.namespace, appName = self.name
+        let graph = self.network
+        let appNamespace = self.namespace
+        let appName = self.name
         async let traffic: Void = graph.load(with: client, key: key, namespace: appNamespace, name: appName)
-        let cluster = model.activeSummary, store = self.store
+        let cluster = model.activeSummary
+        let store = self.store
         await store.refresh($state, key: key, currentKey: { model.argoKey }) {
             try await store.load(with: client, key: key, cluster: cluster)
         }
@@ -224,7 +256,9 @@ struct ArgoAppView: View {
     /// The Source rows: left out when the sources cannot be read, the rest of the screen stands alone.
     private func loadSources() async {
         guard let client = model.client else { return }
-        if let read = try? await client.gitOpsSource(tool: "argocd", kind: "Application", namespace: namespace, name: name) {
+        if let read = try? await client.gitOpsSource(
+            tool: "argocd", kind: "Application", namespace: namespace, name: name)
+        {
             gitSources = read
         }
     }
@@ -232,10 +266,14 @@ struct ArgoAppView: View {
     /// Sync chosen on this app's alert: the sync sheet, as its Sync button opens it, once the app
     /// is read; nothing when it cannot sync now (an operation runs, for one).
     private func takeAlertAction() {
-        guard let request = NotificationRouter.shared.alertActionRequest, request.isSync(namespace: namespace, name: name),
-              case .loaded(let status, _, _) = state else { return }
+        guard let request = NotificationRouter.shared.alertActionRequest,
+            request.isSync(namespace: namespace, name: name),
+            case .loaded(let status, _, _) = state
+        else { return }
         NotificationRouter.shared.alertActionRequest = nil
-        if let app = status.app(namespace: namespace, name: name), app.canSync { syncSheet = SyncRequest(resources: []) }
+        if let app = status.app(namespace: namespace, name: name), app.canSync {
+            syncSheet = SyncRequest(resources: [])
+        }
     }
 
     /// What ending the freeze puts back (the hand-made changes), and how many apps resume.
@@ -245,7 +283,9 @@ struct ArgoAppView: View {
             lines.append(String(localized: "Argo CD resumes auto-sync and self-heal for the apps of this freeze."))
         } else {
             lines.append(String(localized: "Argo CD will put these back as Git has them:"))
-            lines += app.drifted.prefix(6).map { "\($0.kind) \($0.namespace.isEmpty ? "" : $0.namespace + "/")\($0.name)" }
+            lines += app.drifted.prefix(6).map {
+                "\($0.kind) \($0.namespace.isEmpty ? "" : $0.namespace + "/")\($0.name)"
+            }
             lines.append(String(localized: "Is the fix committed?"))
         }
         if covers > 1 { lines.append(String(localized: "This freeze covers \(covers) apps: they all resume.")) }
@@ -254,7 +294,8 @@ struct ArgoAppView: View {
 
     /// Changes the project's sync windows; true when it went through.
     @discardableResult
-    private func freeze(_ action: ArgoFreezeAction, on project: ArgoProject, options: [ArgoFreezeOptions]) async -> Bool {
+    private func freeze(_ action: ArgoFreezeAction, on project: ArgoProject, options: [ArgoFreezeOptions]) async -> Bool
+    {
         guard let client = model.client else { return false }
         if let failure = await store.freeze(action, on: project, options: options, with: client) {
             message = failure
@@ -278,7 +319,9 @@ struct ArgoAppView: View {
         if failure == nil, action == .sync {
             GitOpsOperationJob.shared.followArgoSync(client: client, namespace: app.namespace, name: app.name)
         }
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
         await load()
     }
 }

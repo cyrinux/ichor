@@ -29,7 +29,10 @@ struct TailscaleView: View {
         List {
             Section { header(ts) }
             if !ts.installed || ts.isEmpty {
-                Section { Text("The Tailscale operator is installed but runs no connector or proxy yet.").foregroundStyle(.secondary) }
+                Section {
+                    Text("The Tailscale operator is installed but runs no connector or proxy yet.").foregroundStyle(
+                        .secondary)
+                }
             } else {
                 if !ts.connectors.isEmpty {
                     Section("Connectors") {
@@ -58,18 +61,23 @@ struct TailscaleView: View {
     @ViewBuilder
     private func header(_ ts: Tailscale) -> some View {
         if !ts.error.isEmpty {
-            Text(verbatim: String(localized: "Some sections could not be read: \(ts.error)")).font(.callout).foregroundStyle(.secondary)
+            Text(verbatim: String(localized: "Some sections could not be read: \(ts.error)")).font(.callout)
+                .foregroundStyle(.secondary)
         }
         if let op = ts.operator {
             let deployment = "\(op.namespace)/\(op.name)"
             let ratio = "\(op.ready)/\(op.desired)"
             HStack(alignment: .top, spacing: 12) {
                 HealthDot(health: op.health).padding(.top, 5)
-                Text(verbatim: [String(localized: "Operator \(deployment)"),
-                                String(localized: "\(ratio) ready"),
-                                op.image]
-                    .filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.callout).foregroundStyle(.secondary).lineLimit(2)
+                Text(
+                    verbatim: [
+                        String(localized: "Operator \(deployment)"),
+                        String(localized: "\(ratio) ready"),
+                        op.image,
+                    ]
+                    .filter { !$0.isEmpty }.joined(separator: " · ")
+                )
+                .font(.callout).foregroundStyle(.secondary).lineLimit(2)
             }
         } else if ts.installed {
             Text("No operator Deployment found: nothing here is reconciled.").font(.callout).foregroundStyle(.secondary)
@@ -109,7 +117,9 @@ private struct RowShell: View {
     var body: some View {
         NavigationLink {
             KubeObjectView(
-                resource: KubeAPIResource(group: TailscaleKind.group, version: version, resource: kind.resource, kind: kind.kind, namespaced: false),
+                resource: KubeAPIResource(
+                    group: TailscaleKind.group, version: version, resource: kind.resource, kind: kind.kind,
+                    namespaced: false),
                 namespace: "",
                 name: name,
             )
@@ -144,16 +154,18 @@ private struct ConnectorRow: View {
 
     var body: some View {
         let c = connector
-        RowShell(kind: .connector, version: version, name: c.name, state: c.state, line: [
-            c.hostname == c.name ? nil : c.hostname,
-            c.routes.isEmpty ? nil : String(localized: "subnet router \(c.routes.joined(separator: ", "))"),
-            c.exitNode ? String(localized: "exit node") : nil,
-            c.appConnector ? String(localized: "app connector") : nil,
-            c.appConnector ? c.appConnectorRoutes.joined(separator: ", ") : nil,
-            c.tailnetIPs.joined(separator: ", "),
-            String(localized: "\(c.devices.count) devices"),
-            c.proxyClass.isEmpty ? nil : String(localized: "proxy class \(c.proxyClass)"),
-        ])
+        RowShell(
+            kind: .connector, version: version, name: c.name, state: c.state,
+            line: [
+                c.hostname == c.name ? nil : c.hostname,
+                c.routes.isEmpty ? nil : String(localized: "subnet router \(c.routes.joined(separator: ", "))"),
+                c.exitNode ? String(localized: "exit node") : nil,
+                c.appConnector ? String(localized: "app connector") : nil,
+                c.appConnector ? c.appConnectorRoutes.joined(separator: ", ") : nil,
+                c.tailnetIPs.joined(separator: ", "),
+                String(localized: "\(c.devices.count) devices"),
+                c.proxyClass.isEmpty ? nil : String(localized: "proxy class \(c.proxyClass)"),
+            ])
     }
 }
 
@@ -164,15 +176,17 @@ private struct ProxyGroupRow: View {
 
     var body: some View {
         let g = group
-        RowShell(kind: .proxyGroup, version: version, name: g.name, state: g.state, line: [
-            g.type,
-            String(localized: "\(g.replicas) replicas"),
-            String(localized: "\(g.devices.count) devices"),
-            g.url,
-            g.proxyClass.isEmpty ? nil : String(localized: "proxy class \(g.proxyClass)"),
-            readiness(g.state.ready),
-            !g.state.ready && g.available ? String(localized: "some proxies running") : nil,
-        ])
+        RowShell(
+            kind: .proxyGroup, version: version, name: g.name, state: g.state,
+            line: [
+                g.type,
+                String(localized: "\(g.replicas) replicas"),
+                String(localized: "\(g.devices.count) devices"),
+                g.url,
+                g.proxyClass.isEmpty ? nil : String(localized: "proxy class \(g.proxyClass)"),
+                readiness(g.state.ready),
+                !g.state.ready && g.available ? String(localized: "some proxies running") : nil,
+            ])
     }
 }
 
@@ -182,10 +196,12 @@ private struct ProxyClassRow: View {
     let version: String
 
     var body: some View {
-        RowShell(kind: .proxyClass, version: version, name: proxyClass.name, state: proxyClass.state, line: [
-            readiness(proxyClass.state.ready),
-            String(localized: "used by \(proxyClass.usedBy)"),
-        ])
+        RowShell(
+            kind: .proxyClass, version: version, name: proxyClass.name, state: proxyClass.state,
+            line: [
+                readiness(proxyClass.state.ready),
+                String(localized: "used by \(proxyClass.usedBy)"),
+            ])
     }
 }
 
@@ -195,9 +211,11 @@ private struct DNSConfigRow: View {
     let version: String
 
     var body: some View {
-        RowShell(kind: .dnsConfig, version: version, name: dns.name, state: dns.state, line: [
-            dns.nameserverIP.isEmpty ? nil : String(localized: "nameserver \(dns.nameserverIP)"),
-            readiness(dns.state.ready),
-        ])
+        RowShell(
+            kind: .dnsConfig, version: version, name: dns.name, state: dns.state,
+            line: [
+                dns.nameserverIP.isEmpty ? nil : String(localized: "nameserver \(dns.nameserverIP)"),
+                readiness(dns.state.ready),
+            ])
     }
 }

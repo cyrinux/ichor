@@ -47,9 +47,11 @@ public struct DriftChange: Codable, Equatable, Identifiable, Sendable {
     public let changed: [DriftPair]
     public var id: String { "\(node)/\(key)" }
 
-    public init(node: String, reference: String, key: String, before: String, after: String,
-                nodeName: String = "", referenceName: String = "",
-                added: [String] = [], removed: [String] = [], changed: [DriftPair] = []) {
+    public init(
+        node: String, reference: String, key: String, before: String, after: String,
+        nodeName: String = "", referenceName: String = "",
+        added: [String] = [], removed: [String] = [], changed: [DriftPair] = []
+    ) {
         self.node = node
         self.reference = reference
         self.key = key
@@ -114,7 +116,8 @@ public extension IncidentEntry {
     var evidenceMetrics: Bottlenecks? {
         if let metrics { return metrics }
         guard let rates = evidenceDetail?["rates"],
-              let data = try? JSONSerialization.data(withJSONObject: rates) else { return nil }
+            let data = try? JSONSerialization.data(withJSONObject: rates)
+        else { return nil }
         return try? JSONDecoder().decode(Bottlenecks.self, from: data)
     }
 }

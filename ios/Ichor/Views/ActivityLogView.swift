@@ -32,13 +32,17 @@ struct ActivityLogView: View {
                 }
                 if !entries.isEmpty {
                     ToolbarItem(placement: .primaryAction) {
-                        Button(role: .destructive) { confirmClear = true } label: {
+                        Button(role: .destructive) {
+                            confirmClear = true
+                        } label: {
                             Image(systemName: "trash").accessibilityLabel(Text("Clear"))
                         }
                     }
                 }
             }
-            .confirmationDialog(String(localized: "Clear the activity log?"), isPresented: $confirmClear, titleVisibility: .visible) {
+            .confirmationDialog(
+                String(localized: "Clear the activity log?"), isPresented: $confirmClear, titleVisibility: .visible
+            ) {
                 Button(String(localized: "Clear"), role: .destructive) { Task { await clear() } }
                 Button("Cancel", role: .cancel) {}
             } message: {
@@ -88,10 +92,13 @@ struct ActivityLogView: View {
                 ContentUnavailableView {
                     Label("Activity", systemImage: "clock.arrow.circlepath")
                 } description: {
-                    Text("No action recorded yet. Every change Ichor makes to a cluster is listed here for 90 days, on this device only.")
+                    Text(
+                        "No action recorded yet. Every change Ichor makes to a cluster is listed here for 90 days, on this device only."
+                    )
                 }
             } else if rows.isEmpty {
-                ContentUnavailableView("No action matches these filters.", systemImage: "line.3.horizontal.decrease.circle")
+                ContentUnavailableView(
+                    "No action matches these filters.", systemImage: "line.3.horizontal.decrease.circle")
             }
         }
     }
@@ -104,21 +111,29 @@ struct ActivityLogView: View {
                 FilterChip(label: String(localized: "All"), count: all.count, selected: filter == ActivityFilter()) {
                     filter = ActivityFilter()
                 }
-                FilterChip(label: String(localized: "Failed"), count: all.filter(\.wentWrong).count, selected: filter.failedOnly) {
+                FilterChip(
+                    label: String(localized: "Failed"), count: all.filter(\.wentWrong).count,
+                    selected: filter.failedOnly
+                ) {
                     filter.failedOnly.toggle()
                 }
                 // Only a choice when there is more than one.
                 if clusters.count > 1 {
                     ForEach(clusters, id: \.self) { name in
-                        FilterChip(label: name, count: all.filter { $0.cluster == name }.count, selected: filter.cluster == name) {
+                        FilterChip(
+                            label: name, count: all.filter { $0.cluster == name }.count,
+                            selected: filter.cluster == name
+                        ) {
                             filter.cluster = filter.cluster == name ? nil : name
                         }
                     }
                 }
                 if actions.count > 1 {
                     ForEach(actions, id: \.self) { action in
-                        FilterChip(label: ActivityEntry.label(of: action), count: all.filter { $0.action == action }.count,
-                                   selected: filter.action == action) {
+                        FilterChip(
+                            label: ActivityEntry.label(of: action), count: all.filter { $0.action == action }.count,
+                            selected: filter.action == action
+                        ) {
                             filter.action = filter.action == action ? nil : action
                         }
                     }
@@ -146,10 +161,13 @@ private struct ActivityRow: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Image(systemName: entry.failed ? "exclamationmark.circle" : entry.partial ? "exclamationmark.triangle" : "checkmark.circle")
-                .foregroundStyle(entry.failed ? Color.statusBad : entry.partial ? Color.statusWarn : Color.statusOK)
-                .accessibilityLabel(entry.partial ? Text("Partly done") : Text("Failed"))
-                .accessibilityHidden(!entry.wentWrong)
+            Image(
+                systemName: entry.failed
+                    ? "exclamationmark.circle" : entry.partial ? "exclamationmark.triangle" : "checkmark.circle"
+            )
+            .foregroundStyle(entry.failed ? Color.statusBad : entry.partial ? Color.statusWarn : Color.statusOK)
+            .accessibilityLabel(entry.partial ? Text("Partly done") : Text("Failed"))
+            .accessibilityHidden(!entry.wentWrong)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: [entry.actionLabel, entry.target].filter { !$0.isEmpty }.joined(separator: " · "))
                     .lineLimit(2)
@@ -161,7 +179,8 @@ private struct ActivityRow: View {
                     Text("Partly done").font(.caption.weight(.semibold)).foregroundStyle(Color.statusWarn)
                 }
                 if !entry.error.isEmpty {
-                    Text(verbatim: entry.error).font(.caption).foregroundStyle(entry.partial ? Color.statusWarn : Color.statusBad)
+                    Text(verbatim: entry.error).font(.caption).foregroundStyle(
+                        entry.partial ? Color.statusWarn : Color.statusBad)
                 }
             }
         }

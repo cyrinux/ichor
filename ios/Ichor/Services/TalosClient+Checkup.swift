@@ -17,7 +17,8 @@ extension TalosClient {
     /// The events of the `kind` named `name`, newest first; with an empty `kind`, those of `name`
     /// and of what it owns by name (a Deployment's ReplicaSets and pods).
     func kubeEvents(namespace: String, kind: String, name: String) async throws -> [KubeEvent] {
-        let list: KubeEventList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        let list: KubeEventList = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeEvents(config, context, kubeServer, namespace, kind, name, $0)
         }
         return list.events

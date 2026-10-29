@@ -3,10 +3,10 @@ import XCTest
 
 final class ServiceAccountTemplatesTests: XCTestCase {
     private let json = """
-    [{"id":"read","yaml":"kind: ServiceAccount","apply":"kubectl apply -f ichor-phone.yaml","kubeconfig":"NS=ichor"},
-     {"id":"future","yaml":"","apply":"","kubeconfig":""},
-     {"id":"namespace","yaml":"kind: RoleBinding","apply":"kubectl apply","kubeconfig":"NS=ichor"}]
-    """
+        [{"id":"read","yaml":"kind: ServiceAccount","apply":"kubectl apply -f ichor-phone.yaml","kubeconfig":"NS=ichor"},
+         {"id":"future","yaml":"","apply":"","kubeconfig":""},
+         {"id":"namespace","yaml":"kind: RoleBinding","apply":"kubectl apply","kubeconfig":"NS=ichor"}]
+        """
 
     func testDecodesInOrderAndDropsUnknownIds() throws {
         let templates = try TalosJSON.decode([ServiceAccountTemplate].self, from: json)

@@ -6,11 +6,13 @@ final class ClusterMenuItemsTests: XCTestCase {
 
     func testTalosAdminGetsEveryGroupInOrder() {
         let admin = ContextSummary(name: "admin@lab", roles: ["os:admin"])
-        XCTAssertEqual(clusterMenuGroups(context: admin, canSwitch: true), [
-            [.switchCluster, .manage],
-            [.upgradeCluster, .upgradeKubernetes, .addNode, .updates, .runbooks],
-            share,
-        ])
+        XCTAssertEqual(
+            clusterMenuGroups(context: admin, canSwitch: true),
+            [
+                [.switchCluster, .manage],
+                [.upgradeCluster, .upgradeKubernetes, .addNode, .updates, .runbooks],
+                share,
+            ])
     }
 
     func testTalosReaderCannotUpgrade() {
@@ -20,16 +22,20 @@ final class ClusterMenuItemsTests: XCTestCase {
 
     func testOmniUpgradesAndAddsANode() {
         let omni = ContextSummary(name: "omni-lab", omni: true)
-        XCTAssertEqual(clusterMenuGroups(context: omni, canSwitch: false), [
-            [.manage],
-            [.upgradeCluster, .upgradeKubernetes, .addNode, .updates, .runbooks],
-            share,
-        ])
+        XCTAssertEqual(
+            clusterMenuGroups(context: omni, canSwitch: false),
+            [
+                [.manage],
+                [.upgradeCluster, .upgradeKubernetes, .addNode, .updates, .runbooks],
+                share,
+            ])
     }
 
     func testKubeconfigClusterOperatesWithRunbooksOnly() {
         let kube = ContextSummary(name: "kind-dev", kind: ContextKind.kube)
-        XCTAssertEqual(clusterMenuGroups(context: kube, canSwitch: true), [[.switchCluster, .manage], [.updates, .runbooks], share])
+        XCTAssertEqual(
+            clusterMenuGroups(context: kube, canSwitch: true),
+            [[.switchCluster, .manage], [.updates, .runbooks], share])
     }
 
     func testNoActiveClusterHasNoIncidentSummary() {

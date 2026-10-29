@@ -148,7 +148,8 @@ struct LinkRow: View {
                     Text(verbatim: link.kind).font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
-                StatusPill(label: link.state, color: link.isUp ? .green : link.state.lowercased() == "down" ? .red : .gray)
+                StatusPill(
+                    label: link.state, color: link.isUp ? .green : link.state.lowercased() == "down" ? .red : .gray)
             }
             Text(verbatim: details).font(.caption.monospaced()).foregroundStyle(.secondary)
         }

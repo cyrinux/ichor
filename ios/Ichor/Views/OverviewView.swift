@@ -65,134 +65,143 @@ struct OverviewView: View {
 
     var body: some View {
         content
-        .navigationTitle(model.activeLabel)
-        // Shown by the title once it is inline (scrolled); before that, under ⋯ → Cluster.
-        .toolbarTitleMenu { ClusterTitleMenu(path: $path, shareIncident: { sharingIncident = true }) }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if (model.summary?.contexts.count ?? 0) > 1 {
-                ClusterBar { path.append(.clusters) }
+            .navigationTitle(model.activeLabel)
+            // Shown by the title once it is inline (scrolled); before that, under ⋯ → Cluster.
+            .toolbarTitleMenu { ClusterTitleMenu(path: $path, shareIncident: { sharingIncident = true }) }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if (model.summary?.contexts.count ?? 0) > 1 {
+                    ClusterBar { path.append(.clusters) }
+                }
             }
-        }
-        .toolbar { overviewToolbar }
-        .sheet(isPresented: $customizing) { OverviewEditorSheet(OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards) }
-        .sheet(isPresented: $sharingIncident) {
-            if let context = model.activeSummary {
-                IncidentSummarySheet(context: context.name, cluster: monitorClusterKey(context))
+            .toolbar { overviewToolbar }
+            .sheet(isPresented: $customizing) {
+                OverviewEditorSheet(
+                    OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards)
             }
-        }
-        // Reloads with the screenshot mode too, dropping what was loaded with the old names.
-        .task(id: loadID) { await load() }
-        .watchesHistory(look, cluster: model.activeSummary.map(monitorClusterKey) ?? "", id: loadID)
-        // Live CPU and memory while the overview is on screen, the app active, the setting on
-        // and a node answers; fewer samples on a large cluster, most of them of the focus nodes only.
-        .task(id: liveID) {
-            guard liveStats else {
-                ClusterLiveStore.shared.clear()
-                return
+            .sheet(isPresented: $sharingIncident) {
+                if let context = model.activeSummary {
+                    IncidentSummarySheet(context: context.name, cluster: monitorClusterKey(context))
+                }
             }
-            guard visible, scenePhase == .active, !fromMonitor, case .loaded(let overview, _, _) = state, !overview.partial,
-                  overview.outage == nil, let client = model.client else { return }
-            // Above the dense threshold most samples ask only the problem nodes and the rows on screen.
-            await ClusterLiveStore.shared.poll(with: client, key: loadID, nodes: overview.nodes.count, focus: liveFocus(overview))
-        }
-        .onAppear { visible = true }
-        .onDisappear { visible = false }
-        // The demo tour: on to the next coach mark as each one is closed (DemoTour.follow).
-        .task(id: tourID) {
-            guard tourActive, let available = tourAvailable else { return }
-            await DemoTour.follow(available: available)
-        }
-        .task(id: tourID) {
-            guard tourActive else { return }
-            await DemoTour.watchSwitcher { tourShowsSwitcher = $0 }
-        }
-        .alert("Find the public IPs?", isPresented: $confirmDetectIPs) {
-            Button("Find") { detectPublicIPs() }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text(publicIPDetectionNotice)
-        }
-        .alert("Public IPs", isPresented: $detectIPsError.isPresent()) {
-            Button("OK") {}
-        } message: {
-            Text(verbatim: detectIPsError ?? "")
-        }
-        // Nothing answered: try again on a timer, not only on a pull to refresh.
-        // Keyed on the cluster only: a retry that succeeds must not cancel its own load().
-        .task(id: loadID) {
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(unreachableRetrySeconds))
-                if Task.isCancelled { return }
-                if outage != nil { await load() }
+            // Reloads with the screenshot mode too, dropping what was loaded with the old names.
+            .task(id: loadID) { await load() }
+            .watchesHistory(look, cluster: model.activeSummary.map(monitorClusterKey) ?? "", id: loadID)
+            // Live CPU and memory while the overview is on screen, the app active, the setting on
+            // and a node answers; fewer samples on a large cluster, most of them of the focus nodes only.
+            .task(id: liveID) {
+                guard liveStats else {
+                    ClusterLiveStore.shared.clear()
+                    return
+                }
+                guard visible, scenePhase == .active, !fromMonitor, case .loaded(let overview, _, _) = state,
+                    !overview.partial,
+                    overview.outage == nil, let client = model.client
+                else { return }
+                // Above the dense threshold most samples ask only the problem nodes and the rows on screen.
+                await ClusterLiveStore.shared.poll(
+                    with: client, key: loadID, nodes: overview.nodes.count, focus: liveFocus(overview))
             }
-        }
-        // A new outage shows the notice again, even if the nodes were shown for the last one.
-        .onChange(of: outage != nil) { _, down in
-            if down { showNodesAnyway = false }
-        }
-        // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
-        .task {
-            for await _ in NetworkChanges.stream() {
-                if case .failed = state { await load() } else if outage != nil { await load() }
+            .onAppear { visible = true }
+            .onDisappear { visible = false }
+            // The demo tour: on to the next coach mark as each one is closed (DemoTour.follow).
+            .task(id: tourID) {
+                guard tourActive, let available = tourAvailable else { return }
+                await DemoTour.follow(available: available)
             }
-        }
-        .onChange(of: model.dataGeneration) {
-            state = .loading
-            fromMonitor = false
-            discovered = []
-            inventory = .loading
-            dataServices = nil
-            dataPlugins = []
-            toolPlugins = []
-            argo = nil
-            flux = nil
-            alerts = nil
-        }
-        // The Talos update section shown again: its check was not made while hidden.
-        .onChange(of: layout.hidden.contains(.talosUpdate)) { _, hidden in
-            guard !hidden, case .loaded(let overview, _, _) = state else { return }
-            Task { await checkTalosUpdate(overview, id: loadID) }
-        }
-        // Another cluster: never its name over the previous one's nodes.
-        .onChange(of: model.activeContext) {
-            state = .loading
-            fromMonitor = false
-            discovered = []
-            inventory = .loading
-            dataServices = nil
-            dataPlugins = []
-            toolPlugins = []
-            argo = nil
-            flux = nil
-            alerts = nil
-        }
-        .sheet(isPresented: $showDiscovered) {
-            let context = model.activeContext
-            DiscoveredNodesSheet(nodes: discovered) { nodes in
-                try await model.addNodes(nodes.map(\.address))
-            } notNow: {
-                model.dismissNodes(discovered, of: context)
-                discovered = discovered.filter { !model.dismissedNodes(of: context).contains($0.address) }
+            .task(id: tourID) {
+                guard tourActive else { return }
+                await DemoTour.watchSwitcher { tourShowsSwitcher = $0 }
             }
-        }
-        // After an update (and the unlock: the overview is not shown before): what changed
-        // since the build launched last time. The build is remembered once the notes are closed.
-        .task {
-            let releases = ChangelogStore.pendingWhatsNew()
-            if !releases.isEmpty { whatsNew = WhatsNewContent(releases: releases) }
-        }
-        .sheet(item: $whatsNew, onDismiss: {
-            ChangelogStore.storeCurrentBuild()
-            if openChangelog {
-                openChangelog = false
-                path.append(.changelog)
+            .alert("Find the public IPs?", isPresented: $confirmDetectIPs) {
+                Button("Find") { detectPublicIPs() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(publicIPDetectionNotice)
             }
-        }) { content in
-            WhatsNewSheet(content: content) {
-                openChangelog = true
-                whatsNew = nil
+            .alert("Public IPs", isPresented: $detectIPsError.isPresent()) {
+                Button("OK") {}
+            } message: {
+                Text(verbatim: detectIPsError ?? "")
             }
-        }
+            // Nothing answered: try again on a timer, not only on a pull to refresh.
+            // Keyed on the cluster only: a retry that succeeds must not cancel its own load().
+            .task(id: loadID) {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(unreachableRetrySeconds))
+                    if Task.isCancelled { return }
+                    if outage != nil { await load() }
+                }
+            }
+            // A new outage shows the notice again, even if the nodes were shown for the last one.
+            .onChange(of: outage != nil) { _, down in
+                if down { showNodesAnyway = false }
+            }
+            // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
+            .task {
+                for await _ in NetworkChanges.stream() {
+                    if case .failed = state { await load() } else if outage != nil { await load() }
+                }
+            }
+            .onChange(of: model.dataGeneration) {
+                state = .loading
+                fromMonitor = false
+                discovered = []
+                inventory = .loading
+                dataServices = nil
+                dataPlugins = []
+                toolPlugins = []
+                argo = nil
+                flux = nil
+                alerts = nil
+            }
+            // The Talos update section shown again: its check was not made while hidden.
+            .onChange(of: layout.hidden.contains(.talosUpdate)) { _, hidden in
+                guard !hidden, case .loaded(let overview, _, _) = state else { return }
+                Task { await checkTalosUpdate(overview, id: loadID) }
+            }
+            // Another cluster: never its name over the previous one's nodes.
+            .onChange(of: model.activeContext) {
+                state = .loading
+                fromMonitor = false
+                discovered = []
+                inventory = .loading
+                dataServices = nil
+                dataPlugins = []
+                toolPlugins = []
+                argo = nil
+                flux = nil
+                alerts = nil
+            }
+            .sheet(isPresented: $showDiscovered) {
+                let context = model.activeContext
+                DiscoveredNodesSheet(nodes: discovered) { nodes in
+                    try await model.addNodes(nodes.map(\.address))
+                } notNow: {
+                    model.dismissNodes(discovered, of: context)
+                    discovered = discovered.filter { !model.dismissedNodes(of: context).contains($0.address) }
+                }
+            }
+            // After an update (and the unlock: the overview is not shown before): what changed
+            // since the build launched last time. The build is remembered once the notes are closed.
+            .task {
+                let releases = ChangelogStore.pendingWhatsNew()
+                if !releases.isEmpty { whatsNew = WhatsNewContent(releases: releases) }
+            }
+            .sheet(
+                item: $whatsNew,
+                onDismiss: {
+                    ChangelogStore.storeCurrentBuild()
+                    if openChangelog {
+                        openChangelog = false
+                        path.append(.changelog)
+                    }
+                }
+            ) { content in
+                WhatsNewSheet(content: content) {
+                    openChangelog = true
+                    whatsNew = nil
+                }
+            }
     }
 
     /// The nodes and cards, or why there are none: no endpoint yet, or no node answering.
@@ -216,7 +225,8 @@ struct OverviewView: View {
                     } else {
                         // Two columns on a wide iPad (OverviewColumns); a narrow Split View keeps one.
                         GeometryReader { geometry in
-                            let columns = OverviewColumns.count(width: geometry.size.width, regularPad: ListDetailLayout.isSplit(sizeClass))
+                            let columns = OverviewColumns.count(
+                                width: geometry.size.width, regularPad: ListDetailLayout.isSplit(sizeClass))
                             Group {
                                 if columns == 2 {
                                     let split = OverviewColumns.split(layout.visible)
@@ -254,9 +264,13 @@ struct OverviewView: View {
             ForEach(cards) { card in section(card, overview: overview) }
             // The Talos update section alone, with no release to offer, leaves the list as empty
             // (the Pinned one too, without pins).
-            if leading, layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate || $0 == .pinned && pins.isEmpty }) {
+            if leading,
+                layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate || $0 == .pinned && pins.isEmpty })
+            {
                 Section {
-                    Button { customizing = true } label: {
+                    Button {
+                        customizing = true
+                    } label: {
                         Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
                     }
                 }
@@ -290,28 +304,49 @@ struct OverviewView: View {
             // shows no title.
             // Optional: only once turned on in the settings.
             if ai.enabled {
-                Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
+                Button {
+                    path.append(Route.diagnosis(note: ""))
+                } label: {
+                    Label("AI diagnosis", systemImage: "sparkles")
+                }
             }
             // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
             ForEach(barIcons) { action in
-                Button { path.append(route(action)) } label: {
-                    Label { action.title } icon: { Image(systemName: action.systemImage) }
+                Button {
+                    path.append(route(action))
+                } label: {
+                    Label {
+                        action.title
+                    } icon: {
+                        Image(systemName: action.systemImage)
+                    }
                 }
                 .disabled(!enabled(action))
-                .demoTourTip(action == .settings ? .settings : .actions,
-                             active: tourActive && (action == .settings || action == tourActionsAnchor))
+                .demoTourTip(
+                    action == .settings ? .settings : .actions,
+                    active: tourActive && (action == .settings || action == tourActionsAnchor))
             }
             Menu {
                 let menu = bar.menu.filter(offered)
                 ForEach(menu) { action in
-                    Button { path.append(route(action)) } label: {
-                        Label { action.title } icon: { Image(systemName: action.systemImage) }
+                    Button {
+                        path.append(route(action))
+                    } label: {
+                        Label {
+                            action.title
+                        } icon: {
+                            Image(systemName: action.systemImage)
+                        }
                     }
                     .disabled(!enabled(action))
                 }
                 if !menu.isEmpty { Divider() }
                 ClusterSubmenu(path: $path, shareIncident: { sharingIncident = true })
-                Button { customizing = true } label: { Label("Customize overview", systemImage: "pencil") }
+                Button {
+                    customizing = true
+                } label: {
+                    Label("Customize overview", systemImage: "pencil")
+                }
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
@@ -328,9 +363,10 @@ struct OverviewView: View {
         switch card {
         case .pinned:
             if !pins.isEmpty {
-                PinnedSection(pins: pins.pins, nodes: overview.nodes, argo: argoStatus, flux: fluxStatus,
-                              masked: model.privacyMask, open: { open($0, overview: overview) },
-                              unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
+                PinnedSection(
+                    pins: pins.pins, nodes: overview.nodes, argo: argoStatus, flux: fluxStatus,
+                    masked: model.privacyMask, open: { open($0, overview: overview) },
+                    unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
             }
         case .talosUpdate:
             if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
@@ -345,17 +381,29 @@ struct OverviewView: View {
                 )
                 // The card's two actions as named rows; the card itself opens nothing.
                 NavigationLink(value: Route.insights) {
-                    Label { Text("Insights") } icon: { Image(systemName: "chart.xyaxis.line") }
+                    Label {
+                        Text("Insights")
+                    } icon: {
+                        Image(systemName: "chart.xyaxis.line")
+                    }
                 }
                 // Capacity reads pods and nodes through the admin kubeconfig, as the workloads do.
                 if model.allows(.workloads) {
                     NavigationLink(value: Route.capacity) {
-                        Label { Text(verbatim: CapacityText.capacityTitle) } icon: { Image(systemName: "gauge.with.dots.needle.33percent") }
+                        Label {
+                            Text(verbatim: CapacityText.capacityTitle)
+                        } icon: {
+                            Image(systemName: "gauge.with.dots.needle.33percent")
+                        }
                     }
                 }
                 // The cluster's own Git repository, once one is saved (the demo has one).
                 ClusterRepoToolLink {
-                    Label { Text("Repository") } icon: { Image(systemName: "folder.badge.gearshape") }
+                    Label {
+                        Text("Repository")
+                    } icon: {
+                        Image(systemName: "folder.badge.gearshape")
+                    }
                 }
             } header: {
                 if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
@@ -364,7 +412,9 @@ struct OverviewView: View {
             AppsCard(state: inventory, hostnames: hostnames, argo: argoStatus, path: $path)
         case .dataServices:
             if let dataServices {
-                DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames, plugins: dataPlugins)
+                DataServicesSection(
+                    state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames,
+                    plugins: dataPlugins)
             }
         case .argoCD:
             if let argo {
@@ -375,16 +425,19 @@ struct OverviewView: View {
                 FluxSection(state: flux, app: inventoryApps[fluxCatalogID], downNodes: overview.downHostnames)
             }
         case .nodes:
-            OverviewNodesSection(overview: overview, expanded: $nodesExpanded, tourActive: tourActive,
-                                 tourNode: tourActive ? tourDegradedNode(overview)?.node : nil,
-                                 canDetectIPs: canDetectIPs(overview), detectIPs: { confirmDetectIPs = true }, path: $path)
+            OverviewNodesSection(
+                overview: overview, expanded: $nodesExpanded, tourActive: tourActive,
+                tourNode: tourActive ? tourDegradedNode(overview)?.node : nil,
+                canDetectIPs: canDetectIPs(overview), detectIPs: { confirmDetectIPs = true }, path: $path)
         case .timeDrift:
             // Re-checked with every overview refresh (the load time is the task id).
             TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
         case .alerts:
             if let alerts { AlertsSection(state: alerts) }
         case .tools:
-            OverviewKubeTools(dataServices: dataServices, plugins: toolPlugins, downNodes: overview.downHostnames, refreshID: loadedAt)
+            OverviewKubeTools(
+                dataServices: dataServices, plugins: toolPlugins, downNodes: overview.downHostnames, refreshID: loadedAt
+            )
         }
     }
 
@@ -572,7 +625,8 @@ struct OverviewView: View {
         guard let client = model.client else { return }
         StartupTrace.markOnce("overview load start")
         // Nothing on screen: the last known overview (when kept) while this one loads.
-        if case .loaded = state {} else {
+        if case .loaded = state {
+        } else {
             state = model.seeded(LoadState<ClusterOverview>.loading, from: .overview)
             if case .loaded = state { StartupTrace.markOnce("overview first Loaded", detail: "(last known)") }
         }
@@ -653,7 +707,8 @@ struct OverviewView: View {
     /// Not asked (an internet call) for the demo cluster, or while its section is hidden.
     private func checkTalosUpdate(_ overview: ClusterOverview, id: String) async {
         let unasked = model.activeSummary?.demo == true || layout.hidden.contains(.talosUpdate)
-        let info = unasked
+        let info =
+            unasked
             ? nil : await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
         guard id == loadID else { return }
         update = info
@@ -662,7 +717,9 @@ struct OverviewView: View {
     /// `fetched` with the nodes that stopped answering filled in from the overview on screen
     /// (see mergeLastKnown), kept as last known while a node answers: an outage leaves the
     /// stored one, with its time, as it is.
-    private func merged(_ fetched: LoadState<ClusterOverview>, for target: LastKnownTarget?) -> LoadState<ClusterOverview> {
+    private func merged(_ fetched: LoadState<ClusterOverview>, for target: LastKnownTarget?) -> LoadState<
+        ClusterOverview
+    > {
         guard case .loaded(let overview, let at, _) = fetched else { return fetched }
         var previous: ClusterOverview?
         var previousAt = at

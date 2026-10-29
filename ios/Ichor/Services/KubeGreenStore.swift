@@ -25,7 +25,9 @@ final class KubeGreenStore {
 
     /// The namespace's state if it was read for key within the last minute, else nil.
     func status(namespace: String, key: String) -> KubeGreenNamespace? {
-        guard let entry = entries[Self.id(namespace, key)], Date().timeIntervalSince(entry.at) < Self.fresh else { return nil }
+        guard let entry = entries[Self.id(namespace, key)], Date().timeIntervalSince(entry.at) < Self.fresh else {
+            return nil
+        }
         return entry.value
     }
 

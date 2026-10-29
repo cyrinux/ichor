@@ -71,9 +71,11 @@ public struct ConfigNode: Decodable, Equatable, Identifiable, Sendable {
     public var isContainer: Bool { type == "object" || type == "array" }
     public var isRedacted: Bool { redacted == true }
 
-    public init(key: String, path: [String], type: String, value: String? = nil, title: String? = nil,
-                description: String? = nil, enum: [String]? = nil, redacted: Bool? = nil, children: [ConfigNode]? = nil,
-                addable: [ConfigAddable]? = nil, freeKeyType: String? = nil, itemType: String? = nil) {
+    public init(
+        key: String, path: [String], type: String, value: String? = nil, title: String? = nil,
+        description: String? = nil, enum: [String]? = nil, redacted: Bool? = nil, children: [ConfigNode]? = nil,
+        addable: [ConfigAddable]? = nil, freeKeyType: String? = nil, itemType: String? = nil
+    ) {
         self.key = key
         self.path = path
         self.type = type

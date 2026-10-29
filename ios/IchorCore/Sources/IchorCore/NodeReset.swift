@@ -32,8 +32,10 @@ public struct NodeResetPlan: Decodable, Equatable, Sendable {
     /// The disks other than the system disk, as /dev paths.
     public let userDisks: [String]
 
-    public init(node: String = "", hostname: String = "", role: String = "worker", etcdMember: Member? = nil,
-                lastControlPlane: Bool = false, blockers: [String] = [], warnings: [String] = [], userDisks: [String] = []) {
+    public init(
+        node: String = "", hostname: String = "", role: String = "worker", etcdMember: Member? = nil,
+        lastControlPlane: Bool = false, blockers: [String] = [], warnings: [String] = [], userDisks: [String] = []
+    ) {
         self.node = node
         self.hostname = hostname
         self.role = role

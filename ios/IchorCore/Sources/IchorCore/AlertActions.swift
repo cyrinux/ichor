@@ -119,7 +119,8 @@ public struct AlertActionRequest: Equatable, Hashable, Sendable {
     /// Sync of the Argo CD app `namespace`/`name`.
     public func isSync(namespace: String, name: String) -> Bool {
         let app = GitOpsSubject(key: subject)
-        return action == .sync && prefix == "gitops" && app.tool == "argocd" && app.namespace == namespace && app.name == name
+        return action == .sync && prefix == "gitops" && app.tool == "argocd" && app.namespace == namespace
+            && app.name == name
     }
 
     /// Reconcile of the Flux object `kind` `namespace`/`name`.

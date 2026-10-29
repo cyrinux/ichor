@@ -42,7 +42,9 @@ struct SopsWarningText: View {
     var body: some View {
         let recipients = warning.rule?.recipients.map { "\($0.type) \($0.short)" }.joined(separator: ", ") ?? ""
         Label {
-            Text("This path is encrypted by SOPS in this repository (rule \(warning.rule?.pathRegex ?? ""), recipients \(recipients.isEmpty ? "-" : recipients)): \(sopsWhat(warning)) would be committed in clear text.")
+            Text(
+                "This path is encrypted by SOPS in this repository (rule \(warning.rule?.pathRegex ?? ""), recipients \(recipients.isEmpty ? "-" : recipients)): \(sopsWhat(warning)) would be committed in clear text."
+            )
         } icon: {
             Image(systemName: "lock.open.trianglebadge.exclamationmark")
         }

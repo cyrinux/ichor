@@ -39,8 +39,10 @@ public struct PluginDetectItem: Decodable, Equatable, Sendable, Identifiable {
     /// The tile of an active plugin; nil otherwise.
     public let summary: PluginSummary?
 
-    public init(id: String, name: String = "", icon: String = "", category: String = pluginCategoryDataServices,
-                screen: String = "", active: Bool = true, detectedVia: String = "", summary: PluginSummary? = nil) {
+    public init(
+        id: String, name: String = "", icon: String = "", category: String = pluginCategoryDataServices,
+        screen: String = "", active: Bool = true, detectedVia: String = "", summary: PluginSummary? = nil
+    ) {
         self.id = id
         self.name = name
         self.icon = icon
@@ -97,7 +99,9 @@ public struct PluginCatalog: Decodable, Equatable, Sendable {
     public func kindOf(_ pluginID: String, _ ref: PluginRef) -> String {
         if !ref.kind.isEmpty { return ref.kind }
 
-        return items.first { $0.id == pluginID }?.resources.first { $0.group == ref.group && $0.resource == ref.resource }?.kind ?? ""
+        return items.first { $0.id == pluginID }?.resources.first {
+            $0.group == ref.group && $0.resource == ref.resource
+        }?.kind ?? ""
     }
 
     /// The built-in plugins: the app's own, read-only in Settings.

@@ -4,31 +4,36 @@ import XCTest
 final class StorageTrendTests: XCTestCase {
     /// The Go contract's sample (history_forecast.go).
     private let sample = #"""
-    {"volumes":[
-      {"key":"10.0.0.1|EPHEMERAL","name":"EPHEMERAL","node":"10.0.0.1",
-       "usedPercent":56,"latestAt":1780000000000,"slopePerDay":2,
-       "daysToFull":22,"daysToCritical":19.5,
-       "confidence":"high","points":37,"spanHours":72},
-      {"key":"10.0.0.1|STATE","name":"STATE","node":"10.0.0.1",
-       "usedPercent":40,"latestAt":1780000000000,"slopePerDay":0,
-       "confidence":"low","points":37,"spanHours":72}
-    ]}
-    """#
+        {"volumes":[
+          {"key":"10.0.0.1|EPHEMERAL","name":"EPHEMERAL","node":"10.0.0.1",
+           "usedPercent":56,"latestAt":1780000000000,"slopePerDay":2,
+           "daysToFull":22,"daysToCritical":19.5,
+           "confidence":"high","points":37,"spanHours":72},
+          {"key":"10.0.0.1|STATE","name":"STATE","node":"10.0.0.1",
+           "usedPercent":40,"latestAt":1780000000000,"slopePerDay":0,
+           "confidence":"low","points":37,"spanHours":72}
+        ]}
+        """#
 
     private let eph = "192.0.2.20|EPHEMERAL"
     private let hosts = ["192.0.2.20": "demo-worker-1"]
 
-    private func row(critical: Double?, full: Double? = nil, high: Bool = true, used: Double = 80,
-                     slope: Double = 4) -> HistoryForecast {
+    private func row(
+        critical: Double?, full: Double? = nil, high: Bool = true, used: Double = 80,
+        slope: Double = 4
+    ) -> HistoryForecast {
         HistoryForecast(volumes: [
-            VolumeForecast(key: eph, name: "EPHEMERAL", node: "192.0.2.20", usedPercent: used, slopePerDay: slope,
-                           daysToFull: full ?? critical.map { $0 + 1.25 }, daysToCritical: critical,
-                           confidence: high ? "high" : "low"),
+            VolumeForecast(
+                key: eph, name: "EPHEMERAL", node: "192.0.2.20", usedPercent: used, slopePerDay: slope,
+                daysToFull: full ?? critical.map { $0 + 1.25 }, daysToCritical: critical,
+                confidence: high ? "high" : "low")
         ])
     }
 
-    private func run(_ forecast: HistoryForecast, open: [String: String] = [:],
-                     fill: [String: String] = [:]) -> StorageTrendOutcome {
+    private func run(
+        _ forecast: HistoryForecast, open: [String: String] = [:],
+        fill: [String: String] = [:]
+    ) -> StorageTrendOutcome {
         evaluateStorageTrends(forecast, open: open, fillIssues: fill, hostnames: hosts)
     }
 
@@ -82,35 +87,50 @@ final class StorageTrendTests: XCTestCase {
     }
 
     func testRowSaysFullAndCriticalWhenSooner() {
-        let line = VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 56, slopePerDay: 2,
-                                                     daysToFull: 22, daysToCritical: 19.5, confidence: "high"))
+        let line = VolumeForecastLine(
+            VolumeForecast(
+                key: "k", name: "v", node: "n", usedPercent: 56, slopePerDay: 2,
+                daysToFull: 22, daysToCritical: 19.5, confidence: "high"))
         XCTAssertEqual(line, .projected(full: .days(22), critical: .days(20)))
     }
 
     func testRowLeavesOutCriticalWhenItSaysNothingMore() {
         // Rounded alike.
-        let alike = VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 98, slopePerDay: 40,
-                                                      daysToFull: 0.05, daysToCritical: 0.01, confidence: "high"))
+        let alike = VolumeForecastLine(
+            VolumeForecast(
+                key: "k", name: "v", node: "n", usedPercent: 98, slopePerDay: 40,
+                daysToFull: 0.05, daysToCritical: 0.01, confidence: "high"))
         XCTAssertEqual(alike, .projected(full: .underADay, critical: nil))
         // Already critical: no daysToCritical.
-        let critical = VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 97, slopePerDay: 1,
-                                                         daysToFull: 3, confidence: "high"))
+        let critical = VolumeForecastLine(
+            VolumeForecast(
+                key: "k", name: "v", node: "n", usedPercent: 97, slopePerDay: 1,
+                daysToFull: 3, confidence: "high"))
         XCTAssertEqual(critical, .projected(full: .days(3), critical: nil))
         // Full beyond a year, critical within it.
-        let far = VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 10, slopePerDay: 0.3,
-                                                    daysToCritical: 300, confidence: "high"))
+        let far = VolumeForecastLine(
+            VolumeForecast(
+                key: "k", name: "v", node: "n", usedPercent: 10, slopePerDay: 0.3,
+                daysToCritical: 300, confidence: "high"))
         XCTAssertEqual(far, .projected(full: nil, critical: .days(300)))
     }
 
     func testWeakFitShowsOnlyGrowth() {
-        let growing = VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: 0.46))
+        let growing = VolumeForecastLine(
+            VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: 0.46))
         XCTAssertEqual(growing, .growing("0.5"))
-        XCTAssertNil(VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: 0)))
-        XCTAssertNil(VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: -1)))
-        XCTAssertNil(VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: 0.02)))
+        XCTAssertNil(
+            VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: 0)))
+        XCTAssertNil(
+            VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: -1)))
+        XCTAssertNil(
+            VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 40, slopePerDay: 0.02)))
         // High but beyond a year either way: nothing.
-        XCTAssertNil(VolumeForecastLine(VolumeForecast(key: "k", name: "v", node: "n", usedPercent: 1, slopePerDay: 0.06,
-                                                       confidence: "high")))
+        XCTAssertNil(
+            VolumeForecastLine(
+                VolumeForecast(
+                    key: "k", name: "v", node: "n", usedPercent: 1, slopePerDay: 0.06,
+                    confidence: "high")))
     }
 
     func testWithinAWeekStandsOut() {
@@ -133,7 +153,8 @@ final class StorageTrendTests: XCTestCase {
     }
 
     func testIssueValueRoundTrips() {
-        let issue = StorageTrendIssue(hostname: "w|1", name: "EPHEMERAL", critical: true, days: 2.5, slopePerDay: 4.25, usedPercent: 81.5)
+        let issue = StorageTrendIssue(
+            hostname: "w|1", name: "EPHEMERAL", critical: true, days: 2.5, slopePerDay: 4.25, usedPercent: 81.5)
         let back = StorageTrendIssue(value: issue.value)
         XCTAssertEqual(back.hostname, "w/1")
         XCTAssertEqual(back.name, "EPHEMERAL")
@@ -201,7 +222,11 @@ final class StorageTrendTests: XCTestCase {
     }
 
     func testSkipsAVolumeInAFillAlert() {
-        let fill = [eph: StorageIssue(severity: dataWarning, kind: StorageIssue.fill, hostname: "demo-worker-1", name: "EPHEMERAL").value]
+        let fill = [
+            eph: StorageIssue(
+                severity: dataWarning, kind: StorageIssue.fill, hostname: "demo-worker-1", name: "EPHEMERAL"
+            ).value
+        ]
         XCTAssertEqual(run(row(critical: 1), fill: fill), StorageTrendOutcome(alerts: [], open: [:]))
         // Open, then the fill alert takes over: dropped without a "resolved".
         let open = run(row(critical: 1)).open
@@ -218,16 +243,23 @@ final class StorageTrendTests: XCTestCase {
     func testSnapshotCarriesTrendsAndOldOnesDecode() throws {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         let nodes = ["192.0.2.20": NodeState(hostname: "demo-worker-1", health: .ready)]
-        let trends = [eph: StorageTrendIssue(hostname: "demo-worker-1", name: "EPHEMERAL", critical: false, days: 2,
-                                             slopePerDay: 3, usedPercent: 80).value]
-        let previous = ClusterSnapshot(context: "lab", takenAt: now, nodes: nodes, storageWatched: true, storageChecked: true,
-                                       storageTrends: trends)
-        let current = ClusterSnapshot(context: "lab", takenAt: now, nodes: nodes, storageWatched: true, storageChecked: true)
+        let trends = [
+            eph: StorageTrendIssue(
+                hostname: "demo-worker-1", name: "EPHEMERAL", critical: false, days: 2,
+                slopePerDay: 3, usedPercent: 80
+            ).value
+        ]
+        let previous = ClusterSnapshot(
+            context: "lab", takenAt: now, nodes: nodes, storageWatched: true, storageChecked: true,
+            storageTrends: trends)
+        let current = ClusterSnapshot(
+            context: "lab", takenAt: now, nodes: nodes, storageWatched: true, storageChecked: true)
         XCTAssertEqual(evaluate(previous: previous, current: current, now: now).next.storageTrends, trends)
         // Storage watch off, or another cluster: forgotten.
         let off = ClusterSnapshot(context: "lab", takenAt: now, nodes: nodes)
         XCTAssertEqual(evaluate(previous: previous, current: off, now: now).next.storageTrends, [:])
-        let other = ClusterSnapshot(context: "other", takenAt: now, nodes: nodes, storageWatched: true, storageChecked: true)
+        let other = ClusterSnapshot(
+            context: "other", takenAt: now, nodes: nodes, storageWatched: true, storageChecked: true)
         XCTAssertEqual(evaluate(previous: previous, current: other, now: now).next.storageTrends, [:])
 
         let encoded = try JSONEncoder().encode(previous)
@@ -238,11 +270,16 @@ final class StorageTrendTests: XCTestCase {
 
     func testTrendAlertLinksToTheNodeStorage() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let snapshot = ClusterSnapshot(context: "lab", takenAt: now, nodes: [:], storageTrends: [
-            eph: StorageTrendIssue(hostname: "demo-worker-1", name: "EPHEMERAL", critical: true, days: 2, slopePerDay: 3,
-                                   usedPercent: 80).value,
-        ])
-        XCTAssertEqual(ShareTarget.forAlert(key: storageTrendAlertKey(eph), snapshot: snapshot),
-                       .storage(address: "192.0.2.20", hostname: "demo-worker-1"))
+        let snapshot = ClusterSnapshot(
+            context: "lab", takenAt: now, nodes: [:],
+            storageTrends: [
+                eph: StorageTrendIssue(
+                    hostname: "demo-worker-1", name: "EPHEMERAL", critical: true, days: 2, slopePerDay: 3,
+                    usedPercent: 80
+                ).value
+            ])
+        XCTAssertEqual(
+            ShareTarget.forAlert(key: storageTrendAlertKey(eph), snapshot: snapshot),
+            .storage(address: "192.0.2.20", hostname: "demo-worker-1"))
     }
 }

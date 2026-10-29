@@ -12,12 +12,15 @@ enum EtcdFixEvent: Sendable {
 extension TalosClient {
     /// Snapshot into `destPath` (none when empty) through `snapshotNode`, defragment every
     /// member, disarm the alarm, read etcd again. Ending the stream cancels the run.
-    func etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption) -> AsyncStream<EtcdFixEvent> {
-        let (recipients, passphrase): (String, String) = switch encryption {
-        case .keys(let keys): (keys, "")
-        case .passphrase(let passphrase): ("", passphrase)
-        case .none: ("", "")
-        }
+    func etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption) -> AsyncStream<
+        EtcdFixEvent
+    > {
+        let (recipients, passphrase): (String, String) =
+            switch encryption {
+            case .keys(let keys): (keys, "")
+            case .passphrase(let passphrase): ("", passphrase)
+            case .none: ("", "")
+            }
         return Self.bridged { [config, context] continuation in
             let bridge = EtcdFixBridge(
                 progress: { continuation.yield(.progress($0)) },
@@ -26,7 +29,8 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartEtcdNospaceFix(config, context, snapshotNode, destPath, recipients, passphrase, bridge)
+            let run = IchorgoStartEtcdNospaceFix(
+                config, context, snapshotNode, destPath, recipients, passphrase, bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }

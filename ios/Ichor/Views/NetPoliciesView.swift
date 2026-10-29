@@ -29,7 +29,11 @@ struct NetPoliciesView: View {
                 ForEach(sections) { section in
                     Section {
                         ForEach(section.policies) { policy in
-                            Button { selected = policy } label: { NetPolicyRow(policy: policy) }
+                            Button {
+                                selected = policy
+                            } label: {
+                                NetPolicyRow(policy: policy)
+                            }
                         }
                     } header: {
                         if let namespace = section.namespace {
@@ -42,8 +46,9 @@ struct NetPoliciesView: View {
             }
             .overlay {
                 if report.policies.isEmpty {
-                    ContentUnavailableView("No network policies", systemImage: "shield",
-                                           description: Text("Without a policy, every pod accepts and sends any traffic."))
+                    ContentUnavailableView(
+                        "No network policies", systemImage: "shield",
+                        description: Text("Without a policy, every pod accepts and sends any traffic."))
                 } else if sections.isEmpty && !query.isEmpty {
                     ContentUnavailableView.search(text: query)
                 }

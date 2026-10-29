@@ -15,9 +15,11 @@ struct AuditView: View {
     var body: some View {
         List {
             Section {
-                Text("Ichor reads the Kubernetes audit log of each control plane through the Talos API and looks for the clients that load the API server or keep failing. Talos logs every request by default; reading takes a few tens of MB per node, compressed.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Ichor reads the Kubernetes audit log of each control plane through the Talos API and looks for the clients that load the API server or keep failing. Talos logs every request by default; reading takes a few tens of MB per node, compressed."
+                )
+                .font(.callout)
+                .foregroundStyle(.secondary)
                 Picker(selection: $minutes) {
                     ForEach(Self.windows, id: \.self) { Text("Last \($0) min").tag($0) }
                 } label: {
@@ -82,11 +84,16 @@ private struct AuditReportSections: View {
 
     var body: some View {
         Section {
-            Text("\(report.requests) requests over \(localizedDuration(Int64(report.seconds))) from \(report.nodes.count) control planes, \(formatMegabytes(report.bytesRead)) read")
-                .font(.callout)
+            Text(
+                "\(report.requests) requests over \(localizedDuration(Int64(report.seconds))) from \(report.nodes.count) control planes, \(formatMegabytes(report.bytesRead)) read"
+            )
+            .font(.callout)
         }
         if report.requests == 0 {
-            Section { Text("No request in the audit logs: auditing may be turned off (audit policy level None).").foregroundStyle(.secondary) }
+            Section {
+                Text("No request in the audit logs: auditing may be turned off (audit policy level None).")
+                    .foregroundStyle(.secondary)
+            }
         } else {
             Section("What is wrong") {
                 if report.findings.isEmpty {
@@ -109,7 +116,8 @@ private struct AuditReportSections: View {
                         Text(verbatim: node.node).font(.caption.monospaced())
                         Spacer()
                         if node.error.isEmpty {
-                            Text("\(formatMegabytes(node.bytes)) · \(node.events) events").font(.caption).foregroundStyle(.secondary)
+                            Text("\(formatMegabytes(node.bytes)) · \(node.events) events").font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     if !node.error.isEmpty { ErrorOrNoticeText(message: node.error) }
@@ -148,7 +156,8 @@ private struct AuditFindingRow: View {
                 if finding.aboutServer {
                     Text("API server").font(.subheadline.weight(.semibold))
                 } else if let actor = finding.actor {
-                    Text(verbatim: actor.label).font(.subheadline.monospaced().weight(.semibold)).lineLimit(1).truncationMode(.middle)
+                    Text(verbatim: actor.label).font(.subheadline.monospaced().weight(.semibold)).lineLimit(1)
+                        .truncationMode(.middle)
                     if let agent = actor.agentDetail {
                         Text(verbatim: agent).font(.caption).foregroundStyle(.secondary)
                     }

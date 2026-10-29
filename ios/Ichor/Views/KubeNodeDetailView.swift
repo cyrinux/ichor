@@ -13,16 +13,18 @@ struct KubeNodeDetailView: View {
     let onDeleted: () -> Void
 
     var body: some View {
-        KubeObjectView(resource: KubeAPIResource(resource: "nodes", kind: "Node", namespaced: false),
-                       namespace: "", name: node.name, onDeleted: onDeleted)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        KubeNodeMenu(node: node, path: $path, cordoning: $cordoning)
-                    } label: {
-                        Label("Node actions", systemImage: "ellipsis.circle")
-                    }
+        KubeObjectView(
+            resource: KubeAPIResource(resource: "nodes", kind: "Node", namespaced: false),
+            namespace: "", name: node.name, onDeleted: onDeleted
+        )
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    KubeNodeMenu(node: node, path: $path, cordoning: $cordoning)
+                } label: {
+                    Label("Node actions", systemImage: "ellipsis.circle")
                 }
             }
+        }
     }
 }

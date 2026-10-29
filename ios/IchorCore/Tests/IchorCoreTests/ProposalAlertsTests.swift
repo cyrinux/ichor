@@ -4,9 +4,12 @@ import XCTest
 final class ProposalAlertsTests: XCTestCase {
     private let repo = "https://git.example.org/example-org/cluster-config"
 
-    private func record(_ number: Int, state: String = "open", forge: String = "gitea", createdAt: Int64 = 1) -> GitProposalRecord {
-        GitProposalRecord(tool: "argocd", kind: "Application", namespace: "argocd", name: "ingest", repoURL: repo, path: "a.yaml",
-                          title: "Raise ingest replicas", url: "", number: number, forge: forge, createdAt: createdAt, state: state)
+    private func record(_ number: Int, state: String = "open", forge: String = "gitea", createdAt: Int64 = 1)
+        -> GitProposalRecord
+    {
+        GitProposalRecord(
+            tool: "argocd", kind: "Application", namespace: "argocd", name: "ingest", repoURL: repo, path: "a.yaml",
+            title: "Raise ingest replicas", url: "", number: number, forge: forge, createdAt: createdAt, state: state)
     }
 
     func testOpenThenMergedOrClosedIsToldOnce() {
@@ -30,18 +33,23 @@ final class ProposalAlertsTests: XCTestCase {
     }
 
     func testNeverReadIsABaselineAndErrorsChangeNothing() {
-        let out = proposalStateChanges(records: [record(1, state: ""), record(2)], states: [
-            RequestStateItem(repoURL: repo, number: 1, state: "merged"),
-            RequestStateItem(repoURL: repo, number: 2, state: "", error: "429 Too Many Requests"),
-        ], now: 5)
+        let out = proposalStateChanges(
+            records: [record(1, state: ""), record(2)],
+            states: [
+                RequestStateItem(repoURL: repo, number: 1, state: "merged"),
+                RequestStateItem(repoURL: repo, number: 2, state: "", error: "429 Too Many Requests"),
+            ], now: 5)
         XCTAssertTrue(out.changes.isEmpty)
         XCTAssertEqual(out.records.map(\.state), ["merged", "open"])
     }
 
     func testOnlyOpenNonDemoRecordsAreAskedByHostTwentyAtMost() {
         var records = (1...25).map { record($0, createdAt: Int64($0)) }
-        records += [record(90, state: "merged"), record(91, forge: "demo"),
-                    GitProposalRecord(tool: "", repoURL: "https://github.com/example-org/other", path: "x", title: "t", url: "", number: 3)]
+        records += [
+            record(90, state: "merged"), record(91, forge: "demo"),
+            GitProposalRecord(
+                tool: "", repoURL: "https://github.com/example-org/other", path: "x", title: "t", url: "", number: 3),
+        ]
         let asked = proposalsToCheck(records)
         XCTAssertEqual(asked["git.example.org"]?.count, 20)
         XCTAssertEqual(asked["git.example.org"]?.first?.number, 25, "newest first")
@@ -50,7 +58,8 @@ final class ProposalAlertsTests: XCTestCase {
     }
 
     func testOldRecordsDecodeAndNewOnesStartOpen() throws {
-        let old = #"[{"tool":"argocd","repoURL":"https://git.example.org/example-org/cluster-config","path":"a","title":"t","url":"","number":4,"createdAt":1}]"#
+        let old =
+            #"[{"tool":"argocd","repoURL":"https://git.example.org/example-org/cluster-config","path":"a","title":"t","url":"","number":4,"createdAt":1}]"#
         let decoded = try JSONDecoder().decode([GitProposalRecord].self, from: Data(old.utf8))
         XCTAssertEqual(decoded.first?.state, "")
         XCTAssertEqual(decoded.first?.stateAt, 0)
@@ -66,12 +75,14 @@ final class ProposalAlertsTests: XCTestCase {
         XCTAssertEqual(backupPayloadFormat(), 3)
         XCTAssertEqual(backupPayloadFormat(hasProposals: true), 4)
         XCTAssertNil(backupProposals([:], fingerprints: ["fp"]))
-        XCTAssertNil(backupProposals(["gone": [record(1)]], fingerprints: ["fp"]), "a removed cluster's proposals stay out")
+        XCTAssertNil(
+            backupProposals(["gone": [record(1)]], fingerprints: ["fp"]), "a removed cluster's proposals stay out")
 
         let proposals = try XCTUnwrap(backupProposals(["fp": [record(1)], "gone": [record(2)]], fingerprints: ["fp"]))
         XCTAssertEqual(Array(proposals.keys), ["fp"])
-        let payload = BackupPayload(format: backupPayloadFormat(hasProposals: true), platform: "ios", talosconfig: "context: lab\n",
-                                    proposals: proposals)
+        let payload = BackupPayload(
+            format: backupPayloadFormat(hasProposals: true), platform: "ios", talosconfig: "context: lab\n",
+            proposals: proposals)
         let round = try JSONDecoder().decode(BackupPayload.self, from: JSONEncoder().encode(payload))
         XCTAssertEqual(restoredProposals(round, fingerprints: ["fp"])?["fp"]?.first?.number, 1)
 

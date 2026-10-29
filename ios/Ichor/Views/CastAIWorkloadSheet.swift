@@ -24,8 +24,13 @@ struct CastAIWorkloadSheet: View {
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
                     if rec.nearMemoryLimit {
-                        CastAIBanner(text: String(localized: "The memory request grows to \(String(rec.memoryLimitPercent))% of its limit. CAST AI keeps limits as they are, so the pod has little room before it is OOM-killed."))
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        CastAIBanner(
+                            text: String(
+                                localized:
+                                    "The memory request grows to \(String(rec.memoryLimitPercent))% of its limit. CAST AI keeps limits as they are, so the pod has little room before it is OOM-killed."
+                            )
+                        )
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
                 }
                 Section("Per pod") { perPod }
@@ -58,16 +63,18 @@ struct CastAIWorkloadSheet: View {
     private var perPod: some View {
         let known = rec.change != .unknown
         return VStack(alignment: .leading, spacing: 16) {
-            CastAIBigChange(title: String(localized: "CPU requests"),
-                            before: formatMilliCores(rec.originalCpuMilli), after: formatMilliCores(rec.cpuMilli),
-                            delta: known ? formatMilliCores(rec.cpuDeltaMilli, signed: true) : nil,
-                            deltaColor: castAIDeltaColor(rec.cpuDeltaMilli),
-                            beforeValue: Double(rec.originalCpuMilli), afterValue: Double(rec.cpuMilli))
-            CastAIBigChange(title: String(localized: "Memory requests"),
-                            before: formatBytes(rec.originalMemoryBytes), after: formatBytes(rec.memoryBytes),
-                            delta: known ? signedBytes(rec.memoryDeltaBytes) : nil,
-                            deltaColor: castAIDeltaColor(rec.memoryDeltaBytes),
-                            beforeValue: Double(rec.originalMemoryBytes), afterValue: Double(rec.memoryBytes))
+            CastAIBigChange(
+                title: String(localized: "CPU requests"),
+                before: formatMilliCores(rec.originalCpuMilli), after: formatMilliCores(rec.cpuMilli),
+                delta: known ? formatMilliCores(rec.cpuDeltaMilli, signed: true) : nil,
+                deltaColor: castAIDeltaColor(rec.cpuDeltaMilli),
+                beforeValue: Double(rec.originalCpuMilli), afterValue: Double(rec.cpuMilli))
+            CastAIBigChange(
+                title: String(localized: "Memory requests"),
+                before: formatBytes(rec.originalMemoryBytes), after: formatBytes(rec.memoryBytes),
+                delta: known ? signedBytes(rec.memoryDeltaBytes) : nil,
+                deltaColor: castAIDeltaColor(rec.memoryDeltaBytes),
+                beforeValue: Double(rec.originalMemoryBytes), afterValue: Double(rec.memoryBytes))
         }
         .padding(.vertical, 6)
     }
@@ -108,10 +115,14 @@ private struct CastAIContainerRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: container.name).font(.subheadline.monospaced())
-            line(String(localized: "CPU"), change: castAIChangeText(container.originalCpu.or(container.cpu), container.cpu),
-                 limit: container.cpuLimit, percent: container.cpuLimitPercent, warn: false)
-            line(String(localized: "Memory"), change: castAIChangeText(container.originalMemory.or(container.memory), container.memory),
-                 limit: container.memoryLimit, percent: container.memoryLimitPercent, warn: container.nearMemoryLimit)
+            line(
+                String(localized: "CPU"),
+                change: castAIChangeText(container.originalCpu.or(container.cpu), container.cpu),
+                limit: container.cpuLimit, percent: container.cpuLimitPercent, warn: false)
+            line(
+                String(localized: "Memory"),
+                change: castAIChangeText(container.originalMemory.or(container.memory), container.memory),
+                limit: container.memoryLimit, percent: container.memoryLimitPercent, warn: container.nearMemoryLimit)
         }
         .padding(.vertical, 2)
     }
@@ -120,9 +131,12 @@ private struct CastAIContainerRow: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(verbatim: label).font(.caption).foregroundStyle(.secondary).frame(width: 64, alignment: .leading)
             Text(verbatim: change.or("—")).font(.caption.monospaced()).frame(maxWidth: .infinity, alignment: .leading)
-            Text(verbatim: limit.isEmpty ? String(localized: "no limit") : String(localized: "limit \(limit) · \(String(percent))%"))
-                .font(.caption2)
-                .foregroundStyle(warn ? Color.statusWarn : Color.secondary)
+            Text(
+                verbatim: limit.isEmpty
+                    ? String(localized: "no limit") : String(localized: "limit \(limit) · \(String(percent))%")
+            )
+            .font(.caption2)
+            .foregroundStyle(warn ? Color.statusWarn : Color.secondary)
         }
     }
 }

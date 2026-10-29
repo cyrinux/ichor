@@ -30,7 +30,9 @@ struct StagedChangesView: View {
                     Text("Kept until the app is closed. Open one pull request for all of them.")
                 }
                 Section {
-                    Button { proposing = true } label: {
+                    Button {
+                        proposing = true
+                    } label: {
                         Text("Open pull request").frame(maxWidth: .infinity)
                     }
                     .disabled(files.isEmpty)
@@ -49,20 +51,24 @@ struct StagedChangesView: View {
                 SourceEditView(source: source, path: item.path, app: .repository)
             }
             .sheet(isPresented: $proposing) {
-                ProposeSheet(source: source, path: "", app: .repository,
-                             base: SourceEditBase(file: GitFile(path: ""), ref: key.baseRef), content: "",
-                             target: key.baseRef, files: files,
-                             onReload: { _ in }, onDone: {
-                                 proposing = false
-                                 dismiss()
-                             })
+                ProposeSheet(
+                    source: source, path: "", app: .repository,
+                    base: SourceEditBase(file: GitFile(path: ""), ref: key.baseRef), content: "",
+                    target: key.baseRef, files: files,
+                    onReload: { _ in },
+                    onDone: {
+                        proposing = false
+                        dismiss()
+                    })
             }
         }
     }
 
     private func row(_ file: StagedFile) -> some View {
         HStack(spacing: 8) {
-            Button { editing = StagedPath(path: file.path) } label: {
+            Button {
+                editing = StagedPath(path: file.path)
+            } label: {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: file.path.split(separator: "/").last.map(String.init) ?? file.path)
                         .font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
@@ -81,7 +87,9 @@ struct StagedChangesView: View {
                 }
                 .font(.caption.monospacedDigit().weight(.semibold))
             }
-            Button { staged.remove(key, path: file.path) } label: {
+            Button {
+                staged.remove(key, path: file.path)
+            } label: {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.borderless)
@@ -93,7 +101,9 @@ struct StagedChangesView: View {
     private func count() async {
         for file in files where counts[file] == nil {
             let diff = try? await TalosClient.textDiff(before: file.original, after: file.draft, name: file.path)
-            if let lines = diff?.resources.first?.counts { counts[file] = LineCounts(added: lines.added, removed: lines.removed) }
+            if let lines = diff?.resources.first?.counts {
+                counts[file] = LineCounts(added: lines.added, removed: lines.removed)
+            }
         }
     }
 }

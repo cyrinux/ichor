@@ -15,7 +15,9 @@ extension OverviewView {
         if argo == nil { argo = .loading }
         let key = model.argoKey
         let cluster = model.activeSummary
-        let loaded: LoadState<ArgoStatus> = await .from { try await ArgoCDStore.shared.load(with: client, key: key, cluster: cluster) }
+        let loaded: LoadState<ArgoStatus> = await .from {
+            try await ArgoCDStore.shared.load(with: client, key: key, cluster: cluster)
+        }
         guard id == loadID else { return }
         argo = (argo ?? .loading).refreshed(with: loaded)
     }
@@ -57,7 +59,9 @@ extension OverviewView {
         guard id == loadID else { return }
         dataServices = (dataServices ?? .loading).refreshed(with: loaded)
         // A failed ask keeps the lines shown.
-        if case .loaded(let detect, _, _) = plugins { (dataPlugins, toolPlugins) = (detect.dataServicePlugins, detect.homeTiles) }
+        if case .loaded(let detect, _, _) = plugins {
+            (dataPlugins, toolPlugins) = (detect.dataServicePlugins, detect.homeTiles)
+        }
     }
 
     /// Only for roles that may use the Kubernetes API, and clusters with an Alertmanager (searched

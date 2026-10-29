@@ -31,7 +31,9 @@ struct KubeServicesView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
             if services.anyPending {
-                NavigationLink { KubeLoadBalancingView() } label: {
+                NavigationLink {
+                    KubeLoadBalancingView()
+                } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         lbHint(LBController(rawValue: services.lbController))
                             .font(.footnote).foregroundStyle(.secondary)
@@ -41,17 +43,24 @@ struct KubeServicesView: View {
             }
             ForEach(shown) { service in
                 NavigationLink {
-                    KubeObjectView(resource: KubeAPIResource(resource: "services", kind: "Service"),
-                                   namespace: service.namespace, name: service.name)
+                    KubeObjectView(
+                        resource: KubeAPIResource(resource: "services", kind: "Service"),
+                        namespace: service.namespace, name: service.name)
                 } label: {
                     ServiceRowView(service: service, showNamespace: showNamespace)
                 }
                 ForEach(service.routes) { route in
                     HStack(spacing: 4) {
                         if let url = URL(string: route.url) {
-                            Button { openURL(url) } label: {
-                                Label { Text(verbatim: route.label) } icon: { Image(systemName: "arrow.up.right.square") }
-                                    .font(.footnote)
+                            Button {
+                                openURL(url)
+                            } label: {
+                                Label {
+                                    Text(verbatim: route.label)
+                                } icon: {
+                                    Image(systemName: "arrow.up.right.square")
+                                }
+                                .font(.footnote)
                             }
                             .buttonStyle(.plain)
                         }
@@ -72,13 +81,19 @@ struct KubeServicesView: View {
     private func lbHint(_ controller: LBController?) -> Text {
         switch controller {
         case .metallb:
-            Text("A load balancer has no address: check MetalLB’s IPAddressPool, and an L2Advertisement or BGPAdvertisement that announces it.")
+            Text(
+                "A load balancer has no address: check MetalLB’s IPAddressPool, and an L2Advertisement or BGPAdvertisement that announces it."
+            )
         case .cilium:
-            Text("A load balancer has no address: check the CiliumLoadBalancerIPPool (addresses left, its service selector) and that Cilium’s LB IPAM is on.")
+            Text(
+                "A load balancer has no address: check the CiliumLoadBalancerIPPool (addresses left, its service selector) and that Cilium’s LB IPAM is on."
+            )
         case .kubeVip:
             Text(verbatim: LoadBalancingText.servicesHintKubeVip)
         case nil:
-            Text("A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer.")
+            Text(
+                "A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer."
+            )
         }
     }
 }
@@ -97,9 +112,11 @@ private struct ServiceRowView: View {
                 Spacer()
                 Text(verbatim: service.type).font(.caption).foregroundStyle(levelColor)
             }
-            let inside = [service.headless ? String(localized: "headless") : service.clusterIP,
-                          service.externalName.isEmpty ? "" : "→ \(service.externalName)",
-                          service.ports.joined(separator: ", ")].filter { !$0.isEmpty }
+            let inside = [
+                service.headless ? String(localized: "headless") : service.clusterIP,
+                service.externalName.isEmpty ? "" : "→ \(service.externalName)",
+                service.ports.joined(separator: ", "),
+            ].filter { !$0.isEmpty }
             if !inside.isEmpty {
                 Text(verbatim: inside.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }

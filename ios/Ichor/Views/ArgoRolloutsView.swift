@@ -26,8 +26,10 @@ struct ArgoRolloutsView: View {
             if status.installed {
                 list(status)
             } else {
-                ContentUnavailableView("Argo Rollouts is not installed in this cluster.", systemImage: "arrow.triangle.branch")
-                    .themedBackground()
+                ContentUnavailableView(
+                    "Argo Rollouts is not installed in this cluster.", systemImage: "arrow.triangle.branch"
+                )
+                .themedBackground()
             }
         }
         .task { await load() }
@@ -36,8 +38,11 @@ struct ArgoRolloutsView: View {
         .id(model.client?.kubeServer)
         .navigationTitle(Text("Argo Rollouts"))
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: Binding(get: { selected.flatMap { id in status?.rollouts.first { $0.id == id } } },
-                             set: { selected = $0?.id })) { rollout in
+        .sheet(
+            item: Binding(
+                get: { selected.flatMap { id in status?.rollouts.first { $0.id == id } } },
+                set: { selected = $0?.id })
+        ) { rollout in
             ArgoRolloutSheet(rollout: rollout, busy: running.contains(rollout.id)) { action in
                 // Back to the list: the result's alert shows there, over the status it changes.
                 selected = nil
@@ -52,7 +57,9 @@ struct ArgoRolloutsView: View {
             ForEach(status.byNamespace, id: \.namespace) { group in
                 Section {
                     ForEach(group.rollouts) { rollout in
-                        Button { selected = rollout.id } label: {
+                        Button {
+                            selected = rollout.id
+                        } label: {
                             ArgoRolloutRow(rollout: rollout, busy: running.contains(rollout.id))
                         }
                     }
@@ -191,7 +198,8 @@ extension ArgoRollout {
     var pausedLine: String? {
         guard paused else { return nil }
         if awaitsPromotion && pauseReasons.isEmpty { return String(localized: "Waits for a promotion") }
-        let since = pausedSince > 0 ? String(localized: "Paused \(relativeTime(pausedSince))") : String(localized: "Paused")
+        let since =
+            pausedSince > 0 ? String(localized: "Paused \(relativeTime(pausedSince))") : String(localized: "Paused")
         return ([since] + pauseReasons).joined(separator: " · ")
     }
 }
@@ -221,9 +229,18 @@ extension ArgoRolloutAction {
     /// What the action does, under the confirmation's title.
     var explanation: String {
         switch self {
-        case .promote: String(localized: "The rollout moves on to its next step; a blue-green switches the traffic to the new version.")
-        case .promoteFull: String(localized: "The remaining steps and analyses are skipped: the new version takes all the traffic now.")
-        case .abort: String(localized: "The stable version takes the traffic back and the new pods are scaled down. Retry starts the update again.")
+        case .promote:
+            String(
+                localized:
+                    "The rollout moves on to its next step; a blue-green switches the traffic to the new version.")
+        case .promoteFull:
+            String(
+                localized: "The remaining steps and analyses are skipped: the new version takes all the traffic now.")
+        case .abort:
+            String(
+                localized:
+                    "The stable version takes the traffic back and the new pods are scaled down. Retry starts the update again."
+            )
         case .retry: String(localized: "The aborted update starts again from its first step.")
         case .pause: String(localized: "The rollout stays at its current step until it is promoted.")
         }

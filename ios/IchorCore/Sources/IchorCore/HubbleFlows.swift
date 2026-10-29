@@ -26,8 +26,10 @@ public struct CiliumStatus: Decodable, Equatable, Sendable {
 
     public var isCalico: Bool { cni == FlowCNI.calico }
 
-    public init(installed: Bool = false, cni: String = "", namespace: String = "", version: String = "", hubble: Bool = false,
-                buffer: Int = 0, agents: [CiliumAgent] = []) {
+    public init(
+        installed: Bool = false, cni: String = "", namespace: String = "", version: String = "", hubble: Bool = false,
+        buffer: Int = 0, agents: [CiliumAgent] = []
+    ) {
         self.installed = installed
         self.cni = cni
         self.namespace = namespace
@@ -85,8 +87,10 @@ public struct HubbleSnapshot: Decodable, Equatable, Sendable {
     /// Last seen first.
     public let drops: [HubbleDropGroup]
 
-    public init(seen: Int64 = 0, dropped: Int64 = 0, lost: Int64 = 0, nodes: [HubbleAgentState] = [],
-                flows: [HubbleFlow] = [], drops: [HubbleDropGroup] = []) {
+    public init(
+        seen: Int64 = 0, dropped: Int64 = 0, lost: Int64 = 0, nodes: [HubbleAgentState] = [],
+        flows: [HubbleFlow] = [], drops: [HubbleDropGroup] = []
+    ) {
         cni = ""
         namespace = ""
         version = ""
@@ -197,9 +201,11 @@ public enum DropReason: Equatable, Sendable, WireDecodable {
 func humanizedEnum(_ wire: String) -> String {
     let words = wire.split(separator: "_").map { $0.lowercased() }
     guard let first = words.first else { return wire }
-    let known: [String: String] = ["ip": "IP", "ipv4": "IPv4", "ipv6": "IPv6", "l3": "L3", "l4": "L4", "l7": "L7",
-                                   "ct": "CT", "tcp": "TCP", "udp": "UDP", "icmp": "ICMP", "nat": "NAT", "dns": "DNS",
-                                   "fib": "FIB", "mtu": "MTU", "vlan": "VLAN", "srv6": "SRv6", "lb": "LB"]
+    let known: [String: String] = [
+        "ip": "IP", "ipv4": "IPv4", "ipv6": "IPv6", "l3": "L3", "l4": "L4", "l7": "L7",
+        "ct": "CT", "tcp": "TCP", "udp": "UDP", "icmp": "ICMP", "nat": "NAT", "dns": "DNS",
+        "fib": "FIB", "mtu": "MTU", "vlan": "VLAN", "srv6": "SRv6", "lb": "LB",
+    ]
     let shown = words.map { known[$0] ?? $0 }
     let head = known[first] ?? first.prefix(1).uppercased() + first.dropFirst()
     return ([head] + shown.dropFirst()).joined(separator: " ")
@@ -217,8 +223,10 @@ public struct HubblePeer: Codable, Equatable, Hashable, Sendable {
     /// world, host, remote-node, kube-apiserver…
     public let reserved: String
 
-    public init(namespace: String = "", pod: String = "", workload: String = "", identity: Int64 = 0, ip: String = "",
-                names: [String] = [], reserved: String = "") {
+    public init(
+        namespace: String = "", pod: String = "", workload: String = "", identity: Int64 = 0, ip: String = "",
+        names: [String] = [], reserved: String = ""
+    ) {
         self.namespace = namespace
         self.pod = pod
         self.workload = workload
@@ -298,9 +306,11 @@ public struct HubbleFlow: Codable, Equatable, Sendable {
     public var direction: NetDirection? { NetDirection(rawValue: directionName) }
     public var portLabel: String { flowPortLabel(protocol: `protocol`, port: port) }
 
-    public init(time: Int64 = 0, node: String = "", verdict: String, reason: String = "", direction: String = "",
-                protocol: String = "", port: Int64 = 0, l7: String = "",
-                source: HubblePeer = HubblePeer(), destination: HubblePeer = HubblePeer(), deniedBy: [NetPolicyRef] = []) {
+    public init(
+        time: Int64 = 0, node: String = "", verdict: String, reason: String = "", direction: String = "",
+        protocol: String = "", port: Int64 = 0, l7: String = "",
+        source: HubblePeer = HubblePeer(), destination: HubblePeer = HubblePeer(), deniedBy: [NetPolicyRef] = []
+    ) {
         self.time = time
         self.node = node
         verdictName = verdict
@@ -362,7 +372,8 @@ public struct HubbleFlow: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case time, node, verdict, reason, direction, `protocol`, port, flags, reply, type, l7, source, destination, deniedBy
+        case time, node, verdict, reason, direction, `protocol`, port, flags, reply, type, l7, source, destination,
+            deniedBy
     }
 }
 
@@ -386,7 +397,8 @@ public struct HubbleDropGroup: Decodable, Equatable, Identifiable, Sendable {
     public let sample: HubbleFlow
 
     public var id: String {
-        [source.label, destination.label, `protocol`, String(port), directionName, verdictName, reasonName].joined(separator: "|")
+        [source.label, destination.label, `protocol`, String(port), directionName, verdictName, reasonName].joined(
+            separator: "|")
     }
 
     public var verdict: HubbleVerdict { HubbleVerdict(wire: verdictName) }
@@ -400,9 +412,11 @@ public struct HubbleDropGroup: Decodable, Equatable, Identifiable, Sendable {
         return port > 0 ? ":\(port)\(proto)" : proto
     }
 
-    public init(source: HubblePeer, destination: HubblePeer, protocol: String = "", port: Int64 = 0, direction: String = "",
-                verdict: String = "DROPPED", reason: String = "", count: Int64 = 1, lastSeen: Int64 = 0,
-                deniedBy: [NetPolicyRef] = [], isolating: [NetPolicyRef] = []) {
+    public init(
+        source: HubblePeer, destination: HubblePeer, protocol: String = "", port: Int64 = 0, direction: String = "",
+        verdict: String = "DROPPED", reason: String = "", count: Int64 = 1, lastSeen: Int64 = 0,
+        deniedBy: [NetPolicyRef] = [], isolating: [NetPolicyRef] = []
+    ) {
         self.source = source
         self.destination = destination
         self.protocol = `protocol`
@@ -416,8 +430,9 @@ public struct HubbleDropGroup: Decodable, Equatable, Identifiable, Sendable {
         nodes = []
         self.deniedBy = deniedBy
         self.isolating = isolating
-        sample = HubbleFlow(verdict: verdict, reason: reason, direction: direction, protocol: `protocol`, port: port,
-                            source: source, destination: destination, deniedBy: deniedBy)
+        sample = HubbleFlow(
+            verdict: verdict, reason: reason, direction: direction, protocol: `protocol`, port: port,
+            source: source, destination: destination, deniedBy: deniedBy)
     }
 
     public init(from decoder: Decoder) throws {
@@ -496,7 +511,8 @@ public extension HubbleSnapshot {
     var agentsByAttention: [HubbleAgentState] {
         let rank: (HubbleAgentPhase) -> Int = { $0 == .error ? 0 : $0 == .connecting ? 1 : 2 }
         return nodes.enumerated().sorted { a, b in
-            rank(a.element.state) != rank(b.element.state) ? rank(a.element.state) < rank(b.element.state) : a.offset < b.offset
+            rank(a.element.state) != rank(b.element.state)
+                ? rank(a.element.state) < rank(b.element.state) : a.offset < b.offset
         }.map(\.element)
     }
 }

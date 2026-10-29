@@ -20,7 +20,9 @@ struct MachineConfigView: View {
     /// A repository's Talos patch file: the screen opens a draft with it applied, then the review.
     let patch: PatchRequest?
 
-    init(node: String, hostname: String, fix: DriftFix? = nil, snippet: SnippetRequest? = nil, patch: PatchRequest? = nil) {
+    init(
+        node: String, hostname: String, fix: DriftFix? = nil, snippet: SnippetRequest? = nil, patch: PatchRequest? = nil
+    ) {
         self.node = node
         self.hostname = hostname
         self.fix = fix
@@ -79,7 +81,9 @@ struct MachineConfigView: View {
         }
         .sheet(isPresented: $reviewing) {
             if let base = loadedYAML, let draft {
-                ConfigReviewView(node: node, hostname: hostname, base: base, draft: draft, edits: replayable ? edits : []) {
+                ConfigReviewView(
+                    node: node, hostname: hostname, base: base, draft: draft, edits: replayable ? edits : []
+                ) {
                     Task { await finishTry() }
                 }
             }
@@ -89,7 +93,9 @@ struct MachineConfigView: View {
         }
         .sheet(isPresented: $comparingGit) {
             if let repo = model.activeClusterRepo {
-                GitCompareSheet(repo: repo, node: node, hostname: hostname, role: configRole(loadedYAML ?? ""), live: loadedYAML) { git in
+                GitCompareSheet(
+                    repo: repo, node: node, hostname: hostname, role: configRole(loadedYAML ?? ""), live: loadedYAML
+                ) { git in
                     Task { await editFrom(git) }
                 }
             }
@@ -120,30 +126,42 @@ struct MachineConfigView: View {
             }
             .pickerStyle(.segmented)
             if showingMeta {
-                EmptyView() // the META keys are not the config: nothing to reveal
+                EmptyView()  // the META keys are not the config: nothing to reveal
             } else if draft != nil {
-                Label("Editing a draft: nothing changes on the node until you review and try it.", systemImage: "pencil")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Label(
+                    "Editing a draft: nothing changes on the node until you review and try it.", systemImage: "pencil"
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
                 // The repository file the draft comes from.
                 if let patch {
-                    Label { Text(verbatim: patch.from).lineLimit(1).truncationMode(.middle) } icon: { Image(systemName: "doc.text") }
-                        .font(.footnote.monospaced())
-                        .foregroundStyle(.secondary)
+                    Label {
+                        Text(verbatim: patch.from).lineLimit(1).truncationMode(.middle)
+                    } icon: {
+                        Image(systemName: "doc.text")
+                    }
+                    .font(.footnote.monospaced())
+                    .foregroundStyle(.secondary)
                 }
             } else {
                 Toggle(isOn: Binding(get: { reveal }, set: { on in Task { await setReveal(on) } })) {
                     Label("Reveal secrets", systemImage: reveal ? "eye" : "eye.slash")
                 }
                 if reveal {
-                    Label("Secrets are shown in clear: CA keys and tokens give full control of the cluster. Don't share screenshots.",
-                          systemImage: "exclamationmark.triangle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.statusWarn)
+                    Label(
+                        "Secrets are shown in clear: CA keys and tokens give full control of the cluster. Don't share screenshots.",
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.statusWarn)
                 }
             }
-            if ConfigTryJob.shared.target?.node == node, ConfigTryJob.shared.isActive || ConfigTryJob.shared.outcome != nil {
-                Button { followingTry = true } label: {
+            if ConfigTryJob.shared.target?.node == node,
+                ConfigTryJob.shared.isActive || ConfigTryJob.shared.outcome != nil
+            {
+                Button {
+                    followingTry = true
+                } label: {
                     if ConfigTryJob.shared.isActive {
                         Label("A config change is being tried: show the countdown", systemImage: "timer")
                     } else {
@@ -179,8 +197,9 @@ struct MachineConfigView: View {
                     Text(verbatim: configSyntaxText(error))
                 }
             } else if let tree {
-                ConfigTreeView(tree: tree, query: query, editing: draft != nil, revealed: reveal,
-                               apply: applyEdit, refresh: load)
+                ConfigTreeView(
+                    tree: tree, query: query, editing: draft != nil, revealed: reveal,
+                    apply: applyEdit, refresh: load)
             } else if let treeFailure {
                 ContentUnavailableView {
                     Label("Request failed", systemImage: "exclamationmark.triangle")
@@ -205,7 +224,9 @@ struct MachineConfigView: View {
                     .disabled(!canReview)
             }
             ToolbarItem(placement: .bottomBar) {
-                Button { pickingSnippet = true } label: {
+                Button {
+                    pickingSnippet = true
+                } label: {
                     Label("Snippets", systemImage: "wand.and.stars")
                 }
             }
@@ -215,7 +236,9 @@ struct MachineConfigView: View {
                     Label("Copy", systemImage: "doc.on.doc")
                 }
                 .disabled(loadedYAML == nil)
-                Button { Task { await startEditing() } } label: {
+                Button {
+                    Task { await startEditing() }
+                } label: {
                     Label("Edit", systemImage: "pencil")
                 }
                 .disabled(loadedYAML == nil)
@@ -223,7 +246,10 @@ struct MachineConfigView: View {
                     if model.activeClusterRepo != nil {
                         comparingGit = true
                     } else {
-                        message = String(localized: "No repository is saved for this cluster: add one from its menu in the cluster list (Cluster repository).")
+                        message = String(
+                            localized:
+                                "No repository is saved for this cluster: add one from its menu in the cluster list (Cluster repository)."
+                        )
                     }
                 } label: {
                     Label("Compare with Git", systemImage: "arrow.triangle.branch")
@@ -246,24 +272,28 @@ struct MachineConfigView: View {
 
     /// Typing re-describes the draft after a pause.
     private var draftText: Binding<String> {
-        Binding(get: { draft ?? "" }, set: { new in
-            guard draft != nil, new != draft else { return }
-            draft = new
-            replayable = false
-            describing?.cancel()
-            describing = Task {
-                try? await Task.sleep(for: .milliseconds(400))
-                guard !Task.isCancelled else { return }
-                await describe()
-            }
-        })
+        Binding(
+            get: { draft ?? "" },
+            set: { new in
+                guard draft != nil, new != draft else { return }
+                draft = new
+                replayable = false
+                describing?.cancel()
+                describing = Task {
+                    try? await Task.sleep(for: .milliseconds(400))
+                    guard !Task.isCancelled else { return }
+                    await describe()
+                }
+            })
     }
 
     /// Revealing needs a fresh Face ID / passcode when the app lock is on; hiding re-fetches
     /// the redacted config so the secrets leave memory and screen.
     private func setReveal(_ on: Bool) async {
         if on, model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Reveal the secrets of \(hostname)")) {
+            let failure = await Authenticator.authenticate(
+                reason: String(localized: "Reveal the secrets of \(hostname)"))
+        {
             message = failure
             return
         }
@@ -281,9 +311,11 @@ struct MachineConfigView: View {
         guard let client = model.client, draft == nil else { return }
         let wanted = reveal
         async let schema = try? client.machineConfigSchema(node: node)
-        let result: LoadState<String> = await .from { try await client.machineConfig(node: node, revealSecrets: wanted) }
+        let result: LoadState<String> = await .from {
+            try await client.machineConfig(node: node, revealSecrets: wanted)
+        }
         let version = await schema?.version ?? ""
-        guard wanted == reveal, draft == nil else { return } // a newer toggle wins
+        guard wanted == reveal, draft == nil else { return }  // a newer toggle wins
         schemaVersion = version
         state = result
         await describe()
@@ -294,7 +326,7 @@ struct MachineConfigView: View {
         guard let client = model.client, let text = draft ?? loadedYAML else { return }
         do {
             let described = try await client.describeMachineConfig(text, talosVersion: schemaVersion)
-            guard text == (draft ?? loadedYAML) else { return } // a newer text wins
+            guard text == (draft ?? loadedYAML) else { return }  // a newer text wins
             tree = described
             treeFailure = nil
         } catch {
@@ -382,7 +414,9 @@ struct MachineConfigView: View {
             edits = []
             replayable = false
             await describe()
-            if let reason = asEdits?.reason, !reason.isEmpty { message = String(localized: "For this node only: \(reason)") }
+            if let reason = asEdits?.reason, !reason.isEmpty {
+                message = String(localized: "For this node only: \(reason)")
+            }
             if canReview { reviewing = true }
         } catch {
             message = error.localizedDescription
@@ -405,7 +439,9 @@ struct MachineConfigView: View {
             describing?.cancel()
             draft = edited
             edits.append(contentsOf: result.edits)
-            message = result.staged ? String(localized: "Takes effect at the next boot: apply it staged or with a reboot.") : nil
+            message =
+                result.staged
+                ? String(localized: "Takes effect at the next boot: apply it staged or with a reboot.") : nil
             await describe()
         } catch {
             message = error.localizedDescription
@@ -460,10 +496,12 @@ struct MachineConfigView: View {
     /// Device-only pasteboard; revealed secrets expire from it after two minutes.
     private func copy() {
         guard let yaml = loadedYAML else { return }
-        let options: [UIPasteboard.OptionsKey: Any] = reveal
+        let options: [UIPasteboard.OptionsKey: Any] =
+            reveal
             ? [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)]
             : [.localOnly: true]
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: yaml]], options: options)
-        message = reveal ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
+        message =
+            reveal ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
     }
 }

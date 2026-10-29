@@ -25,7 +25,9 @@ struct KubeObjectDeleteSheet: View {
     @State private var failure: String?
 
     // Explicit: the private @State makes the memberwise init private.
-    init(resource: KubeAPIResource, namespace: String, name: String, denial: KubeAccess?, onDeleted: @escaping () -> Void) {
+    init(
+        resource: KubeAPIResource, namespace: String, name: String, denial: KubeAccess?, onDeleted: @escaping () -> Void
+    ) {
         self.resource = resource
         self.namespace = namespace
         self.name = name
@@ -80,7 +82,8 @@ struct KubeObjectDeleteSheet: View {
                     ForEach(preview.dependents, id: \.self) { dependent in
                         HStack(spacing: 6) {
                             Text(verbatim: dependent.kind).foregroundStyle(.secondary)
-                            Text(verbatim: dependent.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                            Text(verbatim: dependent.name).font(.callout.monospaced()).lineLimit(1).truncationMode(
+                                .middle)
                         }
                     }
                     if preview.moreDependents > 0 {
@@ -131,7 +134,9 @@ struct KubeObjectDeleteSheet: View {
                         if preview.isProtected { Text("Delete anyway") } else { Text("Delete") }
                     }
                 }
-                .disabled(deleting || denial != nil || (preview.needsTypedName && !typedConfirmationMatches(typed, token: name)))
+                .disabled(
+                    deleting || denial != nil
+                        || (preview.needsTypedName && !typedConfirmationMatches(typed, token: name)))
             }
         }
     }
@@ -169,8 +174,9 @@ struct KubeObjectDeleteSheet: View {
         defer { deleting = false }
         failure = nil
         do {
-            try await client.deleteObject(resource, namespace: namespace, name: name, propagation: propagation,
-                                          resourceVersion: preview.resourceVersion, force: preview.isProtected)
+            try await client.deleteObject(
+                resource, namespace: namespace, name: name, propagation: propagation,
+                resourceVersion: preview.resourceVersion, force: preview.isProtected)
             onDeleted()
             dismiss()
         } catch {

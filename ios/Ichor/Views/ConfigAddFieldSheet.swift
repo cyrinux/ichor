@@ -65,8 +65,12 @@ struct ConfigAddFieldSheet: View {
     private var fieldSection: some View {
         Section("Field") {
             ForEach(addable) { field in
-                Button { select(field) } label: { AddableRow(field: field, selected: field.key == selected) }
-                    .buttonStyle(.plain)
+                Button {
+                    select(field)
+                } label: {
+                    AddableRow(field: field, selected: field.key == selected)
+                }
+                .buttonStyle(.plain)
             }
             if allowsCustomKey {
                 TextField("Custom key", text: customKeyBinding)
@@ -79,20 +83,24 @@ struct ConfigAddFieldSheet: View {
 
     /// Typing a key gives up the schema field picked before.
     private var customKeyBinding: Binding<String> {
-        Binding(get: { customKey }, set: { new in
-            customKey = new
-            if !new.isEmpty && selected != nil {
-                selected = nil
-                resetValue()
-            }
-        })
+        Binding(
+            get: { customKey },
+            set: { new in
+                customKey = new
+                if !new.isEmpty && selected != nil {
+                    selected = nil
+                    resetValue()
+                }
+            })
     }
 
     private var typeSelection: Binding<String> {
-        Binding(get: { type }, set: { new in
-            chosenType = new
-            resetValue()
-        })
+        Binding(
+            get: { type },
+            set: { new in
+                chosenType = new
+                resetValue()
+            })
     }
 
     private func select(_ field: ConfigAddable) {
@@ -108,8 +116,10 @@ struct ConfigAddFieldSheet: View {
 
     private func submit() async {
         busy = true
-        failure = await apply(.add(doc: doc, path: parent.path, key: key, type: type,
-                                   value: configSubmittedValue(type: type, text: value)))
+        failure = await apply(
+            .add(
+                doc: doc, path: parent.path, key: key, type: type,
+                value: configSubmittedValue(type: type, text: value)))
         busy = false
         if failure == nil { dismiss() }
     }

@@ -36,16 +36,20 @@ struct AppsCard: View {
         let attention = apps.filter(\.needsAttention).count
         let tiles = overviewTiles(apps, limit: 6, remoteIcons: remoteIcons)
         return VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: String(localized: "Apps"),
-                          subtitle: [String(localized: "\(running) running"), String(localized: "\(containers) containers")]
-                              .joined(separator: " · "),
-                          pill: attentionPill(attention))
-                .font(.headline)
+            SectionHeader(
+                title: String(localized: "Apps"),
+                subtitle: [String(localized: "\(running) running"), String(localized: "\(containers) containers")]
+                    .joined(separator: " · "),
+                pill: attentionPill(attention)
+            )
+            .font(.headline)
             HStack(spacing: 8) {
                 ForEach(tiles.shown) { app in
                     AppIconView(app: app, size: 36)
                         .overlay(alignment: .bottomTrailing) {
-                            if let argo, argoNeedsBadge(argoApps(for: app, in: argo)) { ArgoTileBadge().offset(x: 4, y: 4) }
+                            if let argo, argoNeedsBadge(argoApps(for: app, in: argo)) {
+                                ArgoTileBadge().offset(x: 4, y: 4)
+                            }
                         }
                 }
                 if tiles.rest > 0 {
@@ -64,7 +68,9 @@ struct AppsCard: View {
     @ViewBuilder private func attentionPill(_ attention: Int) -> some View {
         if attention > 0 {
             // Borderless: its own tap target inside the row's link.
-            Button { path.append(.apps(hostnames: hostnames, filter: .attention)) } label: {
+            Button {
+                path.append(.apps(hostnames: hostnames, filter: .attention))
+            } label: {
                 StatusPill(label: String(localized: "\(attention) need a look"), color: attentionColor)
             }
             .buttonStyle(.borderless)

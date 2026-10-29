@@ -83,8 +83,10 @@ struct KubeSignInSheet: View {
                 if info.signedIn {
                     if let user = info.user { LabeledContent("Signed in as", value: user) }
                     if info.sessionExpires > 0 {
-                        LabeledContent("Session ends", value: Date(timeIntervalSince1970: TimeInterval(info.sessionExpires))
-                            .formatted(date: .abbreviated, time: .shortened))
+                        LabeledContent(
+                            "Session ends",
+                            value: Date(timeIntervalSince1970: TimeInterval(info.sessionExpires))
+                                .formatted(date: .abbreviated, time: .shortened))
                     }
                     Button("Sign out", role: .destructive) { Task { await signOut() } }
                         .disabled(signingOut || flow.isRunning)
@@ -303,7 +305,9 @@ struct KubeCredentialsForm: View {
 
     @ViewBuilder private var credentialsFooter: some View {
         if fields.contains(where: { kubeFieldInput($0) == .secret || kubeFieldInput($0) == .json }) {
-            Text("Stored sealed on this device, and in your encrypted backups. Prefer a dedicated identity with read-only access.")
+            Text(
+                "Stored sealed on this device, and in your encrypted backups. Prefer a dedicated identity with read-only access."
+            )
         }
     }
 }
@@ -330,7 +334,8 @@ struct KubeFieldsSection: View {
                 Text(importError).font(.footnote).foregroundStyle(.statusBad)
             }
         }
-        .fileImporter(isPresented: $importingFor.isPresent(), allowedContentTypes: [.json, .plainText, .data]) { result in
+        .fileImporter(isPresented: $importingFor.isPresent(), allowedContentTypes: [.json, .plainText, .data]) {
+            result in
             guard let field = importingFor else { return }
             switch result {
             case .success(let url): read(url, into: field)
@@ -361,8 +366,12 @@ struct KubeFieldsSection: View {
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .frame(minHeight: 100)
-                Button { importingFor = field } label: { Label("Choose file", systemImage: "doc") }
-                    .buttonStyle(.borderless)
+                Button {
+                    importingFor = field
+                } label: {
+                    Label("Choose file", systemImage: "doc")
+                }
+                .buttonStyle(.borderless)
             }
         }
     }
@@ -376,7 +385,8 @@ struct KubeFieldsSection: View {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         // A service account key is a few kB.
         guard let data = try? Data(contentsOf: url), data.count <= 64 * 1024,
-              let text = String(data: data, encoding: .utf8) else {
+            let text = String(data: data, encoding: .utf8)
+        else {
             importError = String(localized: "This file cannot be read.")
             return
         }

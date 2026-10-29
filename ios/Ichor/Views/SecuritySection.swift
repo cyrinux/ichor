@@ -15,9 +15,14 @@ struct SecuritySection: View {
             Text("Security")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
-                if lockRequired && model.lock.enabled { Text("Always on while a cluster is imported.") }
-                else if model.requiresKey && model.lock.enabled { Text("Always on while a security key is required.") }
+                Text(
+                    "Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher."
+                )
+                if lockRequired && model.lock.enabled {
+                    Text("Always on while a cluster is imported.")
+                } else if model.requiresKey && model.lock.enabled {
+                    Text("Always on while a security key is required.")
+                }
             }
         }
         // A YubiKey (or any FIDO2 key) tapped on the iPhone as another way in, see IchorCore/SecurityKeys.swift.
@@ -34,7 +39,9 @@ struct SecuritySection: View {
             return
         }
         Task {
-            if let failure = await Authenticator.authenticate(reason: enabled ? String(localized: "Enable app lock") : String(localized: "Disable app lock")) {
+            if let failure = await Authenticator.authenticate(
+                reason: enabled ? String(localized: "Enable app lock") : String(localized: "Disable app lock"))
+            {
                 lockError = failure
             } else {
                 lockError = nil

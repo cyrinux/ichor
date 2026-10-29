@@ -104,7 +104,8 @@ public func clusterGroups(_ contexts: [ContextSummary], masked: Bool) -> [Cluste
     var seen = Set<String>()
     return keyed.compactMap { _, group in
         guard seen.insert(group.key).inserted else { return nil }
-        return ClusterGroup(key: group.key, provider: group.provider, owner: group.owner,
-                            contexts: members[group.key]?.map(\.0) ?? [])
+        return ClusterGroup(
+            key: group.key, provider: group.provider, owner: group.owner,
+            contexts: members[group.key]?.map(\.0) ?? [])
     }
 }

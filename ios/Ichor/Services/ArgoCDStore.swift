@@ -56,7 +56,9 @@ final class ArgoCDStore {
 
     /// Runs action on the sync windows of project, once per options entry; nil on success, else
     /// the message to show.
-    func freeze(_ action: ArgoFreezeAction, on project: ArgoProject, options: [ArgoFreezeOptions], with client: TalosClient) async -> String? {
+    func freeze(
+        _ action: ArgoFreezeAction, on project: ArgoProject, options: [ArgoFreezeOptions], with client: TalosClient
+    ) async -> String? {
         guard !options.isEmpty else { return nil }
         // Another change is in flight: refusing beats reporting success for nothing done.
         guard !busyProjects.contains(project.id) else {
@@ -66,7 +68,8 @@ final class ArgoCDStore {
         defer { busyProjects.remove(project.id) }
         for entry in options {
             do {
-                try await client.argoFreeze(namespace: project.namespace, project: project.name, action: action, options: entry)
+                try await client.argoFreeze(
+                    namespace: project.namespace, project: project.name, action: action, options: entry)
             } catch {
                 return "\(project.name): \(error.localizedDescription)"
             }
@@ -81,7 +84,9 @@ final class ArgoCDStore {
     }
 
     /// Runs action on app; nil on success, else the message to show.
-    func run(_ action: ArgoAction, on app: ArgoApp, options: ArgoSyncOptions? = nil, with client: TalosClient) async -> String? {
+    func run(_ action: ArgoAction, on app: ArgoApp, options: ArgoSyncOptions? = nil, with client: TalosClient) async
+        -> String?
+    {
         do {
             try await client.argoAction(namespace: app.namespace, name: app.name, action: action, options: options)
             fastUntil = Date().addingTimeInterval(10)
@@ -114,16 +119,20 @@ extension ArgoCDStore {
     /// not frozen), from the status already loaded for key; nil when none or not loaded.
     func selfHealer(kind: String, namespace: String, name: String, key: String) -> ArgoSelfHealer? {
         guard let status = status(for: key),
-              let app = status.selfHealingOwner(kind: kind, namespace: namespace, name: name),
-              let project = status.project(of: app) else { return nil }
+            let app = status.selfHealingOwner(kind: kind, namespace: namespace, name: name),
+            let project = status.project(of: app)
+        else { return nil }
         return ArgoSelfHealer(app: app, project: project)
     }
 
     /// Freezes the healer's app for an hour with reason (stored on the cluster: no masked name);
     /// nil on success, else the message to show.
     func freezeForHandChange(_ healer: ArgoSelfHealer, reason: String, with client: TalosClient) async -> String? {
-        let options = freezeOptions(for: healer.app, scope: .app, minutes: freezeExtendMinutes, manualSync: true, reason: reason)
-        guard let failure = await freeze(.freeze, on: healer.project, options: [options], with: client) else { return nil }
+        let options = freezeOptions(
+            for: healer.app, scope: .app, minutes: freezeExtendMinutes, manualSync: true, reason: reason)
+        guard let failure = await freeze(.freeze, on: healer.project, options: [options], with: client) else {
+            return nil
+        }
         return String(localized: "Could not freeze \(healer.app.name), nothing changed: \(failure)")
     }
 }

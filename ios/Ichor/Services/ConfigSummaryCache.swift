@@ -29,8 +29,10 @@ final class ConfigSummaryCache: @unchecked Sendable {
 
     /// The summary of the stored `text` of `kind`: `record`'s when Go finds the text unchanged
     /// under the current mask (nothing parsed), else parsed. Nil when it does not parse.
-    func summary(_ kind: StoredConfigKind, of text: String, record: ConfigSummaryRecord?,
-                 generation: Int) async -> (summary: ConfigSummary, cached: Bool)? {
+    func summary(
+        _ kind: StoredConfigKind, of text: String, record: ConfigSummaryRecord?,
+        generation: Int
+    ) async -> (summary: ConfigSummary, cached: Bool)? {
         let known = record?.knownDigest(kind, generation: generation) ?? ""
         do {
             let output = try await TalosClient.parseIfChanged(kind, text, knownDigest: known)
@@ -48,12 +50,15 @@ final class ConfigSummaryCache: @unchecked Sendable {
     /// `generation`: TalosClient.privacyGeneration() read before the parse that made the newest
     /// summary; when the mask changed since, nothing is written (shouldStore).
     /// A failed write (e.g. no security key tapped) only means the next launch parses.
-    func store(talos: String?, talosSummary: ConfigSummary?, kube: String?, kubeSummary: ConfigSummary?, generation: Int) {
+    func store(
+        talos: String?, talosSummary: ConfigSummary?, kube: String?, kubeSummary: ConfigSummary?, generation: Int
+    ) {
         let talosDigest = talosSummary == nil ? "" : talos.map { IchorgoConfigDigest($0) } ?? ""
         let kubeDigest = kubeSummary == nil ? "" : kube.map { IchorgoConfigDigest($0) } ?? ""
         do {
-            let record = try ConfigSummaryRecord(talosDigest: talosDigest, kubeDigest: kubeDigest, maskGeneration: generation,
-                                                 summaries: StoredSummaries(talos: talosSummary, kube: kubeSummary))
+            let record = try ConfigSummaryRecord(
+                talosDigest: talosDigest, kubeDigest: kubeDigest, maskGeneration: generation,
+                summaries: StoredSummaries(talos: talosSummary, kube: kubeSummary))
             let kept = SecureConfigStore.isStored(.summaryCache) ? current() : nil
             guard record.shouldStore(currentGeneration: TalosClient.privacyGeneration(), stored: kept) else { return }
             try SecureConfigStore.save(record.encoded(), item: .summaryCache)

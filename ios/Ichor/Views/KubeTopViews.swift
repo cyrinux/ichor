@@ -10,12 +10,14 @@ struct NodeUsageView: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            UsageLine(label: String(localized: "CPU"),
-                      value: "\(formatCPU(top.cpu)) / \(formatCPU(top.cpuAllocatable))",
-                      fraction: top.cpuPercent / 100)
-            UsageLine(label: String(localized: "Memory"),
-                      value: "\(formatBytes(Int64(top.memory))) / \(formatBytes(Int64(top.memoryAllocatable)))",
-                      fraction: top.memoryPercent / 100)
+            UsageLine(
+                label: String(localized: "CPU"),
+                value: "\(formatCPU(top.cpu)) / \(formatCPU(top.cpuAllocatable))",
+                fraction: top.cpuPercent / 100)
+            UsageLine(
+                label: String(localized: "Memory"),
+                value: "\(formatBytes(Int64(top.memory))) / \(formatBytes(Int64(top.memoryAllocatable)))",
+                fraction: top.memoryPercent / 100)
         }
     }
 }
@@ -26,12 +28,15 @@ struct PodUsageView: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            UsageLine(label: String(localized: "CPU"),
-                      value: formatCPU(top.cpu) + (top.cpuBound > 0 ? " / \(formatCPU(top.cpuBound))" : ""),
-                      fraction: top.cpuFraction)
-            UsageLine(label: String(localized: "Memory"),
-                      value: formatBytes(Int64(top.memory)) + (top.memoryBound > 0 ? " / \(formatBytes(Int64(top.memoryBound)))" : ""),
-                      fraction: top.memoryFraction)
+            UsageLine(
+                label: String(localized: "CPU"),
+                value: formatCPU(top.cpu) + (top.cpuBound > 0 ? " / \(formatCPU(top.cpuBound))" : ""),
+                fraction: top.cpuFraction)
+            UsageLine(
+                label: String(localized: "Memory"),
+                value: formatBytes(Int64(top.memory))
+                    + (top.memoryBound > 0 ? " / \(formatBytes(Int64(top.memoryBound)))" : ""),
+                fraction: top.memoryFraction)
         }
     }
 }

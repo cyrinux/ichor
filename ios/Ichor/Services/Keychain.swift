@@ -21,8 +21,10 @@ enum Keychain {
     }
 
     /// `accessible`: when the item can be read; this device only either way.
-    static func write(_ data: Data, account: String,
-                      accessible: CFString = kSecAttrAccessibleWhenUnlockedThisDeviceOnly) throws {
+    static func write(
+        _ data: Data, account: String,
+        accessible: CFString = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+    ) throws {
         let query = base(account)
         let update = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         if update == errSecSuccess { return }

@@ -37,11 +37,20 @@ struct ConfigUnreadableView: View {
     private var reason: String {
         let failed = Set(model.unreadable)
         if failed == [StoredConfigKind.kubeconfig] {
-            return String(localized: "Your kubeconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again.")
+            return String(
+                localized:
+                    "Your kubeconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again."
+            )
         }
         if failed == [StoredConfigKind.talosconfig] {
-            return String(localized: "Your talosconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again.")
+            return String(
+                localized:
+                    "Your talosconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again."
+            )
         }
-        return String(localized: "Your talosconfig and kubeconfig are still on this device, but they could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again.")
+        return String(
+            localized:
+                "Your talosconfig and kubeconfig are still on this device, but they could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again."
+        )
     }
 }

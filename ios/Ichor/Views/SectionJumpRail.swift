@@ -42,10 +42,14 @@ struct SectionJumpRail: View {
                     .transition(.opacity)
                     .accessibilityHidden(true)
             }
-            Button { onJump(section, true) } label: { dot(filled: section.id == current) }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(verbatim: CapacityText.sectionRailJumpTo(section.label)))
-                .accessibilityAddTraits(section.id == current ? .isSelected : [])
+            Button {
+                onJump(section, true)
+            } label: {
+                dot(filled: section.id == current)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(verbatim: CapacityText.sectionRailJumpTo(section.label)))
+            .accessibilityAddTraits(section.id == current ? .isSelected : [])
         }
         .frame(height: rowHeight)
     }
@@ -66,7 +70,8 @@ struct SectionJumpRail: View {
                 if !labelsShown { withAnimation(.easeOut(duration: 0.15)) { labelsShown = true } }
                 let height = rowHeight * CGFloat(sections.count)
                 guard let target = SectionJump.section(at: Double(value.location.y / height), in: sections),
-                      target.id != scrubbed else { return }
+                    target.id != scrubbed
+                else { return }
                 scrubbed = target.id
                 ticks += 1
                 onJump(target, false)
@@ -98,7 +103,11 @@ struct SectionRailScroll<Content: View>: View {
         ScrollViewReader { proxy in
             content()
                 .environment(\.sectionTops, $tops)
-                .onGeometryChange(for: Double.self) { Double($0.frame(in: .global).minY + $0.safeAreaInsets.top) } action: { listTop = $0 }
+                .onGeometryChange(for: Double.self) {
+                    Double($0.frame(in: .global).minY + $0.safeAreaInsets.top)
+                } action: {
+                    listTop = $0
+                }
                 .onChange(of: tops) { updateCurrent() }
                 .onChange(of: listTop) { updateCurrent() }
                 .onChange(of: sections) { updateCurrent() }
@@ -139,7 +148,11 @@ private struct SectionTarget: ViewModifier {
     func body(content: Content) -> some View {
         content
             .id(id)
-            .onGeometryChange(for: Double.self) { Double($0.frame(in: .global).minY) } action: { tops?.wrappedValue[id] = $0 }
+            .onGeometryChange(for: Double.self) {
+                Double($0.frame(in: .global).minY)
+            } action: {
+                tops?.wrappedValue[id] = $0
+            }
             .onDisappear { tops?.wrappedValue[id] = nil }
     }
 }

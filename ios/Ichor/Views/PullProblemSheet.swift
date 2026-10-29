@@ -48,8 +48,9 @@ struct PullProblemSheet: View {
         switch action {
         case .registryMirror(let host):
             NavigationLink {
-                MachineConfigView(node: node.node, hostname: node.hostname,
-                                  snippet: SnippetRequest(id: "registry_mirror", params: host.isEmpty ? [:] : ["host": host]))
+                MachineConfigView(
+                    node: node.node, hostname: node.hostname,
+                    snippet: SnippetRequest(id: "registry_mirror", params: host.isEmpty ? [:] : ["host": host]))
             } label: {
                 Label("Registry mirror snippet", systemImage: "wand.and.stars")
             }
@@ -90,17 +91,31 @@ extension PullHint {
     var text: String {
         switch self {
         case .notFound: String(localized: "Check the image name and tag: the registry has no such image or tag.")
-        case .secrets(let names): String(localized: "The pod's pull secrets: \(names). One must be for this registry and still valid.")
+        case .secrets(let names):
+            String(localized: "The pod's pull secrets: \(names). One must be for this registry and still valid.")
         case .noSecret: String(localized: "The pod has no pull secret: a private image needs one in imagePullSecrets.")
         case .rateLimited:
-            String(localized: "Anonymous pulls from this registry are limited. A pull-through mirror or registry credentials lift the limit.")
+            String(
+                localized:
+                    "Anonymous pulls from this registry are limited. A pull-through mirror or registry credentials lift the limit."
+            )
         case .tls:
-            String(localized: "The registry's certificate is not signed by an authority the node trusts: add its CA to the machine config, or fix the certificate.")
+            String(
+                localized:
+                    "The registry's certificate is not signed by an authority the node trusts: add its CA to the machine config, or fix the certificate."
+            )
         case .network:
-            String(localized: "The node could not resolve or reach the registry: check its DNS, routes and egress, or use a mirror it can reach.")
+            String(
+                localized:
+                    "The node could not resolve or reach the registry: check its DNS, routes and egress, or use a mirror it can reach."
+            )
         case .platform:
-            String(localized: "The image has no build for this node's architecture: pick a multi-arch tag or schedule the pod on matching nodes.")
-        case .invalidName: String(localized: "The image reference cannot be parsed: check its spelling (lower case, no spaces).")
+            String(
+                localized:
+                    "The image has no build for this node's architecture: pick a multi-arch tag or schedule the pod on matching nodes."
+            )
+        case .invalidName:
+            String(localized: "The image reference cannot be parsed: check its spelling (lower case, no spaces).")
         case .unknown: String(localized: "The kubelet's message below says what went wrong.")
         }
     }

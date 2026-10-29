@@ -20,8 +20,11 @@ struct HostnameConfirmationSheet: View {
     @State private var acknowledged: Set<String> = []
 
     // Explicit: the private @State makes the memberwise init private.
-    init(title: String, message: String, hostname: String, actionTitle: String, enabled: Bool = true, acknowledgments: [String] = [],
-         alternative: (title: String, action: () -> Void)? = nil, onConfirm: @escaping () -> Void) {
+    init(
+        title: String, message: String, hostname: String, actionTitle: String, enabled: Bool = true,
+        acknowledgments: [String] = [],
+        alternative: (title: String, action: () -> Void)? = nil, onConfirm: @escaping () -> Void
+    ) {
         self.title = title
         self.message = message
         self.hostname = hostname
@@ -65,13 +68,19 @@ struct HostnameConfirmationSheet: View {
                         .textInputAutocapitalization(.never)
                 }
                 Section {
-                    Button(role: .destructive) { onConfirm() } label: { Text(actionTitle) }
-                        .disabled(!matches || !allAcknowledged)
+                    Button(role: .destructive) {
+                        onConfirm()
+                    } label: {
+                        Text(actionTitle)
+                    }
+                    .disabled(!matches || !allAcknowledged)
                     if let alternative {
                         Button {
                             dismiss()
                             alternative.action()
-                        } label: { Text(verbatim: alternative.title) }
+                        } label: {
+                            Text(verbatim: alternative.title)
+                        }
                     }
                 }
             }
@@ -88,5 +97,7 @@ struct HostnameConfirmationSheet: View {
 func typedConfirmationPrompt(_ name: String) -> String {
     let code = typedConfirmationCode(name)
     let whole = name.trimmingCharacters(in: .whitespaces)
-    return code == whole ? String(localized: "Type \(code) to confirm") : String(localized: "Type \(code), the end of \(whole), to confirm")
+    return code == whole
+        ? String(localized: "Type \(code) to confirm")
+        : String(localized: "Type \(code), the end of \(whole), to confirm")
 }

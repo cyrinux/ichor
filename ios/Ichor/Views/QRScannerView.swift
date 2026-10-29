@@ -209,7 +209,9 @@ private struct Scanner: UIViewControllerRepresentable {
             parts.onStartOver = { [weak self] in self?.readAgain() }
         }
 
-        func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        func dataScanner(
+            _ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]
+        ) {
             inFrame = allItems
             feed(addedItems, from: dataScanner)
         }
@@ -217,12 +219,18 @@ private struct Scanner: UIViewControllerRepresentable {
         // A code held in frame is reported as updated, not added: a part first read
         // unclearly, or one in frame again after Start over, is still collected
         // (duplicates are ignored).
-        func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        func dataScanner(
+            _ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem],
+            allItems: [RecognizedItem]
+        ) {
             inFrame = allItems
             feed(updatedItems, from: dataScanner)
         }
 
-        func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        func dataScanner(
+            _ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem],
+            allItems: [RecognizedItem]
+        ) {
             inFrame = allItems
             muted.subtract(removedItems.map(\.id))
         }
@@ -237,7 +245,9 @@ private struct Scanner: UIViewControllerRepresentable {
         private func feed(_ items: [RecognizedItem], from dataScanner: DataScannerViewController) {
             guard !delivered else { return }
             for item in items where !muted.contains(item.id) {
-                guard case .barcode(let barcode) = item, let payload = Self.text(of: barcode), !payload.isEmpty else { continue }
+                guard case .barcode(let barcode) = item, let payload = Self.text(of: barcode), !payload.isEmpty else {
+                    continue
+                }
                 // A part of a multi-part set waits for the others; a one-code scan imports
                 // unless a set is being collected (the core then answers notPartWhileCollecting).
                 switch parts.add(payload) {
@@ -271,7 +281,8 @@ private struct Scanner: UIViewControllerRepresentable {
                 return barcode.payloadStringValue
             }
             var error: NSError?
-            let text = IchorgoQRCodeText(barcode.payloadStringValue ?? "", qr.errorCorrectedPayload, qr.symbolVersion, &error)
+            let text = IchorgoQRCodeText(
+                barcode.payloadStringValue ?? "", qr.errorCorrectedPayload, qr.symbolVersion, &error)
             return error == nil ? text : barcode.payloadStringValue
         }
     }

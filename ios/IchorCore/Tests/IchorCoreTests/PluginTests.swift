@@ -13,8 +13,9 @@ final class PluginTests: XCTestCase {
             .appendingPathComponent(relative)
         let byDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent("../../\(relative)").standardizedFileURL
-        let url = try XCTUnwrap([byFile, byDirectory].first { FileManager.default.fileExists(atPath: $0.path) },
-                                "\(relative) not found")
+        let url = try XCTUnwrap(
+            [byFile, byDirectory].first { FileManager.default.fileExists(atPath: $0.path) },
+            "\(relative) not found")
         return try TalosJSON.decode(PluginTree.self, from: String(decoding: try Data(contentsOf: url), as: UTF8.self))
     }
 
@@ -159,7 +160,9 @@ final class PluginTests: XCTestCase {
         let awake = try XCTUnwrap(actions[1])
         XCTAssertFalse(awake.usable)
         XCTAssertEqual(awake.note, .reason("not asleep"))
-        let refused = try sections(#"[{"type":"actions","items":[{"id":"a","label":"A","enabled":true,"allowed":false,"params":[{"name":"n","label":"N","type":"enum","values":["x","y"]}]}]}]"#)
+        let refused = try sections(
+            #"[{"type":"actions","items":[{"id":"a","label":"A","enabled":true,"allowed":false,"params":[{"name":"n","label":"N","type":"enum","values":["x","y"]}]}]}]"#
+        )
         guard case .actions(let items) = refused[0] else { return XCTFail("not actions") }
         XCTAssertFalse(items[0].usable)
         XCTAssertEqual(items[0].note, .notAllowed)
@@ -183,12 +186,13 @@ final class PluginTests: XCTestCase {
     }
 
     func testKnownTypeWithBadFieldsIsSkipped() throws {
-        let decoded = try sections(#"""
-        [{"type":"gauge","value":"half"},
-         {"type":"keyValues","items":"none"},
-         {"type":"table","rows":[[1,2]]},
-         {"type":"keyValues","items":[{"label":"Kept","value":"yes"}]}]
-        """#)
+        let decoded = try sections(
+            #"""
+            [{"type":"gauge","value":"half"},
+             {"type":"keyValues","items":"none"},
+             {"type":"table","rows":[[1,2]]},
+             {"type":"keyValues","items":[{"label":"Kept","value":"yes"}]}]
+            """#)
         XCTAssertEqual(decoded.prefix(3), [.unknown("gauge"), .unknown("keyValues"), .unknown("table")])
         guard case .keyValues(let items) = decoded[3] else { return XCTFail("the next section is lost") }
         XCTAssertEqual(items.first?.value, "yes")
@@ -215,12 +219,15 @@ final class PluginTests: XCTestCase {
         let gadgets = try XCTUnwrap(tree.cards.first { $0.id == "gadgets" })
         XCTAssertFalse(gadgets.groupsByNamespace)
         // One namespace: no group title needed.
-        let one = try TalosJSON.decode(PluginCard.self, from: #"{"id":"c","rows":[{"ref":{"namespace":"a","name":"x"}},{"ref":{"namespace":"a","name":"y"}}]}"#)
+        let one = try TalosJSON.decode(
+            PluginCard.self,
+            from: #"{"id":"c","rows":[{"ref":{"namespace":"a","name":"x"}},{"ref":{"namespace":"a","name":"y"}}]}"#)
         XCTAssertFalse(one.groupsByNamespace)
     }
 
     func testShownCardsDropEmptyOnesWithoutText() throws {
-        let tree = try TalosJSON.decode(PluginTree.self, from: #"{"cards":[{"id":"a","rows":[]},{"id":"b","empty":"None.","rows":[]},{"id":"c"}]}"#)
+        let tree = try TalosJSON.decode(
+            PluginTree.self, from: #"{"cards":[{"id":"a","rows":[]},{"id":"b","empty":"None.","rows":[]},{"id":"c"}]}"#)
         XCTAssertEqual(tree.shownCards.map(\.id), ["b"])
         XCTAssertFalse(tree.active)
         XCTAssertEqual(tree.plugin.category, pluginCategoryDataServices)
@@ -253,14 +260,16 @@ final class PluginTests: XCTestCase {
     }
 
     func testDetectSplitsTabsAndTiles() throws {
-        let detect = try TalosJSON.decode(PluginDetect.self, from: #"""
-        {"items":[
-          {"id":"kube-green","name":"kube-green","icon":"kube-green","category":"data-services","active":true,"detectedVia":"api",
-           "summary":{"title":"2 sleep schedules","health":"warning","badges":[{"label":"asleep","value":"1","tone":"info"}]}},
-          {"id":"pg","name":"PG","category":"data-services","screen":"native:cloudnative-pg","active":true,"summary":null},
-          {"id":"widgets","name":"Widgets","category":"networking","active":true},
-          {"id":"off","name":"Off","category":"data-services","active":false}]}
-        """#)
+        let detect = try TalosJSON.decode(
+            PluginDetect.self,
+            from: #"""
+                {"items":[
+                  {"id":"kube-green","name":"kube-green","icon":"kube-green","category":"data-services","active":true,"detectedVia":"api",
+                   "summary":{"title":"2 sleep schedules","health":"warning","badges":[{"label":"asleep","value":"1","tone":"info"}]}},
+                  {"id":"pg","name":"PG","category":"data-services","screen":"native:cloudnative-pg","active":true,"summary":null},
+                  {"id":"widgets","name":"Widgets","category":"networking","active":true},
+                  {"id":"off","name":"Off","category":"data-services","active":false}]}
+                """#)
         XCTAssertEqual(detect.active.map(\.id), ["kube-green", "pg", "widgets"])
         XCTAssertEqual(detect.dataServicePlugins.map(\.id), ["kube-green", "pg"])
         XCTAssertEqual(detect.dataServiceTabs.map(\.id), ["kube-green"])
@@ -286,26 +295,32 @@ final class PluginTests: XCTestCase {
     }
 
     func testCatalogKinds() throws {
-        let catalog = try TalosJSON.decode(PluginCatalog.self, from: #"""
-        {"items":[{"id":"kube-green","name":"kube-green","category":"data-services",
-          "resources":[{"group":"kube-green.com","version":"v1alpha1","resource":"sleepinfos","kind":"SleepInfo"},
-                       {"group":"","version":"v1","resource":"secrets","kind":"Secret"}],
-          "actions":[{"id":"wakeNow","label":"Wake up now","verb":"patch"}]}]}
-        """#)
+        let catalog = try TalosJSON.decode(
+            PluginCatalog.self,
+            from: #"""
+                {"items":[{"id":"kube-green","name":"kube-green","category":"data-services",
+                  "resources":[{"group":"kube-green.com","version":"v1alpha1","resource":"sleepinfos","kind":"SleepInfo"},
+                               {"group":"","version":"v1","resource":"secrets","kind":"Secret"}],
+                  "actions":[{"id":"wakeNow","label":"Wake up now","verb":"patch"}]}]}
+                """#)
         let secret = PluginRef(group: "", version: "v1", resource: "secrets", namespace: "demo-lab", name: "s")
         XCTAssertEqual(catalog.kindOf("kube-green", secret), "Secret")
-        XCTAssertEqual(catalog.kindOf("kube-green", PluginRef(group: "kube-green.com", resource: "sleepinfos")), "SleepInfo")
+        XCTAssertEqual(
+            catalog.kindOf("kube-green", PluginRef(group: "kube-green.com", resource: "sleepinfos")), "SleepInfo")
         XCTAssertEqual(catalog.kindOf("other", secret), "")
         XCTAssertEqual(catalog.kindOf("kube-green", PluginRef(resource: "pods")), "")
-        let clusterScoped = PluginRef(group: "widgets.example.com", version: "", resource: "gadgets", name: "hub").apiResource(kind: "")
+        let clusterScoped = PluginRef(group: "widgets.example.com", version: "", resource: "gadgets", name: "hub")
+            .apiResource(kind: "")
         XCTAssertFalse(clusterScoped.namespaced)
         XCTAssertEqual(clusterScoped.version, "v1")
     }
 
     func testRefKind() throws {
-        let ref = try TalosJSON.decode(PluginRef.self, from: #"""
-        {"group":"networking.k8s.io","version":"v1","resource":"ingresses","kind":"Ingress","namespace":"demo-shop","name":"shop"}
-        """#)
+        let ref = try TalosJSON.decode(
+            PluginRef.self,
+            from: #"""
+                {"group":"networking.k8s.io","version":"v1","resource":"ingresses","kind":"Ingress","namespace":"demo-shop","name":"shop"}
+                """#)
         XCTAssertEqual(ref.kind, "Ingress")
         XCTAssertEqual(PluginCatalog(items: []).kindOf("demo-records", ref), "Ingress")
         XCTAssertEqual(ref.apiResource(kind: PluginCatalog(items: []).kindOf("demo-records", ref)).kind, "Ingress")
@@ -323,10 +338,14 @@ final class PluginTests: XCTestCase {
         let warn = PluginDetectItem(id: "kube-green", summary: PluginSummary(title: "t", health: "warning"))
         let calm = PluginDetectItem(id: "calm", summary: PluginSummary(title: "t", health: "ok"))
         let untold = PluginDetectItem(id: "untold")
-        let lines = DataServicesCardLine.lines(natives: [.longhorn, .cnpg], summary: { summaries[$0] }, plugins: [calm, untold, warn])
-        XCTAssertEqual(lines.map(\.id), ["cloudnative-pg", "plugin:kube-green", "plugin:untold", "longhorn", "plugin:calm"])
+        let lines = DataServicesCardLine.lines(
+            natives: [.longhorn, .cnpg], summary: { summaries[$0] }, plugins: [calm, untold, warn])
+        XCTAssertEqual(
+            lines.map(\.id), ["cloudnative-pg", "plugin:kube-green", "plugin:untold", "longhorn", "plugin:calm"])
         XCTAssertNil(lines[2].health)
-        XCTAssertEqual(DataServicesCardLine.attention(natives: [.longhorn, .cnpg], summary: { summaries[$0] }, plugins: [calm, untold, warn]), 3)
+        XCTAssertEqual(
+            DataServicesCardLine.attention(
+                natives: [.longhorn, .cnpg], summary: { summaries[$0] }, plugins: [calm, untold, warn]), 3)
         XCTAssertEqual(DataServicesCardLine.attention(natives: [], summary: { _ in nil }, plugins: []), 0)
     }
 
@@ -342,25 +361,31 @@ final class PluginTests: XCTestCase {
     // MARK: - Tools
 
     func testTheTreeCarriesItsToolButtons() throws {
-        let tree = try TalosJSON.decode(PluginTree.self, from: #"""
-        {"plugin": {"id": "external-dns", "category": "networking"}, "active": true,
-         "tools": [{"id": "checkNames", "label": "Check names", "hint": "The names go to your DNS resolver."}]}
-        """#)
-        XCTAssertEqual(tree.tools, [PluginTool(id: "checkNames", label: "Check names", hint: "The names go to your DNS resolver.")])
+        let tree = try TalosJSON.decode(
+            PluginTree.self,
+            from: #"""
+                {"plugin": {"id": "external-dns", "category": "networking"}, "active": true,
+                 "tools": [{"id": "checkNames", "label": "Check names", "hint": "The names go to your DNS resolver."}]}
+                """#)
+        XCTAssertEqual(
+            tree.tools, [PluginTool(id: "checkNames", label: "Check names", hint: "The names go to your DNS resolver.")]
+        )
         // A tree without tools (an older core, or a plugin with none) has no buttons.
         XCTAssertEqual(try golden("kube-green-samples").tools, [])
     }
 
     func testAToolResultDecodesWithItsCards() throws {
-        let result = try TalosJSON.decode(PluginToolResult.self, from: #"""
-        {"title": "1 of 2 names point at this cluster", "health": "critical", "cards": [
-          {"id": "names", "type": "list", "empty": "No hostnames.", "rows": [
-            {"ref": {"group": "networking.k8s.io", "version": "v1", "resource": "ingresses", "kind": "Ingress", "namespace": "demo-shop", "name": "shop"},
-             "title": "shop.example.com", "subtitle": "A · Ingress demo-shop/shop", "status": {"tone": "ok", "text": "Resolves here"},
-             "trailing": {"text": "3 ms"}, "detail": [{"type": "keyValues", "items": [{"label": "Answers", "value": "203.0.113.10", "mono": true}]}]},
-            {"title": "api.example.com", "status": {"tone": "critical", "text": "Not found"}}]},
-          {"id": "other", "type": "list", "rows": []}]}
-        """#)
+        let result = try TalosJSON.decode(
+            PluginToolResult.self,
+            from: #"""
+                {"title": "1 of 2 names point at this cluster", "health": "critical", "cards": [
+                  {"id": "names", "type": "list", "empty": "No hostnames.", "rows": [
+                    {"ref": {"group": "networking.k8s.io", "version": "v1", "resource": "ingresses", "kind": "Ingress", "namespace": "demo-shop", "name": "shop"},
+                     "title": "shop.example.com", "subtitle": "A · Ingress demo-shop/shop", "status": {"tone": "ok", "text": "Resolves here"},
+                     "trailing": {"text": "3 ms"}, "detail": [{"type": "keyValues", "items": [{"label": "Answers", "value": "203.0.113.10", "mono": true}]}]},
+                    {"title": "api.example.com", "status": {"tone": "critical", "text": "Not found"}}]},
+                  {"id": "other", "type": "list", "rows": []}]}
+                """#)
         XCTAssertEqual(result.title, "1 of 2 names point at this cluster")
         XCTAssertEqual(result.serviceHealth, .critical)
         // A card with no rows and no empty text draws nothing.
@@ -393,12 +418,14 @@ final class PluginTests: XCTestCase {
     }
 
     func testTwoRowsOfOneObjectExpandApart() throws {
-        let card = try TalosJSON.decode(PluginCard.self, from: #"""
-        {"id": "names", "rows": [
-          {"ref": {"resource": "services", "namespace": "demo-shop", "name": "web"}, "title": "web.example.com", "subtitle": "A"},
-          {"ref": {"resource": "services", "namespace": "demo-shop", "name": "web"}, "title": "web.example.com", "subtitle": "AAAA"},
-          {"title": "x"}]}
-        """#)
+        let card = try TalosJSON.decode(
+            PluginCard.self,
+            from: #"""
+                {"id": "names", "rows": [
+                  {"ref": {"resource": "services", "namespace": "demo-shop", "name": "web"}, "title": "web.example.com", "subtitle": "A"},
+                  {"ref": {"resource": "services", "namespace": "demo-shop", "name": "web"}, "title": "web.example.com", "subtitle": "AAAA"},
+                  {"title": "x"}]}
+                """#)
         let keys = card.rowGroups.flatMap(\.rows).map { $0.expandKey(card: card.id) }
         XCTAssertEqual(keys, ["names|/services/demo-shop/web", "names|#1", "names|#2"])
     }

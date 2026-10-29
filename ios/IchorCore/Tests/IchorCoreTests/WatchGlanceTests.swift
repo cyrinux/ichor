@@ -4,25 +4,34 @@ import XCTest
 final class WatchGlanceTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
-    private func snap(_ nodes: [(String, NodeHealth, String)], alarms: [String] = [], age: TimeInterval = 0) -> ClusterSnapshot {
+    private func snap(_ nodes: [(String, NodeHealth, String)], alarms: [String] = [], age: TimeInterval = 0)
+        -> ClusterSnapshot
+    {
         var byAddress: [String: NodeState] = [:]
         for (i, node) in nodes.enumerated() {
             byAddress["10.0.0.\(i + 1)"] = NodeState(hostname: node.0, health: node.1, reason: node.2)
         }
-        return ClusterSnapshot(context: "admin@lab", takenAt: now.addingTimeInterval(-age), nodes: byAddress,
-                               etcdAlarms: alarms, etcdChecked: true)
+        return ClusterSnapshot(
+            context: "admin@lab", takenAt: now.addingTimeInterval(-age), nodes: byAddress,
+            etcdAlarms: alarms, etcdChecked: true)
     }
 
     func testRowsPutNodesDownFirstThenByName() {
-        let rows = watchRows(from: snap([("cp-2", .ready, ""), ("w-1", .notReady, "Ready: KubeletNotReady"),
-                                         ("cp-1", .ready, ""), ("w-2", .unreachable, "timeout")]))
+        let rows = watchRows(
+            from: snap([
+                ("cp-2", .ready, ""), ("w-1", .notReady, "Ready: KubeletNotReady"),
+                ("cp-1", .ready, ""), ("w-2", .unreachable, "timeout"),
+            ]))
         XCTAssertEqual(rows.map(\.name), ["w-2", "w-1", "cp-1", "cp-2"])
         XCTAssertEqual(rows[1].reason, "Ready: KubeletNotReady")
     }
 
     func testRowsNeverCarryTheNodeAddress() throws {
-        let rows = watchRows(from: snap([("", .unreachable, "dial tcp 10.0.0.1:50000: i/o timeout"),
-                                         ("192.168.1.9", .ready, "")]))
+        let rows = watchRows(
+            from: snap([
+                ("", .unreachable, "dial tcp 10.0.0.1:50000: i/o timeout"),
+                ("192.168.1.9", .ready, ""),
+            ]))
         let json = try XCTUnwrap(String(data: JSONEncoder().encode(rows), encoding: .utf8))
         XCTAssertFalse(json.contains("10.0.0"))
         XCTAssertFalse(json.contains("192.168"))
@@ -62,11 +71,13 @@ final class WatchGlanceTests: XCTestCase {
     }
 
     func testScrubbedHostNames() {
-        XCTAssertEqual(scrubbedAddresses("dial tcp talos.lab.example:50000: connect: connection refused"),
-                       "dial tcp …: connect: connection refused")
+        XCTAssertEqual(
+            scrubbedAddresses("dial tcp talos.lab.example:50000: connect: connection refused"),
+            "dial tcp …: connect: connection refused")
         XCTAssertEqual(scrubbedAddresses("dial tcp cp-1:50000: refused"), "dial tcp …: refused")
-        XCTAssertEqual(scrubbedAddresses("lookup talos.lab.example on 10.0.0.53:53: no such host"),
-                       "lookup … on …: no such host")
+        XCTAssertEqual(
+            scrubbedAddresses("lookup talos.lab.example on 10.0.0.53:53: no such host"),
+            "lookup … on …: no such host")
         XCTAssertEqual(scrubbedAddresses("lookup cp-1: no such host"), "lookup …: no such host")
         XCTAssertEqual(scrubbedAddresses("dial 10.0.0.1:50000"), "dial …")
         XCTAssertEqual(scrubbedAddresses("dial [fd00::1]:50000"), "dial …")
@@ -88,9 +99,12 @@ final class WatchGlanceTests: XCTestCase {
     }
 
     func testPayloadFollowsTheWidgetListAndMarksTheActiveCluster() {
-        let clusters = [WidgetCluster(id: "a", name: "Home lab", link: "ichor://open?x"), WidgetCluster(id: "b", name: "Edge")]
-        let payload = watchPayload(clusters: clusters, snapshots: ["b": snap([("n1", .ready, "")], alarms: ["1:NOSPACE"])],
-                                   active: "b", masked: false, sentAt: now)
+        let clusters = [
+            WidgetCluster(id: "a", name: "Home lab", link: "ichor://open?x"), WidgetCluster(id: "b", name: "Edge"),
+        ]
+        let payload = watchPayload(
+            clusters: clusters, snapshots: ["b": snap([("n1", .ready, "")], alarms: ["1:NOSPACE"])],
+            active: "b", masked: false, sentAt: now)
         XCTAssertEqual(payload.clusters.map(\.id), ["0", "1"])
         XCTAssertEqual(payload.clusters.map(\.name), ["Home lab", "Edge"])
         XCTAssertNil(payload.clusters[0].takenAt)
@@ -100,8 +114,9 @@ final class WatchGlanceTests: XCTestCase {
 
     func testPayloadCarriesNoKeysLinksOrContexts() throws {
         let clusters = [WidgetCluster(id: "cluster-id-123", name: "Lab", link: "ichor://open?secret")]
-        let payload = watchPayload(clusters: clusters, snapshots: ["cluster-id-123": snap([("n1", .ready, "")])],
-                                   active: "cluster-id-123", masked: true, sentAt: now)
+        let payload = watchPayload(
+            clusters: clusters, snapshots: ["cluster-id-123": snap([("n1", .ready, "")])],
+            active: "cluster-id-123", masked: true, sentAt: now)
         let json = try XCTUnwrap(payload.encoded().flatMap { String(data: $0, encoding: .utf8) })
         XCTAssertFalse(json.contains("cluster-id-123"))
         XCTAssertFalse(json.contains("ichor://"))
@@ -110,16 +125,20 @@ final class WatchGlanceTests: XCTestCase {
     }
 
     func testActiveClusterFallsBackToTheFirst() {
-        let payload = WatchPayload(sentAt: now, masked: false,
-                                   clusters: [WatchCluster(id: "0", name: "A", active: false), WatchCluster(id: "1", name: "B", active: false)])
+        let payload = WatchPayload(
+            sentAt: now, masked: false,
+            clusters: [
+                WatchCluster(id: "0", name: "A", active: false), WatchCluster(id: "1", name: "B", active: false),
+            ])
         XCTAssertEqual(payload.activeCluster?.name, "A")
         XCTAssertNil(WatchPayload(sentAt: now, masked: false, clusters: []).activeCluster)
     }
 
     func testClusterReusesTheWidgetGlance() {
-        let payload = watchPayload(clusters: [WidgetCluster(id: "a", name: "A")],
-                                   snapshots: ["a": snap([("n1", .ready, ""), ("n2", .notReady, "")], alarms: ["1:NOSPACE"])],
-                                   active: "a", masked: false, sentAt: now)
+        let payload = watchPayload(
+            clusters: [WidgetCluster(id: "a", name: "A")],
+            snapshots: ["a": snap([("n1", .ready, ""), ("n2", .notReady, "")], alarms: ["1:NOSPACE"])],
+            active: "a", masked: false, sentAt: now)
         let cluster = payload.clusters[0]
         XCTAssertEqual(cluster.glance, [.notReady(1), .etcdAlarms(1)])
         XCTAssertEqual(cluster.tone, .problem)
@@ -138,8 +157,9 @@ final class WatchGlanceTests: XCTestCase {
     }
 
     func testToneOfAWarningOnly() {
-        let cluster = WatchCluster(id: "0", name: "A", active: true, takenAt: now,
-                                   nodes: [WatchNode(name: "n", health: .notReady)], etcdChecked: true)
+        let cluster = WatchCluster(
+            id: "0", name: "A", active: true, takenAt: now,
+            nodes: [WatchNode(name: "n", health: .notReady)], etcdChecked: true)
         XCTAssertEqual(cluster.tone, .warning)
     }
 
@@ -147,9 +167,13 @@ final class WatchGlanceTests: XCTestCase {
         let suite = "watch-glance-tests"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        let payload = WatchPayload(sentAt: now, masked: false,
-                                   clusters: [WatchCluster(id: "0", name: "A", active: true, takenAt: now,
-                                                           nodes: [WatchNode(name: "n", health: .unreachable, reason: "r")])])
+        let payload = WatchPayload(
+            sentAt: now, masked: false,
+            clusters: [
+                WatchCluster(
+                    id: "0", name: "A", active: true, takenAt: now,
+                    nodes: [WatchNode(name: "n", health: .unreachable, reason: "r")])
+            ])
         defaults.set(payload.encoded(), forKey: WatchPayload.storeKey)
         XCTAssertEqual(WatchPayload.load(from: defaults), payload)
         XCTAssertNil(WatchPayload.decode(Data("nope".utf8)))
@@ -159,9 +183,12 @@ final class WatchGlanceTests: XCTestCase {
     private func bigPayload(clusters: Int, nodes: Int) -> WatchPayload {
         let reason = String(repeating: "condition failing ", count: 6)
         let rows = (0..<clusters).map { c in
-            WatchCluster(id: String(c), name: "cluster-\(c)", active: c == 0, takenAt: now,
-                         nodes: (0..<nodes).map { WatchNode(name: "node-\($0)", health: $0 % 3 == 0 ? .notReady : .ready, reason: reason) },
-                         etcdChecked: true)
+            WatchCluster(
+                id: String(c), name: "cluster-\(c)", active: c == 0, takenAt: now,
+                nodes: (0..<nodes).map {
+                    WatchNode(name: "node-\($0)", health: $0 % 3 == 0 ? .notReady : .ready, reason: reason)
+                },
+                etcdChecked: true)
         }
         return WatchPayload(sentAt: now, masked: false, clusters: rows)
     }

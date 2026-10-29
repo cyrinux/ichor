@@ -24,12 +24,17 @@ struct CnpgList: View {
             if !status.error.isEmpty { Section { ErrorLine(error: status.error) } }
             Section {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: [String(localized: "\(status.clusters.count) Postgres clusters"),
-                                    attention > 0 ? String(localized: "\(attention) need a look") : nil]
-                        .compactMap { $0 }.joined(separator: " · "))
-                        .font(.subheadline.weight(.semibold))
+                    Text(
+                        verbatim: [
+                            String(localized: "\(status.clusters.count) Postgres clusters"),
+                            attention > 0 ? String(localized: "\(attention) need a look") : nil,
+                        ]
+                        .compactMap { $0 }.joined(separator: " · ")
+                    )
+                    .font(.subheadline.weight(.semibold))
                     if status.pendingInstances > 0 {
-                        Text("\(status.pendingInstances) instances waiting to be scheduled").font(.caption).foregroundStyle(attentionColor)
+                        Text("\(status.pendingInstances) instances waiting to be scheduled").font(.caption)
+                            .foregroundStyle(attentionColor)
                     }
                 }
                 Picker(selection: Binding(get: { current }, set: { problemsOnly = $0 })) {
@@ -54,21 +59,28 @@ struct CnpgList: View {
                     .foregroundStyle(.secondary)
                 }
                 ForEach(rows) { cluster in
-                    ClusterRow(cluster: cluster, busy: running.contains(cluster.id), onBackup: { confirmBackup = cluster }, onPromote: { promotion = CnpgPromotionTarget(cluster: cluster, instance: $0) }, onLifecycle: { confirmLifecycle = CnpgLifecycleTarget(cluster: cluster, action: $0) })
+                    ClusterRow(
+                        cluster: cluster, busy: running.contains(cluster.id), onBackup: { confirmBackup = cluster },
+                        onPromote: { promotion = CnpgPromotionTarget(cluster: cluster, instance: $0) },
+                        onLifecycle: { confirmLifecycle = CnpgLifecycleTarget(cluster: cluster, action: $0) })
                 }
             }
         }
         .searchable(text: $query, prompt: Text("Filter by namespace or name"))
         .refreshable { await refresh() }
         .themedBackground()
-        .confirmationDialog(confirmBackup.map { String(localized: "Back up \($0.label) now?") } ?? "",
-                            isPresented: $confirmBackup.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirmBackup) { cluster in
+        .confirmationDialog(
+            confirmBackup.map { String(localized: "Back up \($0.label) now?") } ?? "",
+            isPresented: $confirmBackup.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirmBackup
+        ) { cluster in
             Button("Back up now") { Task { await backup(cluster) } }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
-            Text("CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage.")
+            Text(
+                "CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage."
+            )
         }
         .sheet(item: $promotion) { target in
             CnpgPromoteSheet(cluster: target.cluster, instance: target.instance) {
@@ -93,7 +105,9 @@ struct CnpgList: View {
             try await client.cnpgPromote(namespace: cluster.namespace, name: cluster.name, instance: instance)
             resultMessage = String(localized: "Promotion to \(instance) requested")
             await refresh()
-        } catch { resultMessage = String(localized: "Could not promote \(cluster.label): \(error.localizedDescription)") }
+        } catch {
+            resultMessage = String(localized: "Could not promote \(cluster.label): \(error.localizedDescription)")
+        }
     }
 
     private func lifecycle(_ target: CnpgLifecycleTarget) async {
@@ -104,7 +118,8 @@ struct CnpgList: View {
         do {
             switch target.action {
             case .restart: try await client.cnpgRestartPrimary(namespace: cluster.namespace, name: cluster.name)
-            case .hibernate: try await client.cnpgHibernate(namespace: cluster.namespace, name: cluster.name, enabled: true)
+            case .hibernate:
+                try await client.cnpgHibernate(namespace: cluster.namespace, name: cluster.name, enabled: true)
             case .wake: try await client.cnpgHibernate(namespace: cluster.namespace, name: cluster.name, enabled: false)
             }
             resultMessage = String(localized: "Cluster action requested")
@@ -164,7 +179,8 @@ private struct ClusterRow: View {
         case .noInstance: String(localized: "no instance running")
         case .failover: String(localized: "failing over")
         case .instances: String(localized: "instances missing")
-        case .switchover: String(localized: "switchover in progress") + " (\(cluster.currentPrimary) → \(cluster.targetPrimary))"
+        case .switchover:
+            String(localized: "switchover in progress") + " (\(cluster.currentPrimary) → \(cluster.targetPrimary))"
         case .notReady: String(localized: "not ready")
         case .archiving: String(localized: "WAL archiving failing")
         case .backupFailed: String(localized: "last backup failed")
@@ -174,11 +190,14 @@ private struct ClusterRow: View {
 
     @ViewBuilder private var details: some View {
         if !cluster.phase.isEmpty {
-            LabeledContent("Phase", value: [cluster.phase, cluster.phaseReason].filter { !$0.isEmpty }.joined(separator: ": "))
+            LabeledContent(
+                "Phase", value: [cluster.phase, cluster.phaseReason].filter { !$0.isEmpty }.joined(separator: ": "))
         }
         if !cluster.currentPrimary.isEmpty {
             let switching = !cluster.targetPrimary.isEmpty && cluster.targetPrimary != cluster.currentPrimary
-            LabeledContent("Primary", value: switching ? "\(cluster.currentPrimary) → \(cluster.targetPrimary)" : cluster.currentPrimary)
+            LabeledContent(
+                "Primary",
+                value: switching ? "\(cluster.currentPrimary) → \(cluster.targetPrimary)" : cluster.currentPrimary)
         }
         if !cluster.instancePods.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
@@ -186,14 +205,19 @@ private struct ClusterRow: View {
                 ForEach(cluster.instancePods) { pod in
                     HStack(spacing: 6) {
                         HealthDot(health: pod.ready ? .ok : .critical, size: 8)
-                        Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
+                        Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(
+                            pod.ready ? .primary : Color.red)
                     }
                 }
             }
         }
         ForEach(cluster.promotablePods) { pod in
-            Button { onPromote(pod.name) } label: { Text("Promote \(pod.name)") }
-                .disabled(busy).kubeGated(.cnpgPromote, in: cluster.namespace)
+            Button {
+                onPromote(pod.name)
+            } label: {
+                Text("Promote \(pod.name)")
+            }
+            .disabled(busy).kubeGated(.cnpgPromote, in: cluster.namespace)
         }
         KubeDeniedNote(.cnpgPromote, in: cluster.namespace)
         CnpgLifecycleButtons(cluster: cluster, busy: busy, onAction: onLifecycle)
@@ -201,7 +225,9 @@ private struct ClusterRow: View {
         LabeledContent("Backups", value: backupMethod)
         LabeledContent("Last backup", value: relativeTime(cluster.lastSuccessAt))
         if cluster.lastFailureAt > 0 { LabeledContent("Last failure", value: relativeTime(cluster.lastFailureAt)) }
-        if cluster.recoverableAt > 0 { LabeledContent("Oldest recovery point", value: relativeTime(cluster.recoverableAt)) }
+        if cluster.recoverableAt > 0 {
+            LabeledContent("Oldest recovery point", value: relativeTime(cluster.recoverableAt))
+        }
         // The Go core picks the method; a cluster set up for none of them is refused with a reason.
         if !cluster.hibernated {
             Button(action: onBackup) {

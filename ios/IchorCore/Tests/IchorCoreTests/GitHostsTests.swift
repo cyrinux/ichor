@@ -17,21 +17,26 @@ final class GitHostsTests: XCTestCase {
     func testBuildsTheGoHostArgument() throws {
         let json = gitHostJSON(host: "https://gitlab.example.org/", kind: .gitlab, token: #"glpat-"quoted"\slash/"#)
         let decoded = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: String])
-        XCTAssertEqual(decoded, [
-            "kind": "gitlab",
-            "baseURL": "https://gitlab.example.org",
-            "token": #"glpat-"quoted"\slash/"#,
-        ])
-        XCTAssertEqual(gitHostJSON(host: "github.com", kind: .auto, token: "t"),
-                       #"{"baseURL":"https://github.com","kind":"auto","token":"t"}"#)
+        XCTAssertEqual(
+            decoded,
+            [
+                "kind": "gitlab",
+                "baseURL": "https://gitlab.example.org",
+                "token": #"glpat-"quoted"\slash/"#,
+            ])
+        XCTAssertEqual(
+            gitHostJSON(host: "github.com", kind: .auto, token: "t"),
+            #"{"baseURL":"https://github.com","kind":"auto","token":"t"}"#)
         XCTAssertEqual(gitHostDemoJSON, #"{"kind":"demo"}"#)
     }
 
     func testDecodesTheCheck() throws {
-        let ok = try TalosJSON.decode(GitHostCheck.self, from: #"{"login":"octocat","host":"github.com","scopesOK":true,"missing":[]}"#)
+        let ok = try TalosJSON.decode(
+            GitHostCheck.self, from: #"{"login":"octocat","host":"github.com","scopesOK":true,"missing":[]}"#)
         XCTAssertEqual(ok, GitHostCheck(login: "octocat", host: "github.com", scopesOK: true, missing: []))
 
-        let short = try TalosJSON.decode(GitHostCheck.self, from: #"{"login":"dev","scopesOK":false,"missing":["write_repository"]}"#)
+        let short = try TalosJSON.decode(
+            GitHostCheck.self, from: #"{"login":"dev","scopesOK":false,"missing":["write_repository"]}"#)
         XCTAssertEqual(short.missing, ["write_repository"])
         XCTAssertFalse(short.scopesOK)
         XCTAssertEqual(short.host, "")
@@ -58,8 +63,9 @@ final class GitHostsTests: XCTestCase {
         XCTAssertEqual([GitHost].stored(nil), [])
         XCTAssertEqual([GitHost].stored(Data("not json".utf8)), [])
         // An unknown kind (a newer app) reads as auto.
-        XCTAssertEqual([GitHost].stored(Data(#"[{"host":"git.example.org","kind":"bitbucket"}]"#.utf8)),
-                       [GitHost(host: "git.example.org")])
+        XCTAssertEqual(
+            [GitHost].stored(Data(#"[{"host":"git.example.org","kind":"bitbucket"}]"#.utf8)),
+            [GitHost(host: "git.example.org")])
     }
 
     func testUpsertAndRemoveReturnCopies() {
@@ -77,13 +83,17 @@ final class GitHostsTests: XCTestCase {
     }
 
     func testParsesTheTypedAliases() {
-        XCTAssertEqual(parseGitHostAliases("ssh.git.example.org, gitea-http.gitea.svc.cluster.local:3000"),
-                       ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
-        XCTAssertEqual(parseGitHostAliases("SSH.Git.Example.org\n https://git-int.example.org/repo.git ,,  "),
-                       ["ssh.git.example.org", "git-int.example.org"])
+        XCTAssertEqual(
+            parseGitHostAliases("ssh.git.example.org, gitea-http.gitea.svc.cluster.local:3000"),
+            ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
+        XCTAssertEqual(
+            parseGitHostAliases("SSH.Git.Example.org\n https://git-int.example.org/repo.git ,,  "),
+            ["ssh.git.example.org", "git-int.example.org"])
         // Blanks, the host itself and repeats are dropped.
-        XCTAssertEqual(parseGitHostAliases("git.example.org, ssh.git.example.org, SSH.git.example.org, https://", host: "git.example.org"),
-                       ["ssh.git.example.org"])
+        XCTAssertEqual(
+            parseGitHostAliases(
+                "git.example.org, ssh.git.example.org, SSH.git.example.org, https://", host: "git.example.org"),
+            ["ssh.git.example.org"])
         XCTAssertEqual(parseGitHostAliases("  "), [])
         let many = (1...30).map { "mirror\($0).example.org" }.joined(separator: ",")
         XCTAssertEqual(parseGitHostAliases(many).count, gitHostAliasLimit)
@@ -91,7 +101,9 @@ final class GitHostsTests: XCTestCase {
     }
 
     func testMatchesTheHostOrAnAlias() {
-        let host = GitHost(host: "git.example.org", kind: .gitea, aliases: ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
+        let host = GitHost(
+            host: "git.example.org", kind: .gitea,
+            aliases: ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
         XCTAssertTrue(host.matches("git.example.org"))
         XCTAssertTrue(host.matches("https://Git.Example.org/team/repo"))
         XCTAssertTrue(host.matches("ssh.git.example.org"))
@@ -124,15 +136,20 @@ final class GitHostsTests: XCTestCase {
         let hosts = [GitHost(host: "git.example.org", kind: .gitea, aliases: ["ssh.git.example.org"])]
         XCTAssertEqual([GitHost].stored(hosts.encoded()), hosts)
         // A list saved before aliases existed.
-        XCTAssertEqual([GitHost].stored(Data(#"[{"host":"git.example.org","kind":"gitea"}]"#.utf8)),
-                       [GitHost(host: "git.example.org", kind: .gitea)])
+        XCTAssertEqual(
+            [GitHost].stored(Data(#"[{"host":"git.example.org","kind":"gitea"}]"#.utf8)),
+            [GitHost(host: "git.example.org", kind: .gitea)])
         XCTAssertEqual([GitHost].stored(Data(#"[{"host":"git.example.org","kind":"gitea"}]"#.utf8)).first?.aliases, [])
     }
 
     func testHostArgumentCarriesTheAliases() throws {
-        let json = gitHostJSON(host: "git.example.org", kind: .gitea, token: "t",
-                               aliases: ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
-        XCTAssertEqual(json, #"{"aliases":["ssh.git.example.org","gitea-http.gitea.svc.cluster.local:3000"],"baseURL":"https://git.example.org","kind":"gitea","token":"t"}"#)
+        let json = gitHostJSON(
+            host: "git.example.org", kind: .gitea, token: "t",
+            aliases: ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
+        XCTAssertEqual(
+            json,
+            #"{"aliases":["ssh.git.example.org","gitea-http.gitea.svc.cluster.local:3000"],"baseURL":"https://git.example.org","kind":"gitea","token":"t"}"#
+        )
         // No key without aliases, as before.
         XCTAssertFalse(gitHostJSON(host: "git.example.org", kind: .gitea, token: "t", aliases: []).contains("aliases"))
     }
@@ -145,19 +162,32 @@ final class GitHostsTests: XCTestCase {
     func testLinksOnAnAliasOpenOnTheGitHost() {
         let hosts = [
             GitHost(host: "github.com", kind: .github),
-            GitHost(host: "git.example.org", kind: .gitea,
-                    aliases: ["gitea-http.gitea.svc.cluster.local:3000", "ssh.git.example.org"]),
+            GitHost(
+                host: "git.example.org", kind: .gitea,
+                aliases: ["gitea-http.gitea.svc.cluster.local:3000", "ssh.git.example.org"]),
             GitHost(host: "lab.example.org:8443", kind: .gitlab, aliases: ["gitlab-webservice.gitlab.svc"]),
         ]
         let cases: [(String, String)] = [
             // An alias with a port matches the port-less page Argo CD's link is built as.
             ("https://gitea-http.gitea.svc.cluster.local/org/platform", "https://git.example.org/org/platform"),
-            ("https://SSH.git.example.org/org/platform/commit/4be1d0c", "https://git.example.org/org/platform/commit/4be1d0c"),
+            (
+                "https://SSH.git.example.org/org/platform/commit/4be1d0c",
+                "https://git.example.org/org/platform/commit/4be1d0c"
+            ),
             ("https://ssh.git.example.org", "https://git.example.org"),
             // GitLab's commit page is under /-/, its port kept; a /-/ link is left as it is.
-            ("https://gitlab-webservice.gitlab.svc/g/sub/p/commit/4be1d0c9f2a7", "https://lab.example.org:8443/g/sub/p/-/commit/4be1d0c9f2a7"),
-            ("https://gitlab-webservice.gitlab.svc/g/p/-/commit/4be1d0c9f2a7", "https://lab.example.org:8443/g/p/-/commit/4be1d0c9f2a7"),
-            ("https://gitlab-webservice.gitlab.svc/g/p/-/blob/main/a.yaml", "https://lab.example.org:8443/g/p/-/blob/main/a.yaml"),
+            (
+                "https://gitlab-webservice.gitlab.svc/g/sub/p/commit/4be1d0c9f2a7",
+                "https://lab.example.org:8443/g/sub/p/-/commit/4be1d0c9f2a7"
+            ),
+            (
+                "https://gitlab-webservice.gitlab.svc/g/p/-/commit/4be1d0c9f2a7",
+                "https://lab.example.org:8443/g/p/-/commit/4be1d0c9f2a7"
+            ),
+            (
+                "https://gitlab-webservice.gitlab.svc/g/p/-/blob/main/a.yaml",
+                "https://lab.example.org:8443/g/p/-/blob/main/a.yaml"
+            ),
             // Already on a host, on no alias, a lookalike or not https: unchanged.
             ("https://git.example.org/org/platform", "https://git.example.org/org/platform"),
             ("https://github.com/org/platform/commit/4be1d0c", "https://github.com/org/platform/commit/4be1d0c"),

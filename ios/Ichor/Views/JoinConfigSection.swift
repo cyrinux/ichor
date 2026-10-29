@@ -20,8 +20,10 @@ struct JoinConfigSection: View {
 
     var body: some View {
         Section {
-            Text("The new node gets the config of a member of the same role, with its own host name, install disk and address. The member is only read.")
-                .font(.footnote).foregroundStyle(.secondary)
+            Text(
+                "The new node gets the config of a member of the same role, with its own host name, install disk and address. The member is only read."
+            )
+            .font(.footnote).foregroundStyle(.secondary)
             switch members {
             case .loading:
                 ProgressView().frame(maxWidth: .infinity)
@@ -52,8 +54,11 @@ struct JoinConfigSection: View {
             Picker("Template", selection: Binding(get: { template }, set: { pick($0, among: nodes) })) {
                 Text(verbatim: "—").tag(NodeOverview?.none)
                 ForEach(templates) { node in
-                    Text(verbatim: "\(node.hostname.isEmpty ? node.node : node.hostname) · \(roleLabel(joinRole(node.role)))")
-                        .tag(NodeOverview?.some(node))
+                    Text(
+                        verbatim:
+                            "\(node.hostname.isEmpty ? node.node : node.hostname) · \(roleLabel(joinRole(node.role)))"
+                    )
+                    .tag(NodeOverview?.some(node))
                 }
             }
         }
@@ -78,10 +83,12 @@ struct JoinConfigSection: View {
                 }
             }
             VStack(alignment: .leading, spacing: 3) {
-                TextField("Static address (optional)", text: edited($address), prompt: Text(verbatim: "192.168.1.50/24"))
-                    .keyboardType(.numbersAndPunctuation)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
+                TextField(
+                    "Static address (optional)", text: edited($address), prompt: Text(verbatim: "192.168.1.50/24")
+                )
+                .keyboardType(.numbersAndPunctuation)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
                 Text("With its prefix. Empty: the node takes its address from DHCP.")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -104,8 +111,10 @@ struct JoinConfigSection: View {
                 ForEach(config.warnings, id: \.self) { warning in
                     Text(verbatim: "• \(warning)").font(.footnote)
                 }
-                Text("The secrets are hidden here. The full config, with the cluster's secrets, only goes to the new node, in step 3.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "The secrets are hidden here. The full config, with the cluster's secrets, only goes to the new node, in step 3."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
                 ScrollView([.horizontal, .vertical]) {
                     Text(verbatim: config.redactedYaml)
                         .font(.caption.monospaced())
@@ -118,7 +127,8 @@ struct JoinConfigSection: View {
     }
 
     private var complete: Bool {
-        template != nil && !hostname.trimmingCharacters(in: .whitespaces).isEmpty && !disk.trimmingCharacters(in: .whitespaces).isEmpty
+        template != nil && !hostname.trimmingCharacters(in: .whitespaces).isEmpty
+            && !disk.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     private var isLoading: Bool {
@@ -128,10 +138,12 @@ struct JoinConfigSection: View {
 
     /// `binding`, with any change making the shown preview stale.
     private func edited(_ binding: Binding<String>) -> Binding<String> {
-        Binding(get: { binding.wrappedValue }, set: { value in
-            binding.wrappedValue = value
-            stale()
-        })
+        Binding(
+            get: { binding.wrappedValue },
+            set: { value in
+                binding.wrappedValue = value
+                stale()
+            })
     }
 
     /// Picks `node` as the template: the host name follows its role unless typed.
@@ -166,7 +178,8 @@ struct JoinConfigSection: View {
         let loaded = await LoadState.from {
             try await client.joinNodeConfigPreview(
                 template: template.node, role: joinRole(template.role),
-                hostname: hostname.trimmingCharacters(in: .whitespaces), installDisk: disk.trimmingCharacters(in: .whitespaces),
+                hostname: hostname.trimmingCharacters(in: .whitespaces),
+                installDisk: disk.trimmingCharacters(in: .whitespaces),
                 staticAddress: address.trimmingCharacters(in: .whitespaces))
         }
         guard current == request else { return }
@@ -174,7 +187,8 @@ struct JoinConfigSection: View {
         if case .loaded = loaded {
             configured = JoinRequest(
                 address: "", template: template.node, role: joinRole(template.role),
-                hostname: hostname.trimmingCharacters(in: .whitespaces), disk: disk.trimmingCharacters(in: .whitespaces),
+                hostname: hostname.trimmingCharacters(in: .whitespaces),
+                disk: disk.trimmingCharacters(in: .whitespaces),
                 staticAddress: address.trimmingCharacters(in: .whitespaces))
         }
     }

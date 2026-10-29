@@ -94,7 +94,8 @@ struct IncidentSummarySheet: View {
         let since = window.since(now: now)
         let anonymize = hideNames
         let loaded = await LoadState<String>.from {
-            try await TalosClient.incidentSummary(context: context, ring: ring, since: since, now: now, anonymize: anonymize)
+            try await TalosClient.incidentSummary(
+                context: context, ring: ring, since: since, now: now, anonymize: anonymize)
         }
         guard !Task.isCancelled else { return }
         state = loaded

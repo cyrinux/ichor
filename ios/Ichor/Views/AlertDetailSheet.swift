@@ -23,9 +23,11 @@ struct AlertDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var silencing: Bool
 
-    init(alert: AMAlert, node: NodeOverview?, canOpenKube: Bool,
-         silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
-         open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil) {
+    init(
+        alert: AMAlert, node: NodeOverview?, canOpenKube: Bool,
+        silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
+        open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil
+    ) {
         self.alert = alert
         self.node = node
         self.canOpenKube = canOpenKube
@@ -101,7 +103,8 @@ struct AlertDetailSheet: View {
             }
             if alert.silenced {
                 LabeledContent("Silenced by") {
-                    Text(verbatim: alert.silencedBy.joined(separator: "\n")).font(.caption.monospaced()).textSelection(.enabled)
+                    Text(verbatim: alert.silencedBy.joined(separator: "\n")).font(.caption.monospaced()).textSelection(
+                        .enabled)
                 }
             }
         }
@@ -149,7 +152,8 @@ struct AlertDetailSheet: View {
 
     /// An http(s) link; nil for anything else (no other scheme is opened from an alert).
     private func webURL(_ text: String) -> URL? {
-        guard let url = URL(string: text), let scheme = url.scheme?.lowercased(), scheme == "https" || scheme == "http" else { return nil }
+        guard let url = URL(string: text), let scheme = url.scheme?.lowercased(), scheme == "https" || scheme == "http"
+        else { return nil }
         return url
     }
 }
@@ -167,9 +171,11 @@ private struct SilenceForm: View {
     @State private var matchers: [AMMatcher] = []
     @State private var comment: String
 
-    init(alert: AMAlert, minutes: Int = amSilenceDurations[0], comment: String = "",
-         silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
-         done: @escaping () -> Void) {
+    init(
+        alert: AMAlert, minutes: Int = amSilenceDurations[0], comment: String = "",
+        silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
+        done: @escaping () -> Void
+    ) {
         self.alert = alert
         self.silence = silence
         self.done = done
@@ -182,7 +188,8 @@ private struct SilenceForm: View {
     private var duration: Int? { minutes > 0 ? minutes : amParseDuration(custom) }
 
     private var ready: Bool {
-        !busy && !matchers.isEmpty && duration != nil && !comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !busy && !matchers.isEmpty && duration != nil
+            && !comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
@@ -228,7 +235,8 @@ private struct SilenceForm: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     if !custom.isEmpty && duration == nil {
-                        Text("Use minutes (m), hours (h), days (d) or weeks (w), up to 30 days.").font(.footnote).foregroundStyle(.red)
+                        Text("Use minutes (m), hours (h), days (d) or weeks (w), up to 30 days.").font(.footnote)
+                            .foregroundStyle(.red)
                     }
                 }
             }
@@ -262,7 +270,8 @@ private struct SilenceForm: View {
         .task {
             guard matchers.isEmpty else { return }
             // The fallback mutes every alert of this name: still narrow, never everything.
-            matchers = (try? await TalosClient.alertmanagerSilenceMatchers(alert.labels))
+            matchers =
+                (try? await TalosClient.alertmanagerSilenceMatchers(alert.labels))
                 ?? [AMMatcher(name: "alertname", value: alert.alertname)]
         }
     }

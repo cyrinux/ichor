@@ -101,7 +101,8 @@ private struct AppStatTile: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(
+            Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -142,18 +143,21 @@ private struct PodLine: View {
             Circle()
                 .fill(pod.allRunning ? Color.green : attentionColor)
                 .frame(width: 8, height: 8)
-                .accessibilityLabel(Text(pod.allRunning ? LocalizedStringKey("Running") : LocalizedStringKey("Not running")))
+                .accessibilityLabel(
+                    Text(pod.allRunning ? LocalizedStringKey("Running") : LocalizedStringKey("Not running")))
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: pod.pod)
                     .font(.callout)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(verbatim: [hostname, pod.containers.map(\.name).joined(separator: ", "), formatBytes(pod.memory)]
-                    .filter { !$0.isEmpty }
-                    .joined(separator: " · "))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                Text(
+                    verbatim: [hostname, pod.containers.map(\.name).joined(separator: ", "), formatBytes(pod.memory)]
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " · ")
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
             }
         }
     }

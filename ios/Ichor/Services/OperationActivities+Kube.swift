@@ -13,8 +13,9 @@ extension OperationActivities {
         }
         let p = run.progress
         let count = p.flatMap { operationCount(index: $0.done, total: $0.total) }
-        return OperationContent(title: title, step: GitOpsOperationJob.argoStep(run), done: count?.done, total: count?.total,
-                                buttons: OperationButton.offered(for: .argoSync, stopping: run.terminating))
+        return OperationContent(
+            title: title, step: GitOpsOperationJob.argoStep(run), done: count?.done, total: count?.total,
+            buttons: OperationButton.offered(for: .argoSync, stopping: run.terminating))
     }
 
     static func fluxReconcile() -> OperationContent? {
@@ -23,7 +24,8 @@ extension OperationActivities {
         if let outcome = run.outcome {
             return OperationContent(title: title, step: GitOpsOperationJob.fluxResult(run), phase: outcome.phase)
         }
-        return OperationContent(title: title, step: GitOpsOperationJob.fluxStep(run), buttons: OperationButton.offered(for: .fluxReconcile))
+        return OperationContent(
+            title: title, step: GitOpsOperationJob.fluxStep(run), buttons: OperationButton.offered(for: .fluxReconcile))
     }
 
     static func rollout() -> OperationContent? {
@@ -34,8 +36,9 @@ extension OperationActivities {
             return OperationContent(title: title, step: RolloutJob.result(job), phase: outcome.phase)
         }
         let count = job.status?.restartCount
-        return OperationContent(title: title, step: RolloutJob.step(job), done: count?.done, total: count?.total,
-                                buttons: OperationButton.offered(for: .rollout))
+        return OperationContent(
+            title: title, step: RolloutJob.step(job), done: count?.done, total: count?.total,
+            buttons: OperationButton.offered(for: .rollout))
     }
 
     static func netPerf() -> OperationContent? {
@@ -47,8 +50,9 @@ extension OperationActivities {
         }
         // The measurements done, of those the setup runs.
         let count = operationCount(index: run.results.count, total: run.setup.steps)
-        return OperationContent(title: title, step: NetPerfJob.step(run), done: count?.done, total: count?.total,
-                                buttons: OperationButton.offered(for: .netPerf, stopping: run.stopping))
+        return OperationContent(
+            title: title, step: NetPerfJob.step(run), done: count?.done, total: count?.total,
+            buttons: OperationButton.offered(for: .netPerf, stopping: run.stopping))
     }
 
     /// "Clean up dead pods": "12 of 140 pods", Stop; how many went once it ended.
@@ -57,11 +61,13 @@ extension OperationActivities {
         let title = PodSweepJob.title(state)
         if !state.running {
             if let error = state.error { return OperationContent(title: title, step: error, phase: .failed) }
-            return OperationContent(title: title, step: PodSweepJob.result(state), phase: state.stopped ? .stopped : .succeeded)
+            return OperationContent(
+                title: title, step: PodSweepJob.result(state), phase: state.stopped ? .stopped : .succeeded)
         }
         let count = operationCount(index: state.done, total: state.total)
-        return OperationContent(title: title, step: PodSweepJob.step(state), done: count?.done, total: count?.total,
-                                buttons: OperationButton.offered(for: .podSweep, stopping: state.stopping))
+        return OperationContent(
+            title: title, step: PodSweepJob.step(state), done: count?.done, total: count?.total,
+            buttons: OperationButton.offered(for: .podSweep, stopping: state.stopping))
     }
 
     /// A runbook: "Step 2 of 3 · scale-down", "Waiting for you" while a destructive step waits
@@ -74,8 +80,9 @@ extension OperationActivities {
             return OperationContent(title: title, step: RunbookJob.result(run), phase: phase)
         }
         let count = operationCount(index: run.progress.ended, total: run.progress.steps.count)
-        return OperationContent(title: title, step: RunbookJob.step(run), done: count?.done, total: count?.total,
-                                phase: run.progress.waiting == nil ? .running : .paused,
-                                buttons: OperationButton.offered(for: .runbook, stopping: run.stopping))
+        return OperationContent(
+            title: title, step: RunbookJob.step(run), done: count?.done, total: count?.total,
+            phase: run.progress.waiting == nil ? .running : .paused,
+            buttons: OperationButton.offered(for: .runbook, stopping: run.stopping))
     }
 }

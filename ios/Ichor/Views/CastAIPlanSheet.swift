@@ -60,9 +60,13 @@ struct CastAIPlanSheet: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: [String(localized: "Consolidation"), plan.mode.label].compactMap { $0 }.joined(separator: " · "))
-                    .font(.headline)
-                Text(verbatim: plan.name).font(.subheadline.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                Text(
+                    verbatim: [String(localized: "Consolidation"), plan.mode.label].compactMap { $0 }.joined(
+                        separator: " · ")
+                )
+                .font(.headline)
+                Text(verbatim: plan.name).font(.subheadline.monospaced()).foregroundStyle(.secondary).textSelection(
+                    .enabled)
             }
             ChipFlow(spacing: 8) {
                 StatusPill(label: plan.planState.label, color: plan.planState.color)
@@ -84,17 +88,24 @@ struct CastAIPlanSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Monthly cost of the nodes it touches").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
             HStack(alignment: .lastTextBaseline, spacing: 8) {
-                Text(verbatim: formatMoney(plan.beforeMonthly, currency: plan.currency)).font(.headline.monospaced()).foregroundStyle(.secondary)
+                Text(verbatim: formatMoney(plan.beforeMonthly, currency: plan.currency)).font(.headline.monospaced())
+                    .foregroundStyle(.secondary)
                 Text(verbatim: "→").foregroundStyle(.secondary).accessibilityHidden(true)
                 Text(verbatim: formatMoney(plan.afterMonthly, currency: plan.currency)).font(.title2.monospaced())
                 Spacer()
-                Text(verbatim: "−" + String(format: "%.0f%%", plan.savingsPercent)).font(.subheadline.monospaced()).foregroundStyle(.secondary)
+                Text(verbatim: "−" + String(format: "%.0f%%", plan.savingsPercent)).font(.subheadline.monospaced())
+                    .foregroundStyle(.secondary)
             }
             CastAIBeforeAfterBar(before: plan.beforeMonthly, after: plan.afterMonthly, height: 10)
             let lines = [
-                plan.achievedMonthly.map { String(localized: "Measured saving: \(formatMoney($0, currency: plan.currency))/month") },
+                plan.achievedMonthly.map {
+                    String(localized: "Measured saving: \(formatMoney($0, currency: plan.currency))/month")
+                },
                 plan.clusterSharePercent.map {
-                    String(localized: "Planned saving \(formatMoney(plan.plannedMonthly, currency: plan.currency))/month, \(String(format: "%.1f%%", $0)) of the cluster")
+                    String(
+                        localized:
+                            "Planned saving \(formatMoney(plan.plannedMonthly, currency: plan.currency))/month, \(String(format: "%.1f%%", $0)) of the cluster"
+                    )
                 },
             ].compactMap { $0 }
             if !lines.isEmpty {
@@ -130,7 +141,8 @@ private struct CastAIRemovedNode: View {
             if node.events.count > 1 || node.status != .success {
                 ForEach(Array(node.events.enumerated()), id: \.offset) { CastAIEventLine(event: $0.element) }
             } else if let last = node.events.last {
-                Text(verbatim: String(localized: "Removed at \(castAITime(last.at))")).font(.caption2).foregroundStyle(.secondary)
+                Text(verbatim: String(localized: "Removed at \(castAITime(last.at))")).font(.caption2).foregroundStyle(
+                    .secondary)
             }
         }
         .padding(.vertical, 2)
@@ -148,13 +160,15 @@ private struct CastAIAddedNode: View {
             let details = [
                 node.spot ? String(localized: "spot") : nil,
                 node.zone.nonEmpty,
-                node.priceHourly > 0 ? String(localized: "\(formatMoney(node.priceHourly, currency: currency, decimals: 3))/h") : nil,
+                node.priceHourly > 0
+                    ? String(localized: "\(formatMoney(node.priceHourly, currency: currency, decimals: 3))/h") : nil,
             ].compactMap { $0 }
             if !details.isEmpty {
                 Text(verbatim: details.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary)
             }
             if let seconds = node.readySeconds {
-                Text(verbatim: String(localized: "Ready in \(castAIDuration(seconds))")).font(.caption2).foregroundStyle(.statusOK)
+                Text(verbatim: String(localized: "Ready in \(castAIDuration(seconds))")).font(.caption2)
+                    .foregroundStyle(.statusOK)
             } else if let last = node.events.last {
                 CastAIEventLine(event: last)
             }
@@ -169,7 +183,8 @@ private struct CastAIEventLine: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(verbatim: castAITime(event.at)).font(.caption2.monospaced()).foregroundStyle(.secondary).frame(width: 52, alignment: .leading)
+            Text(verbatim: castAITime(event.at)).font(.caption2.monospaced()).foregroundStyle(.secondary).frame(
+                width: 52, alignment: .leading)
             Circle().fill(event.tone.color).frame(width: 7, height: 7).accessibilityHidden(true)
             Text(verbatim: event.text).font(.caption2).foregroundStyle(event.tone.color)
         }
@@ -185,11 +200,16 @@ private struct CastAIBudgetRow: View {
             HStack {
                 Text(verbatim: budget.nodePool).font(.subheadline.monospaced())
                 Spacer()
-                Text(verbatim: String(localized: "\(String(budget.nodes)) nodes")).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: String(localized: "\(String(budget.nodes)) nodes")).font(.caption).foregroundStyle(
+                    .secondary)
             }
-            Text(verbatim: String(localized: "\(String(budget.allowed)) may be disrupted at a time · \(String(budget.disrupting)) now"))
-                .font(.caption)
-                .foregroundStyle(budget.exhausted ? Color.statusWarn : Color.secondary)
+            Text(
+                verbatim: String(
+                    localized: "\(String(budget.allowed)) may be disrupted at a time · \(String(budget.disrupting)) now"
+                )
+            )
+            .font(.caption)
+            .foregroundStyle(budget.exhausted ? Color.statusWarn : Color.secondary)
         }
         .padding(.vertical, 2)
     }

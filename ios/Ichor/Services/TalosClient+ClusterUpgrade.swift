@@ -33,7 +33,9 @@ extension TalosClient {
     /// Every node to `version`, in the order the roll follows, with each node's checks. Nodes
     /// already on the version are done: a rerun continues with the others.
     func clusterUpgradePlan(version: String) async throws -> ClusterUpgradePlan {
-        try await Self.json { [config, context, kubeServer] in IchorgoClusterUpgradePlan(config, context, kubeServer, version, $0) }
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoClusterUpgradePlan(config, context, kubeServer, version, $0)
+        }
     }
 
     /// Upgrades every node to `version`, one after the other (StartClusterUpgrade). Ending the
@@ -50,7 +52,7 @@ extension TalosClient {
         let run = IchorgoStartClusterUpgrade(config, context, kubeServer, version, drain, acknowledged, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole roll
+            _ = bridge  // keep the listener alive for the whole roll
         }
         if run == nil {
             continuation.yield(.done(error: String(localized: "The cluster upgrade could not start.")))

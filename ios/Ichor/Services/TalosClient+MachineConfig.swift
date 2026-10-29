@@ -96,7 +96,7 @@ extension TalosClient {
         let run = IchorgoStartConfigTry(config, context, node, base, draft, timeoutSeconds, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole try
+            _ = bridge  // keep the listener alive for the whole try
         }
         if run == nil {
             continuation.yield(.done(.failed(String(localized: "The config could not be applied."))))
@@ -115,7 +115,9 @@ enum ConfigApplyEvent: Sendable {
 extension TalosClient {
     /// Applies `draft` for good in `mode` (os:admin): now, at the next reboot, or now with a
     /// reboot. Ending the stream stops following the run; what was sent stays.
-    func applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode) -> AsyncStream<ConfigApplyEvent> {
+    func applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode) -> AsyncStream<
+        ConfigApplyEvent
+    > {
         Self.bridged { [config, context] continuation in
             let bridge = ConfigApplyBridge(
                 progress: { continuation.yield(.progress($0)) },
@@ -146,7 +148,9 @@ private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol,
     private let progress: @Sendable (ConfigTryProgress) -> Void
     private let done: @Sendable (ConfigTryOutcome) -> Void
 
-    init(progress: @escaping @Sendable (ConfigTryProgress) -> Void, done: @escaping @Sendable (ConfigTryOutcome) -> Void) {
+    init(
+        progress: @escaping @Sendable (ConfigTryProgress) -> Void, done: @escaping @Sendable (ConfigTryOutcome) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }

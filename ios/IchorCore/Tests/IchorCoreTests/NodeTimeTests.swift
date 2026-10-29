@@ -3,7 +3,8 @@ import XCTest
 
 final class NodeTimeTests: XCTestCase {
     func testDecodeClusterTime() throws {
-        let json = #"{"context":"prod","nodes":[{"node":"10.0.0.2","server":"time.cloudflare.com","localTime":1000,"remoteTime":1600,"offsetMs":600},{"node":"10.0.0.3","server":"","localTime":0,"remoteTime":0,"offsetMs":0,"error":"connection refused"}]}"#
+        let json =
+            #"{"context":"prod","nodes":[{"node":"10.0.0.2","server":"time.cloudflare.com","localTime":1000,"remoteTime":1600,"offsetMs":600},{"node":"10.0.0.3","server":"","localTime":0,"remoteTime":0,"offsetMs":0,"error":"connection refused"}]}"#
         let time = try TalosJSON.decode(ClusterTimeInfo.self, from: json)
         XCTAssertEqual(time.nodes[0].offsetMs, 600)
         XCTAssertNil(time.nodes[0].error)
@@ -33,11 +34,14 @@ final class NodeTimeTests: XCTestCase {
     }
 
     func testSummaryIgnoresUnreachableNodes() {
-        let summary = ClusterTimeInfo(context: "x", nodes: [
-            NodeTimeInfo(node: "a", offsetMs: 9),
-            NodeTimeInfo(node: "b", offsetMs: -3),
-            NodeTimeInfo(node: "c", error: "connection refused"),
-        ]).summary
+        let summary = ClusterTimeInfo(
+            context: "x",
+            nodes: [
+                NodeTimeInfo(node: "a", offsetMs: 9),
+                NodeTimeInfo(node: "b", offsetMs: -3),
+                NodeTimeInfo(node: "c", error: "connection refused"),
+            ]
+        ).summary
         XCTAssertEqual(summary.reachable, 2)
         XCTAssertEqual(summary.unreachable, 1)
         XCTAssertEqual(summary.drifting, 0)
@@ -53,7 +57,10 @@ final class NodeTimeTests: XCTestCase {
         XCTAssertEqual(drifting.maxOffsetMs, 700)
         XCTAssertTrue(drifting.expandedByDefault)
 
-        let bad = TimeDriftSummary([NodeTimeInfo(node: "a", offsetMs: 6_000), NodeTimeInfo(node: "b", offsetMs: -700), NodeTimeInfo(node: "c", error: "x")])
+        let bad = TimeDriftSummary([
+            NodeTimeInfo(node: "a", offsetMs: 6_000), NodeTimeInfo(node: "b", offsetMs: -700),
+            NodeTimeInfo(node: "c", error: "x"),
+        ])
         XCTAssertEqual(bad.status, .bad)
         XCTAssertEqual(bad.drifting, 2)
         XCTAssertEqual(bad.unreachable, 1)

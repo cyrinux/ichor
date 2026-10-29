@@ -79,7 +79,9 @@ public func kubeDistinctActions(_ actions: [KubeAction?]) -> [KubeAction] {
 /// The refusal of `action` over objects of `namespaces` (a bulk action), given the access of
 /// each namespace loaded (`access`): the first distinct namespace that refuses it, nil when each
 /// allows it or is not known yet. A bulk action runs only where each of its objects may.
-public func kubeBulkDenial(for action: KubeAction?, across namespaces: [String], in access: [String: KubeActionAccess]) -> KubeAccess? {
+public func kubeBulkDenial(for action: KubeAction?, across namespaces: [String], in access: [String: KubeActionAccess])
+    -> KubeAccess?
+{
     guard let action else { return nil }
     var seen = Set<String>()
     for namespace in namespaces where seen.insert(namespace).inserted {
@@ -100,8 +102,10 @@ public struct KubeAccess: Decodable, Equatable, Sendable {
     public let namespace: String
     public let reason: String
 
-    public init(allowed: Bool, unknown: Bool = false, verb: String = "", group: String = "", resource: String = "",
-                namespace: String = "", reason: String = "") {
+    public init(
+        allowed: Bool, unknown: Bool = false, verb: String = "", group: String = "", resource: String = "",
+        namespace: String = "", reason: String = ""
+    ) {
         self.allowed = allowed
         self.unknown = unknown
         self.verb = verb

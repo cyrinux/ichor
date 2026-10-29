@@ -71,7 +71,8 @@ final class GitHostStore {
     func check(_ host: GitHost, token: String, demo: Bool) async throws -> GitHostCheck {
         let typed = token.trimmingCharacters(in: .whitespacesAndNewlines)
         let used = typed.isEmpty ? (self.token(host.host) ?? "") : typed
-        let json = demo ? gitHostDemoJSON : gitHostJSON(host: host.host, kind: host.kind, token: used, aliases: host.aliases)
+        let json =
+            demo ? gitHostDemoJSON : gitHostJSON(host: host.host, kind: host.kind, token: used, aliases: host.aliases)
         let result = try await TalosClient.gitHostCheck(json)
         if !demo, hosts.contains(where: { $0.host == host.host }), used == self.token(host.host) {
             setLogin(result.login, for: host.host)
@@ -103,7 +104,8 @@ final class GitHostStore {
 
     private func token(_ host: String) -> String? {
         guard let data = Keychain.read(GitHostKeys.keychainAccount(host)),
-              let token = String(data: data, encoding: .utf8), !token.isEmpty else { return nil }
+            let token = String(data: data, encoding: .utf8), !token.isEmpty
+        else { return nil }
         return token
     }
 

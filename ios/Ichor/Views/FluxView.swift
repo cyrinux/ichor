@@ -23,9 +23,10 @@ struct FluxView: View {
     init(downNodes: Set<String>, selected: FluxAppRoute? = nil) {
         self.downNodes = downNodes
         // With the list's downNodes, as its rows' routes: the row shows as picked.
-        _picked = State(initialValue: selected.map {
-            FluxAppRoute(kind: $0.kind, namespace: $0.namespace, name: $0.name, downNodes: downNodes)
-        })
+        _picked = State(
+            initialValue: selected.map {
+                FluxAppRoute(kind: $0.kind, namespace: $0.namespace, name: $0.name, downNodes: downNodes)
+            })
     }
 
     enum Tab: Hashable { case apps, sources }
@@ -60,15 +61,20 @@ struct FluxView: View {
     private var showsPick: Bool { split && picked != nil }
 
     var body: some View {
-        AdaptiveListDetail(selection: $picked, split: $split, placeholder: "Pick an application to see its details",
-                           systemImage: "arrow.triangle.branch") {
+        AdaptiveListDetail(
+            selection: $picked, split: $split, placeholder: "Pick an application to see its details",
+            systemImage: "arrow.triangle.branch"
+        ) {
             list
         } detail: { app in
             FluxAppView(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: app.downNodes)
         }
         .searchable(text: $query, prompt: Text("Name, namespace, path or URL"))
         // An app pushed on top or shown beside polls for itself.
-        .gitOpsPolling(key: model.fluxKey, paused: { covered || showsPick }, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
+        .gitOpsPolling(
+            key: model.fluxKey, paused: { covered || showsPick }, shouldPoll: { store.shouldPoll(for: model.fluxKey) },
+            load: { await load() }
+        )
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Flux"))
@@ -79,19 +85,27 @@ struct FluxView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: FluxAppRoute.self) {
             FluxAppView(kind: $0.kind, namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes)
-                .recordsOpened(.fluxApp(kind: $0.kind, namespace: $0.namespace, name: $0.name), label: $0.name, detail: $0.namespace)
+                .recordsOpened(
+                    .fluxApp(kind: $0.kind, namespace: $0.namespace, name: $0.name), label: $0.name,
+                    detail: $0.namespace)
         }
         .onAppear { covered = false }
         .onDisappear { covered = true }
-        .confirmationDialog(confirm.map { $0.action.title(for: $0.target.name) } ?? "",
-                            isPresented: $confirm.isPresent(),
-                            titleVisibility: .visible, presenting: confirm) { pending in
+        .confirmationDialog(
+            confirm.map { $0.action.title(for: $0.target.name) } ?? "",
+            isPresented: $confirm.isPresent(),
+            titleVisibility: .visible, presenting: confirm
+        ) { pending in
             Button(pending.action.label, role: pending.action == .suspend ? ButtonRole.destructive : nil) {
                 Task { await run(pending.action, on: pending.target) }
             }
             Button("Cancel", role: .cancel) {}
         } message: { pending in
-            Text(verbatim: [pending.action.explanation(for: pending.target.name), pending.action == .suspend ? pending.notice : nil]
+            Text(
+                verbatim: [
+                    pending.action.explanation(for: pending.target.name),
+                    pending.action == .suspend ? pending.notice : nil,
+                ]
                 .compactMap { $0 }.joined(separator: "\n\n"))
         }
         .messageAlert($message)
@@ -103,15 +117,19 @@ struct FluxView: View {
     private var list: some View {
         LoadStateView(state: state, retry: load) { status in
             if !status.installed {
-                ContentUnavailableView("Flux is not installed", systemImage: "arrow.triangle.branch",
-                                       description: Text("No Flux Kustomizations or HelmReleases were found in this cluster."))
-                    .themedBackground()
+                ContentUnavailableView(
+                    "Flux is not installed", systemImage: "arrow.triangle.branch",
+                    description: Text("No Flux Kustomizations or HelmReleases were found in this cluster.")
+                )
+                .themedBackground()
             } else {
                 SwipeTabPager(tabs: [Tab.apps, .sources], selection: $tab) { shown in
                     switch shown {
                     case .apps:
-                        FluxAppsList(status: status, filter: $filter, query: query, downNodes: downNodes, busy: busy, refresh: load,
-                                     act: act)
+                        FluxAppsList(
+                            status: status, filter: $filter, query: query, downNodes: downNodes, busy: busy,
+                            refresh: load,
+                            act: act)
                     case .sources:
                         FluxSourcesList(status: status, query: query, busy: busy, refresh: load, act: act)
                     }
@@ -189,7 +207,9 @@ struct FluxView: View {
         if failure == nil, action == .reconcile || action == .reconcileWithSource {
             GitOpsOperationJob.shared.followFluxReconcile(client: client, target: target)
         }
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
         await load()
     }
 }

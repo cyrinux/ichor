@@ -13,9 +13,10 @@ final class TalosFormTests: XCTestCase {
     }
 
     func testDirectJSON() throws {
-        let form = TalosForm(mode: .direct, name: " lab ", endpoints: "10.0.0.1\n 10.0.0.2 \n", nodes: "\n10.0.0.3\n",
-                             ca: "CA\n", crt: "CRT", key: "KEY", omniURL: "https://acme.omni.example.com",
-                             cluster: "ignored", identity: "ops@example.com")
+        let form = TalosForm(
+            mode: .direct, name: " lab ", endpoints: "10.0.0.1\n 10.0.0.2 \n", nodes: "\n10.0.0.3\n",
+            ca: "CA\n", crt: "CRT", key: "KEY", omniURL: "https://acme.omni.example.com",
+            cluster: "ignored", identity: "ops@example.com")
         let json = try decoded(form)
         XCTAssertEqual(json["mode"] as? String, "direct")
         XCTAssertEqual(json["name"] as? String, "lab")
@@ -33,9 +34,10 @@ final class TalosFormTests: XCTestCase {
     }
 
     func testOmniJSON() throws {
-        let form = TalosForm(mode: .omni, name: "prod", endpoints: "10.0.0.1", ca: "CA",
-                             omniURL: " https://acme.omni.example.com ", cluster: " prod ",
-                             identity: " ichor@serviceaccount.omni.sidero.dev ")
+        let form = TalosForm(
+            mode: .omni, name: "prod", endpoints: "10.0.0.1", ca: "CA",
+            omniURL: " https://acme.omni.example.com ", cluster: " prod ",
+            identity: " ichor@serviceaccount.omni.sidero.dev ")
         let json = try decoded(form)
         XCTAssertEqual(json["mode"] as? String, "omni")
         XCTAssertEqual(json["omniUrl"] as? String, "https://acme.omni.example.com")
@@ -58,8 +60,9 @@ final class TalosFormTests: XCTestCase {
         missing.name = ""
         XCTAssertFalse(missing.canSubmit)
 
-        let omni = TalosForm(mode: .omni, name: "prod", omniURL: "https://acme.omni.example.com", cluster: "prod",
-                             identity: "ops@example.com")
+        let omni = TalosForm(
+            mode: .omni, name: "prod", omniURL: "https://acme.omni.example.com", cluster: "prod",
+            identity: "ops@example.com")
         XCTAssertTrue(omni.canSubmit)
         var noCluster = omni
         noCluster.cluster = ""

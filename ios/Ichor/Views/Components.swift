@@ -175,9 +175,11 @@ struct RoleNotice: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("\(feature.localizedLabel) needs \(feature.minimumRole)").font(.headline)
-            Text("This talosconfig has \(roleList). Import a talosconfig created with --roles \(feature.minimumRole) to use it.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            Text(
+                "This talosconfig has \(roleList). Import a talosconfig created with --roles \(feature.minimumRole) to use it."
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -216,7 +218,9 @@ extension View {
 extension View {
     /// The empty state of a searchable list: `empty` when there is nothing at all, the "no results"
     /// view when `query` hides everything.
-    func emptyOverlay<Empty: View>(_ isEmpty: Bool, query: String, @ViewBuilder empty: @escaping () -> Empty) -> some View {
+    func emptyOverlay<Empty: View>(_ isEmpty: Bool, query: String, @ViewBuilder empty: @escaping () -> Empty)
+        -> some View
+    {
         overlay {
             if isEmpty {
                 if query.isEmpty {

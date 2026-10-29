@@ -36,8 +36,11 @@ struct VirtualMachinesView: View {
         .id(model.client?.kubeServer)
         .navigationTitle(report?.harvester == true ? Text("Virtual machines (Harvester)") : Text("Virtual machines"))
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: Binding(get: { selected.flatMap { id in report?.vms.first { $0.id == id } } },
-                             set: { selected = $0?.id })) { vm in
+        .sheet(
+            item: Binding(
+                get: { selected.flatMap { id in report?.vms.first { $0.id == id } } },
+                set: { selected = $0?.id })
+        ) { vm in
             VirtualMachineSheet(vm: vm, busy: running.contains(vm.id)) { action, force in
                 // Back to the list: the result's alert shows there, over the status it changes.
                 selected = nil
@@ -53,12 +56,18 @@ struct VirtualMachinesView: View {
         return List {
             Section {
                 VmCountsRow(counts: report.counts)
-                if !report.error.isEmpty { ErrorLine(error: String(localized: "Could not read everything: \(report.error)")) }
+                if !report.error.isEmpty {
+                    ErrorLine(error: String(localized: "Could not read everything: \(report.error)"))
+                }
                 if report.namespaces.count > 1 { NamespacePicker(namespaces: report.namespaces, namespace: $namespace) }
             }
             Section {
                 ForEach(rows) { vm in
-                    Button { selected = vm.id } label: { VmRow(vm: vm, busy: running.contains(vm.id)) }
+                    Button {
+                        selected = vm.id
+                    } label: {
+                        VmRow(vm: vm, busy: running.contains(vm.id))
+                    }
                 }
             }
         }
@@ -76,7 +85,9 @@ struct VirtualMachinesView: View {
         ContentUnavailableView {
             Label("KubeVirt is not installed", systemImage: "desktopcomputer")
         } description: {
-            Text("KubeVirt runs virtual machines as Kubernetes objects. With it (or Harvester), this screen lists them and starts, stops, restarts, pauses or migrates them.")
+            Text(
+                "KubeVirt runs virtual machines as Kubernetes objects. With it (or Harvester), this screen lists them and starts, stops, restarts, pauses or migrates them."
+            )
         } actions: {
             Link(destination: URL(string: "https://kubevirt.io")!) { Text(verbatim: "kubevirt.io") }
             if !report.error.isEmpty {
@@ -104,7 +115,8 @@ struct VirtualMachinesView: View {
         running.insert(vm.id)
         defer { running.remove(vm.id) }
         do {
-            let result = force
+            let result =
+                force
                 ? try await client.vmStopForce(namespace: vm.namespace, name: vm.name, graceSeconds: 0)
                 : try await client.vmAction(namespace: vm.namespace, name: vm.name, action: action)
             if action == .migrate && !result.migration.isEmpty {
@@ -158,8 +170,11 @@ private struct VmRow: View {
                 if busy { ProgressView().controlSize(.small) }
                 VmStatusBadge(vm: vm)
             }
-            Text(verbatim: [vm.namespace, vm.node, vm.firstIP ?? "", vm.guestOS].filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(
+                verbatim: [vm.namespace, vm.node, vm.firstIP ?? "", vm.guestOS].filter { !$0.isEmpty }.joined(
+                    separator: "  ·  ")
+            )
+            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
             if let progress = vmProgressText(vm.progress) {
                 Text(verbatim: progress).font(.caption).foregroundStyle(.statusWarn)
             }

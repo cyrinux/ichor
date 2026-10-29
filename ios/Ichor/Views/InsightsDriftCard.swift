@@ -60,18 +60,21 @@ struct DriftChangeSection: View {
 
     @ViewBuilder private var items: some View {
         ForEach(Array(change.added.enumerated()), id: \.offset) { _, value in
-            DriftDiffRow(sign: "+", text: shortDriftValue(value), color: .statusOK,
-                         label: Text("Added"), copy: value)
+            DriftDiffRow(
+                sign: "+", text: shortDriftValue(value), color: .statusOK,
+                label: Text("Added"), copy: value)
         }
         ForEach(Array(change.removed.enumerated()), id: \.offset) { _, value in
-            DriftDiffRow(sign: "−", text: shortDriftValue(value), color: .statusBad,
-                         label: Text("Removed"), copy: value)
+            DriftDiffRow(
+                sign: "−", text: shortDriftValue(value), color: .statusBad,
+                label: Text("Removed"), copy: value)
         }
         ForEach(Array(change.changed.enumerated()), id: \.offset) { _, pair in
-            DriftDiffRow(sign: "~",
-                         text: "\(pair.name) \(shortDriftValue(pair.before)) → \(shortDriftValue(pair.after))",
-                         color: .statusWarn, label: Text("Changed"),
-                         copy: "\(pair.name) \(pair.before) → \(pair.after)")
+            DriftDiffRow(
+                sign: "~",
+                text: "\(pair.name) \(shortDriftValue(pair.before)) → \(shortDriftValue(pair.after))",
+                color: .statusWarn, label: Text("Changed"),
+                copy: "\(pair.name) \(pair.before) → \(pair.after)")
         }
     }
 
@@ -80,7 +83,11 @@ struct DriftChangeSection: View {
         return Text(verbatim: line)
             .font(.caption.monospaced())
             .contextMenu {
-                Button { UIPasteboard.general.string = line } label: { Label("Copy", systemImage: "doc.on.doc") }
+                Button {
+                    UIPasteboard.general.string = line
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
             }
     }
 }
@@ -102,7 +109,11 @@ private struct DriftDiffRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label + Text(verbatim: ": \(text)"))
         .contextMenu {
-            Button { UIPasteboard.general.string = copy } label: { Label("Copy", systemImage: "doc.on.doc") }
+            Button {
+                UIPasteboard.general.string = copy
+            } label: {
+                Label("Copy", systemImage: "doc.on.doc")
+            }
         }
     }
 }

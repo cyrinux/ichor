@@ -12,7 +12,10 @@ public struct NodeCounters: Decodable, Equatable, Sendable {
     public let memTotal: UInt64
     public let memAvailable: UInt64
 
-    public init(node: String, cpuBusy: Double, cpuTotal: Double, cpuCount: Int = 0, memTotal: UInt64 = 0, memAvailable: UInt64 = 0) {
+    public init(
+        node: String, cpuBusy: Double, cpuTotal: Double, cpuCount: Int = 0, memTotal: UInt64 = 0,
+        memAvailable: UInt64 = 0
+    ) {
         self.node = node
         self.cpuBusy = cpuBusy
         self.cpuTotal = cpuTotal

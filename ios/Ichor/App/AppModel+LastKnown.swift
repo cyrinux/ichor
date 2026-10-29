@@ -13,15 +13,18 @@ struct LastKnownTarget {
 extension AppModel {
     /// The active cluster's, nil when the setting is off and for the demo (never stored).
     var lastKnownTarget: LastKnownTarget? {
-        guard keepLastKnown, let context = activeSummary, !context.demo, !context.fingerprint.isEmpty else { return nil }
+        guard keepLastKnown, let context = activeSummary, !context.demo, !context.fingerprint.isEmpty else {
+            return nil
+        }
         return LastKnownTarget(fingerprint: context.fingerprint, generation: dataGeneration)
     }
 
     /// The stored value of `domain` for the active cluster, if any (less than a day old).
     func lastKnown<T: Decodable>(_ domain: LastKnownDomain, as type: T.Type = T.self) -> (value: T, at: Date)? {
         guard let target = lastKnownTarget,
-              let entry = LastKnownStore.read(fingerprint: target.fingerprint, key: domain.key),
-              let value = try? TalosJSON.decode(T.self, from: entry.json) else { return nil }
+            let entry = LastKnownStore.read(fingerprint: target.fingerprint, key: domain.key),
+            let value = try? TalosJSON.decode(T.self, from: entry.json)
+        else { return nil }
         return (value, entry.date)
     }
 
@@ -31,14 +34,18 @@ extension AppModel {
     }
 
     /// Same, for a screen showing part of what was fetched (`show` takes it out).
-    func seeded<Stored: Decodable, T>(_ state: LoadState<T>, from domain: LastKnownDomain, as type: Stored.Type,
-                                      _ show: (Stored) -> T) -> LoadState<T> {
+    func seeded<Stored: Decodable, T>(
+        _ state: LoadState<T>, from domain: LastKnownDomain, as type: Stored.Type,
+        _ show: (Stored) -> T
+    ) -> LoadState<T> {
         guard case .loading = state, let known = lastKnown(domain, as: Stored.self) else { return state }
         return .loaded(show(known.value), at: known.at)
     }
 
     /// `domain` fetched with `client`, kept as last known when the setting is on.
-    func fetch<T: Decodable & Sendable>(_ domain: LastKnownDomain, as type: T.Type = T.self, with client: TalosClient) async throws -> T {
+    func fetch<T: Decodable & Sendable>(_ domain: LastKnownDomain, as type: T.Type = T.self, with client: TalosClient)
+        async throws -> T
+    {
         let target = lastKnownTarget
         let fetched: (value: T, json: String) = try await client.fetch(domain)
         if let target { remember(domain, json: fetched.json, at: Date(), for: target) }
@@ -60,8 +67,9 @@ extension AppModel {
     /// The stored value of `key` (see remember(key:)) for the active cluster, if any.
     func lastKnown<T: Decodable>(key: String, as type: T.Type = T.self) -> (value: T, at: Date)? {
         guard let target = lastKnownTarget,
-              let entry = LastKnownStore.read(fingerprint: target.fingerprint, key: key),
-              let value = try? TalosJSON.decode(T.self, from: entry.json) else { return nil }
+            let entry = LastKnownStore.read(fingerprint: target.fingerprint, key: key),
+            let value = try? TalosJSON.decode(T.self, from: entry.json)
+        else { return nil }
         return (value, entry.date)
     }
 

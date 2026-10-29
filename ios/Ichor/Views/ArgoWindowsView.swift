@@ -18,9 +18,11 @@ struct ArgoWindowsView: View {
         LoadStateView(state: state, retry: load) { status in
             let sections = status.windowSections()
             if sections.values.allSatisfy(\.isEmpty) {
-                ContentUnavailableView("No sync windows", systemImage: "calendar.badge.clock",
-                                       description: Text("Argo CD may sync at any time."))
-                    .themedBackground()
+                ContentUnavailableView(
+                    "No sync windows", systemImage: "calendar.badge.clock",
+                    description: Text("Argo CD may sync at any time.")
+                )
+                .themedBackground()
             } else {
                 List {
                     ForEach(WindowSection.allCases) { section in
@@ -56,22 +58,36 @@ struct ArgoWindowsView: View {
         }
         .navigationTitle(Text("Sync windows"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(String(localized: "End the freeze?"), isPresented: $ending.isPresent(), titleVisibility: .visible, presenting: ending) { pw in
-            Button(String(localized: "End")) { Task { await change(.unfreeze, pw, ArgoFreezeOptions(window: pw.window.id)) } }
+        .confirmationDialog(
+            String(localized: "End the freeze?"), isPresented: $ending.isPresent(), titleVisibility: .visible,
+            presenting: ending
+        ) { pw in
+            Button(String(localized: "End")) {
+                Task { await change(.unfreeze, pw, ArgoFreezeOptions(window: pw.window.id)) }
+            }
             Button("Cancel", role: .cancel) {}
         } message: { pw in
-            Text(pw.window.apps > 1 ? String(localized: "This freeze covers \(pw.window.apps) apps: they all resume.")
-                 : String(localized: "Argo CD resumes auto-sync and self-heal for the apps of this freeze."))
+            Text(
+                pw.window.apps > 1
+                    ? String(localized: "This freeze covers \(pw.window.apps) apps: they all resume.")
+                    : String(localized: "Argo CD resumes auto-sync and self-heal for the apps of this freeze."))
         }
-        .confirmationDialog(String(localized: "Remove this sync window?"), isPresented: $removing.isPresent(), titleVisibility: .visible, presenting: removing) { pw in
+        .confirmationDialog(
+            String(localized: "Remove this sync window?"), isPresented: $removing.isPresent(),
+            titleVisibility: .visible, presenting: removing
+        ) { pw in
             Button(String(localized: "Remove"), role: .destructive) {
                 Task { await change(.unfreeze, pw, ArgoFreezeOptions(window: pw.window.id, fromGit: true)) }
             }
             Button("Cancel", role: .cancel) {}
         } message: { pw in
-            Text(pw.project.managedBy.isEmpty
-                 ? String(localized: "Ichor did not create this window. Remove it from project \(pw.project.name)?")
-                 : String(localized: "Ichor did not create this window: it likely comes from Git. Argo CD may put it back on the next sync of \(pw.project.managedBy), so remove it in Git too."))
+            Text(
+                pw.project.managedBy.isEmpty
+                    ? String(localized: "Ichor did not create this window. Remove it from project \(pw.project.name)?")
+                    : String(
+                        localized:
+                            "Ichor did not create this window: it likely comes from Git. Argo CD may put it back on the next sync of \(pw.project.managedBy), so remove it in Git too."
+                    ))
         }
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
@@ -98,15 +114,23 @@ struct ArgoWindowsView: View {
             }
             Text(verbatim: origin(w)).font(.caption).foregroundStyle(.secondary)
             when(w, section: section)
-            Text(verbatim: ([String(localized: "\(w.apps) apps")]
-                    + (w.isDeny ? [w.manualSync ? String(localized: "manual syncs allowed") : String(localized: "manual syncs blocked")] : []))
-                .joined(separator: " · "))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                verbatim: ([String(localized: "\(w.apps) apps")]
+                    + (w.isDeny
+                        ? [
+                            w.manualSync
+                                ? String(localized: "manual syncs allowed") : String(localized: "manual syncs blocked")
+                        ] : []))
+                    .joined(separator: " · ")
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
             HStack {
                 if w.ichor != nil && section == .active {
                     Button(String(localized: "+1 h")) {
-                        Task { await change(.extend, pw, ArgoFreezeOptions(minutes: freezeExtendMinutes, window: w.id)) }
+                        Task {
+                            await change(.extend, pw, ArgoFreezeOptions(minutes: freezeExtendMinutes, window: w.id))
+                        }
                     }
                     .buttonStyle(.bordered)
                     Button(String(localized: "Unfreeze")) { ending = pw }.buttonStyle(.borderedProminent)
@@ -123,9 +147,13 @@ struct ArgoWindowsView: View {
     /// "Ichor freeze · hotfix", or "Not from Ichor · 0 22 * * * 8h Europe/Paris".
     private func origin(_ w: ArgoWindow) -> String {
         if let ichor = w.ichor {
-            return ([String(localized: "Ichor freeze")] + (ichor.reason.isEmpty ? [] : [ichor.reason])).joined(separator: " · ")
+            return ([String(localized: "Ichor freeze")] + (ichor.reason.isEmpty ? [] : [ichor.reason])).joined(
+                separator: " · ")
         }
-        return ([String(localized: "Not from Ichor")] + [[w.schedule, w.duration, w.timeZone].filter { !$0.isEmpty }.joined(separator: " ")])
+        return
+            ([String(localized: "Not from Ichor")] + [
+                [w.schedule, w.duration, w.timeZone].filter { !$0.isEmpty }.joined(separator: " ")
+            ])
             .joined(separator: " · ")
     }
 
@@ -138,9 +166,12 @@ struct ArgoWindowsView: View {
         } else if section == .expired {
             Text("Ended \(relativeTime(w.endsAt))").font(.caption).foregroundStyle(.secondary)
         } else if section == .active {
-            let left = Duration.seconds(max(0, w.endsAt - now) / 1000).formatted(.units(allowed: [.days, .hours, .minutes], width: .abbreviated))
+            let left = Duration.seconds(max(0, w.endsAt - now) / 1000).formatted(
+                .units(allowed: [.days, .hours, .minutes], width: .abbreviated))
             Text("\(left) left").font(.caption).monospacedDigit()
-            ProgressView(value: Double(min(max(now - w.start, 0), max(w.endsAt - w.start, 1))), total: Double(max(w.endsAt - w.start, 1)))
+            ProgressView(
+                value: Double(min(max(now - w.start, 0), max(w.endsAt - w.start, 1))),
+                total: Double(max(w.endsAt - w.start, 1)))
         } else if w.start > 0 {
             Text("Starts \(freezeClock(w.start))").font(.caption).foregroundStyle(.secondary)
         }
@@ -150,9 +181,12 @@ struct ArgoWindowsView: View {
     private func scope(_ w: ArgoWindow) -> String {
         var parts: [String] = []
         if !w.applications.isEmpty {
-            parts.append(w.applications == ["*"] ? String(localized: "all apps") : w.applications.joined(separator: ", "))
+            parts.append(
+                w.applications == ["*"] ? String(localized: "all apps") : w.applications.joined(separator: ", "))
         }
-        if !w.namespaces.isEmpty { parts.append(String(localized: "namespace \(w.namespaces.joined(separator: ", "))")) }
+        if !w.namespaces.isEmpty {
+            parts.append(String(localized: "namespace \(w.namespaces.joined(separator: ", "))"))
+        }
         if !w.clusters.isEmpty { parts.append(String(localized: "cluster \(w.clusters.joined(separator: ", "))")) }
         // A window without selectors matches no app.
         return parts.isEmpty ? "—" : parts.joined(separator: " · ")
@@ -161,7 +195,8 @@ struct ArgoWindowsView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        let cluster = model.activeSummary, store = self.store
+        let cluster = model.activeSummary
+        let store = self.store
         await store.refresh($state, key: key, currentKey: { model.argoKey }) {
             try await store.load(with: client, key: key, cluster: cluster)
         }
@@ -170,7 +205,9 @@ struct ArgoWindowsView: View {
     private func change(_ action: ArgoFreezeAction, _ pw: ProjectWindow, _ options: ArgoFreezeOptions) async {
         guard let client = model.client else { return }
         let failure = await store.freeze(action, on: pw.project, options: [options], with: client)
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
         await load()
     }
 
@@ -178,7 +215,11 @@ struct ArgoWindowsView: View {
         guard let client = model.client else { return }
         var seen: Set<String> = []
         for pw in list where seen.insert(pw.project.id).inserted {
-            if let failure = await store.freeze(.clearExpired, on: pw.project, options: [ArgoFreezeOptions()], with: client) { message = failure }
+            if let failure = await store.freeze(
+                .clearExpired, on: pw.project, options: [ArgoFreezeOptions()], with: client)
+            {
+                message = failure
+            }
         }
         await load()
     }

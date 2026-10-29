@@ -33,16 +33,18 @@ enum FreezeReminders {
         for pw in running {
             // Already inside the lead time: its pending reminder (if any) stays as it is.
             guard let fireIn = freezeReminderDelay(endsAt: pw.window.endsAt, lead: lead, now: now) else { continue }
-            let request = UNNotificationRequest(identifier: identifier(cluster, pw), content: content(cluster, pw),
-                                                trigger: UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false))
+            let request = UNNotificationRequest(
+                identifier: identifier(cluster, pw), content: content(cluster, pw),
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false))
             center.add(request)
         }
     }
 
     /// One per freeze: two freezes of a project ending together each get their reminder.
     private static func identifier(_ cluster: String, _ pw: ProjectWindow) -> String {
-        freezeReminderID(prefix: prefix, cluster: cluster, namespace: pw.project.namespace, project: pw.project.name,
-                         window: "\(pw.window.id)")
+        freezeReminderID(
+            prefix: prefix, cluster: cluster, namespace: pw.project.namespace, project: pw.project.name,
+            window: "\(pw.window.id)")
     }
 
     private static func content(_ cluster: String, _ pw: ProjectWindow) -> UNMutableNotificationContent {
@@ -51,19 +53,25 @@ enum FreezeReminders {
         let subject = [pw.project.name, scope].filter { !$0.isEmpty }.joined(separator: " · ")
         let end = Date(epochMillis: pw.window.endsAt).formatted(date: .omitted, time: .shortened)
         content.title = String(localized: "Argo CD freeze ending")
-        content.body = String(localized: "The freeze on \(subject) ends at \(end): Argo CD then puts back what was changed by hand.")
+        content.body = String(
+            localized: "The freeze on \(subject) ends at \(end): Argo CD then puts back what was changed by hand.")
         content.categoryIdentifier = category
         content.sound = .default
-        content.userInfo = FreezeExtendRequest(cluster: cluster, namespace: pw.project.namespace, project: pw.project.name,
-                                               window: pw.window.id, end: pw.window.endsAt).userInfo
+        content.userInfo =
+            FreezeExtendRequest(
+                cluster: cluster, namespace: pw.project.namespace, project: pw.project.name,
+                window: pw.window.id, end: pw.window.endsAt
+            ).userInfo
         return content
     }
 
     /// The category with "+1 h": it opens the app, which extends the freeze on its own cluster.
     nonisolated static var notificationCategory: UNNotificationCategory {
-        let extend = UNNotificationAction(identifier: extendAction, title: String(localized: "+1 h"), options: [.foreground])
-        return UNNotificationCategory(identifier: category, actions: [extend], intentIdentifiers: [],
-                                      hiddenPreviewsBodyPlaceholder: String(localized: "Argo CD freeze ending"), options: [])
+        let extend = UNNotificationAction(
+            identifier: extendAction, title: String(localized: "+1 h"), options: [.foreground])
+        return UNNotificationCategory(
+            identifier: category, actions: [extend], intentIdentifiers: [],
+            hiddenPreviewsBodyPlaceholder: String(localized: "Argo CD freeze ending"), options: [])
     }
 }
 
@@ -90,8 +98,10 @@ struct FreezeExtendRequest: Equatable, Sendable {
 
     init?(userInfo: [AnyHashable: Any]) {
         guard let cluster = userInfo["cluster"] as? String, let namespace = userInfo["namespace"] as? String,
-              let project = userInfo["project"] as? String, let window = userInfo["window"] as? String else { return nil }
-        self.init(cluster: cluster, namespace: namespace, project: project, window: window,
-                  end: (userInfo["end"] as? NSNumber)?.int64Value ?? 0)
+            let project = userInfo["project"] as? String, let window = userInfo["window"] as? String
+        else { return nil }
+        self.init(
+            cluster: cluster, namespace: namespace, project: project, window: window,
+            end: (userInfo["end"] as? NSNumber)?.int64Value ?? 0)
     }
 }

@@ -42,9 +42,13 @@ struct RunbookRunView: View {
         .toolbar {
             if run?.running == true {
                 ToolbarItem(placement: .primaryAction) {
-                    Button(role: .destructive) { job.stop() } label: { Text("Stop") }
-                        .disabled(run?.stopping == true)
-                        .accessibilityLabel(Text("Stop the runbook"))
+                    Button(role: .destructive) {
+                        job.stop()
+                    } label: {
+                        Text("Stop")
+                    }
+                    .disabled(run?.stopping == true)
+                    .accessibilityLabel(Text("Stop the runbook"))
                 }
             }
         }

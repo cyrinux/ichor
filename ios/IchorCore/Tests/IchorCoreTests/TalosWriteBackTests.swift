@@ -4,13 +4,13 @@ import XCTest
 final class TalosWriteBackTests: XCTestCase {
     func testDecodesThePatchAndItsChanges() throws {
         let json = #"""
-        {"patch":"machine:\n  install:\n    disk: /dev/nvme0n1\n","changes":[
-          {"doc":0,"kind":"v1alpha1","path":"machine.network.nameservers","from":["192.0.2.1"],"to":null},
-          {"doc":0,"kind":"v1alpha1","path":"machine.install.disk","from":"/dev/sda","to":"/dev/nvme0n1"},
-          {"doc":0,"kind":"v1alpha1","path":"machine.kubelet.extraArgs","to":{"max-pods":"150"}},
-          {"doc":0,"kind":"v1alpha1","path":"machine.install.wipe","from":false,"to":true}],
-          "touchesSecrets":false,"notes":["machine.network.nameservers was removed"]}
-        """#
+            {"patch":"machine:\n  install:\n    disk: /dev/nvme0n1\n","changes":[
+              {"doc":0,"kind":"v1alpha1","path":"machine.network.nameservers","from":["192.0.2.1"],"to":null},
+              {"doc":0,"kind":"v1alpha1","path":"machine.install.disk","from":"/dev/sda","to":"/dev/nvme0n1"},
+              {"doc":0,"kind":"v1alpha1","path":"machine.kubelet.extraArgs","to":{"max-pods":"150"}},
+              {"doc":0,"kind":"v1alpha1","path":"machine.install.wipe","from":false,"to":true}],
+              "touchesSecrets":false,"notes":["machine.network.nameservers was removed"]}
+            """#
         let patch = try TalosJSON.decode(TalosConfigPatch.self, from: json)
         XCTAssertTrue(patch.changes[0].removed)
         XCTAssertEqual(patch.changes[0].from?.display, #"["192.0.2.1"]"#)
@@ -22,8 +22,9 @@ final class TalosWriteBackTests: XCTestCase {
     }
 
     func testATalosQuickEditGoesToTheCore() throws {
-        let plan = TalosWriteBackPlan(file: "talos/nodes/cp-1.yaml", patch: "machine:\n  install:\n    disk: /dev/nvme0n1\n",
-                                      skipped: [TalosRepoSkip(path: "machine.time.servers", why: "set in talos/patches/time.yaml")])
+        let plan = TalosWriteBackPlan(
+            file: "talos/nodes/cp-1.yaml", patch: "machine:\n  install:\n    disk: /dev/nvme0n1\n",
+            skipped: [TalosRepoSkip(path: "machine.time.servers", why: "set in talos/patches/time.yaml")])
         let edit = QuickEdit.talos(hostname: "cp-1", plan: plan, firstPath: "machine.install.disk")
         XCTAssertEqual(quickEditTitle(edit), "Keep cp-1's config change in Git: machine.install.disk")
 

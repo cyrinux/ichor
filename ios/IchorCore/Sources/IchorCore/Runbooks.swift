@@ -18,7 +18,10 @@ public struct RunbookItem: Decodable, Equatable, Hashable, Identifiable, Sendabl
 
     private enum CodingKeys: String, CodingKey { case id, name, description, steps, destructive, importedAt, problem }
 
-    public init(id: String, name: String, description: String = "", steps: Int = 0, destructive: Int = 0, importedAt: Int64 = 0, problem: String = "") {
+    public init(
+        id: String, name: String, description: String = "", steps: Int = 0, destructive: Int = 0, importedAt: Int64 = 0,
+        problem: String = ""
+    ) {
         self.id = id
         self.name = name
         self.description = description
@@ -118,10 +121,14 @@ public struct RunbookPlanStep: Decodable, Equatable, Hashable, Identifiable, Sen
     public let allowed: Bool
     public let denied: String
 
-    private enum CodingKeys: String, CodingKey { case id, action, target, destructive, continueOnError, role, allowed, denied }
+    private enum CodingKeys: String, CodingKey {
+        case id, action, target, destructive, continueOnError, role, allowed, denied
+    }
 
-    public init(id: String, action: String, target: RunbookTarget, destructive: Bool = false, continueOnError: Bool = false,
-                role: String = "", allowed: Bool = true, denied: String = "") {
+    public init(
+        id: String, action: String, target: RunbookTarget, destructive: Bool = false, continueOnError: Bool = false,
+        role: String = "", allowed: Bool = true, denied: String = ""
+    ) {
         self.id = id
         self.action = action
         self.target = target
@@ -218,7 +225,9 @@ public struct RunbookStepState: Decodable, Equatable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey { case index, id, state, message, startedAt, endedAt }
 
-    public init(index: Int, id: String, state: RunbookStepPhase, message: String = "", startedAt: Int64 = 0, endedAt: Int64 = 0) {
+    public init(
+        index: Int, id: String, state: RunbookStepPhase, message: String = "", startedAt: Int64 = 0, endedAt: Int64 = 0
+    ) {
         self.index = index
         self.id = id
         self.state = state

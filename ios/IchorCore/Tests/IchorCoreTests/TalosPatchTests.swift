@@ -7,7 +7,8 @@ final class TalosPatchTests: XCTestCase {
     }
 
     func testDecodesTheCoreAnswer() throws {
-        let json = #"{"talos":true,"kind":"documents","documents":[{"kind":"HostnameConfig","hostname":"cp-1"},{"kind":"v1alpha1"}],"touchesSecrets":false,"tryable":true}"#
+        let json =
+            #"{"talos":true,"kind":"documents","documents":[{"kind":"HostnameConfig","hostname":"cp-1"},{"kind":"v1alpha1"}],"touchesSecrets":false,"tryable":true}"#
         let info = try JSONDecoder().decode(TalosPatchInfo.self, from: Data(json.utf8))
         XCTAssertTrue(info.tryable)
         XCTAssertEqual(info.kind, "documents")
@@ -21,7 +22,9 @@ final class TalosPatchTests: XCTestCase {
     func testTheNodeThePatchIsFor() {
         let nodes = [node("192.0.2.11", "cp-1.lab.example.test"), node("192.0.2.21", "worker-1")]
         func info(_ hosts: String...) -> TalosPatchInfo {
-            TalosPatchInfo(talos: true, documents: hosts.map { TalosPatchDoc(kind: "HostnameConfig", hostname: $0) }, tryable: true)
+            TalosPatchInfo(
+                talos: true, documents: hosts.map { TalosPatchDoc(kind: "HostnameConfig", hostname: $0) }, tryable: true
+            )
         }
         XCTAssertEqual(info("worker-1").node(in: nodes)?.node, "192.0.2.21")
         XCTAssertEqual(info("cp-1").node(in: nodes)?.node, "192.0.2.11")

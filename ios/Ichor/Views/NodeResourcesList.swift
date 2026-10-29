@@ -52,8 +52,14 @@ struct ResourcesList: View {
             List {
                 Section {
                     LabeledContent("Uptime", value: uptime)
-                    LabeledContent("CPU", value: resources.cpuModel.isEmpty ? String(localized: "\(resources.cpuCount) threads") : "\(resources.cpuCount) × \(resources.cpuModel)")
-                    LabeledContent("Load (1/5/15)", value: String(format: "%.2f  %.2f  %.2f", resources.load1, resources.load5, resources.load15))
+                    LabeledContent(
+                        "CPU",
+                        value: resources.cpuModel.isEmpty
+                            ? String(localized: "\(resources.cpuCount) threads")
+                            : "\(resources.cpuCount) × \(resources.cpuModel)")
+                    LabeledContent(
+                        "Load (1/5/15)",
+                        value: String(format: "%.2f  %.2f  %.2f", resources.load1, resources.load5, resources.load15))
                     if resources.cpuCount > 0 { UsageBar(fraction: resources.load1 / Double(resources.cpuCount)) }
                     if let clock { TimeOffsetRow(info: clock, title: String(localized: "Clock offset")) }
                 } header: {
@@ -64,8 +70,9 @@ struct ResourcesList: View {
                     LabeledContent("Used", value: "\(formatBytes(used)) / \(formatBytes(resources.memTotal))")
                     UsageBar(fraction: usedFraction(total: resources.memTotal, available: resources.memAvailable))
                     if memory.count >= 2 {
-                        HistorySparkline(points: memory, from: window.lowerBound, to: window.upperBound,
-                                         label: Text("Memory used over the period"))
+                        HistorySparkline(
+                            points: memory, from: window.lowerBound, to: window.upperBound,
+                            label: Text("Memory used over the period"))
                     }
                 } header: {
                     Text("Memory").sectionTarget("memory")
@@ -79,7 +86,10 @@ struct ResourcesList: View {
                                 HStack {
                                     Text(mount.mountedOn)
                                     Spacer()
-                                    Text(verbatim: "\(formatBytes(mount.size - min(mount.available, mount.size))) / \(formatBytes(mount.size))").font(.caption)
+                                    Text(
+                                        verbatim:
+                                            "\(formatBytes(mount.size - min(mount.available, mount.size))) / \(formatBytes(mount.size))"
+                                    ).font(.caption)
                                 }
                                 Text(mount.filesystem).font(.caption.monospaced()).foregroundStyle(.secondary)
                                 UsageBar(fraction: usedFraction(total: mount.size, available: mount.available))

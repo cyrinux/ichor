@@ -3,7 +3,8 @@ import XCTest
 
 final class GitRepoSearchTests: XCTestCase {
     func testDecodesTheGoAnswer() throws {
-        let json = #"{"sha":"abc","hits":[{"path":"talos/nodes/cp-1.yaml","line":3,"text":"hostname: cp-1"}],"searched":9,"truncated":true}"#
+        let json =
+            #"{"sha":"abc","hits":[{"path":"talos/nodes/cp-1.yaml","line":3,"text":"hostname: cp-1"}],"searched":9,"truncated":true}"#
         let search = try JSONDecoder().decode(GitRepoSearch.self, from: Data(json.utf8))
         XCTAssertEqual(search.hits, [GitSearchHit(path: "talos/nodes/cp-1.yaml", line: 3, text: "hostname: cp-1")])
         XCTAssertEqual(search.searched, 9)

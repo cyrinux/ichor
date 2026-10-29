@@ -97,6 +97,8 @@ public func backupPlugins(_ export: PluginBackup) -> PluginBackup? {
 
 /// The plugins of a restored payload: only a format 5+ one carries them; nil when it holds none.
 public func restoredPlugins(_ payload: BackupPayload) -> PluginBackup? {
-    guard payload.format >= backupFormatPlugins, let plugins = payload.plugins, !plugins.plugins.isEmpty else { return nil }
+    guard payload.format >= backupFormatPlugins, let plugins = payload.plugins, !plugins.plugins.isEmpty else {
+        return nil
+    }
     return plugins
 }

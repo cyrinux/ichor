@@ -3,14 +3,16 @@ import XCTest
 
 final class HelmRollbackTests: XCTestCase {
     func testDecodesPlan() throws {
-        let plan = try TalosJSON.decode(HelmRollbackPlan.self, from: """
-        {"namespace":"apps","name":"site","from":3,"to":2,"fromChart":"site-1.1.0","toChart":"site-1.0.0",
-         "fromAppVersion":"1.1","toAppVersion":"1.0","future":true,
-         "changes":[{"action":"update","kind":"Deployment","namespace":"apps","name":"web","error":""},
-                    {"action":"delete","kind":"ClusterRole","name":"site","error":"forbidden","extra":1},
-                    {"action":"keep","kind":"PersistentVolumeClaim","namespace":"apps","name":"data"}],
-         "unchanged":4,"fluxOwner":"flux-system/site","blockers":[]}
-        """)
+        let plan = try TalosJSON.decode(
+            HelmRollbackPlan.self,
+            from: """
+                {"namespace":"apps","name":"site","from":3,"to":2,"fromChart":"site-1.1.0","toChart":"site-1.0.0",
+                 "fromAppVersion":"1.1","toAppVersion":"1.0","future":true,
+                 "changes":[{"action":"update","kind":"Deployment","namespace":"apps","name":"web","error":""},
+                            {"action":"delete","kind":"ClusterRole","name":"site","error":"forbidden","extra":1},
+                            {"action":"keep","kind":"PersistentVolumeClaim","namespace":"apps","name":"data"}],
+                 "unchanged":4,"fluxOwner":"flux-system/site","blockers":[]}
+                """)
         XCTAssertEqual(plan.from, 3)
         XCTAssertEqual(plan.to, 2)
         XCTAssertEqual(plan.toChart, "site-1.0.0")
@@ -28,7 +30,8 @@ final class HelmRollbackTests: XCTestCase {
     }
 
     func testBlockersStopIt() throws {
-        let plan = try TalosJSON.decode(HelmRollbackPlan.self, from: #"{"blockers":["revision 9 not found"],"changes":null}"#)
+        let plan = try TalosJSON.decode(
+            HelmRollbackPlan.self, from: #"{"blockers":["revision 9 not found"],"changes":null}"#)
         XCTAssertFalse(plan.canRun)
         XCTAssertEqual(plan.blockers, ["revision 9 not found"])
         XCTAssertEqual(plan.changes, [])
@@ -39,7 +42,9 @@ final class HelmRollbackTests: XCTestCase {
         XCTAssertEqual(plan, HelmRollbackPlan())
         XCTAssertTrue(plan.canRun)
         XCTAssertFalse(plan.keepsObjects)
-        XCTAssertEqual(try TalosJSON.decode(HelmRollbackChange.self, from: "{}"), HelmRollbackChange(action: "", kind: "", name: ""))
+        XCTAssertEqual(
+            try TalosJSON.decode(HelmRollbackChange.self, from: "{}"),
+            HelmRollbackChange(action: "", kind: "", name: ""))
         XCTAssertFalse(plan.force)
         XCTAssertEqual(plan.historyMax, 0)
         XCTAssertEqual(plan.prune, [])
@@ -50,10 +55,12 @@ final class HelmRollbackTests: XCTestCase {
     }
 
     func testDecodesOptionsFields() throws {
-        let plan = try TalosJSON.decode(HelmRollbackPlan.self, from: """
-        {"from":3,"to":1,"force":true,"historyMax":2,"prune":[1,2],"workloads":2,"prune_extra":null,
-         "changes":[{"action":"replace","kind":"Deployment","namespace":"web","name":"site"}]}
-        """)
+        let plan = try TalosJSON.decode(
+            HelmRollbackPlan.self,
+            from: """
+                {"from":3,"to":1,"force":true,"historyMax":2,"prune":[1,2],"workloads":2,"prune_extra":null,
+                 "changes":[{"action":"replace","kind":"Deployment","namespace":"web","name":"site"}]}
+                """)
         XCTAssertTrue(plan.force)
         XCTAssertEqual(plan.historyMax, 2)
         XCTAssertEqual(plan.prune, [1, 2])
@@ -88,12 +95,14 @@ final class HelmRollbackTests: XCTestCase {
     }
 
     func testDecodesHooks() throws {
-        let plan = try TalosJSON.decode(HelmRollbackPlan.self, from: """
-        {"from":3,"to":2,"blockers":[],
-         "hooks":[{"name":"site-migrate","kind":"Job","event":"pre-rollback","weight":-5,
-                   "deletePolicies":["before-hook-creation","hook-succeeded"],"error":"","extra":1},
-                  {"name":"site-notify","kind":"Job","event":"post-rollback"}]}
-        """)
+        let plan = try TalosJSON.decode(
+            HelmRollbackPlan.self,
+            from: """
+                {"from":3,"to":2,"blockers":[],
+                 "hooks":[{"name":"site-migrate","kind":"Job","event":"pre-rollback","weight":-5,
+                           "deletePolicies":["before-hook-creation","hook-succeeded"],"error":"","extra":1},
+                          {"name":"site-notify","kind":"Job","event":"post-rollback"}]}
+                """)
         XCTAssertEqual(plan.hooks.count, 2)
         let pre = plan.hooks[0]
         XCTAssertTrue(pre.runsBefore)
@@ -109,18 +118,21 @@ final class HelmRollbackTests: XCTestCase {
         XCTAssertNotEqual(pre.id, post.id)
         XCTAssertTrue(plan.canRun)
 
-        XCTAssertEqual(try TalosJSON.decode(HelmRollbackHook.self, from: "{}"),
-                       HelmRollbackHook(name: "", kind: "", event: ""))
+        XCTAssertEqual(
+            try TalosJSON.decode(HelmRollbackHook.self, from: "{}"),
+            HelmRollbackHook(name: "", kind: "", event: ""))
         let none = try TalosJSON.decode(HelmRollbackPlan.self, from: #"{"hooks":null}"#)
         XCTAssertEqual(none.hooks, [])
         XCTAssertTrue(none.canRun)
     }
 
     func testRefusedHookStopsIt() throws {
-        let plan = try TalosJSON.decode(HelmRollbackPlan.self, from: """
-        {"blockers":[],"hooks":[{"name":"site-migrate","kind":"Job","event":"pre-rollback","weight":3,
-                                 "error":"jobs.batch is forbidden"}]}
-        """)
+        let plan = try TalosJSON.decode(
+            HelmRollbackPlan.self,
+            from: """
+                {"blockers":[],"hooks":[{"name":"site-migrate","kind":"Job","event":"pre-rollback","weight":3,
+                                         "error":"jobs.batch is forbidden"}]}
+                """)
         XCTAssertFalse(plan.canRun)
         XCTAssertEqual(plan.hooks.first?.label { "w=\($0)" }, "Job site-migrate (w=3)")
     }

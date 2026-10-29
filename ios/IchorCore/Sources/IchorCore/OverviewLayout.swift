@@ -2,7 +2,8 @@ import Foundation
 
 /// A home screen's section that can be moved and hidden; banners and notices stay on top. Raw
 /// values are Android's enum names, so the saved form reads the same on both.
-public protocol HomeCard: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable where RawValue == String, AllCases == [Self] {
+public protocol HomeCard: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable
+where RawValue == String, AllCases == [Self] {
     /// The `@AppStorage` key the home's encoded layout is kept under.
     static var layoutStorageKey: String { get }
     /// Only shown when the cluster has what it reports on.
@@ -37,7 +38,9 @@ public enum OverviewCard: String, HomeCard {
     public var id: String { rawValue }
     public static let layoutStorageKey = "overview.layout"
 
-    public var whenDetected: Bool { self == .pinned || self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
+    public var whenDetected: Bool {
+        self == .pinned || self == .dataServices || self == .argoCD || self == .flux || self == .alerts
+    }
 
     public var leadsWhenNew: Bool { self == .pinned || self == .talosUpdate }
 
@@ -64,7 +67,9 @@ public enum KubeHomeCard: String, HomeCard {
     public static let layoutStorageKey = "kubeHome.layout"
 
     // The apps too: credentials that may not list every pod have no inventory to show.
-    public var whenDetected: Bool { self == .pinned || self == .apps || self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
+    public var whenDetected: Bool {
+        self == .pinned || self == .apps || self == .dataServices || self == .argoCD || self == .flux || self == .alerts
+    }
 
     public var leadsWhenNew: Bool { self == .pinned }
 }
@@ -140,13 +145,15 @@ public struct CardLayout<Card: HomeCard>: Equatable, Sendable {
             let name = raw.trimmingCharacters(in: .whitespaces)
             let isHidden = name.hasPrefix("-")
             guard let card = Card(rawValue: isHidden ? String(name.dropFirst()) : name),
-                  !known.contains(card) else { continue }
+                !known.contains(card)
+            else { continue }
             known.append(card)
             if isHidden { hidden.insert(card) }
         }
         let missing = Card.allCases.filter { !known.contains($0) }
-        return CardLayout(order: missing.filter(\.leadsWhenNew) + known + missing.filter { !$0.leadsWhenNew },
-                          hidden: hidden.union(missing.filter(\.hiddenByDefault)))
+        return CardLayout(
+            order: missing.filter(\.leadsWhenNew) + known + missing.filter { !$0.leadsWhenNew },
+            hidden: hidden.union(missing.filter(\.hiddenByDefault)))
     }
 }
 

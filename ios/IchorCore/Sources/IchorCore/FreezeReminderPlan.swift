@@ -2,7 +2,9 @@ import Foundation
 
 /// The identifier of a freeze's reminder. One per freeze: two freezes of a project ending
 /// together each get their reminder; `prefix` + cluster + "|" starts every one of a cluster's.
-public func freezeReminderID(prefix: String, cluster: String, namespace: String, project: String, window: String) -> String {
+public func freezeReminderID(prefix: String, cluster: String, namespace: String, project: String, window: String)
+    -> String
+{
     "\(prefix)\(cluster)|\(namespace)/\(project)/\(window)"
 }
 

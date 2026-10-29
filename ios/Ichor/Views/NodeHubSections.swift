@@ -81,8 +81,9 @@ struct NodeStatusSection: View {
             tabRow(.live, systemImage: "chart.xyaxis.line")
             tabRow(.processes, systemImage: "list.number", support: support(.processes))
             // "Pods" next to "Kubernetes pods" would read as the same list: these are Talos's containers.
-            tabRow(.pods, title: model.allows(.workloads) ? String(localized: "Containers") : nil,
-                   systemImage: "shippingbox.circle", support: support(.containers))
+            tabRow(
+                .pods, title: model.allows(.workloads) ? String(localized: "Containers") : nil,
+                systemImage: "shippingbox.circle", support: support(.containers))
             // Cgroups (a copy of /sys/fs/cgroup) only exists for admin configs.
             if model.allows(.cgroups) { tabRow(.cgroups, systemImage: "square.3.layers.3d") }
             // The Pods tab reads the containers through Talos (CRI); this asks the API server (os:admin).
@@ -92,8 +93,10 @@ struct NodeStatusSection: View {
         }
     }
 
-    private func tabRow(_ tab: NodeTabsView.Tab, title: String? = nil, systemImage: String,
-                        support: FeatureSupport = FeatureSupport(supported: true)) -> some View {
+    private func tabRow(
+        _ tab: NodeTabsView.Tab, title: String? = nil, systemImage: String,
+        support: FeatureSupport = FeatureSupport(supported: true)
+    ) -> some View {
         NavigationLink(value: Route.nodeTab(ref, tab: tab)) {
             NodeHubRowLabel(title: title ?? tab.label, systemImage: systemImage, support: support)
         }
@@ -117,23 +120,30 @@ struct NodeInspectSection: View {
         Section("Inspect") {
             NodeHubButton(title: String(localized: "Kernel log"), systemImage: "terminal") { open = .kernelLog }
                 .accessibilityIdentifier(SmokeID.kernelLog)
-            NodeHubButton(title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events)) {
+            NodeHubButton(
+                title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events)
+            ) {
                 open = .events
             }
             NodeHubButton(title: String(localized: "Network"), systemImage: "network", support: support(.network)) {
                 open = .network
             }
-            NodeHubButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.mounts)) {
+            NodeHubButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.mounts))
+            {
                 open = .storage
             }
             NodeHubButton(title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images)) {
                 open = .images
             }
             if model.allows(.resourceBrowser) {
-                NodeHubButton(title: String(localized: "Resources browser"), systemImage: "square.stack.3d.up",
-                              support: support(.resourceBrowser)) { open = .resourceBrowser }
+                NodeHubButton(
+                    title: String(localized: "Resources browser"), systemImage: "square.stack.3d.up",
+                    support: support(.resourceBrowser)
+                ) { open = .resourceBrowser }
             }
-            NodeHubButton(title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware)) {
+            NodeHubButton(
+                title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware)
+            ) {
                 open = .hardware
             }
         }
@@ -156,17 +166,24 @@ struct NodeTroubleshootSection: View {
         if model.allows(.debugShell) || model.allows(.packetCapture) {
             Section("Troubleshoot") {
                 if model.allows(.debugShell) {
-                    NodeHubButton(title: String(localized: "Debug shell"), systemImage: "apple.terminal", support: support(.debugShell)) {
+                    NodeHubButton(
+                        title: String(localized: "Debug shell"), systemImage: "apple.terminal",
+                        support: support(.debugShell)
+                    ) {
                         open = .debugShell
                     }
                     // The same privileged netshoot container, one check at a time.
-                    NodeHubButton(title: String(localized: "Network tools"), systemImage: "network", support: support(.debugShell)) {
+                    NodeHubButton(
+                        title: String(localized: "Network tools"), systemImage: "network", support: support(.debugShell)
+                    ) {
                         open = .netTools
                     }
                 }
                 if model.allows(.packetCapture) {
-                    NodeHubButton(title: String(localized: "Capture packets"), systemImage: "antenna.radiowaves.left.and.right",
-                                  support: support(.packetCapture)) { open = .capture }
+                    NodeHubButton(
+                        title: String(localized: "Capture packets"), systemImage: "antenna.radiowaves.left.and.right",
+                        support: support(.packetCapture)
+                    ) { open = .capture }
                 }
             }
         }
@@ -192,29 +209,45 @@ struct NodeOperateSection: View {
         if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) || model.allows(.reset) {
             Section("Operate") {
                 if model.allows(.machineConfig) {
-                    NodeHubButton(title: String(localized: "Machine config"), systemImage: "doc.text", support: support(.machineConfig)) {
+                    NodeHubButton(
+                        title: String(localized: "Machine config"), systemImage: "doc.text",
+                        support: support(.machineConfig)
+                    ) {
                         open = .machineConfig
                     }
                 }
                 if model.allows(.upgrade) {
-                    NodeHubButton(title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle", support: support(.upgrade)) {
+                    NodeHubButton(
+                        title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle",
+                        support: support(.upgrade)
+                    ) {
                         open = .upgrade
                     }
                 }
                 if model.allows(.reset) {
-                    NodeHubButton(title: String(localized: "Reset…"), systemImage: "arrow.counterclockwise.circle", support: support(.reset)) {
+                    NodeHubButton(
+                        title: String(localized: "Reset…"), systemImage: "arrow.counterclockwise.circle",
+                        support: support(.reset)
+                    ) {
                         showingReset = true
                     }
                     .disabled(maintenanceRunning)
                 }
                 // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
                 if model.allows(.workloads) {
-                    NodeHubButton(title: String(localized: "Maintenance…"), systemImage: "wrench.and.screwdriver") { open = .maintenance }
-                    NodeHubButton(title: String(localized: "Drain…"), systemImage: "rectangle.portrait.and.arrow.right") { open = .drain }
+                    NodeHubButton(title: String(localized: "Maintenance…"), systemImage: "wrench.and.screwdriver") {
+                        open = .maintenance
+                    }
+                    NodeHubButton(title: String(localized: "Drain…"), systemImage: "rectangle.portrait.and.arrow.right")
+                    { open = .drain }
                     // An uncordon mid-drain lets the evicted pods come back before the reboot.
-                    NodeHubButton(title: String(localized: "Cordon / uncordon…"), systemImage: "nosign") { showingCordon = true }
-                        .disabled(maintenanceRunning)
-                    NodeHubButton(title: String(localized: "Taints and labels…"), systemImage: "tag") { open = .nodeMeta }
+                    NodeHubButton(title: String(localized: "Cordon / uncordon…"), systemImage: "nosign") {
+                        showingCordon = true
+                    }
+                    .disabled(maintenanceRunning)
+                    NodeHubButton(title: String(localized: "Taints and labels…"), systemImage: "tag") {
+                        open = .nodeMeta
+                    }
                 }
             }
         }
@@ -235,7 +268,9 @@ struct NodePowerSection: View {
         if model.allows(.power) {
             Section("Power") {
                 ForEach(PowerAction.allCases) { action in
-                    NodeHubButton(title: action.localizedTitle, systemImage: "power", role: .destructive) { powerAction = action }
+                    NodeHubButton(title: action.localizedTitle, systemImage: "power", role: .destructive) {
+                        powerAction = action
+                    }
                 }
             }
         }

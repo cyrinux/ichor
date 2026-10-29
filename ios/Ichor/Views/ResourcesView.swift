@@ -36,7 +36,9 @@ struct ResourceTypesView: View {
                     }
                 }
             }
-            .emptyOverlay(groups.isEmpty, query: query) { ContentUnavailableView("No resource type", systemImage: "square.stack.3d.up") }
+            .emptyOverlay(groups.isEmpty, query: query) {
+                ContentUnavailableView("No resource type", systemImage: "square.stack.3d.up")
+            }
             .refreshable { await load() }
             .themedBackground()
         }
@@ -69,7 +71,8 @@ private struct ResourceTypeRow: View {
             Text(verbatim: type.type).font(.caption.monospaced()).foregroundStyle(.secondary)
                 .lineLimit(1).truncationMode(.middle)
             if !type.aliases.isEmpty {
-                Text(verbatim: type.aliases.joined(separator: ", ")).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                Text(verbatim: type.aliases.joined(separator: ", ")).font(.caption2).foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
         }
     }
@@ -106,7 +109,9 @@ struct ResourceItemsView: View {
                     if list.truncated { Text("Only the first \(list.items.count) are shown") }
                 }
             }
-            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No resource of this type", systemImage: "square.stack.3d.up") }
+            .emptyOverlay(shown.isEmpty, query: query) {
+                ContentUnavailableView("No resource of this type", systemImage: "square.stack.3d.up")
+            }
             .refreshable { await load() }
             .themedBackground()
         }
@@ -175,7 +180,9 @@ struct ResourceDetailView: View {
                 ContentUnavailableView {
                     Label("Sensitive", systemImage: "lock.fill")
                 } description: {
-                    Text("This resource contains secrets (keys, tokens). Show it only where nobody else can see your screen.")
+                    Text(
+                        "This resource contains secrets (keys, tokens). Show it only where nobody else can see your screen."
+                    )
                     if let message { Text(message) }
                 } actions: {
                     Button("Show") { Task { await reveal() } }.buttonStyle(.borderedProminent)
@@ -224,7 +231,8 @@ struct ResourceDetailView: View {
                         VStack(spacing: 12) {
                             Image(systemName: "eye.slash").font(.largeTitle).foregroundStyle(.secondary)
                             if captured {
-                                Text("Hidden while the screen is recorded or mirrored.").font(.footnote).foregroundStyle(.secondary)
+                                Text("Hidden while the screen is recorded or mirrored.").font(.footnote)
+                                    .foregroundStyle(.secondary)
                             } else {
                                 Button("Show") { Task { await reveal() } }.buttonStyle(.borderedProminent)
                             }
@@ -240,9 +248,12 @@ struct ResourceDetailView: View {
     private var banner: some View {
         VStack(alignment: .leading, spacing: 4) {
             if type.isSensitive {
-                Label("This resource contains secrets (keys, tokens). Show it only where nobody else can see your screen.", systemImage: "lock.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.statusWarn)
+                Label(
+                    "This resource contains secrets (keys, tokens). Show it only where nobody else can see your screen.",
+                    systemImage: "lock.fill"
+                )
+                .font(.footnote)
+                .foregroundStyle(.statusWarn)
             }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         }
@@ -259,14 +270,17 @@ struct ResourceDetailView: View {
     private func load() async {
         guard let client = model.client else { return }
         state = await .from {
-            try await client.resource(node: node, namespace: item.namespace.isEmpty ? type.namespace : item.namespace,
-                                      type: type.type, id: item.id)
+            try await client.resource(
+                node: node, namespace: item.namespace.isEmpty ? type.namespace : item.namespace,
+                type: type.type, id: item.id)
         }
     }
 
     /// With the app lock on, showing a sensitive resource needs a fresh Face ID / passcode.
     private func reveal() async {
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Show a sensitive resource")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Show a sensitive resource"))
+        {
             message = failure
             return
         }
@@ -281,10 +295,13 @@ struct ResourceDetailView: View {
     /// Device-only pasteboard; a sensitive resource expires from it after two minutes.
     private func copy() {
         guard let yaml = loadedYAML else { return }
-        let options: [UIPasteboard.OptionsKey: Any] = type.isSensitive
+        let options: [UIPasteboard.OptionsKey: Any] =
+            type.isSensitive
             ? [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)]
             : [.localOnly: true]
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: yaml]], options: options)
-        message = type.isSensitive ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
+        message =
+            type.isSensitive
+            ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
     }
 }

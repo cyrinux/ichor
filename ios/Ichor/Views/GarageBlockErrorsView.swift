@@ -37,7 +37,9 @@ struct GarageBlockErrorsView: View {
                     }
                     .disabled(report.errored == 0 || repairing)
                 } footer: {
-                    Text("Fixes the block references and reference counts when they are off, and retries the resync of the blocks nothing references any more.")
+                    Text(
+                        "Fixes the block references and reference counts when they are off, and retries the resync of the blocks nothing references any more."
+                    )
                 }
                 ForEach(report.nodes) { NodeSection(node: $0) }
             }
@@ -47,15 +49,20 @@ struct GarageBlockErrorsView: View {
         .task { await load() }
         .navigationTitle(Text("Block errors"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(Text("Repair the failing blocks?"), isPresented: $confirmRepair, titleVisibility: .visible) {
+        .confirmationDialog(Text("Repair the failing blocks?"), isPresented: $confirmRepair, titleVisibility: .visible)
+        {
             Button("Repair") { Task { await repair() } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Launches a block-refs and a block-rc metadata repair on every Garage node when needed (not while one runs, nor with a node unreachable), and retries the resync of unreferenced blocks. Repairs run in the background and add disk and network load for a while.")
+            Text(
+                "Launches a block-refs and a block-rc metadata repair on every Garage node when needed (not while one runs, nor with a node unreachable), and retries the resync of unreferenced blocks. Repairs run in the background and add disk and network load for a while."
+            )
         }
-        .alert(Text("Repair"),
-               isPresented: $repairSummary.isPresent(),
-               presenting: repairSummary) { _ in
+        .alert(
+            Text("Repair"),
+            isPresented: $repairSummary.isPresent(),
+            presenting: repairSummary
+        ) { _ in
             Button("OK") {}
         } message: { summary in
             Text(verbatim: summary)
@@ -102,9 +109,11 @@ private struct VerdictRow: View {
             Label("No block is failing to resync.", systemImage: "checkmark.circle")
                 .foregroundStyle(.statusOK)
         case .liveAffected:
-            Label("Some failing blocks back live objects: check those objects through S3 before declaring data loss.",
-                  systemImage: "exclamationmark.triangle")
-                .foregroundStyle(.statusBad)
+            Label(
+                "Some failing blocks back live objects: check those objects through S3 before declaring data loss.",
+                systemImage: "exclamationmark.triangle"
+            )
+            .foregroundStyle(.statusBad)
         case .deletedOnly:
             Label("No live object affected: these blocks only hold deleted data.", systemImage: "info.circle")
                 .foregroundStyle(.secondary)
@@ -123,7 +132,9 @@ private struct SummaryRows: View {
         }
         LabeledContent("Deleted data only", value: report.cleanupOnly.formatted())
         if report.staleRefs > 0 { LabeledContent("Stale references", value: report.staleRefs.formatted()) }
-        if report.refcountMismatches > 0 { LabeledContent("Reference counts off", value: report.refcountMismatches.formatted()) }
+        if report.refcountMismatches > 0 {
+            LabeledContent("Reference counts off", value: report.refcountMismatches.formatted())
+        }
         if report.retryable > 0 { LabeledContent("Unreferenced, retryable", value: report.retryable.formatted()) }
     }
 }
@@ -168,7 +179,11 @@ private struct BlockRow: View {
                     Image(systemName: ref.live ? "doc" : "trash").foregroundStyle(ref.live ? .red : .secondary)
                     Text(verbatim: ref.label).lineLimit(2).truncationMode(.middle)
                     Spacer()
-                    if ref.live { Text("live").foregroundStyle(.statusBad) } else { Text("deleted").foregroundStyle(.secondary) }
+                    if ref.live {
+                        Text("live").foregroundStyle(.statusBad)
+                    } else {
+                        Text("deleted").foregroundStyle(.secondary)
+                    }
                 }
                 .font(.caption)
             }
@@ -177,7 +192,9 @@ private struct BlockRow: View {
 
     private var details: String {
         var parts = [String(localized: "\(block.errors) attempts")]
-        if block.nextTrySecs >= 0 { parts.append(String(localized: "next try in \(localizedDuration(block.nextTrySecs))")) }
+        if block.nextTrySecs >= 0 {
+            parts.append(String(localized: "next try in \(localizedDuration(block.nextTrySecs))"))
+        }
         if block.staleRef { parts.append(String(localized: "stale reference")) }
         if block.refcountMismatch { parts.append(String(localized: "reference count off")) }
         return parts.joined(separator: " · ")

@@ -34,7 +34,9 @@ struct SelectedPodsView: View {
     }
 
     private var trigger: Trigger {
-        Trigger(phase: phase, context: model.activeContext, server: model.client?.kubeServer, generation: model.dataGeneration)
+        Trigger(
+            phase: phase, context: model.activeContext, server: model.client?.kubeServer,
+            generation: model.dataGeneration)
     }
 
     init(selection: PodSelection) {
@@ -87,7 +89,9 @@ struct SelectedPodsView: View {
             case .workload(let kind, let namespace, let name):
                 events = client.workloadPodsWatch(kind: kind, namespace: namespace, name: name, phase: phase)
             case .node(let address):
-                guard let name = try? await kubeNode.resolve({ try await client.kubeNodeName(node: address) }) else { return }
+                guard let name = try? await kubeNode.resolve({ try await client.kubeNodeName(node: address) }) else {
+                    return
+                }
                 events = client.nodePodsWatch(kubeNode: name, phase: phase)
             }
             for await event in events {
@@ -111,13 +115,19 @@ struct SelectedPodsView: View {
             Section {
                 // In the server's order: sorting would move rows as pages arrive.
                 ForEach(load.items) { pod in
-                    PodRow(pod: pod, showNamespace: selection.showsNamespace, showNode: selection.showsNode,
-                           deleting: actions.deleting.contains(pod.id), onLogs: { actions.logsPod = pod }) {
+                    PodRow(
+                        pod: pod, showNamespace: selection.showsNamespace, showNode: selection.showsNode,
+                        deleting: actions.deleting.contains(pod.id), onLogs: { actions.logsPod = pod }
+                    ) {
                         actions.confirm = pod
                     }
                     .podLogsSwipe { actions.logsPod = pod }
                     .contextMenu {
-                        Button { actions.logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
+                        Button {
+                            actions.logsPod = pod
+                        } label: {
+                            Label("Logs", systemImage: "doc.text")
+                        }
                     }
                 }
                 if load.hasMore { LoadMoreRow { list.loadMore(model: model) } }
@@ -132,16 +142,21 @@ struct SelectedPodsView: View {
 
     /// The list of `selection`'s pods in `phase`: the first page as full objects (images,
     /// containers), the next ones as Table rows (L9, L10).
-    private static func makeList(_ selection: PodSelection, phase: PodPhaseFilter, kubeNode: KubeNodeNameCache) -> PagedList<KubePod> {
-        PagedList<KubePod>(base: "selectedpods", persist: false, eagerRows: selectedPodsPageSize,
-                           detailed: { pods in pods.allSatisfy { !$0.images.isEmpty } }) { client, _, token in
+    private static func makeList(_ selection: PodSelection, phase: PodPhaseFilter, kubeNode: KubeNodeNameCache)
+        -> PagedList<KubePod>
+    {
+        PagedList<KubePod>(
+            base: "selectedpods", persist: false, eagerRows: selectedPodsPageSize,
+            detailed: { pods in pods.allSatisfy { !$0.images.isEmpty } }
+        ) { client, _, token in
             switch selection {
             case .node(let address):
                 let name = try await kubeNode.resolve { try await client.kubeNodeName(node: address) }
                 return try await client.nodePodsPage(kubeNode: name, phase: phase, token: token, table: !token.isEmpty)
             case .workload(let kind, let namespace, let name):
-                return try await client.workloadPodsPage(kind: kind, namespace: namespace, name: name, phase: phase,
-                                                         token: token, table: !token.isEmpty)
+                return try await client.workloadPodsPage(
+                    kind: kind, namespace: namespace, name: name, phase: phase,
+                    token: token, table: !token.isEmpty)
             }
         }
     }

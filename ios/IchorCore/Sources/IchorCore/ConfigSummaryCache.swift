@@ -41,7 +41,8 @@ public struct ConfigSummaryRecord: Codable, Equatable, Sendable {
     /// The record stored as `data`; nil when it does not decode (a corrupt cache is a miss).
     public static func decode(_ data: Data) -> ConfigSummaryRecord? {
         guard let record = try? JSONDecoder().decode(ConfigSummaryRecord.self, from: data),
-              record.summaries != nil else { return nil }
+            record.summaries != nil
+        else { return nil }
         return record
     }
 
@@ -86,8 +87,10 @@ public struct ConfigSummaryRecord: Codable, Equatable, Sendable {
 /// The summary of a store from the output of Go's Parse…IfChanged: "" means the digest
 /// matched and nothing was parsed, so `record`'s summary is current; anything else is the
 /// fresh summary JSON. Throws when "" comes with no cached summary (the caller parses then).
-public func summaryFromIfChanged(_ output: String, kind: StoredConfigKind,
-                                 record: ConfigSummaryRecord?) throws -> (summary: ConfigSummary, cached: Bool) {
+public func summaryFromIfChanged(
+    _ output: String, kind: StoredConfigKind,
+    record: ConfigSummaryRecord?
+) throws -> (summary: ConfigSummary, cached: Bool) {
     if output.isEmpty {
         guard let cached = record?.summaries?.summary(kind) else { throw ConfigSummaryCacheMiss() }
         return (cached, true)

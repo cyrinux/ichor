@@ -31,7 +31,8 @@ public struct Pin: Codable, Hashable, Sendable, Identifiable {
     public static let pinnable: Set<ShareTarget.Target> = [.node, .workload, .pod, .cronJob, .argoApp, .fluxApp]
 
     private static func key(_ target: ShareTarget) -> String {
-        [target.target.rawValue, target.host, target.addr, target.kind, target.namespace, target.name].joined(separator: "|")
+        [target.target.rawValue, target.host, target.addr, target.kind, target.namespace, target.name].joined(
+            separator: "|")
     }
 
     private static func normalized(_ target: ShareTarget) -> ShareTarget {
@@ -83,7 +84,8 @@ public struct PinList: Equatable, Sendable {
     /// is skipped, anything else unreadable gives no pins.
     public static func parse(_ text: String?) -> PinList {
         guard let text, let data = text.data(using: .utf8), !data.isEmpty,
-              let read = try? JSONDecoder().decode([LenientPin].self, from: data) else { return PinList() }
+            let read = try? JSONDecoder().decode([LenientPin].self, from: data)
+        else { return PinList() }
         return PinList(read.compactMap(\.pin).filter { Pin.pinnable.contains($0.target.target) })
     }
 

@@ -44,7 +44,11 @@ struct PoliciesView: View {
             }
             Section {
                 ForEach(rows) { policy in
-                    Button { selected = policy } label: { PolicyRow(policy: policy, namespace: chosen, showEngine: report.bothEngines) }
+                    Button {
+                        selected = policy
+                    } label: {
+                        PolicyRow(policy: policy, namespace: chosen, showEngine: report.bothEngines)
+                    }
                 }
             } footer: {
                 if report.reportsTruncated {
@@ -55,11 +59,13 @@ struct PoliciesView: View {
         .overlay {
             if report.policies.isEmpty {
                 if report.kyverno {
-                    ContentUnavailableView("No Kyverno policies", systemImage: "checkmark.shield",
-                                           description: Text("Kyverno runs, but no policy is defined."))
+                    ContentUnavailableView(
+                        "No Kyverno policies", systemImage: "checkmark.shield",
+                        description: Text("Kyverno runs, but no policy is defined."))
                 } else {
-                    ContentUnavailableView("No Gatekeeper policies", systemImage: "checkmark.shield",
-                                           description: Text("Gatekeeper runs, but no policy is defined."))
+                    ContentUnavailableView(
+                        "No Gatekeeper policies", systemImage: "checkmark.shield",
+                        description: Text("Gatekeeper runs, but no policy is defined."))
                 }
             } else if rows.isEmpty && !query.isEmpty {
                 ContentUnavailableView.search(text: query)
@@ -103,7 +109,8 @@ private struct PolicyEngineSection: View {
                 ChipFlow(spacing: 6) {
                     ForEach(engine.controllers) { c in
                         Tag("\(c.name) \(c.ready)/\(c.desired)", color: c.healthy ? .statusOK : .statusBad, mono: true)
-                            .accessibilityLabel(Text(PolicyText.controllerReady(c.name, String(c.ready), String(c.desired))))
+                            .accessibilityLabel(
+                                Text(PolicyText.controllerReady(c.name, String(c.ready), String(c.desired))))
                     }
                 }
             }
@@ -123,9 +130,12 @@ private struct PolicyEngineSection: View {
         } header: {
             if gatekeeper { Text("Gatekeeper engine") } else { Text("Kyverno engine") }
         } footer: {
-            Text(verbatim: (gatekeeper ? [engine.namespace] : [engine.namespace, report.version, PolicyText.reportsRead(String(report.reportsRead))])
-                .filter { !$0.isEmpty }
-                .joined(separator: "  ·  "))
+            Text(
+                verbatim: (gatekeeper
+                    ? [engine.namespace]
+                    : [engine.namespace, report.version, PolicyText.reportsRead(String(report.reportsRead))])
+                    .filter { !$0.isEmpty }
+                    .joined(separator: "  ·  "))
         }
     }
 
@@ -133,17 +143,26 @@ private struct PolicyEngineSection: View {
     @ViewBuilder
     private func webhookLine(_ webhook: PolicyWebhook) -> some View {
         if !webhook.present {
-            Text("No admission webhook: policies are not applied to new requests").font(.footnote).foregroundStyle(Color.statusBad)
+            Text("No admission webhook: policies are not applied to new requests").font(.footnote).foregroundStyle(
+                Color.statusBad)
         } else {
             switch webhook.failurePolicy {
             case .fail:
                 Group {
-                    if gatekeeper { Text("Fail: requests are refused while Gatekeeper is down") } else { Text("Fail: requests are refused while Kyverno is down") }
+                    if gatekeeper {
+                        Text("Fail: requests are refused while Gatekeeper is down")
+                    } else {
+                        Text("Fail: requests are refused while Kyverno is down")
+                    }
                 }
                 .font(.footnote).foregroundStyle(Color.statusWarn)
             case .ignore:
                 Group {
-                    if gatekeeper { Text("Ignore: policies are skipped while Gatekeeper is down") } else { Text("Ignore: policies are skipped while Kyverno is down") }
+                    if gatekeeper {
+                        Text("Ignore: policies are skipped while Gatekeeper is down")
+                    } else {
+                        Text("Ignore: policies are skipped while Kyverno is down")
+                    }
                 }
                 .font(.footnote).foregroundStyle(.secondary)
             case .unknown: EmptyView()

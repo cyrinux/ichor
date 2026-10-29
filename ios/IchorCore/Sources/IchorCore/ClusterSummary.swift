@@ -18,8 +18,10 @@ public struct ClusterSummary: Equatable, Sendable {
     public let memTotal: UInt64
     public let memAvailable: UInt64
 
-    public init(total: Int, ready: Int, notReady: Int, unreachable: Int, versions: [String],
-                cpuCount: Int, memTotal: UInt64, memAvailable: UInt64) {
+    public init(
+        total: Int, ready: Int, notReady: Int, unreachable: Int, versions: [String],
+        cpuCount: Int, memTotal: UInt64, memAvailable: UInt64
+    ) {
         self.total = total
         self.ready = ready
         self.notReady = notReady
@@ -33,8 +35,10 @@ public struct ClusterSummary: Equatable, Sendable {
     public init(nodes: [NodeOverview]) {
         let reachable = nodes.filter(\.reachable)
         var versions: [String] = []
-        for version in reachable.map(\.version) where !version.trimmingCharacters(in: .whitespaces).isEmpty
-            && !versions.contains(version) {
+        for version in reachable.map(\.version)
+        where !version.trimmingCharacters(in: .whitespaces).isEmpty
+            && !versions.contains(version)
+        {
             versions.append(version)
         }
         self.init(

@@ -135,7 +135,8 @@ public struct PluginParam: Decodable, Equatable, Sendable {
     /// then required) or when it does not have the param's type.
     public let defaultValue: PluginParamValue?
 
-    public init(name: String, label: String, type: String, values: [String] = [], defaultValue: PluginParamValue? = nil) {
+    public init(name: String, label: String, type: String, values: [String] = [], defaultValue: PluginParamValue? = nil)
+    {
         self.name = name
         self.label = label
         self.type = type
@@ -157,9 +158,11 @@ public struct PluginParam: Decodable, Equatable, Sendable {
     /// The default as the type wants it: anything else is no default.
     private static func decodeDefault(_ c: KeyedDecodingContainer<CodingKeys>, type: String) -> PluginParamValue? {
         switch type {
-        case "bool": (try? c.decodeIfPresent(Bool.self, forKey: .defaultValue)).flatMap { $0 }.map(PluginParamValue.bool)
+        case "bool":
+            (try? c.decodeIfPresent(Bool.self, forKey: .defaultValue)).flatMap { $0 }.map(PluginParamValue.bool)
         case "int": (try? c.decodeIfPresent(Int64.self, forKey: .defaultValue)).flatMap { $0 }.map(PluginParamValue.int)
-        default: (try? c.decodeIfPresent(String.self, forKey: .defaultValue)).flatMap { $0 }.map(PluginParamValue.string)
+        default:
+            (try? c.decodeIfPresent(String.self, forKey: .defaultValue)).flatMap { $0 }.map(PluginParamValue.string)
         }
     }
 
@@ -326,7 +329,8 @@ public enum PluginActionFailure: Equatable, Sendable {
     /// `parameter "size": want an integer, got "big"` anywhere in the message: the name and why.
     private static func param(_ message: String) -> (name: String, detail: String)? {
         guard let start = message.range(of: paramPrefix),
-              let end = message.range(of: "\": ", range: start.upperBound..<message.endIndex) else { return nil }
+            let end = message.range(of: "\": ", range: start.upperBound..<message.endIndex)
+        else { return nil }
         let name = String(message[start.upperBound..<end.lowerBound])
         guard !name.isEmpty, !name.contains("\"") else { return nil }
         return (name, String(message[end.upperBound...]))

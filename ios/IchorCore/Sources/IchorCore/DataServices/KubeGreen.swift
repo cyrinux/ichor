@@ -61,8 +61,10 @@ public struct KubeGreenSleepInfo: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, weekdays, sleepAt, wakeUpAt, timeZone, suspendDeployments, suspendStatefulSets, suspendCronJobs
-        case excludeCount, includeCount, patchCount, operation, lastScheduleAt, nextSleepAt, nextWakeUpAt, asleep, health, reasons
+        case namespace, name, weekdays, sleepAt, wakeUpAt, timeZone, suspendDeployments, suspendStatefulSets,
+            suspendCronJobs
+        case excludeCount, includeCount, patchCount, operation, lastScheduleAt, nextSleepAt, nextWakeUpAt, asleep,
+            health, reasons
     }
 }
 
@@ -103,7 +105,8 @@ public struct KubeGreenNamespace: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case installed, asleep, sleepInfos, sleepsDeployments, sleepsStatefulSets, sleepsCronJobs, nextWakeUpAt, nextSleepAt, filtered
+        case installed, asleep, sleepInfos, sleepsDeployments, sleepsStatefulSets, sleepsCronJobs, nextWakeUpAt,
+            nextSleepAt, filtered
     }
 }
 
@@ -174,7 +177,8 @@ public enum KubeGreenSchedule {
                 runs.append(d...d)
             }
         }
-        return runs.map { $0.lowerBound == $0.upperBound ? "\($0.lowerBound)" : "\($0.lowerBound)-\($0.upperBound)" }.joined(separator: ",")
+        return runs.map { $0.lowerBound == $0.upperBound ? "\($0.lowerBound)" : "\($0.lowerBound)-\($0.upperBound)" }
+            .joined(separator: ",")
     }
 
     /// A sleepAt or wakeUpAt kube-green takes: "HH:mm", each part cron syntax; plain numbers make a real time.

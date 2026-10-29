@@ -18,12 +18,17 @@ struct ApiHealthView: View {
                 ApiVerdictSection(report: report)
                 // The metrics group clients; the audit log names them, and what they do wrong.
                 Section {
-                    NavigationLink { AuditView() } label: {
+                    NavigationLink {
+                        AuditView()
+                    } label: {
                         Label("Find who loads it (audit log)", systemImage: "person.fill.questionmark")
                     }
                 }
                 if !report.metricsError.isEmpty {
-                    Section { ErrorOrNoticeText(message: String(localized: "The metrics could not be read: \(report.metricsError)")) }
+                    Section {
+                        ErrorOrNoticeText(
+                            message: String(localized: "The metrics could not be read: \(report.metricsError)"))
+                    }
                 } else {
                     ApiLoadSection(report: report)
                     ApiClientsSection(report: report)
@@ -73,7 +78,8 @@ struct ApiHealthView: View {
 
     private var waitLabel: String {
         guard let wait = progress?.steps.first(where: { $0.id == "wait" }), wait.state == .running,
-              wait.total > wait.count else {
+            wait.total > wait.count
+        else {
             return String(localized: "Waiting for the second sample")
         }
         return String(localized: "Waiting \(String(wait.total - wait.count)) s for the second sample")
@@ -118,9 +124,12 @@ private struct ApiVerdictSection: View {
                 StatusPill(label: report.status.label, color: report.status.color)
                 Spacer()
                 if !report.version.isEmpty {
-                    Text(verbatim: report.uptimeSeconds > 0 ? "\(report.version) · \(localizedDuration(report.uptimeSeconds))" : report.version)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
+                    Text(
+                        verbatim: report.uptimeSeconds > 0
+                            ? "\(report.version) · \(localizedDuration(report.uptimeSeconds))" : report.version
+                    )
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
                 }
             }
             Text(report.status.hint).font(.callout)
@@ -159,7 +168,9 @@ private struct ApiLoadSection: View {
             row("Requests", formatRate(report.requestRate))
             row("Server errors (5xx)", formatRate(report.errorRate), alert: report.errorRate > 0 ? .orange : nil)
             row("Throttled (429)", formatRate(report.throttledRate), alert: report.throttledRate > 0 ? .red : nil)
-            row("Rejected by priority and fairness", formatRate(report.rejectedRate), alert: report.rejectedRate > 0 ? .red : nil)
+            row(
+                "Rejected by priority and fairness", formatRate(report.rejectedRate),
+                alert: report.rejectedRate > 0 ? .red : nil)
             LabeledContent("In flight") {
                 Text("\(report.inflightRead) read · \(report.inflightMutate) write").monospacedDigit()
             }
@@ -191,9 +202,13 @@ private struct ApiClientsSection: View {
                         if top > 0 { ProgressView(value: min(flow.rate / top, 1)).tint(.accentColor) }
                         if flow.rejectedRate > 0 || flow.queued > 0 {
                             HStack(spacing: 6) {
-                                if flow.rejectedRate > 0 { Tag(String(localized: "\(formatRate(flow.rejectedRate)) rejected"), color: .red) }
+                                if flow.rejectedRate > 0 {
+                                    Tag(String(localized: "\(formatRate(flow.rejectedRate)) rejected"), color: .red)
+                                }
                                 if flow.queued > 0 { Tag(String(localized: "\(flow.queued) queued"), color: .orange) }
-                                if flow.waitMs > 0 { Tag(String(localized: "waits \(formatMs(flow.waitMs))"), color: .orange) }
+                                if flow.waitMs > 0 {
+                                    Tag(String(localized: "waits \(formatMs(flow.waitMs))"), color: .orange)
+                                }
                             }
                         }
                     }
@@ -217,15 +232,20 @@ private struct ApiPrioritiesSection: View {
                     let seats = Int(level.executing.rounded())
                     VStack(alignment: .leading, spacing: 4) {
                         if let share = level.share {
-                            ApiNameValue(name: level.name, value: String(localized: "\(seats) of \(Int(level.limit.rounded())) seats"))
-                            ProgressView(value: share).tint(share >= ApiPriority.full ? .red : share >= 0.6 ? .orange : .green)
+                            ApiNameValue(
+                                name: level.name,
+                                value: String(localized: "\(seats) of \(Int(level.limit.rounded())) seats"))
+                            ProgressView(value: share).tint(
+                                share >= ApiPriority.full ? .red : share >= 0.6 ? .orange : .green)
                         } else {
                             ApiNameValue(name: level.name, value: String(localized: "\(seats) seats, no limit"))
                         }
                         if level.queued > 0 || level.rejectedRate > 0 {
                             HStack(spacing: 6) {
                                 if level.queued > 0 { Tag(String(localized: "\(level.queued) queued"), color: .orange) }
-                                if level.rejectedRate > 0 { Tag(String(localized: "\(formatRate(level.rejectedRate)) rejected"), color: .red) }
+                                if level.rejectedRate > 0 {
+                                    Tag(String(localized: "\(formatRate(level.rejectedRate)) rejected"), color: .red)
+                                }
                             }
                         }
                     }
@@ -250,14 +270,17 @@ private struct ApiRequestsSection: View {
                         if row.resource.isEmpty {
                             Text("Non-resource paths").font(.callout)
                         } else {
-                            Text(verbatim: row.resource).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                            Text(verbatim: row.resource).font(.callout.monospaced()).lineLimit(1).truncationMode(
+                                .middle)
                         }
                         if row.latencyMs > 0 {
                             Text("mean \(formatMs(row.latencyMs))").font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     Spacer()
-                    if row.errorRate > 0 { Tag(String(localized: "\(formatRate(row.errorRate)) errors"), color: .orange) }
+                    if row.errorRate > 0 {
+                        Tag(String(localized: "\(formatRate(row.errorRate)) errors"), color: .orange)
+                    }
                     Text(verbatim: formatRate(row.rate)).font(.callout.monospaced())
                 }
             }
@@ -274,8 +297,10 @@ private struct ApiQueuedSection: View {
             Section("Waiting in queues now") {
                 ForEach(Array(queued.enumerated()), id: \.offset) { _, q in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: q.user.isEmpty ? q.flowSchema : q.user).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-                        Text(verbatim: "\(q.verb) \(q.path)").font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                        Text(verbatim: q.user.isEmpty ? q.flowSchema : q.user).font(.callout.monospaced()).lineLimit(1)
+                            .truncationMode(.middle)
+                        Text(verbatim: "\(q.verb) \(q.path)").font(.caption.monospaced()).foregroundStyle(.secondary)
+                            .lineLimit(1)
                         Text(verbatim: "\(q.flowSchema) → \(q.priority)").font(.caption).foregroundStyle(.secondary)
                     }
                 }

@@ -3,16 +3,19 @@ import XCTest
 
 final class UpgradeTests: XCTestCase {
     func testPlanDecoding() throws {
-        let plan = try TalosJSON.decode(UpgradePlan.self, from: """
-        {"node":"192.0.2.10","hostname":"cp-1","controlPlane":true,"currentVersion":"v1.11.2",
-         "currentImage":"factory.talos.dev/installer/abc:v1.11.2","schematic":"abc",
-         "etcd":{"members":3,"healthy":2,"thisNodeMember":true,"quorumAfterLoss":false},
-         "blockers":["etcd would lose quorum"],"warnings":null,"forceable":true}
-        """)
+        let plan = try TalosJSON.decode(
+            UpgradePlan.self,
+            from: """
+                {"node":"192.0.2.10","hostname":"cp-1","controlPlane":true,"currentVersion":"v1.11.2",
+                 "currentImage":"factory.talos.dev/installer/abc:v1.11.2","schematic":"abc",
+                 "etcd":{"members":3,"healthy":2,"thisNodeMember":true,"quorumAfterLoss":false},
+                 "blockers":["etcd would lose quorum"],"warnings":null,"forceable":true}
+                """)
         XCTAssertEqual(plan.forceable, true)
         XCTAssertEqual(plan.hostname, "cp-1")
         XCTAssertTrue(plan.controlPlane)
-        XCTAssertEqual(plan.etcd, UpgradePlan.Etcd(members: 3, healthy: 2, thisNodeMember: true, quorumAfterLoss: false))
+        XCTAssertEqual(
+            plan.etcd, UpgradePlan.Etcd(members: 3, healthy: 2, thisNodeMember: true, quorumAfterLoss: false))
         XCTAssertEqual(plan.blockers, ["etcd would lose quorum"])
         XCTAssertEqual(plan.warnings, [])
 
@@ -22,19 +25,29 @@ final class UpgradeTests: XCTestCase {
         XCTAssertEqual(worker.acknowledge, [])
         XCTAssertEqual(plan.acknowledge, [])
 
-        let single = try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"n","acknowledge":["single control plane"]}"#)
+        let single = try TalosJSON.decode(
+            UpgradePlan.self, from: #"{"node":"n","acknowledge":["single control plane"]}"#)
         XCTAssertEqual(single.acknowledge, ["single control plane"])
         let nullAck = try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"n","acknowledge":null}"#)
         XCTAssertEqual(nullAck.acknowledge, [])
     }
 
     func testReleasesDecoding() throws {
-        let releases = try TalosJSON.decode([TalosRelease].self, from: """
-        [{"version":"v1.12.0-beta.1","date":"2026-09-20","prerelease":true},{"version":"v1.11.3"}]
-        """)
-        XCTAssertEqual(releases, [TalosRelease(version: "v1.12.0-beta.1", date: "2026-09-20", prerelease: true),
-                                  TalosRelease(version: "v1.11.3")])
-        XCTAssertEqual(upgradeSuggestions(releases + [TalosRelease(version: "v1.11.2")], current: "1.11.2", includePrerelease: false)
+        let releases = try TalosJSON.decode(
+            [TalosRelease].self,
+            from: """
+                [{"version":"v1.12.0-beta.1","date":"2026-09-20","prerelease":true},{"version":"v1.11.3"}]
+                """)
+        XCTAssertEqual(
+            releases,
+            [
+                TalosRelease(version: "v1.12.0-beta.1", date: "2026-09-20", prerelease: true),
+                TalosRelease(version: "v1.11.3"),
+            ])
+        XCTAssertEqual(
+            upgradeSuggestions(
+                releases + [TalosRelease(version: "v1.11.2")], current: "1.11.2", includePrerelease: false
+            )
             .map(\.version), ["v1.11.3"])
         XCTAssertEqual(upgradeSuggestions(releases, current: "v1.11.2", includePrerelease: true).count, 2)
     }
@@ -62,7 +75,9 @@ final class UpgradeTests: XCTestCase {
         XCTAssertTrue(UpgradeGate(plan: clean, targetVersion: "1.11.2", force: false, busy: false).sameVersion)
         XCTAssertFalse(UpgradeGate(plan: clean, targetVersion: "v1.11.3", force: false, busy: false).forceAvailable)
 
-        let etcd = UpgradePlan(node: "n", controlPlane: true, currentVersion: "v1.11.2", blockers: ["etcd is unhealthy", "Losing this member breaks quorum"])
+        let etcd = UpgradePlan(
+            node: "n", controlPlane: true, currentVersion: "v1.11.2",
+            blockers: ["etcd is unhealthy", "Losing this member breaks quorum"])
         let blocked = UpgradeGate(plan: etcd, targetVersion: "v1.11.3", force: false, busy: false)
         XCTAssertFalse(blocked.canStart)
         XCTAssertTrue(blocked.forceAvailable)
@@ -87,27 +102,39 @@ final class UpgradeTests: XCTestCase {
         XCTAssertTrue(none.canRequest)
         XCTAssertTrue(none.canStart)
 
-        let single = UpgradePlan(node: "n", controlPlane: true, currentVersion: "v1.11.2", acknowledge: ["single control plane"])
+        let single = UpgradePlan(
+            node: "n", controlPlane: true, currentVersion: "v1.11.2", acknowledge: ["single control plane"])
         let unconfirmed = UpgradeGate(plan: single, targetVersion: "v1.11.3", force: false, busy: false)
         XCTAssertEqual(unconfirmed.acknowledgments, ["single control plane"])
         XCTAssertTrue(unconfirmed.canRequest)
         XCTAssertFalse(unconfirmed.canStart)
-        XCTAssertTrue(UpgradeGate(plan: single, targetVersion: "v1.11.3", force: false, busy: false, acknowledged: true).canStart)
+        XCTAssertTrue(
+            UpgradeGate(plan: single, targetVersion: "v1.11.3", force: false, busy: false, acknowledged: true).canStart)
 
         // The version risk is one more, after the plan's; blank is none.
-        let risky = UpgradeGate(plan: single, targetVersion: "v1.13.0", versionRisk: "skips minor versions", force: false, busy: false)
+        let risky = UpgradeGate(
+            plan: single, targetVersion: "v1.13.0", versionRisk: "skips minor versions", force: false, busy: false)
         XCTAssertEqual(risky.acknowledgments, ["single control plane", "skips minor versions"])
-        XCTAssertEqual(UpgradeGate(plan: clean, targetVersion: "v1.11.3", versionRisk: " ", force: false, busy: false).acknowledgments, [])
-        XCTAssertFalse(UpgradeGate(plan: clean, targetVersion: "v1.13.0", versionRisk: "skips minor versions", force: false, busy: false).canStart)
+        XCTAssertEqual(
+            UpgradeGate(plan: clean, targetVersion: "v1.11.3", versionRisk: " ", force: false, busy: false)
+                .acknowledgments, [])
+        XCTAssertFalse(
+            UpgradeGate(
+                plan: clean, targetVersion: "v1.13.0", versionRisk: "skips minor versions", force: false, busy: false
+            ).canStart)
 
         // Force skips etcd blockers, never the acknowledgments.
-        let blocked = UpgradePlan(node: "n", blockers: ["etcd is unhealthy"], acknowledge: ["only endpoint"], forceable: true)
+        let blocked = UpgradePlan(
+            node: "n", blockers: ["etcd is unhealthy"], acknowledge: ["only endpoint"], forceable: true)
         let forced = UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: true, busy: false)
         XCTAssertTrue(forced.canRequest)
         XCTAssertFalse(forced.canStart)
-        XCTAssertTrue(UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: true, busy: false, acknowledged: true).canStart)
+        XCTAssertTrue(
+            UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: true, busy: false, acknowledged: true).canStart)
         // Acknowledging does not lift blockers.
-        XCTAssertFalse(UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: false, busy: false, acknowledged: true).canStart)
+        XCTAssertFalse(
+            UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: false, busy: false, acknowledged: true).canStart
+        )
     }
 
     func testPhaseNamesAndOrder() {
@@ -123,7 +150,8 @@ final class UpgradeTests: XCTestCase {
     }
 
     func testProgressDecoding() throws {
-        let ms = try TalosJSON.decode(UpgradeProgress.self, from: #"{"phase":"installing","message":"pulling","at":1800000000000}"#)
+        let ms = try TalosJSON.decode(
+            UpgradeProgress.self, from: #"{"phase":"installing","message":"pulling","at":1800000000000}"#)
         XCTAssertEqual(ms, UpgradeProgress(phase: "installing", message: "pulling", at: 1_800_000_000_000))
         let iso = try TalosJSON.decode(UpgradeProgress.self, from: #"{"phase":"done","at":"2027-01-15T08:00:00Z"}"#)
         XCTAssertEqual(iso.at, 1_800_000_000_000)

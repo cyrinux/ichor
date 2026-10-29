@@ -20,13 +20,16 @@ struct FluxHero: View {
             VStack(spacing: 12) {
                 AppIconView(app: app.iconApp, size: 64)
                 VStack(spacing: 2) {
-                    Text(verbatim: app.name).font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
+                    Text(verbatim: app.name).font(.title2.bold()).multilineTextAlignment(.center)
+                        .accessibilityAddTraits(.isHeader)
                     Text(verbatim: "\(app.kind) · \(app.namespace)").font(.subheadline).foregroundStyle(.secondary)
                     Text(verbatim: app.revisionLabel).font(.subheadline.monospaced()).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 8) {
                     ArgoBadge(label: app.state.label, symbol: app.state.symbol, color: app.state.color)
-                    if app.stalled { ArgoBadge(label: String(localized: "Stalled"), symbol: "exclamationmark.octagon", color: .red) }
+                    if app.stalled {
+                        ArgoBadge(label: String(localized: "Stalled"), symbol: "exclamationmark.octagon", color: .red)
+                    }
                 }
                 if app.canCorrectDrift {
                     Button(action: correctDrift) {
@@ -50,16 +53,21 @@ struct FluxHero: View {
             if app.driftWatched { FluxDriftRow(app: app) }
             sourceRow
             if app.isHelmRelease {
-                if !app.origin.isEmpty { LabeledContent("Chart") { Text(verbatim: app.origin).font(.callout.monospaced()) } }
+                if !app.origin.isEmpty {
+                    LabeledContent("Chart") { Text(verbatim: app.origin).font(.callout.monospaced()) }
+                }
             } else if !app.path.isEmpty {
                 LabeledContent("Path") { Text(verbatim: app.path).font(.callout.monospaced()) }
             }
             if !app.revision.isEmpty {
-                LabeledContent("Revision") { Text(verbatim: fluxShortRevision(app.revision)).font(.callout.monospaced()) }
+                LabeledContent("Revision") {
+                    Text(verbatim: fluxShortRevision(app.revision)).font(.callout.monospaced())
+                }
             }
             if app.revisionDiffers {
                 LabeledContent("Attempted") {
-                    Text(verbatim: fluxShortRevision(app.attemptedRevision)).font(.callout.monospaced()).foregroundStyle(attentionColor)
+                    Text(verbatim: fluxShortRevision(app.attemptedRevision)).font(.callout.monospaced())
+                        .foregroundStyle(attentionColor)
                 }
             }
             if !app.interval.isEmpty { LabeledContent("Interval", value: app.interval) }
@@ -69,8 +77,11 @@ struct FluxHero: View {
                 LabeledContent("Applied by") { Text(verbatim: owner.label).multilineTextAlignment(.trailing) }
             }
             if app.failures > 0 {
-                Label(String(localized: "\(app.failures) failed attempts in a row"), systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.statusBad)
+                Label(
+                    String(localized: "\(app.failures) failed attempts in a row"),
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .foregroundStyle(.statusBad)
             }
         } footer: {
             if let notice = app.ownerNotice { Text(notice) }
@@ -101,9 +112,14 @@ struct FluxHero: View {
         if let ref = app.source {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Source").font(.caption).foregroundStyle(.secondary)
-                Label { Text(verbatim: ref.label).font(.callout) } icon: { Image(systemName: fluxKindSymbol(ref.kind)) }
+                Label {
+                    Text(verbatim: ref.label).font(.callout)
+                } icon: {
+                    Image(systemName: fluxKindSymbol(ref.kind))
+                }
                 if !app.sourceURL.isEmpty {
-                    Text(verbatim: app.sourceURL).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle).textSelection(.enabled)
+                    Text(verbatim: app.sourceURL).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
+                        .textSelection(.enabled)
                 }
                 if let source {
                     Text(verbatim: [source.ref, source.revisionLabel].filter { !$0.isEmpty }.joined(separator: " · "))
@@ -119,27 +135,41 @@ struct FluxHero: View {
 
     private var actions: some View {
         HStack(spacing: 10) {
-            Button { act(.reconcile) } label: {
+            Button {
+                act(.reconcile)
+            } label: {
                 Label("Reconcile", systemImage: FluxAction.reconcile.symbol)
             }
             .buttonStyle(.borderedProminent)
             .disabled(!app.canReconcile || busy)
             let toggle: FluxAction = app.suspended ? .resume : .suspend
-            Button { act(toggle) } label: {
+            Button {
+                act(toggle)
+            } label: {
                 Label(toggle.label, systemImage: toggle.symbol)
             }
             .buttonStyle(.bordered)
             .disabled(busy)
             Menu {
-                Button { act(.reconcileWithSource) } label: {
+                Button {
+                    act(.reconcileWithSource)
+                } label: {
                     Label("Reconcile with source…", systemImage: FluxAction.reconcileWithSource.symbol)
                 }
                 .disabled(!app.canReconcileWithSource)
                 if app.isHelmRelease {
-                    Button { act(.force) } label: { Label("Force upgrade…", systemImage: FluxAction.force.symbol) }
-                        .disabled(!app.canForce)
-                    Button { act(.reset) } label: { Label("Reset failures…", systemImage: FluxAction.reset.symbol) }
-                        .disabled(!app.canReset)
+                    Button {
+                        act(.force)
+                    } label: {
+                        Label("Force upgrade…", systemImage: FluxAction.force.symbol)
+                    }
+                    .disabled(!app.canForce)
+                    Button {
+                        act(.reset)
+                    } label: {
+                        Label("Reset failures…", systemImage: FluxAction.reset.symbol)
+                    }
+                    .disabled(!app.canReset)
                 }
             } label: {
                 Image(systemName: "ellipsis")
@@ -185,11 +215,15 @@ struct FluxConditionsSection: View {
                     Label {
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
-                                Text(verbatim: [condition.type, condition.reason].filter { !$0.isEmpty }.joined(separator: " · "))
-                                    .font(.caption.weight(.semibold))
+                                Text(
+                                    verbatim: [condition.type, condition.reason].filter { !$0.isEmpty }.joined(
+                                        separator: " · ")
+                                )
+                                .font(.caption.weight(.semibold))
                                 Spacer()
                                 if condition.at > 0 {
-                                    Text(verbatim: relativeTime(condition.at)).font(.caption).foregroundStyle(.secondary)
+                                    Text(verbatim: relativeTime(condition.at)).font(.caption).foregroundStyle(
+                                        .secondary)
                                 }
                             }
                             if !condition.message.isEmpty {
@@ -252,17 +286,21 @@ struct FluxInventorySection: View {
             ForEach(app.resourcesByKind) { group in
                 DisclosureGroup {
                     ForEach(group.resources) { resource in
-                        Text(verbatim: resource.namespace.isEmpty ? resource.name : "\(resource.namespace)/\(resource.name)")
-                            .font(.callout.monospaced())
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .textSelection(.enabled)
+                        Text(
+                            verbatim: resource.namespace.isEmpty
+                                ? resource.name : "\(resource.namespace)/\(resource.name)"
+                        )
+                        .font(.callout.monospaced())
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
                     }
                 } label: {
                     HStack {
                         Text(verbatim: group.kind).font(.callout.weight(.medium))
                         Spacer()
-                        Text(verbatim: "\(group.resources.count)").font(.callout).foregroundStyle(.secondary).monospacedDigit()
+                        Text(verbatim: "\(group.resources.count)").font(.callout).foregroundStyle(.secondary)
+                            .monospacedDigit()
                     }
                 }
             }

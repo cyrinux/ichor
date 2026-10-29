@@ -96,8 +96,10 @@ struct KubeGreenScheduleSheet: View {
                 }
                 if let healer {
                     Section {
-                        Text("\(healer.app.name) deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze \(healer.app.name) first to keep your change for a while.")
-                            .foregroundStyle(Color.statusWarn)
+                        Text(
+                            "\(healer.app.name) deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze \(healer.app.name) first to keep your change for a while."
+                        )
+                        .foregroundStyle(Color.statusWarn)
                     }
                 }
                 if let error {
@@ -127,7 +129,9 @@ struct KubeGreenScheduleSheet: View {
                     .multilineTextAlignment(.trailing)
                     .font(.body.monospaced())
                     .keyboardType(.numbersAndPunctuation)
-            } label: { label }
+            } label: {
+                label
+            }
             if !valid { invalid(Text("An hour and a minute, such as 20:00")) }
         }
     }
@@ -142,8 +146,9 @@ struct KubeGreenScheduleSheet: View {
         error = nil
         defer { saving = false }
         do {
-            try await client.setKubeGreenSchedule(namespace: info.namespace, name: info.name, weekdays: weekdays,
-                                                  sleepAt: trimmedSleep, wakeUpAt: trimmedWake, timeZone: trimmedZone)
+            try await client.setKubeGreenSchedule(
+                namespace: info.namespace, name: info.name, weekdays: weekdays,
+                sleepAt: trimmedSleep, wakeUpAt: trimmedWake, timeZone: trimmedZone)
             await onSaved()
             dismiss()
         } catch {
@@ -154,5 +159,7 @@ struct KubeGreenScheduleSheet: View {
 
 /// The schedule editor's texts with arguments, passed as Strings so each key is the `%@` one.
 enum KubeGreenText {
-    static func saveFailed(_ a: String, _ b: String) -> String { String(localized: "Could not save the schedule of \(a): \(b)") }
+    static func saveFailed(_ a: String, _ b: String) -> String {
+        String(localized: "Could not save the schedule of \(a): \(b)")
+    }
 }

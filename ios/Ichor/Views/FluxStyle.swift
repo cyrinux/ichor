@@ -73,7 +73,12 @@ func fluxKindSymbol(_ kind: String) -> String {
 extension FluxApp {
     /// "Applied by Kustomization flux-system/apps: …", nil when nothing applies it from Git.
     var ownerNotice: String? {
-        owner.map { String(localized: "Applied from Git by \($0.label): if its manifest sets suspend, Flux puts that back on the next reconcile.") }
+        owner.map {
+            String(
+                localized:
+                    "Applied from Git by \($0.label): if its manifest sets suspend, Flux puts that back on the next reconcile."
+            )
+        }
     }
 }
 
@@ -117,17 +122,29 @@ extension FluxAction {
     func explanation(for name: String) -> String {
         switch self {
         case .reconcile:
-            String(localized: "Flux applies \(name) now from the revision its source already fetched, instead of waiting for its interval.")
+            String(
+                localized:
+                    "Flux applies \(name) now from the revision its source already fetched, instead of waiting for its interval."
+            )
         case .reconcileWithSource:
             String(localized: "Flux fetches the source first (a new commit or chart), then applies \(name) from it.")
         case .suspend:
-            String(localized: "Flux stops reconciling \(name): changes in Git are not applied and drift is not corrected until you resume it.")
+            String(
+                localized:
+                    "Flux stops reconciling \(name): changes in Git are not applied and drift is not corrected until you resume it."
+            )
         case .resume:
             String(localized: "Flux reconciles \(name) again at once, then at every interval.")
         case .force:
-            String(localized: "The helm-controller runs a Helm upgrade of \(name) now, even with nothing changed: its pods may restart.")
+            String(
+                localized:
+                    "The helm-controller runs a Helm upgrade of \(name) now, even with nothing changed: its pods may restart."
+            )
         case .reset:
-            String(localized: "Flux forgets the failed attempts of \(name) and retries the install or upgrade from scratch, with its retries counted again.")
+            String(
+                localized:
+                    "Flux forgets the failed attempts of \(name) and retries the install or upgrade from scratch, with its retries counted again."
+            )
         }
     }
 }
@@ -152,7 +169,8 @@ struct FluxStateBar: View {
     var height: CGFloat = 8
 
     var body: some View {
-        SegmentBar(segments: counts.map { (color: $0.state.color, count: $0.count, label: $0.state.label) }, height: height)
+        SegmentBar(
+            segments: counts.map { (color: $0.state.color, count: $0.count, label: $0.state.label) }, height: height)
     }
 }
 
@@ -161,13 +179,17 @@ struct FluxOwnerBadge: View {
     let owner: FluxRef
 
     var body: some View {
-        Label { Text(verbatim: owner.name).lineLimit(1) } icon: { Image(systemName: fluxKindSymbol(owner.kind)) }
-            .labelStyle(.titleAndIcon)
-            .font(.caption2.weight(.medium))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .foregroundStyle(.secondary)
-            .background(Color(.tertiarySystemFill), in: Capsule())
-            .accessibilityLabel(Text("Applied by \(owner.label)"))
+        Label {
+            Text(verbatim: owner.name).lineLimit(1)
+        } icon: {
+            Image(systemName: fluxKindSymbol(owner.kind))
+        }
+        .labelStyle(.titleAndIcon)
+        .font(.caption2.weight(.medium))
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .foregroundStyle(.secondary)
+        .background(Color(.tertiarySystemFill), in: Capsule())
+        .accessibilityLabel(Text("Applied by \(owner.label)"))
     }
 }

@@ -15,12 +15,16 @@ extension TalosClient {
     func previewMachineConfigMulti(nodes: [String], edits: [ConfigEdit]) async throws -> MultiConfigPreview {
         let csv = nodes.joined(separator: ",")
         let editsJSON = Self.editsJSON(edits)
-        return try await Self.json { [config, context] in IchorgoMachineConfigMultiPreview(config, context, csv, editsJSON, $0) }
+        return try await Self.json { [config, context] in
+            IchorgoMachineConfigMultiPreview(config, context, csv, editsJSON, $0)
+        }
     }
 
     /// Applies `edits` to `nodes` one after the other in `mode` (workers first, control planes
     /// last). Ending the stream stops following; what was sent stays.
-    func applyMachineConfigMulti(nodes: [String], edits: [ConfigEdit], mode: ConfigApplyMode) -> AsyncStream<MultiConfigEvent> {
+    func applyMachineConfigMulti(nodes: [String], edits: [ConfigEdit], mode: ConfigApplyMode) -> AsyncStream<
+        MultiConfigEvent
+    > {
         let csv = nodes.joined(separator: ",")
         let editsJSON = Self.editsJSON(edits)
         return Self.bridged { [config, context] continuation in

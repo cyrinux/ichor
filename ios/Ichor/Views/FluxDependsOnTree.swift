@@ -65,8 +65,11 @@ struct FluxDriftRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if app.drifted {
-                Label(String(localized: "Drift detected · \(relativeTime(app.driftAt))"), systemImage: "arrow.left.arrow.right")
-                    .foregroundStyle(.statusWarn)
+                Label(
+                    String(localized: "Drift detected · \(relativeTime(app.driftAt))"),
+                    systemImage: "arrow.left.arrow.right"
+                )
+                .foregroundStyle(.statusWarn)
                 if !app.driftMessage.isEmpty {
                     Text(verbatim: app.driftMessage).font(.caption.monospaced()).textSelection(.enabled)
                 }
@@ -74,7 +77,8 @@ struct FluxDriftRow: View {
                 Label("Drift: none", systemImage: "arrow.left.arrow.right").foregroundStyle(.secondary)
             }
             if app.driftMode == fluxDriftWarn {
-                Text("Flux only reports drift for this release; correcting it runs a forced upgrade.").font(.caption).foregroundStyle(.secondary)
+                Text("Flux only reports drift for this release; correcting it runs a forced upgrade.").font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }

@@ -22,11 +22,15 @@ struct HelmReleasesView: View {
         }
     }
 
-    private func list(_ releases: [HelmReleaseSummary], showNamespace: Bool, reload: @escaping () async -> Void) -> some View {
+    private func list(_ releases: [HelmReleaseSummary], showNamespace: Bool, reload: @escaping () async -> Void)
+        -> some View
+    {
         let shown = filterHelmReleases(sortHelmReleases(releases), query: query)
         return List {
             ForEach(shown) { release in
-                NavigationLink { HelmReleaseView(namespace: release.namespace, name: release.name) } label: {
+                NavigationLink {
+                    HelmReleaseView(namespace: release.namespace, name: release.name)
+                } label: {
                     HelmReleaseRow(release: release, showNamespace: showNamespace)
                 }
             }
@@ -76,8 +80,9 @@ private struct HelmStatusPill: View {
     let status: String
 
     var body: some View {
-        StatusPill(label: status.isEmpty ? String(localized: "unknown") : status,
-                   color: kubeStatusTone(status).color ?? .secondary)
+        StatusPill(
+            label: status.isEmpty ? String(localized: "unknown") : status,
+            color: kubeStatusTone(status).color ?? .secondary)
     }
 }
 
@@ -128,7 +133,11 @@ struct HelmReleaseView: View {
             if case .loaded(let detail, _, _) = state, let text = bodyText(of: tab, in: detail), !text.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Button { copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
+                        Button {
+                            copy(text)
+                        } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                        }
                         ShareLink(item: text) { Label("Share", systemImage: "square.and.arrow.up") }
                     } label: {
                         Image(systemName: "square.and.arrow.up").accessibilityLabel(Text("Share"))
@@ -138,8 +147,9 @@ struct HelmReleaseView: View {
         }
         .messageAlert($message)
         .sheet(item: $rollingBack, onDismiss: rollbackDismissed) { revision in
-            HelmRollbackSheet(namespace: namespace, name: name, revision: revision.revision,
-                              rolledBack: { rolledBackTo = revision.revision }, reload: load)
+            HelmRollbackSheet(
+                namespace: namespace, name: name, revision: revision.revision,
+                rolledBack: { rolledBackTo = revision.revision }, reload: load)
         }
         .task(id: kubeNamespacesKey(model)) { await load() }
         .loadsKubeActionAccess(namespace: namespace)
@@ -189,8 +199,9 @@ struct HelmReleaseView: View {
                 Section {
                     ForEach(detail.history) { revision in
                         let current = revision.revision == release.revision
-                        HelmRevisionRow(revision: revision, current: current,
-                                        rollBack: current ? nil : { rollingBack = revision })
+                        HelmRevisionRow(
+                            revision: revision, current: current,
+                            rollBack: current ? nil : { rollingBack = revision })
                     }
                     KubeDeniedNote(.helmRollback)
                 } header: {
@@ -198,9 +209,11 @@ struct HelmReleaseView: View {
                 }
             }
             Section {
-                Text("Upgrades are done with Helm or your GitOps tool. From the history, the release can be rolled back to an older revision.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Upgrades are done with Helm or your GitOps tool. From the history, the release can be rolled back to an older revision."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             }
         }
         .refreshable { await load() }
@@ -219,7 +232,9 @@ struct HelmReleaseView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = kubeNamespacesKey(model)
-        let fetched: LoadState<HelmReleaseDetail> = await .from { try await client.helmRelease(namespace: namespace, name: name) }
+        let fetched: LoadState<HelmReleaseDetail> = await .from {
+            try await client.helmRelease(namespace: namespace, name: name)
+        }
         guard key == kubeNamespacesKey(model) else { return }
         state = state.refreshed(with: fetched)
     }

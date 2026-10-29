@@ -107,7 +107,9 @@ struct HomeEditorSheet<Card: HomeCard & CardLook, Action: BarAction & BarActionL
                             HStack {
                                 CardName(card: card).opacity(0.6)
                                 Spacer()
-                                Button { save(layout.showing(card)) } label: {
+                                Button {
+                                    save(layout.showing(card))
+                                } label: {
                                     Image(systemName: "plus.circle.fill").foregroundStyle(.green)
                                 }
                                 .buttonStyle(.borderless)
@@ -136,14 +138,18 @@ struct HomeEditorSheet<Card: HomeCard & CardLook, Action: BarAction & BarActionL
                 HStack {
                     CardName(card: card)
                     Spacer()
-                    Button { save(layout.hiding(card)) } label: {
+                    Button {
+                        save(layout.hiding(card))
+                    } label: {
                         Image(systemName: "minus.circle.fill").foregroundStyle(.red)
                     }
                     .buttonStyle(.borderless)
                     .accessibilityLabel(Text("Hide"))
                 }
             }
-            .onMove { source, destination in save(layout.moving(fromOffsets: source, toOffset: destination, absent: absent)) }
+            .onMove { source, destination in
+                save(layout.moving(fromOffsets: source, toOffset: destination, absent: absent))
+            }
         } header: {
             Text("Cards")
         } footer: {

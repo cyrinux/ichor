@@ -22,14 +22,22 @@ struct AboutSection: View {
             NavigationLink(value: Route.changelog) { Label("What's new", systemImage: "sparkles") }
             Button(action: replayTour) { Label("Replay the demo tour", systemImage: "play.circle") }
                 .disabled(replayingTour)
-            Link(destination: ProjectLinks.repo) { Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
+            Link(destination: ProjectLinks.repo) {
+                Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+            }
             Link(destination: ProjectLinks.website) { Label("Ichor website", systemImage: "arrow.up.right.square") }
             NavigationLink(value: Route.licenses) { Label("Open-source licenses", systemImage: "doc.text") }
-            NavigationLink(value: Route.supportedIntegrations) { Label("Integrations", systemImage: "puzzlepiece.extension") }
+            NavigationLink(value: Route.supportedIntegrations) {
+                Label("Integrations", systemImage: "puzzlepiece.extension")
+            }
             if Distribution.donations {
                 Link(destination: ProjectLinks.sponsor) { Label("Sponsor on GitHub", systemImage: "heart") }
                 ForEach(Donation.allCases) { coin in
-                    Button { donation = coin } label: { DonationRow(coin: coin) }
+                    Button {
+                        donation = coin
+                    } label: {
+                        DonationRow(coin: coin)
+                    }
                 }
             }
         } header: {
@@ -37,7 +45,9 @@ struct AboutSection: View {
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.")
-                Text("App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners.")
+                Text(
+                    "App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners."
+                )
             }
         }
         .sheet(item: $donation) { coin in DonationSheet(coin: coin) }
@@ -71,7 +81,8 @@ struct AboutSection: View {
 
     static var version: String {
         let info = Bundle.main.infoDictionary
-        return "\(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
+        return
+            "\(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
     }
 }
 
@@ -80,11 +91,16 @@ struct AboutSection: View {
 struct UpdatesSection: View {
     var body: some View {
         Section {
-            Text(Distribution.appStore
-                 ? LocalizedStringKey("This build gets its updates from the App Store, or from TestFlight for a beta.")
-                 : LocalizedStringKey("This build cannot update itself: install each new release from GitHub again, with Sideloadly or AltStore."))
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            Text(
+                Distribution.appStore
+                    ? LocalizedStringKey(
+                        "This build gets its updates from the App Store, or from TestFlight for a beta.")
+                    : LocalizedStringKey(
+                        "This build cannot update itself: install each new release from GitHub again, with Sideloadly or AltStore."
+                    )
+            )
+            .font(.callout)
+            .foregroundStyle(.secondary)
         } header: {
             Text("Updates")
         }
@@ -152,7 +168,9 @@ private struct DonationSheet: View {
                         .multilineTextAlignment(.center)
                         .textSelection(.enabled)
                     Button(action: copy) {
-                        Label(copied ? LocalizedStringKey("Copied") : LocalizedStringKey("Copy address"), systemImage: copied ? "checkmark" : "doc.on.doc")
+                        Label(
+                            copied ? LocalizedStringKey("Copied") : LocalizedStringKey("Copy address"),
+                            systemImage: copied ? "checkmark" : "doc.on.doc")
                     }
                     .buttonStyle(.bordered)
                     if let url = URL(string: coin.uri) {
@@ -196,7 +214,8 @@ private struct DonationSheet: View {
 @MainActor
 final class SupportPrompt {
     private enum Keys {
-        static let first = "support.firstSeen", launches = "support.launches", asked = "support.lastAsked", never = "support.never"
+        static let first = "support.firstSeen", launches = "support.launches", asked = "support.lastAsked",
+            never = "support.never"
     }
 
     private(set) var visible = false
@@ -208,9 +227,11 @@ final class SupportPrompt {
         defaults.set(first, forKey: Keys.first)
         let launches = defaults.integer(forKey: Keys.launches) + 1
         defaults.set(launches, forKey: Keys.launches)
-        visible = SupportState(firstSeen: first, launches: launches,
-                               lastAsked: defaults.object(forKey: Keys.asked) as? Date,
-                               never: defaults.bool(forKey: Keys.never)).shouldAsk(now: now)
+        visible = SupportState(
+            firstSeen: first, launches: launches,
+            lastAsked: defaults.object(forKey: Keys.asked) as? Date,
+            never: defaults.bool(forKey: Keys.never)
+        ).shouldAsk(now: now)
     }
 
     func later() {

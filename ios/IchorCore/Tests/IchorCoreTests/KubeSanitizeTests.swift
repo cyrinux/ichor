@@ -3,14 +3,14 @@ import XCTest
 
 final class KubeSanitizeTests: XCTestCase {
     private let preview = #"""
-    {"pods":[
-     {"namespace":"shop","name":"web-7d9f-abcde","status":"CrashLoopBackOff","ownerKind":"Deployment","ownerName":"web","ageSec":3600},
-     {"namespace":"shop","name":"import-xyz12","status":"Completed","ownerKind":"Job","ownerName":"import","ageSec":7200},
-     {"namespace":"shop","name":"export-abc34","status":"Completed","ageSec":86400},
-     {"namespace":"shop","name":"queue-new","status":"Pending","ownerKind":"StatefulSet","ownerName":"queue","ageSec":30},
-     {"namespace":"shop","name":"queue-old","status":"Pending","ageSec":600}],
-     "truncated":true}
-    """#
+        {"pods":[
+         {"namespace":"shop","name":"web-7d9f-abcde","status":"CrashLoopBackOff","ownerKind":"Deployment","ownerName":"web","ageSec":3600},
+         {"namespace":"shop","name":"import-xyz12","status":"Completed","ownerKind":"Job","ownerName":"import","ageSec":7200},
+         {"namespace":"shop","name":"export-abc34","status":"Completed","ageSec":86400},
+         {"namespace":"shop","name":"queue-new","status":"Pending","ownerKind":"StatefulSet","ownerName":"queue","ageSec":30},
+         {"namespace":"shop","name":"queue-old","status":"Pending","ageSec":600}],
+         "truncated":true}
+        """#
 
     private func decoded() throws -> KubeSanitizePreview {
         try TalosJSON.decode(KubeSanitizePreview.self, from: preview)
@@ -49,14 +49,16 @@ final class KubeSanitizeTests: XCTestCase {
 
     func testNamesAreNewlineSeparatedInPreviewOrder() throws {
         let pods = try decoded().pods
-        XCTAssertEqual(sanitizeNames(pods, selected: ["shop/queue-old", "shop/web-7d9f-abcde"]),
-                       "shop/web-7d9f-abcde\nshop/queue-old")
+        XCTAssertEqual(
+            sanitizeNames(pods, selected: ["shop/queue-old", "shop/web-7d9f-abcde"]),
+            "shop/web-7d9f-abcde\nshop/queue-old")
         XCTAssertEqual(sanitizeNames(pods, selected: []), "")
     }
 
     func testDecodesTheResult() throws {
-        let r = try TalosJSON.decode(KubeSanitizeResult.self,
-                                     from: #"{"deleted":3,"failed":[{"name":"shop/web-1","error":"not found"}]}"#)
+        let r = try TalosJSON.decode(
+            KubeSanitizeResult.self,
+            from: #"{"deleted":3,"failed":[{"name":"shop/web-1","error":"not found"}]}"#)
         XCTAssertEqual(r.deleted, 3)
         XCTAssertEqual(r.failed.first?.name, "shop/web-1")
         XCTAssertEqual(r.failed.first?.error, "not found")

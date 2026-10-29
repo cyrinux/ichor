@@ -23,7 +23,9 @@ struct AppearanceSection: View {
         } header: {
             Text("Appearance")
         } footer: {
-            Text("Ichor follows the iPhone language. To use another one for this app only, open its page in the Settings app and choose Language.")
+            Text(
+                "Ichor follows the iPhone language. To use another one for this app only, open its page in the Settings app and choose Language."
+            )
         }
     }
 

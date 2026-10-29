@@ -33,9 +33,10 @@ struct KubeSpanView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
         .sheet(item: $openedPeer) { opened in
-            PeerDiagnosisSheet(nodeName: hostnames[opened.node] ?? opened.node, peer: opened.peer,
-                               diagnosis: diag?.peer(node: opened.node, publicKey: opened.peer.publicKey),
-                               config: diag?.node(opened.node))
+            PeerDiagnosisSheet(
+                nodeName: hostnames[opened.node] ?? opened.node, peer: opened.peer,
+                diagnosis: diag?.peer(node: opened.node, publicKey: opened.peer.publicKey),
+                config: diag?.node(opened.node))
         }
         .task {
             if let cluster = model.activeSummary?.fingerprint {
@@ -58,8 +59,8 @@ struct KubeSpanView: View {
                 KubeSpanPeersList(overview: overview, hostnames: hostnames, diag: diag) { node, peer in
                     openedPeer = OpenedPeer(node: node, peer: peer)
                 }
-                    .refreshable { await loadPeers() }
-                    .themedBackground()
+                .refreshable { await loadPeers() }
+                .themedBackground()
             }
             .task { if case .loading = peers { await loadPeers() } }
         }
@@ -68,7 +69,8 @@ struct KubeSpanView: View {
     /// Only a node the talosconfig targets has a detail screen.
     private func open(_ node: TopologyNode) {
         guard !node.node.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        openNode = NodeRef(address: node.node, hostname: node.hostname.isEmpty ? node.id : node.hostname, role: node.role)
+        openNode = NodeRef(
+            address: node.node, hostname: node.hostname.isEmpty ? node.id : node.hostname, role: node.role)
     }
 
     /// Reads the map; a fresh one also regroups the overview's nodes by site (TopologyStore).
@@ -122,8 +124,12 @@ private struct KubeSpanPeersList: View {
                         }
                     }
                     ForEach(node.peers) { peer in
-                        Button { onPeer(node.node, peer) } label: { PeerRow(peer: peer) }
-                            .tint(.primary)
+                        Button {
+                            onPeer(node.node, peer)
+                        } label: {
+                            PeerRow(peer: peer)
+                        }
+                        .tint(.primary)
                     }
                 } header: {
                     HStack {
@@ -145,7 +151,8 @@ private struct KubeSpanPeersList: View {
     }
 
     private func summary(down: Int) -> String {
-        let enabled = String(localized: "KubeSpan on \(overview.nodes.filter(\.enabled).count) of \(overview.nodes.count) nodes")
+        let enabled = String(
+            localized: "KubeSpan on \(overview.nodes.filter(\.enabled).count) of \(overview.nodes.count) nodes")
         let links = down > 0 ? String(localized: "\(down) peer links down") : String(localized: "no link down")
         return "\(enabled) · \(links)"
     }
@@ -215,18 +222,23 @@ private struct PeerDiagnosisSheet: View {
                         if diagnosis.verdicts.isEmpty {
                             Text("No problem found on this link.").foregroundStyle(.statusOK)
                         } else {
-                            ForEach(diagnosis.verdicts, id: \.self) { Text(verbatim: $0.message).foregroundStyle(.statusBad) }
+                            ForEach(diagnosis.verdicts, id: \.self) {
+                                Text(verbatim: $0.message).foregroundStyle(.statusBad)
+                            }
                         }
                     }
                     Section("Endpoints tried") {
                         if diagnosis.endpointsTried.isEmpty {
                             Text("none").foregroundStyle(.secondary)
                         } else {
-                            ForEach(diagnosis.endpointsTried, id: \.self) { Text(verbatim: $0).font(.footnote.monospaced()) }
+                            ForEach(diagnosis.endpointsTried, id: \.self) {
+                                Text(verbatim: $0).font(.footnote.monospaced())
+                            }
                         }
                         if !diagnosis.endpoint.isEmpty { Text("In use: \(diagnosis.endpoint)").font(.footnote) }
                         if diagnosis.lastEndpointChange > 0 {
-                            let age = localizedDuration(Int64(Date().timeIntervalSince1970) - diagnosis.lastEndpointChange)
+                            let age = localizedDuration(
+                                Int64(Date().timeIntervalSince1970) - diagnosis.lastEndpointChange)
                             Text("Endpoint changed \(age) ago").font(.footnote)
                         }
                         if let config = config?.config {
@@ -237,15 +249,21 @@ private struct PeerDiagnosisSheet: View {
                     }
                     Section("Details") {
                         LabeledContent("publicKey") { Text(verbatim: diagnosis.publicKey).font(.caption.monospaced()) }
-                        if !diagnosis.address.isEmpty { LabeledContent("address") { Text(verbatim: diagnosis.address).font(.caption.monospaced()) } }
-                        LabeledContent("allowedIPs") { Text(verbatim: diagnosis.allowedIPs.joined(separator: ", ")).font(.caption.monospaced()) }
+                        if !diagnosis.address.isEmpty {
+                            LabeledContent("address") { Text(verbatim: diagnosis.address).font(.caption.monospaced()) }
+                        }
+                        LabeledContent("allowedIPs") {
+                            Text(verbatim: diagnosis.allowedIPs.joined(separator: ", ")).font(.caption.monospaced())
+                        }
                         LabeledContent("state") { Text(verbatim: diagnosis.state).font(.caption.monospaced()) }
                     }
                 } else {
                     Text("This node did not report this peer.").foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle(Text(verbatim: "\(nodeName) → \(peer.label.isEmpty ? String(peer.publicKey.prefix(12)) : peer.label)"))
+            .navigationTitle(
+                Text(verbatim: "\(nodeName) → \(peer.label.isEmpty ? String(peer.publicKey.prefix(12)) : peer.label)")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }

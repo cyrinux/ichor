@@ -151,10 +151,15 @@ struct LastCheckFooter: View {
 
 #Preview {
     let now = Date()
-    let nodes = [WatchNode(name: "worker-2", health: .unreachable, reason: "i/o timeout"),
-                 WatchNode(name: "cp-1", health: .ready), WatchNode(name: "worker-1", health: .ready)]
-    return ClusterListView(payload: WatchPayload(sentAt: now, masked: false, clusters: [
-        WatchCluster(id: "0", name: "Lab", active: true, takenAt: now, nodes: nodes, etcdChecked: true),
-        WatchCluster(id: "1", name: "Edge", active: false),
-    ]))
+    let nodes = [
+        WatchNode(name: "worker-2", health: .unreachable, reason: "i/o timeout"),
+        WatchNode(name: "cp-1", health: .ready), WatchNode(name: "worker-1", health: .ready),
+    ]
+    return ClusterListView(
+        payload: WatchPayload(
+            sentAt: now, masked: false,
+            clusters: [
+                WatchCluster(id: "0", name: "Lab", active: true, takenAt: now, nodes: nodes, etcdChecked: true),
+                WatchCluster(id: "1", name: "Edge", active: false),
+            ]))
 }

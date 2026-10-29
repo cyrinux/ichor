@@ -6,14 +6,14 @@ import Foundation
 /// Main colors (0xRRGGBB) handed out to clusters as they are imported, far apart in hue so
 /// two clusters are told apart at a glance. The first is the Talos orange.
 public let clusterSeeds: [Int] = [
-    0xFF7A45, // orange
-    0x2A78D6, // blue
-    0x2E9E6B, // green
-    0x8E5BD9, // purple
-    0xD6336C, // pink
-    0x0E9AA7, // teal
-    0xC29A12, // yellow
-    0x5C6BC0, // indigo
+    0xFF7A45,  // orange
+    0x2A78D6,  // blue
+    0x2E9E6B,  // green
+    0x8E5BD9,  // purple
+    0xD6336C,  // pink
+    0x0E9AA7,  // teal
+    0xC29A12,  // yellow
+    0x5C6BC0,  // indigo
 ]
 
 public let defaultClusterSeed = clusterSeeds[0]
@@ -29,7 +29,8 @@ public func assignClusterColors(saved: [String: Int], fingerprints: [String]) ->
     var colors = saved.filter { known.contains($0.key) }
     for fingerprint in known where colors[fingerprint] == nil {
         let used = Set(colors.values)
-        colors[fingerprint] = clusterSeeds.first { !used.contains($0) } ?? clusterSeeds[colors.count % clusterSeeds.count]
+        colors[fingerprint] =
+            clusterSeeds.first { !used.contains($0) } ?? clusterSeeds[colors.count % clusterSeeds.count]
     }
     return colors
 }
@@ -43,8 +44,11 @@ private let greySaturation = 0.1
 
 /// Hue (degrees), saturation and lightness (0...1) of a 0xRRGGBB color.
 public func hsl(_ rgb: Int) -> (hue: Double, saturation: Double, lightness: Double) {
-    let r = Double(rgb >> 16 & 0xFF) / 255, g = Double(rgb >> 8 & 0xFF) / 255, b = Double(rgb & 0xFF) / 255
-    let high = max(r, g, b), low = min(r, g, b)
+    let r = Double(rgb >> 16 & 0xFF) / 255
+    let g = Double(rgb >> 8 & 0xFF) / 255
+    let b = Double(rgb & 0xFF) / 255
+    let high = max(r, g, b)
+    let low = min(r, g, b)
     let delta = high - low
     let lightness = (high + low) / 2
     guard delta > 0 else { return (0, 0, lightness) }
@@ -98,7 +102,8 @@ public func tone(of rgb: Int) -> Double {
 
 /// WCAG contrast ratio between two 0xRRGGBB colors (1...21).
 public func contrast(_ a: Int, _ b: Int) -> Double {
-    let high = max(luminance(a), luminance(b)), low = min(luminance(a), luminance(b))
+    let high = max(luminance(a), luminance(b))
+    let low = min(luminance(a), luminance(b))
     return (high + 0.05) / (low + 0.05)
 }
 
@@ -121,10 +126,15 @@ func seedSaturation(_ saturation: Double) -> Double {
 func tonal(hue: Double, saturation: Double, tone target: Double) -> Int {
     if target <= 0 { return 0x000000 }
     if target >= 100 { return 0xFFFFFF }
-    var low = 0.0, high = 1.0
+    var low = 0.0
+    var high = 1.0
     for _ in 0..<16 {
         let mid = (low + high) / 2
-        if tone(of: hslToRGB(hue: hue, saturation: saturation, lightness: mid)) < target { low = mid } else { high = mid }
+        if tone(of: hslToRGB(hue: hue, saturation: saturation, lightness: mid)) < target {
+            low = mid
+        } else {
+            high = mid
+        }
     }
     return hslToRGB(hue: hue, saturation: saturation, lightness: (low + high) / 2)
 }

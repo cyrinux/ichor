@@ -19,13 +19,17 @@ struct SavedScansView: View {
             .toolbar {
                 if !scans.isEmpty {
                     ToolbarItem(placement: .primaryAction) {
-                        Button(role: .destructive) { confirmClear = true } label: {
+                        Button(role: .destructive) {
+                            confirmClear = true
+                        } label: {
                             Image(systemName: "trash").accessibilityLabel(Text("Clear all"))
                         }
                     }
                 }
             }
-            .confirmationDialog(String(localized: "Clear the scan reports?"), isPresented: $confirmClear, titleVisibility: .visible) {
+            .confirmationDialog(
+                String(localized: "Clear the scan reports?"), isPresented: $confirmClear, titleVisibility: .visible
+            ) {
                 Button(String(localized: "Clear all"), role: .destructive) { Task { await clear() } }
                 Button("Cancel", role: .cancel) {}
             } message: {
@@ -79,7 +83,9 @@ struct SavedScansView: View {
                         SavedScanRow(scan: scan, name: title)
                     }
                     .swipeActions {
-                        Button(role: .destructive) { Task { await forget(scan) } } label: {
+                        Button(role: .destructive) {
+                            Task { await forget(scan) }
+                        } label: {
                             Label("Forget", systemImage: "trash")
                         }
                     }
@@ -91,9 +97,13 @@ struct SavedScansView: View {
                         Label("Scan reports", systemImage: "checkmark.shield")
                     } description: {
                         if cluster.isEmpty {
-                            Text("No scan report kept on this phone yet. Completed scans are kept, encrypted, for 90 days.")
+                            Text(
+                                "No scan report kept on this phone yet. Completed scans are kept, encrypted, for 90 days."
+                            )
                         } else {
-                            Text("No scan report kept for this cluster yet. Completed scans are kept on this phone, encrypted, for 90 days.")
+                            Text(
+                                "No scan report kept for this cluster yet. Completed scans are kept on this phone, encrypted, for 90 days."
+                            )
                         }
                     }
                 }

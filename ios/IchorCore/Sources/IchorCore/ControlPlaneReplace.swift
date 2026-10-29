@@ -13,8 +13,10 @@ public struct CpReplacePlan: Decodable, Equatable, Sendable {
         /// Whether the node's Talos API still answers (it can be reset).
         public let reachable: Bool
 
-        public init(id: String = "", hostname: String = "", node: String = "", found: Bool = false,
-                    healthy: Bool = false, reachable: Bool = false) {
+        public init(
+            id: String = "", hostname: String = "", node: String = "", found: Bool = false,
+            healthy: Bool = false, reachable: Bool = false
+        ) {
             self.id = id
             self.hostname = hostname
             self.node = node
@@ -43,7 +45,9 @@ public struct CpReplacePlan: Decodable, Equatable, Sendable {
         public let healthyAfter: Int
         public let safe: Bool
 
-        public init(members: Int = 0, healthy: Int = 0, afterRemoval: Int = 0, healthyAfter: Int = 0, safe: Bool = false) {
+        public init(
+            members: Int = 0, healthy: Int = 0, afterRemoval: Int = 0, healthyAfter: Int = 0, safe: Bool = false
+        ) {
             self.members = members
             self.healthy = healthy
             self.afterRemoval = afterRemoval
@@ -113,7 +117,10 @@ public struct CpReplacePlan: Decodable, Equatable, Sendable {
     /// The healthy control plane whose machine config the new node copies; empty node: none.
     public let template: Node
 
-    public init(member: Member = Member(), quorum: Quorum = Quorum(), leader: Node = Node(), steps: [Step] = [], template: Node = Node()) {
+    public init(
+        member: Member = Member(), quorum: Quorum = Quorum(), leader: Node = Node(), steps: [Step] = [],
+        template: Node = Node()
+    ) {
         self.member = member
         self.quorum = quorum
         self.leader = leader

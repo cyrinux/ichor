@@ -66,7 +66,9 @@ struct PluginList: View {
             if !tree.errorLines.isEmpty {
                 Section {
                     Label {
-                        Text(verbatim: ([String(localized: "Not everything could be read:")] + tree.errorLines).joined(separator: "\n"))
+                        Text(
+                            verbatim: ([String(localized: "Not everything could be read:")] + tree.errorLines).joined(
+                                separator: "\n"))
                     } icon: {
                         Image(systemName: "exclamationmark.triangle")
                     }
@@ -78,22 +80,29 @@ struct PluginList: View {
                 Section { Text("Not found on this cluster.").note() }
             } else {
                 if !tree.tools.isEmpty {
-                    PluginToolsView(pluginID: pluginID, tools: tree.tools, reads: sequence) { data.catalog.kindOf(tree.plugin.id, $0) }
+                    PluginToolsView(pluginID: pluginID, tools: tree.tools, reads: sequence) {
+                        data.catalog.kindOf(tree.plugin.id, $0)
+                    }
                 }
                 if tree.shownCards.isEmpty { Section { Text("Nothing to show.").note() } }
                 ForEach(Array(tree.shownCards.enumerated()), id: \.offset) { _, card in
-                    PluginCardSections(card: card, expanded: $expanded, kindOf: { data.catalog.kindOf(tree.plugin.id, $0) }, rowExtra: rowExtra)
+                    PluginCardSections(
+                        card: card, expanded: $expanded, kindOf: { data.catalog.kindOf(tree.plugin.id, $0) },
+                        rowExtra: rowExtra)
                 }
             }
         }
         .refreshable { await load(current, refresh: true) }
         .themedBackground()
-        .environment(\.pluginActions, PluginActionContext(pluginID: pluginID) { outcome in
-            actionMessage = outcome.message
-            if outcome.succeeded { actionsDone += 1 }
-            // A change made, or rows the cluster no longer agrees with: read in place.
-            if outcome.reload { changes += 1 }
-        })
+        .environment(
+            \.pluginActions,
+            PluginActionContext(pluginID: pluginID) { outcome in
+                actionMessage = outcome.message
+                if outcome.succeeded { actionsDone += 1 }
+                // A change made, or rows the cluster no longer agrees with: read in place.
+                if outcome.reload { changes += 1 }
+            }
+        )
         .messageAlert($actionMessage)
         .sensoryFeedback(.success, trigger: actionsDone)
     }
@@ -216,7 +225,8 @@ struct KubeGreenPluginEdit: View {
     private func read() async {
         guard let client = model.client else { return }
         // The one-minute cache the workload sheets share; forgotten after a save.
-        let namespace = await KubeGreenStore.shared.load(namespace: ref.namespace, key: model.kubeGreenKey, with: client)
+        let namespace = await KubeGreenStore.shared.load(
+            namespace: ref.namespace, key: model.kubeGreenKey, with: client)
         let found = namespace?.sleepInfos.first { $0.name == ref.name }
         info = found
         failed = found == nil

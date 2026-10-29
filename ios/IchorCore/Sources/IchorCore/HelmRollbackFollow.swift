@@ -56,8 +56,10 @@ public struct HelmRollbackWorkload: Decodable, Equatable, Hashable, Identifiable
 
     public var id: String { "\(kind)/\(namespace)/\(name)" }
 
-    public init(kind: String, namespace: String = "", name: String, ready: Int = 0, desired: Int = 0,
-                done: Bool = false, failed: Bool = false, manual: Bool = false) {
+    public init(
+        kind: String, namespace: String = "", name: String, ready: Int = 0, desired: Int = 0,
+        done: Bool = false, failed: Bool = false, manual: Bool = false
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.name = name

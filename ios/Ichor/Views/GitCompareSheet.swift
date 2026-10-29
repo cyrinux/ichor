@@ -128,13 +128,16 @@ struct GitCompareSheet: View {
                 }
                 // The node's live values into Git: from Git's version to the node's.
                 if let live {
-                    ProposeInGitButton(base: result.draft, draft: live, hostname: hostname, label: "Propose the node's values in Git")
+                    ProposeInGitButton(
+                        base: result.draft, draft: live, hostname: hostname, label: "Propose the node's values in Git")
                 }
             }
         } header: {
             if !result.same { Text("What Git would change on the node") }
         } footer: {
-            if !result.same { Text("Opens the editor with Git's version as the draft: review it, then try or apply it.") }
+            if !result.same {
+                Text("Opens the editor with Git's version as the draft: review it, then try or apply it.")
+            }
         }
     }
 
@@ -149,7 +152,8 @@ struct GitCompareSheet: View {
 
     private func load() async {
         do {
-            let found = try await TalosClient.talosRepoFiles(repo, hostname: hostname, role: role, hosts: hosts, demo: demo)
+            let found = try await TalosClient.talosRepoFiles(
+                repo, hostname: hostname, role: role, hosts: hosts, demo: demo)
             selected = found.defaultSelection
             files = .loaded(found, at: Date())
         } catch {
@@ -163,8 +167,9 @@ struct GitCompareSheet: View {
         compareError = nil
         defer { comparing = false }
         do {
-            compare = try await client.talosRepoCompare(repo, node: node, hostname: hostname, sha: found.sha,
-                                                        paths: found.ordered(selected), hosts: hosts, demo: demo)
+            compare = try await client.talosRepoCompare(
+                repo, node: node, hostname: hostname, sha: found.sha,
+                paths: found.ordered(selected), hosts: hosts, demo: demo)
         } catch {
             compare = nil
             compareError = error.localizedDescription
@@ -185,7 +190,8 @@ struct RepoFileView: View {
     var body: some View {
         Group {
             if case .loaded(let source, _, _) = state {
-                SourceFileView(source: source, path: path, app: .repository, line: line > 0 ? line : nil, allowTry: false)
+                SourceFileView(
+                    source: source, path: path, app: .repository, line: line > 0 ? line : nil, allowTry: false)
             } else {
                 LoadStateView(state: state, retry: load) { _ in EmptyView() }
             }

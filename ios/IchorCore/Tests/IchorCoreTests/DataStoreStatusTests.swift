@@ -9,7 +9,8 @@ final class DataStoreStatusTests: XCTestCase {
     }
 
     func testNotSavingSaysWhy() throws {
-        let status = try TalosJSON.decode(DataStoreStatus.self, from: #"{"persisting":false,"dir":"","reason":"data key must be 32 bytes, got 16"}"#)
+        let status = try TalosJSON.decode(
+            DataStoreStatus.self, from: #"{"persisting":false,"dir":"","reason":"data key must be 32 bytes, got 16"}"#)
         XCTAssertEqual(status.problem, "data key must be 32 bytes, got 16")
         XCTAssertEqual(DataStoreStatus(persisting: false).problem, "no data directory")
     }

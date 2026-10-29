@@ -27,7 +27,11 @@ struct HardwareView: View {
                     case .loaded(let s, _, _) where !s.sensorsEmpty || s.sensorsError != nil:
                         SensorsSection(sensors: s)
                     case .failed(let message):
-                        Section { SectionError(message: message) } header: { Text("Sensors").sectionTarget("sensors") }
+                        Section {
+                            SectionError(message: message)
+                        } header: {
+                            Text("Sensors").sectionTarget("sensors")
+                        }
                     default:
                         EmptyView()
                     }
@@ -98,7 +102,8 @@ struct HardwareView: View {
                 InfoRow(label: String(localized: "SKU"), value: system.sku)
                 InfoRow(label: String(localized: "UUID"), value: system.uuid, monospaced: true)
                 InfoRow(label: String(localized: "BIOS version"), value: system.biosVersion)
-                FindPartsButton(kind: "system", manufacturer: system.manufacturer, model: system.product, serial: system.serial)
+                FindPartsButton(
+                    kind: "system", manufacturer: system.manufacturer, model: system.product, serial: system.serial)
             }
         } header: {
             Text("System").sectionTarget("system")
@@ -144,7 +149,8 @@ struct HardwareView: View {
                     }
                     Text(verbatim: memoryDetails(module)).font(.caption).foregroundStyle(.secondary)
                 }
-                FindPartsButton(kind: "memory", manufacturer: module.manufacturer, model: module.type, serial: module.serial)
+                FindPartsButton(
+                    kind: "memory", manufacturer: module.manufacturer, model: module.type, serial: module.serial)
             }
         } header: {
             Text("Memory").sectionTarget("memory")
@@ -223,8 +229,12 @@ struct HardwareView: View {
                 FlagRow(label: String(localized: "Module signatures enforced"), on: security.moduleSignatureEnforced)
                 InfoRow(label: String(localized: "SELinux"), value: security.selinuxState)
                 InfoRow(label: String(localized: "FIPS"), value: security.fipsState)
-                InfoRow(label: String(localized: "UKI signing key"), value: security.ukiSigningKeyFingerprint, monospaced: true)
-                InfoRow(label: String(localized: "PCR signing key"), value: security.pcrSigningKeyFingerprint, monospaced: true)
+                InfoRow(
+                    label: String(localized: "UKI signing key"), value: security.ukiSigningKeyFingerprint,
+                    monospaced: true)
+                InfoRow(
+                    label: String(localized: "PCR signing key"), value: security.pcrSigningKeyFingerprint,
+                    monospaced: true)
             }
         } header: {
             Text("Security").sectionTarget("security")
@@ -262,8 +272,11 @@ private struct FlagRow: View {
 
     var body: some View {
         LabeledContent(label) {
-            Label(on ? String(localized: "Yes") : String(localized: "No"), systemImage: on ? "checkmark.shield.fill" : "xmark.shield")
-                .foregroundStyle(on ? Color.green : Color.secondary)
+            Label(
+                on ? String(localized: "Yes") : String(localized: "No"),
+                systemImage: on ? "checkmark.shield.fill" : "xmark.shield"
+            )
+            .foregroundStyle(on ? Color.green : Color.secondary)
         }
     }
 }

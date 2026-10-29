@@ -48,7 +48,9 @@ struct PolicyDetailSheet: View {
                 } else {
                     Section("Rules") {
                         Text(verbatim: policy.rules.text).font(.callout.monospaced())
-                        ForEach(policy.ruleNames, id: \.self) { Text(verbatim: $0).font(.caption.monospaced()).foregroundStyle(.secondary) }
+                        ForEach(policy.ruleNames, id: \.self) {
+                            Text(verbatim: $0).font(.caption.monospaced()).foregroundStyle(.secondary)
+                        }
                         PolicyCounts(fail: policy.fail, warn: policy.warn, pass: policy.pass)
                     }
                 }
@@ -66,7 +68,10 @@ struct PolicyDetailSheet: View {
         .sheet(isPresented: $confirmAudit) {
             HostnameConfirmationSheet(
                 title: String(localized: "Switch to Audit"),
-                message: switchMessage(String(localized: "Pods that break this policy will be admitted and only reported until you switch it back.")),
+                message: switchMessage(
+                    String(
+                        localized:
+                            "Pods that break this policy will be admitted and only reported until you switch it back.")),
                 hostname: policy.name,
                 actionTitle: String(localized: "Switch to Audit")
             ) {
@@ -74,7 +79,9 @@ struct PolicyDetailSheet: View {
                 Task { await switchTo(.audit) }
             }
         }
-        .confirmationDialog(String(localized: "Switch to Enforce"), isPresented: $confirmEnforce, titleVisibility: .visible) {
+        .confirmationDialog(
+            String(localized: "Switch to Enforce"), isPresented: $confirmEnforce, titleVisibility: .visible
+        ) {
             Button("Switch to Enforce") { Task { await switchTo(.enforce) } }
         } message: {
             Text(verbatim: switchMessage(String(localized: "Requests that break this policy will be refused again.")))
@@ -100,16 +107,23 @@ struct PolicyDetailSheet: View {
     /// The confirmation's body, warning when the policy's rules mix modes (they all take the new
     /// one, and switching back does not restore the mix) and when a GitOps tool would revert it.
     private func switchMessage(_ body: String) -> String {
-        let mixed = policy.action == .mixed
-            ? String(localized: "Its rules mix Enforce and Audit: every rule takes this mode, and switching back later does not restore the mix.")
+        let mixed =
+            policy.action == .mixed
+            ? String(
+                localized:
+                    "Its rules mix Enforce and Audit: every rule takes this mode, and switching back later does not restore the mix."
+            )
             : ""
-        return [body, mixed, policy.gitopsTool.map(PolicyText.switchGitOps) ?? ""].filter { !$0.isEmpty }.joined(separator: "\n\n")
+        return [body, mixed, policy.gitopsTool.map(PolicyText.switchGitOps) ?? ""].filter { !$0.isEmpty }.joined(
+            separator: "\n\n")
     }
 
     private func askAccess() async {
         guard let client = model.client,
-              let access = try? await client.kubeCan(verb: "patch", group: "kyverno.io", resource: policy.kyvernoResource,
-                                                     namespace: policy.namespace, name: policy.name) else { return }
+            let access = try? await client.kubeCan(
+                verb: "patch", group: "kyverno.io", resource: policy.kyvernoResource,
+                namespace: policy.namespace, name: policy.name)
+        else { return }
         denial = access.isDenied ? access : nil
     }
 
@@ -152,7 +166,9 @@ struct PolicyDetailSheet: View {
             }
             if policy.auditAt > 0 {
                 (Text("Last audit") + Text(verbatim: " ")
-                    + Text(Date(timeIntervalSince1970: TimeInterval(policy.auditAt)), format: .relative(presentation: .named)))
+                    + Text(
+                        Date(timeIntervalSince1970: TimeInterval(policy.auditAt)),
+                        format: .relative(presentation: .named)))
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
@@ -194,10 +210,14 @@ private struct PolicyFailureRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(verbatim: [failure.kind, [failure.namespace, failure.name].filter { !$0.isEmpty }.joined(separator: "/")]
+            Text(
+                verbatim: [
+                    failure.kind, [failure.namespace, failure.name].filter { !$0.isEmpty }.joined(separator: "/"),
+                ]
                 .filter { !$0.isEmpty }
-                .joined(separator: " "))
-                .font(.callout.monospaced())
+                .joined(separator: " ")
+            )
+            .font(.callout.monospaced())
             HStack(spacing: 6) {
                 if !failure.rule.isEmpty {
                     Text(PolicyText.ruleOf(failure.rule))

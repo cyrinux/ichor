@@ -83,25 +83,36 @@ struct ImportView: View {
         .onAppear { if firstCluster == nil { firstCluster = model.summary?.contexts.isEmpty ?? true } }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { showingHelp = true } label: { Image(systemName: "questionmark.circle") }
-                    .accessibilityLabel("How to add a cluster")
+                Button {
+                    showingHelp = true
+                } label: {
+                    Image(systemName: "questionmark.circle")
+                }
+                .accessibilityLabel("How to add a cluster")
             }
         }
         .onDisappear { TalosClient.forgetDiscoverSignIn() }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
         .sheet(item: $omniStart) { start in
-            OmniDiscoveryView(initialValues: start.initialValues, initialServiceAccount: start.serviceAccount) { talosconfig in validate(talosconfig) }
+            OmniDiscoveryView(initialValues: start.initialValues, initialServiceAccount: start.serviceAccount) {
+                talosconfig in validate(talosconfig)
+            }
         }
         .sheet(item: $discovery) { start in
-            CloudDiscoveryView(provider: start.provider, initialValues: start.initialValues) { found in validate(found.kubeconfig, discovered: found) }
-        }
-        .sheet(item: $source, onDismiss: {
-            sourceDismissing = false
-            if let start = pendingDiscovery {
-                pendingDiscovery = nil
-                open(start)
+            CloudDiscoveryView(provider: start.provider, initialValues: start.initialValues) { found in
+                validate(found.kubeconfig, discovered: found)
             }
-        }) { source in
+        }
+        .sheet(
+            item: $source,
+            onDismiss: {
+                sourceDismissing = false
+                if let start = pendingDiscovery {
+                    pendingDiscovery = nil
+                    open(start)
+                }
+            }
+        ) { source in
             if source == .form {
                 // A talosconfig built from what is typed, previewed like an imported one.
                 TalosFormView { yaml in validate(yaml) }
@@ -126,7 +137,10 @@ struct ImportView: View {
                 Task { await save(yaml) }
             }
         case .kube(let yaml, let summary, let conflicts)?:
-            KubePreviewList(summary: summary, conflicts: conflicts, refused: discovered?.refused ?? [], busy: busy, onCancel: cancelPreview) { choices in
+            KubePreviewList(
+                summary: summary, conflicts: conflicts, refused: discovered?.refused ?? [], busy: busy,
+                onCancel: cancelPreview
+            ) { choices in
                 Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
             }
         case nil:
@@ -146,7 +160,9 @@ struct ImportView: View {
                     Text("Add from a cloud account").font(.headline)
                     ChipFlow(spacing: 8) {
                         ForEach(kubeDiscoverProviders, id: \.self) { provider in
-                            Button { discovery = DiscoveryStart(provider: provider) } label: {
+                            Button {
+                                discovery = DiscoveryStart(provider: provider)
+                            } label: {
                                 Label {
                                     Text(verbatim: KubeAuthWording.providerLabel(provider))
                                 } icon: {
@@ -155,7 +171,9 @@ struct ImportView: View {
                             }
                             .buttonStyle(.bordered)
                         }
-                        Button { omniStart = DiscoveryStart(provider: "omni") } label: {
+                        Button {
+                            omniStart = DiscoveryStart(provider: "omni")
+                        } label: {
                             Label {
                                 Text(verbatim: KubeAuthWording.providerLabel("omni"))
                             } icon: {
@@ -202,7 +220,9 @@ struct ImportView: View {
                 // On the tile, not the screen: the restore button has a file importer of its own.
                 // Any file: a kubeconfig is often named "config", with no extension.
                 SourceTile(title: String(localized: "File"), systemImage: "doc") { showingImporter = true }
-                    .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
+                    .fileImporter(
+                        isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]
+                    ) { result in
                         switch result {
                         case .success(let url): readFile(url)
                         case .failure(let failure): error = failure.localizedDescription
@@ -250,7 +270,7 @@ struct ImportView: View {
                         validate(text)
                     }
                 case .form:
-                    EmptyView() // its own sheet, TalosFormView
+                    EmptyView()  // its own sheet, TalosFormView
                 }
             }
             .navigationTitle(source.label)
@@ -289,15 +309,19 @@ struct ImportView: View {
                 let yaml = try await TalosClient.decodeImportText(text)
                 let route = try await TalosClient.classifyImportText(yaml)
                 if route.isGkeCredential || route.isEksIdentityCenter || route.isOmni {
-                    let start = route.isGkeCredential ? DiscoveryStart(provider: "gke", initialValues: [route.field: yaml]) :
-                        DiscoveryStart(provider: route.isOmni ? "omni" : "eks", initialValues: route.values,
-                                       serviceAccount: route.isOmniServiceAccount)
+                    let start =
+                        route.isGkeCredential
+                        ? DiscoveryStart(provider: "gke", initialValues: [route.field: yaml])
+                        : DiscoveryStart(
+                            provider: route.isOmni ? "omni" : "eks", initialValues: route.values,
+                            serviceAccount: route.isOmniServiceAccount)
                     if sourceDismissing { pendingDiscovery = start } else { open(start) }
                     error = nil
                     return
                 }
                 if route.isAwsAccessKeys {
-                    error = String(localized: "This file holds AWS access keys. Enter them in the EKS cluster search instead.")
+                    error = String(
+                        localized: "This file holds AWS access keys. Enter them in the EKS cluster search instead.")
                     return
                 }
                 if await TalosClient.isKubeconfig(yaml) {
@@ -338,7 +362,9 @@ struct ImportView: View {
 
     /// After a real (not demo) save: the home offers background alerts when it was the first.
     private func importedReal() {
-        if firstCluster == true, model.summary?.contexts.contains(where: { !$0.demo }) == true { AlertsOffer.offerOnce() }
+        if firstCluster == true, model.summary?.contexts.contains(where: { !$0.demo }) == true {
+            AlertsOffer.offerOnce()
+        }
         onImported()
     }
 
@@ -360,8 +386,10 @@ struct ImportView: View {
         TalosClient.forgetDiscoverSignIn()
     }
 
-    private func saveKube(_ yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict],
-                          choices: [KubeImportChoice]) async {
+    private func saveKube(
+        _ yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict],
+        choices: [KubeImportChoice]
+    ) async {
         busy = true
         defer { busy = false }
         do {
@@ -376,13 +404,15 @@ struct ImportView: View {
             return
         }
         discovered = nil
-        let failures = await signInDiscovered(summary: summary, conflicts: conflicts, choices: choices, secrets: found.secrets)
+        let failures = await signInDiscovered(
+            summary: summary, conflicts: conflicts, choices: choices, secrets: found.secrets)
         TalosClient.forgetDiscoverSignIn()
         if failures.isEmpty {
             importedReal()
         } else {
             // The clusters are added; those not signed in say so on their home.
-            error = String(localized: "Clusters added. Some could not be signed in: \(failures.joined(separator: "; "))")
+            error = String(
+                localized: "Clusters added. Some could not be signed in: \(failures.joined(separator: "; "))")
             preview = nil
         }
     }
@@ -390,8 +420,10 @@ struct ImportView: View {
     /// Signs the discovered clusters just added in with the account's credentials, one after
     /// the other in the core, the screen naming each; those that sign in otherwise (OIDC, Azure
     /// device code, a browser) wait for the user. The errors of the others, by context.
-    private func signInDiscovered(summary: ConfigSummary, conflicts: [KubeImportConflict],
-                                  choices: [KubeImportChoice], secrets: String) async -> [String] {
+    private func signInDiscovered(
+        summary: ConfigSummary, conflicts: [KubeImportConflict],
+        choices: [KubeImportChoice], secrets: String
+    ) async -> [String] {
         guard let kube = model.kubeYAML else { return [] }
         let skipped = Set(choices.filter { $0.skip == true }.map(\.index))
         let names = importedSignInContexts(
@@ -488,8 +520,10 @@ private struct PreviewList: View {
             }
             if adding {
                 Section {
-                    Text("It is added to the clusters already on this device. A cluster imported before (same name and CA) is updated.")
-                        .font(.footnote)
+                    Text(
+                        "It is added to the clusters already on this device. A cluster imported before (same name and CA) is updated."
+                    )
+                    .font(.footnote)
                 }
             }
             Section {
@@ -518,8 +552,10 @@ private struct KubePreviewList: View {
     @State private var replacing: Set<Int> = []
     @State private var showingServiceAccountHelp = false
 
-    init(summary: ConfigSummary, conflicts: [KubeImportConflict], refused: [String] = [], busy: Bool,
-         onCancel: @escaping () -> Void, onImport: @escaping ([KubeImportChoice]) -> Void) {
+    init(
+        summary: ConfigSummary, conflicts: [KubeImportConflict], refused: [String] = [], busy: Bool,
+        onCancel: @escaping () -> Void, onImport: @escaping ([KubeImportChoice]) -> Void
+    ) {
         self.summary = summary
         self.conflicts = conflicts
         self.refused = refused
@@ -534,7 +570,9 @@ private struct KubePreviewList: View {
             Section {
                 Text("Choose the clusters to add").font(.headline)
             } footer: {
-                Text("A client certificate or a token works as it is. A cluster that signs in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) asks for it once added.")
+                Text(
+                    "A client certificate or a token works as it is. A cluster that signs in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) asks for it once added."
+                )
             }
             ForEach(Array(summary.contexts.enumerated()), id: \.element.id) { index, ctx in
                 Section {
@@ -549,8 +587,10 @@ private struct KubePreviewList: View {
             }
             if !refused.isEmpty {
                 Section {
-                    Text("No access in \(refused.joined(separator: ", ")): clusters in these regions, if any, are not listed.")
-                        .font(.footnote).foregroundStyle(.statusWarn)
+                    Text(
+                        "No access in \(refused.joined(separator: ", ")): clusters in these regions, if any, are not listed."
+                    )
+                    .font(.footnote).foregroundStyle(.statusWarn)
                 }
             }
             Section {

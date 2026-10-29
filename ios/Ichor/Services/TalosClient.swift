@@ -170,15 +170,20 @@ struct TalosClient: Sendable {
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { return nil }
         let key = Data(bytes)
         // Fails while locked, so an existing key is never replaced by one that was only unreadable.
-        guard (try? Keychain.write(key, account: dataKeyAccount,
-                                   accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)) != nil else { return nil }
+        guard
+            (try? Keychain.write(
+                key, account: dataKeyAccount,
+                accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)) != nil
+        else { return nil }
         return key
     }
 
     /// Applies the stored screenshot mode; call before any other Go call (also in background tasks).
     static func applyStoredPrivacyMask() {
         let defaults = UserDefaults.standard
-        setPrivacyMask(enabled: defaults.bool(forKey: PrivacyKeys.enabled), extraWords: defaults.string(forKey: PrivacyKeys.words) ?? "")
+        setPrivacyMask(
+            enabled: defaults.bool(forKey: PrivacyKeys.enabled),
+            extraWords: defaults.string(forKey: PrivacyKeys.words) ?? "")
     }
 
     /// The clusters (context fingerprints) where each object the app changes also gets a
@@ -254,8 +259,10 @@ struct TalosClient: Sendable {
 
     /// `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin).
     func rolloutRestart(_ workload: KubeWorkload) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeRolloutRestart(config, context, kubeServer, workload.kind, workload.namespace, workload.name, error)
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeRolloutRestart(
+                config, context, kubeServer, workload.kind, workload.namespace, workload.name, error)
         }
     }
 
@@ -268,7 +275,8 @@ struct TalosClient: Sendable {
 
     /// `kubectl create job --from=cronjob/NAME -n NAMESPACE` (os:admin): the new Job's name.
     func triggerCronJob(_ cronJob: KubeCronJob) async throws -> String {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeTriggerCronJob(config, context, kubeServer, cronJob.namespace, cronJob.name, error)
         }
     }
@@ -277,7 +285,8 @@ struct TalosClient: Sendable {
     /// owners (os:admin): only those pods and workloads are read, never a cluster-wide list.
     func appWorkloads(pods: [RoutePod]) async throws -> [KubeWorkload] {
         let encoded = try TalosJSON.encode(pods)
-        let list: KubeWorkloadList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        let list: KubeWorkloadList = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeAppWorkloads(config, context, kubeServer, encoded, $0)
         }
         return list.workloads
@@ -286,7 +295,8 @@ struct TalosClient: Sendable {
     /// workloads as they are now (os:admin); one deleted since is left out.
     func workloadsNamed(_ workloads: [WorkloadRef]) async throws -> [KubeWorkload] {
         let encoded = try TalosJSON.encode(workloads)
-        let list: KubeWorkloadList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        let list: KubeWorkloadList = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeWorkloadsNamed(config, context, kubeServer, encoded, $0)
         }
         return list.workloads
@@ -295,7 +305,8 @@ struct TalosClient: Sendable {
     /// The Ingress and HTTPRoute URLs serving pods (os:admin).
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
         let encoded = try TalosJSON.encode(pods)
-        let list: KubeRouteList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        let list: KubeRouteList = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeAppRoutes(config, context, kubeServer, encoded, $0)
         }
         return list.routes
@@ -303,21 +314,25 @@ struct TalosClient: Sendable {
 
     /// `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one.
     func deletePod(_ pod: KubePod) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeDeletePod(config, context, kubeServer, pod.namespace, pod.name, error)
         }
     }
 
     /// Deletes an `ichor-netperf-*` namespace a network test left behind (os:admin); the core refuses any other.
     func deleteNetPerfNamespace(_ name: String) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoNetPerfDeleteNamespace(config, context, kubeServer, name, error)
         }
     }
 
     /// Starts `talosctl debug` on node; events go to the listener (from Go threads).
-    func startDebugShell(node: String, image: String, args: String, cols: Int, rows: Int,
-                         listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
+    func startDebugShell(
+        node: String, image: String, args: String, cols: Int, rows: Int,
+        listener: IchorgoDebugListenerProtocol
+    ) -> IchorgoDebugSession? {
         IchorgoStartDebugShell(config, context, node, image, args, cols, rows, listener)
     }
 
@@ -525,7 +540,9 @@ struct TalosClient: Sendable {
     }
 
     /// `name` is the calling function, for the startup trace.
-    static func json<T: Decodable>(_ name: String = #function, _ call: @escaping @Sendable (NSErrorPointer) -> String) async throws -> T {
+    static func json<T: Decodable>(_ name: String = #function, _ call: @escaping @Sendable (NSErrorPointer) -> String)
+        async throws -> T
+    {
         let output = try await run(name, call)
         return try TalosJSON.decode(T.self, from: output)
     }
@@ -535,7 +552,9 @@ struct TalosClient: Sendable {
     /// cluster switched away from, starved every later task: the overview spun forever. GCD
     /// adds threads when they block.
     /// `name` is the calling function: with the startup trace on, each call logs it and its time.
-    static func run<T: Sendable>(_ name: String = #function, _ call: @escaping @Sendable (NSErrorPointer) -> T) async throws -> T {
+    static func run<T: Sendable>(_ name: String = #function, _ call: @escaping @Sendable (NSErrorPointer) -> T)
+        async throws -> T
+    {
         try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 var error: NSError?

@@ -86,15 +86,19 @@ struct FluxDiffView: View {
             .navigationDestination(item: $keeping) { file in
                 SourceEditView(source: file.source, path: file.path, app: file.app, quickEdit: file.edit)
             }
-            .confirmationDialog(String(localized: "Defined in several files"), isPresented: $choosing.isPresent(),
-                                titleVisibility: .visible, presenting: choosing) { choice in
+            .confirmationDialog(
+                String(localized: "Defined in several files"), isPresented: $choosing.isPresent(),
+                titleVisibility: .visible, presenting: choosing
+            ) { choice in
                 ForEach(choice.matches) { match in
                     Button(String(localized: "Defined in \(match.path), line \(String(match.line))")) {
                         if let kept = choice.keep {
-                            keeping = SourceKeepTarget(source: choice.source, path: match.path, app: target.app,
-                                                       edit: .keep(documentIndex: match.documentIndex, resource: kept))
+                            keeping = SourceKeepTarget(
+                                source: choice.source, path: match.path, app: target.app,
+                                edit: .keep(documentIndex: match.documentIndex, resource: kept))
                         } else {
-                            opened = SourceFileTarget(source: choice.source, path: match.path, app: target.app, line: match.line)
+                            opened = SourceFileTarget(
+                                source: choice.source, path: match.path, app: target.app, line: match.line)
                         }
                     }
                 }
@@ -122,7 +126,9 @@ struct FluxDiffView: View {
             List {
                 Section {
                     if !diff.revision.isEmpty {
-                        LabeledContent("Built from") { Text(verbatim: target.short(diff.revision)).font(.callout.monospaced()) }
+                        LabeledContent("Built from") {
+                            Text(verbatim: target.short(diff.revision)).font(.callout.monospaced())
+                        }
                     }
                     if !diff.applied.isEmpty {
                         LabeledContent("Last applied") {
@@ -132,15 +138,20 @@ struct FluxDiffView: View {
                         }
                     }
                     if diff.inSync {
-                        Label("Nothing would change: the cluster matches the source.", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.statusOK)
+                        Label(
+                            "Nothing would change: the cluster matches the source.",
+                            systemImage: "checkmark.circle.fill"
+                        )
+                        .foregroundStyle(.statusOK)
                     }
                     // Opened for one object that has nothing to change: say so, rather than leave it to be looked for.
                     if !focus.isEmpty, focused == nil {
                         let parts = focus.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
-                        Label("\(parts.first ?? "") \(parts.last ?? "") matches what Git would apply: nothing to keep.",
-                              systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.statusOK)
+                        Label(
+                            "\(parts.first ?? "") \(parts.last ?? "") matches what Git would apply: nothing to keep.",
+                            systemImage: "checkmark.circle.fill"
+                        )
+                        .foregroundStyle(.statusOK)
                     }
                     if !diff.counts.isEmpty {
                         ChipFlow {
@@ -148,18 +159,24 @@ struct FluxDiffView: View {
                         }
                     }
                     ForEach(diff.warnings, id: \.self) { warning in
-                        Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                            .font(.callout)
-                            .foregroundStyle(.statusWarn)
+                        Label {
+                            Text(verbatim: warning)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                        }
+                        .font(.callout)
+                        .foregroundStyle(.statusWarn)
                     }
                 }
                 if !changed.isEmpty {
                     Section {
                         ForEach(Array(changed.enumerated()), id: \.element.id) { index, resource in
-                            DiffResourceRow(resource: resource, expanded: binding(for: resource, at: index),
-                                            openSource: openSource(for: resource), searching: searching == resource.id,
-                                            keepLive: keepLive(for: resource))
-                                .id(resource.id)
+                            DiffResourceRow(
+                                resource: resource, expanded: binding(for: resource, at: index),
+                                openSource: openSource(for: resource), searching: searching == resource.id,
+                                keepLive: keepLive(for: resource)
+                            )
+                            .id(resource.id)
                         }
                     }
                 }
@@ -185,9 +202,13 @@ struct FluxDiffView: View {
                     EmptyView()
                 } footer: {
                     if target.isArgo {
-                        Text("What Argo CD itself compared last: the live state and the state after a sync, read from Argo CD’s cache through a port-forward. Nothing ran in the cluster, nothing was changed. Secret values are hidden.")
+                        Text(
+                            "What Argo CD itself compared last: the live state and the state after a sync, read from Argo CD’s cache through a port-forward. Nothing ran in the cluster, nothing was changed. Secret values are hidden."
+                        )
                     } else {
-                        Text("Built in the cluster as Flux builds it, then sent to the API server as a server-side apply dry run: nothing was changed. Secret values are hidden.")
+                        Text(
+                            "Built in the cluster as Flux builds it, then sent to the API server as a server-side apply dry run: nothing was changed. Secret values are hidden."
+                        )
                     }
                 }
             }
@@ -228,21 +249,26 @@ struct FluxDiffView: View {
         guard let client = model.client, searching == nil else { return }
         searching = resource.id
         defer { searching = nil }
-        let app = target.app, demo = model.activeSummary?.demo == true
+        let app = target.app
+        let demo = model.activeSummary?.demo == true
         do {
-            let found = try await client.findSource(app: app, source: source, sourceIndex: index, resKind: resource.kind,
-                                                    resNamespace: resource.namespace, resName: resource.name,
-                                                    hosts: hosts, demo: demo)
+            let found = try await client.findSource(
+                app: app, source: source, sourceIndex: index, resKind: resource.kind,
+                resNamespace: resource.namespace, resName: resource.name,
+                hosts: hosts, demo: demo)
             switch found.outcome {
             case .open(let match) where keep:
-                keeping = SourceKeepTarget(source: source, path: match.path, app: app,
-                                           edit: .keep(documentIndex: match.documentIndex, resource: resource))
+                keeping = SourceKeepTarget(
+                    source: source, path: match.path, app: app,
+                    edit: .keep(documentIndex: match.documentIndex, resource: resource))
             case .open(let match):
                 opened = SourceFileTarget(source: source, path: match.path, app: app, line: match.line)
             case .choose(let matches):
                 choosing = SourceFileChoice(source: source, matches: matches, keep: keep ? resource : nil)
             case .none(let note):
-                message = note.isEmpty ? String(localized: "No file of the source declares \(resource.kind) \(resource.name).") : note
+                message =
+                    note.isEmpty
+                    ? String(localized: "No file of the source declares \(resource.kind) \(resource.name).") : note
             }
         } catch {
             // A missing token: GitHostMissing names the Git host to add one for.
@@ -256,7 +282,8 @@ struct FluxDiffView: View {
         let app = target.app
         // A failed or slow read must not leave the previous cluster's source to search in.
         gitSources = nil
-        gitSources = try? await client.gitOpsSource(tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name)
+        gitSources = try? await client.gitOpsSource(
+            tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name)
     }
 
     /// What a reload keys on: the cluster and the tool's own key (its polling scope).
@@ -264,7 +291,8 @@ struct FluxDiffView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        let key = self.key, target = self.target
+        let key = self.key
+        let target = self.target
         let loaded: LoadState<FluxDiff> = await .from {
             switch target {
             case .flux(let ref): try await client.fluxDiff(of: ref)

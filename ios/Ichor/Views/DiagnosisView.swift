@@ -48,10 +48,18 @@ struct DiagnosisView: View {
     private func content(_ report: DiagnosisReport) -> some View {
         List {
             Section {
-                Text(report.anonymized
-                     ? String(localized: "This report is what gets sent, and only when you ask. The nodes’ names, IP addresses and domain are replaced with placeholders; the rest of the logs, such as pod names and other host names, is sent as it is.")
-                     : String(localized: "This report is what gets sent, and only when you ask. It contains the real node names and IP addresses."))
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    report.anonymized
+                        ? String(
+                            localized:
+                                "This report is what gets sent, and only when you ask. The nodes’ names, IP addresses and domain are replaced with placeholders; the rest of the logs, such as pod names and other host names, is sent as it is."
+                        )
+                        : String(
+                            localized:
+                                "This report is what gets sent, and only when you ask. It contains the real node names and IP addresses."
+                        )
+                )
+                .font(.footnote).foregroundStyle(.secondary)
                 HStack {
                     Text("Report (\(reportSize(report.text)))")
                     Spacer()
@@ -82,7 +90,9 @@ struct DiagnosisView: View {
                 }
                 SharePromptLink(report: report, note: note)
             } footer: {
-                Text("Sends the question and the report to an app you choose, such as Claude, ChatGPT or Gemini. No API key needed.")
+                Text(
+                    "Sends the question and the report to an app you choose, such as Claude, ChatGPT or Gemini. No API key needed."
+                )
             }
             if !answer.isEmpty || answerError != nil {
                 Section {
@@ -92,12 +102,18 @@ struct DiagnosisView: View {
                     // A failure keeps what was already written above it.
                     if let answerError { Text(verbatim: answerError).foregroundStyle(.statusBad) }
                     if asking == nil, !answer.isEmpty {
-                        Button { UIPasteboard.general.string = answer } label: { Label("Copy", systemImage: "doc.on.doc") }
+                        Button {
+                            UIPasteboard.general.string = answer
+                        } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                        }
                     }
                 } header: {
                     Text("Answer")
                 } footer: {
-                    Text("AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.")
+                    Text(
+                        "AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd."
+                    )
                 }
             }
         }

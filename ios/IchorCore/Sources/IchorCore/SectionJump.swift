@@ -22,7 +22,9 @@ public enum SectionJump {
     /// (`visibleTops`, by section id) and the top edge of the list's content (`top`): the last
     /// header at or above that edge; when every header in view is below it, the section before
     /// the first of them; with no header in view, `previous`.
-    public static func current(sections: [JumpSection], visibleTops: [String: Double], top: Double, previous: String?) -> String? {
+    public static func current(sections: [JumpSection], visibleTops: [String: Double], top: Double, previous: String?)
+        -> String?
+    {
         guard !sections.isEmpty else { return nil }
         let inView = sections.enumerated().filter { visibleTops[$0.element.id] != nil }
         guard let first = inView.first else { return previous }

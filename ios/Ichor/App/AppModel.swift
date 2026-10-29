@@ -184,7 +184,8 @@ final class AppModel {
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
         kubeAccess = UserDefaults.standard.dictionary(forKey: Keys.kubeAccess) as? [String: String] ?? [:]
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
-        skippedTalosUpdates = UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
+        skippedTalosUpdates =
+            UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
         vpnOnly = Set(UserDefaults.standard.stringArray(forKey: Keys.vpnOnly) ?? [])
         clusterRepos = ClusterRepoStore.decode(UserDefaults.standard.data(forKey: ClusterRepoStore.key))
         proposals = ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
@@ -202,7 +203,10 @@ final class AppModel {
         guard !vpnHeldBack else { return nil }
         let kubeServer = activeSummary.flatMap { kubeServers[$0.fingerprint] } ?? ""
         let link = kubeLink(for: activeSummary)
-        return config(for: activeSummary).map { TalosClient(config: $0, context: activeContext, kubeServer: kubeServer, kubeLink: link, kubeOnly: activeIsKube) }
+        return config(for: activeSummary).map {
+            TalosClient(
+                config: $0, context: activeContext, kubeServer: kubeServer, kubeLink: link, kubeOnly: activeIsKube)
+        }
     }
 
     var activeSummary: ContextSummary? { summary?.context(named: activeContext) }
@@ -341,7 +345,9 @@ final class AppModel {
     }
 
     /// Privileged actions are only shown when the imported config's role allows them.
-    func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature, kubeLinked: kubeLink(for: activeSummary) != nil) ?? false }
+    func allows(_ feature: Feature) -> Bool {
+        activeSummary?.allows(feature, kubeLinked: kubeLink(for: activeSummary) != nil) ?? false
+    }
 
     /// The active cluster's public IP probe; none in screenshot mode (kept unmasked).
     var activePublicIPs: PublicIPReport? {
@@ -355,11 +361,14 @@ final class AppModel {
     /// a probe of this cluster is already running.
     func detectPublicIPs() async throws -> PublicIPReport? {
         guard let client, let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty,
-              !detectingPublicIPs.contains(fingerprint) else { return nil }
+            !detectingPublicIPs.contains(fingerprint)
+        else { return nil }
         detectingPublicIPs.insert(fingerprint)
         defer { detectingPublicIPs.remove(fingerprint) }
         let report = try await client.detectPublicIPs()
-        guard !privacyMask, summary?.contexts.contains(where: { $0.fingerprint == fingerprint }) == true else { return report }
+        guard !privacyMask, summary?.contexts.contains(where: { $0.fingerprint == fingerprint }) == true else {
+            return report
+        }
         publicIPReports[fingerprint] = report
         try? PublicIPStore.save(publicIPReports)
         return report
@@ -379,8 +388,12 @@ final class AppModel {
     /// when the caller knows it: an upgraded node is asked again). Failures are silent: an
     /// unknown node counts as supporting everything and answers for itself.
     func loadFeatures(node: String, version: String = "") async {
-        if let cached = nodeFeatures[node], version.isEmpty || cached.version.isEmpty
-            || compareTalosVersions(cached.version, version) == 0 { return }
+        if let cached = nodeFeatures[node],
+            version.isEmpty || cached.version.isEmpty
+                || compareTalosVersions(cached.version, version) == 0
+        {
+            return
+        }
         guard let client else { return }
         let generation = featuresGeneration
         guard let loaded = try? await client.features(node: node), generation == featuresGeneration else { return }

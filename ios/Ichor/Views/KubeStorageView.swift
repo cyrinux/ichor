@@ -32,7 +32,9 @@ struct KubeStorageView: View {
         }
     }
 
-    private func list(_ storage: KubeStorage, showNamespace: Bool, scope: KubeScope, reload: @escaping () async -> Void) -> some View {
+    private func list(_ storage: KubeStorage, showNamespace: Bool, scope: KubeScope, reload: @escaping () async -> Void)
+        -> some View
+    {
         let shown = filterStorageClaims(storage.claims, query: query)
         return List {
             if snapshotBusy { ProgressView() }
@@ -42,25 +44,33 @@ struct KubeStorageView: View {
             }
             ForEach(shown) { claim in
                 NavigationLink {
-                    KubeObjectView(resource: KubeAPIResource(resource: "persistentvolumeclaims", kind: "PersistentVolumeClaim"),
-                                   namespace: claim.namespace, name: claim.name)
+                    KubeObjectView(
+                        resource: KubeAPIResource(resource: "persistentvolumeclaims", kind: "PersistentVolumeClaim"),
+                        namespace: claim.namespace, name: claim.name)
                 } label: {
                     StorageClaimRow(claim: claim, showNamespace: showNamespace)
                 }
                 if let kind = claim.managedKind {
                     NavigationLink(value: Route.dataServices(hints: "", downNodes: [], kind: kind)) {
-                        Label(String(localized: "Open in \(kind.title)"), systemImage: "externaldrive.connected.to.line.below")
-                            .font(.footnote)
+                        Label(
+                            String(localized: "Open in \(kind.title)"),
+                            systemImage: "externaldrive.connected.to.line.below"
+                        )
+                        .font(.footnote)
                     }
                 } else if let plugin = claim.managedPlugin {
                     NavigationLink(value: Route.plugin(id: plugin)) {
-                        Label(String(localized: "Open in \(claim.managedName)"), systemImage: "externaldrive.connected.to.line.below")
-                            .font(.footnote)
+                        Label(
+                            String(localized: "Open in \(claim.managedName)"),
+                            systemImage: "externaldrive.connected.to.line.below"
+                        )
+                        .font(.footnote)
                     }
                 }
                 if model.activeSummary?.demo == false, snapshots?.canCreate(claim) == true {
                     VStack(alignment: .leading) {
-                        Button("Create snapshot") { confirmSnapshot = claim }.disabled(snapshotBusy).kubeGated(.createVolumeSnapshot, in: claim.namespace)
+                        Button("Create snapshot") { confirmSnapshot = claim }.disabled(snapshotBusy).kubeGated(
+                            .createVolumeSnapshot, in: claim.namespace)
                         KubeDeniedNote(.createVolumeSnapshot, in: claim.namespace)
                     }.loadsKubeActionAccess(namespace: claim.namespace)
                 }
@@ -72,15 +82,20 @@ struct KubeStorageView: View {
         .refreshable { await reload() }
         .themedBackground()
         .loadsKubeActionAccess(namespace: scope.namespace)
-        .confirmationDialog("Create snapshot", isPresented: Binding(get: { confirmSnapshot != nil }, set: { if !$0 { confirmSnapshot = nil } })) {
+        .confirmationDialog(
+            "Create snapshot",
+            isPresented: Binding(get: { confirmSnapshot != nil }, set: { if !$0 { confirmSnapshot = nil } })
+        ) {
             Button("Create snapshot") {
                 guard let claim = confirmSnapshot, let client = model.client else { return }
                 confirmSnapshot = nil
                 snapshotBusy = true
                 let source = kubeNamespacesKey(model)
                 Task {
-                    do { snapshotResult = try await client.createVolumeSnapshot(namespace: claim.namespace, pvc: claim.name) }
-                    catch { snapshotResult = error.localizedDescription }
+                    do {
+                        snapshotResult = try await client.createVolumeSnapshot(
+                            namespace: claim.namespace, pvc: claim.name)
+                    } catch { snapshotResult = error.localizedDescription }
                     snapshotBusy = false
                     if source == kubeNamespacesKey(model) { await reload() }
                 }
@@ -88,9 +103,14 @@ struct KubeStorageView: View {
         } message: {
             Text("Create a CSI snapshot of \(confirmSnapshot?.id ?? "") using the default class for its driver.")
         }
-        .alert("Create snapshot", isPresented: Binding(get: { snapshotResult != nil }, set: { if !$0 { snapshotResult = nil } })) {
+        .alert(
+            "Create snapshot",
+            isPresented: Binding(get: { snapshotResult != nil }, set: { if !$0 { snapshotResult = nil } })
+        ) {
             Button("OK") { snapshotResult = nil }
-        } message: { Text(verbatim: snapshotResult ?? "") }
+        } message: {
+            Text(verbatim: snapshotResult ?? "")
+        }
     }
 }
 
@@ -116,16 +136,23 @@ private struct StorageClaimRow: View {
                         .font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 }
             } else {
-                Text(verbatim: [claim.capacity > 0 ? formatBytes(Int64(claim.capacity)) : nil,
-                                String(localized: "fill not measured")].compactMap { $0 }.joined(separator: " · "))
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    verbatim: [
+                        claim.capacity > 0 ? formatBytes(Int64(claim.capacity)) : nil,
+                        String(localized: "fill not measured"),
+                    ].compactMap { $0 }.joined(separator: " · ")
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
-            let details = [claim.storageClass, claim.volume, claim.accessModes.joined(separator: ",")].filter { !$0.isEmpty }
+            let details = [claim.storageClass, claim.volume, claim.accessModes.joined(separator: ",")].filter {
+                !$0.isEmpty
+            }
             if !details.isEmpty {
                 Text(verbatim: details.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             if !claim.pods.isEmpty {
-                Text("Used by \(claim.pods.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Text("Used by \(claim.pods.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
         }
         .accessibilityElement(children: .combine)

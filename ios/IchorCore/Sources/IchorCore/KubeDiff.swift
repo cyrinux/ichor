@@ -16,8 +16,10 @@ public struct FluxDiff: Decodable, Equatable, Sendable {
     public let resources: [KubeDiffResource]
     public let warnings: [String]
 
-    public init(kind: String = "Kustomization", namespace: String = "", name: String = "", revision: String = "",
-                applied: String = "", resources: [KubeDiffResource] = [], warnings: [String] = []) {
+    public init(
+        kind: String = "Kustomization", namespace: String = "", name: String = "", revision: String = "",
+        applied: String = "", resources: [KubeDiffResource] = [], warnings: [String] = []
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.name = name
@@ -113,9 +115,11 @@ public struct KubeDiffResource: Decodable, Hashable, Identifiable, Sendable {
     /// What a diff's focus names it by ("kind/namespace/name"): an object page knows no group alias.
     public var focusKey: String { "\(kind)/\(namespace)/\(name)" }
 
-    public init(group: String = "", version: String = "v1", kind: String, namespace: String = "", name: String,
-                change: DiffChange, diff: String = "", truncated: Bool = false, error: String = "",
-                liveChanges: [DiffLiveChange] = []) {
+    public init(
+        group: String = "", version: String = "v1", kind: String, namespace: String = "", name: String,
+        change: DiffChange, diff: String = "", truncated: Bool = false, error: String = "",
+        liveChanges: [DiffLiveChange] = []
+    ) {
         self.group = group
         self.version = version
         self.kind = kind
@@ -142,7 +146,9 @@ public struct KubeDiffResource: Decodable, Hashable, Identifiable, Sendable {
         liveChanges = try c.field(.liveChanges, [DiffLiveChange]())
     }
 
-    private enum CodingKeys: String, CodingKey { case group, version, kind, namespace, name, change, diff, truncated, error, liveChanges }
+    private enum CodingKeys: String, CodingKey {
+        case group, version, kind, namespace, name, change, diff, truncated, error, liveChanges
+    }
 
     /// The diff's lines without its "---"/"+++" header.
     public var lines: [DiffLine] { parseDiffLines(diff) }

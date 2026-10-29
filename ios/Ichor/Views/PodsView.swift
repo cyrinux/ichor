@@ -68,20 +68,30 @@ struct PodsView: View {
                 }
                 .pickerStyle(.segmented)
             } footer: {
-                Text("Refreshed every 3s. CPU is a percentage of one core.") + Text(verbatim: " ") + Text("Tap a container to read its log.")
+                Text("Refreshed every 3s. CPU is a percentage of one core.") + Text(verbatim: " ")
+                    + Text("Tap a container to read its log.")
             }
             ForEach(shown) { pod in
                 Section {
                     // A container row opens its log.
                     ForEach(pod.containers) { row in
-                        NavigationLink(value: Route.containerLogs(node: node, hostname: hostname, container: logContainer(row.container))) {
+                        NavigationLink(
+                            value: Route.containerLogs(
+                                node: node, hostname: hostname, container: logContainer(row.container))
+                        ) {
                             ContainerRowView(row: row)
                         }
                         .contextMenu {
                             if model.allows(.containerRestart) && !restarting {
-                                FeatureButton(title: String(localized: "Restart container…"), systemImage: "arrow.clockwise",
-                                              support: restartSupport, role: .destructive) {
-                                    if row.container.isSystem { systemRestart = row.container } else { kubeRestart = row.container }
+                                FeatureButton(
+                                    title: String(localized: "Restart container…"), systemImage: "arrow.clockwise",
+                                    support: restartSupport, role: .destructive
+                                ) {
+                                    if row.container.isSystem {
+                                        systemRestart = row.container
+                                    } else {
+                                        kubeRestart = row.container
+                                    }
                                 }
                             }
                         }
@@ -94,8 +104,9 @@ struct PodsView: View {
         .overlay {
             if shown.isEmpty && monitor.sample != nil {
                 if query.isEmpty {
-                    ContentUnavailableView("No pods", systemImage: "shippingbox",
-                                           description: Text("No Kubernetes containers run on this node."))
+                    ContentUnavailableView(
+                        "No pods", systemImage: "shippingbox",
+                        description: Text("No Kubernetes containers run on this node."))
                 } else {
                     ContentUnavailableView.search(text: query)
                 }
@@ -113,8 +124,10 @@ struct PodsView: View {
                 Task { await restart(container) }
             }
         }
-        .confirmationDialog(kubeRestart.map(confirmationTitle) ?? "", isPresented: $kubeRestart.isPresent(),
-                            titleVisibility: .visible, presenting: kubeRestart) { container in
+        .confirmationDialog(
+            kubeRestart.map(confirmationTitle) ?? "", isPresented: $kubeRestart.isPresent(),
+            titleVisibility: .visible, presenting: kubeRestart
+        ) { container in
             Button("Restart", role: .destructive) { Task { await restart(container) } }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
@@ -151,7 +164,8 @@ extension PodsView {
             try await client.containerRestart(node: node, namespace: container.namespace, id: container.id)
             resultMessage = String(localized: "Restart of container \(container.displayName) requested on \(hostname).")
         } catch {
-            resultMessage = String(localized: "Restarting container \(container.displayName) failed: \(error.localizedDescription)")
+            resultMessage = String(
+                localized: "Restarting container \(container.displayName) failed: \(error.localizedDescription)")
         }
         restarting = false
     }

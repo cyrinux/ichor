@@ -13,7 +13,8 @@ enum NetPerfEvent: Sendable {
 extension TalosClient {
     /// The Kubernetes nodes a test can run between, by name.
     func netPerfNodes() async throws -> [NetPerfNode] {
-        let list: NetPerfNodeList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        let list: NetPerfNodeList = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoNetPerfNodes(config, context, kubeServer, $0)
         }
         return list.nodes
@@ -39,11 +40,12 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartNetPerf(kubeConfig, kubeContext, kubeAPIServer, setup.server, setup.client,
-                                          setup.hostNetwork, setup.seconds, bridge)
+        let run = IchorgoStartNetPerf(
+            kubeConfig, kubeContext, kubeAPIServer, setup.server, setup.client,
+            setup.hostNetwork, setup.seconds, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole test
+            _ = bridge  // keep the listener alive for the whole test
         }
         return (stream, { run?.cancel() })
     }
@@ -53,7 +55,10 @@ private final class NetPerfBridge: NSObject, IchorgoNetPerfListenerProtocol, @un
     private let progress: @Sendable (NetPerfProgress) -> Void
     private let done: @Sendable (NetPerfReport, String?) -> Void
 
-    init(progress: @escaping @Sendable (NetPerfProgress) -> Void, done: @escaping @Sendable (NetPerfReport, String?) -> Void) {
+    init(
+        progress: @escaping @Sendable (NetPerfProgress) -> Void,
+        done: @escaping @Sendable (NetPerfReport, String?) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }

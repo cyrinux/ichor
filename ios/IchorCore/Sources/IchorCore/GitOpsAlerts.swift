@@ -135,13 +135,16 @@ func gitopsClearedTitle(_ subject: GitOpsSubject) -> String {
 }
 
 /// Argo CD and Flux issues (see evaluateTrack), keyed "gitops:tool|subject".
-func evaluateGitOps(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+func evaluateGitOps(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
+    -> IssueTrack
+{
     evaluateTrack(
         previous: previous?.gitopsTrack, current: current.gitopsTrack, comparable: comparable, severity: gitopsSeverity,
         problem: { key, value in
             let subject = GitOpsSubject(key: key)
-            return Alert(key: "gitops:\(key)", title: gitopsProblemTitle(subject, reason: gitopsReason(value)),
-                         text: "\(subject.label) · \(gitopsSeverity(value))", problem: true)
+            return Alert(
+                key: "gitops:\(key)", title: gitopsProblemTitle(subject, reason: gitopsReason(value)),
+                text: "\(subject.label) · \(gitopsSeverity(value))", problem: true)
         },
         cleared: { key in
             let subject = GitOpsSubject(key: key)

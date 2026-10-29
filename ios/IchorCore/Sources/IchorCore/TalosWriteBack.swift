@@ -35,7 +35,8 @@ public indirect enum ConfigValueText: Decodable, Hashable, Sendable {
         case .text(let s): s
         case .null: "—"
         case .list(let l): "[" + l.map(\.quoted).joined(separator: ",") + "]"
-        case .map(let m): "{" + m.keys.sorted().map { "\"\($0)\":\(m[$0]?.quoted ?? "null")" }.joined(separator: ",") + "}"
+        case .map(let m):
+            "{" + m.keys.sorted().map { "\"\($0)\":\(m[$0]?.quoted ?? "null")" }.joined(separator: ",") + "}"
         }
     }
 

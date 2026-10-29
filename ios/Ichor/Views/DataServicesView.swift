@@ -39,8 +39,10 @@ struct DataServicesView: View {
     }
 
     var body: some View {
-        LoadStateView(state: state, retry: refresh, progress: progress, stepLabel: Self.stepLabel,
-                      showsFooter: !pluginTabShown) { services in
+        LoadStateView(
+            state: state, retry: refresh, progress: progress, stepLabel: Self.stepLabel,
+            showsFooter: !pluginTabShown
+        ) { services in
             let tabs = hubTabs(services)
             if tabs.isEmpty {
                 switch plugins {
@@ -72,7 +74,8 @@ struct DataServicesView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         LikelyCauseBanner(causes: services.likelyCauses(downNodes: downNodes))
                         if tabs.count > 1 {
-                            SystemPicker(tabs: tabs, selection: Binding<String?>(get: { tab.id }, set: { selected = $0 }))
+                            SystemPicker(
+                                tabs: tabs, selection: Binding<String?>(get: { tab.id }, set: { selected = $0 }))
                         }
                     }
                     .padding(.horizontal)
@@ -93,7 +96,9 @@ struct DataServicesView: View {
         ContentUnavailableView {
             Label("No data services found.", systemImage: "externaldrive.badge.questionmark")
         } description: {
-            Text("None of the systems Ichor can read runs on this cluster. See the supported ones, or ask for the one you use.")
+            Text(
+                "None of the systems Ichor can read runs on this cluster. See the supported ones, or ask for the one you use."
+            )
         } actions: {
             NavigationLink("Integrations", value: Route.supportedIntegrations)
             NavigationLink("Request an integration…", value: Route.integrations)
@@ -202,9 +207,13 @@ struct ErrorLine: View {
 
     var body: some View {
         if !error.isEmpty {
-            Label { Text("Could not read: \(error)") } icon: { Image(systemName: "exclamationmark.triangle") }
-                .font(.callout)
-                .foregroundStyle(.statusBad)
+            Label {
+                Text("Could not read: \(error)")
+            } icon: {
+                Image(systemName: "exclamationmark.triangle")
+            }
+            .font(.callout)
+            .foregroundStyle(.statusBad)
         }
     }
 }

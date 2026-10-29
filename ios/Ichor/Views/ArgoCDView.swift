@@ -28,7 +28,8 @@ struct ArgoCDView: View {
     init(downNodes: Set<String>, selected: ArgoAppRoute? = nil) {
         self.downNodes = downNodes
         // With the list's downNodes, as its rows' routes: the row shows as picked.
-        _picked = State(initialValue: selected.map { ArgoAppRoute(namespace: $0.namespace, name: $0.name, downNodes: downNodes) })
+        _picked = State(
+            initialValue: selected.map { ArgoAppRoute(namespace: $0.namespace, name: $0.name, downNodes: downNodes) })
     }
 
     enum Tab: Hashable { case apps, sets }
@@ -62,15 +63,20 @@ struct ArgoCDView: View {
     private var showsPick: Bool { split && picked != nil }
 
     var body: some View {
-        AdaptiveListDetail(selection: $picked, split: $split, placeholder: "Pick an application to see its details",
-                           systemImage: "arrow.triangle.branch") {
+        AdaptiveListDetail(
+            selection: $picked, split: $split, placeholder: "Pick an application to see its details",
+            systemImage: "arrow.triangle.branch"
+        ) {
             list
         } detail: { app in
             ArgoAppView(namespace: app.namespace, name: app.name, downNodes: app.downNodes)
         }
         .searchable(text: $query, prompt: Text("Name, project, namespace or repo"))
         // An app pushed on top or shown beside polls for itself.
-        .gitOpsPolling(key: model.argoKey, paused: { covered || showsPick }, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
+        .gitOpsPolling(
+            key: model.argoKey, paused: { covered || showsPick }, shouldPoll: { store.shouldPoll(for: model.argoKey) },
+            load: { await load() }
+        )
         // An Application that changes reads the status again at once, without waiting for a poll.
         .task(id: "\(model.argoKey)|\(scenePhase == .active && !covered)") { await followChanges() }
         // A new API address (set on the Kubernetes screen): read again through it.
@@ -92,8 +98,9 @@ struct ArgoCDView: View {
         .onChange(of: editMode) { _, mode in if !mode.isEditing { selection = [] } }
         .sheet(item: $freezeTarget) { target in
             if let status = store.status(for: model.argoKey) {
-                ArgoFreezeSheet(app: target.app, status: status, scope: target.scope,
-                                freeze: { project, options in await freeze(project, options) }, pauseInstead: nil)
+                ArgoFreezeSheet(
+                    app: target.app, status: status, scope: target.scope,
+                    freeze: { project, options in await freeze(project, options) }, pauseInstead: nil)
             }
         }
         .sheet(item: $syncTarget) { app in
@@ -101,14 +108,17 @@ struct ArgoCDView: View {
                 await run(.sync, on: [app], options: options)
             }
         }
-        .confirmationDialog(confirmSync.map { String(localized: "Sync \($0.count) apps?") } ?? "",
-                            isPresented: $confirmSync.isPresent(),
-                            titleVisibility: .visible, presenting: confirmSync) { apps in
+        .confirmationDialog(
+            confirmSync.map { String(localized: "Sync \($0.count) apps?") } ?? "",
+            isPresented: $confirmSync.isPresent(),
+            titleVisibility: .visible, presenting: confirmSync
+        ) { apps in
             Button("Sync") { Task { await run(.sync, on: apps) } }
             Button("Cancel", role: .cancel) {}
         } message: { apps in
-            Text(verbatim: apps.prefix(8).map(\.name).joined(separator: ", ") + (apps.count > 8 ? "…" : "")) +
-                Text(verbatim: "\n\n") + Text("Each app syncs to its target revision with its own sync options. Nothing is pruned.")
+            Text(verbatim: apps.prefix(8).map(\.name).joined(separator: ", ") + (apps.count > 8 ? "…" : ""))
+                + Text(verbatim: "\n\n")
+                + Text("Each app syncs to its target revision with its own sync options. Nothing is pruned.")
         }
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
@@ -122,19 +132,23 @@ struct ArgoCDView: View {
     private var list: some View {
         LoadStateView(state: state, retry: load) { status in
             if !status.installed {
-                ContentUnavailableView("Argo CD is not installed", systemImage: "arrow.triangle.branch",
-                                       description: Text("No Argo CD Applications were found in this cluster."))
-                    .themedBackground()
+                ContentUnavailableView(
+                    "Argo CD is not installed", systemImage: "arrow.triangle.branch",
+                    description: Text("No Argo CD Applications were found in this cluster.")
+                )
+                .themedBackground()
             } else {
                 Group {
                     switch tab {
                     case .apps:
-                        ArgoAppsList(status: status, filter: $filter, grouping: grouping, query: query, downNodes: downNodes,
-                                     selection: $selection, busy: busy, refresh: load,
-                                     onSync: { syncTarget = $0 }, onRefresh: { app in Task { await run(.refresh, on: [app]) } },
-                                     onSyncAll: { confirmSync = $0 },
-                                     onFreeze: { app, scope in freezeTarget = FreezeTarget(app: app, scope: scope) })
-                            .environment(\.editMode, $editMode)
+                        ArgoAppsList(
+                            status: status, filter: $filter, grouping: grouping, query: query, downNodes: downNodes,
+                            selection: $selection, busy: busy, refresh: load,
+                            onSync: { syncTarget = $0 }, onRefresh: { app in Task { await run(.refresh, on: [app]) } },
+                            onSyncAll: { confirmSync = $0 },
+                            onFreeze: { app, scope in freezeTarget = FreezeTarget(app: app, scope: scope) }
+                        )
+                        .environment(\.editMode, $editMode)
                     case .sets:
                         ArgoAppSetsList(status: status, query: query, downNodes: downNodes, refresh: load)
                     }
@@ -210,7 +224,9 @@ struct ArgoCDView: View {
                 ToolbarItemGroup(placement: .bottomBar) {
                     let chosen = status.apps.filter { selection.contains($0.id) }
                     let syncable = chosen.filter(\.canSync)
-                    Button { confirmSync = syncable } label: {
+                    Button {
+                        confirmSync = syncable
+                    } label: {
                         Label(String(localized: "Sync (\(syncable.count))"), systemImage: "arrow.triangle.2.circlepath")
                             .labelStyle(.titleAndIcon)
                     }
@@ -223,7 +239,8 @@ struct ArgoCDView: View {
                             editMode = .inactive
                         }
                     } label: {
-                        Label(String(localized: "Refresh (\(chosen.count))"), systemImage: "arrow.clockwise").labelStyle(.titleAndIcon)
+                        Label(String(localized: "Refresh (\(chosen.count))"), systemImage: "arrow.clockwise")
+                            .labelStyle(.titleAndIcon)
                     }
                     .disabled(chosen.isEmpty)
                     .kubeGated(.argoSync, across: chosen.map(\.namespace))
@@ -249,7 +266,8 @@ struct ArgoCDView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        let cluster = model.activeSummary, store = self.store
+        let cluster = model.activeSummary
+        let store = self.store
         await store.refresh($state, key: key, currentKey: { model.argoKey }) {
             try await store.load(with: client, key: key, cluster: cluster)
         }
@@ -259,7 +277,9 @@ struct ArgoCDView: View {
     private func freeze(_ project: ArgoProject, _ options: ArgoFreezeOptions) async {
         guard let client = model.client else { return }
         let failure = await store.freeze(.freeze, on: project, options: [options], with: client)
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
         await load()
     }
 
@@ -278,7 +298,9 @@ struct ArgoCDView: View {
         } else {
             failure = await store.run(action, on: apps, with: client)
         }
-        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
         if action == .sync { editMode = .inactive }
         await load()
     }

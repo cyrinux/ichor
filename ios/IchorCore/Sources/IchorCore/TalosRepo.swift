@@ -127,9 +127,12 @@ public struct TalosRepoCompare: Decodable, Equatable, Sendable {
 public func configRole(_ configYAML: String) -> String {
     var inMachine = false
     for line in configYAML.split(separator: "\n", omittingEmptySubsequences: false) {
-        if let first = line.first, !first.isWhitespace { inMachine = line.trimmingCharacters(in: .whitespaces) == "machine:" }
+        if let first = line.first, !first.isWhitespace {
+            inMachine = line.trimmingCharacters(in: .whitespaces) == "machine:"
+        }
         if inMachine, line.hasPrefix("  type:") {
-            let type = line.dropFirst("  type:".count).trimmingCharacters(in: .whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+            let type = line.dropFirst("  type:".count).trimmingCharacters(in: .whitespaces).trimmingCharacters(
+                in: CharacterSet(charactersIn: "\"'"))
             return type == "init" ? "controlplane" : type
         }
     }

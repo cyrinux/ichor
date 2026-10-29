@@ -34,6 +34,8 @@ public struct OpenSourceLibrary: Codable, Equatable, Hashable, Identifiable, Sen
 
 /// The licenses in `data`; empty when the file is missing (nil) or corrupt.
 public func decodeOpenSourceLicenses(_ data: Data?) -> OpenSourceLicenses {
-    guard let data, let decoded = try? JSONDecoder().decode(OpenSourceLicenses.self, from: data) else { return OpenSourceLicenses() }
+    guard let data, let decoded = try? JSONDecoder().decode(OpenSourceLicenses.self, from: data) else {
+        return OpenSourceLicenses()
+    }
     return decoded
 }

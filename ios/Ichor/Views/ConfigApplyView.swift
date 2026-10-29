@@ -29,7 +29,8 @@ struct ConfigApplyView: View {
                     ProgressView().controlSize(.large)
                     Text(verbatim: phaseLabel).note()
                     if let message = progress?.message, !message.isEmpty {
-                        Text(verbatim: message).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        Text(verbatim: message).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(
+                            .center)
                     }
                 }
                 Spacer()
@@ -62,7 +63,9 @@ struct ConfigApplyView: View {
             Text(doneText).font(.headline).multilineTextAlignment(.center)
             ProposeInGitButton(base: base, draft: draft, hostname: hostname)
         }
-        Button { dismiss() } label: {
+        Button {
+            dismiss()
+        } label: {
             Text("Done").frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)

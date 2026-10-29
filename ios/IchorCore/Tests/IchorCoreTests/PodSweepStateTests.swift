@@ -3,11 +3,18 @@ import XCTest
 
 final class PodSweepStateTests: XCTestCase {
     func testDecodesTheProgressAndTheResult() throws {
-        let progress = try TalosJSON.decode(PodSweepProgress.self, from: #"{"done":12,"total":140,"name":"shop/web-1","failed":1,"at":1700000000000}"#)
+        let progress = try TalosJSON.decode(
+            PodSweepProgress.self, from: #"{"done":12,"total":140,"name":"shop/web-1","failed":1,"at":1700000000000}"#)
         XCTAssertEqual(progress, PodSweepProgress(done: 12, total: 140, name: "shop/web-1", failed: 1))
 
-        let result = try TalosJSON.decode(KubeSanitizeResult.self, from: #"{"deleted":1,"failed":[{"name":"shop/gone","error":"the pod no longer exists"}],"stopped":true}"#)
-        XCTAssertEqual(result, KubeSanitizeResult(deleted: 1, failed: [SanitizeFailure(name: "shop/gone", error: "the pod no longer exists")], stopped: true))
+        let result = try TalosJSON.decode(
+            KubeSanitizeResult.self,
+            from: #"{"deleted":1,"failed":[{"name":"shop/gone","error":"the pod no longer exists"}],"stopped":true}"#)
+        XCTAssertEqual(
+            result,
+            KubeSanitizeResult(
+                deleted: 1, failed: [SanitizeFailure(name: "shop/gone", error: "the pod no longer exists")],
+                stopped: true))
         // The synchronous sweep's result, before "stopped" existed.
         XCTAssertFalse(try TalosJSON.decode(KubeSanitizeResult.self, from: #"{"deleted":2,"failed":[]}"#).stopped)
     }
@@ -23,7 +30,8 @@ final class PodSweepStateTests: XCTestCase {
         XCTAssertEqual(state.failedCount, 1)
         XCTAssertEqual(state.fraction, 2.0 / 3.0, accuracy: 0.001)
 
-        state.finish(KubeSanitizeResult(deleted: 2, failed: [SanitizeFailure(name: "shop/gone", error: "gone")]), error: nil)
+        state.finish(
+            KubeSanitizeResult(deleted: 2, failed: [SanitizeFailure(name: "shop/gone", error: "gone")]), error: nil)
         XCTAssertFalse(state.running)
         XCTAssertEqual(state.done, 3)
         XCTAssertEqual(state.deleted, 2)

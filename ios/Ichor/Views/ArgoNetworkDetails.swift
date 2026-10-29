@@ -26,7 +26,8 @@ struct ArgoNetDetails: View {
                     .font(.title3)
                     .foregroundStyle(node.health.color)
                     .frame(width: 38, height: 38)
-                    .background(node.health.color.opacity(0.15), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .background(
+                        node.health.color.opacity(0.15), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(verbatim: node.kind.rawValue).font(.caption).foregroundStyle(.secondary)
                     Text(verbatim: node.name).font(.headline.monospaced()).lineLimit(3).textSelection(.enabled)
@@ -37,7 +38,8 @@ struct ArgoNetDetails: View {
                 LabeledContent("Namespace") { Text(verbatim: node.namespace).font(.callout.monospaced()) }
             }
             if !node.detail.isEmpty {
-                Text(verbatim: node.detail).font(.callout.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                Text(verbatim: node.detail).font(.callout.monospaced()).foregroundStyle(.secondary).textSelection(
+                    .enabled)
             }
             if node.shared {
                 Label("Shared: not managed by this app", systemImage: "link").font(.caption).foregroundStyle(.secondary)
@@ -50,14 +52,18 @@ struct ArgoNetDetails: View {
         .padding()
         .frame(minWidth: 260, idealWidth: 300, maxWidth: 340, alignment: .leading)
         .presentationCompactAdaptation(.popover)
-        .confirmationDialog(String(localized: "Delete pod \(node.name)?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog(
+            String(localized: "Delete pod \(node.name)?"), isPresented: $confirmDelete, titleVisibility: .visible
+        ) {
             Button("Delete", role: .destructive) { Task { await runDelete() } }
             Button("Cancel", role: .cancel) {}
         } message: {
             if let owner = pod?.owner, !owner.isEmpty {
                 Text("It is removed from \(node.namespace) after its grace period; \(owner) starts a new one.")
             } else {
-                Text("It is removed from \(node.namespace) after its grace period; its controller, if any, starts a new one.")
+                Text(
+                    "It is removed from \(node.namespace) after its grace period; its controller, if any, starts a new one."
+                )
             }
         }
         // The pod's own namespace, asked only for a pod box.
@@ -66,15 +72,25 @@ struct ArgoNetDetails: View {
 
     @ViewBuilder private var actions: some View {
         if node.kind == .host, let url = URL(string: node.url), url.scheme == "https" || url.scheme == "http" {
-            Button { openURL(url) } label: { Label("Open in browser", systemImage: "safari") }
-                .buttonStyle(.borderedProminent)
+            Button {
+                openURL(url)
+            } label: {
+                Label("Open in browser", systemImage: "safari")
+            }
+            .buttonStyle(.borderedProminent)
         }
         if let nodeRef {
-            Button { openNode(nodeRef) } label: { Label("Open node", systemImage: "cpu") }
-                .buttonStyle(.borderedProminent)
+            Button {
+                openNode(nodeRef)
+            } label: {
+                Label("Open node", systemImage: "cpu")
+            }
+            .buttonStyle(.borderedProminent)
         }
         if pod != nil {
-            Button(role: .destructive) { confirmDelete = true } label: {
+            Button(role: .destructive) {
+                confirmDelete = true
+            } label: {
                 HStack(spacing: 6) {
                     if deleting { ProgressView().controlSize(.small) } else { Image(systemName: "trash") }
                     Text("Delete pod…")

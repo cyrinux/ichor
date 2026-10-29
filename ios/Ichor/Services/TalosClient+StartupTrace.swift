@@ -7,9 +7,9 @@ extension TalosClient {
     /// listener with it: none is set while off.
     static func setStartupTrace(_ enabled: Bool) {
         #if DEBUG
-        let on = true
+            let on = true
         #else
-        let on = enabled
+            let on = enabled
         #endif
         guard on != StartupTrace.isEnabled else { return }
         StartupTrace.setEnabled(on)

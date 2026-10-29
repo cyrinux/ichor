@@ -9,7 +9,9 @@ enum WatchStyle {
     static let unknown = Color.gray
 
     static func rgb(_ hex: UInt32) -> Color {
-        Color(red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
+        Color(
+            red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255)
     }
 
     /// A cluster's colour; grey before its first check.

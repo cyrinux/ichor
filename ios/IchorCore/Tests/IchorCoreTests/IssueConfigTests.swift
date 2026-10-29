@@ -10,7 +10,9 @@ final class IssueConfigTests: XCTestCase {
         XCTAssertEqual(ConfigValidity.default.hours, 8_760)
         XCTAssertEqual(ConfigValidity.allCases.map(\.hours), [720, 2_160, 8_760])
         XCTAssertEqual(issuedFileName(context: "lab", roles: "os:reader"), "talosconfig-lab-reader.yaml")
-        XCTAssertEqual(issuedFileName(context: "my lab/1", roles: "os:admin,os:etcd:backup"), "talosconfig-my_lab_1-admin-etcd-backup.yaml")
+        XCTAssertEqual(
+            issuedFileName(context: "my lab/1", roles: "os:admin,os:etcd:backup"),
+            "talosconfig-my_lab_1-admin-etcd-backup.yaml")
         XCTAssertEqual(issuedFileName(context: "", roles: ""), "talosconfig-cluster.yaml")
     }
 

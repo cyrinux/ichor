@@ -41,7 +41,11 @@ struct EditCheckSection: View {
             ForEach(Array(c.errors.enumerated()), id: \.offset) { _, e in errorRow(e) }
         } else if c.built {
             Group {
-                if c.kind == "plain" { Label("Valid YAML", systemImage: "checkmark.circle") } else { Label("Builds", systemImage: "checkmark.circle") }
+                if c.kind == "plain" {
+                    Label("Valid YAML", systemImage: "checkmark.circle")
+                } else {
+                    Label("Builds", systemImage: "checkmark.circle")
+                }
             }
             .foregroundStyle(.statusOK)
             if c.kind != "plain" {
@@ -77,8 +81,10 @@ struct EditCheckSection: View {
     }
 
     private func binding(_ id: String) -> Binding<Bool> {
-        Binding(get: { expanded.contains(id) }, set: { on in
-            if on { expanded.insert(id) } else { expanded.remove(id) }
-        })
+        Binding(
+            get: { expanded.contains(id) },
+            set: { on in
+                if on { expanded.insert(id) } else { expanded.remove(id) }
+            })
     }
 }

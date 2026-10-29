@@ -18,31 +18,41 @@ enum PortForwardEvent: Sendable {
 extension TalosClient {
     /// The listable resources of the cluster, CRDs included, at their preferred version.
     func apiResources() async throws -> KubeAPIResourceList {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeAPIResources(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeAPIResources(config, context, kubeServer, $0)
+        }
     }
 
     /// One page of `resource` as the server's Table shows it; `namespace` nil for every
     /// namespace (and for a cluster-scoped resource); `token` "" for the first page.
-    func resourcePage(_ resource: KubeAPIResource, namespace: String?, token: String,
-                      limit: Int = kubePageSize) async throws -> KubeResourcePage {
+    func resourcePage(
+        _ resource: KubeAPIResource, namespace: String?, token: String,
+        limit: Int = kubePageSize
+    ) async throws -> KubeResourcePage {
         let ns = resource.namespaced ? namespace ?? "" : ""
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeResourcePage(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                    ns, token, limit, $0)
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeResourcePage(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                ns, token, limit, $0)
         }
     }
 
     /// One object as YAML, without managedFields; a Secret's values only with `reveal`.
     func objectYAML(_ resource: KubeAPIResource, namespace: String, name: String, reveal: Bool) async throws -> String {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
-            IchorgoKubeObjectYAML(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                  namespace, name, reveal, error)
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+            IchorgoKubeObjectYAML(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                namespace, name, reveal, error)
         }
     }
 
     /// A Secret or ConfigMap key by key, with the pods using it. A Secret's value comes only for
     /// `key` ("" for none; refused in screenshot mode). Never cached.
-    func configData(_ resource: KubeAPIResource, namespace: String, name: String, key: String) async throws -> KubeConfigData {
+    func configData(_ resource: KubeAPIResource, namespace: String, name: String, key: String) async throws
+        -> KubeConfigData
+    {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeConfigData(config, context, kubeServer, resource.configDataKind, namespace, name, key, $0)
         }
@@ -51,16 +61,20 @@ extension TalosClient {
     /// One object summed up: conditions, owners and managers, metadata, spec highlights, events.
     func objectSummary(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeObjectSummary {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeObjectSummary(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                     namespace, name, $0)
+            IchorgoKubeObjectSummary(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                namespace, name, $0)
         }
     }
 
     /// What saving `edited` would change (a dry run), as a diff.
-    func objectUpdatePreview(_ resource: KubeAPIResource, namespace: String, name: String, edited: String) async throws -> KubeEditPreview {
+    func objectUpdatePreview(_ resource: KubeAPIResource, namespace: String, name: String, edited: String) async throws
+        -> KubeEditPreview
+    {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeObjectUpdatePreview(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                           namespace, name, edited, $0)
+            IchorgoKubeObjectUpdatePreview(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                namespace, name, edited, $0)
         }
     }
 
@@ -81,9 +95,11 @@ extension TalosClient {
 
     /// Saves `edited` as the object, refused when it changed since it was read.
     func updateObject(_ resource: KubeAPIResource, namespace: String, name: String, edited: String) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeObjectUpdate(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                        namespace, name, edited, error)
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeObjectUpdate(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                namespace, name, edited, error)
         }
     }
 
@@ -91,106 +107,146 @@ extension TalosClient {
     /// resource's kind, from the API server's OpenAPI v3. Read-only.
     func explain(_ resource: KubeAPIResource, fieldPath: String) async throws -> KubeExplain {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeExplain(config, context, kubeServer, resource.group, resource.version, resource.kind, fieldPath, $0)
+            IchorgoKubeExplain(
+                config, context, kubeServer, resource.group, resource.version, resource.kind, fieldPath, $0)
         }
     }
 
     /// What deleting the object would do: protection, finalizers, the objects it owns. Read-only.
-    func objectDeletePreview(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeDeletePreview {
+    func objectDeletePreview(_ resource: KubeAPIResource, namespace: String, name: String) async throws
+        -> KubeDeletePreview
+    {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeObjectDeletePreview(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                           namespace, name, $0)
+            IchorgoKubeObjectDeletePreview(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                namespace, name, $0)
         }
     }
 
     /// Deletes the object with `propagation`; refused when it changed since `resourceVersion`
     /// (the preview's) was read, and for a protected object unless `force`.
-    func deleteObject(_ resource: KubeAPIResource, namespace: String, name: String, propagation: KubeDeletePropagation,
-                      resourceVersion: String, force: Bool) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeObjectDelete(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                        namespace, name, propagation.rawValue, resourceVersion, -1, force, error)
+    func deleteObject(
+        _ resource: KubeAPIResource, namespace: String, name: String, propagation: KubeDeletePropagation,
+        resourceVersion: String, force: Bool
+    ) async throws {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeObjectDelete(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                namespace, name, propagation.rawValue, resourceVersion, -1, force, error)
         }
     }
 
     /// How many pods the object wants and runs (a Job: its parallelism).
     func objectScale(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeObjectScale {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeObjectScale(config, context, kubeServer, resource.group, resource.version, resource.resource,
-                                   namespace, name, $0)
+            IchorgoKubeObjectScale(
+                config, context, kubeServer, resource.group, resource.version, resource.resource,
+                namespace, name, $0)
         }
     }
 
     /// `kubectl scale` for any scalable object (a Job: its parallelism): returns a warning when a
     /// HorizontalPodAutoscaler manages the count ("" when none).
-    func scaleObject(_ resource: KubeAPIResource, namespace: String, name: String, replicas: Int) async throws -> String {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
-            IchorgoKubeScaleObject(config, context, kubeServer, resource.group, resource.version, resource.resource, resource.kind,
-                                   namespace, name, replicas, error)
+    func scaleObject(_ resource: KubeAPIResource, namespace: String, name: String, replicas: Int) async throws -> String
+    {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+            IchorgoKubeScaleObject(
+                config, context, kubeServer, resource.group, resource.version, resource.resource, resource.kind,
+                namespace, name, replicas, error)
         }
     }
 
     /// The PersistentVolumeClaims of `namespace` (nil for every one), with volume, pods and fill.
     func storage(namespace: String?) async throws -> KubeStorage {
         let ns = namespace ?? ""
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeStorage(config, context, kubeServer, ns, $0) }
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeStorage(config, context, kubeServer, ns, $0)
+        }
     }
 
     /// The Services of `namespace` (nil for every one), with addresses, ready endpoints and routes.
     func services(namespace: String?) async throws -> KubeServices {
         let ns = namespace ?? ""
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeServices(config, context, kubeServer, ns, $0) }
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeServices(config, context, kubeServer, ns, $0)
+        }
     }
 
     /// Crossplane's packages, definitions, composite resources, claims and managed resources.
     /// Pauses, resumes or asks to reconcile now the Crossplane object `ref` (os:admin).
     func crossplaneAction(ref: CrossplaneRef, action: CrossplaneAction) async throws {
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeCrossplaneAction(config, context, kubeServer, ref.group, ref.version, ref.resource, ref.namespace, ref.name, action.rawValue, error)
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeCrossplaneAction(
+                config, context, kubeServer, ref.group, ref.version, ref.resource, ref.namespace, ref.name,
+                action.rawValue, error)
         }
     }
 
     func crossplane() async throws -> Crossplane {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeCrossplane(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeCrossplane(config, context, kubeServer, $0)
+        }
     }
 
     /// The Tailscale operator's connectors, proxy groups, proxy classes and DNS config, problems first.
     func tailscale() async throws -> Tailscale {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeTailscale(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeTailscale(config, context, kubeServer, $0)
+        }
     }
 
     /// Cluster API's clusters, machines and machine deployments, and Sidero Metal's servers, problems first.
     func clusterLifecycle() async throws -> ClusterLifecycle {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeClusterAPI(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeClusterAPI(config, context, kubeServer, $0)
+        }
     }
 
     /// The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address.
     func loadBalancing() async throws -> KubeLoadBalancing {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeLoadBalancing(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeLoadBalancing(config, context, kubeServer, $0)
+        }
     }
 
     /// The Jobs of `namespace` (nil for every one), failures first.
     func jobs(namespace: String?) async throws -> KubeJobs {
         let ns = namespace ?? ""
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeJobs(config, context, kubeServer, ns, $0) }
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeJobs(config, context, kubeServer, ns, $0)
+        }
     }
 
     /// The latest revision of each Helm release; `namespace` nil for every namespace.
     func helmReleases(namespace: String?) async throws -> HelmReleaseList {
         let ns = namespace ?? ""
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeHelmReleases(config, context, kubeServer, ns, $0) }
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeHelmReleases(config, context, kubeServer, ns, $0)
+        }
     }
 
     /// One Helm release: values, notes, manifest and history.
     func helmRelease(namespace: String, name: String) async throws -> HelmReleaseDetail {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeHelmRelease(config, context, kubeServer, namespace, name, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeHelmRelease(config, context, kubeServer, namespace, name, $0)
+        }
     }
 
     /// What rolling the release back to `revision` (0: the previous one) would change, each
     /// change dry-run on the API server with `options` (replace, history max). Read-only.
-    func helmRollbackPlan(namespace: String, name: String, revision: Int, options: HelmRollbackOptions) async throws -> HelmRollbackPlan {
+    func helmRollbackPlan(namespace: String, name: String, revision: Int, options: HelmRollbackOptions) async throws
+        -> HelmRollbackPlan
+    {
         let optionsJSON = try options.json()
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeHelmRollbackPlan(config, context, kubeServer, namespace, name, revision, optionsJSON, $0)
         }
     }
@@ -200,14 +256,17 @@ extension TalosClient {
     /// --force and --history-max (the wait is StartHelmRollbackFollow, afterwards).
     func helmRollback(namespace: String, name: String, revision: Int, options: HelmRollbackOptions) async throws {
         let optionsJSON = try options.json()
-        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeHelmRollback(config, context, kubeServer, namespace, name, revision, optionsJSON, error)
         }
     }
 
     /// `kubectl logs -f --tail`: the last `tailLines`, then each new line, until the consuming
     /// task is cancelled or the container stops. `container` may be "" for a pod with one.
-    func followPodLogs(namespace: String, pod: String, container: String, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {
+    func followPodLogs(namespace: String, pod: String, container: String, tailLines: Int = 200) -> AsyncStream<
+        LogFollowItem
+    > {
         TalosClient.bridged { continuation in
             let bridge = LogBridge(
                 line: { continuation.yield(.line($0)) },
@@ -216,29 +275,38 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartPodLogFollow(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, container, tailLines, bridge)
+            let run = IchorgoStartPodLogFollow(
+                kubeConfig, kubeContext, kubeAPIServer, namespace, pod, container, tailLines, bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
 
     /// `kubectl exec -it`: a terminal in `container` ("" for the pod's only one); an empty
     /// command runs bash, or sh. Events go to the listener (from Go threads).
-    func startPodShell(namespace: String, pod: String, container: String, command: String, cols: Int, rows: Int,
-                       listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
-        IchorgoStartPodShell(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, container, command, cols, rows, listener)
+    func startPodShell(
+        namespace: String, pod: String, container: String, command: String, cols: Int, rows: Int,
+        listener: IchorgoDebugListenerProtocol
+    ) -> IchorgoDebugSession? {
+        IchorgoStartPodShell(
+            kubeConfig, kubeContext, kubeAPIServer, namespace, pod, container, command, cols, rows, listener)
     }
 
     /// `kubectl debug -it`: adds a debug container from `image` sharing `targetContainer`'s
     /// processes ("" for none), then a terminal on it. It stays in the pod until the pod is deleted.
-    func startPodDebug(namespace: String, pod: String, targetContainer: String, image: String, cols: Int, rows: Int,
-                       listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
-        IchorgoStartPodDebug(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, targetContainer, image, cols, rows, listener)
+    func startPodDebug(
+        namespace: String, pod: String, targetContainer: String, image: String, cols: Int, rows: Int,
+        listener: IchorgoDebugListenerProtocol
+    ) -> IchorgoDebugSession? {
+        IchorgoStartPodDebug(
+            kubeConfig, kubeContext, kubeAPIServer, namespace, pod, targetContainer, image, cols, rows, listener)
     }
 
     /// `kubectl debug node/`: a privileged pod on `node` in `namespace`, in the host's
     /// namespaces, then nsenter for a root shell on the node; the pod is deleted when it ends.
-    func startNodeDebug(node: String, namespace: String, image: String, cols: Int, rows: Int,
-                        listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
+    func startNodeDebug(
+        node: String, namespace: String, image: String, cols: Int, rows: Int,
+        listener: IchorgoDebugListenerProtocol
+    ) -> IchorgoDebugSession? {
         IchorgoStartNodeDebug(kubeConfig, kubeContext, kubeAPIServer, node, namespace, image, cols, rows, listener)
     }
 
@@ -253,7 +321,8 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartPortForward(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, remotePort, bridge)
+            let run = IchorgoStartPortForward(
+                kubeConfig, kubeContext, kubeAPIServer, namespace, pod, remotePort, bridge)
             return BridgedRun(bridge) { run?.stop() }
         }
     }

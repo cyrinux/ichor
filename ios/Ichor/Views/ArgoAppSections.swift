@@ -18,7 +18,8 @@ struct ArgoHero: View {
             VStack(spacing: 12) {
                 AppIconView(app: app.iconApp, size: 64)
                 VStack(spacing: 2) {
-                    Text(verbatim: app.name).font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
+                    Text(verbatim: app.name).font(.title2.bold()).multilineTextAlignment(.center)
+                        .accessibilityAddTraits(.isHeader)
                     RevisionLink(label: app.revisionLabel, url: app.revisionURL)
                         .font(.subheadline.monospaced())
                         .foregroundStyle(.secondary)
@@ -47,30 +48,46 @@ struct ArgoHero: View {
                     Text("Source").font(.caption).foregroundStyle(.secondary)
                     if let url = hosts.browserURL(source.repoURL) {
                         Link(destination: url) {
-                            Label { Text(verbatim: source.repo).lineLimit(2).truncationMode(.middle) } icon: { Image(systemName: "arrow.up.forward.square") }
-                                .font(.callout.monospaced())
+                            Label {
+                                Text(verbatim: source.repo).lineLimit(2).truncationMode(.middle)
+                            } icon: {
+                                Image(systemName: "arrow.up.forward.square")
+                            }
+                            .font(.callout.monospaced())
                         }
                     } else {
-                        Text(verbatim: source.repo).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle).textSelection(.enabled)
+                        Text(verbatim: source.repo).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
+                            .textSelection(.enabled)
                     }
-                    Text(verbatim: [source.chart.isEmpty ? source.path : source.chart, source.targetRevision].filter { !$0.isEmpty }.joined(separator: " @ "))
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
+                    Text(
+                        verbatim: [source.chart.isEmpty ? source.path : source.chart, source.targetRevision].filter {
+                            !$0.isEmpty
+                        }.joined(separator: " @ ")
+                    )
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
                 }
             }
             if app.deployedAt > 0 { LabeledContent("Deployed", value: relativeTime(app.deployedAt)) }
             ForEach(app.externalURLs, id: \.self) { link in
                 if let url = URL(string: link), url.scheme == "https" || url.scheme == "http" {
                     Link(destination: url) {
-                        Label { Text(verbatim: url.host() ?? link).lineLimit(1) } icon: { Image(systemName: "safari") }
+                        Label {
+                            Text(verbatim: url.host() ?? link).lineLimit(1)
+                        } icon: {
+                            Image(systemName: "safari")
+                        }
                     }
                 }
             }
             Toggle(isOn: Binding(get: { app.autoSync.enabled }, set: { act($0 ? .autoSyncOn : .autoSyncOff) })) {
                 Text("Auto-sync")
                 if app.autoSync.enabled {
-                    Text(verbatim: [app.autoSync.prune ? String(localized: "prune") : nil,
-                                    app.autoSync.selfHeal ? String(localized: "self-heal") : nil].compactMap { $0 }.joined(separator: " · "))
+                    Text(
+                        verbatim: [
+                            app.autoSync.prune ? String(localized: "prune") : nil,
+                            app.autoSync.selfHeal ? String(localized: "self-heal") : nil,
+                        ].compactMap { $0 }.joined(separator: " · "))
                 }
             }
             .disabled(!app.canChangeSpec || busy)
@@ -87,15 +104,23 @@ struct ArgoHero: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(!app.canSync || busy)
-            Button { act(.refresh) } label: {
+            Button {
+                act(.refresh)
+            } label: {
                 Label("Refresh", systemImage: "arrow.clockwise")
             }
             .buttonStyle(.bordered)
             .disabled(busy)
             Menu {
-                Button { act(.hardRefresh) } label: { Label("Hard refresh", systemImage: "arrow.clockwise.circle") }
+                Button {
+                    act(.hardRefresh)
+                } label: {
+                    Label("Hard refresh", systemImage: "arrow.clockwise.circle")
+                }
                 if app.canTerminate {
-                    Button(role: .destructive, action: terminate) { Label("Terminate sync…", systemImage: "stop.circle") }
+                    Button(role: .destructive, action: terminate) {
+                        Label("Terminate sync…", systemImage: "stop.circle")
+                    }
                 }
             } label: {
                 Image(systemName: "ellipsis")
@@ -116,7 +141,8 @@ struct ArgoHero: View {
     private var destination: String {
         let cluster = app.destination.name.isEmpty ? app.destination.server : app.destination.name
         let inCluster = cluster.isEmpty || cluster == "https://kubernetes.default.svc" || cluster == "in-cluster"
-        return [app.destination.namespace, inCluster ? nil : cluster].compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: " @ ")
+        return [app.destination.namespace, inCluster ? nil : cluster].compactMap { $0?.isEmpty == false ? $0 : nil }
+            .joined(separator: " @ ")
     }
 }
 
@@ -147,10 +173,15 @@ struct GitSourceRow: View {
 
     var body: some View {
         if source.isChart {
-            row(Text("Helm chart \(source.chart.isEmpty ? source.repoURL : source.chart) · \(source.ref)"), symbol: "shippingbox")
-                .accessibilityElement(children: .combine)
+            row(
+                Text("Helm chart \(source.chart.isEmpty ? source.repoURL : source.chart) · \(source.ref)"),
+                symbol: "shippingbox"
+            )
+            .accessibilityElement(children: .combine)
         } else if source.canOpen {
-            NavigationLink { SourceBrowserView(source: source, dir: source.startDir, app: app) } label: {
+            NavigationLink {
+                SourceBrowserView(source: source, dir: source.startDir, app: app)
+            } label: {
                 row(Text(verbatim: sourceRowLabel(source)), symbol: "folder")
             }
         } else {
@@ -188,12 +219,15 @@ struct ArgoConditionsSection: View {
                 if let message { banner(message, symbol: app.health.symbol, color: app.health.color) }
                 ForEach(app.conditions.indices, id: \.self) { i in
                     let condition = app.conditions[i]
-                    banner(condition.message, title: condition.type,
-                           symbol: condition.isError ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill",
-                           color: condition.isError ? .red : attentionColor)
+                    banner(
+                        condition.message, title: condition.type,
+                        symbol: condition.isError ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill",
+                        color: condition.isError ? .red : attentionColor)
                     // A sync or comparison error: the diff names the objects, each with its file in Git.
                     if condition.isError {
-                        NavigationLink { FluxDiffView(argo: app.namespace, name: app.name) } label: {
+                        NavigationLink {
+                            FluxDiffView(argo: app.namespace, name: app.name)
+                        } label: {
                             Text("Compare with Git").font(.callout)
                         }
                     }
@@ -243,24 +277,32 @@ struct ArgoOperationSection: View {
             if !operation.message.isEmpty {
                 Text(verbatim: operation.message).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
             }
-            LabeledContent("Started by", value: operation.initiatedBy == "automated" ? String(localized: "auto-sync") : operation.initiatedBy)
+            LabeledContent(
+                "Started by",
+                value: operation.initiatedBy == "automated" ? String(localized: "auto-sync") : operation.initiatedBy)
             if !operation.revision.isEmpty {
                 LabeledContent("Revision") {
-                    RevisionLink(label: shortRevision(operation.revision), url: operation.revisionURL).font(.callout.monospaced())
+                    RevisionLink(label: shortRevision(operation.revision), url: operation.revisionURL).font(
+                        .callout.monospaced())
                 }
             }
             if operation.retryCount > 0 { LabeledContent("Retries", value: "\(operation.retryCount)") }
             ForEach(operation.failed) { failed in
                 VStack(alignment: .leading, spacing: 2) {
-                    Label { Text(verbatim: "\(failed.kind) \(failed.name)").font(.callout.monospaced()) } icon: {
+                    Label {
+                        Text(verbatim: "\(failed.kind) \(failed.name)").font(.callout.monospaced())
+                    } icon: {
                         Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad)
                     }
                     if !failed.message.isEmpty {
-                        Text(verbatim: failed.message).font(.caption).foregroundStyle(.statusBad).textSelection(.enabled)
+                        Text(verbatim: failed.message).font(.caption).foregroundStyle(.statusBad).textSelection(
+                            .enabled)
                     }
                     if let app, !failed.name.isEmpty {
                         NavigationLink {
-                            FluxDiffView(argo: app.namespace, name: app.name, focus: "\(failed.kind)/\(failed.namespace)/\(failed.name)")
+                            FluxDiffView(
+                                argo: app.namespace, name: app.name,
+                                focus: "\(failed.kind)/\(failed.namespace)/\(failed.name)")
                         } label: {
                             Text("Compare with Git").font(.caption)
                         }
@@ -279,7 +321,9 @@ struct ArgoOperationSection: View {
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 let end = operation.finishedAt > 0 ? operation.finishedAt : context.date.epochMillis
                 let seconds = max(0, (end - operation.startedAt) / 1000)
-                Text(verbatim: Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow)))
+                Text(
+                    verbatim: Duration.seconds(seconds).formatted(
+                        .units(allowed: [.hours, .minutes, .seconds], width: .narrow)))
             }
         }
     }
@@ -299,15 +343,22 @@ struct ArgoPodsSection: View {
                             .accessibilityHidden(true)
                         Text(verbatim: pod.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
                     }
-                    Text(verbatim: [pod.status, String(localized: "\(pod.ready)/\(pod.containers) ready"),
-                                    pod.restarts > 0 ? String(localized: "\(pod.restarts) restarts") : nil]
-                        .compactMap { $0 }.joined(separator: " · "))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        verbatim: [
+                            pod.status, String(localized: "\(pod.ready)/\(pod.containers) ready"),
+                            pod.restarts > 0 ? String(localized: "\(pod.restarts) restarts") : nil,
+                        ]
+                        .compactMap { $0 }.joined(separator: " · ")
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     if !pod.node.isEmpty {
-                        Text(downNodes.contains(pod.node) ? String(localized: "\(pod.node) is not ready") : String(localized: "on \(pod.node)"))
-                            .font(.caption)
-                            .foregroundStyle(downNodes.contains(pod.node) ? Color.red : Color.secondary)
+                        Text(
+                            downNodes.contains(pod.node)
+                                ? String(localized: "\(pod.node) is not ready") : String(localized: "on \(pod.node)")
+                        )
+                        .font(.caption)
+                        .foregroundStyle(downNodes.contains(pod.node) ? Color.red : Color.secondary)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -362,11 +413,15 @@ struct ArgoHistorySection: View {
                             RevisionLink(label: entry.label, url: entry.url).font(.callout.monospaced())
                             if index == 0 { Tag(String(localized: "current"), color: .green) }
                         }
-                        Text(verbatim: [relativeTime(entry.deployedAt),
-                                        entry.initiatedBy == "automated" ? String(localized: "auto-sync") : entry.initiatedBy]
-                            .filter { !$0.isEmpty }.joined(separator: " · "))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Text(
+                            verbatim: [
+                                relativeTime(entry.deployedAt),
+                                entry.initiatedBy == "automated" ? String(localized: "auto-sync") : entry.initiatedBy,
+                            ]
+                            .filter { !$0.isEmpty }.joined(separator: " · ")
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 4)
                     if index > 0 && app.canRollback {

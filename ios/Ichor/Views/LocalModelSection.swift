@@ -22,13 +22,15 @@ struct LocalModelSection: View {
                 .font(.footnote).foregroundStyle(.secondary)
         }
         ForEach(store.catalog) { model in
-            modelRow(id: model.id, title: model.name,
-                     detail: "\(Self.size(model.bytes)) · \(model.license)",
-                     fits: store.fits(model), selected: selected == model.id)
+            modelRow(
+                id: model.id, title: model.name,
+                detail: "\(Self.size(model.bytes)) · \(model.license)",
+                fits: store.fits(model), selected: selected == model.id)
         }
         ForEach(store.imported(), id: \.self) { id in
-            modelRow(id: id, title: String(id.dropFirst(LocalModelStore.importedPrefix.count)),
-                     detail: String(localized: "Imported file"), fits: true, selected: selected == id)
+            modelRow(
+                id: id, title: String(id.dropFirst(LocalModelStore.importedPrefix.count)),
+                detail: String(localized: "Imported file"), fits: true, selected: selected == id)
         }
         if let model = store.info(selected) {
             downloadRows(model)
@@ -47,8 +49,10 @@ struct LocalModelSection: View {
                 }
             }
         if let importError { Text(verbatim: importError).font(.footnote).foregroundStyle(.statusBad) }
-        Text("The model answers on the phone: nothing is sent. A download starts only when you tap, on Wi-Fi unless you allow mobile data, never in Low Data Mode. A small model is often wrong: check its answer.")
-            .font(.caption).foregroundStyle(.secondary)
+        Text(
+            "The model answers on the phone: nothing is sent. A download starts only when you tap, on Wi-Fi unless you allow mobile data, never in Low Data Mode. A small model is often wrong: check its answer."
+        )
+        .font(.caption).foregroundStyle(.secondary)
     }
 
     private func modelRow(id: String, title: String, detail: String, fits: Bool, selected: Bool) -> some View {

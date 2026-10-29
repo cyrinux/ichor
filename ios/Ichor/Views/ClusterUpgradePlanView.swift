@@ -39,7 +39,10 @@ struct ClusterUpgradePlanView: View {
             if case .loaded(let p, _, _)? = plan {
                 HostnameConfirmationSheet(
                     title: String(localized: "Upgrade \(cluster) to \(p.version)?"),
-                    message: String(localized: "Every node reboots in turn. Pods move between nodes as they drain; a single-replica workload stops while its node reboots."),
+                    message: String(
+                        localized:
+                            "Every node reboots in turn. Pods move between nodes as they drain; a single-replica workload stops while its node reboots."
+                    ),
                     hostname: cluster,
                     actionTitle: String(localized: "Upgrade every node"),
                     acknowledgments: p.allWarnings
@@ -57,8 +60,10 @@ struct ClusterUpgradePlanView: View {
                 Section { Text("Demo cluster: the plan is a sample, and the upgrade is refused.").note() }
             }
             Section {
-                Text("Every node is upgraded one after the other: control planes first, the etcd leader last of them, then the workers. Between nodes, the app checks the cluster is healthy again.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(
+                    "Every node is upgraded one after the other: control planes first, the etcd leader last of them, then the workers. Between nodes, the app checks the cluster is healthy again."
+                )
+                .font(.footnote).foregroundStyle(.secondary)
                 Picker("Version", selection: $version) {
                     ForEach(offeredVersions, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
@@ -99,10 +104,18 @@ struct ClusterUpgradePlanView: View {
         }
         Section("Checks") {
             ForEach(p.allBlockers, id: \.self) { blocker in
-                Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }.foregroundStyle(.statusBad)
+                Label {
+                    Text(verbatim: blocker)
+                } icon: {
+                    Image(systemName: "xmark.octagon.fill")
+                }.foregroundStyle(.statusBad)
             }
             ForEach(p.allWarnings, id: \.self) { warning in
-                Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }.foregroundStyle(.statusWarn)
+                Label {
+                    Text(verbatim: warning)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }.foregroundStyle(.statusWarn)
             }
             if p.allBlockers.isEmpty && p.allWarnings.isEmpty { Text("No issues found").foregroundStyle(.statusOK) }
         }
@@ -112,7 +125,8 @@ struct ClusterUpgradePlanView: View {
             Button {
                 confirming = true
             } label: {
-                Text(p.continues ? "Continue the upgrade" : "Upgrade every node").fontWeight(.semibold).frame(maxWidth: .infinity)
+                Text(p.continues ? "Continue the upgrade" : "Upgrade every node").fontWeight(.semibold).frame(
+                    maxWidth: .infinity)
             }
             .disabled(!p.canStart || busy != nil)
             if let message { Text(verbatim: message).font(.footnote).foregroundStyle(.statusBad) }
@@ -125,10 +139,14 @@ struct ClusterUpgradePlanView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: "\(position). \(node.name)")
-                Text(verbatim: [node.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"),
-                                node.leader ? String(localized: "etcd leader") : "", node.from]
-                    .filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    verbatim: [
+                        node.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"),
+                        node.leader ? String(localized: "etcd leader") : "", node.from,
+                    ]
+                    .filter { !$0.isEmpty }.joined(separator: " · ")
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             if node.nodeState == .done {
@@ -145,7 +163,9 @@ struct ClusterUpgradePlanView: View {
     /// Another node upgrade or maintenance runs: one thing at a time on the cluster.
     private var busy: String? {
         if UpgradeJob.shared.isActive { return String(localized: "Another upgrade is running: wait for it to end.") }
-        if MaintenanceJob.shared.isActive { return String(localized: "A node maintenance is running: wait for it to end.") }
+        if MaintenanceJob.shared.isActive {
+            return String(localized: "A node maintenance is running: wait for it to end.")
+        }
         return nil
     }
 
@@ -178,7 +198,8 @@ struct ClusterUpgradePlanView: View {
     private func start(_ p: ClusterUpgradePlan) async {
         message = nil
         if model.lock.enabled,
-           let failure = await Authenticator.authenticate(reason: String(localized: "Upgrade the cluster \(cluster)")) {
+            let failure = await Authenticator.authenticate(reason: String(localized: "Upgrade the cluster \(cluster)"))
+        {
             message = failure
             return
         }

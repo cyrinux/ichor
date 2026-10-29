@@ -80,8 +80,10 @@ struct KubeSignInSection: View {
                 if info.signedIn {
                     if let user = info.user { LabeledContent("Signed in as", value: user) }
                     if info.sessionExpires > 0 {
-                        LabeledContent("Session ends", value: Date(timeIntervalSince1970: TimeInterval(info.sessionExpires))
-                            .formatted(date: .abbreviated, time: .shortened))
+                        LabeledContent(
+                            "Session ends",
+                            value: Date(timeIntervalSince1970: TimeInterval(info.sessionExpires))
+                                .formatted(date: .abbreviated, time: .shortened))
                     }
                     Button("Sign in") { signingIn = target }
                     Button("Sign out", role: .destructive) { Task { await signOut() } }

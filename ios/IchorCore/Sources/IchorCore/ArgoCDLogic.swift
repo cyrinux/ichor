@@ -75,7 +75,9 @@ public extension ArgoApp {
             let counted = items.filter { !$0.hook }
             let running = operation.map { $0.phase.active } ?? false
             let done = counted.filter { running ? $0.applied : $0.sync == .synced }.count
-            let failed = operation != nil && items.contains { $0.syncFailed || failedIDs.contains("\($0.kind)/\($0.namespace)/\($0.name)") }
+            let failed =
+                operation != nil
+                && items.contains { $0.syncFailed || failedIDs.contains("\($0.kind)/\($0.namespace)/\($0.name)") }
             let state: ArgoStepState
             if failed {
                 state = .failed
@@ -154,12 +156,14 @@ public struct ArgoGroup: Equatable, Identifiable, Sendable {
 /// (case-insensitive), worst level first, then by name.
 public func filterArgoApps(_ apps: [ArgoApp], filter: ArgoFilter, query: String) -> [ArgoApp] {
     let q = query.trimmingCharacters(in: .whitespaces)
-    return apps
+    return
+        apps
         .filter { app in
             guard filter.matches(app) else { return false }
             guard !q.isEmpty else { return true }
-            let words = [app.name, app.project, app.namespace, app.destination.namespace, app.owner?.name ?? ""] +
-                app.sources.flatMap { [$0.chart, $0.repo, $0.path] }
+            let words =
+                [app.name, app.project, app.namespace, app.destination.namespace, app.owner?.name ?? ""]
+                + app.sources.flatMap { [$0.chart, $0.repo, $0.path] }
             return words.contains { $0.localizedCaseInsensitiveContains(q) }
         }
         .sorted(by: argoOrder)
@@ -173,12 +177,13 @@ func argoOrder(_ a: ArgoApp, _ b: ArgoApp) -> Bool {
 /// apps (kept in order) grouped; groups with the worst app first, then by title, the untitled
 /// one last. .none gives a single untitled group.
 public func groupArgoApps(_ apps: [ArgoApp], by grouping: ArgoGrouping) -> [ArgoGroup] {
-    let key: (ArgoApp) -> String = switch grouping {
-    case .none: { _ in "" }
-    case .project: { $0.project }
-    case .appSet: { $0.owner?.kind == "ApplicationSet" ? $0.owner?.name ?? "" : "" }
-    case .namespace: { $0.destination.namespace }
-    }
+    let key: (ArgoApp) -> String =
+        switch grouping {
+        case .none: { _ in "" }
+        case .project: { $0.project }
+        case .appSet: { $0.owner?.kind == "ApplicationSet" ? $0.owner?.name ?? "" : "" }
+        case .namespace: { $0.destination.namespace }
+        }
     var order: [String] = []
     var members: [String: [ArgoApp]] = [:]
     for app in apps {
@@ -187,7 +192,8 @@ public func groupArgoApps(_ apps: [ArgoApp], by grouping: ArgoGrouping) -> [Argo
         members[k, default: []].append(app)
     }
     let worst = { (k: String) in ServiceHealth.worst(members[k, default: []].map(\.level)) }
-    return order
+    return
+        order
         .sorted { a, b in
             if a.isEmpty != b.isEmpty { return b.isEmpty }
             return worst(a) != worst(b) ? worst(a) < worst(b) : a < b
@@ -228,7 +234,9 @@ public extension ArgoStatus {
 
     func apps(of project: ArgoProject) -> [ArgoApp] { apps.filter { $0.project == project.name } }
 
-    func app(namespace: String, name: String) -> ArgoApp? { apps.first { $0.namespace == namespace && $0.name == name } }
+    func app(namespace: String, name: String) -> ArgoApp? {
+        apps.first { $0.namespace == namespace && $0.name == name }
+    }
 }
 
 /// The Argo CD Applications deploying an inventory app, worst first. The first rule with a

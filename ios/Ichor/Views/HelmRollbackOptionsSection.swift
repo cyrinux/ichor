@@ -15,17 +15,23 @@ struct HelmRollbackOptionsSection: View {
         Section {
             if plan.canWait {
                 Toggle(isOn: $options.wait) {
-                    labelled(Text("Wait until its workloads are ready"),
-                             hint: Text("Follows the release's Deployments, StatefulSets and DaemonSets for up to 5 minutes."))
+                    labelled(
+                        Text("Wait until its workloads are ready"),
+                        hint: Text(
+                            "Follows the release's Deployments, StatefulSets and DaemonSets for up to 5 minutes."))
                 }
             }
             Toggle(isOn: $options.force) {
-                labelled(Text("Replace objects instead of patching them"),
-                         hint: Text("Like helm rollback --force: each changed object is written whole, for when a patch cannot bring it back."))
+                labelled(
+                    Text("Replace objects instead of patching them"),
+                    hint: Text(
+                        "Like helm rollback --force: each changed object is written whole, for when a patch cannot bring it back."
+                    ))
             }
             Stepper(value: $options.historyMax, in: HelmRollbackOptions.historyMaxRange) {
-                labelled(Text("Keep the last revisions"), hint: Text("0 keeps them all. Like helm rollback --history-max."),
-                         value: Text(verbatim: "\(options.historyMax)").monospacedDigit().bold())
+                labelled(
+                    Text("Keep the last revisions"), hint: Text("0 keeps them all. Like helm rollback --history-max."),
+                    value: Text(verbatim: "\(options.historyMax)").monospacedDigit().bold())
             }
             if let revisions = plan.pruneList {
                 Label {

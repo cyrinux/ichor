@@ -8,7 +8,8 @@ enum ChangelogStore {
 
     /// Empty when the file is missing or corrupt.
     static func load() -> Changelog {
-        decodeChangelog(Bundle.main.url(forResource: "changelog", withExtension: "json").flatMap { try? Data(contentsOf: $0) })
+        decodeChangelog(
+            Bundle.main.url(forResource: "changelog", withExtension: "json").flatMap { try? Data(contentsOf: $0) })
     }
 
     /// CFBundleVersion, the commit count of the build; nil when it is not a number.

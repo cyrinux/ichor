@@ -86,7 +86,8 @@ struct ArgoNetworkGraph<Details: View>: View {
             }
             .backgroundPreferenceValue(ArgoNetAnchors.self) { anchors in
                 GeometryReader { proxy in
-                    ArgoNetEdges(edges: network.edges(hiding: hidden), rects: anchors.mapValues { proxy[$0] }, path: path)
+                    ArgoNetEdges(
+                        edges: network.edges(hiding: hidden), rects: anchors.mapValues { proxy[$0] }, path: path)
                 }
             }
             .padding(.horizontal, 16)
@@ -107,17 +108,26 @@ struct ArgoNetworkGraph<Details: View>: View {
     }
 
     private func card(_ node: ArgoNetNode, path: ArgoNetPath?) -> some View {
-        Button { tap(node) } label: {
-            ArgoNetCard(symbol: node.kind.symbol, title: node.name, detail: node.detail.isEmpty ? node.kind.rawValue : node.detail,
-                        health: node.health, shared: node.shared, selected: current == node.id)
+        Button {
+            tap(node)
+        } label: {
+            ArgoNetCard(
+                symbol: node.kind.symbol, title: node.name,
+                detail: node.detail.isEmpty ? node.kind.rawValue : node.detail,
+                health: node.health, shared: node.shared, selected: current == node.id)
         }
         .buttonStyle(.plain)
         .opacity(lit(node.id, on: path) ? 1 : 0.25)
         .anchorPreference(key: ArgoNetAnchors.self, value: .bounds) { [node.id: $0] }
-        .popover(isPresented: Binding(get: { presented == node.id }, set: { if !$0 { presented = nil } }),
-                 arrowEdge: .bottom) { details(node) }
-        .accessibilityLabel(Text(verbatim: [node.kind.rawValue, node.name, node.detail, node.health.label]
-                .filter { !$0.isEmpty }.joined(separator: ", ")))
+        .popover(
+            isPresented: Binding(get: { presented == node.id }, set: { if !$0 { presented = nil } }),
+            arrowEdge: .bottom
+        ) { details(node) }
+        .accessibilityLabel(
+            Text(
+                verbatim: [node.kind.rawValue, node.name, node.detail, node.health.label]
+                    .filter { !$0.isEmpty }.joined(separator: ", "))
+        )
         .accessibilityAddTraits(current == node.id ? .isSelected : [])
     }
 
@@ -132,16 +142,21 @@ struct ArgoNetworkGraph<Details: View>: View {
             withAnimation(.snappy) { expanded.toggle() }
         } label: {
             if hidden.isEmpty {
-                ArgoNetCard(symbol: "chevron.up", title: String(localized: "Show less"), detail: "", health: .idle,
-                            shared: true, selected: false)
+                ArgoNetCard(
+                    symbol: "chevron.up", title: String(localized: "Show less"), detail: "", health: .idle,
+                    shared: true, selected: false)
             } else {
-                ArgoNetCard(symbol: "ellipsis", title: String(localized: "+\(hidden.count) more"), detail: ArgoNetKind.pod.rawValue,
-                            health: ServiceHealth.worst(hidden.map(\.health)), shared: true, selected: false)
+                ArgoNetCard(
+                    symbol: "ellipsis", title: String(localized: "+\(hidden.count) more"),
+                    detail: ArgoNetKind.pod.rawValue,
+                    health: ServiceHealth.worst(hidden.map(\.health)), shared: true, selected: false)
             }
         }
         .buttonStyle(.plain)
         .opacity(hidden.isEmpty || lit(ArgoNetwork.morePodsID, on: path) ? 1 : 0.25)
-        .anchorPreference(key: ArgoNetAnchors.self, value: .bounds) { hidden.isEmpty ? [:] : [ArgoNetwork.morePodsID: $0] }
+        .anchorPreference(key: ArgoNetAnchors.self, value: .bounds) {
+            hidden.isEmpty ? [:] : [ArgoNetwork.morePodsID: $0]
+        }
     }
 }
 
@@ -166,7 +181,8 @@ struct ArgoNetCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: title).font(.caption.weight(.semibold)).lineLimit(1).truncationMode(.middle)
                 if !detail.isEmpty {
-                    Text(verbatim: detail).font(.caption2.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                    Text(verbatim: detail).font(.caption2.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                        .truncationMode(.middle)
                 }
             }
             Spacer(minLength: 0)
@@ -224,7 +240,8 @@ private struct ArgoNetEdges: View {
         let still = reduceMotion || !edges.contains { $0.health.flows }
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still)) { context in
             // 28 pt a second, wrapped on the dash pattern's 14 pt so the phase stays small.
-            let phase = still ? 0 : (context.date.timeIntervalSinceReferenceDate * 28).truncatingRemainder(dividingBy: 14)
+            let phase =
+                still ? 0 : (context.date.timeIntervalSinceReferenceDate * 28).truncatingRemainder(dividingBy: 14)
             Canvas { canvas, _ in
                 for edge in edges {
                     guard let from = rects[edge.from], let to = rects[edge.to] else { continue }
@@ -242,7 +259,8 @@ private struct ArgoNetEdges: View {
         let pull = max((end.x - start.x) * 0.5, 12)
         var curve = Path()
         curve.move(to: start)
-        curve.addCurve(to: end, control1: CGPoint(x: start.x + pull, y: start.y), control2: CGPoint(x: end.x - pull, y: end.y))
+        curve.addCurve(
+            to: end, control1: CGPoint(x: start.x + pull, y: start.y), control2: CGPoint(x: end.x - pull, y: end.y))
         return curve
     }
 
@@ -252,11 +270,14 @@ private struct ArgoNetEdges: View {
         let width: CGFloat = lit == true ? 2.5 : 2
         let color = edge.health.edgeColor
         if edge.health.flows {
-            canvas.stroke(curve, with: .color(color.opacity(0.3)), style: StrokeStyle(lineWidth: width, lineCap: .round))
-            canvas.stroke(curve, with: .color(color),
-                          style: StrokeStyle(lineWidth: width, lineCap: .round, dash: [5, 9], dashPhase: -phase))
+            canvas.stroke(
+                curve, with: .color(color.opacity(0.3)), style: StrokeStyle(lineWidth: width, lineCap: .round))
+            canvas.stroke(
+                curve, with: .color(color),
+                style: StrokeStyle(lineWidth: width, lineCap: .round, dash: [5, 9], dashPhase: -phase))
         } else if edge.health == .critical {
-            canvas.stroke(curve, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round, dash: [4, 4]))
+            canvas.stroke(
+                curve, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round, dash: [4, 4]))
         } else {
             canvas.stroke(curve, with: .color(color.opacity(0.6)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
         }

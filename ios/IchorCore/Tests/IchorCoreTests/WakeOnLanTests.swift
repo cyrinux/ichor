@@ -5,7 +5,8 @@ final class WakeOnLanTests: XCTestCase {
     private let mac: [UInt8] = [0xAA, 0xBB, 0xCC, 0x01, 0x02, 0x03]
 
     func testMacsParseInTheUsualNotations() {
-        for text in ["aa:bb:cc:01:02:03", "AA-BB-CC-01-02-03", "aabb.cc01.0203", "aabbcc010203", " aa:bb:cc:01:02:03 "] {
+        for text in ["aa:bb:cc:01:02:03", "AA-BB-CC-01-02-03", "aabb.cc01.0203", "aabbcc010203", " aa:bb:cc:01:02:03 "]
+        {
             XCTAssertEqual(parseMac(text), mac, text)
         }
     }
@@ -28,8 +29,12 @@ final class WakeOnLanTests: XCTestCase {
     }
 
     func testBroadcastIsOptionalIpv4OrHostName() {
-        for text in ["", "  ", "192.168.1.255", "255.255.255.255", "wol-relay.lan", "router"] { XCTAssertTrue(isWolAddress(text), text) }
-        for text in ["192.168.1.256", "192.168.1", "1.2.3.4.5", "bad host", "-x.lan", "a|b"] { XCTAssertFalse(isWolAddress(text), text) }
+        for text in ["", "  ", "192.168.1.255", "255.255.255.255", "wol-relay.lan", "router"] {
+            XCTAssertTrue(isWolAddress(text), text)
+        }
+        for text in ["192.168.1.256", "192.168.1", "1.2.3.4.5", "bad host", "-x.lan", "a|b"] {
+            XCTAssertFalse(isWolAddress(text), text)
+        }
     }
 
     func testDirectedBroadcastOfTheSubnet() {
@@ -43,8 +48,9 @@ final class WakeOnLanTests: XCTestCase {
     }
 
     func testTypedFieldsBecomeATarget() throws {
-        XCTAssertEqual(try parseWolTarget(mac: "AA-BB-CC-01-02-03", broadcast: " 192.168.1.255 ", port: "7").get(),
-                       WolTarget(mac: "aa:bb:cc:01:02:03", broadcast: "192.168.1.255", port: 7))
+        XCTAssertEqual(
+            try parseWolTarget(mac: "AA-BB-CC-01-02-03", broadcast: " 192.168.1.255 ", port: "7").get(),
+            WolTarget(mac: "aa:bb:cc:01:02:03", broadcast: "192.168.1.255", port: 7))
         let defaults = try parseWolTarget(mac: "aabbcc010203", broadcast: "", port: "").get()
         XCTAssertEqual(defaults.port, wolDefaultPort)
         XCTAssertEqual(defaults.address, wolDefaultBroadcast)
@@ -64,20 +70,30 @@ final class WakeOnLanTests: XCTestCase {
     func testStoredFormRoundTrips() {
         let target = WolTarget(mac: "aa:bb:cc:01:02:03", broadcast: "10.0.0.255", port: 7)
         XCTAssertEqual(decodeWolTarget(encodeWolTarget(target)), target)
-        XCTAssertEqual(decodeWolTarget(encodeWolTarget(WolTarget(mac: "aa:bb:cc:01:02:03"))), WolTarget(mac: "aa:bb:cc:01:02:03"))
-        for text in ["", "aa:bb:cc:01:02:03", "nope||9", "aabbcc010203||x", "aabbcc010203||0"] { XCTAssertNil(decodeWolTarget(text), text) }
+        XCTAssertEqual(
+            decodeWolTarget(encodeWolTarget(WolTarget(mac: "aa:bb:cc:01:02:03"))), WolTarget(mac: "aa:bb:cc:01:02:03"))
+        for text in ["", "aa:bb:cc:01:02:03", "nope||9", "aabbcc010203||x", "aabbcc010203||0"] {
+            XCTAssertNil(decodeWolTarget(text), text)
+        }
     }
 
     func testNodesOfRemovedClustersAreForgotten() {
         let target = WolTarget(mac: "aa:bb:cc:01:02:03")
-        let saved = [wolKey(fingerprint: "fp-prod", node: "10.0.0.1"): target, wolKey(fingerprint: "fp-old", node: "10.0.0.2"): target]
-        XCTAssertEqual(keepWolTargets(saved, fingerprints: ["fp-prod", ""]), [wolKey(fingerprint: "fp-prod", node: "10.0.0.1"): target])
+        let saved = [
+            wolKey(fingerprint: "fp-prod", node: "10.0.0.1"): target,
+            wolKey(fingerprint: "fp-old", node: "10.0.0.2"): target,
+        ]
+        XCTAssertEqual(
+            keepWolTargets(saved, fingerprints: ["fp-prod", ""]),
+            [wolKey(fingerprint: "fp-prod", node: "10.0.0.1"): target])
     }
 
     func testSeenMacsRoundTrip() {
         let seen = [SeenMac(link: "eth0", mac: "aa:bb:cc:01:02:03"), SeenMac(link: "enp1s0", mac: "aa:bb:cc:01:02:04")]
         XCTAssertEqual(decodeSeenMacs(encodeSeenMacs(seen)), seen)
-        XCTAssertEqual(decodeSeenMacs("eth0=AA-BB-CC-01-02-03,bad,=aabbcc010203,eth1=nope"), [SeenMac(link: "eth0", mac: "aa:bb:cc:01:02:03")])
+        XCTAssertEqual(
+            decodeSeenMacs("eth0=AA-BB-CC-01-02-03,bad,=aabbcc010203,eth1=nope"),
+            [SeenMac(link: "eth0", mac: "aa:bb:cc:01:02:03")])
         XCTAssertEqual(decodeSeenMacs(""), [])
     }
 
@@ -91,10 +107,14 @@ final class WakeOnLanTests: XCTestCase {
 
     func testWakeUsesTheSavedSettingElseEverySeenMac() {
         let saved = WolTarget(mac: "aa:bb:cc:01:02:03", broadcast: "10.0.0.255", port: 7)
-        let seen = [SeenMac(link: "eth0", mac: "aa:bb:cc:01:02:03"), SeenMac(link: "eth1", mac: "aa:bb:cc:01:02:04"),
-                    SeenMac(link: "eth2", mac: "aa:bb:cc:01:02:04")]
+        let seen = [
+            SeenMac(link: "eth0", mac: "aa:bb:cc:01:02:03"), SeenMac(link: "eth1", mac: "aa:bb:cc:01:02:04"),
+            SeenMac(link: "eth2", mac: "aa:bb:cc:01:02:04"),
+        ]
         XCTAssertEqual(wakeTargets(saved: saved, seen: seen), [saved])
-        XCTAssertEqual(wakeTargets(saved: nil, seen: seen), [WolTarget(mac: "aa:bb:cc:01:02:03"), WolTarget(mac: "aa:bb:cc:01:02:04")])
+        XCTAssertEqual(
+            wakeTargets(saved: nil, seen: seen),
+            [WolTarget(mac: "aa:bb:cc:01:02:03"), WolTarget(mac: "aa:bb:cc:01:02:04")])
         XCTAssertEqual(wakeTargets(saved: nil, seen: []), [])
     }
 

@@ -57,8 +57,10 @@ public struct DrainPod: Decodable, Equatable, Identifiable, Sendable {
     /// The budget allows no disruption now: the drain waits for it.
     public var pdbBlocks: Bool { hasPDB && pdbAllowed == 0 }
 
-    public init(namespace: String, name: String, owner: String = "", kind: String = Kind.evict.rawValue, emptyDir: Bool = false,
-                pdb: String = "", pdbAllowed: Int = -1, state: String = "", reason: String = "") {
+    public init(
+        namespace: String, name: String, owner: String = "", kind: String = Kind.evict.rawValue, emptyDir: Bool = false,
+        pdb: String = "", pdbAllowed: Int = -1, state: String = "", reason: String = ""
+    ) {
         self.namespace = namespace
         self.name = name
         self.owner = owner
@@ -70,7 +72,9 @@ public struct DrainPod: Decodable, Equatable, Identifiable, Sendable {
         self.reason = reason
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, owner, kind, emptyDir, pdb, pdbAllowed, state, reason }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, owner, kind, emptyDir, pdb, pdbAllowed, state, reason
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -121,9 +125,11 @@ public struct MaintenancePlan: Decodable, Equatable, Sendable {
 
     public var podGroups: MaintenancePodGroups { MaintenancePodGroups(pods) }
 
-    public init(node: String, hostname: String = "", kubeNode: String = "", controlPlane: Bool = false, cordoned: Bool = false,
-                pods: [DrainPod] = [], blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [],
-                upgradeDrainable: Bool = false) {
+    public init(
+        node: String, hostname: String = "", kubeNode: String = "", controlPlane: Bool = false, cordoned: Bool = false,
+        pods: [DrainPod] = [], blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [],
+        upgradeDrainable: Bool = false
+    ) {
         self.node = node
         self.hostname = hostname
         self.kubeNode = kubeNode
@@ -219,12 +225,15 @@ public typealias MaintenanceStep = TimelineStep<MaintenancePhase>
 
 /// Timeline of `action`'s phases from the events so far, like upgradeTimeline: phases only
 /// move forward, `finished` marks them all done, `failure` marks the furthest one failed.
-public func maintenanceTimeline(_ events: [MaintenanceProgress], action: MaintenanceAction, finished: Bool = false,
-                                failure: String? = nil) -> [MaintenanceStep] {
+public func maintenanceTimeline(
+    _ events: [MaintenanceProgress], action: MaintenanceAction, finished: Bool = false,
+    failure: String? = nil
+) -> [MaintenanceStep] {
     let phases = MaintenancePhase.steps(for: action)
-    return foldTimeline(events, phases: phases, finished: finished, failure: failure,
-                        phase: { MaintenancePhase(rawValue: $0.phase).flatMap { phases.contains($0) ? $0 : nil } },
-                        at: \.at, message: \.message)
+    return foldTimeline(
+        events, phases: phases, finished: finished, failure: failure,
+        phase: { MaintenancePhase(rawValue: $0.phase).flatMap { phases.contains($0) ? $0 : nil } },
+        at: \.at, message: \.message)
 }
 
 /// The pods of the latest event that listed them (the drain's live states).

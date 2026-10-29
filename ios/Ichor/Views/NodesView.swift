@@ -24,7 +24,9 @@ struct NodesView: View {
     }
 
     var body: some View {
-        AdaptiveListDetail(selection: $selected, placeholder: "Pick a node to see its details", systemImage: "server.rack") {
+        AdaptiveListDetail(
+            selection: $selected, placeholder: "Pick a node to see its details", systemImage: "server.rack"
+        ) {
             nodeList
         } detail: { ref in
             // After a power action, back to the placeholder: dismiss would close the whole screen.
@@ -75,7 +77,10 @@ struct NodesView: View {
                         withAnimation(.snappy) { filter = nil }
                     }
                     ForEach(NodeFilter.allCases, id: \.self) { chip in
-                        FilterChip(label: chip.label, count: nodes.filter(chip.matches).count, selected: filter == chip, dot: chip.dot) {
+                        FilterChip(
+                            label: chip.label, count: nodes.filter(chip.matches).count, selected: filter == chip,
+                            dot: chip.dot
+                        ) {
                             withAnimation(.snappy) { filter = chip }
                         }
                     }

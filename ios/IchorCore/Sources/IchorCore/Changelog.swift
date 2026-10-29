@@ -54,7 +54,9 @@ public struct ChangelogRelease: Decodable, Equatable, Identifiable, Sendable {
         buildNumber = try c.field(.buildNumber, 0)
         publishedAt = try c.field(.publishedAt, "")
         // Sections without items say nothing.
-        sections = (try c.decodeIfPresent([ChangelogSection].self, forKey: .sections) ?? []).filter { !$0.items.isEmpty }
+        sections = (try c.decodeIfPresent([ChangelogSection].self, forKey: .sections) ?? []).filter {
+            !$0.items.isEmpty
+        }
     }
 
     /// The release day, nil when the date is missing or not ISO 8601.
@@ -115,7 +117,8 @@ public func releasesSince(_ releases: [ChangelogRelease], build: Int) -> [Change
 /// launched last time. Nothing (empty) on a first install (no previous build), when the
 /// build is the same or older (a downgrade), or when the bundled history has nothing newer
 /// (also a missing or corrupt file). Same rule as Android.
-public func whatsNewReleases(previousBuild: Int?, currentBuild: Int, releases: [ChangelogRelease]) -> [ChangelogRelease] {
+public func whatsNewReleases(previousBuild: Int?, currentBuild: Int, releases: [ChangelogRelease]) -> [ChangelogRelease]
+{
     guard let previousBuild, currentBuild > previousBuild else { return [] }
     return releasesSince(releases, build: previousBuild)
 }

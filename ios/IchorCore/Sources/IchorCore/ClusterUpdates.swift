@@ -43,8 +43,10 @@ public struct UpdateEdit: Codable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey { case op, kind, name, container, image, path, value, hint, valueFiles }
 
-    public init(op: String, kind: String = "", name: String = "", container: String = "", image: String = "",
-                path: String = "", value: String = "") {
+    public init(
+        op: String, kind: String = "", name: String = "", container: String = "", image: String = "",
+        path: String = "", value: String = ""
+    ) {
         self.op = op
         self.kind = kind
         self.name = name
@@ -262,8 +264,10 @@ public struct UpdateQuickEdit: Decodable, Hashable, Sendable {
     public let path: String
     public let value: String
 
-    public init(op: String, documentIndex: Int = 0, kind: String = "", name: String = "", container: String = "",
-                kustomizeImage: String = "", image: String = "", path: String = "", value: String = "") {
+    public init(
+        op: String, documentIndex: Int = 0, kind: String = "", name: String = "", container: String = "",
+        kustomizeImage: String = "", image: String = "", path: String = "", value: String = ""
+    ) {
         self.op = op
         self.documentIndex = documentIndex
         self.kind = kind
@@ -275,7 +279,9 @@ public struct UpdateQuickEdit: Decodable, Hashable, Sendable {
         self.value = value
     }
 
-    enum CodingKeys: String, CodingKey { case op, documentIndex, kind, name, container, kustomizeImage, image, path, value }
+    enum CodingKeys: String, CodingKey {
+        case op, documentIndex, kind, name, container, kustomizeImage, image, path, value
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -304,7 +310,9 @@ public struct UpdateEditTarget: Decodable, Hashable, Sendable {
     public let note: String
     public let valueFiles: [String]
 
-    enum CodingKeys: String, CodingKey { case app, source, sourceIndex, path, line, documentIndex, edit, note, valueFiles }
+    enum CodingKeys: String, CodingKey {
+        case app, source, sourceIndex, path, line, documentIndex, edit, note, valueFiles
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

@@ -62,12 +62,15 @@ struct RolloutStatusSheet: View {
             let w = status.workload
             let newStarting = status.pods.filter { $0.updated && !$0.healthy }.count
             let fraction = status.done ? 1 : Double(min(status.newReady, w.desired)) / Double(max(w.desired, 1))
-            RolloutProgressBar(desired: w.desired, newReady: status.newReady, newStarting: newStarting,
-                               done: status.done && !status.manual, failed: status.failed)
+            RolloutProgressBar(
+                desired: w.desired, newReady: status.newReady, newStarting: newStarting,
+                done: status.done && !status.manual, failed: status.failed)
             HStack {
-                Text("Updated \(w.updated)/\(w.desired) · ready \(w.ready)/\(w.desired) · available \(w.available)/\(w.desired)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Updated \(w.updated)/\(w.desired) · ready \(w.ready)/\(w.desired) · available \(w.available)/\(w.desired)"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 Spacer(minLength: 8)
                 if !status.manual {
                     Text(fraction, format: .percent.precision(.fractionLength(0)))

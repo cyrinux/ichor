@@ -33,7 +33,9 @@ final class RunbookJob {
 
     /// Starts runbook `id` of the cluster `fingerprint` unless one runs; false then.
     @discardableResult
-    func start(id: String, fingerprint: String, yaml: String, plan: RunbookPlan, continueIDs: Set<String>, client: TalosClient) -> Bool {
+    func start(
+        id: String, fingerprint: String, yaml: String, plan: RunbookPlan, continueIDs: Set<String>, client: TalosClient
+    ) -> Bool {
         guard !isRunning else { return false }
         let started = client.startRunbook(yaml: yaml, continueIDs: continueIDs)
         handle = started

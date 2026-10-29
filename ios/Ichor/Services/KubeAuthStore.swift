@@ -47,7 +47,9 @@ final class KubeAuthStore: NSObject, IchorgoAuthStoreProtocol, @unchecked Sendab
     func restore(_ restored: [String: String]) {
         lock.lock()
         if let current = readLocked() {
-            let merged = current.merging(KubeAuthMap.keeping(restored, fingerprints: Array(restored.keys))) { mine, _ in mine }
+            let merged = current.merging(KubeAuthMap.keeping(restored, fingerprints: Array(restored.keys))) { mine, _ in
+                mine
+            }
             if merged != current { writeLocked(merged) }
         }
         lock.unlock()

@@ -40,7 +40,8 @@ final class JoinJob {
     }
 
     /// `register` adds the joined node's address to the stored talosconfig.
-    func start(client: TalosClient, request: JoinRequest, register: @escaping @MainActor (String) async throws -> Void) {
+    func start(client: TalosClient, request: JoinRequest, register: @escaping @MainActor (String) async throws -> Void)
+    {
         guard !isActive else { return }
         self.request = request
         events = []
@@ -68,7 +69,11 @@ final class JoinJob {
                 do {
                     try await register(address)
                 } catch {
-                    result = .failed(String(localized: "\(request.hostname) joined, but \(address) could not be added to the cluster's nodes: \(error.localizedDescription)"))
+                    result = .failed(
+                        String(
+                            localized:
+                                "\(request.hostname) joined, but \(address) could not be added to the cluster's nodes: \(error.localizedDescription)"
+                        ))
                 }
             }
             outcome = result
@@ -76,7 +81,9 @@ final class JoinJob {
             stop = nil
             stopping = false
             endBackgroundTask()
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.foregroundNotification])
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
+                Self.foregroundNotification
+            ])
             UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
         }
     }
@@ -87,7 +94,9 @@ final class JoinJob {
         guard isActive else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Keep Ichor open")
-        content.body = String(localized: "Ichor stops following the new node while it is in the background. Open it until the node joins.")
+        content.body = String(
+            localized: "Ichor stops following the new node while it is in the background. Open it until the node joins."
+        )
         content.sound = .default
         let request = UNNotificationRequest(identifier: Self.foregroundNotification, content: content, trigger: nil)
         Task { try? await UNUserNotificationCenter.current().add(request) }

@@ -3,9 +3,14 @@ import XCTest
 
 final class WorkloadsTests: XCTestCase {
     private let workloads = [
-        KubeWorkload(kind: "Deployment", namespace: "shop", name: "web", desired: 3, ready: 3, updated: 3, available: 3, state: "ready", images: ["nginx:1.27"]),
-        KubeWorkload(kind: "StatefulSet", namespace: "shop", name: "db", desired: 1, state: "degraded", images: ["postgres:17"]),
-        KubeWorkload(kind: "DaemonSet", namespace: "kube-system", name: "proxy", desired: 3, ready: 3, updated: 2, state: "progressing"),
+        KubeWorkload(
+            kind: "Deployment", namespace: "shop", name: "web", desired: 3, ready: 3, updated: 3, available: 3,
+            state: "ready", images: ["nginx:1.27"]),
+        KubeWorkload(
+            kind: "StatefulSet", namespace: "shop", name: "db", desired: 1, state: "degraded", images: ["postgres:17"]),
+        KubeWorkload(
+            kind: "DaemonSet", namespace: "kube-system", name: "proxy", desired: 3, ready: 3, updated: 2,
+            state: "progressing"),
         KubeWorkload(kind: "Deployment", namespace: "a", name: "frozen", desired: 1, ready: 1, state: "paused"),
     ]
 
@@ -17,7 +22,8 @@ final class WorkloadsTests: XCTestCase {
     }
 
     func testDecodesTheGoJSON() throws {
-        let json = #"{"workloads":[{"kind":"Deployment","namespace":"shop","name":"web","desired":3,"ready":2,"updated":3,"available":2,"state":"degraded","restartedAt":1700000000000,"created":1,"images":["nginx:1.27"]}]}"#
+        let json =
+            #"{"workloads":[{"kind":"Deployment","namespace":"shop","name":"web","desired":3,"ready":2,"updated":3,"available":2,"state":"degraded","restartedAt":1700000000000,"created":1,"images":["nginx:1.27"]}]}"#
         let w = try XCTUnwrap(TalosJSON.decode(KubeWorkloadList.self, from: json).workloads.first)
         XCTAssertEqual(w.workloadState, .degraded)
         XCTAssertEqual(w.restartedAt, 1_700_000_000_000)
@@ -26,9 +32,10 @@ final class WorkloadsTests: XCTestCase {
     }
 
     func testDecodesTheRolloutStatus() throws {
-        let json = #"{"workload":{"kind":"Deployment","namespace":"shop","name":"web","desired":2,"updated":1,"state":"progressing"},"failed":true,"# +
-            #""pods":[{"name":"web-new-a","status":"Running","healthy":true,"ready":1,"containers":1,"updated":true},"# +
-            #"{"name":"web-old-a","status":"Running","healthy":true,"restarts":2}]}"#
+        let json =
+            #"{"workload":{"kind":"Deployment","namespace":"shop","name":"web","desired":2,"updated":1,"state":"progressing"},"failed":true,"#
+            + #""pods":[{"name":"web-new-a","status":"Running","healthy":true,"ready":1,"containers":1,"updated":true},"#
+            + #"{"name":"web-old-a","status":"Running","healthy":true,"restarts":2}]}"#
         let st = try TalosJSON.decode(KubeRolloutStatus.self, from: json)
         XCTAssertEqual(st.workload.workloadState, .progressing)
         XCTAssertFalse(st.done)
@@ -40,7 +47,8 @@ final class WorkloadsTests: XCTestCase {
     }
 
     func testAttentionFirstThenNamespaceAndName() {
-        XCTAssertEqual(filterWorkloads(workloads, namespace: nil, query: "").map(\.name), ["db", "proxy", "frozen", "web"])
+        XCTAssertEqual(
+            filterWorkloads(workloads, namespace: nil, query: "").map(\.name), ["db", "proxy", "frozen", "web"])
     }
 
     func testFiltersByNamespaceAndQuery() {
@@ -59,4 +67,3 @@ final class WorkloadsTests: XCTestCase {
         XCTAssertFalse(ContextSummary(name: "x", roles: ["os:operator"]).allows(.workloads))
     }
 }
-

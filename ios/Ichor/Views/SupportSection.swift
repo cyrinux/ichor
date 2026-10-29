@@ -14,9 +14,12 @@ struct SupportSection: View {
     var body: some View {
         Section {
             if let dataStoreProblem {
-                Label("Action log and node names are not being saved: \(dataStoreProblem)", systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                Label(
+                    "Action log and node names are not being saved: \(dataStoreProblem)",
+                    systemImage: "exclamationmark.triangle"
+                )
+                .font(.footnote)
+                .foregroundStyle(.orange)
             }
             if model.allows(.supportBundle) {
                 let support = model.clusterSupport(.supportBundle)
@@ -45,17 +48,25 @@ struct SupportSection: View {
             NavigationLink(value: Route.activity(cluster: "")) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Activity log")
-                    Text("Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(
+                        "Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Button { browsing = IntegrationLinks.reportBug } label: { Label("Report a bug", systemImage: "ladybug") }
+            Button {
+                browsing = IntegrationLinks.reportBug
+            } label: {
+                Label("Report a bug", systemImage: "ladybug")
+            }
             Toggle(isOn: $startupTrace) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Startup timing in the log")
-                    Text("Logs how long each step of a cold start takes (config, cluster connection, first node, home screen), for a bug report: Console, category startup. Durations and counts only, never a cluster name or an address. Stays on the device.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Logs how long each step of a cold start takes (config, cluster connection, first node, home screen), for a bug report: Console, category startup. Durations and counts only, never a cluster name or an address. Stays on the device."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
             }
             .onChange(of: startupTrace) { _, on in TalosClient.setStartupTrace(on) }

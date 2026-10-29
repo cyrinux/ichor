@@ -26,12 +26,14 @@ final class KubeClusterSummaryTests: XCTestCase {
     }
 
     func testTheShareInUseIsOfTheAllocatableCapacity() throws {
-        let top = try TalosJSON.decode(KubeTopNodes.self, from: """
-        {"available":true,"nodes":[
-          {"name":"worker-1","cpu":1,"cpuAllocatable":4,"memory":\(4 * gib),"memoryAllocatable":\(15 * gib)},
-          {"name":"worker-2","cpu":3,"cpuAllocatable":8,"memory":\(2 * gib),"memoryAllocatable":\(7.5 * gib)}
-        ]}
-        """)
+        let top = try TalosJSON.decode(
+            KubeTopNodes.self,
+            from: """
+                {"available":true,"nodes":[
+                  {"name":"worker-1","cpu":1,"cpuAllocatable":4,"memory":\(4 * gib),"memoryAllocatable":\(15 * gib)},
+                  {"name":"worker-2","cpu":3,"cpuAllocatable":8,"memory":\(2 * gib),"memoryAllocatable":\(7.5 * gib)}
+                ]}
+                """)
         let summary = nodes.clusterSummary(usage: top.nodes)
         XCTAssertEqual(try XCTUnwrap(summary.cpuFraction), 4.0 / 12.0, accuracy: 1e-9)
         XCTAssertEqual(try XCTUnwrap(summary.memFraction), 6.0 / 22.5, accuracy: 1e-9)

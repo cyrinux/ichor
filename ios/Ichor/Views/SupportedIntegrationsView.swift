@@ -41,7 +41,9 @@ struct SupportedIntegrationsView: View {
                 }
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("The projects Ichor reads through the Kubernetes API, found on the cluster by their API groups, their running pods or their Services. Tap one to open its website.")
+                    Text(
+                        "The projects Ichor reads through the Kubernetes API, found on the cluster by their API groups, their running pods or their Services. Tap one to open its website."
+                    )
                     if let problem { Text(verbatim: problem) }
                     if retryable { Button("Retry") { Task { await load() } } }
                 }
@@ -66,7 +68,8 @@ struct SupportedIntegrationsView: View {
             return
         }
         guard let client = model.client else { return }
-        let hints = model.lastKnown(.inventory, as: ClusterInventory.self).map { supportedIntegrationHints($0.value) } ?? ""
+        let hints =
+            model.lastKnown(.inventory, as: ClusterInventory.self).map { supportedIntegrationHints($0.value) } ?? ""
         let result: Result<SupportedIntegrations, Error> = await client.withReadProgress(
             TalosClient.integrationsProgressOp, watching: !list.checked, update: { progress = $0 }
         ) {
@@ -121,9 +124,12 @@ private struct SupportedIntegrationRow: View {
 
     @ViewBuilder private var status: some View {
         if item.detected {
-            Text(item.version.isEmpty ? String(localized: "Detected") : "\(String(localized: "Detected")) · \(item.version)")
-                .font(.caption)
-                .foregroundStyle(.statusOK)
+            Text(
+                item.version.isEmpty
+                    ? String(localized: "Detected") : "\(String(localized: "Detected")) · \(item.version)"
+            )
+            .font(.caption)
+            .foregroundStyle(.statusOK)
             if let how = item.via?.label {
                 Text([how, item.namespace].filter { !$0.isEmpty }.joined(separator: " · "))
                     .font(.caption)

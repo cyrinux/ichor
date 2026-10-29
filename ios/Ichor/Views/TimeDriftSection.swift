@@ -40,8 +40,12 @@ struct TimeDriftSection: View {
                         if info.error == nil {
                             TimeOffsetRow(info: info, title: title(info))
                         } else {
-                            Button { shownError = info } label: { UnreachableRow(title: title(info)) }
-                                .foregroundStyle(.primary)
+                            Button {
+                                shownError = info
+                            } label: {
+                                UnreachableRow(title: title(info))
+                            }
+                            .foregroundStyle(.primary)
                         }
                     }
                 } label: {
@@ -51,7 +55,9 @@ struct TimeDriftSection: View {
         } header: {
             SectionHeader(title: String(localized: "Clock drift"), pill: headerTrailing)
         } footer: {
-            Text("Offset of each node's clock from its NTP server. Drift breaks etcd and certificate checks: warning from 500 ms, critical from 5 s.")
+            Text(
+                "Offset of each node's clock from its NTP server. Drift breaks etcd and certificate checks: warning from 500 ms, critical from 5 s."
+            )
         }
         .task(id: refreshID) { await load() }
         .alert(shownError.map { title($0) } ?? "", isPresented: $shownError.isPresent()) {
@@ -67,9 +73,13 @@ struct TimeDriftSection: View {
             if let status = loadedSummary?.status {
                 StatusPill(label: label(status), color: status.color)
             }
-            Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
-                .disabled(refreshing)
-                .accessibilityLabel(Text("Refresh"))
+            Button {
+                Task { await load() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+            .disabled(refreshing)
+            .accessibilityLabel(Text("Refresh"))
         }
     }
 
@@ -109,9 +119,10 @@ private struct SummaryLine: View {
     var body: some View {
         if summary.reachable > 0 {
             let offset = formatOffsetMagnitude(summary.maxOffsetMs)
-            Text(summary.drifting == 0
-                 ? String(localized: "\(summary.reachable) nodes in sync · max ±\(offset)")
-                 : String(localized: "\(summary.drifting) nodes drifting · max ±\(offset)"))
+            Text(
+                summary.drifting == 0
+                    ? String(localized: "\(summary.reachable) nodes in sync · max ±\(offset)")
+                    : String(localized: "\(summary.drifting) nodes drifting · max ±\(offset)"))
         } else if summary.unreachable > 0 {
             Text(String(localized: "\(summary.unreachable) unreachable")).foregroundStyle(.secondary)
         }

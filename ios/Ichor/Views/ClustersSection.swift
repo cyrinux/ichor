@@ -15,14 +15,20 @@ struct ClustersSection: View {
             if let protection = SecureConfigStore.protection {
                 LabeledContent("Encryption key", value: protection.label)
             }
-            NavigationLink(model.kubeYAML == nil ? LocalizedStringKey("Add a cluster (import a talosconfig or a kubeconfig)") : "Add a cluster", value: Route.importConfig)
+            NavigationLink(
+                model.kubeYAML == nil
+                    ? LocalizedStringKey("Add a cluster (import a talosconfig or a kubeconfig)") : "Add a cluster",
+                value: Route.importConfig)
             if model.allows(.issueConfig) {
                 NavigationLink("Renew my certificate…", value: Route.issueConfig(renew: true))
                 NavigationLink("Create a config for another device…", value: Route.issueConfig(renew: false))
                 NavigationLink("Rotate the cluster CA…", value: Route.rotateCA)
             }
             // Both stores go: with kubeconfig clusters stored, say so.
-            Button(model.kubeYAML == nil ? LocalizedStringKey("Delete stored talosconfig") : "Delete all clusters", role: .destructive) {
+            Button(
+                model.kubeYAML == nil ? LocalizedStringKey("Delete stored talosconfig") : "Delete all clusters",
+                role: .destructive
+            ) {
                 confirmDelete = true
             }
         } header: {
@@ -31,25 +37,35 @@ struct ClustersSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Add a cluster imports a talosconfig or a kubeconfig. The clusters already stored are kept.")
                 if model.allows(.issueConfig) {
-                    Text("Renew this context's client certificate, or issue a restricted talosconfig for another device.")
+                    Text(
+                        "Renew this context's client certificate, or issue a restricted talosconfig for another device."
+                    )
                 }
                 // README "Leftover data": the Keychain outlives the app.
-                Text("Configs are stored in the iOS Keychain, which keeps them after the app is uninstalled. Delete them here to remove them from this device.")
+                Text(
+                    "Configs are stored in the iOS Keychain, which keeps them after the app is uninstalled. Delete them here to remove them from this device."
+                )
             }
         }
         // Every cluster's client keys go, for good without a backup: typed, like a reboot.
-        .sheet(isPresented: $confirmDelete, onDismiss: {
-            if backupAfterSheet {
-                backupAfterSheet = false
-                backupRequested = true
+        .sheet(
+            isPresented: $confirmDelete,
+            onDismiss: {
+                if backupAfterSheet {
+                    backupAfterSheet = false
+                    backupRequested = true
+                }
             }
-        }) {
+        ) {
             HostnameConfirmationSheet(
-                title: model.kubeYAML == nil ? String(localized: "Delete talosconfig?") : String(localized: "Delete all clusters?"),
-                message: String(localized: "The config of every cluster, with their client keys, will be removed from this device."),
+                title: model.kubeYAML == nil
+                    ? String(localized: "Delete talosconfig?") : String(localized: "Delete all clusters?"),
+                message: String(
+                    localized: "The config of every cluster, with their client keys, will be removed from this device."),
                 hostname: Self.deleteAllToken,
                 actionTitle: String(localized: "Delete"),
-                alternative: model.hasConfig ? (title: String(localized: "Back up first"), action: { backupAfterSheet = true }) : nil
+                alternative: model.hasConfig
+                    ? (title: String(localized: "Back up first"), action: { backupAfterSheet = true }) : nil
             ) {
                 confirmDelete = false
                 model.clear()

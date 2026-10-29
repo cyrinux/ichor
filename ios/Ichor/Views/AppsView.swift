@@ -42,20 +42,25 @@ struct AppsView: View {
                     chips(inventory.apps, active: active)
                     if !sections.main.isEmpty { grid(sections.main) }
                     if !sections.system.isEmpty {
-                        AppGroup(title: String(localized: "Kubernetes & Talos · \(sections.system.count)"),
-                                 apps: sections.system, showIcons: true, expanded: $showSystem) { grid($0) }
+                        AppGroup(
+                            title: String(localized: "Kubernetes & Talos · \(sections.system.count)"),
+                            apps: sections.system, showIcons: true, expanded: $showSystem
+                        ) { grid($0) }
                     }
                     if !sections.unrecognised.isEmpty {
-                        AppGroup(title: String(localized: "Not recognised · \(sections.unrecognised.count)"),
-                                 apps: sections.unrecognised, showIcons: false, expanded: $showUnrecognised) { grid($0) }
+                        AppGroup(
+                            title: String(localized: "Not recognised · \(sections.unrecognised.count)"),
+                            apps: sections.unrecognised, showIcons: false, expanded: $showUnrecognised
+                        ) { grid($0) }
                     }
                 }
                 .padding()
             }
             .overlay {
                 if inventory.apps.isEmpty {
-                    ContentUnavailableView("No apps", systemImage: "square.grid.2x2",
-                                           description: Text("No Kubernetes containers run in this cluster."))
+                    ContentUnavailableView(
+                        "No apps", systemImage: "square.grid.2x2",
+                        description: Text("No Kubernetes containers run in this cluster."))
                 } else if sections.main.isEmpty && sections.system.isEmpty && sections.unrecognised.isEmpty {
                     ContentUnavailableView.search(text: query)
                 }
@@ -69,14 +74,20 @@ struct AppsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
-                    .accessibilityLabel(Text("Refresh"))
+                Button {
+                    Task { await load() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .accessibilityLabel(Text("Refresh"))
             }
         }
         // A search or a chip may match apps of the collapsed groups: show them.
         .onChange(of: query) { _, text in if !text.isEmpty { expandGroups() } }
         .onChange(of: filter) { _, chip in if chip != .all { expandGroups() } }
-        .sheet(item: $selected) { app in AppDetailSheet(app: app, hostnames: hostnamesStale ? [:] : hostnames, argoCD: argoCDShown) }
+        .sheet(item: $selected) { app in
+            AppDetailSheet(app: app, hostnames: hostnamesStale ? [:] : hostnames, argoCD: argoCDShown)
+        }
         // Screenshot mode toggled: nothing loaded before (names, logos) stays on screen.
         .onChange(of: model.dataGeneration) {
             selected = nil
@@ -89,8 +100,12 @@ struct AppsView: View {
     private func grid(_ apps: [InventoryApp]) -> some View {
         LazyVGrid(columns: columns, spacing: 12) {
             ForEach(apps) { app in
-                Button { selected = app } label: { AppTile(app: app, argoBadge: argoBadge(app)) }
-                    .buttonStyle(.plain)
+                Button {
+                    selected = app
+                } label: {
+                    AppTile(app: app, argoBadge: argoBadge(app))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -100,13 +115,19 @@ struct AppsView: View {
         let attention = apps.filter(\.needsAttention).count
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChip(label: String(localized: "All"), count: apps.count, selected: active == .all) { filter = .all }
+                FilterChip(label: String(localized: "All"), count: apps.count, selected: active == .all) {
+                    filter = .all
+                }
                 if attention > 0 {
-                    FilterChip(label: String(localized: "Attention"), count: attention, selected: active == .attention,
-                               dot: attentionColor) { filter = .attention }
+                    FilterChip(
+                        label: String(localized: "Attention"), count: attention, selected: active == .attention,
+                        dot: attentionColor
+                    ) { filter = .attention }
                 }
                 ForEach(categoryCounts(apps), id: \.category) { item in
-                    FilterChip(label: item.category.label, count: item.count, selected: active == .category(item.category)) {
+                    FilterChip(
+                        label: item.category.label, count: item.count, selected: active == .category(item.category)
+                    ) {
                         filter = .category(item.category)
                     }
                 }
@@ -179,6 +200,7 @@ private struct AppGroup<Content: View>: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(
+            Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

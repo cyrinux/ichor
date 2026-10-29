@@ -22,7 +22,9 @@ struct DenseNodes: View {
             NodeListRow(node: node, sharedVersion: version, path: $path)
         }
         if problems.more > 0 {
-            Button { path.append(.nodes(filter: .attention, nodes: nodes)) } label: {
+            Button {
+                path.append(.nodes(filter: .attention, nodes: nodes))
+            } label: {
                 HStack {
                     Text("\(problems.more) more need a look")
                     Spacer()
@@ -45,7 +47,8 @@ struct HealthSummary: View {
         let parts = NodeStatus.allCases.filter { counts[$0] > 0 }
         let start = site.map { Text(verbatim: "\($0)  ·  ").foregroundStyle(.secondary) } ?? Text(verbatim: "")
         parts.indices.reduce(start) { text, i in
-            text + Text(verbatim: i > 0 ? "  ·  " : "") + Self.count(counts[parts[i]], of: parts[i]).foregroundStyle(parts[i].color)
+            text + Text(verbatim: i > 0 ? "  ·  " : "")
+                + Self.count(counts[parts[i]], of: parts[i]).foregroundStyle(parts[i].color)
         }
         .font(.subheadline)
         .lineLimit(2)
@@ -87,7 +90,10 @@ private struct NodeDots: View {
     @Binding var path: [Route]
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: dotTarget, maximum: dotTarget), spacing: 0)], alignment: .leading, spacing: 0) {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: dotTarget, maximum: dotTarget), spacing: 0)], alignment: .leading,
+            spacing: 0
+        ) {
             ForEach(nodes) { node in
                 NodeDot(node: node, path: $path)
             }
@@ -108,11 +114,19 @@ private struct NodeDot: View {
     var body: some View {
         Group {
             if node.reachable {
-                Button { path.append(.node(node.ref)) } label: { dot }
-                    .contextMenu { NodeMenu(node: node, path: $path) }
+                Button {
+                    path.append(.node(node.ref))
+                } label: {
+                    dot
+                }
+                .contextMenu { NodeMenu(node: node, path: $path) }
             } else {
                 // Nothing to open on a node that does not answer: a tap offers what it still can.
-                Menu { NodeMenu(node: node, path: $path) } label: { dot }
+                Menu {
+                    NodeMenu(node: node, path: $path)
+                } label: {
+                    dot
+                }
             }
         }
         .accessibilityLabel(Text(verbatim: "\(node.hostname), \(node.status.label)"))

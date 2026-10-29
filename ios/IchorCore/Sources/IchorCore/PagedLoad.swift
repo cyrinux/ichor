@@ -12,7 +12,9 @@ public struct KubePage<T> {
     public let complete: Bool
     public let detailed: Bool
 
-    public init(items: [T], continueToken: String = "", remaining: Int64 = -1, complete: Bool = true, detailed: Bool = true) {
+    public init(
+        items: [T], continueToken: String = "", remaining: Int64 = -1, complete: Bool = true, detailed: Bool = true
+    ) {
         self.items = items
         self.continueToken = continueToken
         self.remaining = remaining
@@ -34,8 +36,8 @@ public func isKubeListExpired(_ message: String) -> Bool {
 
 /// Same, for an error thrown by a page call.
 public func isKubeListExpired(_ error: Error) -> Bool {
-    isKubeListExpired((error as? LocalizedError)?.errorDescription ?? error.localizedDescription) ||
-        isKubeListExpired(String(describing: error))
+    isKubeListExpired((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+        || isKubeListExpired(String(describing: error))
 }
 
 /// Rows a page function is asked for.
@@ -61,8 +63,10 @@ public struct PagedLoad<T> {
     /// Every page held full objects: what only they carry (images) can be searched.
     public private(set) var detailed: Bool
 
-    public init(items: [T] = [], continueToken: String = "", remaining: Int64 = -1, pages: Int = 0,
-                done: Bool = false, capped: Bool = false, detailed: Bool = true) {
+    public init(
+        items: [T] = [], continueToken: String = "", remaining: Int64 = -1, pages: Int = 0,
+        done: Bool = false, capped: Bool = false, detailed: Bool = true
+    ) {
         self.items = items
         self.continueToken = continueToken
         self.remaining = remaining
@@ -135,8 +139,10 @@ public func loadPages<T>(
     }
 }
 
-private func loadOnce<T>(cap: Int, fetch: (String) async throws -> KubePage<T>,
-                         onProgress: (PagedLoad<T>) async -> Void) async throws -> PagedLoad<T> {
+private func loadOnce<T>(
+    cap: Int, fetch: (String) async throws -> KubePage<T>,
+    onProgress: (PagedLoad<T>) async -> Void
+) async throws -> PagedLoad<T> {
     var load = PagedLoad<T>()
     repeat {
         try Task.checkCancellation()

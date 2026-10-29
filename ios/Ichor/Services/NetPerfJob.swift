@@ -149,10 +149,12 @@ extension NetPerfJob {
         switch p.phase {
         case NetPerfPhase.starting:
             // "node: reason" while a pod waits, e.g. for its image.
-            return p.message.contains(":") ? String(localized: "Waiting for \(p.message)…")
+            return p.message.contains(":")
+                ? String(localized: "Waiting for \(p.message)…")
                 : String(localized: "Starting netserver on \(run.setup.server)…")
         case NetPerfPhase.testing:
-            return String(localized: "\(netPerfPathLabel(p.path)) · \(netPerfTestLabel(p.test)) (\(p.step)/\(p.steps))…")
+            return String(
+                localized: "\(netPerfPathLabel(p.path)) · \(netPerfTestLabel(p.test)) (\(p.step)/\(p.steps))…")
         case NetPerfPhase.cleaning:
             return String(localized: "Deleting the test namespace…")
         default:

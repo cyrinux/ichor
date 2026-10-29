@@ -4,7 +4,8 @@ import XCTest
 final class KubeHomeLayoutTests: XCTestCase {
     func testDefaultShowsEverySectionInOrder() {
         let layout = KubeHomeLayout()
-        XCTAssertEqual(layout.visible, [.pinned, .summary, .apps, .nodes, .tools, .dataServices, .argoCD, .flux, .alerts])
+        XCTAssertEqual(
+            layout.visible, [.pinned, .summary, .apps, .nodes, .tools, .dataServices, .argoCD, .flux, .alerts])
         XCTAssertTrue(layout.hiddenCards.isEmpty)
         XCTAssertTrue(layout.isDefault)
         XCTAssertEqual(KubeHomeLayout.storageKey, "kubeHome.layout")
@@ -23,7 +24,8 @@ final class KubeHomeLayoutTests: XCTestCase {
         XCTAssertEqual(KubeHomeLayout.parse(""), KubeHomeLayout())
         // A layout saved by the Talos overview: its own sections are unknown here, the shared names kept.
         let layout = KubeHomeLayout.parse("TALOS_UPDATE,-APPS,NODES,-DATA_SERVICES,TIME_DRIFT")
-        XCTAssertEqual(layout.order, [.pinned, .apps, .nodes, .dataServices, .summary, .tools, .argoCD, .flux, .alerts])
+        XCTAssertEqual(
+            layout.order, [.pinned, .apps, .nodes, .dataServices, .summary, .tools, .argoCD, .flux, .alerts])
         XCTAssertEqual(layout.hidden, [.apps, .dataServices])
     }
 
@@ -32,7 +34,9 @@ final class KubeHomeLayoutTests: XCTestCase {
         let layout = KubeHomeLayout().hiding(.dataServices)
         XCTAssertEqual(layout.visible(absent: absent), [.summary, .nodes, .tools])
         XCTAssertEqual(layout.hiddenCards(absent: absent), [.dataServices])
-        XCTAssertEqual(layout.moving(fromOffsets: [2], toOffset: 0, absent: absent).visible, [.pinned, .tools, .apps, .summary, .nodes, .argoCD, .flux, .alerts])
+        XCTAssertEqual(
+            layout.moving(fromOffsets: [2], toOffset: 0, absent: absent).visible,
+            [.pinned, .tools, .apps, .summary, .nodes, .argoCD, .flux, .alerts])
     }
 
     func testShowingPutsTheSectionLast() {
@@ -42,7 +46,8 @@ final class KubeHomeLayoutTests: XCTestCase {
     }
 
     func testDetectedSectionsAndPinnedLeads() {
-        XCTAssertEqual(Set(KubeHomeCard.allCases.filter(\.whenDetected)), [.pinned, .apps, .dataServices, .argoCD, .flux, .alerts])
+        XCTAssertEqual(
+            Set(KubeHomeCard.allCases.filter(\.whenDetected)), [.pinned, .apps, .dataServices, .argoCD, .flux, .alerts])
         XCTAssertEqual(KubeHomeCard.allCases.filter(\.leadsWhenNew), [.pinned])
     }
 }

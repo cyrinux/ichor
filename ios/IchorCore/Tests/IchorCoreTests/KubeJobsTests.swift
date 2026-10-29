@@ -3,13 +3,13 @@ import XCTest
 
 final class KubeJobsTests: XCTestCase {
     private let json = #"""
-    {"jobs":[
-     {"namespace":"ops","name":"backup-manual-abcde","state":"failed","owner":"backup","manual":true,
-      "started":1760000000000,"finished":1760000300000,"duration":300000,"completions":"0/1",
-      "reason":"BackoffLimitExceeded","level":"critical"},
-     {"namespace":"ops","name":"import","state":"suspended","completions":"0/1","level":"warning"},
-     {"namespace":"ops","name":"migrate","state":"running","started":1760000000000,"duration":600000,"completions":"1/3","level":"newer-level"}]}
-    """#
+        {"jobs":[
+         {"namespace":"ops","name":"backup-manual-abcde","state":"failed","owner":"backup","manual":true,
+          "started":1760000000000,"finished":1760000300000,"duration":300000,"completions":"0/1",
+          "reason":"BackoffLimitExceeded","level":"critical"},
+         {"namespace":"ops","name":"import","state":"suspended","completions":"0/1","level":"warning"},
+         {"namespace":"ops","name":"migrate","state":"running","started":1760000000000,"duration":600000,"completions":"1/3","level":"newer-level"}]}
+        """#
 
     private func jobs() throws -> [JobRow] {
         try JSONDecoder().decode(KubeJobs.self, from: Data(json.utf8)).jobs

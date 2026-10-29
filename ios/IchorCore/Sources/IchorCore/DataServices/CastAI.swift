@@ -20,9 +20,12 @@ public struct CastAIStatus: Decodable, Equatable, Sendable {
     /// Why the plans could not be read; `error` is the recommendations' only.
     public let plansError: String
 
-    public init(version: String = "", error: String = "", recommendations: [CastAIRecommendation] = [], cpuDeltaMilli: Int64 = 0,
-                memoryDeltaBytes: Int64 = 0, compared: Int = 0, plans: [CastAIPlan] = [], stuck: [CastAIStuckNode] = [],
-                plansError: String = "") {
+    public init(
+        version: String = "", error: String = "", recommendations: [CastAIRecommendation] = [],
+        cpuDeltaMilli: Int64 = 0,
+        memoryDeltaBytes: Int64 = 0, compared: Int = 0, plans: [CastAIPlan] = [], stuck: [CastAIStuckNode] = [],
+        plansError: String = ""
+    ) {
         self.version = version
         self.error = error
         self.recommendations = recommendations
@@ -49,8 +52,9 @@ public struct CastAIStatus: Decodable, Equatable, Sendable {
 
     /// A copy with other recommendations (tests, filters).
     public func with(recommendations: [CastAIRecommendation]) -> CastAIStatus {
-        CastAIStatus(version: version, error: error, recommendations: recommendations, cpuDeltaMilli: cpuDeltaMilli,
-                     memoryDeltaBytes: memoryDeltaBytes, compared: compared, plans: plans, stuck: stuck, plansError: plansError)
+        CastAIStatus(
+            version: version, error: error, recommendations: recommendations, cpuDeltaMilli: cpuDeltaMilli,
+            memoryDeltaBytes: memoryDeltaBytes, compared: compared, plans: plans, stuck: stuck, plansError: plansError)
     }
 
     /// Recommendations are the items; one the autoscaler cannot apply or is told not to needs a look.
@@ -62,7 +66,9 @@ public struct CastAIStatus: Decodable, Equatable, Sendable {
         }
         let healths = recommendations.map(\.health)
         let health = ServiceHealth.worst(healths + (stuck.isEmpty ? [] : [.warning]))
-        return ServiceSummary(total: recommendations.count, attention: healths.filter(\.needsAttention).count, health: health, error: error)
+        return ServiceSummary(
+            total: recommendations.count, attention: healths.filter(\.needsAttention).count, health: health,
+            error: error)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -101,10 +107,13 @@ public struct CastAIRecommendation: Decodable, Equatable, Identifiable, Sendable
     /// "shop · Deployment".
     public var subtitle: String { [namespace, kind].filter { !$0.isEmpty }.joined(separator: " · ") }
 
-    public init(namespace: String = "", name: String = "", kind: String = "", workload: String = "", mode: CastAIMode = .unknown,
-                readOnly: Bool = false, health: ServiceHealth = .unknown, reasons: [CastAIReason] = [], message: String = "",
-                containers: [CastAIContainer] = [], cpuDeltaMilli: Int64 = 0, memoryDeltaBytes: Int64 = 0, cpuMilli: Int64 = 0,
-                memoryBytes: Int64 = 0, originalCpuMilli: Int64 = 0, originalMemoryBytes: Int64 = 0) {
+    public init(
+        namespace: String = "", name: String = "", kind: String = "", workload: String = "",
+        mode: CastAIMode = .unknown,
+        readOnly: Bool = false, health: ServiceHealth = .unknown, reasons: [CastAIReason] = [], message: String = "",
+        containers: [CastAIContainer] = [], cpuDeltaMilli: Int64 = 0, memoryDeltaBytes: Int64 = 0, cpuMilli: Int64 = 0,
+        memoryBytes: Int64 = 0, originalCpuMilli: Int64 = 0, originalMemoryBytes: Int64 = 0
+    ) {
         self.namespace = namespace
         self.name = name
         self.kind = kind
@@ -191,8 +200,10 @@ public struct CastAIContainer: Decodable, Equatable, Identifiable, Sendable {
     /// CAST AI keeps limits, so a request this close to its memory limit risks an OOM kill.
     public var nearMemoryLimit: Bool { memoryLimitPercent >= castAINearLimitPercent }
 
-    public init(name: String = "", cpu: String = "", memory: String = "", cpuLimit: String = "", memoryLimit: String = "",
-                originalCpu: String = "", originalMemory: String = "", cpuLimitPercent: Int = 0, memoryLimitPercent: Int = 0) {
+    public init(
+        name: String = "", cpu: String = "", memory: String = "", cpuLimit: String = "", memoryLimit: String = "",
+        originalCpu: String = "", originalMemory: String = "", cpuLimitPercent: Int = 0, memoryLimitPercent: Int = 0
+    ) {
         self.name = name
         self.cpu = cpu
         self.memory = memory

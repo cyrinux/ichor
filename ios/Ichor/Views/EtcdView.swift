@@ -26,7 +26,8 @@ struct EtcdView: View {
 
     var body: some View {
         LoadStateView(state: state, retry: load) { etcd in
-            let hostnames = Dictionary(etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { first, _ in first })
+            let hostnames = Dictionary(
+                etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { first, _ in first })
             SectionRailScroll(sections: jumpSections(etcd)) {
                 List {
                     if let error = etcd.error { ErrorOrNoticeText(message: error) }
@@ -35,12 +36,19 @@ struct EtcdView: View {
                         let reclaimable = order.reduce(Int64(0)) { $0 + $1.reclaimable }
                         Section {
                             if let progress {
-                                HStack { ProgressView(); Text(progress) }
+                                HStack {
+                                    ProgressView(); Text(progress)
+                                }
                             } else {
                                 if let result { Text(result).font(.footnote) }
-                                Text(String(localized: "\(order.count) members to defragment.") + " "
-                                    + String(localized: "About \(formatBytes(reclaimable)) reclaimable. Members are done one at a time, followers first and the leader last."))
-                                    .font(.footnote).foregroundStyle(.secondary)
+                                Text(
+                                    String(localized: "\(order.count) members to defragment.") + " "
+                                        + String(
+                                            localized:
+                                                "About \(formatBytes(reclaimable)) reclaimable. Members are done one at a time, followers first and the leader last."
+                                        )
+                                )
+                                .font(.footnote).foregroundStyle(.secondary)
                                 Button("Defragment all") { confirm = order }
                                     .disabled(order.isEmpty || reclaimable == 0)
                             }
@@ -61,8 +69,10 @@ struct EtcdView: View {
                     // for a cluster that lost etcd (Go refuses it otherwise).
                     if model.allows(.etcdMemberActions) && etcd.etcdLost && recover.idle {
                         Section {
-                            Text("No etcd member answers. If every control plane lost etcd, start it again from a snapshot.")
-                                .foregroundStyle(.statusBad)
+                            Text(
+                                "No etcd member answers. If every control plane lost etcd, start it again from a snapshot."
+                            )
+                            .foregroundStyle(.statusBad)
                             Button("Recover from snapshot…", role: .destructive) {
                                 recoverEtcd = etcd
                                 importingSnapshot = true
@@ -71,8 +81,13 @@ struct EtcdView: View {
                     }
                     if hasAlarmsSection(etcd) {
                         Section {
-                            if let alarmsError = etcd.alarmsError { Text("Could not check alarms: \(alarmsError)").foregroundStyle(.statusBad) }
-                            ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.statusBad) }
+                            if let alarmsError = etcd.alarmsError {
+                                Text("Could not check alarms: \(alarmsError)").foregroundStyle(.statusBad)
+                            }
+                            ForEach(etcd.alarms, id: \.self) {
+                                Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(
+                                    .statusBad)
+                            }
                             if let alarmMessage { Text(alarmMessage).font(.footnote).foregroundStyle(.secondary) }
                             // Defragmentation and disarm, like the separate buttons.
                             if model.allows(.etcdDefrag) && etcd.hasNospace && fix.idle {
@@ -80,7 +95,9 @@ struct EtcdView: View {
                             }
                             if model.allows(.etcdDefrag) && !etcd.alarms.isEmpty {
                                 if disarming {
-                                    HStack { ProgressView(); Text("Disarming…") }
+                                    HStack {
+                                        ProgressView(); Text("Disarming…")
+                                    }
                                 } else {
                                     Button("Disarm alarms", role: .destructive) { confirmDisarm = true }
                                         .disabled(disarmNode(etcd) == nil)
@@ -91,27 +108,32 @@ struct EtcdView: View {
                         }
                     }
                     if model.allows(.etcdMemberActions) {
-                        EtcdMemberActionsSection(etcd: etcd, support: model.clusterSupport(.etcdMemberActions),
-                                                 busy: memberBusy, message: memberMessage,
-                                                 onForfeit: { forfeit = $0 }, onRemove: { removing = $0 })
+                        EtcdMemberActionsSection(
+                            etcd: etcd, support: model.clusterSupport(.etcdMemberActions),
+                            busy: memberBusy, message: memberMessage,
+                            onForfeit: { forfeit = $0 }, onRemove: { removing = $0 })
                     }
                     Section {
                         ForEach(etcd.statuses) { status in
-                            MemberStatusRow(status: status, hostname: hostnames[status.memberId] ?? status.node,
-                                            lag: etcdLag(status, in: etcd.statuses))
-                                .swipeActions {
-                                    if model.allows(.etcdDefrag) && progress == nil && status.error == nil {
-                                        Button("Defragment") { confirm = [status] }.tint(.orange)
-                                    }
+                            MemberStatusRow(
+                                status: status, hostname: hostnames[status.memberId] ?? status.node,
+                                lag: etcdLag(status, in: etcd.statuses)
+                            )
+                            .swipeActions {
+                                if model.allows(.etcdDefrag) && progress == nil && status.error == nil {
+                                    Button("Defragment") { confirm = [status] }.tint(.orange)
                                 }
+                            }
                         }
                     } header: {
                         Text("Members (\(etcd.members.count))").sectionTarget("members")
                     } footer: {
                         let lagging = laggingMembers(etcd.statuses)
                         if !lagging.isEmpty {
-                            Text("Lagging members: \(lagging.map { hostnames[$0.memberId] ?? $0.node }.joined(separator: ", "))")
-                                .foregroundStyle(.statusWarn)
+                            Text(
+                                "Lagging members: \(lagging.map { hostnames[$0.memberId] ?? $0.node }.joined(separator: ", "))"
+                            )
+                            .foregroundStyle(.statusWarn)
                         }
                     }
                 }
@@ -125,27 +147,37 @@ struct EtcdView: View {
         .confirmationDialog(Text("Disarm etcd alarms?"), isPresented: $confirmDisarm, titleVisibility: .visible) {
             Button("Disarm alarms", role: .destructive) { Task { await disarm() } }
         } message: {
-            Text("Disarming does not fix the cause. For a NOSPACE alarm, free disk space and defragment first, or the alarm comes back. Once disarmed, etcd accepts writes again.")
+            Text(
+                "Disarming does not fix the cause. For a NOSPACE alarm, free disk space and defragment first, or the alarm comes back. Once disarmed, etcd accepts writes again."
+            )
         }
-        .confirmationDialog(Text("Forfeit leadership?"),
-                            isPresented: $forfeit.isPresent(),
-                            titleVisibility: .visible, presenting: forfeit) { leader in
+        .confirmationDialog(
+            Text("Forfeit leadership?"),
+            isPresented: $forfeit.isPresent(),
+            titleVisibility: .visible, presenting: forfeit
+        ) { leader in
             Button("Forfeit leadership", role: .destructive) { Task { await forfeitLeadership(leader) } }
         } message: { leader in
-            Text("\(memberName(leader)) gives up etcd leadership and another member is elected. Writes pause briefly during the election.")
+            Text(
+                "\(memberName(leader)) gives up etcd leadership and another member is elected. Writes pause briefly during the election."
+            )
         }
         .sheet(item: $removing) { member in
             if let client = model.client, case .loaded(let etcd, _, _) = state {
-                EtcdRemoveMemberSheet(member: member, throughNode: etcdRemovalNode(memberId: member.id, statuses: etcd.statuses),
-                                      client: client, lockEnabled: model.lock.enabled) { name in
+                EtcdRemoveMemberSheet(
+                    member: member, throughNode: etcdRemovalNode(memberId: member.id, statuses: etcd.statuses),
+                    client: client, lockEnabled: model.lock.enabled
+                ) { name in
                     removing = nil
                     memberMessage = String(localized: "\(name) was removed from etcd")
                     Task { await load() }
                 }
             }
         }
-        .fileMover(isPresented: Binding(get: { snapshot.moving }, set: { snapshot.moving = $0 }), file: snapshot.file,
-                   onCompletion: { snapshot.moved($0) }, onCancellation: { snapshot.moveCancelled() })
+        .fileMover(
+            isPresented: Binding(get: { snapshot.moving }, set: { snapshot.moving = $0 }), file: snapshot.file,
+            onCompletion: { snapshot.moved($0) }, onCancellation: { snapshot.moveCancelled() }
+        )
         .onDisappear {
             snapshot.leave()
             fix.leave()
@@ -154,34 +186,42 @@ struct EtcdView: View {
         .fileImporter(isPresented: $importingSnapshot, allowedContentTypes: [.data]) { result in
             Task { choosingRecovery = await recover.pick(result) }
         }
-        .sheet(isPresented: $choosingRecovery, onDismiss: {
-            // Dismissed without starting: forget the copied file.
-            if !recover.running && !recover.finished { recover.dismiss() }
-            recoverEtcd = nil
-        }) {
+        .sheet(
+            isPresented: $choosingRecovery,
+            onDismiss: {
+                // Dismissed without starting: forget the copied file.
+                if !recover.running && !recover.finished { recover.dismiss() }
+                recoverEtcd = nil
+            }
+        ) {
             if let picked = recover.picked, let etcd = recoverEtcd {
-                EtcdRecoverSheet(picked: picked, nodes: etcd.recoverCandidates, hostnames: [:], clusterName: model.activeContext,
-                                 onStart: { node, identity, passphrase, skipHashCheck in
-                                     choosingRecovery = false
-                                     guard let client = model.client else { return }
-                                     recover.start(client: client, node: node, identity: identity, passphrase: passphrase,
-                                                   skipHashCheck: skipHashCheck, lockEnabled: model.lock.enabled)
-                                 },
-                                 onCancel: { choosingRecovery = false })
+                EtcdRecoverSheet(
+                    picked: picked, nodes: etcd.recoverCandidates, hostnames: [:], clusterName: model.activeContext,
+                    onStart: { node, identity, passphrase, skipHashCheck in
+                        choosingRecovery = false
+                        guard let client = model.client else { return }
+                        recover.start(
+                            client: client, node: node, identity: identity, passphrase: passphrase,
+                            skipHashCheck: skipHashCheck, lockEnabled: model.lock.enabled)
+                    },
+                    onCancel: { choosingRecovery = false })
             }
         }
         // The recovery changed etcd (or stopped half-way): show what is true now.
         .onChange(of: recover.finished) { _, finished in
             if finished { Task { await load() } }
         }
-        .fileMover(isPresented: Binding(get: { fix.moving }, set: { fix.moving = $0 }), file: fix.file,
-                   onCompletion: { fix.moved($0) }, onCancellation: { fix.moveCancelled() })
+        .fileMover(
+            isPresented: Binding(get: { fix.moving }, set: { fix.moving = $0 }), file: fix.file,
+            onCompletion: { fix.moved($0) }, onCancellation: { fix.moveCancelled() }
+        )
         // The fix changed etcd (or stopped half-way): show what is true now.
         .onChange(of: fix.finished) { _, finished in
             if finished { Task { await load() } }
         }
         .sheet(item: Binding(get: { confirmFix.map(FixRequest.init) }, set: { confirmFix = $0?.etcd })) { request in
-            let hostnames = Dictionary(request.etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { first, _ in first })
+            let hostnames = Dictionary(
+                request.etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { first, _ in first })
             EtcdFixConfirmSheet(etcd: request.etcd, hostnames: hostnames, savedKeys: model.activeSnapshotKeys) { pick in
                 confirmFix = nil
                 if case .keys(let keys)? = pick?.encryption { model.setSnapshotKeys(keys) }
@@ -200,14 +240,18 @@ struct EtcdView: View {
                 Task { await defragment(targets) }
             }
         } message: {
-            Text("Each member is busy while it is defragmented. Members are done one at a time, never together, so the cluster keeps quorum.")
+            Text(
+                "Each member is busy while it is defragmented. Members are done one at a time, never together, so the cluster keeps quorum."
+            )
         }
     }
 
     /// One member at a time, stopping at the first failure; Face ID first when the lock is on.
     private func defragment(_ targets: [EtcdNodeStatus]) async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Defragment etcd")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Defragment etcd"))
+        {
             result = failure
             return
         }
@@ -231,7 +275,9 @@ struct EtcdView: View {
         }
         progress = nil
         let reclaimed = formatBytes(targets.reduce(Int64(0)) { $0 + $1.reclaimable })
-        result = String(localized: "Defragmented \(targets.count) members.") + " " + String(localized: "About \(reclaimed) reclaimed.")
+        result =
+            String(localized: "Defragmented \(targets.count) members.") + " "
+            + String(localized: "About \(reclaimed) reclaimed.")
         await load()
     }
 
@@ -262,14 +308,17 @@ struct EtcdView: View {
     /// The hostname of a status' member, its node address when the member list does not have it.
     private func memberName(_ status: EtcdNodeStatus) -> String {
         guard case .loaded(let etcd, _, _) = state,
-              let member = etcd.members.first(where: { $0.id == status.memberId }), !member.hostname.isEmpty else { return status.node }
+            let member = etcd.members.first(where: { $0.id == status.memberId }), !member.hostname.isEmpty
+        else { return status.node }
         return member.hostname
     }
 
     /// Face ID first when the lock is on, then the leader steps down and the list reloads.
     private func forfeitLeadership(_ leader: EtcdNodeStatus) async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Forfeit etcd leadership")) {
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Forfeit etcd leadership"))
+        {
             memberMessage = failure
             return
         }
@@ -278,7 +327,8 @@ struct EtcdView: View {
         do {
             let result = try await client.etcdForfeitLeadership(node: leader.node)
             // No new leader named: the node was not the leader (any more) and nothing changed.
-            memberMessage = result.member.isEmpty
+            memberMessage =
+                result.member.isEmpty
                 ? String(localized: "\(memberName(leader)) was not the leader; nothing changed")
                 : String(localized: "\(memberName(leader)) gave up leadership")
         } catch {
@@ -293,8 +343,12 @@ struct EtcdView: View {
     }
 
     private func disarm() async {
-        guard let client = model.client, case .loaded(let etcd, _, _) = state, let node = disarmNode(etcd) else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Disarm etcd alarms")) {
+        guard let client = model.client, case .loaded(let etcd, _, _) = state, let node = disarmNode(etcd) else {
+            return
+        }
+        if model.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Disarm etcd alarms"))
+        {
             alarmMessage = failure
             return
         }
@@ -329,7 +383,11 @@ private struct MemberStatusRow: View {
                 Text(error).font(.caption).foregroundStyle(.statusBad)
             } else {
                 LabeledContent("Member ID", value: status.memberId).font(.caption.monospaced())
-                LabeledContent("DB size", value: String(localized: "\(formatBytes(status.dbSizeInUse)) in use / \(formatBytes(status.dbSize))")).font(.caption)
+                LabeledContent(
+                    "DB size",
+                    value: String(
+                        localized: "\(formatBytes(status.dbSizeInUse)) in use / \(formatBytes(status.dbSize))")
+                ).font(.caption)
                 UsageBar(fraction: status.dbSize > 0 ? Double(status.dbSizeInUse) / Double(status.dbSize) : 0)
                 LabeledContent("Raft term / index", value: "\(status.raftTerm) / \(status.raftIndex)").font(.caption)
                 lagRows
@@ -343,14 +401,18 @@ private struct MemberStatusRow: View {
         if let lag {
             if !status.isLeader, let behind = lag.behindLeader {
                 LabeledContent("Behind leader") {
-                    Text(behind == 0 ? String(localized: "In sync") : String(localized: "\(Int(clamping: behind)) entries"))
-                        .foregroundStyle(behind >= etcdLagEntries ? Color.statusWarn : Color.primary)
+                    Text(
+                        behind == 0
+                            ? String(localized: "In sync") : String(localized: "\(Int(clamping: behind)) entries")
+                    )
+                    .foregroundStyle(behind >= etcdLagEntries ? Color.statusWarn : Color.primary)
                 }
                 .font(.caption)
             }
             if lag.applyBacklog >= etcdLagEntries {
                 LabeledContent("Not yet applied") {
-                    Text(String(localized: "\(Int(clamping: lag.applyBacklog)) entries")).foregroundStyle(Color.statusWarn)
+                    Text(String(localized: "\(Int(clamping: lag.applyBacklog)) entries")).foregroundStyle(
+                        Color.statusWarn)
                 }
                 .font(.caption)
             }

@@ -25,8 +25,11 @@ final class EtcdFixJob {
     var members: [EtcdFixMember] { events.last?.members ?? [] }
 
     /// `snapshot`: the member, its hostname and the protection; nil skips the snapshot.
-    func start(client: TalosClient, context: String, snapshot: (node: String, hostname: String, encryption: SnapshotEncryption)?,
-               lockEnabled: Bool) {
+    func start(
+        client: TalosClient, context: String,
+        snapshot: (node: String, hostname: String, encryption: SnapshotEncryption)?,
+        lockEnabled: Bool
+    ) {
         guard idle else { return }
         running = true
         task = Task {
@@ -66,27 +69,37 @@ final class EtcdFixJob {
         discard()
     }
 
-    private func run(client: TalosClient, context: String, snapshot: (node: String, hostname: String, encryption: SnapshotEncryption)?,
-                     lockEnabled: Bool) async {
-        if lockEnabled, let failure = await Authenticator.authenticate(reason: String(localized: "Fix the etcd NOSPACE alarm")) {
+    private func run(
+        client: TalosClient, context: String,
+        snapshot: (node: String, hostname: String, encryption: SnapshotEncryption)?,
+        lockEnabled: Bool
+    ) async {
+        if lockEnabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Fix the etcd NOSPACE alarm"))
+        {
             error = failure
             return
         }
         var url: URL?
         if let snapshot {
-            let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+            let folder = FileManager.default.temporaryDirectory.appendingPathComponent(
+                UUID().uuidString, isDirectory: true)
             do {
                 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             } catch {
                 self.error = error.localizedDescription
                 return
             }
-            url = folder.appendingPathComponent(etcdSnapshotFilename(context: context, hostname: snapshot.hostname, date: Date(),
-                                                                     encrypted: snapshot.encryption.mode != .none))
+            url = folder.appendingPathComponent(
+                etcdSnapshotFilename(
+                    context: context, hostname: snapshot.hostname, date: Date(),
+                    encrypted: snapshot.encryption.mode != .none))
         }
         var outcome: String??
-        for await event in client.etcdNospaceFix(snapshotNode: snapshot?.node ?? "", destPath: url?.path ?? "",
-                                                 encryption: snapshot?.encryption ?? .none) {
+        for await event in client.etcdNospaceFix(
+            snapshotNode: snapshot?.node ?? "", destPath: url?.path ?? "",
+            encryption: snapshot?.encryption ?? .none)
+        {
             switch event {
             case .progress(let progress): events.append(progress)
             case .done(let failure): outcome = .some(failure)
@@ -131,8 +144,11 @@ struct EtcdFixConfirmSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    let order = defragOrder(etcd.statuses).map { hostnames[$0.memberId] ?? $0.node }.joined(separator: " → ")
-                    Text("Ichor defragments every etcd member, one at a time (\(order)), disarms the alarm, then reads etcd again. Each member is busy while it is defragmented.")
+                    let order = defragOrder(etcd.statuses).map { hostnames[$0.memberId] ?? $0.node }.joined(
+                        separator: " → ")
+                    Text(
+                        "Ichor defragments every etcd member, one at a time (\(order)), disarms the alarm, then reads etcd again. Each member is busy while it is defragmented."
+                    )
                 }
                 if target != nil {
                     Section {
@@ -180,7 +196,8 @@ struct EtcdFixSection: View {
             }
             ForEach(job.members) { member in
                 LabeledContent {
-                    Text(stateText(member)).foregroundStyle(member.memberState == .failed ? Color.statusBad : Color.secondary)
+                    Text(stateText(member)).foregroundStyle(
+                        member.memberState == .failed ? Color.statusBad : Color.secondary)
                 } label: {
                     Text(verbatim: member.hostname.isEmpty ? member.node : member.hostname)
                 }
@@ -214,12 +231,13 @@ struct EtcdFixSection: View {
     }
 
     private func stateText(_ member: EtcdFixMember) -> String {
-        let state = switch member.memberState {
-        case .pending: String(localized: "waiting")
-        case .running: String(localized: "defragmenting")
-        case .done: String(localized: "done")
-        case .failed: String(localized: "failed")
-        }
+        let state =
+            switch member.memberState {
+            case .pending: String(localized: "waiting")
+            case .running: String(localized: "defragmenting")
+            case .done: String(localized: "done")
+            case .failed: String(localized: "failed")
+            }
         guard member.reclaimedBytes > 0 else { return state }
         return state + " · " + String(localized: "\(formatBytes(member.reclaimedBytes)) freed")
     }

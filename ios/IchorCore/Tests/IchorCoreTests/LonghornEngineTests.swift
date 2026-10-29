@@ -7,15 +7,15 @@ final class LonghornEngineTests: XCTestCase {
 
     func testPreviewDecodesAndAcceptsOnlyADeployedOtherImage() throws {
         let raw = #"""
-        {"namespace":"storage","name":"vol","state":"attached","robustness":"healthy",
-         "currentImage":"longhornio/longhorn-engine:v1.12.0","specImage":"longhornio/longhorn-engine:v1.12.0",
-         "defaultImage":"longhornio/longhorn-engine:v1.13.0","live":true,"canUpgrade":true,"reason":"",
-         "images":[{"image":"longhornio/longhorn-engine:v1.13.0","version":"v1.13.0","deployed":true,"default":true,"incompatible":false},
-                   {"image":"longhornio/longhorn-engine:v1.12.0","version":"v1.12.0","deployed":true,"default":false},
-                   {"image":"example/engine:v1.14.0","deployed":false},
-                   {"image":"example/engine:v1.0.0","deployed":true,"incompatible":true}],
-         "error":""}
-        """#
+            {"namespace":"storage","name":"vol","state":"attached","robustness":"healthy",
+             "currentImage":"longhornio/longhorn-engine:v1.12.0","specImage":"longhornio/longhorn-engine:v1.12.0",
+             "defaultImage":"longhornio/longhorn-engine:v1.13.0","live":true,"canUpgrade":true,"reason":"",
+             "images":[{"image":"longhornio/longhorn-engine:v1.13.0","version":"v1.13.0","deployed":true,"default":true,"incompatible":false},
+                       {"image":"longhornio/longhorn-engine:v1.12.0","version":"v1.12.0","deployed":true,"default":false},
+                       {"image":"example/engine:v1.14.0","deployed":false},
+                       {"image":"example/engine:v1.0.0","deployed":true,"incompatible":true}],
+             "error":""}
+            """#
         let p = try TalosJSON.decode(LonghornEngineUpgradePreview.self, from: raw)
         XCTAssertTrue(p.live)
         XCTAssertEqual(p.images.count, 4)
@@ -31,15 +31,19 @@ final class LonghornEngineTests: XCTestCase {
     }
 
     func testRefusedPreviewAcceptsNothing() throws {
-        let p = try TalosJSON.decode(LonghornEngineUpgradePreview.self, from: #"""
-        {"state":"attached","robustness":"degraded","currentImage":"a:v1","live":true,"canUpgrade":false,
-         "reason":"The volume is degraded: a live upgrade needs a healthy volume.",
-         "images":[{"image":"a:v2","deployed":true,"default":true}]}
-        """#)
+        let p = try TalosJSON.decode(
+            LonghornEngineUpgradePreview.self,
+            from: #"""
+                {"state":"attached","robustness":"degraded","currentImage":"a:v1","live":true,"canUpgrade":false,
+                 "reason":"The volume is degraded: a live upgrade needs a healthy volume.",
+                 "images":[{"image":"a:v2","deployed":true,"default":true}]}
+                """#)
         XCTAssertEqual(p.reason, "The volume is degraded: a live upgrade needs a healthy volume.")
         XCTAssertEqual(p.preselected, "a:v2")
         XCTAssertFalse(p.accepts("a:v2"))
-        let failed = LonghornEngineUpgradePreview(currentImage: "a:v1", canUpgrade: true, images: [LonghornEngineImage(image: "a:v2", deployed: true)], error: "boom")
+        let failed = LonghornEngineUpgradePreview(
+            currentImage: "a:v1", canUpgrade: true, images: [LonghornEngineImage(image: "a:v2", deployed: true)],
+            error: "boom")
         XCTAssertFalse(failed.accepts("a:v2"))
     }
 
@@ -51,11 +55,13 @@ final class LonghornEngineTests: XCTestCase {
     }
 
     func testPreselectIsTheDefaultOnly() {
-        let p = LonghornEngineUpgradePreview(currentImage: "a:v1", canUpgrade: true, images: [
-            LonghornEngineImage(image: "a:v3", deployed: false, isDefault: true),
-            LonghornEngineImage(image: "a:v1", deployed: true),
-            LonghornEngineImage(image: "a:v2", deployed: true),
-        ])
+        let p = LonghornEngineUpgradePreview(
+            currentImage: "a:v1", canUpgrade: true,
+            images: [
+                LonghornEngineImage(image: "a:v3", deployed: false, isDefault: true),
+                LonghornEngineImage(image: "a:v1", deployed: true),
+                LonghornEngineImage(image: "a:v2", deployed: true),
+            ])
         // The default is not deployed yet: nothing is preselected, the user picks one (as on Android).
         XCTAssertEqual(p.preselected, "")
     }
@@ -64,7 +70,9 @@ final class LonghornEngineTests: XCTestCase {
         func volume(_ extra: String) throws -> LonghornVolume {
             try TalosJSON.decode(LonghornVolume.self, from: #"{"name":"v","namespace":"longhorn-system",\#(extra)}"#)
         }
-        let outdated = try volume(#""state":"attached","engineImage":"longhornio/longhorn-engine:v1.12.0","engineCurrentImage":"longhornio/longhorn-engine:v1.12.0","engineOutdated":true,"engineVersion":"v1.12.0""#)
+        let outdated = try volume(
+            #""state":"attached","engineImage":"longhornio/longhorn-engine:v1.12.0","engineCurrentImage":"longhornio/longhorn-engine:v1.12.0","engineOutdated":true,"engineVersion":"v1.12.0""#
+        )
         XCTAssertEqual(outdated.engineImage, old)
         XCTAssertEqual(outdated.engineCurrentImage, old)
         XCTAssertTrue(outdated.engineUpgradable)
@@ -79,16 +87,19 @@ final class LonghornEngineTests: XCTestCase {
         XCTAssertFalse(plain.engineUpgrading)
         XCTAssertEqual(plain.engineLabel, "")
         // No version: the image tag.
-        XCTAssertEqual(try volume(#""engineCurrentImage":"registry.example:5000/longhorn-engine:v1.11.2""#).engineLabel, "v1.11.2")
+        XCTAssertEqual(
+            try volume(#""engineCurrentImage":"registry.example:5000/longhorn-engine:v1.11.2""#).engineLabel, "v1.11.2")
     }
 
     func testStatusEngineImages() throws {
-        let s = try TalosJSON.decode(LonghornStatus.self, from: #"""
-        {"version":"v1.13.0","defaultEngineImage":"longhornio/longhorn-engine:v1.13.0",
-         "volumes":[{"name":"a","engineOutdated":true},{"name":"b"},{"name":"c","engineOutdated":true}],
-         "engineImages":[{"image":"longhornio/longhorn-engine:v1.13.0","version":"v1.13.0","state":"deployed","refCount":1,"deployedNodes":3,"nodes":3},
-                         {"image":"longhornio/longhorn-engine:v1.12.0","version":"v1.12.0","state":"deployed","refCount":2,"incompatible":false}]}
-        """#)
+        let s = try TalosJSON.decode(
+            LonghornStatus.self,
+            from: #"""
+                {"version":"v1.13.0","defaultEngineImage":"longhornio/longhorn-engine:v1.13.0",
+                 "volumes":[{"name":"a","engineOutdated":true},{"name":"b"},{"name":"c","engineOutdated":true}],
+                 "engineImages":[{"image":"longhornio/longhorn-engine:v1.13.0","version":"v1.13.0","state":"deployed","refCount":1,"deployedNodes":3,"nodes":3},
+                                 {"image":"longhornio/longhorn-engine:v1.12.0","version":"v1.12.0","state":"deployed","refCount":2,"incompatible":false}]}
+                """#)
         XCTAssertEqual(s.engineImages.count, 2)
         XCTAssertEqual(s.engineImages[0].deployedNodes, 3)
         XCTAssertEqual(s.engineImages[1].refCount, 2)

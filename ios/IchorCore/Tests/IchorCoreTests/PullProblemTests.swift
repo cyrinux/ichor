@@ -8,9 +8,12 @@ final class PullProblemTests: XCTestCase {
     }
 
     func testDecodesWaitingAndPull() throws {
-        let p = try pod(#","waiting":"429 Too Many Requests","pull":{"kind":"rateLimited","image":"nginx:1.27","registry":"docker.io","secrets":["regcred"]}"#)
+        let p = try pod(
+            #","waiting":"429 Too Many Requests","pull":{"kind":"rateLimited","image":"nginx:1.27","registry":"docker.io","secrets":["regcred"]}"#
+        )
         XCTAssertEqual(p.waiting, "429 Too Many Requests")
-        XCTAssertEqual(p.pull, PullProblem(kind: .rateLimited, image: "nginx:1.27", registry: "docker.io", secrets: ["regcred"]))
+        XCTAssertEqual(
+            p.pull, PullProblem(kind: .rateLimited, image: "nginx:1.27", registry: "docker.io", secrets: ["regcred"]))
     }
 
     func testDecodesWithoutWaitingNorPull() throws {
@@ -62,7 +65,8 @@ final class PullProblemTests: XCTestCase {
     }
 
     func testActions() {
-        XCTAssertEqual(PullProblem(kind: .rateLimited, registry: "docker.io").action, .registryMirror(host: "docker.io"))
+        XCTAssertEqual(
+            PullProblem(kind: .rateLimited, registry: "docker.io").action, .registryMirror(host: "docker.io"))
         XCTAssertEqual(PullProblem(kind: .network).action, .netTools)
         for kind in PullKind.allCases where kind != .rateLimited && kind != .network {
             XCTAssertNil(PullProblem(kind: kind).action)

@@ -46,18 +46,24 @@ final class RecentTargetsTests: XCTestCase {
     func testRoundTripsAndReadsAndroidJSON() {
         let list = RecentTargetList([node(1, at: 5)])
         XCTAssertEqual(RecentTargetList.parse(list.encoded), list)
-        let android = #"[{"target":{"cluster":"aaaaaaaaaaaaaaaa","target":"workload","kind":"Deployment","ns":"default","name":"api"},"label":"api","detail":"default","at":4}]"#
-        XCTAssertEqual(RecentTargetList.parse(android).targets.first?.target, {
-            var t = ShareTarget.workload(kind: "Deployment", namespace: "default", name: "api"); t.cluster = cluster; return t
-        }())
+        let android =
+            #"[{"target":{"cluster":"aaaaaaaaaaaaaaaa","target":"workload","kind":"Deployment","ns":"default","name":"api"},"label":"api","detail":"default","at":4}]"#
+        XCTAssertEqual(
+            RecentTargetList.parse(android).targets.first?.target,
+            {
+                var t = ShareTarget.workload(kind: "Deployment", namespace: "default", name: "api");
+                t.cluster = cluster; return t
+            }())
         XCTAssertTrue(RecentTargetList.parse("not json").targets.isEmpty)
     }
 
     func testAFocusedKubernetesScreenNamesItsObject() {
-        XCTAssertEqual(KubeFocus(tab: .workloads, id: "Deployment/default/api", namespace: "default", name: "api").shareTarget,
-                       .workload(kind: "Deployment", namespace: "default", name: "api"))
-        XCTAssertEqual(KubeFocus(tab: .pods, id: "default/api-0", namespace: "default", name: "api-0").shareTarget,
-                       .pod(namespace: "default", name: "api-0"))
+        XCTAssertEqual(
+            KubeFocus(tab: .workloads, id: "Deployment/default/api", namespace: "default", name: "api").shareTarget,
+            .workload(kind: "Deployment", namespace: "default", name: "api"))
+        XCTAssertEqual(
+            KubeFocus(tab: .pods, id: "default/api-0", namespace: "default", name: "api-0").shareTarget,
+            .pod(namespace: "default", name: "api-0"))
         XCTAssertNil(KubeFocus(tab: .workloads).shareTarget)
     }
 }

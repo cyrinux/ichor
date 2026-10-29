@@ -20,7 +20,8 @@ final class LogFollower {
     /// Follows a Kubernetes container's log when `containerID` is set, else the service's (the
     /// kernel log when `service` is nil).
     func run(_ client: TalosClient, node: String, service: String?, containerID: String? = nil) async {
-        let stream = containerID.map { client.followContainerLogs(node: node, containerID: $0, tailLines: Self.tailLines) }
+        let stream =
+            containerID.map { client.followContainerLogs(node: node, containerID: $0, tailLines: Self.tailLines) }
             ?? client.followLogs(node: node, service: service, tailLines: Self.tailLines)
         await follow(stream)
     }
@@ -65,7 +66,9 @@ final class LogFollower {
         nextID += batch.count
         pending = []
         let (items, texts) = await Task.detached(priority: .userInitiated) {
-            let items = batch.enumerated().map { LogItem(id: firstID + $0.offset, entry: TalosClient.parseLogLine($0.element)) }
+            let items = batch.enumerated().map {
+                LogItem(id: firstID + $0.offset, entry: TalosClient.parseLogLine($0.element))
+            }
             return (items, LogStyle.texts(items))
         }.value
         document = document.appending(items, texts: texts, cap: Self.maxLines)
@@ -126,8 +129,12 @@ struct LogsView: View {
                 }
                 .toggleStyle(.button)
                 if !following {
-                    Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
-                        .accessibilityLabel(Text("Refresh"))
+                    Button {
+                        Task { await load() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .accessibilityLabel(Text("Refresh"))
                 }
                 Menu {
                     Toggle(isOn: $display.raw) {
@@ -322,8 +329,9 @@ private struct PinnedToBottom: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 18.0, *) {
             content.onScrollGeometryChange(for: Metrics.self) { geometry in
-                Metrics(offset: geometry.contentOffset.y,
-                        distanceToBottom: geometry.contentSize.height - geometry.visibleRect.maxY)
+                Metrics(
+                    offset: geometry.contentOffset.y,
+                    distanceToBottom: geometry.contentSize.height - geometry.visibleRect.maxY)
             } action: { old, new in
                 // Only a scroll (offset change) decides; appended lines just grow the content.
                 guard old.offset != new.offset else { return }

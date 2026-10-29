@@ -41,10 +41,12 @@ struct CheckupView: View {
         .task { await load() }
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
-        .confirmationDialog(confirmDelete.map(CheckupText.checkupDeleteNamespaceTitle) ?? "",
-                            isPresented: $confirmDelete.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirmDelete) { namespace in
+        .confirmationDialog(
+            confirmDelete.map(CheckupText.checkupDeleteNamespaceTitle) ?? "",
+            isPresented: $confirmDelete.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirmDelete
+        ) { namespace in
             Button("Delete", role: .destructive) { Task { await deleteLeftover(namespace) } }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
@@ -130,17 +132,21 @@ private struct CheckupVerdictSection: View {
         let warnings = report.count(.warning)
         Section {
             HStack {
-                StatusPill(label: label, color: report.status == .unknown ? CheckupStatus.ok.color : report.status.color)
+                StatusPill(
+                    label: label, color: report.status == .unknown ? CheckupStatus.ok.color : report.status.color)
                 Spacer()
                 if !report.kubeVersion.isEmpty {
-                    Text(verbatim: "Kubernetes \(report.kubeVersion)").font(.caption.monospaced()).foregroundStyle(.secondary)
+                    Text(verbatim: "Kubernetes \(report.kubeVersion)").font(.caption.monospaced()).foregroundStyle(
+                        .secondary)
                 }
             }
             .sectionTarget("verdict")
-            Text(verbatim: critical + warnings == 0
-                ? CheckupText.checkupAllClear("\(report.shownSections.count)")
-                : CheckupText.checkupCounts("\(critical)", "\(warnings)"))
-                .font(.callout)
+            Text(
+                verbatim: critical + warnings == 0
+                    ? CheckupText.checkupAllClear("\(report.shownSections.count)")
+                    : CheckupText.checkupCounts("\(critical)", "\(warnings)")
+            )
+            .font(.callout)
         } footer: {
             Text(verbatim: CheckupText.checkupIntro)
         }
@@ -209,23 +215,32 @@ private struct CheckupSectionBody: View {
             ErrorOrNoticeText(message: CheckupText.checkupSectionError(section.error))
         }
         if section.findings.isEmpty && section.error.isEmpty {
-            Text(verbatim: CheckupText.checkupNothingIn("\(section.checked)")).font(.caption).foregroundStyle(.secondary)
+            Text(verbatim: CheckupText.checkupNothingIn("\(section.checked)")).font(.caption).foregroundStyle(
+                .secondary)
         }
         ForEach(Array(section.findings.enumerated()), id: \.offset) { _, finding in
             if let plugin = finding.plugin, !plugin.plugin.isEmpty {
                 CheckupPluginFindingRow(finding: finding, plugin: plugin)
             } else {
-                CheckupFindingRow(finding: finding, now: now,
-                                  onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil)
+                CheckupFindingRow(
+                    finding: finding, now: now,
+                    onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil)
             }
         }
         if section.truncated > 0 {
-            Text(verbatim: CheckupText.checkupTruncated("\(section.truncated)")).font(.caption).foregroundStyle(.secondary)
+            Text(verbatim: CheckupText.checkupTruncated("\(section.truncated)")).font(.caption).foregroundStyle(
+                .secondary)
         }
         switch section.section {
         case .capacity:
-            NavigationLink { KubeCapacityView() } label: { Text(verbatim: CapacityText.capacityCheckupLink) }
-            let nodes = report.nodes.sorted { max($0.cpuPercent, $0.memoryPercent) > max($1.cpuPercent, $1.memoryPercent) }
+            NavigationLink {
+                KubeCapacityView()
+            } label: {
+                Text(verbatim: CapacityText.capacityCheckupLink)
+            }
+            let nodes = report.nodes.sorted {
+                max($0.cpuPercent, $0.memoryPercent) > max($1.cpuPercent, $1.memoryPercent)
+            }
             CheckupRows(title: CheckupText.checkupRequestsTitle, rows: nodes) { CheckupNodeRequests(node: $0) }
         case .nodes:
             CheckupRows(title: CheckupText.checkupTaintsTitle, rows: report.nodes) { CheckupNodeTaints(node: $0) }
@@ -233,36 +248,49 @@ private struct CheckupSectionBody: View {
             CheckupRows(title: CheckupText.checkupVolumesTitle, rows: report.volumes) { CheckupVolumeRow(volume: $0) }
         case .helm:
             CheckupRows(title: CheckupText.checkupReleasesTitle, rows: report.releases) { release in
-                NavigationLink { HelmReleaseView(namespace: release.namespace, name: release.name) } label: {
+                NavigationLink {
+                    HelmReleaseView(namespace: release.namespace, name: release.name)
+                } label: {
                     CheckupReleaseRow(release: release, now: now)
                 }
             }
         case .loadbalancers:
             if !section.findings.isEmpty || !section.error.isEmpty {
-                NavigationLink { KubeLoadBalancingView() } label: {
+                NavigationLink {
+                    KubeLoadBalancingView()
+                } label: {
                     Label(LoadBalancingText.open, systemImage: "point.3.connected.trianglepath.dotted").font(.callout)
                 }
             }
         case .monitoring:
             // Each down target and failing rule, from the Metrics screen's source (or the first found).
-            NavigationLink { PromMonitoringView(source: nil) } label: {
+            NavigationLink {
+                PromMonitoringView(source: nil)
+            } label: {
                 Label(PromMonitoringText.openFromCheckup, systemImage: "waveform.path.ecg").font(.callout)
             }
         case .policies:
             if !section.findings.isEmpty || !section.error.isEmpty {
-                NavigationLink { PoliciesView() } label: {
+                NavigationLink {
+                    PoliciesView()
+                } label: {
                     Label(CheckupText.checkupOpenPolicies, systemImage: "checklist").font(.callout)
                 }
             }
         case .tailscale:
             if !section.findings.isEmpty || !section.error.isEmpty {
-                NavigationLink { TailscaleView() } label: {
-                    Label(CheckupText.checkupOpenTailscale, systemImage: "network.badge.shield.half.filled").font(.callout)
+                NavigationLink {
+                    TailscaleView()
+                } label: {
+                    Label(CheckupText.checkupOpenTailscale, systemImage: "network.badge.shield.half.filled").font(
+                        .callout)
                 }
             }
         case .clusterapi:
             if !section.findings.isEmpty || !section.error.isEmpty {
-                NavigationLink { ClusterLifecycleView() } label: {
+                NavigationLink {
+                    ClusterLifecycleView()
+                } label: {
                     Label(CheckupText.checkupOpenClusterLifecycle, systemImage: "server.rack").font(.callout)
                 }
             }
@@ -287,7 +315,8 @@ private struct CheckupFindingRow: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: finding.severity.symbol).foregroundStyle(finding.severity.color).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
-                Text(verbatim: subject).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2).truncationMode(.middle)
+                Text(verbatim: subject).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2).truncationMode(
+                    .middle)
                 Text(verbatim: finding.title(now: now)).font(.callout)
                 if !finding.node.isEmpty {
                     Text(verbatim: CheckupText.checkupOnNode(finding.node)).font(.caption).foregroundStyle(.secondary)
@@ -318,13 +347,16 @@ private struct CheckupPluginFindingRow: View {
     var body: some View {
         NavigationLink(value: Route.plugin(id: plugin.plugin)) {
             HStack(alignment: .top, spacing: 10) {
-                Image(systemName: finding.severity.symbol).foregroundStyle(finding.severity.color).accessibilityHidden(true)
+                Image(systemName: finding.severity.symbol).foregroundStyle(finding.severity.color).accessibilityHidden(
+                    true)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(verbatim: plugin.headline).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2).truncationMode(.middle)
+                    Text(verbatim: plugin.headline).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2)
+                        .truncationMode(.middle)
                     if !plugin.detail.isEmpty {
                         Text(verbatim: plugin.detail).font(.callout)
                     }
-                    Text(verbatim: CheckupText.checkupPluginNamed(plugin.pluginLabel)).font(.caption).foregroundStyle(.secondary)
+                    Text(verbatim: CheckupText.checkupPluginNamed(plugin.pluginLabel)).font(.caption).foregroundStyle(
+                        .secondary)
                 }
             }
             .padding(.vertical, 2)
@@ -349,7 +381,8 @@ private struct CheckupRows<Item: Identifiable, Row: View>: View {
                 Button {
                     all.toggle()
                 } label: {
-                    Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(rows.count)")).font(.callout)
+                    Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(rows.count)"))
+                        .font(.callout)
                 }
             }
         }
@@ -365,11 +398,15 @@ private struct CheckupNodeRequests: View {
             HStack {
                 Text(verbatim: node.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
                 Spacer()
-                Text(verbatim: CheckupText.checkupPodsOf("\(node.pods)", "\(node.podCapacity)")).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: CheckupText.checkupPodsOf("\(node.pods)", "\(node.podCapacity)")).font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            bar(CheckupText.checkupCpu, percent: node.cpuPercent,
-                amount: CheckupText.checkupCoresOf(String(format: "%.1f", node.cpuRequests), String(format: "%.1f", node.cpuAllocatable)))
-            bar(CheckupText.checkupMemory, percent: node.memoryPercent,
+            bar(
+                CheckupText.checkupCpu, percent: node.cpuPercent,
+                amount: CheckupText.checkupCoresOf(
+                    String(format: "%.1f", node.cpuRequests), String(format: "%.1f", node.cpuAllocatable)))
+            bar(
+                CheckupText.checkupMemory, percent: node.memoryPercent,
                 amount: "\(formatBytes(Int64(node.memoryRequests))) / \(formatBytes(Int64(node.memoryAllocatable)))")
         }
         .padding(.vertical, 2)
@@ -380,7 +417,8 @@ private struct CheckupNodeRequests: View {
             HStack {
                 Text(verbatim: label).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Text(verbatim: "\(checkupPercent(percent.rounded()))  \(amount)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                Text(verbatim: "\(checkupPercent(percent.rounded()))  \(amount)").font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
             }
             UsageBar(fraction: percent / 100)
         }
@@ -397,17 +435,24 @@ private struct CheckupNodeTaints: View {
             HStack {
                 Text(verbatim: node.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
                 Spacer()
-                if !node.kubelet.isEmpty { Text(verbatim: node.kubelet).font(.caption.monospaced()).foregroundStyle(.secondary) }
+                if !node.kubelet.isEmpty {
+                    Text(verbatim: node.kubelet).font(.caption.monospaced()).foregroundStyle(.secondary)
+                }
             }
-            Text(verbatim: summary).font(.caption).foregroundStyle(node.ready && !node.cordoned ? Color.secondary : Color.statusWarn)
+            Text(verbatim: summary).font(.caption).foregroundStyle(
+                node.ready && !node.cordoned ? Color.secondary : Color.statusWarn)
             ForEach(node.taints, id: \.self) { taint in
-                Text(verbatim: taint).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                Text(verbatim: taint).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                    .truncationMode(.middle)
             }
             if !node.labels.isEmpty {
                 Button {
                     showLabels.toggle()
                 } label: {
-                    Text(verbatim: showLabels ? CheckupText.checkupShowLess : CheckupText.checkupLabels("\(node.labels.count)")).font(.caption)
+                    Text(
+                        verbatim: showLabels
+                            ? CheckupText.checkupShowLess : CheckupText.checkupLabels("\(node.labels.count)")
+                    ).font(.caption)
                 }
                 .buttonStyle(.borderless)
                 if showLabels {
@@ -438,11 +483,13 @@ private struct CheckupVolumeRow: View {
             HStack {
                 Text(verbatim: volume.id).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
                 Spacer()
-                Text(verbatim: volume.measured
-                    ? "\(formatBytes(Int64(volume.used))) / \(formatBytes(Int64(volume.capacity)))"
-                    : formatBytes(Int64(volume.capacity)))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                Text(
+                    verbatim: volume.measured
+                        ? "\(formatBytes(Int64(volume.used))) / \(formatBytes(Int64(volume.capacity)))"
+                        : formatBytes(Int64(volume.capacity))
+                )
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
             }
             if volume.measured {
                 UsageBar(fraction: volume.usedPercent / 100)
@@ -465,9 +512,12 @@ private struct CheckupReleaseRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: release.id).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-                Text(verbatim: CheckupText.checkupReleaseRevision("\(release.revision)", checkupAge(release.updated, now: now)))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    verbatim: CheckupText.checkupReleaseRevision(
+                        "\(release.revision)", checkupAge(release.updated, now: now))
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             Spacer()
             Tag(release.status, color: release.inTrouble ? Color.statusWarn : Color.statusOK)

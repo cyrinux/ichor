@@ -4,35 +4,35 @@ import XCTest
 final class InventoryTests: XCTestCase {
     // Shaped like the Go core's ClusterInventory (demo data), including Go's null slices.
     private let json = #"""
-    {"at":1790000000000,"nodes":5,"answered":4,"apps":[
-      {"id":"cilium","name":"Cilium","category":"networking","icon":"cilium","known":true,"system":false,
-       "version":"v1.18.2","drift":true,"unpinned":false,"namespaces":["kube-system"],
-       "nodes":["192.0.2.20","192.0.2.21"],"containers":3,"running":3,"memory":641728512,
-       "images":[{"repo":"quay.io/cilium/cilium","tag":"v1.18.2","containers":1},
-                 {"repo":"quay.io/cilium/cilium","tag":"v1.18.1","containers":1},
-                 {"repo":"quay.io/cilium/operator-generic","tag":"v1.18.2","containers":1}],
-       "pods":[{"namespace":"kube-system","pod":"cilium-8h2kd","node":"192.0.2.20",
-                "containers":[{"name":"cilium-agent","image":"quay.io/cilium/cilium:v1.18.2","status":"CONTAINER_RUNNING","memory":224395264}]}]},
-      {"id":"coredns","name":"CoreDNS","category":"system","icon":"coredns","known":true,"system":true,
-       "version":"v1.12.3","drift":false,"unpinned":false,"namespaces":["kube-system"],"nodes":["192.0.2.10"],
-       "containers":2,"running":2,"memory":50331648,
-       "images":[{"repo":"registry.k8s.io/coredns/coredns","tag":"v1.12.3","containers":2}],"pods":null},
-      {"id":"grafana","name":"Grafana","category":"observability","icon":"grafana","known":true,"system":false,
-       "version":"12.2.0","drift":false,"unpinned":false,"namespaces":["monitoring"],"nodes":["192.0.2.21"],
-       "containers":2,"running":2,"memory":104857600,
-       "images":[{"repo":"docker.io/grafana/grafana","tag":"12.2.0","containers":1}],"pods":[]},
-      {"id":"kimai","name":"Kimai","category":"productivity","remoteIcon":"kimai","known":true,"system":false,
-       "version":"2.40","drift":false,"unpinned":false,"namespaces":["tools"],"nodes":["192.0.2.20"],
-       "containers":1,"running":1,"memory":1,"images":[],"pods":[]},
-      {"id":"nightly-backup","name":"nightly-backup","category":"other","known":false,"system":false,
-       "version":"","drift":false,"unpinned":false,"namespaces":["tools"],"nodes":null,
-       "containers":1,"running":0,"memory":0,
-       "images":[{"repo":"","tag":"","digest":"sha256:0123456789abcdef0123","containers":1}],"pods":null},
-      {"id":"uptime-kuma","name":"Uptime Kuma","category":"observability","icon":"uptime-kuma","known":true,"system":false,
-       "version":"latest","drift":false,"unpinned":true,"namespaces":["default"],"nodes":["192.0.2.20"],
-       "containers":1,"running":1,"memory":10,"images":[{"repo":"docker.io/louislam/uptime-kuma","tag":"latest","containers":1}],"pods":[]}
-    ]}
-    """#
+        {"at":1790000000000,"nodes":5,"answered":4,"apps":[
+          {"id":"cilium","name":"Cilium","category":"networking","icon":"cilium","known":true,"system":false,
+           "version":"v1.18.2","drift":true,"unpinned":false,"namespaces":["kube-system"],
+           "nodes":["192.0.2.20","192.0.2.21"],"containers":3,"running":3,"memory":641728512,
+           "images":[{"repo":"quay.io/cilium/cilium","tag":"v1.18.2","containers":1},
+                     {"repo":"quay.io/cilium/cilium","tag":"v1.18.1","containers":1},
+                     {"repo":"quay.io/cilium/operator-generic","tag":"v1.18.2","containers":1}],
+           "pods":[{"namespace":"kube-system","pod":"cilium-8h2kd","node":"192.0.2.20",
+                    "containers":[{"name":"cilium-agent","image":"quay.io/cilium/cilium:v1.18.2","status":"CONTAINER_RUNNING","memory":224395264}]}]},
+          {"id":"coredns","name":"CoreDNS","category":"system","icon":"coredns","known":true,"system":true,
+           "version":"v1.12.3","drift":false,"unpinned":false,"namespaces":["kube-system"],"nodes":["192.0.2.10"],
+           "containers":2,"running":2,"memory":50331648,
+           "images":[{"repo":"registry.k8s.io/coredns/coredns","tag":"v1.12.3","containers":2}],"pods":null},
+          {"id":"grafana","name":"Grafana","category":"observability","icon":"grafana","known":true,"system":false,
+           "version":"12.2.0","drift":false,"unpinned":false,"namespaces":["monitoring"],"nodes":["192.0.2.21"],
+           "containers":2,"running":2,"memory":104857600,
+           "images":[{"repo":"docker.io/grafana/grafana","tag":"12.2.0","containers":1}],"pods":[]},
+          {"id":"kimai","name":"Kimai","category":"productivity","remoteIcon":"kimai","known":true,"system":false,
+           "version":"2.40","drift":false,"unpinned":false,"namespaces":["tools"],"nodes":["192.0.2.20"],
+           "containers":1,"running":1,"memory":1,"images":[],"pods":[]},
+          {"id":"nightly-backup","name":"nightly-backup","category":"other","known":false,"system":false,
+           "version":"","drift":false,"unpinned":false,"namespaces":["tools"],"nodes":null,
+           "containers":1,"running":0,"memory":0,
+           "images":[{"repo":"","tag":"","digest":"sha256:0123456789abcdef0123","containers":1}],"pods":null},
+          {"id":"uptime-kuma","name":"Uptime Kuma","category":"observability","icon":"uptime-kuma","known":true,"system":false,
+           "version":"latest","drift":false,"unpinned":true,"namespaces":["default"],"nodes":["192.0.2.20"],
+           "containers":1,"running":1,"memory":10,"images":[{"repo":"docker.io/louislam/uptime-kuma","tag":"latest","containers":1}],"pods":[]}
+        ]}
+        """#
 
     private func load() throws -> ClusterInventory {
         try TalosJSON.decode(ClusterInventory.self, from: json)
@@ -88,7 +88,8 @@ final class InventoryTests: XCTestCase {
     func testFilters() throws {
         let apps = try load().apps
         XCTAssertEqual(filterApps(apps, query: "", filter: .attention).map(\.id), ["cilium", "uptime-kuma"])
-        XCTAssertEqual(filterApps(apps, query: "", filter: .category(.observability)).map(\.id), ["grafana", "uptime-kuma"])
+        XCTAssertEqual(
+            filterApps(apps, query: "", filter: .category(.observability)).map(\.id), ["grafana", "uptime-kuma"])
         XCTAssertEqual(filterApps(apps, query: "kuma", filter: .category(.networking)), [])
     }
 
@@ -120,18 +121,24 @@ final class InventoryTests: XCTestCase {
 
     func testCustomIconSource() throws {
         let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        XCTAssertEqual(customIconSource("data:image/png;base64,\(png)", remoteIcons: false), .inline(Data(base64Encoded: png)!))
-        XCTAssertEqual(customIconSource("https://a.example/w.png", remoteIcons: true), .url(URL(string: "https://a.example/w.png")!))
+        XCTAssertEqual(
+            customIconSource("data:image/png;base64,\(png)", remoteIcons: false), .inline(Data(base64Encoded: png)!))
+        XCTAssertEqual(
+            customIconSource("https://a.example/w.png", remoteIcons: true),
+            .url(URL(string: "https://a.example/w.png")!))
         // A URL is a download: only when the user allowed them.
         XCTAssertNil(customIconSource("https://a.example/w.png", remoteIcons: false))
         let big = Data(count: customIconMaxBytes + 1).base64EncodedString()
-        for bad in ["grafana", "http://a.example/w.png", "https://u:p@a.example/w.png", "https:///w.png",
-                    "file:///etc/passwd", "data:image/svg+xml;base64,PHN2Zy8+", "data:image/png;base64,***",
-                    "data:image/png;base64,\(big)"] {
+        for bad in [
+            "grafana", "http://a.example/w.png", "https://u:p@a.example/w.png", "https:///w.png",
+            "file:///etc/passwd", "data:image/svg+xml;base64,PHN2Zy8+", "data:image/png;base64,***",
+            "data:image/png;base64,\(big)",
+        ] {
             XCTAssertNil(customIconSource(bad, remoteIcons: true), bad)
         }
         // The app's own icon wins over its catalog one; an invalid one falls back to it.
-        let app = try TalosJSON.decode(InventoryApp.self, from: #"{"id":"x","name":"X","icon":"cilium","iconUrl":"https://a.example/w.png"}"#)
+        let app = try TalosJSON.decode(
+            InventoryApp.self, from: #"{"id":"x","name":"X","icon":"cilium","iconUrl":"https://a.example/w.png"}"#)
         XCTAssertEqual(app.iconSource(remoteIcons: true), .url(URL(string: "https://a.example/w.png")!))
         XCTAssertEqual(app.iconSource(remoteIcons: false), .bundled("cilium"))
     }
@@ -144,22 +151,26 @@ final class InventoryTests: XCTestCase {
         XCTAssertFalse(isValidIconSlug("Cilium"))
         XCTAssertFalse(isValidIconSlug(""))
         // A bundled name that is not a slug is ignored: monogram (or the remote icon).
-        let bad = try TalosJSON.decode(InventoryApp.self, from: #"{"id":"x","name":"X","icon":"../x","remoteIcon":"kimai"}"#)
+        let bad = try TalosJSON.decode(
+            InventoryApp.self, from: #"{"id":"x","name":"X","icon":"../x","remoteIcon":"kimai"}"#)
         XCTAssertEqual(bad.iconSource(remoteIcons: false), .monogram)
         XCTAssertEqual(bad.iconSource(remoteIcons: true), .remote("kimai"))
     }
 
     func testRemoteIconURLsFallBackToGitHub() {
-        XCTAssertEqual(remoteIconURLs(slug: "kimai").map(\.absoluteString), [
-            "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/kimai.webp",
-            "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/kimai.webp",
-        ])
+        XCTAssertEqual(
+            remoteIconURLs(slug: "kimai").map(\.absoluteString),
+            [
+                "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/kimai.webp",
+                "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/kimai.webp",
+            ])
         XCTAssertEqual(remoteIconURLs(slug: "../secrets"), [])
     }
 
     func testRemoteIconURL() {
-        XCTAssertEqual(remoteIconURL(slug: "kimai")?.absoluteString,
-                       "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/kimai.webp")
+        XCTAssertEqual(
+            remoteIconURL(slug: "kimai")?.absoluteString,
+            "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/kimai.webp")
         XCTAssertNotNil(remoteIconURL(slug: "home-assistant-2"))
         XCTAssertNil(remoteIconURL(slug: ""))
         XCTAssertNil(remoteIconURL(slug: "-kimai"))

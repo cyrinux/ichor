@@ -36,11 +36,13 @@ final class HealthExplanation {
                 }
             }
             do {
-                let report = try await client.collectHealthExplanation(lines: lines, failure: failure, anonymize: anonymize)
+                let report = try await client.collectHealthExplanation(
+                    lines: lines, failure: failure, anonymize: anonymize)
                 guard !Task.isCancelled else { return }
                 collecting = false
-                let events = report.ask(provider: provider.id, settings: settings, language: appLanguage,
-                                        note: healthFailureNote(failure))
+                let events = report.ask(
+                    provider: provider.id, settings: settings, language: appLanguage,
+                    note: healthFailureNote(failure))
                 for await event in events {
                     // Stopped or replaced: what was still queued belongs to the old answer.
                     guard !Task.isCancelled else { break }
@@ -105,16 +107,24 @@ struct HealthExplainSection: View {
                 Text(verbatim: error).foregroundStyle(.statusBad)
             }
             if !explanation.running, !explanation.text.isEmpty {
-                Button { UIPasteboard.general.string = explanation.text } label: { Label("Copy", systemImage: "doc.on.doc") }
+                Button {
+                    UIPasteboard.general.string = explanation.text
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
             }
             NavigationLink("Continue in Diagnosis", value: Route.diagnosis(note: healthFailureNote(failure)))
         } header: {
             Text("What went wrong")
         } footer: {
             if !explanation.text.isEmpty {
-                Text("AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.")
+                Text(
+                    "AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd."
+                )
             } else if ai.onPhone, ai.canAsk {
-                Text("Reads the failed checks, node readiness and recent events with the model on this phone. Nothing leaves it.")
+                Text(
+                    "Reads the failed checks, node readiness and recent events with the model on this phone. Nothing leaves it."
+                )
             } else if let provider = ai.provider, ai.canAsk {
                 Text("Sends the failed checks, node readiness and recent events to \(provider.name).")
             }

@@ -32,9 +32,10 @@ struct NodeMetaEditorView: View {
                 NodeMetaEntrySheet(entry: entry) { save($0) }
             }
             .sheet(item: $reviewed) { reviewed in
-                NodeMetaPlanSheet(plan: reviewed.plan, hostname: hostname,
-                                  apply: { await apply(reviewed) },
-                                  reload: { Task { await load() } })
+                NodeMetaPlanSheet(
+                    plan: reviewed.plan, hostname: hostname,
+                    apply: { await apply(reviewed) },
+                    reload: { Task { await load() } })
             }
             .alert(outcome ?? "", isPresented: Binding(get: { outcome != nil }, set: { if !$0 { outcome = nil } })) {
                 Button("OK", role: .cancel) {}
@@ -46,24 +47,36 @@ struct NodeMetaEditorView: View {
             Section {
                 Toggle("Show protected", isOn: $showProtected)
             } footer: {
-                Text("Taints and labels set by Kubernetes, Talos or the cloud provider are locked. Show them to change them anyway.")
+                Text(
+                    "Taints and labels set by Kubernetes, Talos or the cloud provider are locked. Show them to change them anyway."
+                )
             }
             Section("Taints") {
                 if draft.taints.isEmpty { Text("No taints.").foregroundStyle(.secondary) }
                 ForEach(draft.taints) { taint in
                     taintRow(taint, editable: NodeMetaDraft.editable(taint, showProtected: showProtected))
                 }
-                Button { entry = NodeMetaEntry(kind: .taint) } label: { Label("Add a taint", systemImage: "plus") }
+                Button {
+                    entry = NodeMetaEntry(kind: .taint)
+                } label: {
+                    Label("Add a taint", systemImage: "plus")
+                }
             }
             Section("Labels") {
                 if draft.labels.isEmpty { Text("No labels.").foregroundStyle(.secondary) }
                 ForEach(draft.labels) { label in
                     labelRow(label, editable: NodeMetaDraft.editable(label, showProtected: showProtected))
                 }
-                Button { entry = NodeMetaEntry(kind: .label) } label: { Label("Add a label", systemImage: "plus") }
+                Button {
+                    entry = NodeMetaEntry(kind: .label)
+                } label: {
+                    Label("Add a label", systemImage: "plus")
+                }
             }
             Section {
-                Button { Task { await review() } } label: {
+                Button {
+                    Task { await review() }
+                } label: {
                     if reviewing { ProgressView() } else { Text("Review") }
                 }
                 .disabled(!draft.hasChanges || reviewing)
@@ -121,7 +134,9 @@ struct NodeMetaEditorView: View {
         let value = entry.value.trimmingCharacters(in: .whitespaces)
         switch entry.kind {
         case .taint:
-            update { $0.setTaint(NodeTaint(key: key, value: value, effect: entry.effect.rawValue), replacing: entry.taint) }
+            update {
+                $0.setTaint(NodeTaint(key: key, value: value, effect: entry.effect.rawValue), replacing: entry.taint)
+            }
         case .label:
             update { $0.setLabel(NodeLabel(key: key, value: value), replacing: entry.label) }
         }
@@ -164,7 +179,9 @@ struct NodeMetaEditorView: View {
     /// that were planned. Returns why it failed, nil once applied (the sheet then closes).
     private func apply(_ reviewed: ReviewedNodeMetaPlan) async -> String? {
         guard let client = model.client else { return nil }
-        let reason = reviewed.plan.hasTaintChanges ? String(localized: "Change the taints of \(hostname)")
+        let reason =
+            reviewed.plan.hasTaintChanges
+            ? String(localized: "Change the taints of \(hostname)")
             : String(localized: "Change the labels of \(hostname)?")
         if model.lock.enabled, let failure = await Authenticator.authenticate(reason: reason) {
             return failure

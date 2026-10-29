@@ -25,7 +25,10 @@ final class LoadStateRefreshTests: XCTestCase {
         guard case .loaded(let v, _, let error)? = after else { return XCTFail("data dropped") }
         XCTAssertEqual(v, 1)
         XCTAssertEqual(error, "down")
-        guard case .failed(let message)? = LoadState<Int>.loading.refreshed(with: .failed("down"), readFor: "a", current: "a") else {
+        guard
+            case .failed(let message)? = LoadState<Int>.loading.refreshed(
+                with: .failed("down"), readFor: "a", current: "a")
+        else {
             return XCTFail("a screen with nothing to show gets the error page")
         }
         XCTAssertEqual(message, "down")

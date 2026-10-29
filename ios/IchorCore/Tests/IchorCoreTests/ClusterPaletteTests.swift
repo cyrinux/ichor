@@ -5,7 +5,9 @@ final class ClusterPaletteTests: XCTestCase {
     /// Built-in seeds, a hue sweep at the slider's vividness, greys and extreme picks.
     private var seeds: [Int] {
         let sweep = stride(from: 0.0, to: 360.0, by: 10.0).map { hslToRGB(hue: $0, saturation: 0.8, lightness: 0.55) }
-        let extremes = [0xFFFF00, 0x00FFFF, 0x0000FF, 0xFF0000, 0x00FF00, 0xFF00FF, 0x010101, 0xFEFEFE, 0x0A0A3A, 0xF0F0C0]
+        let extremes = [
+            0xFFFF00, 0x00FFFF, 0x0000FF, 0xFF0000, 0x00FF00, 0xFF00FF, 0x010101, 0xFEFEFE, 0x0A0A3A, 0xF0F0C0,
+        ]
         let greys = [0x000000, 0xFFFFFF, 0x808080, 0x7F8082, 0x333333]
         return clusterSeeds + sweep + extremes + greys
     }
@@ -53,7 +55,8 @@ final class ClusterPaletteTests: XCTestCase {
     /// True black only blackens the page: the containers keep the dark tones.
     func testTrueBlackKeepsDarkContainers() {
         for seed in clusterSeeds {
-            XCTAssertEqual(ClusterPalette(seed: seed, appearance: .trueBlack), ClusterPalette(seed: seed, appearance: .dark))
+            XCTAssertEqual(
+                ClusterPalette(seed: seed, appearance: .trueBlack), ClusterPalette(seed: seed, appearance: .dark))
         }
     }
 
@@ -70,7 +73,10 @@ final class ClusterPaletteTests: XCTestCase {
         for seed in [0x808080, 0x000000, 0xFFFFFF, 0x7F8082] {
             for appearance in appearances {
                 let palette = ClusterPalette(seed: seed, appearance: appearance)
-                for color in [palette.primaryContainer, palette.onPrimaryContainer, palette.secondaryContainer, palette.onSecondaryContainer] {
+                for color in [
+                    palette.primaryContainer, palette.onPrimaryContainer, palette.secondaryContainer,
+                    palette.onSecondaryContainer,
+                ] {
                     XCTAssertLessThan(hsl(color).saturation, 0.1, String(seed, radix: 16))
                 }
             }
@@ -79,7 +85,11 @@ final class ClusterPaletteTests: XCTestCase {
 
     /// Another seed, another palette: the colors are computed from the seed, nothing kept.
     func testPaletteFollowsTheSeed() {
-        XCTAssertNotEqual(ClusterPalette(seed: clusterSeeds[0], appearance: .light), ClusterPalette(seed: clusterSeeds[1], appearance: .light))
-        XCTAssertNotEqual(ClusterPalette(seed: clusterSeeds[0], appearance: .light), ClusterPalette(seed: clusterSeeds[0], appearance: .dark))
+        XCTAssertNotEqual(
+            ClusterPalette(seed: clusterSeeds[0], appearance: .light),
+            ClusterPalette(seed: clusterSeeds[1], appearance: .light))
+        XCTAssertNotEqual(
+            ClusterPalette(seed: clusterSeeds[0], appearance: .light),
+            ClusterPalette(seed: clusterSeeds[0], appearance: .dark))
     }
 }

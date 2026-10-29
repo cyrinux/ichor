@@ -25,7 +25,8 @@ enum OperationActivities {
             Task { await activity.end(nil, dismissalPolicy: .immediate) }
         }
         // The app lock turned on or off (a setting, not observable): mask or unmask at once.
-        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { _ in
+        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) {
+            _ in
             MainActor.assumeIsolated { resync() }
         }
         observe()
@@ -130,9 +131,12 @@ enum OperationActivities {
     /// What each run shows now; none for a kind with no run, nor one cleared.
     private static func current() -> [OperationKind: OperationContent] {
         let entries: [(OperationKind, OperationContent?)] = [
-            (.upgrade, upgrade()), (.maintenance, maintenance()), (.configTry, configTry()), (.configMulti, configMulti()),
-            (.clusterUpgrade, clusterUpgrade()), (.k8sUpgrade, k8sUpgrade()), (.imagePull, imagePull()), (.join, join()),
-            (.imageScan, imageScan()), (.argoSync, argoSync()), (.fluxReconcile, fluxReconcile()), (.rollout, rollout()),
+            (.upgrade, upgrade()), (.maintenance, maintenance()), (.configTry, configTry()),
+            (.configMulti, configMulti()),
+            (.clusterUpgrade, clusterUpgrade()), (.k8sUpgrade, k8sUpgrade()), (.imagePull, imagePull()),
+            (.join, join()),
+            (.imageScan, imageScan()), (.argoSync, argoSync()), (.fluxReconcile, fluxReconcile()),
+            (.rollout, rollout()),
             (.netPerf, netPerf()), (.runbook, runbook()), (.podSweep, podSweep()), (.caRotation, caRotation()),
         ]
         let locked = lockEnabled
@@ -163,9 +167,13 @@ enum OperationActivities {
         case .failed(let message)?:
             return OperationContent(title: title, step: message, phase: .failed)
         case .unfollowed?:
-            return OperationContent(title: title, step: String(localized: "Stopped following. The node keeps upgrading: check its version later."), phase: .stopped)
+            return OperationContent(
+                title: title,
+                step: String(localized: "Stopped following. The node keeps upgrading: check its version later."),
+                phase: .stopped)
         case nil:
-            let step = job.events.last.map(\.message).flatMap { $0.isEmpty ? nil : $0 } ?? String(localized: "Requested")
+            let step =
+                job.events.last.map(\.message).flatMap { $0.isEmpty ? nil : $0 } ?? String(localized: "Requested")
             return OperationContent(title: title, step: step, buttons: OperationButton.offered(for: .upgrade))
         }
     }
@@ -175,11 +183,13 @@ enum OperationActivities {
         guard let target = job.target else { return nil }
         let title = String(localized: "Maintenance of \(target.hostname)")
         switch job.outcome {
-        case .succeeded?: return OperationContent(title: title, step: String(localized: "Maintenance done"), phase: .succeeded)
+        case .succeeded?:
+            return OperationContent(title: title, step: String(localized: "Maintenance done"), phase: .succeeded)
         case .failed(let message)?: return OperationContent(title: title, step: message, phase: .failed)
         case nil:
-            return OperationContent(title: title, step: job.events.last?.message ?? "",
-                                    buttons: OperationButton.offered(for: .maintenance, stopping: job.stopping))
+            return OperationContent(
+                title: title, step: job.events.last?.message ?? "",
+                buttons: OperationButton.offered(for: .maintenance, stopping: job.stopping))
         }
     }
 
@@ -188,17 +198,25 @@ enum OperationActivities {
         guard let target = job.target else { return nil }
         let title = String(localized: "Trying a config change on \(target.hostname)")
         if let outcome = job.outcome {
-            let phase: OperationPhase = switch outcome {
-            case .kept: .succeeded
-            case .reverted: .stopped
-            case .failed: .failed
-            }
+            let phase: OperationPhase =
+                switch outcome {
+                case .kept: .succeeded
+                case .reverted: .stopped
+                case .failed: .failed
+                }
             return OperationContent(title: title, step: ConfigTryJob.announcement(outcome), phase: phase)
         }
         let deadline = job.progress?.deadlineDate
-        let step = deadline.map { String(localized: "Reverts by itself at \($0.formatted(date: .omitted, time: .shortened)) unless you keep it.") }
+        let step =
+            deadline.map {
+                String(
+                    localized:
+                        "Reverts by itself at \($0.formatted(date: .omitted, time: .shortened)) unless you keep it.")
+            }
             ?? String(localized: "The node reverts by itself unless you keep the change.")
-        return OperationContent(title: title, step: step, deadline: deadline, buttons: OperationButton.offered(for: .configTry, waiting: job.waiting))
+        return OperationContent(
+            title: title, step: step, deadline: deadline,
+            buttons: OperationButton.offered(for: .configTry, waiting: job.waiting))
     }
 
     private static func configMulti() -> OperationContent? {
@@ -206,14 +224,21 @@ enum OperationActivities {
         guard job.target != nil else { return nil }
         let title = String(localized: "Config rollout")
         if let outcome = job.outcome {
-            if job.stopped, let stopped = outcome { return OperationContent(title: title, step: stopped, phase: .stopped) }
-            return OperationContent(title: title, step: outcome ?? String(localized: "Every node has the change."), phase: outcome == nil ? .succeeded : .failed)
+            if job.stopped, let stopped = outcome {
+                return OperationContent(title: title, step: stopped, phase: .stopped)
+            }
+            return OperationContent(
+                title: title, step: outcome ?? String(localized: "Every node has the change."),
+                phase: outcome == nil ? .succeeded : .failed)
         }
         guard let p = job.progress, let count = operationCount(index: p.index, total: p.total) else {
-            return OperationContent(title: title, step: "", buttons: OperationButton.offered(for: .configMulti, stopping: job.stopped))
+            return OperationContent(
+                title: title, step: "", buttons: OperationButton.offered(for: .configMulti, stopping: job.stopped))
         }
-        return OperationContent(title: title, step: String(localized: "\(count.done) of \(count.total) nodes done"), done: count.done, total: count.total,
-                                buttons: OperationButton.offered(for: .configMulti, stopping: job.stopped))
+        return OperationContent(
+            title: title, step: String(localized: "\(count.done) of \(count.total) nodes done"), done: count.done,
+            total: count.total,
+            buttons: OperationButton.offered(for: .configMulti, stopping: job.stopped))
     }
 
     private static func clusterUpgrade() -> OperationContent? {
@@ -221,28 +246,40 @@ enum OperationActivities {
         guard let version = job.version else { return nil }
         let title = String(localized: "Upgrading the cluster to \(version)")
         if let outcome = job.outcome {
-            return OperationContent(title: title, step: outcome ?? String(localized: "Every node runs \(version)."), phase: outcome == nil ? .succeeded : .failed)
+            return OperationContent(
+                title: title, step: outcome ?? String(localized: "Every node runs \(version)."),
+                phase: outcome == nil ? .succeeded : .failed)
         }
         let buttons = OperationButton.offered(for: .clusterUpgrade, stopping: job.aborting, paused: job.paused)
         guard let p = job.progress, let count = operationCount(index: p.index, total: p.total) else {
             return OperationContent(title: title, step: String(localized: "Starting the rollout…"), buttons: buttons)
         }
-        let step = String(localized: "Upgrading \(min(p.index + 1, p.total))/\(p.total): \(p.name), \(p.localizedPhase)")
-        return OperationContent(title: title, step: step, done: count.done, total: count.total, phase: job.paused ? .paused : .running, buttons: buttons)
+        let step = String(
+            localized: "Upgrading \(min(p.index + 1, p.total))/\(p.total): \(p.name), \(p.localizedPhase)")
+        return OperationContent(
+            title: title, step: step, done: count.done, total: count.total, phase: job.paused ? .paused : .running,
+            buttons: buttons)
     }
 
     private static func k8sUpgrade() -> OperationContent? {
         let job = K8sUpgradeJob.shared
         guard let version = job.version else { return nil }
-        let title = job.dryRun ? String(localized: "Kubernetes dry run to \(version)") : String(localized: "Upgrading Kubernetes to \(version)")
+        let title =
+            job.dryRun
+            ? String(localized: "Kubernetes dry run to \(version)")
+            : String(localized: "Upgrading Kubernetes to \(version)")
         if let outcome = job.outcome {
-            let done = job.dryRun ? String(localized: "Every node accepted its change. Nothing was applied.") : String(localized: "Every component runs \(version).")
+            let done =
+                job.dryRun
+                ? String(localized: "Every node accepted its change. Nothing was applied.")
+                : String(localized: "Every component runs \(version).")
             return OperationContent(title: title, step: outcome ?? done, phase: outcome == nil ? .succeeded : .failed)
         }
         let buttons = OperationButton.offered(for: .k8sUpgrade, stopping: job.cancelling)
         guard let p = job.latest else { return OperationContent(title: title, step: "", buttons: buttons) }
         let count = operationCount(index: p.index, total: p.total)
-        return OperationContent(title: title, step: p.localizedStep, done: count?.done, total: count?.total, buttons: buttons)
+        return OperationContent(
+            title: title, step: p.localizedStep, done: count?.done, total: count?.total, buttons: buttons)
     }
 
     private static func imagePull() -> OperationContent? {
@@ -253,12 +290,17 @@ enum OperationActivities {
         let step = String(localized: "\(p.done) of \(p.total) nodes done")
         let count = operationCount(index: p.done, total: p.total)
         if job.isRunning {
-            return OperationContent(title: title, step: step, done: count?.done, total: count?.total,
-                                    buttons: OperationButton.offered(for: .imagePull, stopping: job.outcome == .stopped))
+            return OperationContent(
+                title: title, step: step, done: count?.done, total: count?.total,
+                buttons: OperationButton.offered(for: .imagePull, stopping: job.outcome == .stopped))
         }
         switch job.outcome {
-        case .succeeded?: return OperationContent(title: title, step: String(localized: "Image pulled"), done: count?.done, total: count?.total, phase: .succeeded)
-        case .stopped?: return OperationContent(title: title, step: String(localized: "Image pull stopped"), phase: .stopped)
+        case .succeeded?:
+            return OperationContent(
+                title: title, step: String(localized: "Image pulled"), done: count?.done, total: count?.total,
+                phase: .succeeded)
+        case .stopped?:
+            return OperationContent(title: title, step: String(localized: "Image pull stopped"), phase: .stopped)
         case .failed(let message)?: return OperationContent(title: title, step: message, phase: .failed)
         case nil: return nil
         }
@@ -270,11 +312,15 @@ enum OperationActivities {
         let title = String(localized: "Adding \(request.hostname)")
         switch job.outcome {
         case .joined(let address)?:
-            return OperationContent(title: title, step: String(localized: "\(request.hostname) joined the cluster as \(address)"), phase: .succeeded)
+            return OperationContent(
+                title: title, step: String(localized: "\(request.hostname) joined the cluster as \(address)"),
+                phase: .succeeded)
         case .failed(let message)?:
             return OperationContent(title: title, step: message, phase: .failed)
         case nil:
-            return OperationContent(title: title, step: job.events.last?.message ?? "", buttons: OperationButton.offered(for: .join, stopping: job.stopping))
+            return OperationContent(
+                title: title, step: job.events.last?.message ?? "",
+                buttons: OperationButton.offered(for: .join, stopping: job.stopping))
         }
     }
 
@@ -288,9 +334,14 @@ enum OperationActivities {
                 ? OperationContent(title: title, step: String(localized: "Scan stopped"), phase: .stopped)
                 : OperationContent(title: title, step: String(localized: "Scan done"), phase: .succeeded)
         }
-        let step = state.stopping ? String(localized: "Stopping…") : imageScanPhaseText(state.progress, scanner: state.scanner.label)
-        let count = state.progress.flatMap { $0.phase == ImageScanPhase.scanning ? operationCount(index: $0.step - 1, total: $0.steps) : nil }
-        return OperationContent(title: title, step: step, done: count?.done, total: count?.total,
-                                buttons: OperationButton.offered(for: .imageScan, stopping: state.stopping))
+        let step =
+            state.stopping
+            ? String(localized: "Stopping…") : imageScanPhaseText(state.progress, scanner: state.scanner.label)
+        let count = state.progress.flatMap {
+            $0.phase == ImageScanPhase.scanning ? operationCount(index: $0.step - 1, total: $0.steps) : nil
+        }
+        return OperationContent(
+            title: title, step: step, done: count?.done, total: count?.total,
+            buttons: OperationButton.offered(for: .imageScan, stopping: state.stopping))
     }
 }

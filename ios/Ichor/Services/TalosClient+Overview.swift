@@ -44,7 +44,9 @@ private final class OverviewBridge: NSObject, IchorgoOverviewListenerProtocol, @
     private let node: @Sendable (NodeOverview) -> Void
     private let done: @Sendable (ClusterOverview?, String?) -> Void
 
-    init(node: @escaping @Sendable (NodeOverview) -> Void, done: @escaping @Sendable (ClusterOverview?, String?) -> Void) {
+    init(
+        node: @escaping @Sendable (NodeOverview) -> Void, done: @escaping @Sendable (ClusterOverview?, String?) -> Void
+    ) {
         self.node = node
         self.done = done
     }

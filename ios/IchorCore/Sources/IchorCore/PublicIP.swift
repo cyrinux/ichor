@@ -52,7 +52,8 @@ public struct PublicIPReport: Codable, Equatable, Sendable {
         let host = node.hostname
         guard !host.isEmpty, host != node.node else { return nil }
         let short = { (name: String) in String(name.lowercased().split(separator: ".").first ?? "") }
-        return (found.first { $0.name.lowercased() == host.lowercased() }
+        return
+            (found.first { $0.name.lowercased() == host.lowercased() }
             ?? found.first { short($0.name) == short(host) })?.publicIP
     }
 

@@ -31,7 +31,8 @@ extension VmAction {
 func vmProgressText(_ progress: VmProgress?) -> String? {
     switch progress {
     case .importing(let disk, let value): String(localized: "Importing \(disk) \(value.isEmpty ? "…" : value)")
-    case .migrating(let from, let to): String(localized: "Migrating \(from.isEmpty ? "?" : from) → \(to.isEmpty ? "?" : to)")
+    case .migrating(let from, let to):
+        String(localized: "Migrating \(from.isEmpty ? "?" : from) → \(to.isEmpty ? "?" : to)")
     case nil: nil
     }
 }

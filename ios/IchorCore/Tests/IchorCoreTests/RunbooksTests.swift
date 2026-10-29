@@ -3,12 +3,12 @@ import XCTest
 
 final class RunbooksTests: XCTestCase {
     private let planJSON = #"""
-    {"name":"Restart ingestion","description":"Scale down, restart.","steps":[
-     {"id":"scale-down","action":"scale","target":{"kind":"Deployment","namespace":"demo-shop","name":"ingest-api","node":""},"destructive":true,"continueOnError":false,"role":"os:admin","allowed":false,"denied":"the cluster's RBAC refuses patch deployments.apps in namespace demo-shop"},
-     {"id":"compact","action":"triggerCronJob","target":{"kind":"","namespace":"demo-shop","name":"store-compaction","node":""},"destructive":false,"continueOnError":true,"role":"os:admin","allowed":false,"denied":"no"},
-     {"id":"reboot","action":"nodeReboot","target":{"kind":"","namespace":"","name":"","node":"10.5.0.5"},"destructive":true,"continueOnError":false,"role":"os:operator","allowed":true,"denied":""}
-    ],"errors":[]}
-    """#
+        {"name":"Restart ingestion","description":"Scale down, restart.","steps":[
+         {"id":"scale-down","action":"scale","target":{"kind":"Deployment","namespace":"demo-shop","name":"ingest-api","node":""},"destructive":true,"continueOnError":false,"role":"os:admin","allowed":false,"denied":"the cluster's RBAC refuses patch deployments.apps in namespace demo-shop"},
+         {"id":"compact","action":"triggerCronJob","target":{"kind":"","namespace":"demo-shop","name":"store-compaction","node":""},"destructive":false,"continueOnError":true,"role":"os:admin","allowed":false,"denied":"no"},
+         {"id":"reboot","action":"nodeReboot","target":{"kind":"","namespace":"","name":"","node":"10.5.0.5"},"destructive":true,"continueOnError":false,"role":"os:operator","allowed":true,"denied":""}
+        ],"errors":[]}
+        """#
 
     func testDecodePlanAndRunRules() throws {
         let plan = try TalosJSON.decode(RunbookPlan.self, from: planJSON)
@@ -32,7 +32,8 @@ final class RunbooksTests: XCTestCase {
     }
 
     func testPlanWithErrorsOrNoStepsCannotRun() throws {
-        let broken = try TalosJSON.decode(RunbookPlan.self, from: #"{"name":"x","steps":[{"id":"a","action":"scale"}],"errors":["boom"]}"#)
+        let broken = try TalosJSON.decode(
+            RunbookPlan.self, from: #"{"name":"x","steps":[{"id":"a","action":"scale"}],"errors":["boom"]}"#)
         XCTAssertFalse(broken.canRun(continueIDs: []))
         let empty = try TalosJSON.decode(RunbookPlan.self, from: #"{"name":"x"}"#)
         XCTAssertFalse(empty.canRun(continueIDs: []))
@@ -41,16 +42,19 @@ final class RunbooksTests: XCTestCase {
     }
 
     func testDecodeStoreAndSummary() throws {
-        let list = try TalosJSON.decode(RunbookList.self, from: #"""
-        {"items":[{"id":"restart-ingestion","name":"Restart ingestion","description":"d","steps":2,"destructive":2,"importedAt":1792668615147},
-                  {"id":"old","name":"old","steps":0,"destructive":0,"importedAt":1,"problem":"step a: unknown action"}]}
-        """#)
+        let list = try TalosJSON.decode(
+            RunbookList.self,
+            from: #"""
+                {"items":[{"id":"restart-ingestion","name":"Restart ingestion","description":"d","steps":2,"destructive":2,"importedAt":1792668615147},
+                          {"id":"old","name":"old","steps":0,"destructive":0,"importedAt":1,"problem":"step a: unknown action"}]}
+                """#)
         XCTAssertEqual(list.items.map(\.id), ["restart-ingestion", "old"])
         XCTAssertTrue(list.items[0].usable)
         XCTAssertFalse(list.items[1].usable)
         XCTAssertEqual(list.items[0].destructive, 2)
 
-        let summary = try TalosJSON.decode(RunbookSummary.self, from: #"{"name":"Three steps","description":"","steps":3,"destructive":3}"#)
+        let summary = try TalosJSON.decode(
+            RunbookSummary.self, from: #"{"name":"Three steps","description":"","steps":3,"destructive":3}"#)
         XCTAssertEqual(summary.steps, 3)
         XCTAssertEqual(summary.destructive, 3)
     }
@@ -61,7 +65,10 @@ final class RunbooksTests: XCTestCase {
         XCTAssertNil(progress.position)
         XCTAssertTrue(progress.steps.allSatisfy { $0.state == .pending })
 
-        progress.apply(try TalosJSON.decode(RunbookStepState.self, from: #"{"index":0,"id":"scale-down","state":"waiting","message":"","startedAt":0,"endedAt":0}"#))
+        progress.apply(
+            try TalosJSON.decode(
+                RunbookStepState.self,
+                from: #"{"index":0,"id":"scale-down","state":"waiting","message":"","startedAt":0,"endedAt":0}"#))
         XCTAssertEqual(progress.waiting?.id, "scale-down")
         XCTAssertEqual(progress.position?.step, 1)
         XCTAssertEqual(progress.position?.total, 3)
@@ -74,12 +81,15 @@ final class RunbooksTests: XCTestCase {
 
         // Out of range and unknown states do not break the run's screen.
         progress.apply(RunbookStepState(index: 9, id: "x", state: .ok))
-        let unknown = try TalosJSON.decode(RunbookStepState.self, from: #"{"index":2,"id":"reboot","state":"something-new"}"#)
+        let unknown = try TalosJSON.decode(
+            RunbookStepState.self, from: #"{"index":2,"id":"reboot","state":"something-new"}"#)
         XCTAssertEqual(unknown.state, .pending)
 
-        let result = try TalosJSON.decode(RunbookResult.self, from: #"""
-        {"ok":false,"steps":[{"index":0,"id":"scale-down","state":"ok"},{"index":1,"id":"compact","state":"failed","message":"forbidden"},{"index":2,"id":"reboot","state":"skipped","message":"step compact failed"}]}
-        """#)
+        let result = try TalosJSON.decode(
+            RunbookResult.self,
+            from: #"""
+                {"ok":false,"steps":[{"index":0,"id":"scale-down","state":"ok"},{"index":1,"id":"compact","state":"failed","message":"forbidden"},{"index":2,"id":"reboot","state":"skipped","message":"step compact failed"}]}
+                """#)
         progress.apply(result)
         XCTAssertFalse(result.ok)
         XCTAssertEqual(progress.ended, 3)

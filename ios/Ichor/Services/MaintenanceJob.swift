@@ -69,15 +69,18 @@ final class MaintenanceJob {
         }
         // For the reminder posted when the app leaves the screen.
         Task { _ = await BackgroundMonitor.requestPermission() }
-        let run = if target.kube {
-            client.startKubeDrain(kubeNode: target.node, includeBare: includeBare)
-        } else if target.action == .upgrade {
-            client.startMaintenanceUpgrade(node: target.node, image: target.image, includeBare: includeBare,
-                                           acknowledged: acknowledged, force: target.force)
-        } else {
-            client.startMaintenance(node: target.node, action: target.action, includeBare: includeBare,
-                                    acknowledged: acknowledged)
-        }
+        let run =
+            if target.kube {
+                client.startKubeDrain(kubeNode: target.node, includeBare: includeBare)
+            } else if target.action == .upgrade {
+                client.startMaintenanceUpgrade(
+                    node: target.node, image: target.image, includeBare: includeBare,
+                    acknowledged: acknowledged, force: target.force)
+            } else {
+                client.startMaintenance(
+                    node: target.node, action: target.action, includeBare: includeBare,
+                    acknowledged: acknowledged)
+            }
         stop = run.stop
         task = Task {
             var result = Outcome.failed(String(localized: "The maintenance ended without a result."))
@@ -92,7 +95,9 @@ final class MaintenanceJob {
             stop = nil
             stopping = false
             endBackgroundTask()
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.foregroundNotification])
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
+                Self.foregroundNotification
+            ])
             UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || JoinJob.shared.isActive
         }
     }
@@ -103,7 +108,9 @@ final class MaintenanceJob {
         guard isActive else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Keep Ichor open")
-        content.body = String(localized: "The node maintenance stops while Ichor is in the background. Open it until the maintenance ends.")
+        content.body = String(
+            localized:
+                "The node maintenance stops while Ichor is in the background. Open it until the maintenance ends.")
         content.sound = .default
         let request = UNNotificationRequest(identifier: Self.foregroundNotification, content: content, trigger: nil)
         Task { try? await UNUserNotificationCenter.current().add(request) }

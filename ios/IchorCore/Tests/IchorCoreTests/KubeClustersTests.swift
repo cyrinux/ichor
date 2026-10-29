@@ -3,13 +3,13 @@ import XCTest
 
 final class KubeClustersTests: XCTestCase {
     private let kubeJSON = """
-    {"current":"prod","contexts":[
-      {"name":"broken","kind":"kube","fingerprint":"k1","clusterId":"c1","endpoints":["http://x"],"nodes":[],"roles":[],
-       "certNotAfter":0,"auth":"exec","problem":"kube-exec-unsupported","problemDetail":"some-plugin"},
-      {"name":"prod","kind":"kube","fingerprint":"k2","clusterId":"c2","endpoints":["https://k8s.example:6443"],
-       "nodes":null,"roles":null,"certNotAfter":1796385050,"namespace":"apps","auth":"token","user":"system:serviceaccount:apps:ichor"}
-    ]}
-    """
+        {"current":"prod","contexts":[
+          {"name":"broken","kind":"kube","fingerprint":"k1","clusterId":"c1","endpoints":["http://x"],"nodes":[],"roles":[],
+           "certNotAfter":0,"auth":"exec","problem":"kube-exec-unsupported","problemDetail":"some-plugin"},
+          {"name":"prod","kind":"kube","fingerprint":"k2","clusterId":"c2","endpoints":["https://k8s.example:6443"],
+           "nodes":null,"roles":null,"certNotAfter":1796385050,"namespace":"apps","auth":"token","user":"system:serviceaccount:apps:ichor"}
+        ]}
+        """
 
     func testDecodesKubeconfigSummary() throws {
         let summary = try TalosJSON.decode(ConfigSummary.self, from: kubeJSON)
@@ -46,7 +46,8 @@ final class KubeClustersTests: XCTestCase {
     }
 
     func testCombinedListsTalosThenKube() {
-        let talos = ConfigSummary(current: "lab", contexts: [ContextSummary(name: "lab"), ContextSummary(name: "home")])
+        let talos = ConfigSummary(
+            current: "lab", contexts: [ContextSummary(name: "lab"), ContextSummary(name: "home")])
         let kube = ConfigSummary(current: "prod", contexts: [ContextSummary(name: "prod", kind: ContextKind.kube)])
 
         let both = ConfigSummary.combined(talos: talos, kube: kube)
@@ -68,15 +69,18 @@ final class KubeClustersTests: XCTestCase {
 
         XCTAssertEqual(unreadableConfigs([.talosconfig: .loaded, .kubeconfig: .absent]), [])
         XCTAssertEqual(unreadableConfigs([.talosconfig: .loaded, .kubeconfig: .unreadable]), [.kubeconfig])
-        XCTAssertEqual(unreadableConfigs([.kubeconfig: .unreadable, .talosconfig: .unreadable]), [.talosconfig, .kubeconfig])
+        XCTAssertEqual(
+            unreadableConfigs([.kubeconfig: .unreadable, .talosconfig: .unreadable]), [.talosconfig, .kubeconfig])
     }
 
     func testImportChoicesSkipAndReplace() throws {
         let choices = kubeImportChoices(count: 4, selected: [1, 2, 3], replacing: [2, 0])
-        XCTAssertEqual(choices, [
-            KubeImportChoice(index: 0, skip: true),
-            KubeImportChoice(index: 2, replace: true),
-        ])
+        XCTAssertEqual(
+            choices,
+            [
+                KubeImportChoice(index: 0, skip: true),
+                KubeImportChoice(index: 2, replace: true),
+            ])
         // Unset fields stay out, as Go's omitempty would.
         let json = try TalosJSON.encode(choices)
         let decoded = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [[String: Any]])
@@ -86,14 +90,14 @@ final class KubeClustersTests: XCTestCase {
 
     func testKubeNodesDecode() throws {
         let json = """
-        {"serverVersion":"v1.31.2","nodes":[
-          {"name":"cp-1","roles":["control-plane"],"ready":true,"cordoned":false,"internalIP":"10.0.0.2",
-           "kubelet":"v1.31.2","cpu":4,"memory":8.0e9,"podLimit":110,"pressure":null,"created":1700000000},
-          {"name":"w-1","roles":null,"ready":false,"cordoned":true,"externalIP":"203.0.113.4","cpu":2,"memory":4.0e9,
-           "pool":"general","poolKind":"karpenter","instanceType":"m6i.large","capacity":"spot",
-           "podLimit":110,"pressure":["DiskPressure"],"created":1700000001}
-        ]}
-        """
+            {"serverVersion":"v1.31.2","nodes":[
+              {"name":"cp-1","roles":["control-plane"],"ready":true,"cordoned":false,"internalIP":"10.0.0.2",
+               "kubelet":"v1.31.2","cpu":4,"memory":8.0e9,"podLimit":110,"pressure":null,"created":1700000000},
+              {"name":"w-1","roles":null,"ready":false,"cordoned":true,"externalIP":"203.0.113.4","cpu":2,"memory":4.0e9,
+               "pool":"general","poolKind":"karpenter","instanceType":"m6i.large","capacity":"spot",
+               "podLimit":110,"pressure":["DiskPressure"],"created":1700000001}
+            ]}
+            """
         let overview = try TalosJSON.decode(KubeNodesOverview.self, from: json)
         XCTAssertEqual(overview.serverVersion, "v1.31.2")
         XCTAssertFalse(overview.forbidden)
@@ -111,7 +115,8 @@ final class KubeClustersTests: XCTestCase {
         XCTAssertEqual(overview.nodes[1].instanceType, "m6i.large")
         XCTAssertEqual(overview.nodes[1].capacity, "spot")
 
-        let forbidden = try TalosJSON.decode(KubeNodesOverview.self, from: #"{"serverVersion":"","nodes":null,"forbidden":true}"#)
+        let forbidden = try TalosJSON.decode(
+            KubeNodesOverview.self, from: #"{"serverVersion":"","nodes":null,"forbidden":true}"#)
         XCTAssertTrue(forbidden.forbidden)
         XCTAssertEqual(forbidden.nodes, [])
     }

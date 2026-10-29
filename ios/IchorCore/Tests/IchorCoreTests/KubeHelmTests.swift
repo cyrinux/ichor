@@ -3,10 +3,12 @@ import XCTest
 
 final class KubeHelmTests: XCTestCase {
     func testDecodesList() throws {
-        let list = try TalosJSON.decode(HelmReleaseList.self, from: """
-        {"releases":[{"name":"cert-manager","namespace":"cert-manager","revision":4,"status":"deployed",
-          "chart":"cert-manager","chartVersion":"v1.18.2","appVersion":"v1.18.2","updated":1790000000}]}
-        """)
+        let list = try TalosJSON.decode(
+            HelmReleaseList.self,
+            from: """
+                {"releases":[{"name":"cert-manager","namespace":"cert-manager","revision":4,"status":"deployed",
+                  "chart":"cert-manager","chartVersion":"v1.18.2","appVersion":"v1.18.2","updated":1790000000}]}
+                """)
         XCTAssertEqual(list.releases.count, 1)
         XCTAssertEqual(list.releases[0].chartLabel, "cert-manager-v1.18.2")
         XCTAssertEqual(list.releases[0].tone, .good)
@@ -15,13 +17,15 @@ final class KubeHelmTests: XCTestCase {
     }
 
     func testDecodesDetailWithFlatSummaryAndNewestFirstHistory() throws {
-        let detail = try TalosJSON.decode(HelmReleaseDetail.self, from: """
-        {"name":"web","namespace":"apps","revision":3,"status":"failed","chart":"web","chartVersion":"1.0.0",
-         "updated":1790000000,"description":"Upgrade failed","notes":"Visit http://web","values":"replicaCount: 2\\n",
-         "manifest":"---\\nkind: Service\\n",
-         "history":[{"revision":1,"status":"superseded","updated":1},{"revision":3,"status":"failed","updated":3,"description":"boom"},
-                    {"revision":2,"status":"superseded","updated":2}]}
-        """)
+        let detail = try TalosJSON.decode(
+            HelmReleaseDetail.self,
+            from: """
+                {"name":"web","namespace":"apps","revision":3,"status":"failed","chart":"web","chartVersion":"1.0.0",
+                 "updated":1790000000,"description":"Upgrade failed","notes":"Visit http://web","values":"replicaCount: 2\\n",
+                 "manifest":"---\\nkind: Service\\n",
+                 "history":[{"revision":1,"status":"superseded","updated":1},{"revision":3,"status":"failed","updated":3,"description":"boom"},
+                            {"revision":2,"status":"superseded","updated":2}]}
+                """)
         XCTAssertEqual(detail.summary.name, "web")
         XCTAssertEqual(detail.summary.tone, .bad)
         XCTAssertEqual(detail.summary.appVersion, "")

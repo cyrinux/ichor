@@ -19,8 +19,10 @@ extension TalosClient {
 
     /// A new node's config from `template`'s (os:admin: read with its secrets), redacted. The
     /// role must be the template's; `staticAddress` is a prefix or "" for DHCP.
-    func joinNodeConfigPreview(template: String, role: String, hostname: String, installDisk: String,
-                               staticAddress: String) async throws -> JoinConfigPreview {
+    func joinNodeConfigPreview(
+        template: String, role: String, hostname: String, installDisk: String,
+        staticAddress: String
+    ) async throws -> JoinConfigPreview {
         try await Self.json { [config, context] in
             IchorgoJoinNodeConfigPreview(config, context, template, role, hostname, installDisk, staticAddress, "", $0)
         }
@@ -44,11 +46,12 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartNodeJoin(config, context, request.address, request.template, request.role, request.hostname,
-                                       request.disk, request.staticAddress, "", request.replacing, bridge)
+        let run = IchorgoStartNodeJoin(
+            config, context, request.address, request.template, request.role, request.hostname,
+            request.disk, request.staticAddress, "", request.replacing, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
-            _ = bridge // keep the listener alive for the whole run
+            _ = bridge  // keep the listener alive for the whole run
         }
         return (stream, { run?.cancel() })
     }

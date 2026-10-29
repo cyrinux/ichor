@@ -19,7 +19,9 @@ struct DenseKubeNodes: View {
             KubeNodeActionRow(node: node, path: $path, cordoning: $cordoning)
         }
         if problems.more > 0 {
-            Button { path.append(.kubeNodes(filter: .attention, nodes: nodes)) } label: {
+            Button {
+                path.append(.kubeNodes(filter: .attention, nodes: nodes))
+            } label: {
                 HStack {
                     Text("\(problems.more) more need a look")
                     Spacer()
@@ -39,7 +41,10 @@ private struct KubeNodeDots: View {
     @Binding var cordoning: KubeNodeInfo?
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: dotTarget, maximum: dotTarget), spacing: 0)], alignment: .leading, spacing: 0) {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: dotTarget, maximum: dotTarget), spacing: 0)], alignment: .leading,
+            spacing: 0
+        ) {
             ForEach(nodes) { node in
                 Menu {
                     KubeNodeMenu(node: node, path: $path, cordoning: $cordoning)

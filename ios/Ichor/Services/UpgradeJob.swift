@@ -64,8 +64,9 @@ final class UpgradeJob {
         Task { _ = await BackgroundMonitor.requestPermission() }
         task = Task {
             var result = Outcome.unfollowed
-            let stream = client.upgrade(node: target.node, image: target.image, stage: target.stage, force: force,
-                                        acknowledged: acknowledged)
+            let stream = client.upgrade(
+                node: target.node, image: target.image, stage: target.stage, force: force,
+                acknowledged: acknowledged)
             for await event in stream {
                 switch event {
                 case .progress(let progress):
@@ -88,7 +89,8 @@ final class UpgradeJob {
         guard needsForeground else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Keep Ichor open")
-        content.body = String(localized: "The Talos upgrade can stall while Ichor is in the background. Open it until the node reboots.")
+        content.body = String(
+            localized: "The Talos upgrade can stall while Ichor is in the background. Open it until the node reboots.")
         content.sound = .default
         let request = UNNotificationRequest(identifier: Self.foregroundNotification, content: content, trigger: nil)
         Task { try? await UNUserNotificationCenter.current().add(request) }

@@ -82,13 +82,19 @@ struct HelmRollbackSheet: View {
     private func content(_ plan: HelmRollbackPlan) -> some View {
         List {
             Section {
-                LabeledContent("Now") { Text(verbatim: versionLine(plan.from, plan.fromChart, plan.fromAppVersion)).monospaced() }
-                LabeledContent("After") { Text(verbatim: versionLine(plan.to, plan.toChart, plan.toAppVersion)).monospaced() }
+                LabeledContent("Now") {
+                    Text(verbatim: versionLine(plan.from, plan.fromChart, plan.fromAppVersion)).monospaced()
+                }
+                LabeledContent("After") {
+                    Text(verbatim: versionLine(plan.to, plan.toChart, plan.toAppVersion)).monospaced()
+                }
             }
             if !plan.fluxOwner.isEmpty {
                 Section {
                     Label {
-                        Text("The Flux HelmRelease \(plan.fluxOwner) manages this release: it is suspended first, otherwise Flux would upgrade it straight back. Fix the version in Git, then resume it.")
+                        Text(
+                            "The Flux HelmRelease \(plan.fluxOwner) manages this release: it is suspended first, otherwise Flux would upgrade it straight back. Fix the version in Git, then resume it."
+                        )
                     } icon: {
                         Image(systemName: "exclamationmark.triangle")
                     }
@@ -145,7 +151,9 @@ struct HelmRollbackSheet: View {
             if plan.canRun {
                 Text("Each change passed a dry run on the API server. Nothing has changed yet.")
             }
-            Text("Like helm rollback: a new revision is recorded with the older one's chart and values, and helm history agrees afterwards.")
+            Text(
+                "Like helm rollback: a new revision is recorded with the older one's chart and values, and helm history agrees afterwards."
+            )
         }
     }
 
@@ -205,7 +213,7 @@ struct HelmRollbackSheet: View {
             } else {
                 dismiss()
             }
-        } catch where isHelmHistoryNotPruned(error.localizedDescription) {
+        } catch  where isHelmHistoryNotPruned(error.localizedDescription) {
             // Done, only the old revisions are still there: as a success, with the warning.
             running = false
             rolledBack()

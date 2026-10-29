@@ -42,8 +42,12 @@ struct BootMediaCard: View {
                     .accessibilityLabel(Text("Copy \(name)"))
                 ShareLink(item: shown.text) { Image(systemName: "square.and.arrow.up") }
                     .accessibilityLabel(Text("Share \(name)"))
-                Button { showingQR = true } label: { Image(systemName: "qrcode") }
-                    .accessibilityLabel(Text("QR code of \(name)"))
+                Button {
+                    showingQR = true
+                } label: {
+                    Image(systemName: "qrcode")
+                }
+                .accessibilityLabel(Text("QR code of \(name)"))
             }
             .buttonStyle(.borderless)
         } header: {
@@ -54,7 +58,8 @@ struct BootMediaCard: View {
 
     /// Device-only pasteboard; the join token expires from it after two minutes.
     private func copy() {
-        let options: [UIPasteboard.OptionsKey: Any] = sensitive
+        let options: [UIPasteboard.OptionsKey: Any] =
+            sensitive
             ? [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)]
             : [.localOnly: true]
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: shown.text]], options: options)

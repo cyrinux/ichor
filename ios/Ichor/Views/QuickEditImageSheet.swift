@@ -15,8 +15,10 @@ struct QuickEditImageSheet: View {
 
     // Explicit: the private @State properties make the memberwise init private.
     /// prefill: an update's edit (Updates screen): the sheet opens on its image and tag.
-    init(targets: [QuickEditImageTarget], content: String, app: GitOpsAppRef, prefill: QuickEdit? = nil,
-         onApply: @escaping (QuickEdit) -> Void) {
+    init(
+        targets: [QuickEditImageTarget], content: String, app: GitOpsAppRef, prefill: QuickEdit? = nil,
+        onApply: @escaping (QuickEdit) -> Void
+    ) {
         self.targets = targets
         self.content = content
         self.app = app
@@ -24,7 +26,8 @@ struct QuickEditImageSheet: View {
         let picked = prefill.flatMap { quickPrefillTarget(targets, edit: $0) }
         let first = picked ?? targets.first
         _place = State(initialValue: first?.place)
-        _tag = State(initialValue: picked != nil ? prefill.map(quickPrefillTag) ?? "" : first.map { imageTag($0.image) } ?? "")
+        _tag = State(
+            initialValue: picked != nil ? prefill.map(quickPrefillTag) ?? "" : first.map { imageTag($0.image) } ?? "")
     }
 
     @Environment(\.dismiss) private var dismiss
@@ -110,7 +113,8 @@ struct QuickEditImageSheet: View {
                 }
                 .disabled(checking || !isValidImageTag(trimmedTag))
             } footer: {
-                Text("For routine bumps, Flux image automation or Argo CD Image Updater can open these changes for you.")
+                Text(
+                    "For routine bumps, Flux image automation or Argo CD Image Updater can open these changes for you.")
             }
         }
         .themedBackground()
@@ -134,7 +138,9 @@ struct QuickEditImageSheet: View {
     }
 
     private func chip(_ title: LocalizedStringKey, tag value: String) -> some View {
-        Button { tag = value } label: {
+        Button {
+            tag = value
+        } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.caption2).foregroundStyle(.secondary)
                 Text(verbatim: value).font(.caption.monospaced()).lineLimit(1)
@@ -147,7 +153,8 @@ struct QuickEditImageSheet: View {
     /// The images the Argo CD app runs now; nothing for Flux, or when it cannot be read.
     private func loadLive() async {
         guard app.tool == "argocd", let client = model.client,
-              let status = try? await client.argoCD() else { return }
+            let status = try? await client.argoCD()
+        else { return }
         live = status.apps.first { $0.namespace == app.namespace && $0.name == app.name }?.images ?? []
     }
 

@@ -7,14 +7,16 @@ final class GitOpsQuickEditTests: XCTestCase {
     }
 
     func testDecodesTheTargets() throws {
-        let targets = try TalosJSON.decode(QuickEditTargets.self, from: #"""
-        {"documents":[{"index":0,"kind":"Deployment","name":"podinfo","replicas":2,"scalable":true,
-          "containers":[{"name":"podinfo","image":"ghcr.io/example-org/podinfo:6.7.1","line":21}]},
-         {"index":1,"kind":"CronJob","name":"cleanup","scalable":false,
-          "containers":[{"name":"job","image":"ghcr.io/example-org/tools:1.0","line":40}]},
-         {"index":2,"kind":"Widget","name":"custom","replicas":4}],
-         "kustomizeImages":null}
-        """#)
+        let targets = try TalosJSON.decode(
+            QuickEditTargets.self,
+            from: #"""
+                {"documents":[{"index":0,"kind":"Deployment","name":"podinfo","replicas":2,"scalable":true,
+                  "containers":[{"name":"podinfo","image":"ghcr.io/example-org/podinfo:6.7.1","line":21}]},
+                 {"index":1,"kind":"CronJob","name":"cleanup","scalable":false,
+                  "containers":[{"name":"job","image":"ghcr.io/example-org/tools:1.0","line":40}]},
+                 {"index":2,"kind":"Widget","name":"custom","replicas":4}],
+                 "kustomizeImages":null}
+                """#)
         XCTAssertEqual(targets.documents.count, 3)
         XCTAssertEqual(targets.documents[0].replicas, 2)
         XCTAssertNil(targets.documents[1].replicas)
@@ -31,18 +33,24 @@ final class GitOpsQuickEditTests: XCTestCase {
     }
 
     func testAKustomizationEntryReplacesTheContainer() throws {
-        let targets = try TalosJSON.decode(QuickEditTargets.self, from: #"""
-        {"documents":[{"index":1,"kind":"Deployment","name":"app","scalable":true,
-          "containers":[{"name":"app","image":"ghcr.io/example-org/app:1.0.0","overriddenBy":"ghcr.io/example-org/app"},
-                        {"name":"sidecar","image":"ghcr.io/example-org/proxy:2.1"}]}],
-         "kustomizeImages":[{"documentIndex":0,"name":"ghcr.io/example-org/app","newTag":"1.4.0","line":7},
-          {"documentIndex":0,"name":"nginx","newName":"registry.example.com:5000/mirror/nginx"}],
-         "kustomizeReplicas":[{"documentIndex":0,"name":"app","count":3,"line":12}]}
-        """#)
+        let targets = try TalosJSON.decode(
+            QuickEditTargets.self,
+            from: #"""
+                {"documents":[{"index":1,"kind":"Deployment","name":"app","scalable":true,
+                  "containers":[{"name":"app","image":"ghcr.io/example-org/app:1.0.0","overriddenBy":"ghcr.io/example-org/app"},
+                                {"name":"sidecar","image":"ghcr.io/example-org/proxy:2.1"}]}],
+                 "kustomizeImages":[{"documentIndex":0,"name":"ghcr.io/example-org/app","newTag":"1.4.0","line":7},
+                  {"documentIndex":0,"name":"nginx","newName":"registry.example.com:5000/mirror/nginx"}],
+                 "kustomizeReplicas":[{"documentIndex":0,"name":"app","count":3,"line":12}]}
+                """#)
         let images = targets.images
         XCTAssertEqual(images.map(\.label), ["app", "nginx", "sidecar"])
-        XCTAssertEqual(images.map(\.image),
-                       ["ghcr.io/example-org/app:1.4.0", "registry.example.com:5000/mirror/nginx", "ghcr.io/example-org/proxy:2.1"])
+        XCTAssertEqual(
+            images.map(\.image),
+            [
+                "ghcr.io/example-org/app:1.4.0", "registry.example.com:5000/mirror/nginx",
+                "ghcr.io/example-org/proxy:2.1",
+            ])
         XCTAssertTrue(images[0].isKustomize)
         XCTAssertFalse(images[2].isKustomize)
 
@@ -66,8 +74,9 @@ final class GitOpsQuickEditTests: XCTestCase {
     }
 
     func testEncodesTheContainerEdits() throws {
-        let document = QuickEditDocument(index: 1, kind: "Deployment", name: "podinfo", replicas: 2,
-                                         containers: [QuickEditContainer(name: "podinfo", image: "ghcr.io/example-org/podinfo:6.7.1")])
+        let document = QuickEditDocument(
+            index: 1, kind: "Deployment", name: "podinfo", replicas: 2,
+            containers: [QuickEditContainer(name: "podinfo", image: "ghcr.io/example-org/podinfo:6.7.1")])
         let targets = QuickEditTargets(documents: [document])
         let image = try object(try XCTUnwrap(targets.images.first).edit(tag: "6.7.0").json())
         XCTAssertEqual(image["op"] as? String, "image")
@@ -89,12 +98,14 @@ final class GitOpsQuickEditTests: XCTestCase {
 
         // A target built without its workload sends neither key.
         let bare = QuickEditImageTarget(place: .container(documentIndex: 0, name: "app"), label: "app", image: "app:1")
-        XCTAssertEqual(Set(try object(try bare.edit(tag: "2").json()).keys), ["op", "documentIndex", "container", "image"])
+        XCTAssertEqual(
+            Set(try object(try bare.edit(tag: "2").json()).keys), ["op", "documentIndex", "container", "image"])
     }
 
     func testKustomizeEditsCarryNoWorkload() throws {
-        let targets = QuickEditTargets(kustomizeImages: [QuickEditKustomizeImage(name: "ghcr.io/example-org/app", newTag: "1")],
-                                       kustomizeReplicas: [QuickEditKustomizeReplica(name: "app", count: 2)])
+        let targets = QuickEditTargets(
+            kustomizeImages: [QuickEditKustomizeImage(name: "ghcr.io/example-org/app", newTag: "1")],
+            kustomizeReplicas: [QuickEditKustomizeReplica(name: "app", count: 2)])
         let image = try object(try XCTUnwrap(targets.images.first).edit(tag: "2").json())
         XCTAssertEqual(Set(image.keys), ["op", "documentIndex", "kustomizeImage", "image"])
         let scale = try object(try XCTUnwrap(targets.replicas.first).edit(replicas: 3).json())
@@ -102,12 +113,14 @@ final class GitOpsQuickEditTests: XCTestCase {
     }
 
     func testDigestEntriesAndUnnamedContainersAreNotOffered() throws {
-        let targets = try TalosJSON.decode(QuickEditTargets.self, from: #"""
-        {"documents":[{"index":0,"kind":"Deployment","name":"web","scalable":true,
-          "containers":[{"name":"","image":"ghcr.io/example-org/web:1"},{"name":"web","image":"ghcr.io/example-org/web:1"}]}],
-         "kustomizeImages":[{"documentIndex":1,"name":"ghcr.io/example-org/pinned","digest":"sha256:abc"},
-          {"documentIndex":1,"name":"ghcr.io/example-org/api","newTag":"2"}]}
-        """#)
+        let targets = try TalosJSON.decode(
+            QuickEditTargets.self,
+            from: #"""
+                {"documents":[{"index":0,"kind":"Deployment","name":"web","scalable":true,
+                  "containers":[{"name":"","image":"ghcr.io/example-org/web:1"},{"name":"web","image":"ghcr.io/example-org/web:1"}]}],
+                 "kustomizeImages":[{"documentIndex":1,"name":"ghcr.io/example-org/pinned","digest":"sha256:abc"},
+                  {"documentIndex":1,"name":"ghcr.io/example-org/api","newTag":"2"}]}
+                """#)
         XCTAssertEqual(targets.kustomizeImages[0].digest, "sha256:abc")
         XCTAssertEqual(targets.kustomizeImages[1].digest, "")
         XCTAssertEqual(targets.images.map(\.label), ["api", "web"])
@@ -133,19 +146,26 @@ final class GitOpsQuickEditTests: XCTestCase {
         let redis = try XCTUnwrap(targets.replicas.first)
         XCTAssertEqual(redis.current, 1)
         XCTAssertEqual(quickEditTitle(redis.edit(replicas: 5)), "Scale redis to 5")
-        let target = QuickEditImageTarget(place: .container(documentIndex: 0, name: "redis"), label: "redis",
-                                          image: "docker.io/library/redis:7.2@sha256:abc")
+        let target = QuickEditImageTarget(
+            place: .container(documentIndex: 0, name: "redis"), label: "redis",
+            image: "docker.io/library/redis:7.2@sha256:abc")
         XCTAssertEqual(quickEditTitle(target.edit(tag: "7.4")), "Bump redis to 7.4")
         XCTAssertEqual(target.edit(tag: "7.4").image, "docker.io/library/redis:7.4")
     }
 
     func testAKeepEditSendsTheLiveChangesOfItsObject() throws {
-        let resource = try TalosJSON.decode(KubeDiffResource.self, from: #"""
-        {"kind":"Deployment","name":"web","change":"changed",
-         "liveChanges":[{"path":["spec","replicas"],"label":"spec.replicas","wanted":"2","live":"5","type":"int"}]}
-        """#)
-        XCTAssertEqual(resource.liveChanges, [DiffLiveChange(path: ["spec", "replicas"], label: "spec.replicas", wanted: "2", live: "5", type: "int")])
-        XCTAssertEqual(try TalosJSON.decode(KubeDiffResource.self, from: #"{"kind":"Service","name":"web","change":"changed"}"#).liveChanges, [])
+        let resource = try TalosJSON.decode(
+            KubeDiffResource.self,
+            from: #"""
+                {"kind":"Deployment","name":"web","change":"changed",
+                 "liveChanges":[{"path":["spec","replicas"],"label":"spec.replicas","wanted":"2","live":"5","type":"int"}]}
+                """#)
+        XCTAssertEqual(
+            resource.liveChanges,
+            [DiffLiveChange(path: ["spec", "replicas"], label: "spec.replicas", wanted: "2", live: "5", type: "int")])
+        XCTAssertEqual(
+            try TalosJSON.decode(KubeDiffResource.self, from: #"{"kind":"Service","name":"web","change":"changed"}"#)
+                .liveChanges, [])
 
         let edit = QuickEdit.keep(documentIndex: 1, resource: resource)
         XCTAssertEqual(quickEditTitle(edit), "Keep live changes of Deployment web")
@@ -156,12 +176,14 @@ final class GitOpsQuickEditTests: XCTestCase {
         let change = try XCTUnwrap((json["changes"] as? [[String: Any]])?.first)
         XCTAssertEqual(Set(change.keys), ["path", "label", "wanted", "live", "type"])
 
-        let result = try TalosJSON.decode(QuickEditResult.self, from: #"{"content":"x","changed":true,"skipped":["a: not set in this file"]}"#)
+        let result = try TalosJSON.decode(
+            QuickEditResult.self, from: #"{"content":"x","changed":true,"skipped":["a: not set in this file"]}"#)
         XCTAssertEqual(result.skipped, ["a: not set in this file"])
     }
 
     func testDecodesTheResult() throws {
-        let result = try TalosJSON.decode(QuickEditResult.self, from: #"{"content":"kind: Deployment\n","changed":true,"line":27}"#)
+        let result = try TalosJSON.decode(
+            QuickEditResult.self, from: #"{"content":"kind: Deployment\n","changed":true,"line":27}"#)
         XCTAssertTrue(result.changed)
         XCTAssertEqual(result.line, 27)
         XCTAssertFalse(try TalosJSON.decode(QuickEditResult.self, from: #"{"content":"x"}"#).changed)
@@ -180,12 +202,14 @@ final class GitOpsQuickEditTests: XCTestCase {
 
     func testTagSuggestions() {
         let image = "ghcr.io/example-org/podinfo:6.7.1"
-        let both = quickEditTagSuggestions(for: image,
-                                           history: ["ghcr.io/example-org/podinfo:6.7.1", "ghcr.io/example-org/podinfo:6.7.0"],
-                                           live: ["ghcr.io/example-org/other:1.0", "ghcr.io/example-org/podinfo:6.6.9"])
+        let both = quickEditTagSuggestions(
+            for: image,
+            history: ["ghcr.io/example-org/podinfo:6.7.1", "ghcr.io/example-org/podinfo:6.7.0"],
+            live: ["ghcr.io/example-org/other:1.0", "ghcr.io/example-org/podinfo:6.6.9"])
         XCTAssertEqual(both, QuickEditTagSuggestions(previous: "6.7.0", running: "6.6.9"))
-        let same = quickEditTagSuggestions(for: image, history: ["ghcr.io/example-org/podinfo:6.7.0"],
-                                           live: ["ghcr.io/example-org/podinfo:6.7.0"])
+        let same = quickEditTagSuggestions(
+            for: image, history: ["ghcr.io/example-org/podinfo:6.7.0"],
+            live: ["ghcr.io/example-org/podinfo:6.7.0"])
         XCTAssertEqual(same, QuickEditTagSuggestions(previous: "6.7.0"))
         XCTAssertTrue(quickEditTagSuggestions(for: image, history: [], live: [image]).isEmpty)
     }

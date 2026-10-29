@@ -88,7 +88,8 @@ public struct VeleroRestoreDetail: Decodable, Equatable, Identifiable, Sendable 
 
     public var id: String { name }
     public var running: Bool {
-        phase == "New" || phase == "InProgress" || phase.hasPrefix("WaitingForPluginOperations") || phase.hasPrefix("Finalizing")
+        phase == "New" || phase == "InProgress" || phase.hasPrefix("WaitingForPluginOperations")
+            || phase.hasPrefix("Finalizing")
     }
     public var finished: Bool {
         phase == "Completed" || phase == "PartiallyFailed" || phase == "Failed" || phase == "FailedValidation"
@@ -136,9 +137,11 @@ public struct VeleroRestoreOptions: Encodable, Equatable, Sendable {
     /// Every namespace of the backup; the core refuses an empty `includedNamespaces` without it.
     public var allNamespaces: Bool
 
-    public init(includedNamespaces: [String] = [], namespaceMapping: [String: String] = [:],
-                existingResourcePolicy: String = "none", restorePVs: Bool? = nil, includeClusterResources: Bool? = nil,
-                allNamespaces: Bool = false) {
+    public init(
+        includedNamespaces: [String] = [], namespaceMapping: [String: String] = [:],
+        existingResourcePolicy: String = "none", restorePVs: Bool? = nil, includeClusterResources: Bool? = nil,
+        allNamespaces: Bool = false
+    ) {
         self.includedNamespaces = includedNamespaces
         self.namespaceMapping = namespaceMapping
         self.existingResourcePolicy = existingResourcePolicy
@@ -148,7 +151,8 @@ public struct VeleroRestoreOptions: Encodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case allNamespaces, includedNamespaces, namespaceMapping, existingResourcePolicy, restorePVs, includeClusterResources
+        case allNamespaces, includedNamespaces, namespaceMapping, existingResourcePolicy, restorePVs,
+            includeClusterResources
     }
 
     public func encode(to encoder: Encoder) throws {

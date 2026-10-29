@@ -36,7 +36,8 @@ enum IncomingConfig {
     /// The files "Send to Ichor" left in the App Group: each through `receive`, oldest first (the
     /// newest is the one on screen), then deleted; one older than a day is deleted unread.
     static func receivePending() {
-        guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SharedSnapshot.suite) else { return }
+        guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SharedSnapshot.suite)
+        else { return }
         let inbox = group.appendingPathComponent(IncomingFile.inboxFolder, isDirectory: true)
         let pending = IncomingFile.pending(in: inbox)
         for url in pending.stale { try? FileManager.default.removeItem(at: url) }

@@ -3,9 +3,11 @@ import XCTest
 
 final class GitProposalsTests: XCTestCase {
     private func record(_ n: Int, tool: String = "argocd") -> GitProposalRecord {
-        GitProposalRecord(tool: tool, kind: "Application", namespace: "argocd", name: "web",
-                          repoURL: "https://github.com/example-org/cluster-config", path: "apps/web/deployment.yaml",
-                          title: "Change \(n)", url: "https://github.com/example-org/cluster-config/pull/\(n)", number: n, createdAt: 1)
+        GitProposalRecord(
+            tool: tool, kind: "Application", namespace: "argocd", name: "web",
+            repoURL: "https://github.com/example-org/cluster-config", path: "apps/web/deployment.yaml",
+            title: "Change \(n)", url: "https://github.com/example-org/cluster-config/pull/\(n)", number: n,
+            createdAt: 1)
     }
 
     func testKeepsTheNewestFirstOnceAndAtMostFifty() {
@@ -26,7 +28,8 @@ final class GitProposalsTests: XCTestCase {
         XCTAssertEqual(ProposalsStore.decode(ProposalsStore.encode(saved)), saved)
         XCTAssertEqual(ProposalsStore.keep(saved, fingerprints: ["other"]), [:])
         // Android's record decodes (createdAt in milliseconds, absent fields defaulted).
-        let android = #"{"tool":"flux","kind":"Kustomization","namespace":"flux-system","name":"apps","repoURL":"https://gitlab.com/example-org/x","number":3,"createdAt":1760860800000}"#
+        let android =
+            #"{"tool":"flux","kind":"Kustomization","namespace":"flux-system","name":"apps","repoURL":"https://gitlab.com/example-org/x","number":3,"createdAt":1760860800000}"#
         let r = try JSONDecoder().decode(GitProposalRecord.self, from: Data(android.utf8))
         XCTAssertEqual(r.number, 3)
         XCTAssertEqual(r.host, "gitlab.com")
@@ -46,6 +49,9 @@ final class GitProposalsTests: XCTestCase {
 
     func testTheDemoHasOneOpenAndOneMerged() {
         XCTAssertEqual(ProposalsStore.demo.map(\.number), [1, 2])
-        XCTAssertTrue(ProposalsStore.demo.allSatisfy { $0.isFor(tool: "argocd", kind: "Application", namespace: "argocd", name: "hello-ichor") })
+        XCTAssertTrue(
+            ProposalsStore.demo.allSatisfy {
+                $0.isFor(tool: "argocd", kind: "Application", namespace: "argocd", name: "hello-ichor")
+            })
     }
 }

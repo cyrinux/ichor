@@ -54,8 +54,10 @@ final class LocalModelHost: NSObject, IchorgoLocalModelProtocol, @unchecked Send
         }
     }
 
-    func generate(_ modelID: String?, optionsJSON: String?, system: String?, messagesJSON: String?,
-                  sink: (any IchorgoLocalModelSinkProtocol)?) -> String {
+    func generate(
+        _ modelID: String?, optionsJSON: String?, system: String?, messagesJSON: String?,
+        sink: (any IchorgoLocalModelSinkProtocol)?
+    ) -> String {
         setCancelled(false)
         guard let modelID, let file = LocalModelStore.shared.file(for: modelID) else { return "not-downloaded" }
         let options = (try? JSONDecoder().decode(Options.self, from: Data((optionsJSON ?? "").utf8))) ?? Options()
@@ -71,7 +73,10 @@ final class LocalModelHost: NSObject, IchorgoLocalModelProtocol, @unchecked Send
             freeLocked()
             var error = [CChar](repeating: 0, count: 256)
             let errorLen = error.count
-            guard let loaded = ichor_llm_load(file.path, Int32(options.contextTokens), Int32(Self.threads), 999, &error, errorLen) else {
+            guard
+                let loaded = ichor_llm_load(
+                    file.path, Int32(options.contextTokens), Int32(Self.threads), 999, &error, errorLen)
+            else {
                 return String(cString: error)
             }
             handle = loaded
@@ -94,15 +99,16 @@ final class LocalModelHost: NSObject, IchorgoLocalModelProtocol, @unchecked Send
                 withCStrings(contents) { contentPointers in
                     var status = [CChar](repeating: 0, count: 256)
                     let statusLen = status.count
-                    ichor_llm_generate(model, rolePointers, contentPointers, roles.count, options.assistantPrefix,
-                                       Int32(options.answerTokens), Float(options.temperature),
-                                       { text, length, user in
-                                           guard let text, let user else { return }
-                                           let box = Unmanaged<SinkBox>.fromOpaque(user).takeUnretainedValue()
-                                           let bytes = UnsafeRawBufferPointer(start: text, count: length)
-                                           box.sink?.onPiece(String(decoding: bytes, as: UTF8.self))
-                                       },
-                                       Unmanaged.passUnretained(box).toOpaque(), &status, statusLen)
+                    ichor_llm_generate(
+                        model, rolePointers, contentPointers, roles.count, options.assistantPrefix,
+                        Int32(options.answerTokens), Float(options.temperature),
+                        { text, length, user in
+                            guard let text, let user else { return }
+                            let box = Unmanaged<SinkBox>.fromOpaque(user).takeUnretainedValue()
+                            let bytes = UnsafeRawBufferPointer(start: text, count: length)
+                            box.sink?.onPiece(String(decoding: bytes, as: UTF8.self))
+                        },
+                        Unmanaged.passUnretained(box).toOpaque(), &status, statusLen)
                     return String(cString: status)
                 }
             }

@@ -76,7 +76,10 @@ public struct HistoryAlertSpan: Decodable, Equatable, Sendable {
     public let openedAt: Int64
     public let closedAt: Int64?
 
-    public init(key: String, track: String, severity: String? = nil, title: String? = nil, openedAt: Int64, closedAt: Int64? = nil) {
+    public init(
+        key: String, track: String, severity: String? = nil, title: String? = nil, openedAt: Int64,
+        closedAt: Int64? = nil
+    ) {
         self.key = key
         self.track = track
         self.severity = severity
@@ -89,7 +92,9 @@ public struct HistoryAlertSpan: Decodable, Equatable, Sendable {
     public var label: String { title.flatMap { $0.isEmpty ? nil : $0 } ?? key }
 
     /// As a record lists it (to resend it).
-    public var record: HistoryAlertRecord { HistoryAlertRecord(key: key, track: track, severity: severity, title: title) }
+    public var record: HistoryAlertRecord {
+        HistoryAlertRecord(key: key, track: track, severity: severity, title: title)
+    }
 }
 
 public struct HistoryVolumeSeries: Decodable, Equatable, Sendable {
@@ -148,8 +153,10 @@ public struct HistoryQueryResult: Decodable, Equatable, Sendable {
     public let memory: [HistoryMemorySeries]
     public let gaps: [HistorySpan]
 
-    public init(from: Int64, to: Int64, records: Int = 0, nodes: [HistoryNodeUptime] = [], alerts: [HistoryAlertSpan] = [],
-                volumes: [HistoryVolumeSeries] = [], memory: [HistoryMemorySeries] = [], gaps: [HistorySpan] = []) {
+    public init(
+        from: Int64, to: Int64, records: Int = 0, nodes: [HistoryNodeUptime] = [], alerts: [HistoryAlertSpan] = [],
+        volumes: [HistoryVolumeSeries] = [], memory: [HistoryMemorySeries] = [], gaps: [HistorySpan] = []
+    ) {
         self.from = from
         self.to = to
         self.records = records
@@ -176,7 +183,9 @@ public struct HistoryQueryResult: Decodable, Equatable, Sendable {
         gaps = try c.field(.gaps, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case from, to, records, resetAt, resetReason, nodes, alerts, volumes, memory, gaps }
+    private enum CodingKeys: String, CodingKey {
+        case from, to, records, resetAt, resetReason, nodes, alerts, volumes, memory, gaps
+    }
 
     /// The alerts still open: what a run resends for a track it could not read.
     public var openAlerts: [HistoryAlertRecord] { alerts.filter { $0.closedAt == nil }.map(\.record) }
@@ -187,7 +196,8 @@ public struct HistoryQueryResult: Decodable, Equatable, Sendable {
 
     /// The volume series of `node` by volume name.
     public func volumes(of node: String) -> [String: [HistoryPoint]] {
-        Dictionary(volumes.filter { $0.node == node }.map { ($0.name, $0.series) }, uniquingKeysWith: { first, _ in first })
+        Dictionary(
+            volumes.filter { $0.node == node }.map { ($0.name, $0.series) }, uniquingKeysWith: { first, _ in first })
     }
 }
 
@@ -242,8 +252,11 @@ public struct HistorySinceSummary: Decodable, Equatable, Sendable {
     public let alertsOpen: [HistoryAlertSpan]
     public let upgrades: [HistoryUpgrade]
 
-    public init(from: Int64, to: Int64, records: Int = 0, nodesRecovered: [HistoryNodeOutage] = [], nodesDown: [HistoryNodeOutage] = [],
-                alertsResolved: [HistoryAlertSpan] = [], alertsOpen: [HistoryAlertSpan] = [], upgrades: [HistoryUpgrade] = []) {
+    public init(
+        from: Int64, to: Int64, records: Int = 0, nodesRecovered: [HistoryNodeOutage] = [],
+        nodesDown: [HistoryNodeOutage] = [],
+        alertsResolved: [HistoryAlertSpan] = [], alertsOpen: [HistoryAlertSpan] = [], upgrades: [HistoryUpgrade] = []
+    ) {
         self.from = from
         self.to = to
         self.records = records
@@ -266,7 +279,9 @@ public struct HistorySinceSummary: Decodable, Equatable, Sendable {
         upgrades = try c.field(.upgrades, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case from, to, records, nodesRecovered, nodesDown, alertsResolved, alertsOpen, upgrades }
+    private enum CodingKeys: String, CodingKey {
+        case from, to, records, nodesRecovered, nodesDown, alertsResolved, alertsOpen, upgrades
+    }
 
     /// Worth the banner: something ended or changed after the last look, or a node or an alert
     /// went bad after it. What was already down or open then was seen: alone, it shows nothing.

@@ -54,8 +54,9 @@ public struct VmCounts: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(running: try c.field(.running, 0), stopped: try c.field(.stopped, 0), failing: try c.field(.failing, 0),
-                  migrating: try c.field(.migrating, 0), importing: try c.field(.importing, 0))
+        self.init(
+            running: try c.field(.running, 0), stopped: try c.field(.stopped, 0), failing: try c.field(.failing, 0),
+            migrating: try c.field(.migrating, 0), importing: try c.field(.importing, 0))
     }
 
     private enum CodingKeys: String, CodingKey { case running, stopped, failing, migrating, importing }
@@ -183,7 +184,9 @@ public struct VmMigration: Decodable, Equatable, Hashable, Sendable {
         failed = try c.field(.failed, false)
     }
 
-    private enum CodingKeys: String, CodingKey { case name, phase, sourceNode, targetNode, startedAt, completed, failed }
+    private enum CodingKeys: String, CodingKey {
+        case name, phase, sourceNode, targetNode, startedAt, completed, failed
+    }
 }
 
 /// One DataVolume a VM boots from, with its import, clone or upload progress.
