@@ -4,6 +4,9 @@
 # then shuts it down: android.yml's ui-smoke, without a third-party action. Needs /dev/kvm.
 #
 #   scripts/ci-emulator.sh scripts/ui-smoke.sh
+#
+# EMULATOR_SIZE (e.g. 1080x2200) and EMULATOR_DENSITY override the screen after boot, for
+# scripts/ci-screenshots.sh: the default AVD screen is small and low density.
 set -euo pipefail
 
 API="${EMULATOR_API:-34}"
@@ -43,5 +46,7 @@ for scale in window_animation_scale transition_animation_scale animator_duration
   adb shell settings put global "$scale" 0
 done
 adb shell input keyevent 82 || true
+[[ -z "${EMULATOR_SIZE:-}" ]] || adb shell wm size "$EMULATOR_SIZE"
+[[ -z "${EMULATOR_DENSITY:-}" ]] || adb shell wm density "$EMULATOR_DENSITY"
 
 "$@"
