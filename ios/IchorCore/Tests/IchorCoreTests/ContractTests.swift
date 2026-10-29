@@ -41,6 +41,9 @@ final class ContractTests: XCTestCase {
         "kubespan": ContractTests.row(KubeSpanOverview.self),
         "topology": ContractTests.row(ClusterTopology.self),
         "cluster-updates": ContractTests.row(ClusterUpdates.self) { XCTAssertFalse(updateSections($0).images.isEmpty) },
+        "update-proposal-plan": ContractTests.row(UpdateProposalPlan.self) {
+            XCTAssertEqual($0.files.first?.changes.count, 2)
+        },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh

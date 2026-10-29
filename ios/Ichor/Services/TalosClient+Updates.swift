@@ -28,6 +28,20 @@ extension TalosClient {
         }
     }
 
+    /// One pull request for selection (UpdateProposalPlan): each file read at the request's
+    /// branch with every edit applied, the title, the body's table and the rows left out with
+    /// why. Read only.
+    func updateProposalPlan(
+        _ selection: [(row: UpdateRow, version: String)], repo: ClusterRepo?, hosts: GitHostStore, demo: Bool
+    ) async throws -> UpdateProposalPlan {
+        let (host, _) = await Self.updatesRepoArgs(repo, hosts: hosts, demo: demo)
+        let items = updateProposalItemsJSON(selection)
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoUpdateProposalPlan(config, context, kubeServer, host, items, $0)
+        }
+    }
+
     /// The saved cluster repository's host (with its token) and ClusterUpdates' options naming
     /// it; blank without them (the lookups then read no repository).
     private static func updatesRepoArgs(_ repo: ClusterRepo?, hosts: GitHostStore, demo: Bool) async -> (String, String)

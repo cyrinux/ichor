@@ -44,7 +44,7 @@ tour** shows it again.
   an app deploys at the revision the cluster runs, edits reviewed and opened as pull requests,
   a cluster repository for Talos machine config patches, offered a dependency-update bot
   configuration when it has none, and the images and charts with a newer version, one tap from
-  the pull request that bumps them.
+  the pull request that bumps them (or select several and propose them as one pull request).
 - **Operators:** Longhorn, CloudNativePG, Garage, Rook Ceph, Velero, cert-manager, External
   Secrets, Sealed Secrets, ExternalDNS, Crossplane, Tailscale, Cluster API, Kyverno,
   Gatekeeper, KubeVirt, CAST AI and more, each with its findings in the cluster checkup, and

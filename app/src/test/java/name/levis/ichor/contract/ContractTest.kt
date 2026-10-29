@@ -13,6 +13,7 @@ import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.ClusterUpdates
+import name.levis.ichor.model.UpdateProposalPlan
 import name.levis.ichor.model.updateSections
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.Inventory
@@ -48,6 +49,7 @@ class ContractTest {
         "kubespan" to Row(KubeSpanOverview.serializer()) { assertTrue(it.nodes.isNotEmpty()) },
         "topology" to Row(ClusterTopology.serializer()),
         "cluster-updates" to Row(ClusterUpdates.serializer()) { assertTrue(updateSections(it).images.isNotEmpty()) },
+        "update-proposal-plan" to Row(UpdateProposalPlan.serializer()) { assertEquals(2, it.files[0].changes.size) },
     )
 
     /** Every default written out, so the re-encoded object names every key the model reads. */
