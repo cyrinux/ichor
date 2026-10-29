@@ -117,6 +117,11 @@ func main() {
 		if err := setDataDir(*dataDir); err != nil {
 			fail(fmt.Errorf("data dir: %w", err))
 		}
+
+		// Keep the diagnostics ring there too, like an app with the setting on.
+		if err := ichorgo.SetDiagPersist(true); err != nil {
+			fail(fmt.Errorf("diagnostics log: %w", err))
+		}
 	}
 
 	c, ok := lookup(flag.Arg(0))
