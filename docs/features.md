@@ -30,7 +30,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   routing objects are the standard ones, and the network map's Gateway boxes name the
   controller serving them — kgateway, Traefik, Cilium, Envoy Gateway, Istio, NGINX Gateway
   Fabric); browse any resource, CRDs included, with the
-  columns `kubectl get` prints, read and edit its YAML (a dry-run diff first; a change made
+  columns `kubectl get` prints (on iPhone and iPad, long-press an object to copy its name, share
+  its link or delete it), read and edit its YAML (a dry-run diff first; a change made
   meanwhile is never overwritten), apply pasted manifests like `kubectl apply --server-side`
   (each object previewed as a diff first; a field another manager owns is refused, never taken
   over), list Helm releases and roll one back to an earlier revision
@@ -278,6 +279,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
   [Cluster checkup](kubernetes.md#cluster-checkup).
+- **Alertmanager:** the cluster's alerts grouped by name, worst first, and its silences. Swipe an
+  alert to silence it (the form opens with matchers that mute only that alert; nothing is sent
+  before **Silence**), swipe a silence to expire it (iPhone and iPad).
 - **Node taints and labels:** a node's menu → **Taints and labels…** lists them, with the ones
   Kubernetes, Talos or the cloud set locked unless shown. Review shows the change, the API
   server's dry-run verdict and the pods a new `NoExecute` taint would evict; a taint change asks

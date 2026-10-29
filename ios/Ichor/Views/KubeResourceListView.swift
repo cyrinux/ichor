@@ -25,6 +25,8 @@ struct KubeResourceListView: View {
     @State private var columns: KubeResourceColumns
     @State private var scope = KubeBrowserScope()
     @State private var query = ""
+    /// The row whose Delete… was chosen from its context menu.
+    @State private var deleting: KubeResourceRow?
     @AppStorage("kubeBrowser.wide") private var wide = false
 
     init(resource: KubeAPIResource) {
@@ -62,6 +64,11 @@ struct KubeResourceListView: View {
                     }
                     .toggleStyle(.button)
                 }
+            }
+        }
+        .sheet(item: $deleting) { row in
+            KubeRowDeleteSheet(resource: resource, row: row) {
+                Task { await list.refresh(model: model) }
             }
         }
         .task(id: kubeNamespacesKey(model)) {
@@ -118,6 +125,7 @@ struct KubeResourceListView: View {
                             row: row, columns: columns.columns, indices: indices, showNamespace: showNamespace, now: now
                         )
                     }
+                    .contextMenu { rowMenu(row) }
                 }
                 if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
             } header: {
@@ -139,6 +147,56 @@ struct KubeResourceListView: View {
         }
         .refreshable { await list.refresh(model: model) }
         .themedBackground()
+    }
+
+    /// A row's long press: its name to the clipboard, its link when the kind has one, and
+    /// Delete…, which opens the object screen's preview sheet (no swipe: the row is a link and
+    /// a Delete swipe on any object is too easy to hit).
+    @ViewBuilder private func rowMenu(_ row: KubeResourceRow) -> some View {
+        Button {
+            UIPasteboard.general.string = row.name
+        } label: {
+            Label("Copy name", systemImage: "doc.on.doc")
+        }
+        if let target = resource.shareTarget(namespace: row.namespace, name: row.name) {
+            ShareLinkButton(target: target)
+        }
+        if resource.verbs.contains("delete") {
+            Button(role: .destructive) {
+                deleting = row
+            } label: {
+                Label("Delete…", systemImage: "trash")
+            }
+        }
+    }
+}
+
+/// The object screen's delete sheet for a browser row: the credentials' delete can-I is asked
+/// here, as the object screen asks it, and the sheet reads its preview itself.
+private struct KubeRowDeleteSheet: View {
+    let resource: KubeAPIResource
+    let row: KubeResourceRow
+    let onDeleted: () -> Void
+
+    @Environment(AppModel.self) private var model
+    @State private var denial: KubeAccess?
+
+    var body: some View {
+        KubeObjectDeleteSheet(
+            resource: resource, namespace: row.namespace, name: row.name, denial: denial, onDeleted: onDeleted
+        )
+        .task { await loadDenial() }
+    }
+
+    /// An answer that cannot be had leaves Delete offered: the API server still decides.
+    private func loadDenial() async {
+        guard let client = model.client,
+            let access = try? await client.kubeCan(
+                verb: "delete", group: resource.group, resource: resource.resource,
+                namespace: row.namespace, name: row.name),
+            !Task.isCancelled
+        else { return }
+        denial = access.isDenied ? access : nil
     }
 }
 

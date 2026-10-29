@@ -148,6 +148,13 @@ struct AlertsView: View {
         selected = alert
     }
 
+    /// Silence… swiped on an alert's row: its sheet opens on the silence form, matchers from its
+    /// labels, nothing sent before "Silence".
+    private func silenceFromRow(_ alert: AMAlert) {
+        silenceComment = ""
+        selected = alert
+    }
+
     /// The namespace of a source reached through the service proxy, nil for a URL source.
     private var proxyNamespace: String? {
         guard let source, source.mode == PromSource.proxy else { return nil }
@@ -227,12 +234,7 @@ struct AlertsView: View {
                 ForEach(groups) { group in
                     Section {
                         ForEach(group.alerts) { alert in
-                            Button {
-                                selected = alert
-                            } label: {
-                                AlertRow(alert: alert)
-                            }
-                            .foregroundStyle(.primary)
+                            AlertListRow(alert: alert, open: { selected = alert }, silence: { silenceFromRow(alert) })
                         }
                     } header: {
                         HStack(spacing: 6) {
@@ -431,6 +433,47 @@ struct AlertsView: View {
             announce(String(localized: "Silence expired"))
         }
         await reload()
+    }
+}
+
+/// An alert's row: a tap opens its sheet; a trailing swipe, the context menu or VoiceOver's
+/// actions offer Silence…, left out when the credentials may not silence (the access the
+/// screen loads for the source's namespace), and the context menu shares the alerts screen.
+private struct AlertListRow: View {
+    let alert: AMAlert
+    let open: () -> Void
+    let silence: () -> Void
+
+    @Environment(\.kubeActionAccess) private var access
+
+    private var canSilence: Bool { access?.denial(for: .alertmanagerSilence) == nil }
+
+    var body: some View {
+        Button(action: open) {
+            AlertRow(alert: alert)
+        }
+        .foregroundStyle(.primary)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            if canSilence {
+                Button(action: silence) {
+                    Label("Silence…", systemImage: "bell.slash")
+                }
+                .tint(.indigo)
+            }
+        }
+        .contextMenu {
+            if canSilence {
+                Button(action: silence) {
+                    Label("Silence…", systemImage: "bell.slash")
+                }
+            }
+            ShareLinkButton(target: .screen(.alerts))
+        }
+        .accessibilityActions {
+            if canSilence {
+                Button("Silence…", action: silence)
+            }
+        }
     }
 }
 

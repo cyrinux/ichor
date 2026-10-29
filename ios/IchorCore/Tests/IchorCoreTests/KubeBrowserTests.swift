@@ -214,4 +214,21 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertTrue(job.isParallelism)
         XCTAssertFalse(try TalosJSON.decode(KubeObjectScale.self, from: "{}").isParallelism)
     }
+
+    /// A browser row shares a link only for the kinds links open.
+    func testShareTargetOfARow() {
+        let statefulSet = KubeAPIResource(group: "apps", resource: "statefulsets", kind: "StatefulSet")
+        XCTAssertEqual(
+            statefulSet.shareTarget(namespace: "shop", name: "db"),
+            .workload(kind: "StatefulSet", namespace: "shop", name: "db"))
+        XCTAssertEqual(
+            resources[1].shareTarget(namespace: "shop", name: "web-1"), .pod(namespace: "shop", name: "web-1"))
+        let cronJobs = KubeAPIResource(group: "batch", resource: "cronjobs", kind: "CronJob")
+        XCTAssertEqual(
+            cronJobs.shareTarget(namespace: "shop", name: "report"), .cronJob(namespace: "shop", name: "report"))
+        // A Job, a CRD and a cluster-scoped object have no link.
+        XCTAssertNil(resources[4].shareTarget(namespace: "shop", name: "once"))
+        XCTAssertNil(resources[0].shareTarget(namespace: "shop", name: "web"))
+        XCTAssertNil(resources[3].shareTarget(namespace: "", name: "n1"))
+    }
 }

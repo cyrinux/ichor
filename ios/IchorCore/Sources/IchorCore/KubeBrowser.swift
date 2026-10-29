@@ -68,6 +68,22 @@ public struct KubeAPIResource: Decodable, Equatable, Hashable, Identifiable, Sen
 
     /// The resource a scale patches, as KubeCan takes it: a Job itself, the /scale subresource otherwise.
     public var scaleResource: String { isJob ? resource : "\(resource)/scale" }
+
+    /// The share link of one of its objects: a workload, a pod or a CronJob, the kinds links
+    /// open (Go's shareWorkloadKinds); nil for any other kind or a cluster-scoped object.
+    public func shareTarget(namespace: String, name: String) -> ShareTarget? {
+        guard !namespace.isEmpty, !name.isEmpty else { return nil }
+        switch (group, resource) {
+        case ("apps", "deployments"), ("apps", "statefulsets"), ("apps", "daemonsets"):
+            return .workload(kind: kind, namespace: namespace, name: name)
+        case ("", "pods"):
+            return .pod(namespace: namespace, name: name)
+        case ("batch", "cronjobs"):
+            return .cronJob(namespace: namespace, name: name)
+        default:
+            return nil
+        }
+    }
 }
 
 /// How many pods an object wants (`replicas`) and runs (`current`) (KubeObjectScale). A Job's
