@@ -14,14 +14,17 @@ struct QuickEditImageSheet: View {
     let onApply: (QuickEdit) -> Void
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(targets: [QuickEditImageTarget], content: String, app: GitOpsAppRef, onApply: @escaping (QuickEdit) -> Void) {
+    /// prefill: an update's edit (Updates screen): the sheet opens on its image and tag.
+    init(targets: [QuickEditImageTarget], content: String, app: GitOpsAppRef, prefill: QuickEdit? = nil,
+         onApply: @escaping (QuickEdit) -> Void) {
         self.targets = targets
         self.content = content
         self.app = app
         self.onApply = onApply
-        let first = targets.first
+        let picked = prefill.flatMap { quickPrefillTarget(targets, edit: $0) }
+        let first = picked ?? targets.first
         _place = State(initialValue: first?.place)
-        _tag = State(initialValue: first.map { imageTag($0.image) } ?? "")
+        _tag = State(initialValue: picked != nil ? prefill.map(quickPrefillTag) ?? "" : first.map { imageTag($0.image) } ?? "")
     }
 
     @Environment(\.dismiss) private var dismiss

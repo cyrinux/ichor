@@ -41,6 +41,12 @@ var contractFixtures = []struct {
 	{"inventory", func() any { return demoInventory(contractNow.UnixMilli()) }},
 	{"kubespan", func() any { return demoKubeSpan() }},
 	{"topology", func() any { return demoTopology() }},
+	{"cluster-updates", func() any {
+		u := demoClusterUpdates(contractNow)
+		sortUpdates(&u)
+
+		return u
+	}},
 }
 
 // contractJSON is v as a fixture: indented, map keys sorted (encoding/json does), lists cut to

@@ -1,0 +1,144 @@
+{
+  "at": 1767323045000,
+  "charts": [
+    {
+      "current": "4.12.1",
+      "edit": {
+        "op": "path",
+        "path": "spec.chart.spec.version",
+        "value": "4.12.4"
+      },
+      "minor": "4.13.3",
+      "name": "ingress-nginx",
+      "owner": {
+        "kind": "HelmRelease",
+        "name": "ingress-nginx",
+        "namespace": "ingress-nginx",
+        "tool": "flux"
+      },
+      "patch": "4.12.4",
+      "repoURL": "https://kubernetes.github.io/ingress-nginx",
+      "shape": "x.y.z",
+      "source": "kubernetes.github.io",
+      "version": "4.12.1"
+    },
+    {
+      "automatedBy": "flux-semver",
+      "constraint": "\u003e=6.0.0",
+      "current": "6.7.0",
+      "edit": null,
+      "name": "podinfo",
+      "owner": {
+        "kind": "HelmRelease",
+        "name": "podinfo",
+        "namespace": "demo",
+        "tool": "flux"
+      },
+      "repoURL": "oci://ghcr.io/stefanprodan/charts",
+      "shape": "x.y.z",
+      "source": "ghcr.io",
+      "version": "6.7.0"
+    }
+  ],
+  "images": [
+    {
+      "current": "6.7.0",
+      "digest": "",
+      "edit": {
+        "container": "podinfo",
+        "image": "ghcr.io/stefanprodan/podinfo:6.7.1",
+        "kind": "Deployment",
+        "name": "podinfo",
+        "op": "image",
+        "path": ""
+      },
+      "minor": "6.9.2",
+      "owner": {
+        "kind": "Kustomization",
+        "name": "podinfo",
+        "namespace": "flux-system",
+        "tool": "flux"
+      },
+      "patch": "6.7.1",
+      "repo": "ghcr.io/stefanprodan/podinfo",
+      "shape": "x.y.z",
+      "source": "ghcr.io",
+      "tag": "6.7.0",
+      "workloads": [
+        {
+          "containers": [
+            "podinfo"
+          ],
+          "kind": "Deployment",
+          "name": "podinfo",
+          "namespace": "demo"
+        }
+      ]
+    },
+    {
+      "automatedBy": "argocd-image-updater",
+      "current": "2.3.0",
+      "digest": "",
+      "edit": null,
+      "owner": {
+        "kind": "Application",
+        "name": "hello-ichor",
+        "namespace": "argocd",
+        "tool": "argocd"
+      },
+      "patch": "2.3.1",
+      "repo": "ghcr.io/example-org/worker",
+      "shape": "x.y.z",
+      "source": "ghcr.io",
+      "tag": "2.3.0",
+      "workloads": [
+        {
+          "containers": [
+            "worker"
+          ],
+          "kind": "Deployment",
+          "name": "worker",
+          "namespace": "demo"
+        }
+      ]
+    },
+    {
+      "current": "1.27.4-alpine",
+      "digest": "",
+      "edit": {
+        "container": "nginx",
+        "image": "nginx:1.27.5-alpine",
+        "kind": "Deployment",
+        "name": "hello-ichor",
+        "op": "image",
+        "path": ""
+      },
+      "owner": {
+        "kind": "Application",
+        "name": "hello-ichor",
+        "namespace": "argocd",
+        "tool": "argocd"
+      },
+      "patch": "1.27.5-alpine",
+      "repo": "nginx",
+      "shape": "x.y.z-alpine",
+      "source": "Docker Hub",
+      "tag": "1.27.4-alpine",
+      "workloads": [
+        {
+          "containers": [
+            "nginx"
+          ],
+          "kind": "Deployment",
+          "name": "hello-ichor",
+          "namespace": "demo"
+        }
+      ]
+    }
+  ],
+  "lookups": {
+    "failed": 1,
+    "queried": 8
+  },
+  "skipped": []
+}

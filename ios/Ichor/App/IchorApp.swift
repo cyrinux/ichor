@@ -348,6 +348,8 @@ enum Route: Hashable {
     case search
     /// The cluster's runbooks (docs/runbooks.md), one runbook's plan, and its run.
     case runbooks
+    /// The images and charts with a newer version (the cluster menu's "Updates…").
+    case updates
     case runbookPlan(id: String)
     case runbookRun(id: String)
 }
@@ -546,6 +548,7 @@ struct MainNavigation: View {
         case .activity(let cluster): ActivityLogView(cluster: cluster)
         case .search: SearchView(open: { target in Task { await open(target) } }, openRoute: { path.append($0) })
         case .runbooks: RunbooksView(path: $path)
+        case .updates: UpdatesView()
         case .runbookPlan(let id): RunbookPlanView(id: id, path: $path)
         case .runbookRun(let id): RunbookRunView(id: id, path: $path)
         }

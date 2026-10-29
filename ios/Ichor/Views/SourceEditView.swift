@@ -102,7 +102,8 @@ struct SourceEditView: View {
             .navigationDestination(isPresented: $reviewing) {
                 if let base {
                     SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
-                                     defaultTitle: quickTitle, notice: quickTitle == nil ? nil : quickSkipped,
+                                     defaultTitle: quickTitle, defaultBody: quickTitle == nil || quickEdit?.body.isEmpty != false ? nil : quickEdit?.body,
+                                     notice: quickTitle == nil ? nil : quickSkipped,
                                      onReload: reload(at:), onDone: { dismiss() },
                                      onStage: stageable(base) ? { stage(base) } as (() -> Void)? : nil)
                 }
@@ -266,6 +267,8 @@ private struct SourceEditReview: View {
     let target: String
     /// The quick edit's pull request title, nil for the Go core's.
     let defaultTitle: String?
+    /// The quick edit's pull request body (an update's), nil for the Go core's.
+    var defaultBody: String?
     /// What the quick edit left out, shown above the diff.
     var notice: String?
     let onReload: (String) -> Void
@@ -340,7 +343,7 @@ private struct SourceEditReview: View {
         .task { await load() }
         .sheet(isPresented: $proposing) {
             ProposeSheet(source: source, path: path, app: app, base: base, content: edited, target: target,
-                         defaultTitle: defaultTitle, onReload: onReload, onDone: onDone)
+                         defaultTitle: defaultTitle, defaultBody: defaultBody, onReload: onReload, onDone: onDone)
         }
     }
 

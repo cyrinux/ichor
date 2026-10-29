@@ -45,6 +45,8 @@ struct ClusterTitleMenu: View {
         case .addNode:
             // On Omni, Add a node opens the boot media: Omni joins the machine itself.
             Button { path.append(.joinNode) } label: { Label("Add a node…", systemImage: "plus.circle") }
+        case .updates:
+            Button { path.append(.updates) } label: { Label("Updates…", systemImage: "arrow.up.square") }
         case .runbooks:
             Button { path.append(.runbooks) } label: { Label("Runbooks…", systemImage: "list.bullet.rectangle") }
         case .incidentSummary:
