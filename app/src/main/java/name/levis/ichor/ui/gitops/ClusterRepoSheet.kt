@@ -79,6 +79,7 @@ fun hasClusterRepo(): Boolean {
 fun ClusterRepoSheet(app: TalosApp, fingerprint: String, label: String, onDismiss: () -> Unit, onGitHosts: (() -> Unit)?) {
     val saved = app.clusterRepos.repos.collectAsStateWithLifecycle().value[fingerprint]
     val hosts by app.gitHostStore.hosts.collectAsStateWithLifecycle()
+    val activeFingerprint = app.configRepository.config.collectAsStateWithLifecycle().value?.activeSummary?.fingerprint
     val scope = rememberCoroutineScope()
     var url by remember { mutableStateOf(saved?.repoURL.orEmpty()) }
     var branch by remember { mutableStateOf(saved?.branch.orEmpty()) }
@@ -165,6 +166,8 @@ fun ClusterRepoSheet(app: TalosApp, fingerprint: String, label: String, onDismis
                 if (check == RepoCheck.Running) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             }
             RepoCheckResult(check)
+            // The active cluster only: a proposal is recorded in the active cluster's audit log.
+            if (activeFingerprint == fingerprint) app.gitOpsRepository.activeClusterRepo()?.let { UpdateBotRow(app, it) }
             MutedText(stringResource(R.string.repo_edits_are_proposals))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 if (saved != null) {

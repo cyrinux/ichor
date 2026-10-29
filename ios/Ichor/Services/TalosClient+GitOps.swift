@@ -173,6 +173,18 @@ extension TalosClient {
         return try await Self.json { IchorgoGitForgeRepo(json, url, branch, $0) }
     }
 
+    /// Whether repo (at its branch head) has a dependency-update bot configured, else the
+    /// configuration drafted for it (UpdateBotConfig), with the source to propose it to.
+    /// Throws GitHostMissing without a token.
+    static func updateBotConfig(_ repo: ClusterRepo, hosts: GitHostStore, demo: Bool) async throws -> (GitSource, UpdateBotConfig) {
+        let info = try await repoInfo(repo, hosts: hosts, demo: demo)
+        let source = repoSource(repo, info: info)
+        let json = try await forgeHost(repo.host, hosts: hosts, demo: demo)
+        let url = repo.repoURL, ref = source.tracked, talos = repo.talosDir, kube = repo.kubernetesDir
+        let cfg: UpdateBotConfig = try await Self.json { IchorgoUpdateBotConfig(json, url, ref, talos, kube, $0) }
+        return (source, cfg)
+    }
+
     /// The files of repo (under its Talos directory) that configure the node hostname of role,
     /// at its branch head. Throws GitHostMissing without a token.
     static func talosRepoFiles(_ repo: ClusterRepo, hostname: String, role: String, hosts: GitHostStore, demo: Bool) async throws -> TalosRepoFiles {

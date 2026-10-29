@@ -141,6 +141,13 @@ Part of the [Ichor documentation](../README.md#documentation).
   pull or merge requests on a new branch, never commits to the branch itself. Nothing is
   cloned: each directory and file is one call to the forge's API. The demo cluster has a sample
   repository built in.
+- **Dependency updates:** the Cluster repository sheet of the active cluster tells whether the
+  repository already has a dependency-update bot (a Renovate configuration, a workflow running
+  it, or Dependabot's). When it has none, **Propose a configuration…** shows a `renovate.json`
+  drafted for the files it holds (the Flux, Argo CD and Kubernetes manifests under its
+  Kubernetes directory, the Talos and Kubernetes versions of `talconfig.yaml`, Talos installer
+  images) with why each part is there, then opens it as a pull request; installing the bot on
+  the forge stays yours, and the pull request says how. No schedule, no automerge.
 - **Try a Talos patch from Git:** on a Talos cluster, a Talos patch file opened in the cluster
   repository or an app's source (machine/cluster sections, or config documents such as
   `HostnameConfig`) shows **Try on a node…**: pick the node (the one the patch sets the hostname

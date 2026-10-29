@@ -5629,6 +5629,15 @@
     <string name="repo_check_can_push">This token can push: edits open pull requests.</string>
     <string name="repo_check_read_only">This token can read only: pull requests will be refused.</string>
     <string name="repo_edits_are_proposals">Edits are never committed to the branch: each one opens a pull or merge request.</string>
+    <string name="repo_update_bot_title">Dependency updates</string>
+    <string name="repo_update_bot_checking">Looking for a dependency-update bot…</string>
+    <string name="repo_update_bot_present">A bot is configured: %1$s</string>
+    <string name="repo_update_bot_none">No update bot in this repository.</string>
+    <string name="repo_update_bot_propose">Propose a configuration…</string>
+    <string name="repo_update_bot_failed">Could not read the repository: %1$s</string>
+    <string name="repo_update_bot_sheet_title">Add a dependency-update bot configuration</string>
+    <string name="repo_update_bot_sheet_body">The app wrote %1$s for the files it found. Read it, then open a pull request: nothing changes until you merge it.</string>
+    <string name="repo_update_bot_continue">Continue to the pull request</string>
     <string name="source_search">Find in repository</string>
     <string name="source_search_field">Text to find</string>
     <string name="source_search_close">Close the search</string>

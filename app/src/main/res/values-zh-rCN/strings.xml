@@ -5491,6 +5491,15 @@
     <string name="repo_check_can_push">此令牌可以推送：编辑会创建拉取请求。</string>
     <string name="repo_check_read_only">此令牌只能读取：拉取请求将被拒绝。</string>
     <string name="repo_edits_are_proposals">编辑从不直接提交到分支：每次编辑都会创建一个拉取请求或合并请求。</string>
+    <string name="repo_update_bot_title">依赖更新</string>
+    <string name="repo_update_bot_checking">正在查找依赖更新机器人…</string>
+    <string name="repo_update_bot_present">已配置机器人：%1$s</string>
+    <string name="repo_update_bot_none">此仓库中没有更新机器人。</string>
+    <string name="repo_update_bot_propose">提议一份配置…</string>
+    <string name="repo_update_bot_failed">无法读取仓库：%1$s</string>
+    <string name="repo_update_bot_sheet_title">添加依赖更新机器人配置</string>
+    <string name="repo_update_bot_sheet_body">应用已根据找到的文件写好 %1$s。请先阅读，再打开拉取请求：在你合并之前不会有任何更改。</string>
+    <string name="repo_update_bot_continue">继续创建拉取请求</string>
     <string name="source_search">在仓库中查找</string>
     <string name="source_search_field">要查找的文本</string>
     <string name="source_search_close">关闭搜索</string>

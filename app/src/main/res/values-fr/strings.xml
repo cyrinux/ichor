@@ -5624,6 +5624,15 @@
     <string name="repo_check_can_push">Ce jeton peut pousser : les modifications ouvrent des pull requests.</string>
     <string name="repo_check_read_only">Ce jeton peut seulement lire : les pull requests seront refusées.</string>
     <string name="repo_edits_are_proposals">Les modifications ne sont jamais commitées sur la branche : chacune ouvre une pull ou merge request.</string>
+    <string name="repo_update_bot_title">Mises à jour des dépendances</string>
+    <string name="repo_update_bot_checking">Recherche d\'un bot de mise à jour des dépendances…</string>
+    <string name="repo_update_bot_present">Un bot est configuré : %1$s</string>
+    <string name="repo_update_bot_none">Aucun bot de mise à jour dans ce dépôt.</string>
+    <string name="repo_update_bot_propose">Proposer une configuration…</string>
+    <string name="repo_update_bot_failed">Impossible de lire le dépôt : %1$s</string>
+    <string name="repo_update_bot_sheet_title">Ajouter une configuration de bot de mise à jour des dépendances</string>
+    <string name="repo_update_bot_sheet_body">L\'app a rédigé %1$s pour les fichiers trouvés. Relisez-le, puis ouvrez une pull request : rien ne change tant que vous ne la fusionnez pas.</string>
+    <string name="repo_update_bot_continue">Continuer vers la pull request</string>
     <string name="source_search">Rechercher dans le dépôt</string>
     <string name="source_search_field">Texte à chercher</string>
     <string name="source_search_close">Fermer la recherche</string>
