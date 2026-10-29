@@ -343,6 +343,7 @@ internal fun OverviewTopBar(
                         labels = clusterLabels,
                         onSelect = app::selectCluster,
                         onManage = onManageClusters,
+                        onFleet = nav.onFleet,
                         onDismiss = { onClusterMenu(false) },
                         onUpgradeCluster = { nav.onUpgradeCluster("") },
                         onUpgradeKubernetes = nav.onUpgradeKubernetes,
@@ -409,6 +410,7 @@ internal fun OverviewDialogs(
             onEndpoints = { endpoints.onEdit(it.name) },
             onActivity = { nav.onActivity(it.name) },
             onGitHosts = nav.onGitHosts,
+            onFleet = nav.onFleet,
         )
     }
     config?.let { stored ->

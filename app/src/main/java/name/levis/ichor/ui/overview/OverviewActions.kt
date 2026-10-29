@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FolderCopy
@@ -12,7 +13,6 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.Widgets
-import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,6 +24,7 @@ import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.clusterSupport
 import name.levis.ichor.ui.components.ActionBarActions
 import name.levis.ichor.ui.components.ActionLook
+import name.levis.ichor.ui.components.SMOKE_SETTINGS
 import name.levis.ichor.ui.components.rememberClusterFeatures
 import name.levis.ichor.ui.tour.TourAnchor
 import name.levis.ichor.ui.tour.tourAnchor
@@ -135,6 +136,7 @@ fun OverviewActions(
             offered = ::offered,
             enabled = ::enabled,
             marker = { if (it == OverviewAction.SETTINGS) Modifier.tourAnchor(TourAnchor.Settings) else Modifier },
+            testTag = { if (it == OverviewAction.SETTINGS) SMOKE_SETTINGS else null },
         )
     }
 }

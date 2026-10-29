@@ -157,7 +157,7 @@ Ichor is free, with no ads or tracking. To help keep it going:
 - Bitcoin: `bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl`
 - Ethereum: `0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804`
 
-The app's About section and the [website](https://cyrinux.github.io/ichor/#support) show them as QR codes.
+The app's About section and the [website](https://cyrinux.github.io/ichor/features.html#support) show them as QR codes.
 
 The Google Play version can't show those links (Play's payment rules). Instead,
 **Settings → About → Fund features** lets you back the features you want next, with Google

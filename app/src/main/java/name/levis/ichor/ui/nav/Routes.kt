@@ -35,6 +35,7 @@ internal object Routes {
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val SEARCH = "search"
+    const val FLEET = "fleet"
     const val APPS = "apps?attention={attention}"
     const val METRICS = "metrics?tab={tab}"
 

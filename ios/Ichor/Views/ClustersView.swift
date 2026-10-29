@@ -106,6 +106,18 @@ struct ClustersView: View {
     var body: some View {
         List {
             let contexts = model.summary?.contexts ?? []
+            Section {
+                NavigationLink(value: Route.fleet) {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("All clusters")
+                            Text("Every cluster's last check, worst first").font(.caption).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "rectangle.stack")
+                    }
+                }
+            }
             // A long list in sections, per provider and account; a short one as it is.
             if let groups = clusterGroups(contexts, masked: model.labels.masked) {
                 ForEach(groups) { group in

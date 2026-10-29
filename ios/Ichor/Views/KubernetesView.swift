@@ -469,6 +469,44 @@ private struct WorkloadRow: View {
                 .accessibilityLabel(Text("Restart \(workload.name)"))
             }
         }
+        // Swipe right: the restart, which only opens its confirmation. VoiceOver lists it too.
+        .swipeActions(edge: .leading) {
+            if !restarting {
+                Button(action: onRestart) {
+                    Label("Restart", systemImage: "arrow.clockwise")
+                }
+                .tint(.blue)
+                .disabled(!workload.canRestart)
+                .kubeGated(KubeAction.restart(kind: workload.kind), in: workload.namespace)
+            }
+        }
+        .contextMenu {
+            if !restarting && workload.canRestart {
+                restartMenuItem
+            }
+            Button(action: onOpen) {
+                Label("Scale…", systemImage: "arrow.up.and.down")
+            }
+            ShareLinkButton(target: shareTarget)
+            PinButton(target: shareTarget, label: workload.name)
+        }
+    }
+
+    private var shareTarget: ShareTarget {
+        .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name)
+    }
+
+    /// The restart as a menu item, with the reason when the account may not.
+    @ViewBuilder private var restartMenuItem: some View {
+        if let action = KubeAction.restart(kind: workload.kind) {
+            KubeGatedMenuButton(
+                String(localized: "Restart"), systemImage: "arrow.clockwise", action: action, in: workload.namespace,
+                perform: onRestart)
+        } else {
+            Button(action: onRestart) {
+                Label("Restart", systemImage: "arrow.clockwise")
+            }
+        }
     }
 
     /// Name, kind, readiness and last restart: opens the workload's actions.

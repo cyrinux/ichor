@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
@@ -153,6 +154,13 @@ fun WithClusterRail(nav: NavHostController, app: TalosApp, content: @Composable 
                     nav.openSection(section?.takeIf { it in railSections(context) } ?: RailSection.OVERVIEW, context)
                 },
                 onSection = { nav.openSection(it, active) },
+                fleetSelected = route == Routes.FLEET,
+                onFleet = {
+                    nav.navigate(Routes.FLEET) {
+                        popUpTo(Routes.OVERVIEW)
+                        launchSingleTop = true
+                    }
+                },
             )
             VerticalDivider()
         }
@@ -176,8 +184,9 @@ private fun NavHostController.openSection(section: RailSection, cluster: Context
 }
 
 /**
- * The tablet rail, as the iPad sidebar: the clusters (each in its colour, the current one
- * selected), then the sections of the current cluster, the [selected] one highlighted.
+ * The tablet rail, as the iPad sidebar: "All clusters" (the fleet view, [fleetSelected] while
+ * it is on screen), the clusters (each in its colour, the current one selected), then the
+ * sections of the current cluster, the [selected] one highlighted.
  */
 @Composable
 fun ClusterRail(
@@ -188,11 +197,20 @@ fun ClusterRail(
     selected: RailSection?,
     onCluster: (ContextSummary) -> Unit,
     onSection: (RailSection) -> Unit,
+    fleetSelected: Boolean = false,
+    onFleet: () -> Unit = {},
 ) {
     val clustersLabel = stringResource(R.string.rail_clusters)
     NavigationRail {
         // Many clusters and ten sections outgrow a landscape tablet: the rail scrolls.
         Column(Modifier.verticalScroll(rememberScrollState()).padding(vertical = 8.dp)) {
+            NavigationRailItem(
+                selected = fleetSelected,
+                onClick = onFleet,
+                icon = { Icon(Icons.Outlined.ViewAgenda, contentDescription = null) },
+                label = { Text(stringResource(R.string.fleet_title), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                modifier = Modifier.width(80.dp),
+            )
             Column(Modifier.semantics { contentDescription = clustersLabel }) {
                 clusters.forEach { context ->
                     val active = context.name == current.name

@@ -20,6 +20,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .accessibilityIdentifier(SmokeID.settingsScreen)
         .themedBackground()
         .navigationTitle("Settings")
     }

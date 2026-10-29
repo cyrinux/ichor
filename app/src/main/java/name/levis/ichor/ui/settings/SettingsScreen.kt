@@ -16,6 +16,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,6 +24,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.SMOKE_SETTINGS_SCREEN
 import name.levis.ichor.ui.components.pageContent
 
 /** Settings: one row per group (see [SettingsPage]), each opening its own page. */
@@ -38,7 +40,7 @@ fun SettingsScreen(configs: ConfigRepository, onBack: () -> Unit, onOpen: (Setti
             )
         },
     ) { padding ->
-        Column(Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).testTag(SMOKE_SETTINGS_SCREEN)) {
             visibleSettingsPages(config?.activeSummary).forEach { page -> SettingsPageRow(page) { onOpen(page) } }
         }
     }
