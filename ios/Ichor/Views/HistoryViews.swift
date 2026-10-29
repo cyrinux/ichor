@@ -215,7 +215,8 @@ private struct HistoryStrip: View {
             }
             // Over the "no data" end, which it replaces.
             if let downTail {
-                let rect = CGRect(x: size.width * downTail, y: 0, width: size.width * (1 - downTail), height: size.height)
+                let rect = CGRect(
+                    x: size.width * downTail, y: 0, width: size.width * (1 - downTail), height: size.height)
                 context.fill(Path(rect), with: .color(NodeHealth.unreachable.color.opacity(0.4)))
             }
         }

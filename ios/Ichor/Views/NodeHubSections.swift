@@ -101,7 +101,9 @@ struct NodeStatusSection: View {
                 .pods, title: model.allows(.workloads) ? String(localized: "Containers") : nil,
                 systemImage: "shippingbox.circle", support: support(.containers, .containers))
             // Cgroups (a copy of /sys/fs/cgroup) only exists for admin configs.
-            if model.allows(.cgroups) { tabRow(.cgroups, systemImage: "square.3.layers.3d", support: support(.cgroups)) }
+            if model.allows(.cgroups) {
+                tabRow(.cgroups, systemImage: "square.3.layers.3d", support: support(.cgroups))
+            }
             // The Pods tab reads the containers through Talos (CRI); this asks the API server (os:admin).
             if model.allows(.workloads) {
                 NodeHubButton(title: String(localized: "Kubernetes pods"), systemImage: "cube") { open = .kubePods }
@@ -139,18 +141,24 @@ struct NodeInspectSection: View {
             ) { open = .kernelLog }
             .accessibilityIdentifier(SmokeID.kernelLog)
             NodeHubButton(
-                title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events, .events)
+                title: String(localized: "Events"), systemImage: "list.bullet.rectangle",
+                support: support(.events, .events)
             ) {
                 open = .events
             }
-            NodeHubButton(title: String(localized: "Network"), systemImage: "network", support: support(.network, .network)) {
+            NodeHubButton(
+                title: String(localized: "Network"), systemImage: "network", support: support(.network, .network)
+            ) {
                 open = .network
             }
-            NodeHubButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.storage, .mounts))
-            {
+            NodeHubButton(
+                title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.storage, .mounts)
+            ) {
                 open = .storage
             }
-            NodeHubButton(title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images, .images)) {
+            NodeHubButton(
+                title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images, .images)
+            ) {
                 open = .images
             }
             if model.allows(.resourceBrowser) {
@@ -160,7 +168,8 @@ struct NodeInspectSection: View {
                 ) { open = .resourceBrowser }
             }
             NodeHubButton(
-                title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware, .hardware)
+                title: String(localized: "About this node"), systemImage: "info.circle",
+                support: support(.hardware, .hardware)
             ) {
                 open = .hardware
             }
@@ -300,8 +309,8 @@ struct NodePowerSection: View {
             Section("Power") {
                 ForEach(PowerAction.allCases) { action in
                     NodeHubButton(
-                        title: action.localizedTitle, systemImage: "power", support: model.hubSupport(.power, node: node),
-                        role: .destructive
+                        title: action.localizedTitle, systemImage: "power",
+                        support: model.hubSupport(.power, node: node), role: .destructive
                     ) {
                         powerAction = action
                     }
