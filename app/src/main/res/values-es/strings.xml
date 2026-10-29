@@ -5107,6 +5107,23 @@
     <string name="cnpg_promote_unavailable">Esta instancia no puede promoverse en el estado actual del clúster.</string>
     <string name="cnpg_promote_requested">Promoción a %1$s solicitada</string>
     <string name="cnpg_promote_failed">No se pudo promover %1$s: %2$s</string>
+    <string name="cnpg_destroy_title">Quitar la instancia</string>
+    <string name="cnpg_destroy_instance">Quitar %1$s</string>
+    <string name="cnpg_destroy_risk">Borra los volúmenes de la instancia y después su pod, como kubectl cnpg destroy. CloudNativePG clona luego una nueva réplica desde el primario en un nodo que existe.</string>
+    <string name="cnpg_destroy_pod">Pod: %1$s</string>
+    <string name="cnpg_destroy_no_pod">Sin pod</string>
+    <string name="cnpg_destroy_node_gone">en el nodo %1$s, que ya no existe</string>
+    <string name="cnpg_destroy_node_present">en el nodo %1$s, aún en el clúster</string>
+    <string name="cnpg_destroy_node_none">no ligado a un nodo</string>
+    <string name="cnpg_destroy_node_unknown">nodo desconocido</string>
+    <string name="cnpg_destroy_block_primary">No se puede quitar el primario, ni ninguna instancia mientras no se conozca un primario.</string>
+    <string name="cnpg_destroy_block_no_other_data">El primario no conserva ningún volumen: esta instancia puede tener la única copia de los datos.</string>
+    <string name="cnpg_destroy_block_not_found">Esta instancia ya no tiene pod ni volumen.</string>
+    <string name="cnpg_destroy_warn_ready">Esta réplica está sana: el clúster tiene una copia menos hasta que la nueva réplica se ponga al día.</string>
+    <string name="cnpg_destroy_warn_node_present">Su nodo sigue ahí: la instancia puede volver por sí sola cuando se arregle el nodo.</string>
+    <string name="cnpg_destroy_done">%1$s quitada: CloudNativePG crea una nueva réplica</string>
+    <string name="cnpg_destroy_failed">No se pudo quitar %1$s: %2$s</string>
+    <string name="cnpg_instance_no_pod">sin pod</string>
 
     <string name="cnpg_restart_primary">Reiniciar primario</string>
     <string name="cnpg_hibernate_action">Hibernar clúster</string>

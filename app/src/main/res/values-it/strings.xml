@@ -5107,6 +5107,23 @@
     <string name="cnpg_promote_unavailable">Questa istanza non può essere promossa nello stato attuale del cluster.</string>
     <string name="cnpg_promote_requested">Promozione a %1$s richiesta</string>
     <string name="cnpg_promote_failed">Impossibile promuovere %1$s: %2$s</string>
+    <string name="cnpg_destroy_title">Rimuovi istanza</string>
+    <string name="cnpg_destroy_instance">Rimuovi %1$s</string>
+    <string name="cnpg_destroy_risk">Elimina i volumi dell\'istanza, poi il suo pod, come kubectl cnpg destroy. CloudNativePG clona poi una nuova replica dal primario su un nodo esistente.</string>
+    <string name="cnpg_destroy_pod">Pod: %1$s</string>
+    <string name="cnpg_destroy_no_pod">Nessun pod</string>
+    <string name="cnpg_destroy_node_gone">sul nodo %1$s, che non esiste più</string>
+    <string name="cnpg_destroy_node_present">sul nodo %1$s, ancora nel cluster</string>
+    <string name="cnpg_destroy_node_none">non legato a un nodo</string>
+    <string name="cnpg_destroy_node_unknown">nodo sconosciuto</string>
+    <string name="cnpg_destroy_block_primary">Il primario non può essere rimosso, né alcuna istanza finché non si conosce un primario.</string>
+    <string name="cnpg_destroy_block_no_other_data">Il primario non ha alcun volume: questa istanza potrebbe avere l\'unica copia dei dati.</string>
+    <string name="cnpg_destroy_block_not_found">Questa istanza non ha più né pod né volume.</string>
+    <string name="cnpg_destroy_warn_ready">Questa replica è sana: il cluster ha una copia in meno finché la nuova replica non si allinea.</string>
+    <string name="cnpg_destroy_warn_node_present">Il suo nodo c\'è ancora: l\'istanza potrebbe tornare da sola una volta sistemato il nodo.</string>
+    <string name="cnpg_destroy_done">%1$s rimossa: CloudNativePG crea una nuova replica</string>
+    <string name="cnpg_destroy_failed">Impossibile rimuovere %1$s: %2$s</string>
+    <string name="cnpg_instance_no_pod">nessun pod</string>
 
     <string name="cnpg_restart_primary">Riavvia primario</string>
     <string name="cnpg_hibernate_action">Iberna cluster</string>

@@ -129,6 +129,7 @@ final class KubeAccessTests: XCTestCase {
                 "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
                 "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "editNodeMeta",
                 "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate",
+                "cnpgDestroy",
                 "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode",
                 "longhornEngineUpgrade",
                 "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",

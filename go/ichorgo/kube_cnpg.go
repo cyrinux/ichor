@@ -31,14 +31,18 @@ type cnpgCluster struct {
 	CurrentPrimary string    `json:"currentPrimary"`
 	TargetPrimary  string    `json:"targetPrimary"`
 	InstancePods   []cnpgPod `json:"instancePods"`
-	Archiving      string    `json:"archiving"`    // ok|failing|off|unknown
-	LastBackup     string    `json:"lastBackup"`   // ok|failed|stale|none
-	BackupMethod   string    `json:"backupMethod"` // plugin|in-tree|none
-	ObjectStore    string    `json:"objectStore"`  // plugin ObjectStore name
-	Scheduled      bool      `json:"scheduled"`    // a ScheduledBackup that is not suspended targets it
-	LastSuccessAt  int64     `json:"lastSuccessfulBackupAt"`
-	LastFailureAt  int64     `json:"lastFailedBackupAt"`
-	RecoverableAt  int64     `json:"firstRecoverabilityAt"`
+	// FailedInstances: instances the operator marks failed; MissingInstances: instances it
+	// knows (a volume left behind) that have no pod, such as an evicted primary.
+	FailedInstances  []string `json:"failedInstances"`
+	MissingInstances []string `json:"missingInstances"`
+	Archiving        string   `json:"archiving"`    // ok|failing|off|unknown
+	LastBackup       string   `json:"lastBackup"`   // ok|failed|stale|none
+	BackupMethod     string   `json:"backupMethod"` // plugin|in-tree|none
+	ObjectStore      string   `json:"objectStore"`  // plugin ObjectStore name
+	Scheduled        bool     `json:"scheduled"`    // a ScheduledBackup that is not suspended targets it
+	LastSuccessAt    int64    `json:"lastSuccessfulBackupAt"`
+	LastFailureAt    int64    `json:"lastFailedBackupAt"`
+	RecoverableAt    int64    `json:"firstRecoverabilityAt"`
 }
 
 type cnpgPod struct {
@@ -82,16 +86,18 @@ type cnpgClusterObject struct {
 		} `json:"backup"`
 	} `json:"spec"`
 	Status struct {
-		Instances                int             `json:"instances"`
-		ReadyInstances           int             `json:"readyInstances"`
-		Phase                    string          `json:"phase"`
-		PhaseReason              string          `json:"phaseReason"`
-		CurrentPrimary           string          `json:"currentPrimary"`
-		TargetPrimary            string          `json:"targetPrimary"`
-		LastSuccessfulBackup     string          `json:"lastSuccessfulBackup"`
-		LastFailedBackup         string          `json:"lastFailedBackup"`
-		FirstRecoverabilityPoint string          `json:"firstRecoverabilityPoint"`
-		Conditions               []kubeCondition `json:"conditions"`
+		Instances                int                 `json:"instances"`
+		ReadyInstances           int                 `json:"readyInstances"`
+		Phase                    string              `json:"phase"`
+		PhaseReason              string              `json:"phaseReason"`
+		CurrentPrimary           string              `json:"currentPrimary"`
+		TargetPrimary            string              `json:"targetPrimary"`
+		LastSuccessfulBackup     string              `json:"lastSuccessfulBackup"`
+		LastFailedBackup         string              `json:"lastFailedBackup"`
+		FirstRecoverabilityPoint string              `json:"firstRecoverabilityPoint"`
+		Conditions               []kubeCondition     `json:"conditions"`
+		InstanceNames            []string            `json:"instanceNames"`
+		InstancesStatus          map[string][]string `json:"instancesStatus"`
 	} `json:"status"`
 }
 
@@ -233,6 +239,8 @@ func mapCNPGCluster(c cnpgClusterObject, interval time.Duration, stores map[stri
 		out.InstancePods = []cnpgPod{}
 	}
 
+	out.FailedInstances, out.MissingInstances = cnpgInstanceGaps(st.InstanceNames, st.InstancesStatus["failed"], out.InstancePods)
+
 	// An in-tree barmanObjectStore both archives WAL and takes backups.
 	archiver := len(c.Spec.Backup.BarmanObjectStore) > 0 && string(c.Spec.Backup.BarmanObjectStore) != "null"
 
@@ -278,6 +286,26 @@ func mapCNPGCluster(c cnpgClusterObject, interval time.Duration, stores map[stri
 	out.Health, out.Reasons = cnpgHealth(out, conditionStatus(st.Conditions, "Ready"))
 
 	return out
+}
+
+// cnpgInstanceGaps: the failed instances, and the known instances without a pod, sorted.
+func cnpgInstanceGaps(names, failed []string, pods []cnpgPod) ([]string, []string) {
+	failedOut := slices.Sorted(slices.Values(failed))
+	if failedOut == nil {
+		failedOut = []string{}
+	}
+
+	missing := []string{}
+
+	for _, n := range names {
+		if !slices.ContainsFunc(pods, func(p cnpgPod) bool { return p.Name == n }) && !slices.Contains(missing, n) {
+			missing = append(missing, n)
+		}
+	}
+
+	slices.Sort(missing)
+
+	return failedOut, missing
 }
 
 // cnpgArchiving: no archiver configured is a choice, not a fault.

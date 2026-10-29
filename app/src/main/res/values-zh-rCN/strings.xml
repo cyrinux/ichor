@@ -4979,6 +4979,23 @@
     <string name="cnpg_promote_unavailable">在集群当前状态下无法提升此实例。</string>
     <string name="cnpg_promote_requested">已请求提升到 %1$s</string>
     <string name="cnpg_promote_failed">无法提升 %1$s：%2$s</string>
+    <string name="cnpg_destroy_title">移除实例</string>
+    <string name="cnpg_destroy_instance">移除 %1$s</string>
+    <string name="cnpg_destroy_risk">删除该实例的卷，然后删除其 Pod，与 kubectl cnpg destroy 相同。随后 CloudNativePG 会从主实例克隆一个新副本到现有节点上。</string>
+    <string name="cnpg_destroy_pod">Pod：%1$s</string>
+    <string name="cnpg_destroy_no_pod">无 Pod</string>
+    <string name="cnpg_destroy_node_gone">位于节点 %1$s，该节点已不存在</string>
+    <string name="cnpg_destroy_node_present">位于节点 %1$s，仍在集群中</string>
+    <string name="cnpg_destroy_node_none">未绑定到节点</string>
+    <string name="cnpg_destroy_node_unknown">节点未知</string>
+    <string name="cnpg_destroy_block_primary">无法移除主实例；在主实例未知时也无法移除任何实例。</string>
+    <string name="cnpg_destroy_block_no_other_data">主实例没有卷：此实例可能持有数据的唯一副本。</string>
+    <string name="cnpg_destroy_block_not_found">此实例已没有 Pod 和卷。</string>
+    <string name="cnpg_destroy_warn_ready">此副本运行正常：在新副本追上之前，集群会少一份副本。</string>
+    <string name="cnpg_destroy_warn_node_present">其节点仍然存在：节点修复后，该实例可能会自行恢复。</string>
+    <string name="cnpg_destroy_done">已移除 %1$s：CloudNativePG 正在创建新副本</string>
+    <string name="cnpg_destroy_failed">无法移除 %1$s：%2$s</string>
+    <string name="cnpg_instance_no_pod">无 Pod</string>
 
     <string name="cnpg_restart_primary">重启主库</string>
     <string name="cnpg_hibernate_action">休眠集群</string>

@@ -5107,6 +5107,23 @@
     <string name="cnpg_promote_unavailable">Cette instance ne peut pas être promue dans l’état actuel du cluster.</string>
     <string name="cnpg_promote_requested">Promotion vers %1$s demandée</string>
     <string name="cnpg_promote_failed">Impossible de promouvoir %1$s : %2$s</string>
+    <string name="cnpg_destroy_title">Retirer l\'instance</string>
+    <string name="cnpg_destroy_instance">Retirer %1$s</string>
+    <string name="cnpg_destroy_risk">Supprime les volumes de l\'instance, puis son pod, comme kubectl cnpg destroy. CloudNativePG clone ensuite une nouvelle réplique depuis le primaire sur un nœud qui existe.</string>
+    <string name="cnpg_destroy_pod">Pod : %1$s</string>
+    <string name="cnpg_destroy_no_pod">Aucun pod</string>
+    <string name="cnpg_destroy_node_gone">sur le nœud %1$s, qui n\'existe plus</string>
+    <string name="cnpg_destroy_node_present">sur le nœud %1$s, toujours dans le cluster</string>
+    <string name="cnpg_destroy_node_none">non lié à un nœud</string>
+    <string name="cnpg_destroy_node_unknown">nœud inconnu</string>
+    <string name="cnpg_destroy_block_primary">Le primaire ne peut pas être retiré, ni aucune instance tant qu\'aucun primaire n\'est connu.</string>
+    <string name="cnpg_destroy_block_no_other_data">Le primaire n\'a aucun volume : cette instance détient peut-être la seule copie des données.</string>
+    <string name="cnpg_destroy_block_not_found">Cette instance n\'a plus ni pod ni volume.</string>
+    <string name="cnpg_destroy_warn_ready">Cette réplique est saine : le cluster a une copie de moins jusqu\'à ce que la nouvelle réplique rattrape son retard.</string>
+    <string name="cnpg_destroy_warn_node_present">Son nœud est toujours là : l\'instance peut revenir d\'elle-même une fois le nœud réparé.</string>
+    <string name="cnpg_destroy_done">%1$s retirée : CloudNativePG crée une nouvelle réplique</string>
+    <string name="cnpg_destroy_failed">Impossible de retirer %1$s : %2$s</string>
+    <string name="cnpg_instance_no_pod">aucun pod</string>
 
     <string name="cnpg_restart_primary">Redémarrer le primaire</string>
     <string name="cnpg_hibernate_action">Mettre le cluster en veille</string>

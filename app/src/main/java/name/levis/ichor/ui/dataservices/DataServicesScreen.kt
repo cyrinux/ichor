@@ -129,6 +129,7 @@ fun DataServicesScreen(
     CertificateRenewToasts(vm.certificates.results)
     CnpgBackupToasts(vm.cnpg.results)
     CnpgPromoteToasts(vm.cnpg.promoteResults)
+    CnpgDestroyToasts(vm.cnpg.destroyResults)
     CnpgLifecycleToasts(vm.cnpg.lifecycleResults)
     VeleroResultToasts(vm.velero.results)
 

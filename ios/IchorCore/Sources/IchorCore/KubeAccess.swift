@@ -15,7 +15,10 @@ public enum KubeAction: String, CaseIterable, Sendable {
     case editNodeMeta
     /// create and delete on services/proxy: an Alertmanager reached through the service proxy.
     case alertmanagerSilence, alertmanagerExpire
-    case cnpgPromote, cnpgRestartPrimary, cnpgHibernate, longhornSalvage, longhornAttachment, longhornSnapshot
+    case cnpgPromote, cnpgRestartPrimary, cnpgHibernate
+    /// Remove one CloudNativePG instance, its PVCs then its pod, like `kubectl cnpg destroy`.
+    case cnpgDestroy
+    case longhornSalvage, longhornAttachment, longhornSnapshot
     case longhornReplicas, longhornNode, longhornEngineUpgrade
     case veleroBackupNow, veleroDeleteBackup, veleroRestore
     case vmStart, vmStop, vmRestart, vmMigrate, vmPause, vmUnpause

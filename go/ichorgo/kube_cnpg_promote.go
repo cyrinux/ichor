@@ -50,6 +50,9 @@ type cnpgActionPod struct {
 			UID  string `json:"uid"`
 		} `json:"ownerReferences"`
 	} `json:"metadata"`
+	Spec struct {
+		NodeName string `json:"nodeName"`
+	} `json:"spec"`
 	Status struct {
 		Phase      string          `json:"phase"`
 		Conditions []kubeCondition `json:"conditions"`

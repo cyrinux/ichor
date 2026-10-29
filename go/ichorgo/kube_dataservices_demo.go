@@ -96,7 +96,8 @@ func demoDataServices(now time.Time) dataServices {
 	cnpg := &cnpgStatus{Version: "v1", Clusters: []cnpgCluster{
 		{Namespace: "demo", Name: "orders-db", Phase: "Waiting for the instances to become active", Health: healthCritical, Reasons: []string{cnpgReasonNoInstance},
 			Instances: 2, CurrentPrimary: "orders-db-1", TargetPrimary: "orders-db-1", InstancePods: pods("orders-db", false, false),
-			Archiving: "ok", LastBackup: "ok", BackupMethod: "plugin", ObjectStore: "garage-store", Scheduled: true,
+			FailedInstances: []string{"orders-db-2"},
+			Archiving:       "ok", LastBackup: "ok", BackupMethod: "plugin", ObjectStore: "garage-store", Scheduled: true,
 			LastSuccessAt: ms(2 * 24 * time.Hour), RecoverableAt: ms(14 * 24 * time.Hour)},
 		{Namespace: "demo", Name: "app-db", Phase: "Switchover in progress", Health: healthWarning, Reasons: []string{cnpgReasonInstances, cnpgReasonSwitchover},
 			Instances: 3, ReadyInstances: 2, CurrentPrimary: "app-db-3", TargetPrimary: "app-db-1", InstancePods: pods("app-db", true, true, false),
@@ -115,6 +116,10 @@ func demoDataServices(now time.Time) dataServices {
 			Archiving: "off", LastBackup: "ok", BackupMethod: "plugin", ObjectStore: "garage-store", Scheduled: true,
 			LastSuccessAt: ms(3 * 24 * time.Hour), RecoverableAt: ms(17 * 24 * time.Hour)},
 	}}
+	for i := range cnpg.Clusters {
+		c := &cnpg.Clusters[i]
+		c.FailedInstances, c.MissingInstances = cnpgInstanceGaps(nil, c.FailedInstances, c.InstancePods)
+	}
 
 	in := func(d time.Duration) int64 { return now.Add(d).UnixMilli() }
 

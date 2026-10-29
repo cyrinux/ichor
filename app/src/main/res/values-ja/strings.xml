@@ -4979,6 +4979,23 @@
     <string name="cnpg_promote_unavailable">クラスターの現在の状態では、このインスタンスを昇格できません。</string>
     <string name="cnpg_promote_requested">%1$s への昇格を要求しました</string>
     <string name="cnpg_promote_failed">%1$s を昇格できませんでした：%2$s</string>
+    <string name="cnpg_destroy_title">インスタンスを削除</string>
+    <string name="cnpg_destroy_instance">%1$s を削除</string>
+    <string name="cnpg_destroy_risk">kubectl cnpg destroy と同じく、インスタンスのボリュームを削除してから Pod を削除します。その後 CloudNativePG がプライマリから存在するノードへ新しいレプリカを複製します。</string>
+    <string name="cnpg_destroy_pod">Pod: %1$s</string>
+    <string name="cnpg_destroy_no_pod">Pod なし</string>
+    <string name="cnpg_destroy_node_gone">ノード %1$s 上（このノードはもう存在しません）</string>
+    <string name="cnpg_destroy_node_present">ノード %1$s 上（まだクラスター内にあります）</string>
+    <string name="cnpg_destroy_node_none">ノードに固定されていません</string>
+    <string name="cnpg_destroy_node_unknown">ノード不明</string>
+    <string name="cnpg_destroy_block_primary">プライマリは削除できません。プライマリが不明な間はどのインスタンスも削除できません。</string>
+    <string name="cnpg_destroy_block_no_other_data">プライマリにボリュームがありません。このインスタンスがデータの唯一のコピーを持っている可能性があります。</string>
+    <string name="cnpg_destroy_block_not_found">このインスタンスには Pod もボリュームも残っていません。</string>
+    <string name="cnpg_destroy_warn_ready">このレプリカは正常です。新しいレプリカが追いつくまで、クラスターのコピーが 1 つ減ります。</string>
+    <string name="cnpg_destroy_warn_node_present">ノードはまだ存在します。ノードが直ればインスタンスは自然に戻る可能性があります。</string>
+    <string name="cnpg_destroy_done">%1$s を削除しました。CloudNativePG が新しいレプリカを作成します</string>
+    <string name="cnpg_destroy_failed">%1$s を削除できませんでした: %2$s</string>
+    <string name="cnpg_instance_no_pod">Pod なし</string>
 
     <string name="cnpg_restart_primary">プライマリを再起動</string>
     <string name="cnpg_hibernate_action">クラスターを休止</string>

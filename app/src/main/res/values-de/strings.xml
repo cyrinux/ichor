@@ -5098,6 +5098,23 @@
     <string name="cnpg_promote_unavailable">Diese Instanz kann im aktuellen Clusterzustand nicht hochgestuft werden.</string>
     <string name="cnpg_promote_requested">Hochstufung auf %1$s angefordert</string>
     <string name="cnpg_promote_failed">%1$s konnte nicht hochgestuft werden: %2$s</string>
+    <string name="cnpg_destroy_title">Instanz entfernen</string>
+    <string name="cnpg_destroy_instance">%1$s entfernen</string>
+    <string name="cnpg_destroy_risk">Löscht die Volumes der Instanz und danach ihren Pod, wie kubectl cnpg destroy. CloudNativePG klont dann ein neues Replikat vom Primary auf einen vorhandenen Node.</string>
+    <string name="cnpg_destroy_pod">Pod: %1$s</string>
+    <string name="cnpg_destroy_no_pod">Kein Pod</string>
+    <string name="cnpg_destroy_node_gone">auf Node %1$s, den es nicht mehr gibt</string>
+    <string name="cnpg_destroy_node_present">auf Node %1$s, noch im Cluster</string>
+    <string name="cnpg_destroy_node_none">an keinen Node gebunden</string>
+    <string name="cnpg_destroy_node_unknown">Node unbekannt</string>
+    <string name="cnpg_destroy_block_primary">Der Primary kann nicht entfernt werden, und keine Instanz, solange kein Primary bekannt ist.</string>
+    <string name="cnpg_destroy_block_no_other_data">Der Primary hat kein Volume: Diese Instanz hält vielleicht die einzige Kopie der Daten.</string>
+    <string name="cnpg_destroy_block_not_found">Diese Instanz hat weder Pod noch Volume mehr.</string>
+    <string name="cnpg_destroy_warn_ready">Dieses Replikat ist gesund: Der Cluster hat eine Kopie weniger, bis das neue Replikat aufgeholt hat.</string>
+    <string name="cnpg_destroy_warn_node_present">Sein Node ist noch da: Die Instanz kommt vielleicht von selbst zurück, sobald der Node repariert ist.</string>
+    <string name="cnpg_destroy_done">%1$s entfernt: CloudNativePG erstellt ein neues Replikat</string>
+    <string name="cnpg_destroy_failed">%1$s konnte nicht entfernt werden: %2$s</string>
+    <string name="cnpg_instance_no_pod">kein Pod</string>
 
     <string name="cnpg_restart_primary">Primärknoten neu starten</string>
     <string name="cnpg_hibernate_action">Cluster in Ruhezustand versetzen</string>
