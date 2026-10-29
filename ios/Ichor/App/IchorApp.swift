@@ -353,6 +353,8 @@ enum Route: Hashable {
     case diagnostics
     /// Every cluster's nodes, pods, workloads and GitOps apps, as last seen.
     case search
+    /// Every cluster's last background check, worst first ("All clusters").
+    case fleet
     /// The cluster's runbooks (docs/runbooks.md), one runbook's plan, and its run.
     case runbooks
     /// The images and charts with a newer version (the cluster menu's "Updates…").
@@ -566,6 +568,7 @@ struct MainNavigation: View {
         case .activity(let cluster): ActivityLogView(cluster: cluster)
         case .diagnostics: DiagnosticsView()
         case .search: SearchView(open: { target in Task { await open(target) } }, openRoute: { path.append($0) })
+        case .fleet: FleetView(path: $path)
         case .runbooks: RunbooksView(path: $path)
         case .updates: UpdatesView()
         case .runbookPlan(let id): RunbookPlanView(id: id, path: $path)
