@@ -6,6 +6,7 @@ import IchorCore
 struct SupportSection: View {
     @Environment(AppModel.self) private var model
     @AppStorage(StartupTrace.defaultsKey) private var startupTrace = false
+    @AppStorage(DiagnosticsFiles.persistKey) private var diagPersist = false
     /// The bug forms in the in-app browser (SafariView says why not a Link).
     @State private var browsing: URL?
     /// Why the action log and the node names are not saved (nil while they are).
@@ -70,6 +71,27 @@ struct SupportSection: View {
                 }
             }
             .onChange(of: startupTrace) { _, on in TalosClient.setStartupTrace(on) }
+            // On this device only, with no cluster: no role needed.
+            NavigationLink(value: Route.diagnostics) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Export diagnostics…")
+                    Text(
+                        "A redacted log of the app's own events and the system's crash reports, with no cluster names. It leaves this device only when you share it."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Toggle(isOn: $diagPersist) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Keep a diagnostics log on this device")
+                    Text(
+                        "Keeps the log across restarts, so the events before a crash are in the next export. Off: the log holds the current launch only."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .onChange(of: diagPersist) { _, on in TalosClient.setDiagPersist(on) }
         } header: {
             Text("Support")
         }

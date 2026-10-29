@@ -8,9 +8,14 @@ import Foundation
 /// core's steps (config parse, session, first node, all nodes) in the same stream, and a
 /// signpost interval per Go call for Instruments.
 ///
-/// Off unless the "Startup timing" setting is on (UserDefaults `startupTrace`) or the build is
-/// a debug one. The lines carry step names, call names, counts and durations only: never a
-/// context name, an endpoint or an address (the privacy mask does not cover the log).
+/// The app's steps also go to the core's redacted diagnostics log through `setRingSink`,
+/// whatever the setting (the core writes its own steps there too), so an exported diagnostics
+/// zip has the last start's steps.
+///
+/// The unified log is off unless the "Startup timing" setting is on (UserDefaults
+/// `startupTrace`) or the build is a debug one. The lines carry step names, call names, counts
+/// and durations only: never a context name, an endpoint or an address (the privacy mask does
+/// not cover the log).
 public enum StartupTrace {
     /// UserDefaults key of the setting.
     public static let defaultsKey = "startupTrace"
@@ -28,16 +33,34 @@ public enum StartupTrace {
     /// Turns the trace on or off (the app also sets or removes the Go listener, see TalosClient).
     public static func setEnabled(_ on: Bool) { state.enabled = on }
 
-    /// Logs `step` now, when the trace is on.
-    public static func mark(_ step: String) {
-        guard let (sinceStart, delta) = state.tick() else { return }
-        log(line(step: step, sinceStart: sinceStart, delta: delta))
+    /// Where the app's steps go besides the unified log: (step, ms since the process started,
+    /// ms since the previous step). The app points it at the core's diagnostics log.
+    public typealias RingSink = @Sendable (_ step: String, _ sinceStart: Int, _ delta: Int) -> Void
+
+    /// Sets (or removes) the diagnostics log sink; call first at launch.
+    public static func setRingSink(_ sink: RingSink?) { state.sink = sink }
+
+    /// Writes the app's `step` now: to the diagnostics log always, to the unified log when the
+    /// trace is on.
+    public static func mark(_ step: String) { mark(step, ring: true) }
+
+    /// A Go core step: to the unified log only, as the core writes its own steps to the
+    /// diagnostics log.
+    public static func markGo(_ step: String) { mark(step, ring: false) }
+
+    private static func mark(_ step: String, ring: Bool) {
+        let sink = ring ? state.sink : nil
+        let on = state.enabled
+        guard sink != nil || on else { return }
+        let (sinceStart, delta) = state.tick()
+        sink?(step, sinceStart, delta)
+        if on { log(line(step: step, sinceStart: sinceStart, delta: delta)) }
     }
 
     /// `mark` the first time `key` is seen in this process only: a step of the cold start that
     /// runs again later (a refresh, a background check) logs once. `detail` follows the key.
     public static func markOnce(_ key: String, detail: String = "") {
-        guard state.enabled, state.firstTime(key) else { return }
+        guard state.firstTime(key) else { return }
         mark(detail.isEmpty ? key : "\(key) \(detail)")
     }
 
@@ -62,13 +85,14 @@ public enum StartupTrace {
         #endif
     }
 
-    /// Ends `span`: logs "call <name> <ms>ms" and closes its signpost interval.
+    /// Ends `span`: logs "call <name> <ms>ms" to the unified log and closes its signpost interval.
     public static func end(_ span: Span?) {
         guard let span else { return }
         #if canImport(os)
             signposter.endInterval("go call", span.signpost)
         #endif
-        mark(callStep(name: span.name, ms: Int(Date().timeIntervalSince(span.start) * 1000)))
+        // The unified log only: a diagnostics line per Go call would crowd out the log.
+        mark(callStep(name: span.name, ms: Int(Date().timeIntervalSince(span.start) * 1000)), ring: false)
     }
 
     /// "<step> +<ms since process start> (Δ<ms since the previous step>)", as on Android.
@@ -110,6 +134,7 @@ public enum StartupTrace {
 private final class TraceState: @unchecked Sendable {
     private let lock = NSLock()
     private var on = false
+    private var ringSink: StartupTrace.RingSink?
     private var previous = 0
     private var marked: Set<String> = []
     private let processStart = TraceState.processStartTime() ?? Date().timeIntervalSince1970
@@ -127,11 +152,23 @@ private final class TraceState: @unchecked Sendable {
         }
     }
 
-    /// Milliseconds since the process started and since the previous tick; nil while off.
-    func tick() -> (Int, Int)? {
+    var sink: StartupTrace.RingSink? {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return ringSink
+        }
+        set {
+            lock.lock()
+            defer { lock.unlock() }
+            ringSink = newValue
+        }
+    }
+
+    /// Milliseconds since the process started and since the previous tick.
+    func tick() -> (Int, Int) {
         lock.lock()
         defer { lock.unlock() }
-        guard on else { return nil }
         let now = Int((Date().timeIntervalSince1970 - processStart) * 1000)
         let delta = now - previous
         previous = now

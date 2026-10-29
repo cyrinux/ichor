@@ -15,13 +15,17 @@ struct IchorApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        // First, so the startup trace (when on) sees the whole launch.
+        // First, so the startup trace (when on) and the diagnostics log see the whole launch.
+        TalosClient.startDiagStartupTrace()
         TalosClient.applyStoredStartupTrace()
         StartupTrace.markOnce("app.init start")
         // Before any Talos call, including the background refresh task registered below.
         TalosClient.applyStoredPrivacyMask()
         TalosClient.applyStoredAuditEvents()
         TalosClient.setDataDirectory()
+        // The diagnostics log's files live in the data directory; MetricKit's reports go to it.
+        TalosClient.applyStoredDiagPersist()
+        CrashDiagnostics.start()
         // Where Go keeps the sign-ins of kubeconfig clusters, before any Kubernetes call.
         KubeAuthStore.register()
         // GKE's Sign in with Google, when the build carries Ichor's iOS client
@@ -345,6 +349,8 @@ enum Route: Hashable {
     case diagnosis(note: String)
     /// The action audit log; cluster: a context name, "" for every cluster.
     case activity(cluster: String)
+    /// The redacted diagnostics log and MetricKit's crash reports, exported as a zip.
+    case diagnostics
     /// Every cluster's nodes, pods, workloads and GitOps apps, as last seen.
     case search
     /// The cluster's runbooks (docs/runbooks.md), one runbook's plan, and its run.
@@ -558,6 +564,7 @@ struct MainNavigation: View {
         case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
         case .rotateCA: RotateCAView()
         case .activity(let cluster): ActivityLogView(cluster: cluster)
+        case .diagnostics: DiagnosticsView()
         case .search: SearchView(open: { target in Task { await open(target) } }, openRoute: { path.append($0) })
         case .runbooks: RunbooksView(path: $path)
         case .updates: UpdatesView()

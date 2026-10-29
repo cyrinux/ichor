@@ -2,7 +2,7 @@ import Foundation
 
 /// Whether the core saves the action audit log and the node names across launches (Go's
 /// DataStoreStatus): the last element of its directory, and why not when it does not.
-public struct DataStoreStatus: Decodable, Equatable, Sendable {
+public struct DataStoreStatus: Codable, Equatable, Sendable {
     public let persisting: Bool
     public let dir: String
     public let reason: String
