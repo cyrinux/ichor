@@ -226,8 +226,9 @@ Part of the [Ichor documentation](../README.md#documentation).
 - **Export diagnostics:** a redacted log of the app's own events and the system's crash records,
   as a zip you review and share yourself; nothing is sent automatically (Settings → Support).
   On Android 11 and later it holds the system's records of how the app last stopped (an ANR,
-  a crash, a low-memory kill) with their trace. The log keeps the current launch only, unless
-  "Keep a diagnostics log on this phone" is on.
+  a crash, a low-memory kill) with their trace; on iOS, the crash, hang and exception reports
+  MetricKit hands over at a later launch, with their top frames. The log keeps the current
+  launch only, unless "Keep a diagnostics log on this phone" (iOS: "on this device") is on.
 - **Incident summary:** overview menu → Share incident summary… turns the last 6 h, 24 h or 7 days
   of the cluster's history on this phone and the actions taken from it into a Markdown page
   (what is wrong now, timeline, actions, polling gaps), names hidden by default, to share or copy.

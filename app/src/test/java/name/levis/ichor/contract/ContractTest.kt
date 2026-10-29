@@ -2,6 +2,7 @@ package name.levis.ichor.contract
 
 import java.io.File
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -13,6 +14,7 @@ import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.ClusterUpdates
+import name.levis.ichor.model.DiagEntry
 import name.levis.ichor.model.UpdateProposalPlan
 import name.levis.ichor.model.updateSections
 import name.levis.ichor.model.FluxStatus
@@ -50,6 +52,7 @@ class ContractTest {
         "topology" to Row(ClusterTopology.serializer()),
         "cluster-updates" to Row(ClusterUpdates.serializer()) { assertTrue(updateSections(it).images.isNotEmpty()) },
         "update-proposal-plan" to Row(UpdateProposalPlan.serializer()) { assertEquals(2, it.files[0].changes.size) },
+        "diag-entries" to Row(ListSerializer(DiagEntry.serializer())) { assertEquals("ClusterOverview", it[0].attrs.getValue("fn").content) },
     )
 
     /** Every default written out, so the re-encoded object names every key the model reads. */

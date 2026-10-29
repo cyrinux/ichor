@@ -27,9 +27,50 @@ final class StartupTraceTests: XCTestCase {
         XCTAssertEqual(StartupTrace.callStep(name: "overview()", ms: 812), "call overview() 812ms")
     }
 
+    func testAppStepsReachTheRingWithTheTraceOff() {
+        let seen = StepBox()
+        StartupTrace.setEnabled(false)
+        StartupTrace.setRingSink { step, sinceStart, delta in seen.add(step, sinceStart >= 0 && delta >= 0) }
+        defer { StartupTrace.setRingSink(nil) }
+        StartupTrace.mark("app.init start")
+        StartupTrace.markOnce("ring-test once")
+        StartupTrace.markOnce("ring-test once")
+        StartupTrace.markOnce("ring-test detail", detail: "3 contexts")
+        // The core writes its own steps to the ring.
+        StartupTrace.markGo("go:config.parse 12ms")
+        XCTAssertEqual(seen.steps, ["app.init start", "ring-test once", "ring-test detail 3 contexts"])
+        XCTAssertTrue(seen.allTimed)
+    }
+
     func testOffCostsNoSpan() {
         StartupTrace.setEnabled(false)
         XCTAssertNil(StartupTrace.begin("overview()"))
         XCTAssertFalse(StartupTrace.isEnabled)
+    }
+}
+
+/// The steps a test's ring sink received, behind a lock.
+private final class StepBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var received: [String] = []
+    private var timed = true
+
+    func add(_ step: String, _ ok: Bool) {
+        lock.lock()
+        defer { lock.unlock() }
+        received.append(step)
+        timed = timed && ok
+    }
+
+    var steps: [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return received
+    }
+
+    var allTimed: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return timed
     }
 }

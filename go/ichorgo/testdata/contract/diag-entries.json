@@ -1,0 +1,28 @@
+[
+  {
+    "at": 1767323045000,
+    "attrs": {
+      "fn": "ClusterOverview"
+    },
+    "component": "api",
+    "err": "dial tcp \u003credacted\u003e: connection refused",
+    "level": "warn",
+    "msg": "call failed"
+  },
+  {
+    "at": 1767323045000,
+    "attrs": {
+      "ms": 12,
+      "step": "config.parse"
+    },
+    "component": "trace",
+    "level": "info",
+    "msg": "startup step"
+  },
+  {
+    "at": 1767323045000,
+    "component": "ios",
+    "level": "info",
+    "msg": "startup app.init start"
+  }
+]

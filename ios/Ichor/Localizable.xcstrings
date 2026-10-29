@@ -189655,6 +189655,1481 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ precisa que você entre novamente antes da próxima verificação." } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Для следующей проверки %@ нужно снова войти." } }
       }
+    },
+    "Diagnostics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnose"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnóstico"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostic"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostica"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "診断"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnóstico"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Диагностика"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Діагностика"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "诊断"
+          }
+        }
+      }
+    },
+    "Export diagnostics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnose exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar diagnóstico"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter le diagnostic"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta diagnostica"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "診断をエクスポート"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar diagnóstico"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспорт диагностики"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експорт діагностики"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出诊断"
+          }
+        }
+      }
+    },
+    "Export diagnostics…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnose exportieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar diagnóstico…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter le diagnostic…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta diagnostica…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "診断をエクスポート…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar diagnóstico…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспорт диагностики…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експорт діагностики…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出诊断…"
+          }
+        }
+      }
+    },
+    "Clear log" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokoll leeren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaciar el registro"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vider le journal"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuota il registro"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログを消去"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar o log"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить журнал"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистити журнал"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空日志"
+          }
+        }
+      }
+    },
+    "Clear the diagnostics log?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnoseprotokoll leeren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Vaciar el registro de diagnóstico?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vider le journal de diagnostic ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuotare il registro di diagnostica?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "診断ログを消去しますか？"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar o log de diagnóstico?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить журнал диагностики?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистити журнал діагностики?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空诊断日志？"
+          }
+        }
+      }
+    },
+    "Every entry of the log is deleted, and its file on this device if it is kept. The system's crash reports stay." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Einträge des Protokolls werden gelöscht, ebenso seine Datei auf diesem Gerät, falls es aufbewahrt wird. Die Absturzberichte des Systems bleiben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se eliminan todas las entradas del registro y, si se conserva, su archivo en este dispositivo. Los informes de fallos del sistema se mantienen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toutes les entrées du journal sont supprimées, ainsi que son fichier sur cet appareil s’il est gardé. Les rapports de plantage du système restent."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutte le voci del registro vengono eliminate, insieme al suo file su questo dispositivo se viene conservato. I rapporti di arresto anomalo del sistema restano."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログのすべてのエントリが削除され、保持している場合はこのデバイス上のファイルも削除されます。システムのクラッシュレポートは残ります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas as entradas do log são apagadas, e o arquivo dele neste dispositivo, se for mantido. Os relatórios de falha do sistema permanecem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все записи журнала удаляются, а также его файл на этом устройстве, если он сохраняется. Отчёты системы о сбоях остаются."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі записи журналу видаляються, а також його файл на цьому пристрої, якщо він зберігається. Звіти системи про збої залишаються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日志的所有条目都会被删除；如果日志被保留，此设备上的日志文件也会被删除。系统的崩溃报告会保留。"
+          }
+        }
+      }
+    },
+    "The system kept no crash or hang report for the app. iOS hands one over at a later launch." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das System hat keinen Absturz- oder Hängebericht der App aufbewahrt. iOS liefert einen bei einem späteren Start."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sistema no guardó ningún informe de fallo o bloqueo de la app. iOS entrega uno en un inicio posterior."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le système n’a gardé aucun rapport de plantage ou de blocage de l’app. iOS en transmet un lors d’un lancement ultérieur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sistema non ha conservato alcun rapporto di arresto anomalo o blocco dell’app. iOS ne consegna uno a un avvio successivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムはアプリのクラッシュやハングのレポートを保持していません。iOS は後の起動時にレポートを渡します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O sistema não guardou nenhum relatório de falha ou travamento do app. O iOS entrega um em uma abertura posterior."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Система не сохранила ни одного отчёта о сбое или зависании приложения. iOS передаёт отчёт при одном из следующих запусков."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Система не зберегла жодного звіту про збій чи зависання застосунку. iOS передає звіт під час одного з наступних запусків."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统没有保留此应用的崩溃或卡顿报告。iOS 会在之后的某次启动时提供报告。"
+          }
+        }
+      }
+    },
+    "Crash and hang reports" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absturz- und Hängeberichte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes de fallos y bloqueos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapports de plantage et de blocage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapporti di arresti anomali e blocchi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラッシュとハングのレポート"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatórios de falhas e travamentos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отчёты о сбоях и зависаниях"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти про збої та зависання"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "崩溃与卡顿报告"
+          }
+        }
+      }
+    },
+    "The log is empty." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Protokoll ist leer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro está vacío."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le journal est vide."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il registro è vuoto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログは空です。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O log está vazio."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал пуст."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал порожній."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日志为空。"
+          }
+        }
+      }
+    },
+    "Log" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokoll"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registro"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Journal"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registro"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日志"
+          }
+        }
+      }
+    },
+    "The zip holds the app version and device model, this log, the system's crash reports and the actions the app made, all redacted: no secret, cluster name, address or namespace. Nothing is sent: you share or save it yourself." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zip enthält die App-Version und das Gerätemodell, dieses Protokoll, die Absturzberichte des Systems und die Aktionen der App, alles geschwärzt: kein Geheimnis, kein Cluster-Name, keine Adresse und kein Namespace. Nichts wird gesendet: Sie teilen oder speichern es selbst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El zip contiene la versión de la app y el modelo del dispositivo, este registro, los informes de fallos del sistema y las acciones de la app, todo censurado: ningún secreto, nombre de clúster, dirección ni namespace. No se envía nada: lo compartes o guardas tú."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le zip contient la version de l’app et le modèle de l’appareil, ce journal, les rapports de plantage du système et les actions faites par l’app, le tout expurgé : aucun secret, nom de cluster, adresse ou namespace. Rien n’est envoyé : vous le partagez ou l’enregistrez vous-même."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo zip contiene la versione dell’app e il modello del dispositivo, questo registro, i rapporti di arresto anomalo del sistema e le azioni eseguite dall’app, tutto oscurato: nessun segreto, nome di cluster, indirizzo o namespace. Non viene inviato nulla: lo condividi o lo salvi tu."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zip にはアプリのバージョンとデバイスのモデル、このログ、システムのクラッシュレポート、アプリが行った操作が含まれ、すべて秘匿処理されています：シークレット、クラスター名、アドレス、名前空間は含まれません。何も送信されません：共有や保存はご自身で行います。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O zip contém a versão do app e o modelo do dispositivo, este log, os relatórios de falha do sistema e as ações feitas pelo app, tudo ocultado: nenhum segredo, nome de cluster, endereço ou namespace. Nada é enviado: você mesmo compartilha ou salva."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zip содержит версию приложения и модель устройства, этот журнал, отчёты системы о сбоях и действия приложения, всё в скрытом виде: без секретов, имён кластеров, адресов и пространств имён. Ничего не отправляется: вы сами делитесь им или сохраняете."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zip містить версію застосунку та модель пристрою, цей журнал, звіти системи про збої та дії застосунку, усе приховано: без секретів, імен кластерів, адрес і просторів імен. Нічого не надсилається: ви самі ділитеся ним або зберігаєте."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zip 包含应用版本和设备型号、此日志、系统的崩溃报告以及应用执行过的操作，全部经过脱敏：没有密钥、集群名称、地址或命名空间。不会发送任何内容：由你自己分享或保存。"
+          }
+        }
+      }
+    },
+    "No crash report and no log entry yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch kein Absturzbericht und kein Protokolleintrag."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay ningún informe de fallo ni entrada de registro."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun rapport de plantage ni entrée de journal pour l’instant."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancora nessun rapporto di arresto anomalo né voce di registro."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラッシュレポートもログエントリもまだありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ainda não há relatório de falha nem entrada de log."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока нет ни отчётов о сбоях, ни записей журнала."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки немає ні звітів про збої, ні записів журналу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无崩溃报告，也没有日志条目。"
+          }
+        }
+      }
+    },
+    "Making the zip…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zip wird erstellt…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creando el zip…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Création du zip…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creazione dello zip…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zip を作成中…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criando o zip…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создание zip…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створення zip…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在生成 zip…"
+          }
+        }
+      }
+    },
+    "Could not make the diagnostics zip: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Diagnose-Zip konnte nicht erstellt werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo crear el zip de diagnóstico: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de créer le zip de diagnostic : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile creare lo zip di diagnostica: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "診断 zip を作成できませんでした：%@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível criar o zip de diagnóstico: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось создать zip диагностики: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося створити zip діагностики: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法生成诊断 zip：%@"
+          }
+        }
+      }
+    },
+    "Log entries: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolleinträge: %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entradas del registro: %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrées du journal : %lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voci del registro: %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログ件数：%lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entradas do log: %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записей журнала: %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записів журналу: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日志条目：%lld"
+          }
+        }
+      }
+    },
+    "Delete the diagnostics zip?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnose-Zip löschen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar el zip de diagnóstico?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le zip de diagnostic ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminare lo zip di diagnostica?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "診断 zip を削除しますか？"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar o zip de diagnóstico?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить zip диагностики?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити zip діагностики?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除诊断 zip？"
+          }
+        }
+      }
+    },
+    "Frames" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frames"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frames"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frame"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フレーム"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frames"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кадры стека"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кадри стека"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "栈帧"
+          }
+        }
+      }
+    },
+    "Crash" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absturz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fallo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plantage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arresto anomalo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラッシュ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбой"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збій"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "崩溃"
+          }
+        }
+      }
+    },
+    "Hang" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hänger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloqueo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocco"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ハング"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travamento"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зависание"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зависання"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡顿"
+          }
+        }
+      }
+    },
+    "CPU exception" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU-Ausnahme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excepción de CPU"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exception CPU"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eccezione CPU"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU 例外"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exceção de CPU"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Исключение CPU"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виняток CPU"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU 异常"
+          }
+        }
+      }
+    },
+    "Disk-write exception" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreib-Ausnahme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excepción de escritura en disco"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exception d’écriture disque"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eccezione di scrittura su disco"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ディスク書き込み例外"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exceção de gravação em disco"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Исключение записи на диск"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виняток запису на диск"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "磁盘写入异常"
+          }
+        }
+      }
+    },
+    "Slow launch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langsamer Start"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio lento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancement lent"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvio lento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "起動が遅い"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abertura lenta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Медленный запуск"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повільний запуск"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动缓慢"
+          }
+        }
+      }
+    },
+    "A redacted log of the app's own events and the system's crash reports, with no cluster names. It leaves this device only when you share it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein geschwärztes Protokoll der eigenen Ereignisse der App und der Absturzberichte des Systems, ohne Cluster-Namen. Es verlässt dieses Gerät nur, wenn Sie es teilen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un registro censurado de los eventos de la app y de los informes de fallos del sistema, sin nombres de clúster. Solo sale de este dispositivo si lo compartes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un journal expurgé des événements de l’app et des rapports de plantage du système, sans nom de cluster. Il ne quitte cet appareil que si vous le partagez."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un registro oscurato degli eventi dell’app e dei rapporti di arresto anomalo del sistema, senza nomi di cluster. Lascia questo dispositivo solo se lo condividi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリ自身のイベントとシステムのクラッシュレポートを秘匿処理したログです。クラスター名は含まれません。共有しない限りこのデバイスの外に出ません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um log ocultado dos eventos do próprio app e dos relatórios de falha do sistema, sem nomes de cluster. Ele só sai deste dispositivo quando você o compartilha."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал событий самого приложения и отчётов системы о сбоях в скрытом виде, без имён кластеров. Он покидает это устройство, только если вы им поделитесь."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал подій самого застосунку та звітів системи про збої в прихованому вигляді, без імен кластерів. Він залишає цей пристрій, лише якщо ви ним поділитеся."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用自身事件和系统崩溃报告的脱敏日志，不含集群名称。只有你分享时才会离开此设备。"
+          }
+        }
+      }
+    },
+    "Keep a diagnostics log on this device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnoseprotokoll auf diesem Gerät aufbewahren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar un registro de diagnóstico en este dispositivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder un journal de diagnostic sur cet appareil"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva un registro di diagnostica su questo dispositivo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このデバイスに診断ログを保持"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter um log de diagnóstico neste dispositivo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хранить журнал диагностики на этом устройстве"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігати журнал діагностики на цьому пристрої"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在此设备上保留诊断日志"
+          }
+        }
+      }
+    },
+    "Keeps the log across restarts, so the events before a crash are in the next export. Off: the log holds the current launch only." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewahrt das Protokoll über Neustarts hinweg auf, damit die Ereignisse vor einem Absturz im nächsten Export sind. Aus: Das Protokoll enthält nur den aktuellen Start."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva el registro entre reinicios, para que los eventos anteriores a un fallo estén en la próxima exportación. Desactivado: el registro solo contiene el inicio actual."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garde le journal d’un redémarrage à l’autre, pour que les événements d’avant un plantage soient dans le prochain export. Désactivé : le journal ne contient que le lancement en cours."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva il registro tra un riavvio e l’altro, così gli eventi prima di un arresto anomalo sono nella prossima esportazione. Disattivato: il registro contiene solo l’avvio corrente."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再起動をまたいでログを保持し、クラッシュ前のイベントを次のエクスポートに含めます。オフ：ログには現在の起動分のみが入ります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantém o log entre reinícios, para que os eventos antes de uma falha estejam na próxima exportação. Desativado: o log contém apenas a abertura atual."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраняет журнал между перезапусками, чтобы события перед сбоем попали в следующий экспорт. Выключено: журнал содержит только текущий запуск."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає журнал між перезапусками, щоб події перед збоєм потрапили до наступного експорту. Вимкнено: журнал містить лише поточний запуск."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在重启之间保留日志，使崩溃前的事件出现在下一次导出中。关闭：日志只包含本次启动。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

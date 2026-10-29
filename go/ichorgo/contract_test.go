@@ -49,6 +49,22 @@ var contractFixtures = []struct {
 		return u
 	}},
 	{"update-proposal-plan", contractUpdatePlan},
+	{"diag-entries", contractDiagEntries},
+}
+
+// contractDiagEntries is DiagEntries' shape, newest first: a failed call with its error, a core
+// trace step and an app line without attributes.
+func contractDiagEntries() any {
+	at := contractNow.UnixMilli()
+
+	return []diagEntry{
+		{
+			At: at, Level: "warn", Component: "api", Msg: "call failed",
+			Attrs: map[string]any{"fn": "ClusterOverview"}, Err: "dial tcp <redacted>: connection refused",
+		},
+		{At: at, Level: "info", Component: "trace", Msg: "startup step", Attrs: map[string]any{"step": "config.parse", "ms": 12}},
+		{At: at, Level: "info", Component: "ios", Msg: "startup app.init start"},
+	}
 }
 
 // contractUpdatePlan is the demo's plan for podinfo, its exporter and ingress-nginx, its branch
