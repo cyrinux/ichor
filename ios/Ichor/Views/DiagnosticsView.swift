@@ -56,6 +56,12 @@ struct DiagnosticsView: View {
     private var content: some View {
         if !loaded {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if isEmpty {
+            ContentUnavailableView {
+                Label("Diagnostics", systemImage: "stethoscope")
+            } description: {
+                Text("No crash report and no log entry yet.")
+            }
         } else {
             list
         }
@@ -92,15 +98,11 @@ struct DiagnosticsView: View {
                 )
             }
         }
-        .overlay {
-            if records.isEmpty && entries.isEmpty && loadError == nil && exported == nil {
-                ContentUnavailableView {
-                    Label("Diagnostics", systemImage: "stethoscope")
-                } description: {
-                    Text("No crash report and no log entry yet.")
-                }
-            }
-        }
+    }
+
+    /// Nothing to show and no zip on the way.
+    private var isEmpty: Bool {
+        records.isEmpty && entries.isEmpty && loadError == nil && exported == nil && exportError == nil && !exporting
     }
 
     @ViewBuilder

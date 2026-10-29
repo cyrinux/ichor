@@ -44,6 +44,9 @@ final class ContractTests: XCTestCase {
         "update-proposal-plan": ContractTests.row(UpdateProposalPlan.self) {
             XCTAssertEqual($0.files.first?.changes.count, 2)
         },
+        "diag-entries": ContractTests.row([DiagEntry].self) {
+            XCTAssertEqual($0.first?.attrs["fn"], .text("ClusterOverview")); XCTAssertEqual($0.last?.err, "")
+        },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh
