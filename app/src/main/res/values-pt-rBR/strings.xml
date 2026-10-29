@@ -5134,6 +5134,10 @@
     <string name="longhorn_salvage_risk">O salvamento pode perder dados. Escolha as réplicas cujos dados você quer recuperar; os timestamps delas não garantem consistência.</string>
     <string name="longhorn_salvage_choose">Escolha as réplicas explicitamente. Nenhuma réplica é selecionada automaticamente.</string>
     <string name="longhorn_salvage_unavailable">O salvamento exige um volume com falha desanexado e réplicas disponíveis.</string>
+    <string name="longhorn_salvage_node_not_ready">Indisponível: o nó não está pronto. Traga-o de volta para salvar esta réplica.</string>
+    <string name="longhorn_salvage_node_missing">Indisponível: o nó não está mais no Longhorn.</string>
+    <string name="longhorn_salvage_disk_unavailable">Indisponível: o disco da réplica está ausente ou não é agendável.</string>
+    <string name="longhorn_salvage_deleting">Indisponível: a réplica está sendo excluída.</string>
     <string name="longhorn_salvage_replica">%1$s em %2$s · íntegra: %3$s · com falha: %4$s</string>
     <string name="longhorn_salvage_requested">Salvamento solicitado</string>
     <string name="longhorn_salvage_failed">Não foi possível salvar o volume: %1$s</string>

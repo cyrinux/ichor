@@ -17,6 +17,9 @@ type longhornSalvageReplica struct {
 	HealthyAt int64  `json:"healthyAt"`
 	FailedAt  int64  `json:"failedAt"`
 	Eligible  bool   `json:"eligible"`
+	// Blocked says why an ineligible replica cannot be chosen: node-missing, node-not-ready,
+	// disk-unavailable or deleting; empty when eligible.
+	Blocked string `json:"blocked"`
 }
 type longhornSalvagePreview struct {
 	Namespace  string                   `json:"namespace"`
@@ -119,20 +122,34 @@ func readLonghornSalvagePreview(ctx context.Context, k *kubeClient, namespace, n
 		if r.Spec.VolumeName != name {
 			continue
 		}
-		n, exists := byNode[r.Spec.NodeID]
-		diskReady := false
-		for _, d := range n.Status.DiskStatus {
-			if r.Spec.DiskID != "" && d.DiskUUID == r.Spec.DiskID && conditionStatus(d.Conditions, "Schedulable") == "True" {
-				diskReady = true
-			}
-		}
 		times := r.times()
-		eligible := exists && conditionStatus(n.Status.Conditions, "Ready") == "True" && diskReady && r.Metadata.Name != "" && r.Metadata.DeletionTimestamp == ""
-		p.Replicas = append(p.Replicas, longhornSalvageReplica{Name: r.Metadata.Name, Node: r.Spec.NodeID, HealthyAt: unixMilli(times.HealthyAt), FailedAt: unixMilli(times.FailedAt), Eligible: eligible})
+		blocked := salvageReplicaBlocked(r, byNode)
+		eligible := blocked == "" && r.Metadata.Name != ""
+		p.Replicas = append(p.Replicas, longhornSalvageReplica{Name: r.Metadata.Name, Node: r.Spec.NodeID, HealthyAt: unixMilli(times.HealthyAt), FailedAt: unixMilli(times.FailedAt), Eligible: eligible, Blocked: blocked})
 	}
 	slices.SortFunc(p.Replicas, func(a, b longhornSalvageReplica) int { return strings.Compare(a.Name, b.Name) })
 	p.CanSalvage = p.State == "detached" && p.Robustness == "faulted" && slices.ContainsFunc(p.Replicas, func(r longhornSalvageReplica) bool { return r.Eligible })
 	return p, nil
+}
+
+// salvageReplicaBlocked names the first reason Longhorn would refuse to salvage from r, or "".
+func salvageReplicaBlocked(r lhReplicaObject, byNode map[string]lhNodeObject) string {
+	if r.Metadata.DeletionTimestamp != "" {
+		return "deleting"
+	}
+	n, exists := byNode[r.Spec.NodeID]
+	if !exists {
+		return "node-missing"
+	}
+	if conditionStatus(n.Status.Conditions, "Ready") != "True" {
+		return "node-not-ready"
+	}
+	for _, d := range n.Status.DiskStatus {
+		if r.Spec.DiskID != "" && d.DiskUUID == r.Spec.DiskID && conditionStatus(d.Conditions, "Schedulable") == "True" {
+			return ""
+		}
+	}
+	return "disk-unavailable"
 }
 func validateSalvageSelection(names []string) error {
 	if len(names) == 0 {

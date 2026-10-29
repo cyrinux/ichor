@@ -5139,6 +5139,10 @@
     <string name="longhorn_salvage_risk">La récupération peut perdre des données. Choisissez les répliques à récupérer ; leurs horodatages ne garantissent pas la cohérence.</string>
     <string name="longhorn_salvage_choose">Choisissez explicitement les répliques. Aucune n’est sélectionnée automatiquement.</string>
     <string name="longhorn_salvage_unavailable">La récupération nécessite un volume détaché en panne et des répliques disponibles.</string>
+    <string name="longhorn_salvage_node_not_ready">Indisponible : le nœud n’est pas prêt. Remettez-le en service pour récupérer cette réplique.</string>
+    <string name="longhorn_salvage_node_missing">Indisponible : le nœud n’est plus dans Longhorn.</string>
+    <string name="longhorn_salvage_disk_unavailable">Indisponible : le disque de la réplique est absent ou non planifiable.</string>
+    <string name="longhorn_salvage_deleting">Indisponible : la réplique est en cours de suppression.</string>
     <string name="longhorn_salvage_replica">%1$s sur %2$s · sain : %3$s · échec : %4$s</string>
     <string name="longhorn_salvage_requested">Récupération demandée</string>
     <string name="longhorn_salvage_failed">Impossible de récupérer le volume : %1$s</string>
