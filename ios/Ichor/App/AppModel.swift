@@ -164,6 +164,11 @@ final class AppModel {
     /// address): the overview never reads sensors itself, so a row says nothing until then.
     private(set) var throttledNodes: Set<String> = []
 
+    /// Whether each node of the last overview answered (by address), and the nodes whose
+    /// features call just failed to dial them (gone down since): see reachability(of:).
+    private(set) var nodeReachability: [String: NodeReachability] = [:]
+    private(set) var unreachableNow: [String: NodeReachability] = [:]
+
     /// Public IPs Talos does not know, found by a curl pod per node (PublicIPStore), by cluster
     /// fingerprint, and the clusters being probed: here, not in a view, since a probe takes
     /// minutes and outlives the screen that started it.
@@ -396,8 +401,25 @@ final class AppModel {
         }
         guard let client else { return }
         let generation = featuresGeneration
-        guard let loaded = try? await client.features(node: node), generation == featuresGeneration else { return }
-        nodeFeatures[node] = loaded
+        do {
+            let loaded = try await client.features(node: node)
+            guard generation == featuresGeneration else { return }
+            nodeFeatures[node] = loaded
+            unreachableNow[node] = nil
+        } catch {
+            // The only live word the hub has on a node that went down after the last overview.
+            guard generation == featuresGeneration else { return }
+            unreachableNow[node] = NodeReachability.from(failure: error.localizedDescription)
+        }
+    }
+
+    /// Whether node answers: the last overview's word (in memory, else the last known one),
+    /// overruled by its features call failing to dial it. Nil while unknown: nothing is dimmed.
+    func reachability(of node: String) -> NodeReachability? {
+        let known =
+            nodeReachability[node]
+            ?? lastKnown(.overview, as: ClusterOverview.self)?.value.reachability(of: node)
+        return NodeReachability.merge(known: known, live: unreachableNow[node])
     }
 
     /// Records what node's sensors said, for its row in the node lists.
@@ -415,6 +437,10 @@ final class AppModel {
     /// Also records their MACs for Wake-on-LAN (recordNodeMacs), alongside.
     func loadFeatures(of nodes: [NodeOverview]) async {
         Task { await recordNodeMacs(of: nodes) }
+        for node in nodes {
+            nodeReachability[node.node] = NodeReachability(
+                reachable: node.reachable, errorKind: node.errorKind, error: node.error, lastSeen: node.lastSeen)
+        }
         await withTaskGroup(of: Void.self) { group in
             for node in nodes where node.reachable {
                 group.addTask { await self.loadFeatures(node: node.node, version: node.version) }
@@ -428,6 +454,8 @@ final class AppModel {
         featuresGeneration += 1
         nodeFeatures = [:]
         throttledNodes = []
+        nodeReachability = [:]
+        unreachableNow = [:]
     }
 
     /// Discovered members set aside with "Not now", per context, until the app restarts.

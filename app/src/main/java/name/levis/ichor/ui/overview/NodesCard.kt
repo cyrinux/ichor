@@ -204,7 +204,8 @@ private fun NodeRow(
     // Opaque, so the swipe background only shows beside the row as it slides.
     Box(
         Modifier.fillMaxWidth().testTag(SMOKE_NODE).background(background).combinedClickable(
-            onClick = { if (node.reachable) onClick() },
+            // A node that does not answer opens too: its screen keeps what works through Kubernetes.
+            onClick = onClick,
             onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.overview_node_actions),
         ).semantics {

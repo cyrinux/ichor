@@ -30,8 +30,24 @@ enum NodeHubScreen: Hashable {
     }
 }
 
-/// A hub row: its title with the "Needs Talos vX" notice under it, disabled when this node's
-/// Talos version lacks the feature.
+extension FeatureSupport {
+    /// A Talos row of a node known not to answer: off, saying so.
+    static var nodeUnreachable: FeatureSupport {
+        FeatureSupport(supported: false, reason: String(localized: "Node unreachable"))
+    }
+}
+
+extension AppModel {
+    /// What a hub `entry` of `node` can do: "Node unreachable" for a Talos row of a node known
+    /// not to answer (its Talos version is moot then), else the version's `feature` support.
+    func hubSupport(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil, node: String) -> FeatureSupport {
+        if entry.transport == .talos, reachability(of: node).isDown { return .nodeUnreachable }
+        return feature.map { support($0, node: node) } ?? FeatureSupport(supported: true)
+    }
+}
+
+/// A hub row: its title with the "Needs Talos vX" (or "Node unreachable") notice under it,
+/// disabled when this node's Talos version lacks the feature or the node does not answer.
 struct NodeHubRowLabel: View {
     let title: String
     let systemImage: String
@@ -76,16 +92,16 @@ struct NodeStatusSection: View {
 
     var body: some View {
         Section("Status") {
-            tabRow(.services, systemImage: "gearshape.2")
-            tabRow(.resources, systemImage: "gauge.with.dots.needle.33percent")
-            tabRow(.live, systemImage: "chart.xyaxis.line")
-            tabRow(.processes, systemImage: "list.number", support: support(.processes))
+            tabRow(.services, systemImage: "gearshape.2", support: support(.services))
+            tabRow(.resources, systemImage: "gauge.with.dots.needle.33percent", support: support(.resources))
+            tabRow(.live, systemImage: "chart.xyaxis.line", support: support(.live))
+            tabRow(.processes, systemImage: "list.number", support: support(.processes, .processes))
             // "Pods" next to "Kubernetes pods" would read as the same list: these are Talos's containers.
             tabRow(
                 .pods, title: model.allows(.workloads) ? String(localized: "Containers") : nil,
-                systemImage: "shippingbox.circle", support: support(.containers))
+                systemImage: "shippingbox.circle", support: support(.containers, .containers))
             // Cgroups (a copy of /sys/fs/cgroup) only exists for admin configs.
-            if model.allows(.cgroups) { tabRow(.cgroups, systemImage: "square.3.layers.3d") }
+            if model.allows(.cgroups) { tabRow(.cgroups, systemImage: "square.3.layers.3d", support: support(.cgroups)) }
             // The Pods tab reads the containers through Talos (CRI); this asks the API server (os:admin).
             if model.allows(.workloads) {
                 NodeHubButton(title: String(localized: "Kubernetes pods"), systemImage: "cube") { open = .kubePods }
@@ -103,8 +119,8 @@ struct NodeStatusSection: View {
         .disabled(!support.supported)
     }
 
-    private func support(_ feature: NodeFeature) -> FeatureSupport {
-        model.support(feature, node: ref.address)
+    private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
+        model.hubSupport(entry, feature, node: ref.address)
     }
 }
 
@@ -118,39 +134,41 @@ struct NodeInspectSection: View {
 
     var body: some View {
         Section("Inspect") {
-            NodeHubButton(title: String(localized: "Kernel log"), systemImage: "terminal") { open = .kernelLog }
-                .accessibilityIdentifier(SmokeID.kernelLog)
             NodeHubButton(
-                title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events)
+                title: String(localized: "Kernel log"), systemImage: "terminal", support: support(.kernelLog)
+            ) { open = .kernelLog }
+            .accessibilityIdentifier(SmokeID.kernelLog)
+            NodeHubButton(
+                title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events, .events)
             ) {
                 open = .events
             }
-            NodeHubButton(title: String(localized: "Network"), systemImage: "network", support: support(.network)) {
+            NodeHubButton(title: String(localized: "Network"), systemImage: "network", support: support(.network, .network)) {
                 open = .network
             }
-            NodeHubButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.mounts))
+            NodeHubButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.storage, .mounts))
             {
                 open = .storage
             }
-            NodeHubButton(title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images)) {
+            NodeHubButton(title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images, .images)) {
                 open = .images
             }
             if model.allows(.resourceBrowser) {
                 NodeHubButton(
                     title: String(localized: "Resources browser"), systemImage: "square.stack.3d.up",
-                    support: support(.resourceBrowser)
+                    support: support(.resourceBrowser, .resourceBrowser)
                 ) { open = .resourceBrowser }
             }
             NodeHubButton(
-                title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware)
+                title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware, .hardware)
             ) {
                 open = .hardware
             }
         }
     }
 
-    private func support(_ feature: NodeFeature) -> FeatureSupport {
-        model.support(feature, node: node)
+    private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
+        model.hubSupport(entry, feature, node: node)
     }
 }
 
@@ -168,13 +186,14 @@ struct NodeTroubleshootSection: View {
                 if model.allows(.debugShell) {
                     NodeHubButton(
                         title: String(localized: "Debug shell"), systemImage: "apple.terminal",
-                        support: support(.debugShell)
+                        support: support(.debugShell, .debugShell)
                     ) {
                         open = .debugShell
                     }
                     // The same privileged netshoot container, one check at a time.
                     NodeHubButton(
-                        title: String(localized: "Network tools"), systemImage: "network", support: support(.debugShell)
+                        title: String(localized: "Network tools"), systemImage: "network",
+                        support: support(.netTools, .debugShell)
                     ) {
                         open = .netTools
                     }
@@ -182,21 +201,22 @@ struct NodeTroubleshootSection: View {
                 if model.allows(.packetCapture) {
                     NodeHubButton(
                         title: String(localized: "Capture packets"), systemImage: "antenna.radiowaves.left.and.right",
-                        support: support(.packetCapture)
+                        support: support(.capture, .packetCapture)
                     ) { open = .capture }
                 }
             }
         }
     }
 
-    private func support(_ feature: NodeFeature) -> FeatureSupport {
-        model.support(feature, node: node)
+    private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
+        model.hubSupport(entry, feature, node: node)
     }
 }
 
 /// Machine config, upgrade, reset, maintenance, drain and cordon; nothing without the role.
 struct NodeOperateSection: View {
     let node: String
+    let hostname: String
     /// A maintenance of this node runs: it owns the node's cordon (and reset) until it ends.
     let maintenanceRunning: Bool
     @Binding var open: NodeHubScreen?
@@ -211,7 +231,7 @@ struct NodeOperateSection: View {
                 if model.allows(.machineConfig) {
                     NodeHubButton(
                         title: String(localized: "Machine config"), systemImage: "doc.text",
-                        support: support(.machineConfig)
+                        support: support(.machineConfig, .machineConfig)
                     ) {
                         open = .machineConfig
                     }
@@ -219,7 +239,7 @@ struct NodeOperateSection: View {
                 if model.allows(.upgrade) {
                     NodeHubButton(
                         title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle",
-                        support: support(.upgrade)
+                        support: support(.upgrade, .upgrade)
                     ) {
                         open = .upgrade
                     }
@@ -227,7 +247,7 @@ struct NodeOperateSection: View {
                 if model.allows(.reset) {
                     NodeHubButton(
                         title: String(localized: "Reset…"), systemImage: "arrow.counterclockwise.circle",
-                        support: support(.reset)
+                        support: support(.reset, .reset)
                     ) {
                         showingReset = true
                     }
@@ -249,17 +269,28 @@ struct NodeOperateSection: View {
                         open = .nodeMeta
                     }
                 }
+                // Down: the phone can still power it on over the LAN, once its MAC is known.
+                if model.reachability(of: node).isDown, let fingerprint = model.wakeOnLanFingerprint {
+                    let targets = WakeOnLanStore.shared.wakeTargets(fingerprint: fingerprint, node: node)
+                    if !targets.isEmpty {
+                        NodeHubButton(title: String(localized: "Wake (Wake-on-LAN)"), systemImage: "power.circle") {
+                            WakeOnLanCenter.shared.wake(
+                                NodeOverview(node: node, hostname: hostname, reachable: false), targets: targets)
+                        }
+                    }
+                }
             }
         }
     }
 
-    private func support(_ feature: NodeFeature) -> FeatureSupport {
-        model.support(feature, node: node)
+    private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
+        model.hubSupport(entry, feature, node: node)
     }
 }
 
 /// Reboot and shut down, each behind its confirmation sheet; only for roles that allow them.
 struct NodePowerSection: View {
+    let node: String
     @Binding var powerAction: PowerAction?
 
     @Environment(AppModel.self) private var model
@@ -268,7 +299,10 @@ struct NodePowerSection: View {
         if model.allows(.power) {
             Section("Power") {
                 ForEach(PowerAction.allCases) { action in
-                    NodeHubButton(title: action.localizedTitle, systemImage: "power", role: .destructive) {
+                    NodeHubButton(
+                        title: action.localizedTitle, systemImage: "power", support: model.hubSupport(.power, node: node),
+                        role: .destructive
+                    ) {
                         powerAction = action
                     }
                 }

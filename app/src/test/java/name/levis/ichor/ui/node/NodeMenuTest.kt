@@ -89,4 +89,27 @@ class NodeMenuTest {
         assertEquals(R.string.apps_stat_containers, NodeMenuEntry.TAB_CONTAINERS.label(cordoned = null, kubePods = true))
         assertEquals(R.string.node_tab_pods, NodeMenuEntry.TAB_CONTAINERS.label(cordoned = null, kubePods = false))
     }
+
+    @Test
+    fun onlyTheKubernetesEntriesAndSavedCapturesSkipTheTalosApi() {
+        val byTransport = NodeMenuEntry.entries.groupBy { it.transport }
+        assertEquals(
+            listOf(
+                NodeMenuEntry.TAB_KUBE_PODS, NodeMenuEntry.MAINTENANCE, NodeMenuEntry.DRAIN,
+                NodeMenuEntry.CORDON, NodeMenuEntry.TAINTS_LABELS,
+            ),
+            byTransport[NodeTransport.KUBE],
+        )
+        assertEquals(listOf(NodeMenuEntry.CAPTURES), byTransport[NodeTransport.LOCAL])
+        assertEquals(NodeMenuEntry.entries.size - 6, byTransport[NodeTransport.TALOS]?.size)
+    }
+
+    @Test
+    fun theWakeRowAtTheEndOfOperatePushesPowerDownByOne() {
+        val groups = nodeMenuGroups(admin)
+        val without = nodeJumpSections(groups, power = true)
+        val with = nodeJumpSections(groups, power = true, wake = true)
+        assertEquals(without.dropLast(1), with.dropLast(1))
+        assertEquals(without.last().index + 1, with.last().index)
+    }
 }

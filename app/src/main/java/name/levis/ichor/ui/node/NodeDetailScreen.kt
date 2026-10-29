@@ -47,6 +47,9 @@ import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.NodeReachability
+import name.levis.ichor.model.down
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
@@ -58,7 +61,10 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
-import name.levis.ichor.ui.components.rememberNodeFeatures
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.agoLabel
+import name.levis.ichor.ui.components.rememberNodeState
+import name.levis.ichor.ui.overview.rememberWakeOnLan
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
 import name.levis.ichor.ui.share.PinButton
@@ -102,7 +108,14 @@ fun NodeDetailScreen(
     val share = rememberShareLink()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
-    val features = rememberNodeFeatures(node)
+    val (features, reachability) = rememberNodeState(node)
+    // Only on a node that does not answer, and only once its MAC is known (nothing in screenshot mode).
+    val wakeOnLan = rememberWakeOnLan(config?.activeSummary?.fingerprint)
+    val onWake = if (reachability.down) {
+        wakeOnLan(NodeOverview(node = node, hostname = hostname, reachable = false))?.takeIf { it.targets.isNotEmpty() }?.onWake
+    } else {
+        null
+    }
     // One upgrade at a time in the app: the entry stays open for the node being upgraded.
     val upgrading by app.upgradeManager.current.collectAsStateWithLifecycle()
     val upgradeBusyElsewhere = upgrading?.let { it.running && it.node != node } ?: false
@@ -224,7 +237,7 @@ fun NodeDetailScreen(
         val groups = nodeMenuGroups(config?.activeSummary)
         // Power actions only exist for configs whose role allows them.
         val powerActions = if (canPower) PowerAction.entries else emptyList()
-        val jumps = nodeJumpSections(groups, power = powerActions.isNotEmpty())
+        val jumps = nodeJumpSections(groups, power = powerActions.isNotEmpty(), wake = onWake != null)
         val labels = jumps.map { stringResource(it.title) }
         val sections = remember(jumps, labels) { jumps.mapIndexed { i, jump -> JumpSection(jump.key, labels[i], jump.index) } }
         val listState = rememberLazyListState()
@@ -235,7 +248,7 @@ fun NodeDetailScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                item(key = "header") { NodeHeader(node, role, cordoned[node]) }
+                item(key = "header") { NodeHeader(node, role, cordoned[node], reachability) }
                 nodeSections(
                     groups = groups,
                     features = features,
@@ -252,6 +265,7 @@ fun NodeDetailScreen(
                     cordoned = cordoned[node],
                     powerActions = powerActions,
                     powerEnabled = powerState !is PowerState.Running,
+                    reachability = reachability,
                     onPick = { entry ->
                         val tab = entry.tab
                         when {
@@ -262,6 +276,7 @@ fun NodeDetailScreen(
                         }
                     },
                     onPower = { confirming = it },
+                    onWake = onWake,
                 )
             }
             SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
@@ -287,9 +302,12 @@ fun NodeDetailScreen(
     }
 }
 
-/** The node's role and cordoned state as pills (each only when known), then its uptime strip. */
+/**
+ * The node's role and cordoned state as pills (each only when known), Unreachable with why and
+ * when it last answered for a node known not to answer, then its uptime strip.
+ */
 @Composable
-private fun NodeHeader(node: String, role: String, cordoned: Boolean?) {
+private fun NodeHeader(node: String, role: String, cordoned: Boolean?, reachability: NodeReachability?) {
     val roleLabel = when (role) {
         "controlplane" -> R.string.topology_role_controlplane
         "worker" -> R.string.topology_role_worker
@@ -297,12 +315,27 @@ private fun NodeHeader(node: String, role: String, cordoned: Boolean?) {
     }
     // No card: without a known role or uptime history it would be an empty box.
     Column(Modifier.fillMaxWidth()) {
-        if (roleLabel != null || cordoned == true) {
+        val down = reachability.down
+        if (roleLabel != null || cordoned == true || down) {
             Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 roleLabel?.let { StatusPill(stringResource(it), MaterialTheme.colorScheme.primary) }
                 if (cordoned == true) StatusPill(stringResource(R.string.kube_node_cordoned), LocalStatusColors.current.warn)
+                if (down) StatusPill(stringResource(R.string.common_status_unreachable), LocalStatusColors.current.bad)
             }
         }
-        NodeUptime(node, Modifier.padding(vertical = 4.dp))
+        if (reachability != null && down) UnreachableReason(reachability)
+        NodeUptime(node, Modifier.padding(vertical = 4.dp), reachability)
     }
+}
+
+/** Why the node does not answer, by its error kind (else the core's words), and when it last did. */
+@Composable
+private fun UnreachableReason(reachability: NodeReachability) {
+    val reason = when (reachability.errorKind) {
+        "network" -> stringResource(R.string.node_hub_unreachable_network)
+        "tls", "auth" -> stringResource(R.string.node_hub_unreachable_credentials)
+        else -> reachability.error
+    }
+    val seen = reachability.lastSeen?.let { stringResource(R.string.overview_node_last_seen, agoLabel(System.currentTimeMillis() - it)) }
+    listOfNotNull(reason, seen).takeIf { it.isNotEmpty() }?.let { MutedText(it.joinToString(" · ")) }
 }

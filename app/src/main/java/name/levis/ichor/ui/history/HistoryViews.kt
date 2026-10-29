@@ -2,6 +2,7 @@ package name.levis.ichor.ui.history
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -34,7 +36,10 @@ import name.levis.ichor.model.HISTORY_READY
 import name.levis.ichor.model.HistoryForecast
 import name.levis.ichor.model.HistoryNodeSpan
 import name.levis.ichor.model.HistoryQuery
+import name.levis.ichor.model.uncheckedTail
 import name.levis.ichor.model.uptimeSegments
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 import java.util.Locale
 
@@ -42,6 +47,8 @@ import java.util.Locale
 const val HISTORY_SHORT_DAYS = 7
 const val HISTORY_LONG_DAYS = 30
 private const val DAY_MILLIS = 86_400_000L
+/** The unchecked end of a strip whose node is down now: red, but fainter than what was seen. */
+private const val DOWN_TAIL_ALPHA = 0.4f
 
 /**
  * The shown cluster's history over the last [days] days, read once per cluster and window;
@@ -78,32 +85,59 @@ fun rememberVolumeForecast(): HistoryForecast? {
 /**
  * A node's states over the window, as a strip: ready, not ready, unreachable, and no data
  * (a gap) left as the track. Its uptime % next to it, and the window to switch (7 or 30 days).
+ * When the window ends without a check of the node, a line says the % covers the time checked
+ * and how long it has not been; [downNow] (the node does not answer now) paints that end red.
  */
 @Composable
-fun UptimeRow(span: HistoryNodeSpan, history: HistoryQuery, days: Int, onDays: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun UptimeRow(
+    span: HistoryNodeSpan,
+    history: HistoryQuery,
+    days: Int,
+    onDays: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    downNow: Boolean = false,
+) {
     val percent = span.uptimePercent?.let { String.format(Locale.ROOT, "%.2f %%", it) } ?: "—"
-    val description = pluralStringResource(R.plurals.history_uptime_description, days, days, percent)
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        UptimeStrip(span, history.from, history.to, Modifier.weight(1f).semantics { contentDescription = description })
-        Text(percent, style = MaterialTheme.typography.labelMedium)
-        listOf(HISTORY_SHORT_DAYS, HISTORY_LONG_DAYS).forEach { window ->
-            FilterChip(
-                selected = window == days,
-                onClick = { onDays(window) },
-                label = { Text(pluralStringResource(R.plurals.history_days_short, window, window)) },
+    val tail = history.uncheckedTail(span)
+    val observed = tail?.let { stringResource(R.string.history_uptime_observed, percent, localizedDuration(it / 1000)) }
+    val description = listOfNotNull(pluralStringResource(R.plurals.history_uptime_description, days, days, percent), observed).joinToString(". ")
+    Column(modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            UptimeStrip(
+                span,
+                history.from,
+                history.to,
+                Modifier.weight(1f).semantics { contentDescription = description },
+                downTail = tail != null && downNow,
             )
+            Text(percent, style = MaterialTheme.typography.labelMedium)
+            listOf(HISTORY_SHORT_DAYS, HISTORY_LONG_DAYS).forEach { window ->
+                FilterChip(
+                    selected = window == days,
+                    onClick = { onDays(window) },
+                    label = { Text(pluralStringResource(R.plurals.history_days_short, window, window)) },
+                )
+            }
         }
+        observed?.let { MutedText(it) }
     }
 }
 
-/** The strip alone: one segment per state interval of [span] between [from] and [to]. */
+/**
+ * The strip alone: one segment per state interval of [span] between [from] and [to].
+ * [downTail]: from its last interval to [to] in a faint red, the node not answering now.
+ */
 @Composable
-fun UptimeStrip(span: HistoryNodeSpan, from: Long, to: Long, modifier: Modifier = Modifier) {
+fun UptimeStrip(span: HistoryNodeSpan, from: Long, to: Long, modifier: Modifier = Modifier, downTail: Boolean = false) {
     val colors = LocalStatusColors.current
     val track = MaterialTheme.colorScheme.surfaceVariant
     val segments = uptimeSegments(span, from, to)
+    val tailStart = if (downTail) segments.maxOfOrNull { it.end } ?: 0f else null
     Canvas(modifier.height(12.dp)) {
         drawRect(track, size = size)
+        tailStart?.let { start ->
+            drawRect(colors.bad.copy(alpha = DOWN_TAIL_ALPHA), topLeft = Offset(size.width * start, 0f), size = Size(size.width * (1f - start), size.height))
+        }
         segments.forEach { segment ->
             val color = when (segment.state) {
                 HISTORY_READY -> colors.ok

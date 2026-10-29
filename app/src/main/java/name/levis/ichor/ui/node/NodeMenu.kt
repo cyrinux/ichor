@@ -45,6 +45,12 @@ enum class NodeMenuGroup(@StringRes val title: Int) {
 }
 
 /**
+ * How an entry reaches the node: through its Talos API (fails while the node does not answer),
+ * through the Kubernetes API server (works while it is down), or not at all (files on the phone).
+ */
+enum class NodeTransport { TALOS, KUBE, LOCAL }
+
+/**
  * Entries of the node screen, by [group]. An entry whose [role] the talosconfig lacks is not
  * offered; one whose [needs] the node's Talos version lacks is shown disabled, with the
  * version it needs. A Status entry opens the node's tabs on its [tab]; it stays enabled (dimmed)
@@ -141,4 +147,22 @@ fun nodeMenuEntries(summary: ContextSummary?): List<NodeMenuEntry> =
 fun nodeMenuGroups(summary: ContextSummary?): List<Pair<NodeMenuGroup, List<NodeMenuEntry>>> =
     NodeMenuGroup.entries.mapNotNull { group ->
         nodeMenuEntries(summary).filter { it.group == group }.takeIf { it.isNotEmpty() }?.let { group to it }
+    }
+
+/**
+ * How the entry reaches the node (see [NodeTransport]): the Kubernetes ones and the saved
+ * captures still work while the node does not answer, everything else goes to its Talos API.
+ */
+val NodeMenuEntry.transport: NodeTransport
+    get() = when (this) {
+        NodeMenuEntry.TAB_KUBE_PODS, NodeMenuEntry.MAINTENANCE, NodeMenuEntry.DRAIN,
+        NodeMenuEntry.CORDON, NodeMenuEntry.TAINTS_LABELS -> NodeTransport.KUBE
+        NodeMenuEntry.CAPTURES -> NodeTransport.LOCAL
+        // Listed one by one: a new entry has to say how it reaches the node.
+        NodeMenuEntry.TAB_SERVICES, NodeMenuEntry.TAB_RESOURCES, NodeMenuEntry.TAB_LIVE,
+        NodeMenuEntry.TAB_PROCESSES, NodeMenuEntry.TAB_CONTAINERS, NodeMenuEntry.TAB_CGROUPS,
+        NodeMenuEntry.KERNEL_LOG, NodeMenuEntry.EVENTS, NodeMenuEntry.NETWORK, NodeMenuEntry.HARDWARE,
+        NodeMenuEntry.IMAGES, NodeMenuEntry.STORAGE, NodeMenuEntry.RESOURCES, NodeMenuEntry.DEBUG_SHELL,
+        NodeMenuEntry.NET_TOOLS, NodeMenuEntry.CAPTURE, NodeMenuEntry.MACHINE_CONFIG, NodeMenuEntry.UPGRADE,
+        NodeMenuEntry.RESET -> NodeTransport.TALOS
     }

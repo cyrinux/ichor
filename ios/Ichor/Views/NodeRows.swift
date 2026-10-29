@@ -18,13 +18,10 @@ struct NodeListRow: View {
             node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs), sharedVersion: sharedVersion,
             throttled: node.reachable && model.throttledNodes.contains(node.node))
         Group {
-            if node.reachable {
-                // Beside the Nodes list on an iPad, pushed everywhere else.
-                ListDetailLink(value: Route.node(ref), pick: ref) { row }
-                    .accessibilityIdentifier(SmokeID.node)
-            } else {
-                row
-            }
+            // Beside the Nodes list on an iPad, pushed everywhere else. A node that does not answer
+            // opens too: its hub keeps what works through Kubernetes and dims the rest.
+            ListDetailLink(value: Route.node(ref), pick: ref) { row }
+                .accessibilityIdentifier(SmokeID.node)
         }
         .swipeActions(edge: .leading) {
             if node.reachable {

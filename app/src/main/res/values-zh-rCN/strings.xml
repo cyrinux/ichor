@@ -5738,4 +5738,8 @@
     <plurals name="updates_propose_count">
         <item quantity="other">提议 %1$d 个更新</item>
     </plurals>
+    <string name="node_hub_unreachable_notice">节点无法访问</string>
+    <string name="node_hub_unreachable_network">此手机没有通往该节点的路由</string>
+    <string name="node_hub_unreachable_credentials">节点已响应，但拒绝了此 talosconfig</string>
+    <string name="history_uptime_observed">已检查时间的 %1$s · 已 %2$s 未检查</string>
 </resources>

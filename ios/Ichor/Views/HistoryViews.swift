@@ -143,15 +143,20 @@ extension View {
 }
 
 /// A node's uptime over the last 7 or 30 days: a strip of ready, not ready, unreachable and
-/// no data (the phone did not check), with the uptime %.
+/// no data (the phone did not check), with the uptime %. When the window ends without a check
+/// of the node (`unchecked`, ms), a line says the % covers the time checked and how long it has
+/// not been; `downNow` (the node does not answer now) paints that end red.
 struct NodeUptimeStrip: View {
     let uptime: HistoryNodeUptime
     let from: Int64
     let to: Int64
     @Binding var period: HistoryPeriod
+    var unchecked: Int64?
+    var downNow = false
 
     var body: some View {
         let percent = historyUptimeText(uptime.uptimePercent)
+        let observed = unchecked.map { observedText(percent: percent, unchecked: $0) }
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Uptime").font(.subheadline)
@@ -166,16 +171,39 @@ struct NodeUptimeStrip: View {
                 .pickerStyle(.segmented)
                 .fixedSize()
             }
-            HistoryStrip(segments: historyStrip(uptime.intervals, from: from, to: to))
+            HistoryStrip(segments: historyStrip(uptime.intervals, from: from, to: to), downTail: downTail)
                 .accessibilityElement()
                 .accessibilityLabel(Text("Uptime") + Text(verbatim: " \(percent)"))
+            if let observed {
+                Text(verbatim: observed).font(.caption).foregroundStyle(.secondary)
+            }
         }
+    }
+
+    /// Where the faint red end starts (a fraction of the window): after the last interval, when
+    /// the node does not answer now and the end went unchecked.
+    private var downTail: Double? {
+        guard downNow, unchecked != nil, to > from else { return nil }
+        let last = uptime.intervals.map(\.to).max() ?? from
+        return Double(min(max(last, from), to) - from) / Double(to - from)
+    }
+
+    /// "100 % of the time checked · no check for 3 hr".
+    private func observedText(percent: String, unchecked: Int64) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.allowedUnits = [.day, .hour, .minute]
+        formatter.maximumUnitCount = 2
+        let span = formatter.string(from: Double(unchecked) / 1000) ?? ""
+        return String(localized: "\(percent) of the time checked · no check for \(span)")
     }
 }
 
 /// The strip itself: one coloured run per segment.
 private struct HistoryStrip: View {
     let segments: [HistoryStripSegment]
+    /// From this fraction to the end: the node does not answer now (faint red, not seen).
+    var downTail: Double?
 
     var body: some View {
         Canvas { context, size in
@@ -184,6 +212,11 @@ private struct HistoryStrip: View {
                     x: size.width * segment.start, y: 0,
                     width: max(1, size.width * (segment.end - segment.start)), height: size.height)
                 context.fill(Path(rect), with: .color(color(segment.state)))
+            }
+            // Over the "no data" end, which it replaces.
+            if let downTail {
+                let rect = CGRect(x: size.width * downTail, y: 0, width: size.width * (1 - downTail), height: size.height)
+                context.fill(Path(rect), with: .color(NodeHealth.unreachable.color.opacity(0.4)))
             }
         }
         .frame(height: 10)

@@ -19,7 +19,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.NodeReachability
 import name.levis.ichor.model.VolumeOutlook
+import name.levis.ichor.model.down
 import name.levis.ichor.model.formatSlope
 import name.levis.ichor.model.outlook
 import name.levis.ichor.monitor.TREND_CLOSE_DAYS
@@ -30,16 +32,17 @@ import java.util.Locale
 
 /**
  * The node's uptime strip, from the background checks' history (7 or 30 days); nothing until
- * the history has seen the node.
+ * the history has seen the node. [reachability]: a node known not to answer now gets the
+ * unchecked end of its strip in red.
  */
 @Composable
-fun NodeUptime(node: String, modifier: Modifier = Modifier) {
+fun NodeUptime(node: String, modifier: Modifier = Modifier, reachability: NodeReachability? = null) {
     var days by rememberSaveable { mutableIntStateOf(HISTORY_SHORT_DAYS) }
     val history = rememberClusterHistory(days) ?: return
     val span = history.nodes.find { it.node == node } ?: return
     Column(modifier) {
         MutedText(stringResource(R.string.history_uptime_title))
-        UptimeRow(span, history, days, onDays = { days = it })
+        UptimeRow(span, history, days, onDays = { days = it }, downNow = reachability.down)
     }
 }
 

@@ -5863,4 +5863,8 @@
         <item quantity="one">%1$d Update vorschlagen</item>
         <item quantity="other">%1$d Updates vorschlagen</item>
     </plurals>
+    <string name="node_hub_unreachable_notice">Knoten nicht erreichbar</string>
+    <string name="node_hub_unreachable_network">Keine Route von diesem Telefon zum Knoten</string>
+    <string name="node_hub_unreachable_credentials">Der Knoten hat geantwortet, aber diese talosconfig abgelehnt</string>
+    <string name="history_uptime_observed">%1$s der geprüften Zeit · seit %2$s nicht geprüft</string>
 </resources>
