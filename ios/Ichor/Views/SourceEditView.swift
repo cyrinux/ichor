@@ -102,7 +102,7 @@ struct SourceEditView: View {
             .navigationDestination(isPresented: $reviewing) {
                 if let base {
                     SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
-                                     defaultTitle: quickTitle, defaultBody: quickTitle == nil ? nil : quickEdit?.body,
+                                     defaultTitle: quickTitle, defaultBody: quickTitle == nil || quickEdit?.body.isEmpty != false ? nil : quickEdit?.body,
                                      notice: quickTitle == nil ? nil : quickSkipped,
                                      onReload: reload(at:), onDone: { dismiss() },
                                      onStage: stageable(base) ? { stage(base) } as (() -> Void)? : nil)

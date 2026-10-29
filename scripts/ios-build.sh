@@ -127,7 +127,21 @@ fi
 
 case "$MODE" in
   test)
-    xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Debug -destination 'generic/platform=iOS Simulator' build
+    # The Debug simulator build, then the demo-mode smoke test (IchorUITests) on it, from one
+    # build: build-for-testing compiles the app and the test bundle once, test-without-building
+    # runs them. The simulator is the runner's first iPhone, picked from simctl since the
+    # image's models change. Signed ad hoc, not unsigned: an unsigned app has no keychain
+    # entitlement in the simulator, so storing the demo's config fails
+    # (errSecMissingEntitlement, -34018); the simulator needs no team or profile for it. The
+    # unsigned build stays checked by `ipa`. The result bundle is build/ui-tests.xcresult
+    # (uploaded by ios.yml on failure).
+    sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')
+    [[ -n "$sim" ]] || { echo "no iPhone simulator available" >&2; exit 1; }
+    adhoc=(CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=)
+    xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" build-for-testing
+    rm -rf build/ui-tests.xcresult
+    xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" \
+      -only-testing:IchorUITests -resultBundlePath build/ui-tests.xcresult test-without-building
     ;;
   ipa)
     xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Release -destination 'generic/platform=iOS' build

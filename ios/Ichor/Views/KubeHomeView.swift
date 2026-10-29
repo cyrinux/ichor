@@ -133,6 +133,7 @@ struct KubeHomeView: View {
             }
             .refreshable { await load() }
             .themedBackground()
+            .accessibilityIdentifier(SmokeID.kubeHome)
         }
         .navigationTitle(model.activeLabel)
         .kubeCordonDialogs(cordoning: $cordoning, reload: load)

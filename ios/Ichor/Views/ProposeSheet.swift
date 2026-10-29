@@ -22,7 +22,7 @@ struct ProposeSheet: View {
     /// The title and commit message of a quick edit ("Bump podinfo to 6.7.0"), nil for the Go
     /// core's.
     let defaultTitle: String?
-    /// The description of a quick edit that names one (an update), nil or "" for the Go core's.
+    /// The description in place of the Go core's (a drafted file's notes), nil for its.
     let defaultBody: String?
     /// The staged files proposed together, in place of path and content; empty for one file.
     let files: [StagedFile]
@@ -184,7 +184,7 @@ struct ProposeSheet: View {
             title = defaultTitle
             message = defaultTitle
         }
-        if let defaultBody, !defaultBody.isEmpty { details = defaultBody }
+        if let defaultBody { details = defaultBody }
         let cluster = model.activeSummary?.name ?? ""
         let loaded: GitProposalDefaults?
         if app.isRepository {

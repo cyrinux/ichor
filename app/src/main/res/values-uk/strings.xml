@@ -5871,6 +5871,15 @@
     <string name="repo_check_can_push">Цей токен може робити push: зміни відкривають pull request.</string>
     <string name="repo_check_read_only">Цей токен може лише читати: pull request буде відхилено.</string>
     <string name="repo_edits_are_proposals">Зміни ніколи не комітяться в гілку: кожна відкриває pull або merge request.</string>
+    <string name="repo_update_bot_title">Оновлення залежностей</string>
+    <string name="repo_update_bot_checking">Пошук бота оновлення залежностей…</string>
+    <string name="repo_update_bot_present">Бота налаштовано: %1$s</string>
+    <string name="repo_update_bot_none">У цьому репозиторії немає бота оновлень.</string>
+    <string name="repo_update_bot_propose">Запропонувати конфігурацію…</string>
+    <string name="repo_update_bot_failed">Не вдалося прочитати репозиторій: %1$s</string>
+    <string name="repo_update_bot_sheet_title">Додати конфігурацію бота оновлення залежностей</string>
+    <string name="repo_update_bot_sheet_body">Застосунок склав %1$s для знайдених файлів. Перегляньте його, потім відкрийте pull request: нічого не зміниться, доки ви його не злиєте.</string>
+    <string name="repo_update_bot_continue">Перейти до pull request</string>
     <string name="source_search">Шукати в репозиторії</string>
     <string name="source_search_field">Текст для пошуку</string>
     <string name="source_search_close">Закрити пошук</string>
