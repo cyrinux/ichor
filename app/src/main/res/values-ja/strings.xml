@@ -5738,4 +5738,8 @@
     <plurals name="updates_propose_count">
         <item quantity="other">%1$d 件の更新を提案</item>
     </plurals>
+    <string name="node_hub_unreachable_notice">ノードに到達できません</string>
+    <string name="node_hub_unreachable_network">このスマートフォンからノードへの経路がありません</string>
+    <string name="node_hub_unreachable_credentials">ノードは応答しましたが、この talosconfig を拒否しました</string>
+    <string name="history_uptime_observed">確認した時間の %1$s · %2$s 確認なし</string>
 </resources>

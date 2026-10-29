@@ -6121,4 +6121,8 @@
         <item quantity="many">Запропонувати %1$d оновлень</item>
         <item quantity="other">Запропонувати %1$d оновлення</item>
     </plurals>
+    <string name="node_hub_unreachable_notice">Вузол недоступний</string>
+    <string name="node_hub_unreachable_network">Немає маршруту до вузла з цього телефона</string>
+    <string name="node_hub_unreachable_credentials">Вузол відповів, але відхилив цей talosconfig</string>
+    <string name="history_uptime_observed">%1$s перевіреного часу · без перевірки %2$s</string>
 </resources>

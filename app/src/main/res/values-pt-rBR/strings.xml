@@ -5867,4 +5867,8 @@
         <item quantity="one">Propor %1$d atualização</item>
         <item quantity="other">Propor %1$d atualizações</item>
     </plurals>
+    <string name="node_hub_unreachable_notice">Nó inacessível</string>
+    <string name="node_hub_unreachable_network">Sem rota até o nó a partir deste telefone</string>
+    <string name="node_hub_unreachable_credentials">O nó respondeu, mas recusou este talosconfig</string>
+    <string name="history_uptime_observed">%1$s do tempo verificado · sem verificação há %2$s</string>
 </resources>

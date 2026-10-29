@@ -18,7 +18,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,25 +37,47 @@ import name.levis.ichor.data.featuresKey
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.FeatureSupport
 import name.levis.ichor.model.NodeFeatures
+import name.levis.ichor.model.NodeReachability
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.VersionNotice
 import name.levis.ichor.model.clusterSupport
+import name.levis.ichor.model.mergeReachability
 import name.levis.ichor.model.notice
+import name.levis.ichor.model.reachabilityOf
 import name.levis.ichor.model.support
+import name.levis.ichor.model.unreachableFrom
 
 /**
  * What [node]'s Talos version supports: the cached answer at once, then the node's. Null
  * while unknown (unreachable node, first load): everything then counts as supported.
  */
 @Composable
-fun rememberNodeFeatures(node: String): NodeFeatures? {
+fun rememberNodeFeatures(node: String): NodeFeatures? = rememberNodeState(node).first
+
+/**
+ * Whether [node] answers: the last overview's word at once, overruled by the features call
+ * failing to dial it (a node that went down since). Null while unknown: nothing is dimmed then.
+ */
+@Composable
+fun rememberNodeReachability(node: String): NodeReachability? = rememberNodeState(node).second
+
+/** [rememberNodeFeatures] and [rememberNodeReachability] from one features call, for the node screen. */
+@Composable
+fun rememberNodeState(node: String): Pair<NodeFeatures?, NodeReachability?> {
     val talos = (LocalContext.current.applicationContext as TalosApp).talosRepository
     val invalidations by talos.invalidations.collectAsStateWithLifecycle()
     val changes by talos.featureChanges.collectAsStateWithLifecycle()
+    var failed by remember(node) { mutableStateOf<NodeReachability?>(null) }
     val features by produceState(talos.cached<NodeFeatures>(featuresKey(node))?.value, node, invalidations, changes) {
-        runCatching { talos.features(node) }.onSuccess { value = it }
+        runCatching { talos.features(node) }
+            .onSuccess {
+                value = it
+                failed = null
+            }
+            .onFailure { failed = unreachableFrom(it.message) }
     }
-    return features
+    val known = talos.cached<ClusterOverview>(OVERVIEW)?.value?.reachabilityOf(node)
+    return features to mergeReachability(known, failed)
 }
 
 /**
