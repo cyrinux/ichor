@@ -258,3 +258,41 @@ fun updateQuickEdit(target: UpdateEditTarget, row: UpdateRow, version: String): 
 
 /** A digest shown when an image has no tag: "sha256:" and the first hex digits. */
 private const val DIGEST_SHOWN = 19
+
+/** One item's edit in a planned file: [line] is on the content the items before it already edited. */
+@Serializable
+data class UpdateProposalChange(val item: String = "", val index: Int = 0, val line: Int = 0, val before: String = "", val after: String = "")
+
+/** A file of the plan: [original] as read at the branch (its [fileSha] the lock), [content] with every change applied. */
+@Serializable
+data class UpdateProposalFile(
+    val path: String = "",
+    val content: String = "",
+    val original: String = "",
+    val fileSha: String = "",
+    val changes: List<UpdateProposalChange> = emptyList(),
+)
+
+/** An item left out of the plan, [index] in the items sent, and why. */
+@Serializable
+data class UpdateProposalSkip(val item: String = "", val index: Int = 0, val reason: String = "")
+
+/** `UpdateProposalPlan`'s answer: one pull request on [source]'s repository at [baseRef] for the items selected. */
+@Serializable
+data class UpdateProposalPlan(
+    val source: GitSource? = null,
+    val baseRef: String = "",
+    val files: List<UpdateProposalFile> = emptyList(),
+    val title: String = "",
+    val message: String = "",
+    val branch: String = "",
+    val body: String = "",
+    val skipped: List<UpdateProposalSkip> = emptyList(),
+)
+
+/** The version a row is selected with: its smallest step (patch, else minor, else major); null when it cannot be proposed. */
+fun defaultSelection(row: UpdateRow): String? = row.candidates.firstOrNull()?.version?.takeIf { row.editable }
+
+/** `UpdateProposalPlan`'s itemsJSON: each selected row's item with the version picked, in [selection]'s order. */
+fun updateProposalItemsJson(selection: List<Pair<UpdateRow, String>>): String =
+    selection.joinToString(",", "[", "]") { (row, version) -> updateItemJson(row, version) }

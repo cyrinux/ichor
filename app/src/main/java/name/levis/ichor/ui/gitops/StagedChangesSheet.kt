@@ -55,7 +55,7 @@ fun StagedChip(count: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun StagedChangesSheet(
     state: StagedChangesState,
-    onEdit: (String) -> Unit,
+    onEdit: ((String) -> Unit)?,
     onRemove: (String) -> Unit,
     onPropose: () -> Unit,
     onDismiss: () -> Unit,
@@ -73,7 +73,8 @@ fun StagedChangesSheet(
         ) {
             Text(stringResource(R.string.staged_title), style = MaterialTheme.typography.titleLarge)
             MutedText(stringResource(R.string.staged_session_note))
-            state.rows.forEach { row -> StagedFileRow(row, onEdit = { onEdit(row.file.path) }, onRemove = { onRemove(row.file.path) }) }
+            state.rows.forEach { row -> StagedFileRow(row, onEdit = onEdit?.let { e -> { e(row.file.path) } }, onRemove = { onRemove(row.file.path) }) }
+            state.notes.forEach { MutedText(it) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
                 Button(onClick = onPropose, enabled = state.rows.isNotEmpty()) { Text(stringResource(R.string.gitops_propose_open)) }
@@ -83,11 +84,13 @@ fun StagedChangesSheet(
 }
 
 @Composable
-private fun StagedFileRow(row: StagedRow, onEdit: () -> Unit, onRemove: () -> Unit) {
+private fun StagedFileRow(row: StagedRow, onEdit: (() -> Unit)?, onRemove: () -> Unit) {
     val colors = LocalStatusColors.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(
-            Modifier.weight(1f).clickable(role = Role.Button, onClickLabel = stringResource(R.string.gitops_edit), onClick = onEdit).padding(vertical = 6.dp),
+            Modifier.weight(1f)
+                .then(if (onEdit != null) Modifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.gitops_edit), onClick = onEdit) else Modifier)
+                .padding(vertical = 6.dp),
         ) {
             Text(row.file.path.substringAfterLast('/'), style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
             MutedText(row.file.path, maxLines = 1, overflow = TextOverflow.Ellipsis)

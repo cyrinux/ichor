@@ -8,13 +8,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.StagedEdits
+import name.levis.ichor.data.StagedFile
 import name.levis.ichor.data.UpdatesRepository
 import name.levis.ichor.model.ClusterUpdates
 import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.model.UpdateEditApp
+import name.levis.ichor.model.UpdateProposalFile
+import name.levis.ichor.model.UpdateProposalPlan
 import name.levis.ichor.model.UpdateRow
+import name.levis.ichor.model.defaultSelection
 import name.levis.ichor.model.updateQuickEdit
+import name.levis.ichor.model.updateSections
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.gitops.ProposeForm
+import name.levis.ichor.ui.gitops.StagedChanges
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.refreshFailed
@@ -47,9 +56,22 @@ data class UpdatesUiState(
     val notes: Map<String, UiText> = emptyMap(),
     /** A rendered image's values file opened: the screen says where the tag is. */
     val renderedHint: Boolean = false,
+    /** Rows are being ticked for one pull request: [selected] maps a row's key to the version picked. */
+    val selecting: Boolean = false,
+    val selected: Map<String, String> = emptyMap(),
+    /** The selection's pull request is being planned; [planError] when it could not be. */
+    val planning: Boolean = false,
+    val planError: UiText? = null,
 )
 
-class UpdatesViewModel(private val repo: UpdatesRepository) : ViewModel() {
+class UpdatesViewModel(
+    private val repo: UpdatesRepository,
+    gitOps: GitOpsRepository? = null,
+    stagedEdits: StagedEdits? = null,
+) : ViewModel() {
+    /** The staged files of the selection's pull request (the cluster repository browser's staging area). */
+    val staged: StagedChanges? = if (gitOps != null && stagedEdits != null) StagedChanges(gitOps, stagedEdits, viewModelScope) else null
+
     private val _state = MutableStateFlow(UpdatesUiState())
     val state: StateFlow<UpdatesUiState> = _state.asStateFlow()
     private val _open = MutableStateFlow<UpdateOpen?>(null)
@@ -127,6 +149,56 @@ class UpdatesViewModel(private val repo: UpdatesRepository) : ViewModel() {
         }
     }
 
+    /** Enters or leaves the selection; leaving it drops what was ticked. */
+    fun toggleSelecting() = _state.update { it.copy(selecting = !it.selecting, selected = emptyMap(), planError = null) }
+
+    /** Ticks [row] with its smallest step, or unticks it. */
+    fun toggle(row: UpdateRow) = _state.update { s ->
+        val version = defaultSelection(row)
+        when {
+            row.key in s.selected -> s.copy(selected = s.selected - row.key)
+            version != null -> s.copy(selected = s.selected + (row.key to version))
+            else -> s
+        }
+    }
+
+    /** Ticks [row] with [version] (a chip tapped while selecting). */
+    fun choose(row: UpdateRow, version: String) {
+        if (row.editable) _state.update { it.copy(selected = it.selected + (row.key to version)) }
+    }
+
+    /**
+     * Plans one pull request for the rows ticked (`UpdateProposalPlan`), stages its files and
+     * opens the staged sheet prefilled; the rows left out get their reason as a note.
+     */
+    fun proposeSelected() {
+        val s = _state.value
+        val data = (s.updates as? UiState.Loaded)?.data ?: return
+        val sections = updateSections(data)
+        val selection = (sections.images + sections.charts).mapNotNull { r -> s.selected[r.key]?.let { r to it } }
+        if (selection.isEmpty() || s.planning) return
+        _state.update { st -> st.copy(planning = true, planError = null, notes = st.notes - selection.map { it.first.key }.toSet()) }
+        viewModelScope.launch {
+            cancellableCatching { repo.proposalPlan(selection) }.fold(
+                onSuccess = { plan -> stagePlan(plan, selection.map { it.first }) },
+                onFailure = { e -> _state.update { it.copy(planning = false, planError = e.uiText()) } },
+            )
+        }
+    }
+
+    private fun stagePlan(plan: UpdateProposalPlan, rows: List<UpdateRow>) {
+        val skipped = plan.skipped.mapNotNull { k -> rows.getOrNull(k.index)?.let { it.key to UiText.Raw(k.reason) } }.toMap()
+        val src = plan.source
+        val staging = staged
+        if (plan.files.isEmpty() || src == null || staging == null) {
+            _state.update { it.copy(planning = false, notes = it.notes + skipped) }
+            return
+        }
+        val form = ProposeForm(plan.title, plan.message, plan.body, plan.branch, base = plan.baseRef, baseFixed = true)
+        staging.stageAndOpen(src, plan.files.map(::stagedFileOf), form, plan.skipped.map { "${it.item}: ${it.reason}" })
+        _state.update { it.copy(planning = false, selecting = false, selected = emptyMap(), notes = it.notes + skipped) }
+    }
+
     fun consumeOpen() {
         _open.value = null
     }
@@ -135,3 +207,6 @@ class UpdatesViewModel(private val repo: UpdatesRepository) : ViewModel() {
         _state.update { it.copy(renderedHint = false) }
     }
 }
+
+/** A planned file as a staged one: read at the plan's branch, with every edit applied. */
+internal fun stagedFileOf(f: UpdateProposalFile): StagedFile = StagedFile(path = f.path, original = f.original, fileSha = f.fileSha, draft = f.content)

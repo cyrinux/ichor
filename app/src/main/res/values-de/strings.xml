@@ -5855,4 +5855,12 @@
     <string name="updates_lookups_failed">Fehlgeschlagene Abfragen: %1$d von %2$d</string>
     <string name="updates_skipped">Übersprungen: %1$s (%2$s)</string>
     <string name="updates_asking_count">Registries werden abgefragt (Images und Charts: %1$d)…</string>
+    <string name="updates_select">Auswählen</string>
+    <string name="updates_select_cancel">Auswahl abbrechen</string>
+    <string name="updates_select_hint">Wähle die Updates, die in einem Pull Request vorgeschlagen werden</string>
+    <string name="updates_planning">Dateien werden gelesen…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="one">%1$d Update vorschlagen</item>
+        <item quantity="other">%1$d Updates vorschlagen</item>
+    </plurals>
 </resources>

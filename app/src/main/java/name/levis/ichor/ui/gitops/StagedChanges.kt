@@ -35,6 +35,8 @@ data class StagedChangesState(
     val form: ProposeForm? = null,
     val formOpen: Boolean = false,
     val result: GitProposalResult? = null,
+    /** Shown above the button: what was left out of the pull request and why (the Updates screen's skipped rows). */
+    val notes: List<String> = emptyList(),
 )
 
 /**
@@ -54,6 +56,18 @@ class StagedChanges(private val gitOps: GitOpsRepository, private val staged: St
     fun attach(src: GitSource) {
         if (source?.let(::stagedKeyOf) != stagedKeyOf(src)) _state.value = StagedChangesState()
         source = src
+    }
+
+    /**
+     * Stages [files] for the repository [src] (replacing earlier stages of the same paths) and
+     * opens the sheet with the pull request [form] prefilled and [notes] above its button.
+     */
+    fun stageAndOpen(src: GitSource, files: List<StagedFile>, form: ProposeForm, notes: List<String>) {
+        attach(src)
+        val k = key ?: return
+        files.forEach { staged.stage(k, it) }
+        _state.update { it.copy(form = form, notes = notes) }
+        open()
     }
 
     fun open() {

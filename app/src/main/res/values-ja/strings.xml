@@ -5731,4 +5731,11 @@
     <string name="updates_lookups_failed">失敗した問い合わせ：%1$d / %2$d</string>
     <string name="updates_skipped">スキップ：%1$s（%2$s）</string>
     <string name="updates_asking_count">レジストリに問い合わせ中（イメージとチャート：%1$d）…</string>
+    <string name="updates_select">選択</string>
+    <string name="updates_select_cancel">選択をキャンセル</string>
+    <string name="updates_select_hint">1 つのプルリクエストで提案する更新を選んでください</string>
+    <string name="updates_planning">ファイルを読み込み中…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="other">%1$d 件の更新を提案</item>
+    </plurals>
 </resources>

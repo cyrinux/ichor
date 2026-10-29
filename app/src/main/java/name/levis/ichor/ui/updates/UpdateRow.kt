@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,13 +34,25 @@ import name.levis.ichor.ui.components.StatusPill
  * One image or chart: its name, "running → newest", who applied it, then a chip per candidate
  * (patch, minor, major: a tap opens that version's edit), the badge of what already bumps it,
  * or why it is not comparable. [resolving] while its file is being found; [note] says why a
- * tap led nowhere.
+ * tap led nowhere. While [selecting], a row that can be proposed has a checkbox ([onToggle])
+ * and its chips pick the version it is ticked with ([selectedVersion]).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UpdateRowItem(row: UpdateRow, resolving: Boolean, note: UiText?, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
+fun UpdateRowItem(
+    row: UpdateRow,
+    resolving: Boolean,
+    note: UiText?,
+    onPick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    selecting: Boolean = false,
+    selectedVersion: String? = null,
+    onToggle: () -> Unit = {},
+) {
+    val selectable = selecting && row.editable && row.candidates.isNotEmpty()
     Column(modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (selectable) Checkbox(checked = selectedVersion != null, onCheckedChange = { onToggle() })
             Text(
                 row.name,
                 style = MaterialTheme.typography.bodyLarge,
@@ -57,11 +71,12 @@ fun UpdateRowItem(row: UpdateRow, resolving: Boolean, note: UiText?, onPick: (St
             automation != null -> StatusPill(stringResource(automationLabel(automation)), MaterialTheme.colorScheme.primary)
             row.candidates.isNotEmpty() -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.candidates.forEach { c ->
-                    AssistChip(
-                        onClick = { onPick(c.version) },
-                        enabled = row.editable && !resolving,
-                        label = { Text(stringResource(stepLabel(c.step), c.version), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    )
+                    val label = @Composable { Text(stringResource(stepLabel(c.step), c.version), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    if (selectable) {
+                        FilterChip(selected = c.version == selectedVersion, onClick = { onPick(c.version) }, label = label)
+                    } else {
+                        AssistChip(onClick = { onPick(c.version) }, enabled = row.editable && !resolving && !selecting, label = label)
+                    }
                 }
             }
             row.reason.isNotEmpty() -> MutedText(row.reason)

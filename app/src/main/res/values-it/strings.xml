@@ -5864,4 +5864,12 @@
     <string name="updates_lookups_failed">Ricerche non riuscite: %1$d su %2$d</string>
     <string name="updates_skipped">Saltato: %1$s (%2$s)</string>
     <string name="updates_asking_count">Interrogazione dei registri (immagini e chart: %1$d)…</string>
+    <string name="updates_select">Seleziona</string>
+    <string name="updates_select_cancel">Annulla la selezione</string>
+    <string name="updates_select_hint">Spunta gli aggiornamenti da proporre in un\'unica pull request</string>
+    <string name="updates_planning">Lettura dei file…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="one">Proponi %1$d aggiornamento</item>
+        <item quantity="other">Proponi %1$d aggiornamenti</item>
+    </plurals>
 </resources>

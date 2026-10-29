@@ -5731,4 +5731,11 @@
     <string name="updates_lookups_failed">查询失败：%1$d / %2$d</string>
     <string name="updates_skipped">已跳过：%1$s（%2$s）</string>
     <string name="updates_asking_count">正在查询镜像仓库（镜像和 chart：%1$d）…</string>
+    <string name="updates_select">选择</string>
+    <string name="updates_select_cancel">取消选择</string>
+    <string name="updates_select_hint">勾选要在一个拉取请求中提议的更新</string>
+    <string name="updates_planning">正在读取文件…</string>
+    <plurals name="updates_propose_count">
+        <item quantity="other">提议 %1$d 个更新</item>
+    </plurals>
 </resources>
