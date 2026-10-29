@@ -89,21 +89,27 @@ func Archive(ctx context.Context, h Host, repo RepoRef, ref string) ([]byte, err
 	f := New(h)
 	path, query := f.archivePath(repo, ref)
 
-	return gitForgeClientOf(f).download(ctx, path, query)
-}
-
-// gitForgeClientOf is the client behind one of the three forges.
-func gitForgeClientOf(f Forge) gitForgeClient {
-	switch f := f.(type) {
-	case gitHubForge:
-		return f.c
-	case gitLabForge:
-		return f.c
-	case giteaForge:
-		return f.c
+	c, err := gitForgeClientOf(f)
+	if err != nil {
+		return nil, err
 	}
 
-	panic(fmt.Sprintf("unknown forge %T", f))
+	return c.download(ctx, path, query)
+}
+
+// gitForgeClientOf is the client behind one of the three forges; an error for any other
+// Forge (New only makes these three, so it means a fourth was added without its case here).
+func gitForgeClientOf(f Forge) (gitForgeClient, error) {
+	switch f := f.(type) {
+	case gitHubForge:
+		return f.c, nil
+	case gitLabForge:
+		return f.c, nil
+	case giteaForge:
+		return f.c, nil
+	}
+
+	return gitForgeClient{}, fmt.Errorf("unknown forge %T", f)
 }
 
 // download reads the body of GET api+path?query, following one redirect: with the token on

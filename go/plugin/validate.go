@@ -95,7 +95,14 @@ func (v *validator) enum(path, value string, owner any, field string) {
 		return
 	}
 
-	if allowed := tagEnum(owner, field); !slices.Contains(allowed, value) {
+	allowed, err := tagEnum(owner, field)
+	if err != nil {
+		v.errorf(path, "%s", err)
+
+		return
+	}
+
+	if !slices.Contains(allowed, value) {
 		v.errorf(path, "%q is not one of %s", value, strings.Join(allowed, ", "))
 	}
 }
@@ -556,20 +563,21 @@ func (v *validator) i18n() {
 	}
 }
 
-// tagEnum is the enum=a|b|c of a field's schema tag.
-func tagEnum(owner any, field string) []string {
+// tagEnum is the enum=a|b|c of a field's schema tag. field is a Go field name, so an error
+// means a mistake in this package (a renamed field, a dropped tag), never in the plugin file.
+func tagEnum(owner any, field string) ([]string, error) {
 	f, ok := reflect.TypeOf(owner).FieldByName(field)
 	if !ok {
-		panic("plugin: no field " + field)
+		return nil, fmt.Errorf("plugin: no field %s on %T", field, owner)
 	}
 
 	for part := range strings.SplitSeq(f.Tag.Get("schema"), ",") {
 		if values, ok := strings.CutPrefix(part, "enum="); ok {
-			return strings.Split(values, "|")
+			return strings.Split(values, "|"), nil
 		}
 	}
 
-	panic("plugin: no enum on " + field)
+	return nil, fmt.Errorf("plugin: no enum on %T.%s", owner, field)
 }
 
 func sortedKeys[V any](m map[string]V) []string {
