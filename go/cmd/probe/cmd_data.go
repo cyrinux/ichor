@@ -187,6 +187,10 @@ var dataCommands = []command{
 		// Where one cluster-updates item (plus "version") is edited in Git.
 		return ichorgo.UpdateEditTarget(e.cfg, e.context, e.kubeServer, flag.Arg(2), flag.Arg(1))
 	}},
+	{name: "update-proposal-plan", args: "ITEMSJSON [HOSTJSON]", run: func(e env) (string, error) {
+		// One pull request for several cluster-updates items (each plus "version"); nothing is written.
+		return ichorgo.UpdateProposalPlan(e.cfg, e.context, e.kubeServer, flag.Arg(2), flag.Arg(1))
+	}},
 	{name: "gitops-revision-runs", args: "TOOL KIND NAMESPACE NAME SHA", run: func(e env) (string, error) {
 		return ichorgo.GitOpsRevisionRuns(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5))
 	}},

@@ -65,6 +65,8 @@ type updateEditTarget struct {
 const (
 	updateEditRenderedNote = "rendered by a chart"
 	updateEditByHandNote   = "installed without Argo CD or Flux: no file in Git declares it"
+
+	demoInfraKustomization = "infra" // the demo Kustomization applying apps/infra
 )
 
 var errUpdateNoEdit = errors.New("nothing to edit: something already bumps it, a range sets it, or it has no newer version")
@@ -186,16 +188,26 @@ func readUpdateObjectMeta(ctx context.Context, k *kubeClient, tool, kind, namesp
 func demoUpdateEditEnv() updateEditEnv {
 	return updateEditEnv{
 		sources: func(_ context.Context, app updateEditApp) (gitopsSources, error) {
-			return demoGitOpsSource(app.Tool), nil
+			s := demoGitOpsSource(app.Tool)
+			if app.Name == demoInfraKustomization {
+				s.Sources[0].Path = "apps/infra"
+			}
+
+			return s, nil
 		},
 		files: func(_ context.Context, src gitopsSource) (sourceFiles, error) {
 			return treeFilesUnder(demoFluxTree().files, src.Path), nil
 		},
-		// The demo's charts are applied by the flux-system Kustomization, whose source does
-		// not hold them: their edit says so.
+		// ingress-nginx is applied by the infra Kustomization (apps/infra); the demo's other
+		// charts by flux-system, whose source does not hold them: their edit says so.
 		meta: func(_ context.Context, _, _, namespace, name string) (fluxMeta, error) {
+			by := "flux-system"
+			if name == "ingress-nginx" {
+				by = demoInfraKustomization
+			}
+
 			return fluxMeta{Name: name, Namespace: namespace, Labels: map[string]string{
-				fluxKustomizeNameLabel: "flux-system", fluxKustomizeNsLabel: "flux-system",
+				fluxKustomizeNameLabel: by, fluxKustomizeNsLabel: "flux-system",
 			}}, nil
 		},
 	}
@@ -412,6 +424,16 @@ func findUpdateEdit(ctx context.Context, env updateEditEnv, app updateEditApp, q
 
 // checkUpdateEdit applies qe to content and returns the line it changes.
 func checkUpdateEdit(content []byte, qe updateQuickEdit) (int, error) {
+	res, err := applyUpdateEdit(content, qe)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.Line, nil
+}
+
+// applyUpdateEdit is content with qe applied (GitOpsQuickEdit).
+func applyUpdateEdit(content []byte, qe updateQuickEdit) (quickEditResult, error) {
 	e := quickEdit{
 		Op: qe.Op, DocumentIndex: qe.DocumentIndex, Kind: qe.Kind, Name: qe.Name, Container: qe.Container,
 		KustomizeImage: qe.KustomizeImage, Image: qe.Image, Path: qe.Path,
@@ -419,18 +441,13 @@ func checkUpdateEdit(content []byte, qe updateQuickEdit) (int, error) {
 	if qe.Op == "path" {
 		b, err := json.Marshal(qe.Value)
 		if err != nil {
-			return 0, err
+			return quickEditResult{}, err
 		}
 
 		e.Value = b
 	}
 
-	res, err := gitOpsQuickEdit(string(content), e)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.Line, nil
+	return gitOpsQuickEdit(string(content), e)
 }
 
 // writtenImage is the image the file sets on container of document doc, "" when not found.

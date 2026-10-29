@@ -76,6 +76,39 @@
       ]
     },
     {
+      "current": "0.4.0",
+      "digest": "",
+      "edit": {
+        "container": "exporter",
+        "image": "ghcr.io/example-org/podinfo-exporter:0.4.2",
+        "kind": "Deployment",
+        "name": "podinfo",
+        "op": "image",
+        "path": ""
+      },
+      "owner": {
+        "kind": "Kustomization",
+        "name": "podinfo",
+        "namespace": "flux-system",
+        "tool": "flux"
+      },
+      "patch": "0.4.2",
+      "repo": "ghcr.io/example-org/podinfo-exporter",
+      "shape": "x.y.z",
+      "source": "ghcr.io",
+      "tag": "0.4.0",
+      "workloads": [
+        {
+          "containers": [
+            "exporter"
+          ],
+          "kind": "Deployment",
+          "name": "podinfo",
+          "namespace": "demo"
+        }
+      ]
+    },
+    {
       "automatedBy": "argocd-image-updater",
       "current": "2.3.0",
       "digest": "",
@@ -98,39 +131,6 @@
           ],
           "kind": "Deployment",
           "name": "worker",
-          "namespace": "demo"
-        }
-      ]
-    },
-    {
-      "current": "1.27.4-alpine",
-      "digest": "",
-      "edit": {
-        "container": "nginx",
-        "image": "nginx:1.27.5-alpine",
-        "kind": "Deployment",
-        "name": "hello-ichor",
-        "op": "image",
-        "path": ""
-      },
-      "owner": {
-        "kind": "Application",
-        "name": "hello-ichor",
-        "namespace": "argocd",
-        "tool": "argocd"
-      },
-      "patch": "1.27.5-alpine",
-      "repo": "nginx",
-      "shape": "x.y.z-alpine",
-      "source": "Docker Hub",
-      "tag": "1.27.4-alpine",
-      "workloads": [
-        {
-          "containers": [
-            "nginx"
-          ],
-          "kind": "Deployment",
-          "name": "hello-ichor",
           "namespace": "demo"
         }
       ]
