@@ -133,5 +133,45 @@ class CommandLineTest(unittest.TestCase):
             verify_release.main(["verify", "v1.0.0", "--abi", "mips"])
 
 
+class PublishedOptionTest(unittest.TestCase):
+    """--published: the APK is already on disk (a draft downloaded by an earlier CI step)."""
+
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.dir.cleanup)
+        self.calls = []
+        self.originals = (verify_release.download, verify_release.rebuild)
+        self.addCleanup(self.restore)
+
+        def fake_download(*args):
+            self.calls.append("download")
+            raise AssertionError("downloaded although --published was given")
+
+        def fake_rebuild(tag, abi, repo, work):
+            self.calls.append("rebuild")
+            path = os.path.join(work, "rebuilt.apk")
+            with open(path, "wb") as f:
+                f.write(make_zip(APP))
+            return path
+
+        verify_release.download, verify_release.rebuild = fake_download, fake_rebuild
+
+    def restore(self):
+        verify_release.download, verify_release.rebuild = self.originals
+
+    def test_the_given_apk_is_compared_without_a_download(self):
+        published = os.path.join(self.dir.name, "ichor-v1.0.0-arm64-v8a.apk")
+        with open(published, "wb") as f:
+            f.write(with_signing_block(make_zip(APP, signed=True)))
+        self.assertEqual(verify_release.main(["verify", "v1.0.0", "--published", published]), 0)
+        self.assertEqual(self.calls, ["rebuild"])
+        self.assertTrue(os.path.exists(published), "the caller's APK must not be deleted")
+
+    def test_a_missing_apk_fails_before_the_build(self):
+        missing = os.path.join(self.dir.name, "missing.apk")
+        self.assertEqual(verify_release.main(["verify", "v1.0.0", "--published", missing]), 2)
+        self.assertEqual(self.calls, [])
+
+
 if __name__ == "__main__":
     unittest.main()

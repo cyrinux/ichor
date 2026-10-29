@@ -9,11 +9,15 @@ them entry by entry: name, order, size, CRC-32, compression and timestamp.
 
 Exit 0 and "identical: N entries" when they match; exit 1 with the differing entries (also
 written to --report) otherwise; exit 2 when it cannot run (no nix, no release, no build).
---keep keeps both stripped APKs (for diffoscope) and the build checkout.
+--keep keeps both stripped APKs (for diffoscope) and the build checkout. --published uses
+an APK already on disk instead of downloading it: CI downloads the draft in a step of its
+own, since only a token that can write releases sees a draft, and keeps that token out of
+the build.
 
 Usage:
   scripts/verify-release.py verify v1.40.1
   scripts/verify-release.py verify v1.40.1 --abi x86_64 --keep --report diff.txt
+  scripts/verify-release.py verify v1.40.1 --published ichor-v1.40.1-arm64-v8a.apk
   scripts/verify-release.py compare PUBLISHED.apk REBUILT.apk   # no download, no build
 """
 
@@ -156,14 +160,16 @@ def rebuild(tag: str, abi: str, repo: str, work: str) -> str:
 
 
 def verify(args) -> int:
+    if args.published and not os.path.isfile(args.published):
+        raise VerifyError(f"{args.published} does not exist")
     work = tempfile.mkdtemp(prefix="ichor-verify-")
     try:
-        published = download(args.tag, args.abi, args.repo, work)
+        published = args.published or download(args.tag, args.abi, args.repo, work)
         rebuilt = rebuild(args.tag, args.abi, args.repo, work)
         code = compare(published, rebuilt, args.report)
         if args.keep:
             for path in (published, rebuilt):
-                write_stripped(path, path.replace(".apk", "-stripped.apk"))
+                write_stripped(path, os.path.join(work, os.path.basename(path).replace(".apk", "-stripped.apk")))
             print(f"kept in {work} (diffoscope {work}/*-stripped.apk)", file=sys.stderr)
         return code
     finally:
@@ -181,6 +187,7 @@ def main(argv=None) -> int:
     v.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY") or DEFAULT_REPO)
     v.add_argument("--keep", action="store_true")
     v.add_argument("--report", help="also write the differing entries here")
+    v.add_argument("--published", help="the published APK, already downloaded (no gh release download)")
     c = sub.add_parser("compare", help="compare two APKs already on disk")
     c.add_argument("published")
     c.add_argument("rebuilt")
