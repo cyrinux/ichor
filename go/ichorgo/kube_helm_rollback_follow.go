@@ -138,12 +138,11 @@ func StartHelmRollbackFollow(configYAML, contextName, kubeServer, namespace, nam
 
 // followHelmRollback lists the workloads of the deployed revision, then reads them every
 // helmWaitInterval until they are all done, one failed, or helmWaitTimeout passed (Timeout,
-// no error).
+// no error). The wait starts once they are listed, as Helm's --timeout: the listing is one
+// read, bounded by followReadTimeout alone, so a slow API fails it rather than timing out the
+// wait before it began.
 func followHelmRollback(ctx context.Context, target kubeTarget, namespace, name string, emit func(helmRollbackProgress)) (string, error) {
-	bounded, cancel := context.WithTimeout(ctx, helmWaitTimeout)
-	defer cancel()
-
-	readCtx, cancelRead := context.WithTimeout(bounded, followReadTimeout)
+	readCtx, cancelRead := context.WithTimeout(ctx, followReadTimeout)
 	workloads, err := withKubeContext(readCtx, target, func(ctx context.Context, k *kubeClient) ([]helmObject, error) {
 		return deployedHelmWorkloads(ctx, k, namespace, name)
 	})
@@ -161,6 +160,9 @@ func followHelmRollback(ctx context.Context, target kubeTarget, namespace, name 
 	}
 
 	p := helmRollbackProgress{Phase: helmWaitRunning, Total: len(workloads), Workloads: []helmRollbackWorkload{}}
+
+	bounded, cancel := context.WithTimeout(ctx, helmWaitTimeout)
+	defer cancel()
 
 	err = pollFollow(bounded, target, helmWaitInterval, func(ctx context.Context, k *kubeClient) (bool, error) {
 		next, err := readHelmWorkloads(ctx, k, workloads)
