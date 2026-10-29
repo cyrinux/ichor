@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -49,6 +50,15 @@ func helmFollowDeployment(ready int, failed bool) string {
 func newHelmFollowAPI(t *testing.T, status string, seq []string) string {
 	t.Helper()
 
+	f := newHelmFollowFake(t, status, seq)
+
+	return f.kubeconfigFor(f.URL)
+}
+
+// newHelmFollowFake is newHelmFollowAPI's server, for a test that hooks its reads.
+func newHelmFollowFake(t *testing.T, status string, seq []string) *fakeKubeAPI {
+	t.Helper()
+
 	rel := helmSecretData(t, helmTestRelease(3, status, "1.0.0", helmFollowManifest, nil))
 	old := helmSecretData(t, helmTestRelease(2, "superseded", "1.0.0", helmFollowManifest, nil))
 
@@ -62,7 +72,7 @@ func newHelmFollowAPI(t *testing.T, status string, seq []string) string {
 	})
 	serveSequence(f, helmTestDeploy, seq)
 
-	return f.kubeconfigFor(f.URL)
+	return f
 }
 
 // helmFollowSteps is every progress event as "phase done/total name ready/desired ...".
@@ -162,13 +172,45 @@ func TestHelmRollbackFollowStaleNotFailed(t *testing.T) {
 	}
 }
 
+// The wait budget leaves room for the race detector's slower round trips; the progress dedup
+// keeps the steps at two however many polls fit in it.
+const helmFollowTestWait = 300 * time.Millisecond
+
 func TestHelmRollbackFollowTimeout(t *testing.T) {
-	fastHelmFollow(t, 60*time.Millisecond)
+	fastHelmFollow(t, helmFollowTestWait)
 
 	cfg := newHelmFollowAPI(t, "deployed", []string{helmFollowDeployment(1, false)})
 
 	rec := newFollowRecorder()
 	StartHelmRollbackFollow(cfg, "admin@test", "", "web", "site", rec)
+
+	assertHelmFollowTimedOut(t, rec)
+}
+
+// A listing slower than the whole wait still ends with Timeout, not an error: the wait starts
+// once the workloads are listed.
+func TestHelmRollbackFollowTimeoutAfterSlowListing(t *testing.T) {
+	fastHelmFollow(t, helmFollowTestWait)
+
+	f := newHelmFollowFake(t, "deployed", []string{helmFollowDeployment(1, false)})
+	// The release's three secret reads (the list and two revisions) take longer than the wait.
+	next := f.beforeAnswer
+	f.beforeAnswer = func(r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, helmTestSecrets) {
+			time.Sleep(helmFollowTestWait / 2)
+		}
+
+		next(r)
+	}
+
+	rec := newFollowRecorder()
+	StartHelmRollbackFollow(f.kubeconfigFor(f.URL), "admin@test", "", "web", "site", rec)
+
+	assertHelmFollowTimedOut(t, rec)
+}
+
+func assertHelmFollowTimedOut(t *testing.T, rec *followRecorder) {
+	t.Helper()
 
 	if done := rec.wait(t); done != [2]string{helmWaitTimedOut, ""} {
 		t.Fatalf("done %q", done)
