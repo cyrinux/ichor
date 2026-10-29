@@ -374,6 +374,7 @@ fun Navigation(
                         onNodeMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
                         onActivity = { nav.navigate(Routes.activity(it)) },
                         onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
+                        onFleet = { nav.navigate(Routes.FLEET) { launchSingleTop = true } },
                         onOpenTarget = openTarget,
                     ),
                 )

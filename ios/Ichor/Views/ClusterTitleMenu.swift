@@ -37,6 +37,12 @@ struct ClusterTitleMenu: View {
             } label: {
                 Label("Switch cluster", systemImage: "arrow.left.arrow.right")
             }
+        case .fleet:
+            Button {
+                path.append(.fleet)
+            } label: {
+                Label("All clusters", systemImage: "rectangle.stack")
+            }
         case .manage:
             Button {
                 path.append(.clusters)

@@ -108,6 +108,7 @@ import name.levis.ichor.data.ClusterUpgradeManager
 import name.levis.ichor.data.ConfigTryManager
 import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.ClusterNames
+import name.levis.ichor.data.FleetRepository
 import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.VpnMonitor
@@ -222,6 +223,7 @@ class TalosApp : Application() {
         )
     }
     val dataServicesRepository by lazy { DataServicesRepository(goCall) }
+    val fleetRepository by lazy { FleetRepository() }
     val pluginRepository by lazy { PluginRepository(goCall) }
     val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
 

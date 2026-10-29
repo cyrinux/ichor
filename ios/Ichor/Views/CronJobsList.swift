@@ -42,11 +42,12 @@ struct CronJobsList: View {
                             onRun: { confirm = cronJob },
                             onSuspend: { confirmSuspend = cronJob }
                         )
-                        .contextMenu {
-                            ShareLinkButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name))
-                            PinButton(
-                                target: .cronJob(namespace: cronJob.namespace, name: cronJob.name), label: cronJob.name)
-                        }
+                        .modifier(
+                            CronJobRowActions(
+                                cronJob: cronJob,
+                                busy: triggering.contains(cronJob.id) || suspending.contains(cronJob.id),
+                                onRun: { confirm = cronJob },
+                                onSuspend: { confirmSuspend = cronJob }))
                     }
                 }
                 if load.hasMore && query.isEmpty {
@@ -339,6 +340,60 @@ private struct CronJobRow: View {
                 .foregroundStyle(.secondary)
         }
     }
+}
+
+/// A CronJob row's quick actions. Swipe right: Run now. Swipe left: Suspend or Resume. Long
+/// press: both, then Share and Pin. Each only opens its confirmation; VoiceOver lists the swipes.
+private struct CronJobRowActions: ViewModifier {
+    let cronJob: KubeCronJob
+    /// A run or a suspend in flight: no second one from the row.
+    let busy: Bool
+    let onRun: () -> Void
+    let onSuspend: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .swipeActions(edge: .leading) {
+                if !busy && cronJob.triggerable {
+                    Button(action: onRun) {
+                        Label("Run now", systemImage: "play.fill")
+                    }
+                    .tint(.blue)
+                    .kubeGated(.triggerCronJob, in: cronJob.namespace)
+                }
+            }
+            .swipeActions(edge: .trailing) {
+                if !busy {
+                    Button(action: onSuspend) {
+                        Label(suspendTitle, systemImage: suspendSymbol)
+                    }
+                    .tint(.orange)
+                    .kubeGated(.suspendCronJob, in: cronJob.namespace)
+                }
+            }
+            .contextMenu {
+                if !busy {
+                    if cronJob.triggerable {
+                        KubeGatedMenuButton(
+                            String(localized: "Run now"), systemImage: "play.fill", action: .triggerCronJob,
+                            in: cronJob.namespace, perform: onRun)
+                    }
+                    KubeGatedMenuButton(
+                        suspendTitle, systemImage: suspendSymbol, action: .suspendCronJob, in: cronJob.namespace,
+                        perform: onSuspend)
+                }
+                ShareLinkButton(target: shareTarget)
+                PinButton(target: shareTarget, label: cronJob.name)
+            }
+    }
+
+    private var shareTarget: ShareTarget { .cronJob(namespace: cronJob.namespace, name: cronJob.name) }
+
+    private var suspendTitle: String {
+        cronJob.suspended ? String(localized: "Resume") : String(localized: "Suspend")
+    }
+
+    private var suspendSymbol: String { cronJob.suspended ? "play.circle" : "pause.circle" }
 }
 
 private struct MetaChip: View {

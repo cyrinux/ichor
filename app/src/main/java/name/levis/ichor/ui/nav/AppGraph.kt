@@ -13,6 +13,7 @@ import name.levis.ichor.ui.diagnostics.DiagnosticsScreen
 import name.levis.ichor.ui.imagescan.SavedScansScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
+import name.levis.ichor.ui.fleet.FleetScreen
 import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.kubebrowser.KubeLinks
@@ -32,12 +33,20 @@ import name.levis.ichor.ui.tour.replayDemoTour
 
 /**
  * The app's own screens: settings, diagnosis, changelog, licenses, funding, support, and the
- * search across clusters, whose results [openTarget] opens like share links.
+ * search across clusters, whose results [openTarget] opens like share links, and the fleet view.
  */
 internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks, openTarget: (ShareTarget) -> Unit) {
     composable(Routes.SEARCH) {
         // A screen of the active cluster: opened over the search, so Back returns to it.
         SearchScreen(onBack = { nav.popBackStack() }, onOpen = openTarget, onOpenRoute = { nav.navigate(it) { launchSingleTop = true } })
+    }
+    composable(Routes.FLEET) {
+        FleetScreen(
+            onBack = { nav.popBackStack() },
+            // The cluster tapped is on screen by then: its home, with nothing over it.
+            onHome = { if (!nav.popBackStack(Routes.OVERVIEW, inclusive = false)) nav.popBackStack() },
+            onAlertsSettings = { nav.navigate(Routes.settingsPage(SettingsPage.ALERTS)) },
+        )
     }
     composable(Routes.INSIGHTS) {
         name.levis.ichor.ui.insights.InsightsScreen(

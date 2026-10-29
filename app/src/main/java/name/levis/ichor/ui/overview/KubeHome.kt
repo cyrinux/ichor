@@ -166,6 +166,8 @@ class KubeHomeNavigation(
     val onActivity: (cluster: String) -> Unit,
     /** The search across clusters. */
     val onSearch: () -> Unit,
+    /** Every cluster's last check on one list (the fleet view). */
+    val onFleet: () -> Unit,
     /** The cluster's runbooks. */
     val onRunbooks: () -> Unit,
     /** The Updates screen: images and charts with a newer version. */
@@ -299,6 +301,7 @@ fun KubeHomeScreen(
                                 labels = clusterLabels,
                                 onSelect = app::selectCluster,
                                 onManage = { showClusters = true },
+                                onFleet = nav.onFleet,
                                 onDismiss = { clusterMenu = false },
                                 onRunbooks = nav.onRunbooks,
                                 onUpdates = nav.onUpdates,
@@ -322,6 +325,7 @@ fun KubeHomeScreen(
                 onClustersCleared = nav.onClustersCleared,
                 onActivity = { nav.onActivity(it.name) },
                 onGitHosts = nav.onGitHosts,
+                onFleet = nav.onFleet,
             )
         }
         val refresh = {

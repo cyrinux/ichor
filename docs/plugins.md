@@ -814,7 +814,7 @@ not the rule's reason. Editors and generators can check drafts against
 
 Users ask for one through the Plugin request issue form:
 `https://github.com/cyrinux/ichor/issues/new?template=crd-request.yml`, or the website's
-form, which opens it prefilled (`https://cyrinux.github.io/ichor/#plugin-request`). The app's
+form, which opens it prefilled (`https://cyrinux.github.io/ichor/features.html#plugin-request`). The app's
 Settings → Support → Request an integration opens the same form with the operator and the CRD
 names (`<plural>.<group>`) of the API groups picked, and no link: the cluster does not know
 where the manifest is published. The `crd-request` workflow (`.github/workflows/crd-request.yml`)

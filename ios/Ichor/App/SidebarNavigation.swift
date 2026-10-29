@@ -1,10 +1,10 @@
 import IchorCore
 import SwiftUI
 
-/// The iPad's root at regular width: a sidebar with the clusters and the active cluster's
-/// sections, beside the app's NavigationStack in the detail column (`detail`). The split view
-/// sits at the root and the stack inside it, the supported shape (a split view inside the
-/// stack breaks Back, see AdaptiveListDetail.swift). `path` stays MainNavigation's, so share
+/// The iPad's root at regular width: a sidebar with "All clusters" (the fleet view), the
+/// clusters and the active cluster's sections, beside the app's NavigationStack in the detail
+/// column (`detail`). The split view sits at the root and the stack inside it, the supported
+/// shape (a split view inside the stack breaks Back, see AdaptiveListDetail.swift). `path` stays MainNavigation's, so share
 /// links, notifications and quick actions route as on the iPhone.
 struct SidebarNavigation<Detail: View>: View {
     @Binding var path: [Route]
@@ -21,6 +21,14 @@ struct SidebarNavigation<Detail: View>: View {
     var body: some View {
         NavigationSplitView(columnVisibility: $visibility) {
             List {
+                Section {
+                    Button {
+                        path = [.fleet]
+                    } label: {
+                        Label("All clusters", systemImage: "rectangle.stack")
+                    }
+                    .accessibilityAddTraits(path.last == .fleet ? .isSelected : [])
+                }
                 Section("Clusters") {
                     ForEach(model.summary?.contexts ?? []) { context in
                         clusterRow(context)

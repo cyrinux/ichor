@@ -9,7 +9,7 @@ final class ClusterMenuItemsTests: XCTestCase {
         XCTAssertEqual(
             clusterMenuGroups(context: admin, canSwitch: true),
             [
-                [.switchCluster, .manage],
+                [.switchCluster, .fleet, .manage],
                 [.upgradeCluster, .upgradeKubernetes, .addNode, .updates, .runbooks],
                 share,
             ])
@@ -35,7 +35,7 @@ final class ClusterMenuItemsTests: XCTestCase {
         let kube = ContextSummary(name: "kind-dev", kind: ContextKind.kube)
         XCTAssertEqual(
             clusterMenuGroups(context: kube, canSwitch: true),
-            [[.switchCluster, .manage], [.updates, .runbooks], share])
+            [[.switchCluster, .fleet, .manage], [.updates, .runbooks], share])
     }
 
     func testNoActiveClusterHasNoIncidentSummary() {
