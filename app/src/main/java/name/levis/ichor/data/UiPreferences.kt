@@ -3,6 +3,7 @@ package name.levis.ichor.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.StringRes
+import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -88,6 +89,15 @@ class UiPreferences(private val prefs: SharedPreferences) {
     /** Logs where a cold start's time goes to logcat (tag Ichor.Startup). Off by default. */
     private val _startupTrace = MutableStateFlow(prefs.getBoolean(KEY_STARTUP_TRACE, false))
     val startupTrace: StateFlow<Boolean> = _startupTrace.asStateFlow()
+
+    /** Keeps the core's redacted diagnostics log in the data directory across launches. Off by default. */
+    private val _diagPersist = MutableStateFlow(prefs.getBoolean(KEY_DIAG_PERSIST, false))
+    val diagPersist: StateFlow<Boolean> = _diagPersist.asStateFlow()
+
+    /** The time (unix ms) of the newest exit record of the OS already copied to the diagnostics log. */
+    var lastExitRecordAt: Long
+        get() = prefs.getLong(KEY_LAST_EXIT_RECORD_AT, 0)
+        set(value) = prefs.edit { putLong(KEY_LAST_EXIT_RECORD_AT, value) }
 
     /**
      * Offers a root shell on the nodes of a cluster without Talos, through a privileged pod
@@ -234,6 +244,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _startupTrace.value = enabled
     }
 
+    fun setDiagPersist(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_DIAG_PERSIST, enabled) }
+        _diagPersist.value = enabled
+    }
+
     fun setNodeDebugShell(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_NODE_DEBUG_SHELL, enabled).apply()
         _nodeDebugShell.value = enabled
@@ -343,6 +358,8 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_AUDIT_EVENTS = "audit_events"
         private const val KEY_STARTUP_TRACE = "startup_trace"
+        private const val KEY_DIAG_PERSIST = "diag_persist"
+        private const val KEY_LAST_EXIT_RECORD_AT = "last_exit_record_at"
         private const val KEY_NODE_DEBUG_SHELL = "node_debug_shell"
         private const val KEY_IMAGE_SCANNER = "image_scanner"
         private const val KEY_OFFLINE_CACHE = "offline_cache"

@@ -612,6 +612,7 @@ class TalosApp : Application() {
         _dataStoreProblem.value = runCatching { Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0)) }
             .exceptionOrNull()?.let { it.message ?: it.javaClass.simpleName }
         StartupTrace.markOnce("app.goInit done")
+        applyDiagnostics()
         // GKE's "Sign in with Google" (Play build with Play services): Google's SDK holds the
         // client, so no client ID here.
         if (googleNativeSignIn.available(this)) Ichorgo.setGoogleSignInClient("android", "")
