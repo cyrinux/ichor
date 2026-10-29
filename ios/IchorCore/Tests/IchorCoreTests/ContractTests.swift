@@ -47,6 +47,9 @@ final class ContractTests: XCTestCase {
         "diag-entries": ContractTests.row([DiagEntry].self) {
             XCTAssertEqual($0.first?.attrs["fn"], .text("ClusterOverview")); XCTAssertEqual($0.last?.err, "")
         },
+        "fleet-summary": ContractTests.row(FleetSummary.self) {
+            XCTAssertEqual($0.worst, .bad); XCTAssertEqual($0.clusters.first?.topFinding?.track, "nodes")
+        },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh

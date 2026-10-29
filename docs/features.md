@@ -313,7 +313,7 @@ Part of the [Ichor documentation](../README.md#documentation).
   data services, activity, search, settings) beside the screen open in the detail column.
   On an iPhone the app stays in portrait, except logs, shells, charts, YAML, diffs and the
   KubeSpan map, which rotate to landscape.
-- **Background:** alerts and a home-screen widget. Alerts are off until you turn them on: after the first real cluster is added, the home offers them once and asks for the notification permission there. The findings of the plugins the cluster runs
+- **Background:** alerts, a home-screen widget and a fleet screen with every cluster's last check, worst first. Alerts are off until you turn them on: after the first real cluster is added, the home offers them once and asks for the notification permission there. The findings of the plugins the cluster runs
   (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify
   like the data services' problems, in the app's language, and clear when they go away
   ([docs/plugins.md](plugins.md#findings)).
@@ -385,6 +385,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   with "Search clusters" and "Run a checkup" on Android). The cluster menu (tap the title; on
   iOS also ⋯ → Cluster) is grouped: switch or manage the clusters, operate this one (upgrades,
   add a node, runbooks), then share it (incident summary, link).
+- **All clusters:** every cluster's last background check on one list, worst first (down or
+  critical, degraded, not checked lately, fine): its ready nodes, the critical and warning
+  counts, the one thing that is wrong and how old the check is. Opening it calls no cluster;
+  "Check every cluster now" runs one. A tap switches to that cluster. From the cluster title
+  menu, the top of the cluster list, the tablet rail and the iPad sidebar; the demo shows a
+  made-up fleet, and screenshot mode shows the masked names and no alert or app name.
 - **Search clusters:** every cluster's last-known nodes, pods, workloads, CronJobs and GitOps
   apps, and every screen of the cluster on screen: type "upgrade", "etcd", "alert set" or a
   node's name and "hard" to open it. With nothing typed it lists the nodes, workloads and
