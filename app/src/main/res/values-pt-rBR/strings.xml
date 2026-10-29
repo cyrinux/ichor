@@ -160,7 +160,7 @@
     <string name="overview_support_later">Agora não</string>
     <string name="overview_support_sponsor">Patrocinar</string>
     <string name="overview_swipe_live">Ao vivo</string>
-    <string name="overview_swipe_actions">Ações</string>
+    <string name="row_actions">Ações</string>
     <string name="overview_action_live_graphs">Gráficos ao vivo</string>
     <string name="overview_action_services_logs">Serviços e logs</string>
     <string name="overview_action_kernel_log">Log do kernel</string>

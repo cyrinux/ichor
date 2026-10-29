@@ -3,15 +3,9 @@ package name.levis.ichor.ui.overview
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
@@ -29,25 +23,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.WolTarget
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.support
+import name.levis.ichor.ui.components.QuickActionRow
+import name.levis.ichor.ui.components.RowAction
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.components.text
@@ -58,9 +47,9 @@ enum class NodeAction { LIVE, SERVICES, KERNEL_LOG, REBOOT, SHUTDOWN, SHELL, DRA
 
 /**
  * Swipe right: the node's live graphs. Swipe left (or long-press the card): the action sheet.
- * The card always springs back; nothing runs on the swipe itself.
+ * The card always springs back; nothing runs on the swipe itself. The row's [content] keeps
+ * its own tap, long press and TalkBack actions.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeableNode(
     node: NodeOverview,
@@ -68,39 +57,15 @@ fun SwipeableNode(
     onMore: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val state = rememberSwipeToDismissBoxState()
-    val scope = rememberCoroutineScope()
-    SwipeToDismissBox(
-        state = state,
-        enableDismissFromStartToEnd = node.reachable, // no live data from an unreachable node
-        onDismiss = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> onLive()
-                SwipeToDismissBoxValue.EndToStart -> onMore()
-                SwipeToDismissBoxValue.Settled -> Unit
-            }
-            scope.launch { state.reset() } // spring back
-        },
-        backgroundContent = {
-            val toLive = state.dismissDirection == SwipeToDismissBoxValue.StartToEnd
-            Row(
-                Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(horizontal = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = if (toLive) Arrangement.Start else Arrangement.End,
-            ) {
-                val (icon, label) = if (toLive) {
-                    Icons.AutoMirrored.Outlined.ShowChart to stringResource(R.string.overview_swipe_live)
-                } else {
-                    Icons.Outlined.MoreHoriz to stringResource(R.string.overview_swipe_actions)
-                }
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-                Spacer(Modifier.width(8.dp))
-                Text(label, color = MaterialTheme.colorScheme.onSecondaryContainer)
-            }
-        },
-    ) { content() }
+    QuickActionRow(
+        // No live data from an unreachable node.
+        leading = RowAction(Icons.AutoMirrored.Outlined.ShowChart, stringResource(R.string.overview_swipe_live), onLive, enabled = node.reachable),
+        trailing = RowAction(Icons.Outlined.MoreHoriz, stringResource(R.string.row_actions), onMore),
+        menu = emptyList(),
+        onClick = null,
+        shape = RoundedCornerShape(12.dp),
+        content = content,
+    )
 }
 
 /** How the actions sheet offers Wake-on-LAN for a node; null when it does not (screenshot mode). */
