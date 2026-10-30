@@ -479,6 +479,9 @@
     <string name="settings_theme_light">Clair</string>
     <string name="settings_theme_dark">Sombre</string>
     <string name="settings_theme_black">Noir</string>
+    <string name="settings_ui_style">Style de l\'interface</string>
+    <string name="settings_ui_style_desc">Comment les cartes, barres et boutons sont dessinés</string>
+    <string name="settings_ui_style_material3">Material 3</string>
     <string name="settings_language">Langue</string>
     <string name="settings_language_system">Langue du système</string>
     <string name="settings_live_cluster_stats">Utilisation du cluster en direct</string>
@@ -532,7 +535,7 @@
     <string name="settings_delete_backup_first">Sauvegarder d’abord</string>
 
     <string name="settings_section_clusters">Clusters et sauvegarde</string>
-    <string name="settings_page_appearance_summary">Thème, langue, utilisation en direct</string>
+    <string name="settings_page_appearance_summary">Thème, style, langue, utilisation en direct</string>
     <string name="settings_page_security_summary">Verrouillage de l’app, clés de sécurité</string>
     <string name="settings_page_privacy_summary">Mode capture d’écran, événements du cluster, icônes d’apps, dernier état connu</string>
     <string name="settings_page_alerts_summary">Vérifications en arrière-plan, surveillances, seuils</string>

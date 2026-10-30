@@ -445,6 +445,9 @@
     <string name="settings_theme_light">浅色</string>
     <string name="settings_theme_dark">深色</string>
     <string name="settings_theme_black">纯黑</string>
+    <string name="settings_ui_style">界面样式</string>
+    <string name="settings_ui_style_desc">卡片、栏和按钮的绘制方式</string>
+    <string name="settings_ui_style_material3">Material 3</string>
     <string name="settings_language">语言</string>
     <string name="settings_language_system">系统默认</string>
     <string name="settings_live_cluster_stats">实时集群用量</string>
@@ -498,7 +501,7 @@
     <string name="settings_delete_backup_first">先备份</string>
 
     <string name="settings_section_clusters">集群和备份</string>
-    <string name="settings_page_appearance_summary">主题、语言、实时用量</string>
+    <string name="settings_page_appearance_summary">主题、样式、语言、实时用量</string>
     <string name="settings_page_security_summary">应用锁、安全密钥</string>
     <string name="settings_page_privacy_summary">截图模式、集群事件、应用图标、上次已知状态</string>
     <string name="settings_page_alerts_summary">后台检查、监视、阈值</string>

@@ -479,6 +479,9 @@
     <string name="settings_theme_light">Claro</string>
     <string name="settings_theme_dark">Oscuro</string>
     <string name="settings_theme_black">Negro</string>
+    <string name="settings_ui_style">Estilo de interfaz</string>
+    <string name="settings_ui_style_desc">Cómo se dibujan las tarjetas, barras y botones</string>
+    <string name="settings_ui_style_material3">Material 3</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_language_system">Predeterminado del sistema</string>
     <string name="settings_live_cluster_stats">Uso del clúster en directo</string>
@@ -532,7 +535,7 @@
     <string name="settings_delete_backup_first">Hacer una copia primero</string>
 
     <string name="settings_section_clusters">Clústeres y copia de seguridad</string>
-    <string name="settings_page_appearance_summary">Tema, idioma, uso en directo</string>
+    <string name="settings_page_appearance_summary">Tema, estilo, idioma, uso en directo</string>
     <string name="settings_page_security_summary">Bloqueo de la app, llaves de seguridad</string>
     <string name="settings_page_privacy_summary">Modo captura, eventos del clúster, iconos de apps, último estado conocido</string>
     <string name="settings_page_alerts_summary">Comprobaciones en segundo plano, vigilancias, umbrales</string>

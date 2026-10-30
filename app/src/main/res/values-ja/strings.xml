@@ -445,6 +445,9 @@
     <string name="settings_theme_light">ライト</string>
     <string name="settings_theme_dark">ダーク</string>
     <string name="settings_theme_black">ブラック</string>
+    <string name="settings_ui_style">UI スタイル</string>
+    <string name="settings_ui_style_desc">カード、バー、ボタンの描画方法</string>
+    <string name="settings_ui_style_material3">Material 3</string>
     <string name="settings_language">言語</string>
     <string name="settings_language_system">システムのデフォルト</string>
     <string name="settings_live_cluster_stats">クラスターのライブ使用量</string>
@@ -498,7 +501,7 @@
     <string name="settings_delete_backup_first">先にバックアップ</string>
 
     <string name="settings_section_clusters">クラスターとバックアップ</string>
-    <string name="settings_page_appearance_summary">テーマ、言語、ライブ使用量</string>
+    <string name="settings_page_appearance_summary">テーマ、スタイル、言語、ライブ使用量</string>
     <string name="settings_page_security_summary">アプリのロック、セキュリティキー</string>
     <string name="settings_page_privacy_summary">スクリーンショットモード、クラスターのイベント、アプリアイコン、最後に確認した状態</string>
     <string name="settings_page_alerts_summary">バックグラウンドチェック、監視、しきい値</string>
