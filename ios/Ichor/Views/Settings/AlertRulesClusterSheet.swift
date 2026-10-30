@@ -68,7 +68,7 @@ struct AlertRulesClusterSheet: View {
     }
 }
 
-/// A cluster's three overrides, each with an "As default" choice.
+/// A cluster's four overrides, each with an "As default" choice.
 private struct ClusterRuleEditor: View {
     let rule: AlertRule
     let onChange: (AlertRule) -> Void
@@ -118,6 +118,15 @@ private struct ClusterRuleEditor: View {
         ) { index in
             var next = rule
             next.digest = index == 0 ? nil : index == 2
+            onChange(next)
+        }
+        RuleSegments(
+            title: String(localized: "Repeat critical alerts every"),
+            labels: [asDefault] + alertRepeatChoices.map(alertRepeatLabel),
+            selected: rule.repeatMinutes.flatMap { alertRepeatChoices.firstIndex(of: $0) }.map { $0 + 1 } ?? 0
+        ) { index in
+            var next = rule
+            next.repeatMinutes = index == 0 ? nil : alertRepeatChoices[index - 1]
             onChange(next)
         }
     }

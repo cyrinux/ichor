@@ -113,10 +113,15 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         let action = response.actionIdentifier
         let cluster = content.userInfo[AlertNotificationActions.clusterKey] as? String ?? ""
         let alertKey = content.userInfo[AlertNotificationActions.alertKey] as? String ?? identifier
-        // Snooze and Wake: in the background, the app stays closed.
+        // Snooze, Acknowledge and Wake: in the background, the app stays closed.
         if let hours = snoozeHours(actionID: action) {
             AlertNotificationActions.snooze(
                 hours: hours, cluster: cluster, alertKey: alertKey, notification: identifier)
+            return
+        }
+        // Acknowledge: the alert stops repeating, its notification stays.
+        if action == AlertAction.acknowledge.rawValue {
+            AlertAckStore.acknowledge(cluster: cluster, alertKey: alertKey)
             return
         }
         if action == AlertAction.wake.rawValue {

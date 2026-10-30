@@ -1,9 +1,10 @@
 import SwiftUI
 import IchorCore
 
-/// The "Rules" group of the background alerts: quiet hours, the minimum severity and the digest
-/// by default, and a "Per cluster" row for the overrides (AlertRulesClusterSheet), as Android's
-/// AlertRulesGroup. Read at each check: nothing to confirm, nothing destructive.
+/// The "Rules" group of the background alerts: quiet hours, the minimum severity, the digest and
+/// the repeat of critical alerts by default, and a "Per cluster" row for the overrides
+/// (AlertRulesClusterSheet), as Android's AlertRulesGroup. Read at each check: nothing to
+/// confirm, nothing destructive.
 struct AlertRulesSection: View {
     @Environment(AppModel.self) private var model
     /// The background alerts are on (MonitoringSection's switch).
@@ -39,6 +40,21 @@ struct AlertRulesSection: View {
                 isOn: rule.digest == true
             ) { on in
                 update { $0.digest = on ? true : nil }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                RuleSegments(
+                    title: String(localized: "Repeat critical alerts every"),
+                    labels: alertRepeatChoices.map(alertRepeatLabel),
+                    selected: alertRepeatChoices.firstIndex(of: rule.repeatMinutes ?? 0) ?? 0
+                ) { index in
+                    let minutes = alertRepeatChoices[index]
+                    update { $0.repeatMinutes = minutes > 0 ? minutes : nil }
+                }
+                Text(
+                    "Until acknowledged or snoozed; iOS checks every 15 min at most, so 5 min means each check."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             Button {
                 perCluster = true

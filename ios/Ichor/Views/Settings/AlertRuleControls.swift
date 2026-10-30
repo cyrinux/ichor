@@ -14,6 +14,11 @@ func alertSeverityLabel(_ severity: String) -> String {
     }
 }
 
+/// "Off" for 0, else "15 min": a repeat choice.
+func alertRepeatLabel(_ minutes: Int) -> String {
+    minutes <= 0 ? String(localized: "Off") : String(localized: "\(minutes) min")
+}
+
 /// "Phone's (Europe/Paris)" for "", else the zone itself.
 func alertZoneLabel(_ zone: String) -> String {
     let phone = TimeZone.current.identifier
