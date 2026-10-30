@@ -290,7 +290,7 @@ func ControlPlaneReplaceRemove(configYAML, contextName, memberID string) (err er
 		return errDemoUnavailable
 	}
 
-	_, err = withSession(configYAML, contextName, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
+	_, err = withSessionFrom(context.Background(), configYAML, contextName, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
 		cps, err := s.controlPlanes(ctx)
 		if err != nil {
 			return struct{}{}, err

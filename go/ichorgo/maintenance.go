@@ -198,7 +198,7 @@ func KubeCordon(configYAML, contextName, kubeServer, node string, on bool) (err 
 		return errDemoUnavailable
 	}
 
-	kubeNode, err := withNodeSession(configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
+	kubeNode, err := withNodeSessionFrom(context.Background(), configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
 		return kubeNodeNameOf(nodeCtx, s.client)
 	})
 	if err != nil {
@@ -232,6 +232,8 @@ func StartNodeMaintenance(configYAML, contextName, kubeServer, node, action stri
 	}
 
 	return runMaintenance(listener, func(ctx context.Context) error {
+		defer holdCalls(configYAML, contextName)()
+
 		return recordedRun(configYAML, contextName, func() auditAction {
 			return auditAction{Action: "maintenance-" + m.action, Node: node, Params: fmt.Sprintf("include-bare=%t", includeBare)}
 		}, func() error { return m.run(ctx) })

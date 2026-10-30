@@ -6,6 +6,7 @@ import IchorCore
 /// (K8sUpgradeRunView), which goes on when leaving the screen.
 struct K8sUpgradePlanView: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var choice: LoadState<K8sVersionChoice> = .loading
     @State private var version = ""
     @State private var typed = ""
@@ -206,7 +207,7 @@ struct K8sUpgradePlanView: View {
     /// first when the app lock is on.
     private func start(dryRun: Bool) async {
         message = nil
-        if !dryRun, model.lock.enabled,
+        if !dryRun, lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(
                 reason: String(localized: "Upgrade Kubernetes on \(cluster)"))
         {

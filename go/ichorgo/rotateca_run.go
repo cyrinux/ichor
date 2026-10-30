@@ -147,6 +147,7 @@ func StartTalosCARotation(configYAML, contextName string, listener TalosCARotati
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		var err error
 

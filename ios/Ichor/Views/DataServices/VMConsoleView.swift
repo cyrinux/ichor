@@ -9,6 +9,7 @@ struct VMConsoleView: View {
     let name: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var shell = DebugShell()
     @State private var error: String?
 
@@ -63,7 +64,7 @@ struct VMConsoleView: View {
     /// The console may sit at a logged-in shell: with the app lock on, it asks like a pod's.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Serial console of \(name)"))
         {
             error = failure

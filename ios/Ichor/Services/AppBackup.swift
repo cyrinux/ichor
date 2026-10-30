@@ -202,8 +202,8 @@ enum AppBackup {
             remoteAppIcons: AppIconSettings.remoteEnabled
         )
         settings.liveClusterStats = LiveStatsSettings.enabled
-        let securityKey = model.securityKeys?.keys.isEmpty == false
-        settings.appLockMode = BackupLockMode(enabled: model.lock.enabled, securityKey: securityKey).rawValue
+        let securityKey = model.lockStore.securityKeys?.keys.isEmpty == false
+        settings.appLockMode = BackupLockMode(enabled: model.lockStore.lock.enabled, securityKey: securityKey).rawValue
         let thresholds = BackgroundMonitor.storageThresholds
         settings.storageWarnPercent = thresholds.warn
         settings.storageCriticalPercent = thresholds.crit

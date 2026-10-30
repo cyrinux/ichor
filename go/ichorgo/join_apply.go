@@ -145,6 +145,7 @@ func (j *nodeJoin) start(timeout time.Duration) *JoinRun {
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { j.listener.OnDone("", msg) })
+		defer holdCalls(j.config, j.context)()
 
 		err := recordedRun(j.config, j.context, j.auditAction, func() error { return j.run(ctx, timeout) })
 		if err != nil {

@@ -13,6 +13,8 @@ import name.levis.ichor.security.SecurityKeyRequiredException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -124,6 +126,9 @@ class ConfigRepository(
     }
 
     private val writes = Mutex()
+
+    // Lives as long as the repository (the process): a cancel must outlive the screen that switched.
+    private val switchCalls = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _config = MutableStateFlow<StoredConfig?>(null)
     val config: StateFlow<StoredConfig?> = _config.asStateFlow()
@@ -398,6 +403,15 @@ class ConfigRepository(
         if (current.summary.contexts.none { it.name == name }) return
         saveActive(current.summary, name)
         _config.value = current.copy(activeContext = name)
+        if (name != current.activeContext) cancelCallsOf(current, current.activeContext)
+    }
+
+    /** Ends the reads still under way on the cluster just left, so they stop holding threads and the network. */
+    private fun cancelCallsOf(stored: StoredConfig, context: String) {
+        switchCalls.launch {
+            // Best effort: reads left running only finish on their own, as they always did.
+            runCatching { Ichorgo.cancelCalls(stored.yamlFor(context), context) }
+        }
     }
 
     private fun saveActive(summary: ConfigSummary, name: String) =

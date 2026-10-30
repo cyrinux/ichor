@@ -88,6 +88,7 @@ func StartImagePull(configYAML, contextName, nodesCSV, image, namespace string, 
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		pulled := 0
 

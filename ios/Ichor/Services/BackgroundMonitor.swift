@@ -436,9 +436,17 @@ enum BackgroundMonitor {
         var overview: ClusterOverview?
         var kubeNodes: KubeNodesOverview?
         if context.isKube {
-            kubeNodes = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.kubeNodes() }
+            switch await firstRead(within: max(0, deadline.timeIntervalSinceNow), { try await client.kubeNodes() }) {
+            case .read(let nodes): kubeNodes = nodes
+            case .left: return .skipped
+            case .failed: break
+            }
         } else {
-            overview = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.overview() }
+            switch await firstRead(within: max(0, deadline.timeIntervalSinceNow), { try await client.overview() }) {
+            case .read(let read): overview = read
+            case .left: return .skipped
+            case .failed: break
+            }
         }
         guard overview != nil || kubeNodes != nil else { return Task.isCancelled ? .skipped : .unreachable }
         var etcd: EtcdOverview?
@@ -539,6 +547,29 @@ enum BackgroundMonitor {
                 sensorWatched: watchSensors, sensorIssues: sensorIssues,
                 pluginWatched: watchPlugins, pluginIssues: pluginIssues),
             extras)
+    }
+
+    /// How a check's first read ended: `left` when the switch away from this cluster cut it,
+    /// which says nothing of the cluster.
+    private enum FirstRead<T: Sendable>: Sendable {
+        case read(T)
+        case left
+        case failed
+    }
+
+    private static func firstRead<T: Sendable>(
+        within seconds: TimeInterval, _ work: @escaping @Sendable () async throws -> T
+    ) async -> FirstRead<T> {
+        let ended = await withDeadline(seconds) { () async -> FirstRead<T>? in
+            do {
+                return .read(try await work())
+            } catch is CancellationError {
+                return .left
+            } catch {
+                return .failed
+            }
+        }
+        return ended ?? .failed
     }
 
     /// `work` within `seconds` when `on`; nil when off, failed or too slow.

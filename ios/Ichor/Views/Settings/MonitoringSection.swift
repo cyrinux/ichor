@@ -2,7 +2,7 @@ import SwiftUI
 import IchorCore
 
 struct MonitoringSection: View {
-    @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var enabled = BackgroundMonitor.alertsEnabled
     @State private var dataWatched = BackgroundMonitor.dataServicesWatched
     @State private var importedPlugins = BackgroundMonitor.importedPluginAlerts
@@ -244,7 +244,7 @@ struct MonitoringSection: View {
                     "Each check covers every cluster. To leave one out, turn off Watch in the background in its menu under Clusters."
                 )
                 // The sealed configs cannot be read in the background after iOS closed the app.
-                if model.requiresKey {
+                if lockStore.requiresKey {
                     Text(
                         "A security key is required: alerts and the widget pause when iOS has closed Ichor, until you unlock it again."
                     )

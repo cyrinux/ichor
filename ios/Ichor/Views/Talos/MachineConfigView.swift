@@ -31,6 +31,7 @@ struct MachineConfigView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @AppStorage("machineConfig.tab") private var tab = ConfigTab.pretty
     @State private var state: LoadState<String> = .loading
     @State private var reveal = false
@@ -290,7 +291,7 @@ struct MachineConfigView: View {
     /// Revealing needs a fresh Face ID / passcode when the app lock is on; hiding re-fetches
     /// the redacted config so the secrets leave memory and screen.
     private func setReveal(_ on: Bool) async {
-        if on, model.lock.enabled,
+        if on, lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(
                 reason: String(localized: "Reveal the secrets of \(hostname)"))
         {

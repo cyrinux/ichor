@@ -90,6 +90,7 @@ func StartEtcdRecover(
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		req := recoverRequest{node: strings.TrimSpace(node), path: snapshotPath, identity: identity, passphrase: passphrase, skipHashCheck: skipHashCheck}
 		digest := ""

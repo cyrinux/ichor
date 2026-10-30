@@ -11,6 +11,7 @@ struct MaintenanceView: View {
     var drainOnly = false
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var plan: LoadState<MaintenancePlan> = .loading
     @State private var action = MaintenanceAction.reboot
     @State private var includeBare = false
@@ -254,7 +255,7 @@ struct MaintenanceView: View {
     /// App lock first (like reboot), then the typed hostname.
     private func requestStart() async {
         message = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Maintenance of \(hostname)"))
         {
             message = failure

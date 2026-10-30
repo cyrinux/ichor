@@ -123,7 +123,7 @@ enum OperationActivities {
         }
     }
 
-    // The setting AppModel keeps (Keys.lock).
+    // The setting LockStore keeps (Keys.enabled).
     private static var lockEnabled: Bool { UserDefaults.standard.bool(forKey: "appLockEnabled") }
     /// The screenshot mode (SettingsStore.setPrivacyMask): no node or cluster name shown either.
     private static var screenshotMode: Bool { UserDefaults.standard.bool(forKey: PrivacyKeys.enabled) }

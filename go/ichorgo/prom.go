@@ -170,9 +170,22 @@ func promSend(target kubeTarget, src promSource, method, pathQuery string, body 
 		return promHTTPDo(ctx, src, method, src.URL+pathQuery, promHeader(src), body)
 	}
 
-	a, err := withKube(target, func(ctx context.Context, k *kubeClient) (promProxyAnswer, error) {
+	call := func(ctx context.Context, k *kubeClient) (promProxyAnswer, error) {
 		return promProxyCall(ctx, k, src, method, pathQuery, body)
-	})
+	}
+
+	var (
+		a   promProxyAnswer
+		err error
+	)
+
+	// Only a read is ended by CancelCalls: a silence being created still lands.
+	if method == http.MethodGet {
+		a, err = withKube(target, call)
+	} else {
+		a, err = withKubeFrom(context.Background(), target, call)
+	}
+
 	if err != nil {
 		return 0, nil, err
 	}

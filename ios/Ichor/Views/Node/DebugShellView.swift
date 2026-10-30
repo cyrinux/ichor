@@ -15,6 +15,7 @@ struct DebugShellView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @AppStorage("debug.image") private var image = "nicolaka/netshoot:latest"
     @AppStorage("debug.args") private var args = "/bin/sh"
     @State private var shell = DebugShell()
@@ -88,7 +89,7 @@ struct DebugShellView: View {
     /// With the app lock on, a privileged shell needs a fresh Face ID / passcode, like reboot.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Debug shell on \(hostname)"))
         {
             error = failure

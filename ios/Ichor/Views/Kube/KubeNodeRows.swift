@@ -171,6 +171,7 @@ private struct KubeCordonDialogs: ViewModifier {
     let reload: () async -> Void
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var message: String?
 
     func body(content: Content) -> some View {
@@ -199,7 +200,7 @@ private struct KubeCordonDialogs: ViewModifier {
     private func cordon(_ node: KubeNodeInfo, on: Bool) async {
         guard let client = model.client else { return }
         let title = on ? String(localized: "Cordon \(node.name)") : String(localized: "Uncordon \(node.name)")
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: title) {
+        if lockStore.lock.enabled, let failure = await Authenticator.authenticate(reason: title) {
             message = failure
             return
         }

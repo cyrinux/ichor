@@ -50,7 +50,9 @@ an issue first so we can agree on the approach before you spend time on it.
   state goes behind `Locked` (`Sources/IchorCore/Locked.swift`), the package's one
   `@unchecked Sendable`; a new `@unchecked Sendable` needs a comment saying why it is safe.
 - On iOS, preferences live in `SettingsStore` (`ios/Ichor/App/SettingsStore.swift`, in the
-  environment next to the model); cluster state lives in `AppModel`, which is being split further.
+  environment next to the model), the app lock and its security keys in `LockStore`
+  (`ios/Ichor/App/LockStore.swift`, likewise); cluster state lives in `AppModel`, which is being
+  split further.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app
   (GPL, AGPL, LGPL for statically linked code); ask in the issue first if unsure.
@@ -70,6 +72,12 @@ wrappers). New Kubernetes domain logic goes in `go/kube/<domain>`, with `go/kube
 worked example: its tests answer from the fake API in `go/kube/kubetest` and do not import the
 facade, whose functions come down to demo check, funnel, a call to `helm`, mask and audit, JSON.
 One domain moves per pull request; see `go/kube/helm/doc.go`.
+
+Every synchronous read funnel (`withKube`, `withSession`, `withNodeSession`) derives from the
+cluster's `callParent`, and the apps call `CancelCalls` when they switch cluster. Mutations
+keep a background parent (`kubeMutate`, `nodeAction`, the `*From` variants). A followed run
+holds its cluster's scope (`defer holdCalls(…)()` after `onPanic`, guarded by
+`callscope_guard_test.go`); screen-bound streams are listed in `screenBoundRuns`.
 
 ## Facade contract
 

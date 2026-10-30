@@ -7,6 +7,7 @@ struct NodeDetailView: View {
     let ref: NodeRef
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(\.dismiss) private var dismiss
     @State private var powerAction: PowerAction?
     @State private var running = false
@@ -180,7 +181,7 @@ struct NodeDetailView: View {
     /// `talosctl reset`, after the app lock when it is on; the screen closes once requested.
     private func performReset(_ request: NodeResetSheet.Request) async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(ref.hostname)"))
         {
             succeeded = false
@@ -202,7 +203,7 @@ struct NodeDetailView: View {
 
     private func perform(_ request: PowerRequest) async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: "\(request.localizedTitle) \(ref.hostname)")
         {
             succeeded = false
@@ -232,7 +233,7 @@ extension NodeDetailView {
     private func cordon(_ on: Bool) async {
         guard let client = model.client else { return }
         let title = on ? String(localized: "Cordon \(ref.hostname)") : String(localized: "Uncordon \(ref.hostname)")
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: title) {
+        if lockStore.lock.enabled, let failure = await Authenticator.authenticate(reason: title) {
             succeeded = false
             resultMessage = failure
             return

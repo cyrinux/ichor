@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 /// kept on the phone, then share it, save it to Files or delete it.
 struct SupportBundleView: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var nodes: LoadState<[NodeOverview]> = .loading
     @State private var selected: Set<String> = []
     @State private var job = SupportBundleJob()
@@ -197,7 +198,7 @@ struct SupportBundleView: View {
     private func start(_ all: [String]) async {
         guard let client = model.client else { return }
         message = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Create a support bundle"))
         {
             message = failure
