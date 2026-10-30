@@ -239,8 +239,8 @@ private func writeSharedReport(_ content: String, name: String) throws -> URL {
     return url
 }
 
-/// The system share sheet for `items`.
-private struct ActivityView: UIViewControllerRepresentable {
+/// The system share sheet for `items` (also the cloud user data's, shown after a confirmation).
+struct ActivityView: UIViewControllerRepresentable {
     let items: [Any]
 
     func makeUIViewController(context: Context) -> UIActivityViewController {

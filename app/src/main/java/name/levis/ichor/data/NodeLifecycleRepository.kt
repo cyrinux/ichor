@@ -8,6 +8,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.BootMedia
 import name.levis.ichor.model.CARotationPlan
 import name.levis.ichor.model.CARotationProgress
+import name.levis.ichor.model.CloudUserData
 import name.levis.ichor.model.ClusterUpgradeCommand
 import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.CpReplacePlan
@@ -254,6 +255,19 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     suspend fun nodeBootMedia(template: String, arch: String, secureBoot: Boolean): BootMedia = call { cfg, ctx ->
         TalosJson.decodeFromString(BootMedia.serializer(), Ichorgo.nodeBootMedia(cfg, ctx, template, arch, secureBoot))
     }
+
+    /**
+     * The user data of a new node on a cloud host and the Talos cloud images to create it from:
+     * Omni's join config on Omni (the other arguments are not used), else a new member's full
+     * config made from [template]'s. Never cached: it carries a credential.
+     */
+    suspend fun nodeCloudUserData(template: String, role: String, hostname: String, installDisk: String, extraEditsJson: String = ""): CloudUserData =
+        call { cfg, ctx ->
+            TalosJson.decodeFromString(
+                CloudUserData.serializer(),
+                Ichorgo.nodeCloudUserData(cfg, ctx, template, role, hostname, installDisk, extraEditsJson),
+            )
+        }
 
     /** A new node's config from [template]'s, redacted (never cached; the full one only goes to the node). */
     suspend fun joinNodeConfigPreview(template: String, role: String, hostname: String, installDisk: String, staticAddress: String): JoinConfigPreview =
