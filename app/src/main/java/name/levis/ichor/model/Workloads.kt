@@ -88,6 +88,8 @@ data class KubeRolloutStatus(
     val failed: Boolean = false,
     /** Pods are only replaced when deleted (OnDelete, StatefulSet partition): a restart replaces none. */
     val manual: Boolean = false,
+    /** A Deployment whose rollout is paused (`kubectl rollout pause`): a template change waits for the resume. */
+    val paused: Boolean = false,
     /** The new pods first, the newest first. */
     val pods: List<KubeRolloutPod> = emptyList(),
 )

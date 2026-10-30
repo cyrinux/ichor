@@ -26,7 +26,7 @@ import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubePodPage
-import name.levis.ichor.model.KubeRevision
+import name.levis.ichor.model.KubeRevisionDiff
 import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeRoute
@@ -166,14 +166,33 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         Ichorgo.kubeScale(cfg, ctx, server, workload.kind, workload.namespace, workload.name, replicas.toLong())
     }
 
-    /** `kubectl rollout history deployment/NAME -n NAMESPACE`, newest first (os:admin). Never cached. */
-    suspend fun deploymentRevisions(workload: KubeWorkload): List<KubeRevision> = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubeRevisionList.serializer(), Ichorgo.kubeDeploymentRevisions(cfg, ctx, server, workload.namespace, workload.name)).revisions
+    /**
+     * `kubectl rollout history KIND/NAME -n NAMESPACE` of a Deployment, StatefulSet or
+     * DaemonSet, newest first (os:admin). Never cached.
+     */
+    suspend fun workloadRevisions(workload: KubeWorkload): KubeRevisionList = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(
+            KubeRevisionList.serializer(),
+            Ichorgo.kubeWorkloadRevisions(cfg, ctx, server, workload.kind, workload.namespace, workload.name),
+        )
     }
 
-    /** `kubectl rollout undo deployment/NAME --to-revision=N -n NAMESPACE` (os:admin). */
-    suspend fun rollbackDeployment(workload: KubeWorkload, revision: Int) = go.kube { cfg, ctx, server ->
-        Ichorgo.kubeRollbackDeployment(cfg, ctx, server, workload.namespace, workload.name, revision.toLong())
+    /** The pod template diff from what [workload] runs now to [revision]: what a rollback to it undoes. */
+    suspend fun revisionDiff(workload: KubeWorkload, revision: Int): KubeRevisionDiff = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(
+            KubeRevisionDiff.serializer(),
+            Ichorgo.kubeRevisionDiff(cfg, ctx, server, workload.kind, workload.namespace, workload.name, revision.toLong()),
+        )
+    }
+
+    /** `kubectl rollout undo KIND/NAME --to-revision=N -n NAMESPACE` (os:admin). */
+    suspend fun rollbackWorkload(workload: KubeWorkload, revision: Int) = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeRollbackWorkload(cfg, ctx, server, workload.kind, workload.namespace, workload.name, revision.toLong())
+    }
+
+    /** `kubectl rollout pause|resume deployment/NAME -n NAMESPACE` (os:admin). */
+    suspend fun pauseRollout(workload: KubeWorkload, paused: Boolean) = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeRolloutPause(cfg, ctx, server, workload.namespace, workload.name, paused)
     }
 
     /** CronJobs with their recent runs through the Kubernetes API (os:admin). */

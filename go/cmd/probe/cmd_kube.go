@@ -321,25 +321,28 @@ var kubeCommands = []command{
 	}},
 	{name: "suspend-cronjob", args: "NAMESPACE NAME", run: runSuspendCronjob},
 	{name: "resume-cronjob", args: "NAMESPACE NAME", run: runSuspendCronjob},
-	{name: "revisions", args: "NAMESPACE NAME", run: func(e env) (out string, err error) {
-		out, err = ichorgo.KubeDeploymentRevisions(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	{name: "revisions", args: "KIND NAMESPACE NAME", run: func(e env) (out string, err error) {
+		// revisions Deployment|StatefulSet|DaemonSet NAMESPACE NAME
+		out, err = ichorgo.KubeWorkloadRevisions(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
 
 		return out, err
 	}},
-	{name: "rollback", args: "NAMESPACE NAME REVISION", run: func(e env) (out string, err error) {
-		// rollback NAMESPACE DEPLOYMENT REVISION
-		revision, convErr := strconv.Atoi(flag.Arg(3))
-		if convErr != nil {
-			fmt.Fprintf(os.Stderr, "rollback: revision %q is not a number\n", flag.Arg(3))
-			os.Exit(2)
-		}
+	{name: "revision-diff", args: "KIND NAMESPACE NAME REVISION", run: func(e env) (out string, err error) {
+		// revision-diff KIND NAMESPACE NAME REVISION: what a rollback to REVISION would undo.
+		out, err = ichorgo.KubeRevisionDiff(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), probeRevision(4))
 
-		if err = ichorgo.KubeRollbackDeployment(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision); err == nil {
+		return out, err
+	}},
+	{name: "rollback", args: "KIND NAMESPACE NAME REVISION", run: func(e env) (out string, err error) {
+		// rollback KIND NAMESPACE NAME REVISION
+		if err = ichorgo.KubeRollbackWorkload(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), probeRevision(4)); err == nil {
 			out = "rolled back"
 		}
 
 		return out, err
 	}},
+	{name: "rollout-pause", args: "NAMESPACE DEPLOYMENT", run: runRolloutPause},
+	{name: "rollout-resume", args: "NAMESPACE DEPLOYMENT", run: runRolloutPause},
 	{name: "pod-logs", args: "NAMESPACE POD [CONTAINER] [previous]", run: func(e env) (out string, err error) {
 		// pod-logs NAMESPACE POD [CONTAINER] (previous run with -previous via the 4th arg "previous")
 		out, err = ichorgo.KubePodLogs(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4) == "previous", 50)
@@ -671,4 +674,25 @@ func helmRevisionArg(arg string) (int, error) {
 	}
 
 	return revision, nil
+}
+
+// probeRevision is the revision number of argument i; a typo stops the probe.
+func probeRevision(i int) int {
+	revision, err := strconv.Atoi(flag.Arg(i))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "revision %q is not a number\n", flag.Arg(i))
+		os.Exit(2)
+	}
+
+	return revision
+}
+
+// runRolloutPause: rollout-pause|rollout-resume NAMESPACE DEPLOYMENT.
+func runRolloutPause(e env) (out string, err error) {
+	paused := e.cmd == "rollout-pause"
+	if err = ichorgo.KubeRolloutPause(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), paused); err == nil {
+		out = map[bool]string{true: "paused", false: "resumed"}[paused]
+	}
+
+	return out, err
 }

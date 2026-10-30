@@ -100,6 +100,7 @@ func TestActionAccessAsksEachKindsOwnResource(t *testing.T) {
 		"restartDaemonSet":            "patch daemonsets.apps",
 		"scale":                       "patch deployments.apps/scale",
 		"scaleStatefulSet":            "patch statefulsets.apps/scale",
+		"pauseRollout":                "patch deployments.apps",
 		"fluxReconcile":               "patch kustomizations.kustomize.toolkit.fluxcd.io",
 		"fluxReconcileHelmRelease":    "patch helmreleases.helm.toolkit.fluxcd.io",
 		"fluxReconcileGitRepository":  "patch gitrepositories.source.toolkit.fluxcd.io",
@@ -133,6 +134,16 @@ func TestActionAccessAsksEachKindsOwnResource(t *testing.T) {
 	for _, sk := range fluxSourceKinds {
 		if _, ok := kubeActionChecks["fluxReconcile"+sk.kind]; !ok {
 			t.Errorf("no check for %s", sk.kind)
+		}
+	}
+}
+
+func TestRollbackAccessReadsControllerRevisions(t *testing.T) {
+	for name, resource := range map[string]string{"rollbackStatefulSet": "statefulsets", "rollbackDaemonSet": "daemonsets"} {
+		needs := kubeActionChecks[name]
+		if len(needs) != 2 || needs[0].attrs.Verb != "patch" || needs[0].attrs.Resource != resource || needs[0].attrs.Group != "apps" ||
+			needs[1].attrs.Verb != "list" || needs[1].attrs.Resource != "controllerrevisions" || !needs[0].namespaced || !needs[1].namespaced {
+			t.Errorf("%s: %+v", name, needs)
 		}
 	}
 }

@@ -12,6 +12,11 @@ enum class KubeAction(val wire: String) {
     RESTART_DAEMON_SET("restartDaemonSet"),
     SCALE("scale"),
     SCALE_STATEFUL_SET("scaleStatefulSet"),
+    /** A StatefulSet's or DaemonSet's rollback: patch it, list its ControllerRevisions. */
+    ROLLBACK_STATEFUL_SET("rollbackStatefulSet"),
+    ROLLBACK_DAEMON_SET("rollbackDaemonSet"),
+    /** Pause or resume a Deployment's rollout. */
+    PAUSE_ROLLOUT("pauseRollout"),
     DELETE_POD("deletePod"),
     /** List and delete a namespace's dead pods at once (k9s sanitize). */
     SANITIZE_PODS("sanitizePods"),
@@ -79,6 +84,14 @@ enum class KubeAction(val wire: String) {
             "Deployment" -> RESTART_WORKLOAD
             "StatefulSet" -> RESTART_STATEFUL_SET
             "DaemonSet" -> RESTART_DAEMON_SET
+            else -> null
+        }
+
+        /** A rollback of a [kind] workload: a Deployment's is its restart's patch. */
+        fun rollback(kind: String): KubeAction? = when (kind) {
+            "Deployment" -> RESTART_WORKLOAD
+            "StatefulSet" -> ROLLBACK_STATEFUL_SET
+            "DaemonSet" -> ROLLBACK_DAEMON_SET
             else -> null
         }
 

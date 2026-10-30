@@ -46,6 +46,26 @@ time) and warns before scaling a workload or resuming a CronJob, since kube-gree
 replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster
 without kube-green shows nothing new.
 
+## Rollout history, undo and pause
+
+A workload's sheet lists its revisions, like `kubectl rollout history`, for Deployments (their
+ReplicaSets) as well as StatefulSets and DaemonSets (their ControllerRevisions): each with its
+images, age and change cause, the current one marked. Tapping an older revision opens what a
+rollback to it would undo: the images from → to on top, then the pod template diff (the live
+template against the revision's, masked like the YAML views in screenshot mode). **Roll back to
+revision N** asks for the workload's name typed, then replaces the pod template like
+`kubectl rollout undo --to-revision=N`, follows the rollout in the status sheet and records the
+action in the log. A StatefulSet or DaemonSet with `updateStrategy: OnDelete` takes the template
+but replaces no pod: the sheet says "pods update when deleted". The current revision has nothing
+to undo.
+
+A Deployment also has **Pause rollout** / **Resume rollout** next to Restart, like `kubectl
+rollout pause|resume`: while paused, a change to its template waits, the rollout status says
+"paused", and a restart or a rollback is refused until it resumes. The demo cluster lists sample
+revisions with a diff and refuses both actions. RBAC: `list` on `replicasets.apps` or
+`controllerrevisions.apps` for the history, `patch` on the kind for a rollback or a pause; a
+kubeconfig without it shows the refusal before the tap.
+
 **Kubernetes → Workloads → kube-green → a schedule → Edit schedule** moves it: the days, the sleep and
 wake-up times ("HH:mm", cron syntax kept) and the time zone the times are in, written with them
 so a time is never saved without its zone. "No wake-up" (sleep until changed by hand) is an

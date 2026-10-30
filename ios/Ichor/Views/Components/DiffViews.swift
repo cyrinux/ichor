@@ -211,5 +211,16 @@ struct DiffLinesView: View {
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(tinted ? style.tint.opacity(0.12) : Color.clear)
+        // VoiceOver says whether a line is added or removed, not "plus" or "minus".
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: spoken(line)))
+    }
+
+    private func spoken(_ line: DiffLine) -> String {
+        switch line.kind {
+        case .added: String(localized: "Added: \(line.text)")
+        case .removed: String(localized: "Removed: \(line.text)")
+        case .hunk, .context: line.text
+        }
     }
 }

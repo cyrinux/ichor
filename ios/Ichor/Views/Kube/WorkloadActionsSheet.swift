@@ -2,8 +2,9 @@ import SwiftUI
 import IchorCore
 
 /// A workload's actions beyond the restart (os:admin): scale a Deployment or StatefulSet like
-/// `kubectl scale`, and roll a Deployment back to a revision like `kubectl rollout undo`,
-/// then follow that rollout. `changed` refreshes the list behind.
+/// `kubectl scale`, pause or resume a Deployment's rollout, and roll a Deployment, StatefulSet
+/// or DaemonSet back to a revision like `kubectl rollout undo` after seeing its pod template
+/// diff, then follow that rollout. `changed` refreshes the list behind.
 struct WorkloadActionsSheet: View {
     let workload: KubeWorkload
     let changed: () async -> Void
@@ -16,9 +17,13 @@ struct WorkloadActionsSheet: View {
     @State private var scaling = false
     @State private var confirmScale = false
     @State private var confirmScaleToZero = false
-    @State private var revisions: LoadState<[DeploymentRevision]> = .loading
-    @State private var confirmRollback: DeploymentRevision?
+    @State private var revisions: LoadState<WorkloadRevisionList> = .loading
+    /// The revision whose diff and rollback are shown.
+    @State private var diffRevision: DeploymentRevision?
     @State private var rollingBack = false
+    @State private var pausing = false
+    /// The Deployment's rollout is paused: the workload's, then the last pause or resume's.
+    @State private var rolloutPaused: Bool
     /// Rolled back: its rollout is shown live.
     @State private var following: KubeWorkload?
     @State private var resultMessage: String?
@@ -34,6 +39,7 @@ struct WorkloadActionsSheet: View {
         self.changed = changed
         _replicas = State(initialValue: workload.desired)
         _current = State(initialValue: workload.desired)
+        _rolloutPaused = State(initialValue: workload.rolloutPaused)
     }
 
     var body: some View {
@@ -55,6 +61,7 @@ struct WorkloadActionsSheet: View {
                         }
                     }
                 }
+                if workload.canPauseRollout { pauseSection }
                 if workload.canScale { scaleSection }
                 if workload.hasHistory { historySection }
                 Section {
@@ -132,18 +139,15 @@ struct WorkloadActionsSheet: View {
                     Task { await scale() }
                 }
             }
-            .confirmationDialog(
-                confirmRollback.map { String(localized: "Roll back to revision \($0.revision)?") } ?? "",
-                isPresented: $confirmRollback.isPresent(),
-                titleVisibility: .visible,
-                presenting: confirmRollback
-            ) { revision in
-                Button("Roll back", role: .destructive) { Task { await rollback(to: revision) } }
-                Button("Cancel", role: .cancel) {}
-            } message: { revision in
-                Text(
-                    "\(workload.name) gets the pod template of revision \(revision.revision) back: its pods are replaced with a rolling update, like kubectl rollout undo."
-                )
+            .sheet(item: $diffRevision) { revision in
+                RevisionDiffSheet(
+                    workload: workload, revision: revision, history: loadedHistory ?? WorkloadRevisionList()
+                ) {
+                    // The diff sheet goes first: the rollout sheet follows once it is gone.
+                    diffRevision = nil
+                    try? await Task.sleep(for: .milliseconds(350))
+                    await rollback(to: revision)
+                }
             }
             .sheet(item: $following) { workload in
                 RolloutStatusSheet(workload: workload) {
@@ -152,6 +156,30 @@ struct WorkloadActionsSheet: View {
                 }
             }
             .messageAlert($resultMessage)
+        }
+    }
+
+    /// Pause a Deployment's rollout (a template change then waits), or resume a paused one.
+    private var pauseSection: some View {
+        Section {
+            HStack {
+                Button {
+                    Task { await pauseRollout(!rolloutPaused) }
+                } label: {
+                    if rolloutPaused { Text("Resume rollout") } else { Text("Pause rollout") }
+                }
+                .disabled(pausing)
+                .kubeGated(.pauseRollout)
+                if pausing {
+                    Spacer()
+                    ProgressView()
+                }
+            }
+            KubeDeniedNote(.pauseRollout)
+        } footer: {
+            if rolloutPaused {
+                Text("Rollout paused: template changes wait until it resumes")
+            }
         }
     }
 
@@ -212,21 +240,27 @@ struct WorkloadActionsSheet: View {
                 ProgressView()
             case .failed(let message):
                 Text("Could not read its revisions: \(message)").note()
-            case .loaded(let list, _, _):
+            case .loaded(let history, _, _):
+                let list = history.revisions
                 if list.isEmpty {
                     Text("No revision kept.").note()
                 }
-                KubeDeniedNote(.restartWorkload)
+                KubeDeniedNote(KubeAction.rollback(kind: workload.kind))
                 ForEach(list) { revision in
-                    RevisionRow(revision: revision, busy: rollingBack) { confirmRollback = revision }
+                    RevisionRow(revision: revision, kind: workload.kind, busy: rollingBack) { diffRevision = revision }
                 }
             }
         }
     }
 
+    /// The revisions once read, nil while loading or after a failure.
+    private var loadedHistory: WorkloadRevisionList? {
+        if case .loaded(let history, _, _) = revisions { history } else { nil }
+    }
+
     private func loadRevisions() async {
         guard let client = model.client else { return }
-        revisions = revisions.refreshed(with: await .from { try await client.deploymentRevisions(workload) })
+        revisions = revisions.refreshed(with: await .from { try await client.workloadRevisions(workload) })
     }
 
     private func loadKubeGreen() async {
@@ -286,17 +320,42 @@ struct WorkloadActionsSheet: View {
         defer { rollingBack = false }
         do {
             try await client.rollback(workload, to: revision.revision)
+            if loadedHistory?.manual == true {
+                resultMessage = String(
+                    localized: "\(workload.name) rolled back: its pods update when deleted (OnDelete).")
+            }
             following = workload
             await changed()
         } catch {
             resultMessage = String(localized: "Could not roll back \(workload.name): \(error.localizedDescription)")
         }
     }
+
+    private func pauseRollout(_ paused: Bool) async {
+        guard let client = model.client, !pausing else { return }
+        pausing = true
+        defer { pausing = false }
+        do {
+            try await client.pauseRollout(workload, paused: paused)
+            rolloutPaused = paused
+            resultMessage =
+                paused
+                ? String(localized: "Rollout of \(workload.name) paused")
+                : String(localized: "Rollout of \(workload.name) resumed")
+            if !paused { following = workload }
+            await changed()
+        } catch {
+            resultMessage = String(
+                localized: "Could not pause or resume the rollout of \(workload.name): \(error.localizedDescription)")
+        }
+    }
 }
 
-/// "Revision 3 · current", its age, images and change cause, and Roll back for the others.
+/// "Revision 3 · current", its age, images and change cause, and Roll back for the others,
+/// which opens the revision's diff first.
 private struct RevisionRow: View {
     let revision: DeploymentRevision
+    let kind: String
     let busy: Bool
     let onRollback: () -> Void
 
@@ -324,7 +383,7 @@ private struct RevisionRow: View {
                 Button("Roll back", action: onRollback)
                     .buttonStyle(.bordered)
                     .disabled(busy)
-                    .kubeGated(.restartWorkload)
+                    .kubeGated(KubeAction.rollback(kind: kind))
             }
         }
     }

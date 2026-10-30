@@ -133,9 +133,11 @@ func KubeSuspendCronJob(configYAML, contextName, kubeServer, namespace, name str
 	})
 }
 
-// deploymentRevision is one revision of a Deployment (one of its ReplicaSets).
+// deploymentRevision is one revision of a workload: one of a Deployment's ReplicaSets, or
+// one of a StatefulSet's or DaemonSet's ControllerRevisions.
 type deploymentRevision struct {
-	Revision    int      `json:"revision"`
+	Revision int `json:"revision"`
+	// ReplicaSet is the ReplicaSet, or the ControllerRevision, that keeps the revision.
 	ReplicaSet  string   `json:"replicaSet"`
 	Created     int64    `json:"created"` // unix ms
 	Images      []string `json:"images"`
@@ -181,24 +183,15 @@ func (rs revisionReplicaSet) revision() int {
 }
 
 // KubeDeploymentRevisions lists a Deployment's revisions, newest first, like `kubectl
-// rollout history` (os:admin): {"revisions":[{revision,replicaSet,created,images,
-// changeCause,replicas,current}]}. kubeServer: see KubePods.
+// rollout history` (os:admin): KubeWorkloadRevisions of a Deployment. kubeServer: see
+// KubePods.
 func KubeDeploymentRevisions(configYAML, contextName, kubeServer, namespace, name string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	if err := validateKubeName("Deployment", namespace, name); err != nil {
-		return "", err
-	}
-
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoDeploymentRevisions,
-		func(ctx context.Context, k *kubeClient) (map[string][]deploymentRevision, error) {
-			revs, _, err := deploymentRevisions(ctx, k, namespace, name)
-
-			return map[string][]deploymentRevision{"revisions": revs}, err
-		})
+	return workloadRevisionsJSON(configYAML, contextName, kubeServer, "Deployment", namespace, name)
 }
 
 // deploymentRevisions reads the Deployment and its ReplicaSets; the ReplicaSets come back
@@ -209,6 +202,11 @@ func deploymentRevisions(ctx context.Context, k *kubeClient, namespace, name str
 		return nil, nil, err
 	}
 
+	return deploymentRevisionsOf(ctx, k, dep, namespace, name)
+}
+
+// deploymentRevisionsOf is deploymentRevisions of the Deployment dep, already read.
+func deploymentRevisionsOf(ctx context.Context, k *kubeClient, dep appsObject, namespace, name string) ([]deploymentRevision, map[int]revisionReplicaSet, error) {
 	var list kubeList[revisionReplicaSet]
 
 	path := "/apis/apps/v1/namespaces/" + url.PathEscape(namespace) + "/replicasets?labelSelector=" + url.QueryEscape(matchLabelsSelector(dep.Spec.Selector.MatchLabels))
@@ -262,28 +260,11 @@ func templateImages(template json.RawMessage) []string {
 	return images
 }
 
-// KubeRollbackDeployment rolls a Deployment back to revision, like `kubectl rollout undo
-// deployment/NAME --to-revision=N` (os:admin): its pod template becomes that ReplicaSet's
-// (without the pod-template-hash label), which starts a rolling update to it (it then
-// shows as the newest revision). A paused Deployment, and the current revision, are
-// refused. kubeServer: see KubePods.
-func KubeRollbackDeployment(configYAML, contextName, kubeServer, namespace, name string, revision int) (err error) {
-	defer maskErr(&err)
-
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "rollback-deployment", Namespace: namespace, Object: "Deployment/" + name, Params: fmt.Sprintf("revision=%d", revision)})
-
-	if err := validateKubeName("Deployment", namespace, name); err != nil {
-		return err
-	}
-
-	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		return rollbackDeployment(ctx, k, namespace, name, revision)
-	})
-}
-
+// rollbackDeployment rolls a Deployment back to revision, like `kubectl rollout undo
+// deployment/NAME --to-revision=N` (KubeRollbackWorkload): its pod template becomes that
+// ReplicaSet's (without the pod-template-hash label), which starts a rolling update to it (it
+// then shows as the newest revision). A paused Deployment, and the current revision, are
+// refused.
 func rollbackDeployment(ctx context.Context, k *kubeClient, namespace, name string, revision int) error {
 	path := appsPath(workloadKinds[0], namespace, name)
 

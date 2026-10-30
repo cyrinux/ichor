@@ -32,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -231,9 +233,16 @@ fun DiffLines(lines: List<DiffLine>) {
                 DiffLine.Kind.HUNK -> "" to muted
                 DiffLine.Kind.CONTEXT -> " " to Color.Unspecified
             }
+            // A screen reader says whether a line is added or removed, not "plus" or "minus".
+            val spoken = when (line.kind) {
+                DiffLine.Kind.ADDED -> stringResource(R.string.revision_diff_line_added, line.text)
+                DiffLine.Kind.REMOVED -> stringResource(R.string.revision_diff_line_removed, line.text)
+                else -> null
+            }
             Row(
                 Modifier
                     .background(if (line.kind == DiffLine.Kind.ADDED || line.kind == DiffLine.Kind.REMOVED) tint.copy(alpha = 0.12f) else Color.Transparent)
+                    .then(if (spoken != null) Modifier.clearAndSetSemantics { contentDescription = spoken } else Modifier)
                     .padding(horizontal = 8.dp),
             ) {
                 Text(sign, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, color = tint, modifier = Modifier.width(12.dp))
