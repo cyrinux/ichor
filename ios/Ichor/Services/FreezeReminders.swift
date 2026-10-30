@@ -26,7 +26,8 @@ enum FreezeReminders {
         let center = UNUserNotificationCenter.current()
         let keep = Set(running.map { identifier(cluster, $0) })
         let clusterPrefix = prefix + cluster + "|"
-        center.getPendingNotificationRequests { requests in
+        // @Sendable: called on a queue of the system's, so it must not inherit the main actor.
+        center.getPendingNotificationRequests { @Sendable requests in
             let gone = requests.map(\.identifier).filter { $0.hasPrefix(clusterPrefix) && !keep.contains($0) }
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: gone)
         }

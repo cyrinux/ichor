@@ -17,7 +17,8 @@ final class VpnMonitor {
     @ObservationIgnored private let monitor = NWPathMonitor()
 
     private init() {
-        monitor.pathUpdateHandler = { path in
+        // @Sendable: called on the monitor's queue, so it must not inherit the main actor.
+        monitor.pathUpdateHandler = { @Sendable path in
             let isUp = Self.isUp(path)
             Task { @MainActor in VpnMonitor.shared.update(isUp) }
         }
