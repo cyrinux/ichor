@@ -116,6 +116,7 @@ private fun Header(workload: KubeWorkload, status: KubeRolloutStatus?) {
     val colors = LocalStatusColors.current
     val (label, color) = when {
         status == null -> stringResource(R.string.rollout_starting) to colors.muted
+        status.paused -> stringResource(R.string.rollout_paused) to colors.warn
         status.manual -> stringResource(R.string.rollout_manual) to colors.warn
         status.done -> stringResource(R.string.rollout_done) to colors.ok
         status.failed -> stringResource(R.string.rollout_failed) to colors.bad
