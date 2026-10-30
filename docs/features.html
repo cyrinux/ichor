@@ -49,1691 +49,107 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <style>
-      :root {
-        --bg: #e9eef2;
-        --surface: #f6f8fa;
-        --ink: #14243b;
-        --ink-2: #51627a;
-        --line: #c9d3dd;
-        --accent: #ff7a45;
-        --accent-ink: #b4461b;
-        --ready: #1b7f45;
-        --warn: #8a6100;
-        --down: #c0282d;
-        --phone: #0f1a2a;
-        --phone-ink: #e8eef5;
-        --phone-ink-2: #93a3b8;
-        --phone-card: #18263a;
-        --measure: 68ch;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #101823;
-          --surface: #16212f;
-          --ink: #e4eaf1;
-          --ink-2: #9aabc0;
-          --line: #2a3a4e;
-          --accent-ink: #ff9466;
-          --ready: #5bd18b;
-          --warn: #f2c14e;
-          --down: #ff6b6b;
-          --phone: #05090f;
-          --phone-card: #121e2e;
-        }
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-      html {
-        -webkit-text-size-adjust: 100%;
-      }
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--ink);
-        font:
-          400 1.0625rem/1.6 "IBM Plex Sans",
-          system-ui,
-          sans-serif;
-      }
-      a {
-        color: inherit;
-      }
-      a:focus-visible,
-      .button:focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 3px;
-        border-radius: 6px;
-      }
-      code,
-      .cmd {
-        font-family: "IBM Plex Mono", ui-monospace, monospace;
-      }
-      /* Long commands and identifiers break instead of widening the page. */
-      :not(pre) > code {
-        overflow-wrap: anywhere;
-      }
-      .wrap {
-        max-width: 72rem;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-      }
-
-      /* Beta tester call, above the header */
-      .beta-banner {
-        margin: 0;
-        padding: 0.6rem 1.5rem;
-        background: var(--accent);
-        color: #14243b;
-        font-size: 0.95rem;
-        text-align: center;
-      }
-      .beta-banner a {
-        font-weight: 600;
-      }
-      .beta-banner a:focus-visible {
-        outline: 3px solid var(--ink);
-        outline-offset: 2px;
-        border-radius: 4px;
-      }
-
-      /* Header */
-      .top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1.25rem 0;
-      }
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        font-weight: 600;
-        text-decoration: none;
-      }
-      .brand img {
-        width: 32px;
-        height: 32px;
-      }
-      .top nav {
-        display: flex;
-        gap: 1.25rem;
-        font-size: 0.95rem;
-      }
-      .top nav a {
-        text-decoration: none;
-        color: var(--ink-2);
-      }
-      .top nav a:hover {
-        color: var(--ink);
-      }
-
-      /* Language switcher */
-      .lang {
-        position: relative;
-      }
-      .lang summary {
-        list-style: none;
-        white-space: nowrap;
-        cursor: pointer;
-        color: var(--ink-2);
-        font: 500 0.85rem/1.6 "IBM Plex Mono", ui-monospace, monospace;
-      }
-      .lang summary::-webkit-details-marker {
-        display: none;
-      }
-      .lang summary::after {
-        content: " ▾";
-      }
-      .lang summary:hover {
-        color: var(--ink);
-      }
-      .lang summary:focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 3px;
-        border-radius: 6px;
-      }
-      .lang ul {
-        position: absolute;
-        right: 0;
-        top: calc(100% + 0.5rem);
-        z-index: 10;
-        min-width: 10rem;
-        margin: 0;
-        padding: 0.35rem;
-        list-style: none;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        box-shadow: 0 12px 30px -12px rgba(20, 36, 59, 0.35);
-      }
-      .top nav .lang a {
-        display: block;
-        padding: 0.35rem 0.6rem;
-        border-radius: 6px;
-        color: var(--ink);
-      }
-      .top nav .lang a:hover {
-        background: var(--bg);
-      }
-      .top nav .lang a[aria-current] {
-        font-weight: 600;
-      }
-
-      /* Hero */
-      .hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 3rem;
-        align-items: center;
-        padding: 3.5rem 0 4.5rem;
-      }
-      .hero h1 {
-        font-weight: 600;
-        font-size: clamp(2.4rem, 5.2vw, 4rem);
-        line-height: 1.04;
-        letter-spacing: -0.025em;
-        margin: 0 0 1.25rem;
-        max-width: 14ch;
-      }
-      .lede {
-        font-size: 1.2rem;
-        color: var(--ink-2);
-        max-width: 46ch;
-        margin: 0 0 2rem;
-      }
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        align-items: center;
-      }
-      .button {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.8rem 1.2rem;
-        border-radius: 10px;
-        font-weight: 500;
-        text-decoration: none;
-        border: 1px solid var(--line);
-        background: var(--surface);
-        color: var(--ink);
-      }
-      .button.primary {
-        background: var(--ink);
-        color: var(--bg);
-        border-color: var(--ink);
-      }
-      .button:hover {
-        border-color: var(--ink-2);
-      }
-      .note {
-        font-size: 0.9rem;
-        color: var(--ink-2);
-        margin-top: 1rem;
-      }
-
-      /* The phone: one orchestrated moment, the alert arriving */
-      .phone {
-        justify-self: center;
-        width: min(320px, 100%);
-        aspect-ratio: 9 / 19;
-        background: var(--phone);
-        color: var(--phone-ink);
-        border-radius: 44px;
-        padding: 14px;
-        position: relative;
-        box-shadow:
-          0 0 0 2px #2c3a4f,
-          0 30px 60px -20px rgba(20, 36, 59, 0.45);
-      }
-      .screen {
-        height: 100%;
-        border-radius: 32px;
-        overflow: hidden;
-        position: relative;
-        background: radial-gradient(
-          120% 70% at 50% 0%,
-          #1e3350 0%,
-          var(--phone) 70%
-        );
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 3.2rem 1rem 1rem;
-      }
-      .clock {
-        font-size: 4rem;
-        font-weight: 300;
-        letter-spacing: -0.03em;
-        line-height: 1;
-      }
-      .date {
-        color: var(--phone-ink-2);
-        font-size: 0.85rem;
-        margin-top: 0.35rem;
-      }
-      .notification {
-        margin-top: 2.2rem;
-        width: 100%;
-        background: rgba(232, 238, 245, 0.12);
-        backdrop-filter: blur(12px);
-        border-radius: 18px;
-        padding: 0.8rem 0.9rem;
-        animation: arrive 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 900ms both;
-      }
-      .notification header {
-        display: flex;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.72rem;
-        color: var(--phone-ink-2);
-      }
-      .notification header svg {
-        width: 16px;
-        height: 16px;
-        color: #ff7a45;
-      }
-      .notification header span:last-child {
-        margin-left: auto;
-      }
-      .notification strong {
-        display: block;
-        font-weight: 600;
-        font-size: 0.92rem;
-        margin-top: 0.35rem;
-      }
-      .notification p {
-        margin: 0.15rem 0 0;
-        font-size: 0.82rem;
-        color: var(--phone-ink-2);
-        line-height: 1.35;
-      }
-      .glance {
-        margin-top: auto;
-        width: 100%;
-        background: var(--phone-card);
-        border-radius: 16px;
-        padding: 0.8rem 0.9rem;
-        font-size: 0.8rem;
-      }
-      .glance .count {
-        font-size: 1.6rem;
-        font-weight: 600;
-        line-height: 1.1;
-      }
-      .glance .row {
-        display: flex;
-        gap: 0.9rem;
-        color: var(--phone-ink-2);
-        margin-top: 0.2rem;
-      }
-      .dot {
-        display: inline-block;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        margin-right: 0.35rem;
-        vertical-align: middle;
-      }
-      @keyframes arrive {
-        from {
-          opacity: 0;
-          transform: translateY(-14px) scale(0.97);
-        }
-        to {
-          opacity: 1;
-          transform: none;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .notification {
-          animation: none;
-        }
-      }
-
-      /* Sections */
-      section {
-        padding: 4rem 0;
-        border-top: 1px solid var(--line);
-      }
-      h2 {
-        font-weight: 600;
-        font-size: clamp(1.6rem, 3vw, 2.1rem);
-        line-height: 1.15;
-        letter-spacing: -0.015em;
-        margin: 0 0 0.75rem;
-      }
-      .intro {
-        color: var(--ink-2);
-        max-width: var(--measure);
-        margin: 0 0 2rem;
-      }
-
-      /* The site's forms (beta sign-up, plugin request): no server, they hand off to a mail app or GitHub */
-      .site-form {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
-        gap: 1rem 1.5rem;
-        max-width: 48rem;
-      }
-      .site-form .field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-      .site-form .wide {
-        grid-column: 1 / -1;
-      }
-      .site-form label {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--ink-2);
-      }
-      .site-form input,
-      .site-form textarea {
-        font: inherit;
-        color: var(--ink);
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 0.7rem 0.85rem;
-        width: 100%;
-      }
-      .site-form textarea {
-        min-height: 7rem;
-        resize: vertical;
-      }
-      .site-form input:focus-visible,
-      .site-form textarea:focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 1px;
-      }
-      .site-form .button {
-        cursor: pointer;
-        font: inherit;
-        font-weight: 500;
-      }
-      .site-form .note {
-        margin: 0;
-      }
-
-      /* talosctl -> app mapping, the page's main device */
-      .map {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .map th {
-        text-align: left;
-        font-weight: 500;
-        font-size: 0.9rem;
-        color: var(--ink-2);
-        padding: 0 1rem 0.6rem 0;
-      }
-      .map td {
-        padding: 0.95rem 1rem 0.95rem 0;
-        border-top: 1px solid var(--line);
-        vertical-align: top;
-      }
-      .map td.cmd {
-        font-size: 0.92rem;
-        white-space: nowrap;
-        color: var(--ink-2);
-      }
-      .map td.what strong {
-        font-weight: 600;
-      }
-      .map td.what span {
-        display: block;
-        color: var(--ink-2);
-        font-size: 0.95rem;
-      }
-      .role {
-        font-size: 0.85rem;
-        white-space: nowrap;
-      }
-
-      /* Roles */
-      .roles {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 2rem;
-      }
-      .roles h3 {
-        margin: 0 0 0.25rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-      }
-      .roles code {
-        font-size: 0.9rem;
-        color: var(--accent-ink);
-      }
-      .roles p {
-        margin: 0.5rem 0 0;
-        color: var(--ink-2);
-        font-size: 0.98rem;
-      }
-      .roles .recommended {
-        border-left: 3px solid var(--ready);
-        padding-left: 1rem;
-      }
-      .roles > div {
-        border-left: 3px solid var(--line);
-        padding-left: 1rem;
-      }
-      .roles > div.recommended {
-        border-left-color: var(--ready);
-      }
-
-      /* Install: a real sequence, so numbered */
-      .steps {
-        counter-reset: step;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        max-width: var(--measure);
-      }
-      .steps li {
-        counter-increment: step;
-        position: relative;
-        padding: 0 0 1.75rem 3rem;
-      }
-      .steps li::before {
-        content: counter(step);
-        position: absolute;
-        left: 0;
-        top: -0.1rem;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 50%;
-        border: 1px solid var(--line);
-        display: grid;
-        place-items: center;
-        font-weight: 500;
-        font-size: 0.95rem;
-      }
-      .steps h3 {
-        margin: 0 0 0.3rem;
-        font-size: 1.05rem;
-        font-weight: 600;
-      }
-      .steps p {
-        margin: 0;
-        color: var(--ink-2);
-      }
-      pre {
-        margin: 0.7rem 0 0;
-        padding: 0.8rem 1rem;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        overflow-x: auto;
-        font-size: 0.88rem;
-        line-height: 1.5;
-      }
-
-      .platforms {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 2.5rem;
-      }
-      .platforms h3 {
-        margin: 0 0 0.4rem;
-        font-weight: 600;
-      }
-      .platforms p {
-        color: var(--ink-2);
-        margin: 0 0 1rem;
-      }
-
-      footer {
-        border-top: 1px solid var(--line);
-        padding: 2.5rem 0 3rem;
-        color: var(--ink-2);
-        font-size: 0.92rem;
-      }
-      footer .ci-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 1rem;
-      }
-      footer .ci-badges img {
-        display: block;
-        height: 20px;
-      }
-      footer .links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.25rem;
-        margin-bottom: 0.75rem;
-      }
-      footer .foss {
-        font-size: 0.78rem;
-        opacity: 0.7;
-        margin-top: 1rem;
-      }
-
-      @media (max-width: 860px) {
-        .hero {
-          grid-template-columns: minmax(0, 1fr);
-          padding-top: 2rem;
-        }
-        .phone {
-          width: min(290px, 100%);
-        }
-        .roles,
-        .platforms {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .map thead {
-          display: none;
-        }
-        .map tr {
-          display: block;
-          border-top: 1px solid var(--line);
-          padding: 0.9rem 0;
-        }
-        .map td {
-          display: block;
-          border: 0;
-          padding: 0.1rem 0;
-        }
-        .map td.cmd {
-          white-space: normal;
-        }
-        .map td.role::before {
-          content: "Needs ";
-        }
-        /* The role names stay in English, so this prefix is translated here. */
-        :lang(fr) .map td.role::before {
-          content: "Rôle ";
-        }
-        :lang(es) .map td.role::before {
-          content: "Rol ";
-        }
-        :lang(uk) .map td.role::before {
-          content: "Роль ";
-        }
-        :lang(de) .map td.role::before {
-          content: "Rolle ";
-        }
-        :lang(it) .map td.role::before {
-          content: "Ruolo ";
-        }
-        .top nav a.optional {
-          display: none;
-        }
-      }
-      .shots {
-        display: flex;
-        gap: 1.25rem;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        padding: 0.5rem 0 1.25rem;
-        margin-top: 2rem;
-      }
-      .shots figure {
-        margin: 0;
-        flex: 0 0 auto;
-        width: min(240px, 70vw);
-        scroll-snap-align: start;
-      }
-      .shots img {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        background: var(--phone);
-      }
-      .shots figcaption {
-        margin-top: 0.6rem;
-        font-size: 0.9rem;
-        color: var(--ink-2);
-      }
-      .shots figcaption strong {
-        display: block;
-        color: var(--ink);
-        font-weight: 600;
-      }
-      .shots:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 4px;
-      }
-      .donate {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 1.25rem;
-        margin-top: 2rem;
-      }
-      .donate > div {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 1.25rem;
-      }
-      .donate h3 {
-        margin: 0 0 0.75rem;
-        font-size: 1rem;
-      }
-      .donate img {
-        display: block;
-        width: 148px;
-        height: 148px;
-        background: #fff;
-        border-radius: 8px;
-        padding: 6px;
-      }
-      .donate code {
-        display: block;
-        margin: 0.9rem 0 0.6rem;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 0.8rem;
-        word-break: break-all;
-        color: var(--ink);
-      }
-      .donate .row {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-      }
-      .donate button,
-      .donate .wallet {
-        font: inherit;
-        font-size: 0.85rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 8px;
-        border: 1px solid var(--line);
-        background: transparent;
-        color: var(--ink);
-        cursor: pointer;
-        text-decoration: none;
-      }
-      .donate button:focus-visible,
-      .donate .wallet:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-
-      .brand small {
-        font-weight: 400;
-        color: var(--ink-2);
-      }
-      .eyebrow {
-        display: inline-block;
-        margin: 0 0 1rem;
-        font:
-          500 0.85rem/1 "IBM Plex Mono",
-          ui-monospace,
-          monospace;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--accent-ink);
-      }
-
-      /* Four reasons, right under the hero */
-      .props {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 2rem;
-        padding: 0 0 4rem;
-        margin: 0;
-        list-style: none;
-      }
-      .props li {
-        border-top: 2px solid var(--accent);
-        padding-top: 1rem;
-      }
-      .props h3 {
-        margin: 0 0 0.35rem;
-        font-size: 1.05rem;
-        font-weight: 600;
-      }
-      .props p {
-        margin: 0;
-        color: var(--ink-2);
-        font-size: 0.97rem;
-      }
-
-      /* The name */
-      .myth {
-        display: grid;
-        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-        gap: 3rem;
-        align-items: start;
-      }
-      .myth blockquote {
-        margin: 0;
-        padding-left: 1.25rem;
-        border-left: 3px solid var(--accent);
-        font-size: 1.35rem;
-        line-height: 1.4;
-        font-weight: 500;
-        letter-spacing: -0.01em;
-      }
-      .myth p {
-        margin: 0 0 1rem;
-        color: var(--ink-2);
-        max-width: var(--measure);
-      }
-
-      /* FAQ */
-      .faq {
-        max-width: var(--measure);
-      }
-      .faq details {
-        border-top: 1px solid var(--line);
-        padding: 1rem 0;
-      }
-      .faq details:last-child {
-        border-bottom: 1px solid var(--line);
-      }
-      .faq summary {
-        cursor: pointer;
-        font-weight: 600;
-      }
-      .faq summary:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 3px;
-        border-radius: 4px;
-      }
-      .faq details p {
-        margin: 0.6rem 0 0;
-        color: var(--ink-2);
-      }
-
-      @media (max-width: 860px) {
-        .props {
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 1.5rem;
-        }
-        .myth {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 1.5rem;
-        }
-      }
-      @media (max-width: 520px) {
-        .props {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-      /* "New" pill above the hero title */
-      .newpill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        margin: 0 0 1.25rem;
-        padding: 0.3rem 0.85rem 0.3rem 0.35rem;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: var(--surface);
-        font-size: 0.9rem;
-        text-decoration: none;
-        color: var(--ink-2);
-      }
-      .newpill:hover {
-        border-color: var(--ink-2);
-        color: var(--ink);
-      }
-      .newpill b {
-        background: var(--accent);
-        color: #14243b;
-        font-weight: 600;
-        font-size: 0.75rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        padding: 0.2rem 0.55rem;
-        border-radius: 999px;
-      }
-
-      /* Cluster insights spotlight */
-      .spotlight {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
-      }
-      .insight {
-        display: flex;
-        flex-direction: column;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 1.25rem;
-      }
-      .insight h3 {
-        margin: 1.1rem 0 0.35rem;
-        font-size: 1.15rem;
-        font-weight: 600;
-      }
-      .insight p {
-        margin: 0;
-        color: var(--ink-2);
-        font-size: 0.97rem;
-      }
-      .insight .ask {
-        margin-top: 0.9rem;
-        font: 500 0.85rem/1.4 "IBM Plex Mono", ui-monospace, monospace;
-        color: var(--accent-ink);
-      }
-      .mock {
-        background: var(--phone);
-        color: var(--phone-ink);
-        border-radius: 14px;
-        padding: 0.9rem;
-        font: 400 0.78rem/1.45 "IBM Plex Mono", ui-monospace, monospace;
-        min-height: 10.6rem;
-      }
-      .mock .title {
-        color: var(--phone-ink-2);
-        font-size: 0.7rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 0.5rem;
-      }
-      .mock .line {
-        display: grid;
-        grid-template-columns: 6rem minmax(0, 1fr) auto;
-        gap: 0.5rem;
-        padding: 0.28rem 0;
-        border-top: 1px solid rgba(147, 163, 184, 0.16);
-      }
-      .mock .line span:first-child {
-        color: var(--phone-ink-2);
-      }
-      .mock .tag {
-        font-size: 0.68rem;
-        padding: 0 0.4rem;
-        border-radius: 6px;
-        align-self: center;
-      }
-      .tag.same {
-        color: #5bd18b;
-        background: rgba(91, 209, 139, 0.12);
-      }
-      .tag.diff {
-        color: #ff9466;
-        background: rgba(255, 122, 69, 0.16);
-      }
-      .tag.bad {
-        color: #ff6b6b;
-        background: rgba(255, 107, 107, 0.14);
-      }
-      .tag.run {
-        color: #7cb7ff;
-        background: rgba(124, 183, 255, 0.14);
-      }
-      .tag.off {
-        color: var(--phone-ink-2);
-        background: rgba(147, 163, 184, 0.14);
-      }
-      /* A card as wide as the grid: the mock beside its text. */
-      .insight.wide {
-        grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-        gap: 1.5rem;
-        align-items: start;
-      }
-      .insight.wide h3 {
-        margin-top: 0;
-      }
-      .insight p + p {
-        margin-top: 0.6rem;
-      }
-      .mock .runbtn {
-        display: inline-block;
-        margin-top: 0.7rem;
-        padding: 0.25rem 0.8rem;
-        border-radius: 999px;
-        background: var(--accent);
-        color: #14243b;
-        font-weight: 600;
-      }
-      .mock .tl {
-        display: grid;
-        grid-template-columns: 4.2rem 0.6rem minmax(0, 1fr);
-        gap: 0.45rem;
-        padding: 0.22rem 0;
-        align-items: center;
-      }
-      .mock .tl time {
-        color: var(--phone-ink-2);
-      }
-      .mock .bar {
-        display: grid;
-        grid-template-columns: 6rem minmax(0, 1fr) 2.6rem;
-        gap: 0.5rem;
-        align-items: center;
-        padding: 0.3rem 0;
-      }
-      .mock .bar span:first-child {
-        color: var(--phone-ink-2);
-      }
-      .mock .bar span:last-child {
-        text-align: right;
-      }
-      .mock .meter {
-        height: 6px;
-        border-radius: 3px;
-        background: rgba(147, 163, 184, 0.18);
-        overflow: hidden;
-      }
-      .mock .meter i {
-        display: block;
-        height: 100%;
-        border-radius: 3px;
-        background: #5bd18b;
-      }
-      .mock .meter i.hot {
-        background: #ff7a45;
-      }
-      .mock .apps {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.55rem 0.4rem;
-      }
-      .mock .app {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.2rem;
-        font-size: 0.64rem;
-        color: var(--phone-ink-2);
-        white-space: nowrap;
-      }
-      .mock .app b {
-        width: 2rem;
-        height: 2rem;
-        border-radius: 0.6rem;
-        display: grid;
-        place-items: center;
-        font: 600 0.72rem/1 "IBM Plex Sans", system-ui, sans-serif;
-        color: #0f1a2a;
-      }
-      .mock .app.warn::after {
-        content: "";
-        position: absolute;
-        top: -0.15rem;
-        right: 0.55rem;
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 50%;
-        background: #f2c14e;
-        border: 2px solid var(--phone);
-      }
-      .mock .app.warn span {
-        color: #f2c14e;
-      }
-      .reassure {
-        margin: 1.5rem 0 0;
-        color: var(--ink-2);
-        font-size: 0.95rem;
-        max-width: var(--measure);
-      }
-
-      /* Smaller "also new" items */
-      .alsonew {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 2rem;
-        margin: 3rem 0 0;
-        padding: 0;
-        list-style: none;
-      }
-      .alsonew li {
-        border-left: 3px solid var(--accent);
-        padding-left: 1rem;
-      }
-      .alsonew h3 {
-        margin: 0 0 0.3rem;
-        font-size: 1.02rem;
-        font-weight: 600;
-      }
-      .alsonew p {
-        margin: 0;
-        color: var(--ink-2);
-        font-size: 0.95rem;
-      }
-
-      /* Closing call to action */
-      .cta {
-        background: var(--ink);
-        color: var(--bg);
-        border-radius: 24px;
-        padding: 3rem 2.5rem;
-        display: grid;
-        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-        gap: 2rem;
-        align-items: center;
-        border-top: 0;
-        margin: 1rem 0 4rem;
-      }
-      .cta h2 {
-        margin: 0 0 0.6rem;
-      }
-      .cta p {
-        margin: 0;
-        opacity: 0.8;
-        max-width: 48ch;
-      }
-      .cta .actions {
-        justify-content: flex-end;
-      }
-      .cta .button {
-        background: transparent;
-        color: var(--bg);
-        border-color: color-mix(in srgb, var(--bg) 40%, transparent);
-      }
-      .cta .button.primary {
-        background: var(--accent);
-        color: #14243b;
-        border-color: var(--accent);
-      }
-
-      @media (max-width: 960px) {
-        .spotlight {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .insight.wide {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .alsonew {
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 1.5rem;
-        }
-        .cta {
-          grid-template-columns: minmax(0, 1fr);
-          padding: 2rem 1.5rem;
-        }
-        .cta .actions {
-          justify-content: flex-start;
-        }
-      }
-      /* Tablets: one card per row, the mock beside its text. */
-      @media (min-width: 641px) and (max-width: 960px) {
-        .insight,
-        .insight.wide {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-          column-gap: 1.5rem;
-          align-content: start;
-        }
-        .insight > .mock {
-          grid-column: 1;
-          grid-row: 1 / span 6;
-          align-self: start;
-        }
-        .insight > :not(.mock) {
-          grid-column: 2;
-        }
-        .insight > h3 {
-          margin-top: 0;
-        }
-      }
-      @media (max-width: 640px) {
-        .spotlight {
-          max-width: 34rem;
-        }
-      }
-      @media (max-width: 520px) {
-        .alsonew {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        /* Phones: tighter gutters so the mocks keep their columns. */
-        .wrap {
-          padding: 0 1.15rem;
-        }
-        .brand small {
-          display: none;
-        }
-        .top {
-          gap: 0.75rem;
-        }
-        .top nav {
-          gap: 0.85rem;
-        }
-        .phone {
-          width: min(250px, 100%);
-        }
-        .insight {
-          padding: 1rem;
-        }
-        .mock {
-          padding: 0.8rem;
-        }
-        .mock .line {
-          grid-template-columns: 5.2rem minmax(0, 1fr) auto;
-        }
-        .mock .bar {
-          grid-template-columns: 5.2rem minmax(0, 1fr) 2.6rem;
-        }
-        .cta {
-          padding: 1.75rem 1.25rem;
-        }
-      }
-      /* Smallest phones: the footer still links to GitHub. */
-      @media (max-width: 360px) {
-        .top nav a.github {
-          display: none;
-        }
-      }
-      /* Mobile menu: the links the narrow header hides, behind one button. */
-      .menu {
-        position: relative;
-        display: none;
-      }
-      .menu summary {
-        list-style: none;
-        cursor: pointer;
-        width: 2.4rem;
-        height: 2.4rem;
-        display: grid;
-        place-items: center;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        color: var(--ink);
-      }
-      .menu summary::-webkit-details-marker {
-        display: none;
-      }
-      .menu summary span,
-      .menu summary span::before,
-      .menu summary span::after {
-        display: block;
-        width: 1.1rem;
-        height: 2px;
-        background: currentColor;
-        border-radius: 2px;
-        position: relative;
-        content: "";
-      }
-      .menu summary span::before {
-        position: absolute;
-        top: -6px;
-      }
-      .menu summary span::after {
-        position: absolute;
-        top: 6px;
-      }
-      .menu[open] summary {
-        background: var(--surface);
-      }
-      .menu summary:focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 3px;
-      }
-      .menu ul {
-        position: absolute;
-        right: 0;
-        top: calc(100% + 0.5rem);
-        z-index: 10;
-        min-width: 11rem;
-        margin: 0;
-        padding: 0.35rem;
-        list-style: none;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        box-shadow: 0 12px 30px -12px rgba(20, 36, 59, 0.35);
-      }
-      .top nav .menu a {
-        display: block;
-        padding: 0.5rem 0.7rem;
-        border-radius: 6px;
-        color: var(--ink);
-      }
-      .top nav .menu a:hover {
-        background: var(--bg);
-      }
-
-      /* The cluster switcher on the hero phone */
-      .screen {
-        padding-top: 2.4rem;
-      }
-      .screen .clock {
-        font-size: 3.2rem;
-      }
-      .screen .notification {
-        margin-top: 1.4rem;
-      }
-      .clusters {
-        margin-top: auto;
-        width: 100%;
-        background: var(--phone-card);
-        border-radius: 16px;
-        padding: 0.7rem 0.8rem 0.5rem;
-        font-size: 0.78rem;
-      }
-      .clusters .head {
-        color: var(--phone-ink-2);
-        font-size: 0.68rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 0.3rem;
-      }
-      .cluster {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto auto;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.38rem 0;
-        border-top: 1px solid rgba(147, 163, 184, 0.16);
-      }
-      .cluster .swatch {
-        width: 0.55rem;
-        height: 0.55rem;
-        border-radius: 3px;
-      }
-      .cluster .name {
-        font-weight: 600;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cluster .via {
-        font: 500 0.64rem/1 "IBM Plex Mono", ui-monospace, monospace;
-        color: var(--phone-ink-2);
-        border: 1px solid rgba(147, 163, 184, 0.3);
-        border-radius: 999px;
-        padding: 0.18rem 0.45rem;
-      }
-      .cluster .state {
-        font-size: 0.72rem;
-        min-width: 3.4rem;
-        text-align: right;
-      }
-      .cluster .state.ok {
-        color: #5bd18b;
-      }
-      .cluster .state.warn {
-        color: #f2c14e;
-      }
-      .cluster.current .name::after {
-        content: " ·";
-        color: #ff7a45;
-      }
-
-      /* Providers: the ways in, beside the add-cluster preview */
-      .providers {
-        display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 2.5rem;
-        align-items: start;
-        margin-top: 0.5rem;
-      }
-      .providers .intro {
-        margin-top: 0;
-      }
-      .ways {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 1.5rem 2rem;
-        margin: 1.5rem 0 0;
-        padding: 0;
-        list-style: none;
-      }
-      .ways li {
-        border-top: 2px solid var(--line);
-        padding-top: 0.8rem;
-      }
-      .ways li:first-child {
-        border-top-color: var(--accent);
-      }
-      .ways h3 {
-        margin: 0 0 0.3rem;
-        font-size: 1.02rem;
-        font-weight: 600;
-      }
-      .ways p {
-        margin: 0;
-        color: var(--ink-2);
-        font-size: 0.95rem;
-      }
-      .mock.tall .line {
-        grid-template-columns: 5rem minmax(0, 1fr) auto;
-      }
-      .mock .line span:nth-child(2) {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin: 2.5rem 0 0;
-        padding: 0;
-        list-style: none;
-      }
-      .chips li {
-        font: 500 0.85rem/1 "IBM Plex Mono", ui-monospace, monospace;
-        padding: 0.5rem 0.8rem;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: var(--surface);
-        color: var(--ink-2);
-      }
-      .chips li.talos {
-        color: var(--accent-ink);
-        border-color: var(--accent);
-      }
-
-      /* Security key and assistant mocks */
-      .mock .key {
-        text-align: center;
-      }
-      .mock .key .ring {
-        width: 3.6rem;
-        height: 3.6rem;
-        margin: 0.3rem auto 0.5rem;
-        border-radius: 50%;
-        border: 2px solid rgba(147, 163, 184, 0.3);
-        display: grid;
-        place-items: center;
-      }
-      .mock .key .ring span {
-        width: 1.6rem;
-        height: 1.6rem;
-        border-radius: 50%;
-        background: var(--accent);
-        box-shadow: 0 0 0 6px rgba(255, 122, 69, 0.18);
-      }
-      .mock .key p {
-        margin: 0 0 0.5rem;
-        color: var(--phone-ink-2);
-      }
-      .mock .key .line {
-        text-align: left;
-      }
-      .mock .chat .you {
-        margin: 0 0 0.5rem;
-        padding: 0.35rem 0.6rem;
-        border-radius: 10px 10px 2px 10px;
-        background: rgba(232, 238, 245, 0.12);
-        font-family: "IBM Plex Sans", system-ui, sans-serif;
-        width: fit-content;
-        max-width: 100%;
-        margin-left: auto;
-      }
-      .mock .chat pre {
-        margin: 0 0 0.3rem;
-        padding: 0.4rem 0.5rem;
-        border: 1px solid rgba(147, 163, 184, 0.2);
-        border-radius: 8px;
-        background: transparent;
-        color: var(--phone-ink);
-        font-size: 0.68rem;
-        line-height: 1.35;
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-      }
-      .mock .tl .dot {
-        margin: 0;
-      }
-      .mock .tl span:last-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      /* Responsive: the header keeps a menu, the hero stacks, mocks keep their columns. */
-      @media (max-width: 860px) {
-        .menu {
-          display: block;
-        }
-        .top nav a.github {
-          display: none;
-        }
-        .providers {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 2rem;
-        }
-        .hero {
-          gap: 2rem;
-        }
-      }
-      @media (max-width: 640px) {
-        .ways {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 1.25rem;
-        }
-        .providers .insight {
-          max-width: 34rem;
-        }
-      }
-      @media (max-width: 520px) {
-        .hero {
-          padding-top: 1.25rem;
-          padding-bottom: 2.5rem;
-        }
-        .hero h1 {
-          font-size: clamp(2rem, 9.5vw, 2.4rem);
-        }
-        .lede {
-          font-size: 1.05rem;
-          margin-bottom: 1.5rem;
-        }
-        .actions .button {
-          padding: 0.7rem 1rem;
-        }
-        .phone {
-          width: min(270px, 100%);
-          aspect-ratio: 9 / 16;
-          border-radius: 36px;
-          padding: 10px;
-        }
-        .screen {
-          border-radius: 28px;
-          padding: 0.9rem 0.75rem 0.75rem;
-        }
-        .screen {
-          padding-top: 1.4rem;
-        }
-        .screen .clock {
-          font-size: 2.4rem;
-        }
-        .screen .notification {
-          margin-top: 0.9rem;
-        }
-        .mock.tall .line {
-          grid-template-columns: 4.2rem minmax(0, 1fr) auto;
-        }
-        .chips li {
-          font-size: 0.78rem;
-          padding: 0.4rem 0.65rem;
-        }
-        section {
-          padding: 3rem 0;
-        }
-      }
-      @media (max-width: 360px) {
-        .hero h1 {
-          font-size: 1.9rem;
-        }
-        .actions {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        }
-        .actions .button {
-          justify-content: center;
-        }
-        .actions .button.primary {
-          grid-column: 1 / -1;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="site.css" />
+    <link rel="stylesheet" href="features.css" />
     <meta
       name="google-site-verification"
       content="lpVs7M2E7c8dphSqSBVfq_Gifch93KEnzBxpJHi_xPo"
     />
   </head>
   <body>
-    <p class="beta-banner">
-      Looking for <strong>Play Store beta testers</strong>: join on
-      <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a> or
-      <a href="#beta">sign up by mail</a>.
-    </p>
-    <div class="wrap">
-      <header class="top">
-        <a class="brand" href="./">
-          <img src="brand/ichor.svg" width="32" height="32" alt="" />
-          <span data-i18n>Ichor <small>for Talos Linux and Kubernetes</small></span>
-        </a>
-        <nav aria-label="Primary">
-          <a data-i18n class="optional" href="#new">What's new</a>
-          <a data-i18n class="optional" href="#providers">Clusters</a>
-          <a data-i18n class="optional" href="#screens">Screens</a>
-          <a data-i18n class="optional" href="#features">Features</a>
-          <a data-i18n class="optional" href="#faq">FAQ</a>
-          <a data-i18n href="#install">Install</a>
-          <a class="github" href="https://github.com/cyrinux/ichor">GitHub</a>
-          <details class="lang">
-            <summary aria-label="Language">EN</summary>
-            <ul translate="no">
-              <li><a href="features.html" hreflang="en" lang="en" aria-current="true">English</a></li>
-              <li><a href="fr/features.html" hreflang="fr" lang="fr">Français</a></li>
-              <li><a href="es/features.html" hreflang="es" lang="es">Español</a></li>
-              <li><a href="uk/features.html" hreflang="uk" lang="uk">Українська</a></li>
-              <li><a href="de/features.html" hreflang="de" lang="de">Deutsch</a></li>
-              <li><a href="it/features.html" hreflang="it" lang="it">Italiano</a></li>
-              <li><a href="zh-Hans/features.html" hreflang="zh-Hans" lang="zh-Hans">简体中文</a></li>
-              <li><a href="ru/features.html" hreflang="ru" lang="ru">Русский</a></li>
-              <li><a href="pt-BR/features.html" hreflang="pt-BR" lang="pt-BR">Português (Brasil)</a></li>
-              <li><a href="ja/features.html" hreflang="ja" lang="ja">日本語</a></li>
-            </ul>
-          </details>
-          <details class="menu">
-            <summary aria-label="Menu"><span></span></summary>
-            <ul>
-              <li><a data-i18n href="#new">What's new</a></li>
-              <li><a data-i18n href="#providers">Clusters</a></li>
-              <li><a data-i18n href="#screens">Screens</a></li>
-              <li><a data-i18n href="#features">Features</a></li>
-              <li><a data-i18n href="#access">Access</a></li>
-              <li><a data-i18n href="#faq">FAQ</a></li>
-              <li translate="no"><a href="https://github.com/cyrinux/ichor">GitHub</a></li>
-            </ul>
-          </details>
-        </nav>
-      </header>
+    <header class="site-bar" id="bar">
+      <a class="site-brand" href="./" aria-label="Ichor, back to top">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#glyph" /></svg>
+        <span translate="no">ichor</span>
+      </a>
+      <nav aria-label="Primary">
+        <span class="site-links">
+          <a data-i18n href="./#clusters">Clusters</a>
+          <a data-i18n href="./#watch">Watch</a>
+          <a data-i18n href="./#operate">Operate</a>
+          <a data-i18n href="./#plugins">Plugins</a>
+          <a data-i18n href="features.html">Features</a>
+          <a href="https://github.com/cyrinux/ichor" translate="no">GitHub</a>
+        </span>
+        <button class="menu-button" id="menu-button" aria-label="Menu" aria-controls="menu" aria-expanded="false">
+          <span></span>
+        </button>
+      </nav>
+    </header>
 
-      <main>
-        <div class="hero">
-          <div>
-            <a class="newpill" href="#new" data-i18n
+    <div class="overlay" id="menu" aria-label="What Ichor does">
+      <ol>
+        <li><a data-i18n href="./#clusters">Clusters <small>Talos, Omni, EKS…</small></a></li>
+        <li><a data-i18n href="./#watch">Watch <small>alerts, logs</small></a></li>
+        <li><a data-i18n href="./#operate">Operate <small>upgrades, GitOps</small></a></li>
+        <li><a data-i18n href="./#measure">Measure <small>network, storage</small></a></li>
+        <li><a data-i18n href="./#plugins">Plugins <small>any CRD</small></a></li>
+        <li><a data-i18n href="./#trust">Privacy <small>no tracking</small></a></li>
+        <li><a data-i18n href="./#get">Get the app</a></li>
+        <li><a data-i18n href="features.html">Everything else <small>the full tour</small></a></li>
+      </ol>
+      <p class="meta">
+        <a data-i18n href="features.html#faq">FAQ</a>
+        <a href="https://github.com/cyrinux/ichor" translate="no">GitHub</a>
+      </p>
+      <nav class="langs" aria-label="Language" translate="no">
+        <a href="features.html" hreflang="en" lang="en" aria-current="true">English</a>
+        <a href="fr/features.html" hreflang="fr" lang="fr">Français</a>
+        <a href="es/features.html" hreflang="es" lang="es">Español</a>
+        <a href="uk/features.html" hreflang="uk" lang="uk">Українська</a>
+        <a href="de/features.html" hreflang="de" lang="de">Deutsch</a>
+        <a href="it/features.html" hreflang="it" lang="it">Italiano</a>
+        <a href="zh-Hans/features.html" hreflang="zh-Hans" lang="zh-Hans">简体中文</a>
+        <a href="ru/features.html" hreflang="ru" lang="ru">Русский</a>
+        <a href="pt-BR/features.html" hreflang="pt-BR" lang="pt-BR">Português (Brasil)</a>
+        <a href="ja/features.html" hreflang="ja" lang="ja">日本語</a>
+      </nav>
+    </div>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="glyph" viewBox="0 0 512 512">
+        <g fill="none" stroke="currentColor" stroke-width="40">
+          <path d="M300.1,72.6A212,212 0 0 1 463.4,235.9M467.9,272.6A212,212 0 0 1 355.5,467.2M211.9,72.6A212,212 0 0 0 48.6,235.9M44.1,272.6A212,212 0 0 0 156.5,467.2" />
+        </g>
+        <path fill="currentColor" d="M256,8L228,24L240,116L256,132L272,116L284,24Z" />
+        <path fill="currentColor" fill-rule="evenodd" d="M256,100C190,100 152,144 152,204L152,300L192,350L320,350L360,300L360,204C360,144 322,100 256,100ZM162,184L256,210L350,184L344,232L302,250L280,250L280,350L232,350L232,250L210,250L168,232Z" />
+        <path class="pulse" fill="var(--accent)" d="M256,380C256,380 214,430 214,456A42,42 0 0 0 298,456C298,430 256,380 256,380Z" />
+      </symbol>
+    </svg>
+
+    <section class="page-head">
+      <a class="release" href="#new" data-i18n
               ><b>1.41</b> Plugins for any CRD, pull requests from the phone, capacity and runbooks →</a
             >
-            <h1>Every cluster you run, from your phone.</h1>
-            <p class="lede">
+      <h1>Everything Ichor does</h1>
+      <p class="lede">
               Ichor was built for Talos Linux and still speaks to it with the same
               client as talosctl. Today it also opens any kubeconfig: EKS, GKE,
               AKS, DigitalOcean, Rancher, Sidero Omni or an OIDC sign-in, with
               nothing to install on the cluster and nothing in between. And when
               an operator is missing, a plugin in one YAML file gives it a screen.
             </p>
-            <div class="actions">
-              <a class="button primary" data-i18n href="#beta"
-                >Get it on Google Play (beta)</a
-              >
-              <a class="button" href="#ios" translate="no">iPhone</a>
-            </div>
-            <p class="note">
-              No cluster at hand? Tap <strong>Try demo</strong> on the first
-              screen: five sample nodes, live graphs and logs, fully offline.
-              Free and open source, Apache-2.0, read-only by default.
-            </p>
-          </div>
+      <nav class="toc" aria-label="On this page">
+        <a data-i18n href="#new">What's new</a>
+        <a data-i18n href="#providers">Clusters</a>
+        <a data-i18n href="#operate">Operate</a>
+        <a data-i18n href="#measure">Measure</a>
+        <a data-i18n href="#apps">Apps</a>
+        <a data-i18n href="#insights">Insights</a>
+        <a data-i18n href="#screens">Screens</a>
+        <a data-i18n href="#features">Features</a>
+        <a data-i18n href="#access">Access</a>
+        <a data-i18n href="#beta">Beta</a>
+        <a data-i18n href="#install">Install</a>
+        <a data-i18n href="#faq">FAQ</a>
+      </nav>
+    </section>
 
-          <div
-            class="phone"
-            role="img"
-            aria-label="A phone showing an Ichor alert, cp-2 is not ready, above the cluster switcher: lab on Talos 7 of 8 ready, prod-eu on EKS, staging on AKS with one warning, dev on GKE and edge through Omni."
-          >
-            <div class="screen" aria-hidden="true">
-              <div class="clock">3:12</div>
-              <div class="date" data-i18n>Thursday, 1 October</div>
-              <div class="notification">
-                <header>
-                  <svg viewBox="0 0 512 512" fill="currentColor" stroke="currentColor">
-                    <path fill="none" stroke-width="40" d="M300.1,72.6A212,212 0 0 1 463.4,235.9M467.9,272.6A212,212 0 0 1 355.5,467.2M211.9,72.6A212,212 0 0 0 48.6,235.9M44.1,272.6A212,212 0 0 0 156.5,467.2" />
-                    <path stroke="none" fill-rule="evenodd" d="M256,8L228,24L240,116L256,132L272,116L284,24ZM256,100C190,100 152,144 152,204L152,300L192,350L320,350L360,300L360,204C360,144 322,100 256,100ZM162,184L256,210L350,184L344,232L302,250L280,250L280,350L232,350L232,250L210,250L168,232ZM256,380C256,380 214,430 214,456A42,42 0 0 0 298,456C298,430 256,380 256,380Z" />
-                  </svg>
-                  <span>Ichor</span><span data-i18n>now</span>
-                </header>
-                <strong data-i18n>cp-2 is not ready</strong>
-                <p>lab · services: etcd not healthy</p>
-              </div>
-              <div class="clusters">
-                <div class="head" data-i18n>Clusters</div>
-                <div class="cluster current">
-                  <i class="swatch" style="background: #ff7a45"></i>
-                  <span class="name">lab</span><span class="via">Talos</span>
-                  <span class="state warn" data-i18n>7/8 ready</span>
-                </div>
-                <div class="cluster">
-                  <i class="swatch" style="background: #7cb7ff"></i>
-                  <span class="name">prod-eu</span><span class="via">EKS</span>
-                  <span class="state ok">42/42</span>
-                </div>
-                <div class="cluster">
-                  <i class="swatch" style="background: #c58bff"></i>
-                  <span class="name">staging</span><span class="via">AKS</span>
-                  <span class="state warn" data-i18n>1 pending</span>
-                </div>
-                <div class="cluster">
-                  <i class="swatch" style="background: #5bd18b"></i>
-                  <span class="name">dev</span><span class="via">GKE</span>
-                  <span class="state ok">6/6</span>
-                </div>
-                <div class="cluster">
-                  <i class="swatch" style="background: #f2c14e"></i>
-                  <span class="name">edge</span><span class="via">Omni</span>
-                  <span class="state ok">3/3</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <ul class="props" aria-label="Why Ichor">
-          <li>
-            <h3>Same client as talosctl</h3>
-            <p>
-              Built on Sidero's official Go machinery library. Contexts, mTLS
-              and endpoint-to-node proxying behave exactly as on your laptop.
-            </p>
-          </li>
-          <li>
-            <h3>Any kubeconfig, your identity</h3>
-            <p>
-              A kubeconfig cluster signs in the way its users do: IAM, Entra ID,
-              a Google service account, OIDC in the browser. What you may do is
-              your RBAC, and the app says so before you tap.
-            </p>
-          </li>
-          <li>
-            <h3>Alerts without a server</h3>
-            <p>
-              The phone itself checks every cluster in the background, Talos or
-              not, and tells you when a node, etcd or a backup is unhealthy.
-            </p>
-          </li>
-          <li>
-            <h3>Open source, no tracking</h3>
-            <p>
-              Apache-2.0, no account, no ads, no analytics. Your configs are
-              sealed on the device and only ever talk to your clusters.
-            </p>
-          </li>
-        </ul>
+    <div class="wrap">
+      <main>
 
         <section id="providers" aria-labelledby="providers-title">
           <p class="eyebrow">Born on Talos · At home anywhere</p>
@@ -3042,90 +1458,90 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
             aria-label="App screenshots, scroll sideways"
           >
             <figure>
-              <img
+              <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/overview-light.webp" /><img
                 src="screenshots/overview.webp"
                 width="540"
                 height="1045"
                 loading="lazy"
                 alt="Cluster overview screen of Ichor for Talos Linux"
-              />
+              /></picture>
               <figcaption>
                 <strong>Cluster overview</strong>Health, usage, apps and data services at a glance.
               </figcaption>
             </figure>
             <figure>
-              <img
+              <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/node-services-light.webp" /><img
                 src="screenshots/node-services.webp"
                 width="540"
                 height="1045"
                 loading="lazy"
                 alt="Services screen of Ichor for Talos Linux"
-              />
+              /></picture>
               <figcaption>
                 <strong>Services</strong>Health of each Talos service, with
                 restart for operators.
               </figcaption>
             </figure>
             <figure>
-              <img
+              <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/logs-light.webp" /><img
                 src="screenshots/logs.webp"
                 width="540"
                 height="1045"
                 loading="lazy"
                 alt="Kernel and service logs screen of Ichor for Talos Linux"
-              />
+              /></picture>
               <figcaption>
                 <strong>Kernel and service logs</strong>Colored by level,
                 repeats folded, filter to warnings or errors.
               </figcaption>
             </figure>
             <figure>
-              <img
+              <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/events-light.webp" /><img
                 src="screenshots/events.webp"
                 width="540"
                 height="1045"
                 loading="lazy"
                 alt="Events screen of Ichor for Talos Linux"
-              />
+              /></picture>
               <figcaption>
                 <strong>Events</strong>Service changes and node conditions as
                 they happen.
               </figcaption>
             </figure>
             <figure>
-              <img
+              <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/graphs-light.webp" /><img
                 src="screenshots/graphs.webp"
                 width="540"
                 height="1045"
                 loading="lazy"
                 alt="Live graphs screen of Ichor for Talos Linux"
-              />
+              /></picture>
               <figcaption>
                 <strong>Live graphs</strong>CPU, memory, network, disk and load
                 every two seconds.
               </figcaption>
             </figure>
             <figure>
-              <img
+              <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/capture-light.webp" /><img
                 src="screenshots/capture.webp"
                 width="540"
                 height="1045"
                 loading="lazy"
                 alt="Packet capture screen of Ichor for Talos Linux"
-              />
+              /></picture>
               <figcaption>
                 <strong>Packet capture</strong>A live packet list, saved as a
                 .pcap for Wireshark.
               </figcaption>
             </figure>
             <figure>
-              <img
+              <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/upgrade-light.webp" /><img
                 src="screenshots/upgrade.webp"
                 width="540"
                 height="1045"
                 loading="lazy"
                 alt="Talos upgrade screen of Ichor for Talos Linux"
-              />
+              /></picture>
               <figcaption>
                 <strong>Cluster upgrade</strong>Every node in a safe order, drained first, after pre-flight checks.
               </figcaption>
@@ -4009,24 +2425,31 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           </div>
         </section>
 
-        <section class="cta" aria-labelledby="cta-title">
-          <div>
-            <h2 id="cta-title">Your cluster has a pulse. Carry it with you.</h2>
-            <p>
-              Install Ichor in a minute, open the demo, then point it at your
-              own cluster with a read-only certificate. Free, open source, no
-              account.
-            </p>
-          </div>
-          <div class="actions">
-            <a
-              class="button primary"
-              data-i18n
-              href="#beta"
-              >Get Ichor</a
-            >
-            <a class="button" href="#install" data-i18n>How to install</a>
-          </div>
+        <section class="end" id="get-it" aria-labelledby="cta-title">
+          <h2 id="cta-title">Your cluster has a pulse. Carry it with you.</h2>
+          <div class="badges">
+          <a class="badge" href="features.html#beta">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#00d7fe" d="M3.6 1.8 13.4 12 3.6 22.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1Z" />
+              <path fill="#ffce00" d="m16.8 15.4-3.4-3.4 3.4-3.4 3.9 2.2c1 .6 1 1.8 0 2.4l-3.9 2.2Z" />
+              <path fill="#ff3a44" d="M16.8 15.4 13.4 12 3.6 22.2c.4.2.9.2 1.4-.1l11.8-6.7Z" />
+              <path fill="#00f076" d="M16.8 8.6 5 1.9c-.5-.3-1-.3-1.4-.1L13.4 12l3.4-3.4Z" />
+            </svg>
+            <span data-i18n><small>BETA ON</small><strong>Google Play</strong></span>
+          </a>
+          <a class="badge" href="https://github.com/cyrinux/ichor/releases/latest">
+            <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+              <rect x="6" y="1.5" width="12" height="21" rx="2.5" fill="none" stroke="#fff" stroke-width="1.6" />
+              <rect x="9.5" y="3.2" width="5" height="1.2" rx="0.6" />
+            </svg>
+            <span data-i18n><small>DOWNLOAD FOR</small><strong>iPhone</strong></span>
+          </a>
+        </div>
+          <p class="call">
+          Looking for <strong>Play Store beta testers</strong>: join on
+          <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a> or
+          <a href="#beta">sign up by mail</a>.
+        </p>
         </section>
 
         <section id="support" aria-labelledby="support-title">
@@ -4097,17 +2520,20 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           </div>
         </section>
       </main>
+    </div>
 
-      <footer>
-        <div class="links">
-          <a data-i18n href="https://github.com/cyrinux/ichor">Source on GitHub</a>
-          <a href="https://www.talos.dev" translate="no">Talos Linux</a>
-          <a data-i18n href="#support">Support the project</a>
-          <a data-i18n href="plugins/">Plugin reference</a>
-          <a data-i18n href="#plugin-request">Plugin request</a>
-          <a data-i18n href="privacy.html">Privacy policy</a>
-        </div>
-        <div class="ci-badges" translate="no">
+    <footer class="site-footer">
+      <div class="footer-links">
+        <a data-i18n href="features.html">Every feature</a>
+        <a data-i18n href="features.html#faq">FAQ</a>
+        <a data-i18n href="features.html#support">Support the project</a>
+        <a data-i18n href="plugins/">Plugin reference</a>
+        <a data-i18n href="features.html#plugin-request">Plugin request</a>
+        <a data-i18n href="privacy.html">Privacy policy</a>
+        <a data-i18n href="https://github.com/cyrinux/ichor">Source on GitHub</a>
+        <a href="https://www.talos.dev" translate="no">Talos Linux</a>
+      </div>
+      <div class="ci-badges" translate="no">
           <a href="https://github.com/cyrinux/ichor/actions/workflows/android.yml">
             <img
               src="https://github.com/cyrinux/ichor/actions/workflows/android.yml/badge.svg?branch=main"
@@ -4125,51 +2551,18 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
             />
           </a>
         </div>
-        <p class="foss">
+      <p class="foss">
           Open-source build: <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D" translate="no">Obtainium</a> ·
           <a href="https://github.com/cyrinux/ichor/releases/latest">APK</a>
         </p>
-        <p>
+      <p class="legal">
           Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of
           Sidero Labs, Inc.
         </p>
-      </footer>
-    </div>
+    </footer>
+
+    <script src="site.js"></script>
     <script>
-      // First visit to the English home: follow the browser's language when the site
-      // has it. Picking a language in the switcher is remembered and wins from then on.
-      (function () {
-        var supported = ["en", "fr", "es", "uk", "de", "it"];
-        try {
-          document.querySelectorAll(".lang a[hreflang]").forEach(function (link) {
-            link.addEventListener("click", function () {
-              localStorage.setItem("lang", link.hreflang);
-            });
-          });
-          if (document.documentElement.lang !== "en" || localStorage.getItem("lang")) {
-            return;
-          }
-          var wanted = (navigator.languages || [navigator.language || ""])
-            .map(function (tag) {
-              return tag.toLowerCase().split("-")[0];
-            })
-            .filter(function (code) {
-              return supported.indexOf(code) >= 0;
-            })[0];
-          if (wanted && wanted !== "en") {
-            location.replace(wanted + "/" + location.hash);
-          }
-        } catch (e) {}
-      })();
-
-      document.addEventListener("click", function (event) {
-        document.querySelectorAll(".lang[open], .menu[open]").forEach(function (open) {
-          if (!open.contains(event.target)) {
-            open.removeAttribute("open");
-          }
-        });
-      });
-
       // The beta form has no server: it writes the mail and hands it to the mail app.
       var betaForm = document.getElementById("beta-form");
       if (betaForm) {

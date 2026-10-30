@@ -1,0 +1,267 @@
+/* The home page: one screen, then one short section per idea. */
+.hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 6rem 1.5rem 0;
+  background: radial-gradient(120% 70% at 50% 0%, var(--navy-2), var(--navy));
+  color: var(--navy-ink);
+  overflow: hidden;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 7.5rem;
+  height: 7.5rem;
+  border: 2px solid rgb(232 238 245 / 0.9);
+  border-radius: 50%;
+}
+
+.mark svg {
+  width: 4.4rem;
+  height: 4.4rem;
+}
+
+.mark .pulse {
+  color: var(--accent);
+}
+
+.hero h1 {
+  margin: 1rem 0 0;
+  font-size: clamp(3rem, 12vw, 4.5rem);
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+
+.tagline {
+  margin: 2.2rem 0 0;
+  max-width: 22ch;
+  font-size: clamp(1.6rem, 6.4vw, 2.4rem);
+  font-weight: 300;
+  line-height: 1.3;
+}
+
+.tagline b {
+  font-weight: 600;
+}
+
+.demo {
+  margin: 1.2rem 0 0;
+  font-size: 0.95rem;
+  color: var(--navy-ink-2);
+}
+
+.demo b {
+  color: var(--navy-ink);
+  font-weight: 500;
+}
+
+.device {
+  margin-top: 1.2rem;
+  width: min(78vw, 20rem);
+  aspect-ratio: 540 / 1045;
+  padding: 0.7rem 0.7rem 0;
+  border: 0.45rem solid #05090f;
+  border-bottom: 0;
+  border-radius: 2.6rem 2.6rem 0 0;
+  background: #05090f;
+  box-shadow: 0 -20px 60px rgb(0 0 0 / 0.35);
+  height: min(46svh, 26rem);
+  overflow: hidden;
+}
+
+.device img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2rem 2rem 0 0;
+}
+
+.scroll-hint {
+  margin-top: 1.2rem;
+  color: var(--navy-ink-2);
+  animation: nudge 2s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  50% {
+          transform: translateY(6px);
+  };
+}
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.6rem;
+  margin: 0;
+  padding: 1.4rem 1.5rem;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  font: 500 0.9rem "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.strip li:first-child {
+  color: var(--accent);
+}
+
+.feature {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 5.5rem 1.5rem;
+  scroll-margin-top: 3rem;
+}
+
+@media (min-width: 52rem) {
+  .feature {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+
+  .feature:nth-of-type(even) .shot {
+    order: -1;
+  }
+
+}
+
+.feature + .feature {
+  border-top: 1px solid var(--line);
+}
+
+.feature h2 {
+  margin: 0.6rem 0 0;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.feature p.lead {
+  margin: 1rem 0 0;
+  color: var(--ink-2);
+}
+
+.feature ul {
+  margin: 1.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature li {
+  padding: 0.7rem 0 0.7rem 1.6rem;
+  border-top: 1px solid var(--line);
+  position: relative;
+}
+
+.feature li::before {
+  content: "";
+  position: absolute;
+  left: 0.2rem;
+  top: 1.25rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.feature li b {
+  font-weight: 600;
+}
+
+.shot {
+  justify-self: center;
+  width: min(70vw, 17rem);
+  padding: 0.5rem;
+  border-radius: 2.2rem;
+  background: #05090f;
+  box-shadow: 0 30px 60px -20px rgb(20 36 59 / 0.45);
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 1.8rem;
+}
+
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  justify-self: stretch;
+}
+
+.provider-grid span {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.provider-grid span:first-child {
+  grid-column: 1 / -1;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+pre.yaml {
+  justify-self: stretch;
+  margin: 0;
+  padding: 1.4rem;
+  border-radius: 14px;
+  background: var(--navy);
+  color: var(--navy-ink);
+  font: 0.88rem/1.6 "IBM Plex Mono", ui-monospace, monospace;
+  overflow-x: auto;
+}
+
+pre.yaml i {
+  font-style: normal;
+  color: var(--navy-ink-2);
+}
+
+pre.yaml b {
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.trust {
+  background: var(--navy);
+  color: var(--navy-ink);
+}
+
+.trust > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 2rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 4.5rem 1.5rem;
+}
+
+.trust h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.trust p {
+  margin: 0.4rem 0 0;
+  font-size: 0.95rem;
+  color: var(--navy-ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint {
+    animation: none;
+  }
+
+}

@@ -62,10 +62,10 @@ fun InfoHint(title: String, text: String, modifier: Modifier = Modifier, link: S
 }
 
 /** The website's section on CronJobs: their icon, name and description labels. */
-const val CRONJOBS_DOCS_URL = "${ICHOR_WEBSITE_URL}#cronjobs"
+const val CRONJOBS_DOCS_URL = "${ICHOR_WEBSITE_URL}features.html#cronjobs"
 
 /** The website's section on Argo CD: an app's own icon. */
-const val ARGOCD_DOCS_URL = "${ICHOR_WEBSITE_URL}#argocd"
+const val ARGOCD_DOCS_URL = "${ICHOR_WEBSITE_URL}features.html#argocd"
 
 /** The website's runbook reference (docs/runbooks.md, published by scripts/site-reference.py). */
 const val RUNBOOKS_DOCS_URL = "${ICHOR_WEBSITE_URL}runbooks/"
