@@ -7,7 +7,7 @@ import UserNotifications
 @main
 struct IchorApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var model = AppModel()
+    @State private var model = AppModel(settings: SettingsStore())
     @State private var support = SupportPrompt()
     @State private var ai = AISettings()
     @State private var gitHosts = GitHostStore()
@@ -57,6 +57,7 @@ struct IchorApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
+                .environment(model.settings)
                 .environment(support)
                 .environment(ai)
                 .environment(gitHosts)
@@ -93,7 +94,7 @@ struct IchorApp: App {
                     if phase == .active { IncomingConfig.receivePending() }
                     if phase == .background { ConfigMultiJob.shared.didEnterBackground() }
                 }
-                .preferredColorScheme(model.theme.colorScheme)
+                .preferredColorScheme(model.settings.theme.colorScheme)
                 // The accent color follows the cluster on screen.
                 .tint(model.accent)
         }
@@ -134,6 +135,7 @@ extension ThemeMode {
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @Environment(\.scenePhase) private var scenePhase
     @State private var everUnlocked = false
 
@@ -142,10 +144,10 @@ struct RootView: View {
             if everUnlocked || !model.lock.locked {
                 content
                     // Under the cover below: VoiceOver must not read the old names either.
-                    .accessibilityHidden(model.maskTransition)
+                    .accessibilityHidden(settings.maskTransition)
             }
             // The screenshot mode switching: no screen shows until its names are the new ones.
-            if model.maskTransition {
+            if settings.maskTransition {
                 MaskTransitionCover()
             }
             if model.lock.locked {
@@ -200,7 +202,7 @@ struct RootView: View {
     }
 }
 
-/// Over the screens while the screenshot mode is turned on or off (AppModel.maskTransition):
+/// Over the screens while the screenshot mode is turned on or off (SettingsStore.maskTransition):
 /// its icon and a progress indicator, and no name.
 private struct MaskTransitionCover: View {
     var body: some View {
@@ -395,6 +397,7 @@ extension Route {
 
 struct MainNavigation: View {
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var path: [Route] = []
     /// The outcome of "+1 h" from a freeze reminder.
@@ -408,7 +411,7 @@ struct MainNavigation: View {
             .wakeOnLanPresenter()
             // The screenshot mode switching (under its cover): the screens pushed with the old names
             // go, the settings pages the switch was flipped on stay.
-            .onChange(of: model.maskTransition) { _, switching in
+            .onChange(of: settings.maskTransition) { _, switching in
                 guard switching else { return }
                 path = pathKeptOnMaskSwitch(path) { route in
                     if case .settingsPage = route { return true }
@@ -706,14 +709,14 @@ struct MainNavigation: View {
         }
         // Not during a screenshot mode switch, nor with a route read under the setting before it:
         // the route carries node names (see pathKeptOnMaskSwitch).
-        guard !model.maskTransition else { return }
+        guard !settings.maskTransition else { return }
         let generation = model.dataGeneration
         path = []
         guard let route = await target.route(client: model.client, kube: model.activeIsKube),
-            !model.maskTransition, generation == model.dataGeneration
+            !settings.maskTransition, generation == model.dataGeneration
         else { return }
         let shown = await splitRoute(actionRoute(route, for: action))
-        guard !model.maskTransition, generation == model.dataGeneration else { return }
+        guard !settings.maskTransition, generation == model.dataGeneration else { return }
         path = [shown]
         if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
     }

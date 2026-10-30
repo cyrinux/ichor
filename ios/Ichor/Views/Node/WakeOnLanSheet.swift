@@ -67,6 +67,7 @@ extension View {
 
 private struct WakeOnLanPresenter: ViewModifier {
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
 
     func body(content: Content) -> some View {
         @Bindable var center = WakeOnLanCenter.shared
@@ -78,7 +79,7 @@ private struct WakeOnLanPresenter: ViewModifier {
             }
             .messageAlert($center.message)
             // Screenshot mode turned on with the sheet open: closed, not just emptied.
-            .onChange(of: model.privacyMask) { _, masked in if masked { center.editing = nil } }
+            .onChange(of: settings.privacyMask) { _, masked in if masked { center.editing = nil } }
     }
 }
 

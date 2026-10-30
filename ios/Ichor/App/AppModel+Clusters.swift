@@ -4,6 +4,12 @@ import IchorCore
 
 // Loading, saving and editing the stored clusters, and showing a parsed config.
 extension AppModel {
+    /// How clusters are called on screen (given names, unless the screenshot mode is on).
+    var labels: ClusterLabels { ClusterLabels(names: clusterNames, masked: settings.privacyMask) }
+
+    /// The name of the cluster on screen.
+    var activeLabel: String { activeSummary.map(labels.of) ?? activeContext }
+
     /// Loads the stored configs (Keychain); nothing is read before the first unlock.
     func load() async {
         StartupTrace.markOnce("config load start")
@@ -140,8 +146,8 @@ extension AppModel {
         storeColors(clusterColors.merging(colors) { _, new in new })
         storeNames(names)
         storeKubeServers(servers)
-        storeVpnOnly(restoredVpnOnly)
-        storeAuditEventClusters(restoredAuditEvents)
+        settings.storeVpnOnly(restoredVpnOnly)
+        settings.storeAuditEventClusters(restoredAuditEvents)
         storeKubeAccess(links)
         storeClusterRepos(repos)
     }
@@ -299,8 +305,8 @@ extension AppModel {
         AlertmanagerStore.keep(fingerprints: [])
         WakeOnLanStore.shared.wipe()
         KubeAuthStore.shared.wipe()  // its sealed item went with the others
-        storeVpnOnly([])
-        storeMonitorUnwatched([])
+        settings.storeVpnOnly([])
+        settings.storeMonitorUnwatched([])
         AlertSnoozeStore.keep(clusters: [])
         AlertRulesStore.keep(fingerprints: [])
         AlertMuteStore.keep(clusters: [])
@@ -366,7 +372,8 @@ extension AppModel {
         storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSkippedTalosUpdates(
             keepClusterNames(saved: skippedTalosUpdates, fingerprints: newSummary.contexts.map(\.fingerprint)))
-        storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        settings.storeVpnOnly(
+            keepVpnOnly(saved: settings.vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
         // The app-wide "Record actions" switch of older versions, once: on, every cluster keeps it.
         let defaults = UserDefaults.standard
         if defaults.object(forKey: AuditEventKeys.enabled) != nil {
@@ -374,10 +381,10 @@ extension AppModel {
                 legacyOn: defaults.bool(forKey: AuditEventKeys.enabled),
                 contexts: newSummary.contexts)
             defaults.removeObject(forKey: AuditEventKeys.enabled)
-            storeAuditEventClusters(auditEventClusters.union(seeded))
+            settings.storeAuditEventClusters(settings.auditEventClusters.union(seeded))
         }
         // Per cluster: a context added to a recording cluster records too; removed ones go.
-        storeAuditEventClusters(wholeClusters(auditEventClusters, contexts: newSummary.contexts))
+        settings.storeAuditEventClusters(wholeClusters(settings.auditEventClusters, contexts: newSummary.contexts))
         storeClusterRepos(ClusterRepoStore.keep(clusterRepos, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeProposals(ProposalsStore.keep(storedProposals, fingerprints: newSummary.contexts.map(\.fingerprint)))
         // Sign-ins and Kubernetes access links go with their clusters.
@@ -396,8 +403,8 @@ extension AppModel {
         MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         AlertmanagerStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         // A removed cluster's background state goes too: its snapshot, unreachable count and snoozes.
-        storeMonitorUnwatched(
-            keepVpnOnly(saved: monitorUnwatched, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        settings.storeMonitorUnwatched(
+            keepVpnOnly(saved: settings.monitorUnwatched, fingerprints: newSummary.contexts.map(\.fingerprint)))
         SharedStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
         HistoryStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
         AlertSnoozeStore.keep(clusters: newSummary.contexts.map(\.fingerprint))

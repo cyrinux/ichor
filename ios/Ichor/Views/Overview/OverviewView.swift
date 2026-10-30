@@ -6,6 +6,7 @@ struct OverviewView: View {
     @Binding var path: [Route]
 
     @Environment(AppModel.self) var model
+    @Environment(SettingsStore.self) var settings
     @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
     /// `state` is only what the last background check saw (a seed), until the cluster answers.
@@ -289,7 +290,7 @@ struct OverviewView: View {
     /// The screenshot-mode sign, AI diagnosis, the bar's icons as arranged and the ⋯ menu.
     @ToolbarContentBuilder
     private var overviewToolbar: some ToolbarContent {
-        if model.privacyMask {
+        if settings.privacyMask {
             ToolbarItem(placement: .topBarLeading) {
                 // A small icon rather than a label, so it stays out of the way in screenshots.
                 Image(systemName: "eye.slash")
@@ -367,7 +368,7 @@ struct OverviewView: View {
             if !pins.isEmpty {
                 PinnedSection(
                     pins: pins.pins, nodes: overview.nodes, argo: argoStatus, flux: fluxStatus,
-                    masked: model.privacyMask, open: { open($0, overview: overview) },
+                    masked: settings.privacyMask, open: { open($0, overview: overview) },
                     unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
             }
         case .talosUpdate:
@@ -447,7 +448,7 @@ struct OverviewView: View {
     /// the screenshot mode's switching cover over it.
     private var tourActive: Bool {
         DemoTourSteps.runs(demo: model.activeSummary?.demo == true, kube: model.activeIsKube)
-            && visible && scenePhase == .active && !model.maskTransition && !model.lock.locked
+            && visible && scenePhase == .active && !settings.maskTransition && !model.lock.locked
     }
 
     /// The coach marks whose anchor is on screen; nil until the overview is loaded.
@@ -500,7 +501,7 @@ struct OverviewView: View {
 
     /// Whether the public IPs Talos does not know can be asked from the internet now.
     private func canDetectIPs(_ overview: ClusterOverview) -> Bool {
-        model.allows(.kubeconfig) && !model.privacyMask && overview.lacksPublicIPs
+        model.allows(.kubeconfig) && !settings.privacyMask && overview.lacksPublicIPs
     }
 
     private func detectPublicIPs() {

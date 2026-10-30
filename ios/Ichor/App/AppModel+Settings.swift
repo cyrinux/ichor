@@ -2,19 +2,20 @@ import Foundation
 import Observation
 import IchorCore
 
-// Per-cluster settings (VPN only, repository, proposals, background watch), what follows them
-// (widget, Spotlight), keeping the last known state, and the screenshot mode.
+// Per-cluster settings (VPN only, repository, proposals, background watch) and what follows them
+// (widget, Spotlight). The values themselves are SettingsStore's.
 extension AppModel {
     /// Whether the cluster on screen is set to be reached over a VPN only and none is up.
     var vpnHeldBack: Bool {
-        heldBackForVpn(vpnOnly: vpnOnly, fingerprint: activeSummary?.fingerprint, vpnUp: VpnMonitor.shared.up)
+        heldBackForVpn(vpnOnly: settings.vpnOnly, fingerprint: activeSummary?.fingerprint, vpnUp: VpnMonitor.shared.up)
     }
 
     /// Sets whether `context` is reached over a VPN only; the cluster on screen reloads (with
     /// the VPN off, the screens then say to connect it).
     func setVpnOnly(_ on: Bool, for context: ContextSummary) {
         guard !context.fingerprint.isEmpty else { return }
-        storeVpnOnly(on ? vpnOnly.union([context.fingerprint]) : vpnOnly.subtracting([context.fingerprint]))
+        let fingerprint = context.fingerprint
+        settings.storeVpnOnly(on ? settings.vpnOnly.union([fingerprint]) : settings.vpnOnly.subtracting([fingerprint]))
         if context.fingerprint == activeSummary?.fingerprint { dataGeneration += 1 }
     }
 
@@ -84,53 +85,28 @@ extension AppModel {
         UserDefaults.standard.set(ClusterRepoStore.encode(repos), forKey: ClusterRepoStore.key)
     }
 
-    // Internal, not private: AppModel+Clusters.swift uses it.
-
-    func storeVpnOnly(_ fingerprints: Set<String>) {
-        guard fingerprints != vpnOnly else { return }
-        vpnOnly = fingerprints
-        UserDefaults.standard.set(fingerprints.sorted(), forKey: Keys.vpnOnly)
-    }
-
     /// Whether the background checks watch `context`'s cluster (off on any of its contexts: not).
     func watchesInBackground(_ context: ContextSummary) -> Bool {
-        watchedInBackground(context, contexts: summary?.contexts ?? [], unwatched: monitorUnwatched)
+        watchedInBackground(context, contexts: summary?.contexts ?? [], unwatched: settings.monitorUnwatched)
     }
 
     /// Turns the background checks of `context`'s cluster on or off.
     func setWatchInBackground(_ on: Bool, for context: ContextSummary) {
-        storeMonitorUnwatched(
-            settingWatched(on, for: context, contexts: summary?.contexts ?? [], unwatched: monitorUnwatched))
+        settings.storeMonitorUnwatched(
+            settingWatched(on, for: context, contexts: summary?.contexts ?? [], unwatched: settings.monitorUnwatched))
     }
 
     /// Whether `context`'s cluster records actions (a Kubernetes Event per change).
     func recordsActions(_ context: ContextSummary) -> Bool {
-        clusterFlagged(context, contexts: summary?.contexts ?? [], members: auditEventClusters)
+        clusterFlagged(context, contexts: summary?.contexts ?? [], members: settings.auditEventClusters)
     }
 
     /// Turns "Record actions in the cluster" on or off for `context`'s cluster (all its contexts).
     func setRecordActions(_ on: Bool, for context: ContextSummary) {
-        storeAuditEventClusters(
+        settings.storeAuditEventClusters(
             settingClusterFlag(
                 on, for: context, contexts: summary?.contexts ?? [],
-                members: auditEventClusters))
-    }
-
-    /// Saves the clusters that record actions and hands them to Go.
-    // Internal, not private: AppModel+Clusters.swift uses it.
-    func storeAuditEventClusters(_ fingerprints: Set<String>) {
-        guard fingerprints != auditEventClusters else { return }
-        auditEventClusters = fingerprints
-        UserDefaults.standard.set(fingerprints.sorted(), forKey: AuditEventKeys.clusters)
-        TalosClient.setAuditEventClusters(fingerprints)
-    }
-
-    // Internal, not private: AppModel+Clusters.swift uses it.
-
-    func storeMonitorUnwatched(_ fingerprints: Set<String>) {
-        guard fingerprints != monitorUnwatched else { return }
-        monitorUnwatched = fingerprints
-        UserDefaults.standard.set(fingerprints.sorted(), forKey: BackgroundMonitor.unwatchedKey)
+                members: settings.auditEventClusters))
     }
 
     /// Tells the widget which clusters it can show, named as on screen, and which one is active
@@ -156,85 +132,12 @@ extension AppModel {
     func updateSpotlight() {
         SpotlightIndex.update(
             summary: summary, active: activeContext, labels: labels,
-            enabled: keepLastKnown && !lock.enabled && !privacyMask)
+            enabled: settings.keepLastKnown && !lock.enabled && !settings.privacyMask)
     }
 
     /// The VPN came up: a VPN-only cluster on screen reloads.
     // Internal, not private: AppModel.swift uses it.
     func reloadIfHeldBack() {
-        if let shown = activeSummary?.fingerprint, vpnOnly.contains(shown) { dataGeneration += 1 }
-    }
-
-    /// Off: everything kept so far is deleted, with its key.
-    func setKeepLastKnown(_ enabled: Bool) {
-        keepLastKnown = enabled
-        UserDefaults.standard.set(enabled, forKey: Keys.keepLastKnown)
-        if !enabled { LastKnownStore.wipe() }
-        updateSpotlight()
-    }
-
-    /// Turns the screenshot mode on or off, keeping its words (the Privacy toggle).
-    func setPrivacyMask(_ on: Bool) async {
-        await setPrivacyMask(on, words: privacyWords)
-    }
-
-    /// Turns the screenshot mode on or off (or changes its words). One switch at a time: a
-    /// second call waits for the first, so the two never interleave.
-    func setPrivacyMask(_ enabled: Bool, words: String) async {
-        let previous = maskSwitch
-        let current = Task {
-            await previous?.value
-            await switchPrivacyMask(enabled, words: words)
-        }
-        maskSwitch = current
-        await current.value
-    }
-
-    /// With the placeholder up (maskTransition), drops the data held with the previous names
-    /// (widget snapshot, last known state, live samples, search history), then changes Go's
-    /// mask and re-reads the config, whose context names are masked too (MaskTransition).
-    private func switchPrivacyMask(_ enabled: Bool, words: String) async {
-        guard enabled != privacyMask || words != privacyWords else { return }
-        // Words changed while the mode is off: nothing shown changes.
-        guard enabled || privacyMask else {
-            storePrivacyMask(enabled, words: words)
-            return
-        }
-        await MaskTransition.run(
-            begin: { maskTransition = true },
-            dropData: { dropMaskedData() },
-            applyMask: { storePrivacyMask(enabled, words: words) },
-            reread: {
-                await reparse()
-                dataGeneration += 1
-                // Lets the screens under the placeholder drop what they hold (their onChange and
-                // .task(id:) on dataGeneration) before it goes, so not one frame shows old names.
-                try? await Task.sleep(for: .milliseconds(150))
-            },
-            end: { maskTransition = false }
-        )
-        // Not awaited under the placeholder: the notification center may answer slowly.
-        if enabled { Task { await BackgroundMonitor.removeDeliveredAlerts() } }
-    }
-
-    /// What was kept under the previous names, dropped before Go's mask changes.
-    private func dropMaskedData() {
-        // Also resets the alert diff, which would otherwise see every node renamed.
-        SharedStore.clear()
-        LastKnownStore.wipe()
-        // Its poll stops recording: the overview starts a new one with the new generation.
-        ClusterLiveStore.shared.forget()
-        SearchRecents.clear()
-        RecentTargetStore.shared.clear()
-        forgetFeatures()
-    }
-
-    private func storePrivacyMask(_ enabled: Bool, words: String) {
-        privacyMask = enabled
-        privacyWords = words
-        UserDefaults.standard.set(enabled, forKey: PrivacyKeys.enabled)
-        UserDefaults.standard.set(words, forKey: PrivacyKeys.words)
-        TalosClient.setPrivacyMask(enabled: enabled, extraWords: words)
-        updateSpotlight()
+        if let shown = activeSummary?.fingerprint, settings.vpnOnly.contains(shown) { dataGeneration += 1 }
     }
 }

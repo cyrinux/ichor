@@ -4,7 +4,7 @@ import SwiftUI
 /// More rows than any screen is tall are laid out and the overflow is clipped.
 struct SkeletonView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(SettingsStore.self) private var settings: SettingsStore?
     @State private var dimmed = false
 
     private static let rows = 14
@@ -34,7 +34,7 @@ struct SkeletonView: View {
         .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // The "true black" theme keeps its black page under the shapes.
-        .background(model?.theme == .black ? Color.black : Color(.systemGroupedBackground))
+        .background(settings?.theme == .black ? Color.black : Color(.systemGroupedBackground))
         .onAppear { dimmed = !reduceMotion }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Loading…")

@@ -13,6 +13,7 @@ struct SearchView: View {
     let openRoute: (Route) -> Void
 
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @State private var store = SearchStore()
     @State private var text = ""
     @State private var presented = false
@@ -20,7 +21,7 @@ struct SearchView: View {
 
     var body: some View {
         List {
-            if !model.keepLastKnown {
+            if !settings.keepLastKnown {
                 Section {
                     Label(
                         "Turn on “Keep last known state” in Settings to search your other clusters too",

@@ -14,6 +14,7 @@ private struct KubeServerAlert: ViewModifier {
     @Binding var context: ContextSummary?
 
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @State private var input = ""
     @State private var error: String?
 
@@ -40,7 +41,7 @@ private struct KubeServerAlert: ViewModifier {
             .onChange(of: context) { _, opened in
                 input = opened.flatMap { model.kubeServers[$0.fingerprint] } ?? ""
             }
-            .onChange(of: model.privacyMask) { _, masked in if masked { context = nil } }
+            .onChange(of: settings.privacyMask) { _, masked in if masked { context = nil } }
     }
 
     private func save(_ typed: String, for context: ContextSummary?) async {
