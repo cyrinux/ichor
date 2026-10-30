@@ -37,6 +37,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.RunbookRunState
 import name.levis.ichor.model.RunbookPlanStep
 import name.levis.ichor.model.RunbookStepState
+import name.levis.ichor.model.runbookValuesLabel
 import name.levis.ichor.model.confirmsByHostname
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -82,6 +83,7 @@ fun RunbookRunScreen(onBack: () -> Unit, onActivity: (cluster: String) -> Unit) 
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 RunHeader(state)
+                if (state.values.isNotEmpty()) MutedText(stringResource(R.string.runbook_params_values, runbookValuesLabel(state.values)))
                 state.plan.steps.forEachIndexed { index, step ->
                     if (index > 0) HorizontalDivider()
                     val st = state.steps.getOrNull(index)

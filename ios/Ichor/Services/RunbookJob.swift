@@ -14,6 +14,8 @@ final class RunbookJob {
         let id: String
         let fingerprint: String
         let plan: RunbookPlan
+        /// What it was asked for: its header shows them.
+        var values: [String: String] = [:]
         var progress: RunbookProgress
         var running = true
         var stopping = false
@@ -34,12 +36,13 @@ final class RunbookJob {
     /// Starts runbook `id` of the cluster `fingerprint` unless one runs; false then.
     @discardableResult
     func start(
-        id: String, fingerprint: String, yaml: String, plan: RunbookPlan, continueIDs: Set<String>, client: TalosClient
+        id: String, fingerprint: String, yaml: String, plan: RunbookPlan, continueIDs: Set<String>,
+        values: [String: String] = [:], client: TalosClient
     ) -> Bool {
         guard !isRunning else { return false }
-        let started = client.startRunbook(yaml: yaml, continueIDs: continueIDs)
+        let started = client.startRunbook(yaml: yaml, continueIDs: continueIDs, values: values)
         handle = started
-        run = Run(id: id, fingerprint: fingerprint, plan: plan, progress: RunbookProgress(plan: plan))
+        run = Run(id: id, fingerprint: fingerprint, plan: plan, values: values, progress: RunbookProgress(plan: plan))
         OperationNotice.prepare()
         background.begin("Runbook")
         Task {

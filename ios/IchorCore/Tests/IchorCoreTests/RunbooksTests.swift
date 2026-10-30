@@ -122,6 +122,32 @@ final class RunbooksTests: XCTestCase {
         XCTAssertEqual(progress.position?.step, 3)
     }
 
+    func testDecodeParamsAndWhatTheFormNeeds() throws {
+        let json = """
+            {"name":"r","steps":1,"params":[
+              {"name":"ns","prompt":"Namespace","default":"","kind":"namespace"},
+              {"name":"app","default":"ingest-api"},
+              {"name":"old","default":"x"}]}
+            """
+        let summary = try JSONDecoder().decode(RunbookSummary.self, from: Data(json.utf8))
+        XCTAssertEqual(summary.params.map(\.name), ["ns", "app", "old"])
+        XCTAssertEqual(summary.params[0].kind, RunbookParam.kindNamespace)
+        XCTAssertEqual(summary.params[1].prompt, "app", "no prompt: the name")
+        XCTAssertEqual(summary.params[1].kind, "string")
+
+        let remembered = ["ns": "demo-shop", "gone": "y", "old": " "]
+        let values = RunbookParam.initialValues(summary.params, remembered: remembered)
+        XCTAssertEqual(values, ["ns": "demo-shop", "app": "ingest-api", "old": "x"])
+        XCTAssertEqual(RunbookParam.missing(summary.params, values: values), [])
+        XCTAssertEqual(RunbookParam.missing(summary.params, values: ["ns": " "]), ["ns"])
+        XCTAssertEqual(RunbookParam.label(["ns": "demo-shop", "app": "api"]), "app=api · ns=demo-shop")
+    }
+
+    func testASummaryWithoutParamsAsksNothing() throws {
+        let summary = try JSONDecoder().decode(RunbookSummary.self, from: Data(#"{"name":"r"}"#.utf8))
+        XCTAssertEqual(summary.params, [])
+    }
+
     func testRunbookOperationKind() {
         XCTAssertEqual(OperationButton.offered(for: .runbook), [.stop])
         XCTAssertEqual(OperationButton.offered(for: .runbook, stopping: true), [])

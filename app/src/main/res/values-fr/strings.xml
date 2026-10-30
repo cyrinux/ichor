@@ -5797,6 +5797,10 @@
     <string name="runbooks_remove">Supprimer</string>
     <string name="runbooks_remove_title">Supprimer %1$s ?</string>
     <string name="runbooks_remove_text">Le runbook est supprimé de ce téléphone. Rien ne change sur le cluster.</string>
+    <string name="runbook_params_title">Valeurs pour cette exécution</string>
+    <string name="runbook_params_continue">Continuer</string>
+    <string name="runbook_params_change">Modifier les valeurs</string>
+    <string name="runbook_params_values">Valeurs : %1$s</string>
     <string name="runbook_open_plan">Voir le plan</string>
     <string name="runbook_field_yaml">YAML du runbook</string>
     <string name="runbook_field_url">Adresse https:// du fichier runbook</string>

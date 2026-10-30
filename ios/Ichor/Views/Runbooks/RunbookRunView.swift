@@ -22,6 +22,11 @@ struct RunbookRunView: View {
         Form {
             if let run {
                 header(run)
+                if !run.values.isEmpty {
+                    Section {
+                        Text("Values: \(RunbookParam.label(run.values))").font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
                 Section {
                     ForEach(Array(run.plan.steps.enumerated()), id: \.element.id) { index, step in
                         RunbookStepStateRow(step: step, state: run.progress.steps[safe: index]) {

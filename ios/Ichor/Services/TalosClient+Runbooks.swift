@@ -47,20 +47,35 @@ extension TalosClient {
         try await run { IchorgoPluginFetchURL(url, $0) }
     }
 
-    /// What each step will do, its role and whether the cluster allows it; runs nothing.
+    /// What each step will do, its role and whether the cluster allows it, a parameter still
+    /// shown as written; runs nothing.
     func runbookPlan(yaml: String) async throws -> RunbookPlan {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoRunbookPlan(config, context, kubeServer, yaml, $0)
         }
     }
 
-    /// Starts the run; `continueIDs` are the steps chosen to go past. Each destructive step
-    /// waits until `confirm(index)`; `stop` skips the rest.
-    func startRunbook(yaml: String, continueIDs: Set<String>) -> RunbookHandle {
+    /// The plan with `values` in place; a missing required value is an error. Runs nothing.
+    func runbookPlan(yaml: String, values: [String: String]) async throws -> RunbookPlan {
+        let valuesJSON = Self.runbookValuesJSON(values)
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoRunbookPlanWith(config, context, kubeServer, yaml, valuesJSON, $0)
+        }
+    }
+
+    private static func runbookValuesJSON(_ values: [String: String]) -> String {
+        (try? JSONEncoder().encode(values)).flatMap { String(data: $0, encoding: .utf8) } ?? ""
+    }
+
+    /// Starts the run with `values`; `continueIDs` are the steps chosen to go past. Each
+    /// destructive step waits until `confirm(index)`; `stop` skips the rest.
+    func startRunbook(yaml: String, continueIDs: Set<String>, values: [String: String]) -> RunbookHandle {
         let (stream, continuation) = AsyncStream.makeStream(of: RunbookEvent.self)
         let bridge = RunbookBridge(continuation)
-        let started = IchorgoStartRunbook(
-            kubeConfig, kubeContext, kubeAPIServer, yaml, runbookContinueIDs(continueIDs), bridge)
+        let started = IchorgoStartRunbookWith(
+            kubeConfig, kubeContext, kubeAPIServer, yaml, runbookContinueIDs(continueIDs),
+            Self.runbookValuesJSON(values), bridge)
         let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
             _ = bridge  // keep the listener alive for the whole run
