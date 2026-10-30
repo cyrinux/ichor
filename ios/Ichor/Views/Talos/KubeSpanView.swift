@@ -152,9 +152,10 @@ private struct KubeSpanPeersList: View {
 
     /// The nodes with a problem first, then by name.
     private var problemsFirst: [KubeSpanNode] {
-        overview.nodes.sorted {
-            ($0.broken == 0 ? 1 : 0, hostnames[$0.node] ?? $0.node) < ($1.broken == 0 ? 1 : 0, hostnames[$1.node] ?? $1.node)
+        func rank(_ node: KubeSpanNode) -> (Int, String) {
+            (node.broken == 0 ? 1 : 0, hostnames[node.node] ?? node.node)
         }
+        return overview.nodes.sorted { rank($0) < rank($1) }
     }
 
     private func summary(down: Int) -> String {

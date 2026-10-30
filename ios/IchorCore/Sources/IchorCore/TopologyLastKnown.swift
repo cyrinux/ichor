@@ -55,7 +55,8 @@ private extension ClusterTopology {
             let named = TopologySite(
                 id: current.id, label: beforeSite.label, kind: beforeSite.kind,
                 country: current.country.isEmpty ? beforeSite.country : current.country, nodes: current.nodes)
-            return ClusterTopology(nodes: nodes, links: links, sites: sites.map { $0.id == current.id ? named : $0 }, mesh: mesh)
+            let renamed = sites.map { $0.id == current.id ? named : $0 }
+            return ClusterTopology(nodes: nodes, links: links, sites: renamed, mesh: mesh)
         }
         let moved = sites.compactMap { s -> TopologySite? in
             switch s.id {

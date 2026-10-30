@@ -25,8 +25,8 @@ final class TopologyTests: XCTestCase {
         XCTAssertEqual(topology.links.map(\.isOneSided), [false, false, true])
         XCTAssertEqual(topology.links[0].reason, "neverHandshaked")
         XCTAssertEqual(topology.links[2].since, 1_800_000_000)
-        XCTAssertEqual(
-            topology.mesh, TopologyMesh(checked: true, links: 3, broken: 2, pairs: ["node-a ↔ node-b", "node-b ↔ node-c"]))
+        let pairs = ["node-a ↔ node-b", "node-b ↔ node-c"]
+        XCTAssertEqual(topology.mesh, TopologyMesh(checked: true, links: 3, broken: 2, pairs: pairs))
         XCTAssertEqual(topology.brokenLinks(of: "node-b"), 2)
     }
 
