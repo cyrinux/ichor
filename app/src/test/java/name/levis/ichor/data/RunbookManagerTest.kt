@@ -4,12 +4,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import name.levis.ichor.model.RunbookParam
 import name.levis.ichor.model.RunbookPlan
 import name.levis.ichor.model.RunbookPlanStep
 import name.levis.ichor.model.RunbookResult
 import name.levis.ichor.model.RunbookStepState
 import name.levis.ichor.model.RunbookTarget
 import name.levis.ichor.model.confirmsByHostname
+import name.levis.ichor.model.initialRunbookValues
+import name.levis.ichor.model.missingRunbookValues
+import name.levis.ichor.model.runbookValuesLabel
 import name.levis.ichor.ui.operations.OperationText
 import name.levis.ichor.ui.operations.RunbookPresenter
 import org.junit.Assert.assertEquals
@@ -32,17 +36,39 @@ class RunbookManagerTest {
         val confirmed = mutableListOf<Int>()
         var stops = 0
         var continueIds = emptySet<String>()
+        var values = emptyMap<String, String>()
 
         fun step(index: Int, id: String, state: String) = events.trySend(RunbookEvent.Step(RunbookStepState(index, id, state)))
     }
 
     private fun manager(fake: FakeRun) = RunbookManager(
-        startRun = { _, ids ->
+        startRun = { _, ids, values ->
             fake.continueIds = ids
+            fake.values = values
             RunbookHandle(fake.events, { fake.stops++ }, { fake.confirmed += it })
         },
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
     )
+
+    @Test
+    fun theValuesReachTheRunAndItsHeader() {
+        val fake = FakeRun()
+        val m = manager(fake)
+        val values = mapOf("ns" to "demo-shop", "count" to "2")
+        assertTrue(m.start("yaml", plan, emptySet(), values))
+        assertEquals(values, fake.values)
+        assertEquals(values, m.current.value?.values)
+    }
+
+    @Test
+    fun whatTheFormStartsFromAndWhatItStillNeeds() {
+        val params = listOf(RunbookParam("ns"), RunbookParam("app", default = "ingest-api"), RunbookParam("old", default = "x"))
+        val start = initialRunbookValues(params, mapOf("ns" to "demo-shop", "gone" to "y", "old" to " "))
+        assertEquals(mapOf("ns" to "demo-shop", "app" to "ingest-api", "old" to "x"), start)
+        assertEquals(emptyList<String>(), missingRunbookValues(params, start))
+        assertEquals(listOf("ns"), missingRunbookValues(params, mapOf("ns" to " ")))
+        assertEquals("ns=demo-shop · app=api", runbookValuesLabel(mapOf("ns" to "demo-shop", "app" to "api")))
+    }
 
     @Test
     fun aWaitingStepIsConfirmedOnlyWhileItWaits() {

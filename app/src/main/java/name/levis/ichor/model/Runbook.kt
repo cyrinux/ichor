@@ -20,6 +20,34 @@ data class RunbookItem(
 @Serializable
 data class RunbookList(val items: List<RunbookItem> = emptyList())
 
+/** A value a runbook asks for before its plan (RunbookSummary's params). */
+@Serializable
+data class RunbookParam(val name: String, val prompt: String = name, val default: String = "", val kind: String = KIND_STRING) {
+    companion object {
+        const val KIND_STRING = "string"
+        const val KIND_NAMESPACE = "namespace"
+        const val KIND_WORKLOAD = "workload"
+        const val KIND_NODE = "node"
+        const val KIND_INT = "int"
+        const val KIND_BOOL = "bool"
+    }
+}
+
+/** RunbookSummary's answer, for what the plan asks first. */
+@Serializable
+data class RunbookSummary(val params: List<RunbookParam> = emptyList())
+
+/** The names among [params] that have neither a value nor a default. */
+fun missingRunbookValues(params: List<RunbookParam>, values: Map<String, String>): List<String> =
+    params.filter { values[it.name].isNullOrBlank() && it.default.isBlank() }.map { it.name }
+
+/** What the form starts from: the [remembered] values of a parameter that still exists, else its default. */
+fun initialRunbookValues(params: List<RunbookParam>, remembered: Map<String, String>): Map<String, String> =
+    params.associate { it.name to (remembered[it.name]?.takeIf(String::isNotBlank) ?: it.default) }
+
+/** The values as a run's header shows them: "ns=demo-shop · count=2". */
+fun runbookValuesLabel(values: Map<String, String>): String = values.entries.joinToString(" · ") { "${it.key}=${it.value}" }
+
 /** What a step acts on: a Kubernetes object, or a node. */
 @Serializable
 data class RunbookTarget(val kind: String = "", val namespace: String = "", val name: String = "", val node: String = "") {

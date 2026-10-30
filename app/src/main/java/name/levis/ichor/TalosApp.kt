@@ -14,6 +14,7 @@ import name.levis.ichor.data.UpdateLookupConsent
 import name.levis.ichor.data.UpdatesRepository
 import name.levis.ichor.data.RunbookManager
 import name.levis.ichor.data.RunbookRepository
+import name.levis.ichor.data.RunbookValueMemory
 import name.levis.ichor.data.CARotationManager
 import name.levis.ichor.data.PodSweepManager
 import name.levis.ichor.data.BackupManager
@@ -331,6 +332,7 @@ class TalosApp : Application() {
     }
     val runbookRepository by lazy { RunbookRepository(goCall) }
     /** The runbook running or last run, app-wide; OperationService keeps the app alive while it runs. */
+    val runbookValues by lazy { RunbookValueMemory(getSharedPreferences(RunbookValueMemory.FILE, Context.MODE_PRIVATE)) }
     val runbookManager by lazy { RunbookManager(runbookRepository::start, onStarted = { OperationService.start(this, OperationKind.RUNBOOK) }) }
     /** The "Clean up dead pods" sweep running or last run, app-wide; OperationService keeps the app alive while it runs. */
     val podSweepManager by lazy { PodSweepManager(kubeRepository::startSanitize, onStarted = { OperationService.start(this, OperationKind.POD_SWEEP) }) }

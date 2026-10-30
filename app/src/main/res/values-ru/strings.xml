@@ -6035,6 +6035,10 @@
     <string name="runbooks_remove">Удалить</string>
     <string name="runbooks_remove_title">Удалить %1$s?</string>
     <string name="runbooks_remove_text">Ранбук будет удалён с этого телефона. На кластере ничего не изменится.</string>
+    <string name="runbook_params_title">Значения для этого запуска</string>
+    <string name="runbook_params_continue">Продолжить</string>
+    <string name="runbook_params_change">Изменить значения</string>
+    <string name="runbook_params_values">Значения: %1$s</string>
     <string name="runbook_open_plan">Показать план</string>
     <string name="runbook_field_yaml">YAML ранбука</string>
     <string name="runbook_field_url">Адрес https:// файла ранбука</string>

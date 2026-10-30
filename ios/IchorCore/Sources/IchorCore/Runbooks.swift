@@ -58,14 +58,74 @@ public struct RunbookList: Decodable, Equatable, Sendable {
     }
 }
 
+/// A value a runbook asks for before its plan (RunbookSummary's params).
+public struct RunbookParam: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public static let kindNamespace = "namespace"
+    public static let kindWorkload = "workload"
+    public static let kindNode = "node"
+    public static let kindInt = "int"
+    public static let kindBool = "bool"
+
+    public let name: String
+    public let prompt: String
+    public let defaultValue: String
+    public let kind: String
+
+    public var id: String { name }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, prompt, kind
+        case defaultValue = "default"
+    }
+
+    public init(name: String, prompt: String = "", defaultValue: String = "", kind: String = "string") {
+        self.name = name
+        self.prompt = prompt.isEmpty ? name : prompt
+        self.defaultValue = defaultValue
+        self.kind = kind
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        let asked: String = try c.field(.prompt, "")
+        prompt = asked.isEmpty ? name : asked
+        defaultValue = try c.field(.defaultValue, "")
+        kind = try c.field(.kind, "string")
+    }
+
+    /// The names among `params` that have neither a value nor a default.
+    public static func missing(_ params: [RunbookParam], values: [String: String]) -> [String] {
+        params.filter { param in
+            (values[param.name] ?? "").trimmingCharacters(in: .whitespaces).isEmpty && param.defaultValue.isEmpty
+        }.map(\.name)
+    }
+
+    /// What the form starts from: the `remembered` value of a parameter that still exists, else its default.
+    public static func initialValues(_ params: [RunbookParam], remembered: [String: String]) -> [String: String] {
+        var values: [String: String] = [:]
+        for param in params {
+            let kept = (remembered[param.name] ?? "").trimmingCharacters(in: .whitespaces)
+            values[param.name] = kept.isEmpty ? param.defaultValue : kept
+        }
+        return values
+    }
+
+    /// The values as a run's header shows them: "count=2 · ns=demo-shop", in a stable order.
+    public static func label(_ values: [String: String]) -> String {
+        values.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " · ")
+    }
+}
+
 /// RunbookSummary's answer: what the import shows before asking the cluster.
 public struct RunbookSummary: Decodable, Equatable, Sendable {
     public let name: String
     public let description: String
     public let steps: Int
     public let destructive: Int
+    public let params: [RunbookParam]
 
-    private enum CodingKeys: String, CodingKey { case name, description, steps, destructive }
+    private enum CodingKeys: String, CodingKey { case name, description, steps, destructive, params }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -73,6 +133,7 @@ public struct RunbookSummary: Decodable, Equatable, Sendable {
         description = try c.field(.description, "")
         steps = try c.field(.steps, 0)
         destructive = try c.field(.destructive, 0)
+        params = try c.field(.params, [])
     }
 }
 

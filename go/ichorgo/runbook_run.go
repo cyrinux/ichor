@@ -64,14 +64,21 @@ type runbookResult struct {
 	Steps []runbookStepState `json:"steps"`
 }
 
-// StartRunbook runs the steps of runbookYAML in order (docs/runbooks.md), each through the
+// StartRunbook is StartRunbookWith with no values: a runbook with a required parameter does
+// not start.
+func StartRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs string, listener RunbookListener) *RunbookRun {
+	return StartRunbookWith(configYAML, contextName, kubeServer, runbookYAML, continueIDs, "", listener)
+}
+
+// StartRunbookWith runs the steps of runbookYAML in order (docs/runbooks.md), with valuesJSON
+// ({"name":"value"}, "" for none) in place of its parameters, each through the
 // exported function its button calls, so each keeps its own can-I gate, demo refusal and
 // Activity entry; one more entry, "runbook", records the whole. It stops at the first
 // failed step unless that step has continueOnError, or its id is in continueIDs (comma
 // separated: the steps the user chose to go past). Each destructive step waits, in state
 // waiting, until Confirm(its index) or Stop. The demo is refused before any step. Roles:
-// each step's (see RunbookPlan). kubeServer: see KubePods.
-func StartRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs string, listener RunbookListener) *RunbookRun {
+// each step's (see RunbookPlanWith). kubeServer: see KubePods.
+func StartRunbookWith(configYAML, contextName, kubeServer, runbookYAML, continueIDs, valuesJSON string, listener RunbookListener) *RunbookRun {
 	contextName = unmaskContext(configYAML, contextName)
 	listener = maskedRunbookListener{listener}
 
@@ -83,7 +90,13 @@ func StartRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs 
 		defer onPanic(listener.OnError)
 		defer holdCalls(configYAML, contextName)()
 
-		rb, err := loadRunbook(runbookYAML)
+		var rb runbook
+
+		values, err := parseRunbookValues(valuesJSON)
+		if err == nil {
+			rb, err = loadRunbookWith(runbookYAML, values)
+		}
+
 		if err == nil {
 			rb = rb.continuingAt(splitCSV(continueIDs))
 		}
