@@ -146,6 +146,8 @@
     <string name="overview_support_sponsor">赞助</string>
     <string name="overview_swipe_live">实时</string>
     <string name="row_actions">操作</string>
+    <string name="row_logs">日志</string>
+    <string name="row_scale">扩缩容…</string>
     <string name="overview_action_live_graphs">实时图表</string>
     <string name="overview_action_services_logs">服务和日志</string>
     <string name="overview_action_kernel_log">内核日志</string>

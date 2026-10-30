@@ -161,6 +161,8 @@
     <string name="overview_support_sponsor">Sponsern</string>
     <string name="overview_swipe_live">Live</string>
     <string name="row_actions">Aktionen</string>
+    <string name="row_logs">Logs</string>
+    <string name="row_scale">Skalieren…</string>
     <string name="overview_action_live_graphs">Live-Diagramme</string>
     <string name="overview_action_services_logs">Dienste und Logs</string>
     <string name="overview_action_kernel_log">Kernel-Log</string>

@@ -64,7 +64,11 @@ import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
-/** One CronJob: who it is, when it runs, how its last runs went, Suspend/Resume and Run now. Tap for the runs. */
+/**
+ * One CronJob: who it is, when it runs, how its last runs went, Suspend/Resume and Run now.
+ * Tap for the runs; swipe right to run it, left to suspend or resume it, long press for both
+ * with Pin and Share ([CronJobQuickActions]).
+ */
 @Composable
 internal fun CronJobCard(
     cronJob: KubeCronJob,
@@ -79,32 +83,34 @@ internal fun CronJobCard(
     onSuspend: () -> Unit,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    // The home's card shape and colour, like SectionCard.
-    Card(onClick = onToggle, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            CronJobHeader(cronJob, showNamespace)
-            if (cronJob.description.isNotBlank()) {
-                Text(cronJob.description, style = MaterialTheme.typography.bodySmall, color = muted)
+    val access = rememberKubeActionAccess(cronJob.namespace)
+    val suspendDenial = access?.denial(KubeAction.SUSPEND_CRON_JOB)
+    val runDenial = access?.denial(KubeAction.TRIGGER_CRON_JOB)
+    // The home's card shape and colour, like SectionCard; the tap belongs to the quick-actions row.
+    CronJobQuickActions(cronJob, triggering, suspending, runDenial, suspendDenial, onToggle = onToggle, onRun = onRun, onSuspend = onSuspend) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                CronJobHeader(cronJob, showNamespace)
+                if (cronJob.description.isNotBlank()) {
+                    Text(cronJob.description, style = MaterialTheme.typography.bodySmall, color = muted)
+                }
+                CronJobTiming(cronJob)
+                KubeGreenCronJobNote(kubeGreen, cronJob.suspended)
+                // On its own line: beside five actions the text had about 40dp and broke after every word.
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    RunHistoryStrip(cronJob.runs)
+                    LastRunText(cronJob.runs.firstOrNull())
+                }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+                    PinButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), cronJob.name)
+                    ShareLinkButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), icon = Icons.Outlined.Link)
+                    AddToHomeButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), cronJob.name)
+                    SuspendButton(cronJob, suspending, enabled = suspendDenial == null, onSuspend)
+                    RunNowButton(cronJob, triggering, enabled = runDenial == null, onRun)
+                }
+                listOfNotNull(suspendDenial, runDenial).forEach { KubeDenialNote(it) }
+                AnimatedVisibility(expanded) { RunList(cronJob.runs) }
             }
-            CronJobTiming(cronJob)
-            KubeGreenCronJobNote(kubeGreen, cronJob.suspended)
-            val access = rememberKubeActionAccess(cronJob.namespace)
-            val suspendDenial = access?.denial(KubeAction.SUSPEND_CRON_JOB)
-            val runDenial = access?.denial(KubeAction.TRIGGER_CRON_JOB)
-            // On its own line: beside five actions the text had about 40dp and broke after every word.
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                RunHistoryStrip(cronJob.runs)
-                LastRunText(cronJob.runs.firstOrNull())
-            }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-                PinButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), cronJob.name)
-                ShareLinkButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), icon = Icons.Outlined.Link)
-                AddToHomeButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), cronJob.name)
-                SuspendButton(cronJob, suspending, enabled = suspendDenial == null, onSuspend)
-                RunNowButton(cronJob, triggering, enabled = runDenial == null, onRun)
-            }
-            listOfNotNull(suspendDenial, runDenial).forEach { KubeDenialNote(it) }
-            AnimatedVisibility(expanded) { RunList(cronJob.runs) }
         }
     }
 }
