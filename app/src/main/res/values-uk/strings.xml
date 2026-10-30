@@ -6266,4 +6266,9 @@
     <string name="alert_rules_digest_text">Критичних: %1$d, попереджень: %2$d</string>
     <string name="alert_rules_muted_quiet">без звуку · тихі години до %1$s</string>
     <string name="alert_rules_muted_severity">без звуку · нижче мінімальної важливості кластера</string>
+    <string name="alert_repeat_title">Повторювати критичні сповіщення кожні</string>
+    <string name="alert_repeat_minutes">%1$d хв</string>
+    <string name="alert_repeat_hint">Критичне сповіщення, яке досі активне, публікується знову, доки ви не підтвердите або не відкладете його. Перевірки відбуваються кожні %1$d хв, тож повтор чекає наступної перевірки.</string>
+    <string name="alert_repeat_still_firing">Досі активне · %1$d хв · %2$s</string>
+    <string name="alert_action_acknowledge">Підтвердити</string>
 </resources>

@@ -6019,4 +6019,9 @@
     <string name="alert_rules_digest_text">Critical: %1$d, warnings: %2$d</string>
     <string name="alert_rules_muted_quiet">muted · quiet hours until %1$s</string>
     <string name="alert_rules_muted_severity">muted · below the cluster\'s minimum severity</string>
+    <string name="alert_repeat_title">Repeat critical alerts every</string>
+    <string name="alert_repeat_minutes">%1$d min</string>
+    <string name="alert_repeat_hint">A critical alert that still fires is posted again until you acknowledge or snooze it. Checks run every %1$d min, so a repeat waits for the next check.</string>
+    <string name="alert_repeat_still_firing">Still firing · %1$d min · %2$s</string>
+    <string name="alert_action_acknowledge">Acknowledge</string>
 </resources>

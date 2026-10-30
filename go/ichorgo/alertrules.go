@@ -21,6 +21,7 @@ const (
 	alertNotify = "notify"
 	alertMute   = "mute"
 	alertDigest = "digest"
+	alertRepeat = "repeat"
 )
 
 // The reasons of a decision that is not "notify".
@@ -29,7 +30,19 @@ const (
 	alertReasonSeverity = "severity"
 	alertReasonQuiet    = "quiet"
 	alertReasonDigest   = "digest"
+	// An ongoing alert: posted again, or why not.
+	alertReasonRepeat       = "repeat"
+	alertReasonRepeatOff    = "repeatOff"
+	alertReasonAcknowledged = "acknowledged"
+	alertReasonNotDue       = "notDue"
 )
+
+// alertRepeatMax is the longest repeat a rule may ask for, a day in minutes.
+const alertRepeatMax = 1440
+
+// alertRepeatSlack lets a check that runs a little early still repeat: the background checks
+// are not run to the second.
+const alertRepeatSlack = time.Minute
 
 // The severities of an alert, lowest first: the order the minimum severity compares on.
 var alertSeverities = []string{"info", "warning", "critical"}
@@ -60,6 +73,9 @@ type alertRule struct {
 	QuietHours  *alertQuietHours `json:"quietHours"`
 	MinSeverity *string          `json:"minSeverity"`
 	Digest      *bool            `json:"digest"`
+	// RepeatMinutes: how often a still-firing critical alert is posted again until it is
+	// acknowledged; 0 (or absent everywhere) is off.
+	RepeatMinutes *int `json:"repeatMinutes"`
 }
 
 type alertRules struct {
@@ -75,6 +91,12 @@ type alertIn struct {
 	Severity string `json:"severity"`
 	Problem  bool   `json:"problem"`
 	Snoozed  bool   `json:"snoozed"`
+	// Ongoing: the alert did not change this check, it still fires since it was posted; the app
+	// sends it only to ask whether it is posted again ("repeat").
+	Ongoing            bool  `json:"ongoing"`
+	FirstSeenMillis    int64 `json:"firstSeenMillis"`
+	LastNotifiedMillis int64 `json:"lastNotifiedMillis"`
+	Acknowledged       bool  `json:"acknowledged"`
 }
 
 type alertDecision struct {
@@ -83,6 +105,9 @@ type alertDecision struct {
 	Action  string `json:"action"`
 	Reason  string `json:"reason"`
 	Until   int64  `json:"until"`
+	// Repeats: a posted alert ("notify" or "repeat") will be posted again while it fires, until
+	// it is acknowledged: the app offers Acknowledge on it.
+	Repeats bool `json:"repeats"`
 }
 
 type alertDigestGroup struct {
@@ -110,13 +135,14 @@ type resolvedRule struct {
 	quiet       *quietWindow
 	minSeverity string
 	digest      bool
+	repeat      time.Duration
 }
 
 // AlertRulesApply decides, for each alert of alertsJSON ([{cluster, key, kind, severity,
 // problem, snoozed}…]), whether the app posts it now ("notify"), drops it ("mute") or adds
 // it to the cluster's digest ("digest"), under rulesJSON ({"default":{rule},
 // "clusters":{"<fingerprint>":{rule}}}, rule = {quietHours:{start,end,tz,exceptCritical},
-// minSeverity: all|warning|critical, digest}) as of nowMillis (unix ms).
+// minSeverity: all|warning|critical, digest, repeatMinutes}) as of nowMillis (unix ms).
 //
 // A cluster's rule overrides the default field by field. The checks run in this order: a
 // snoozed alert is muted ("snoozed"); a problem below the minimum severity is muted
@@ -126,8 +152,18 @@ type resolvedRule struct {
 // then a digest cluster's alert goes to its digest ("digest"), except the recovery of a
 // critical alert, which is posted on its own. A missing severity is
 // "warning", or "critical" for the unreachable, node and etcd kinds; an unknown one is a
-// warning. The answer lists one decision per alert in order, and one digest per cluster that
-// has digest decisions, in the order of their first alert, with at most five keys.
+// warning.
+//
+// An ongoing alert (ongoing: it still fires since the app posted it, firstSeenMillis,
+// lastNotifiedMillis, acknowledged) is only asked about again: "repeat" when the cluster's
+// rule has a repeatMinutes (0..1440, 0 off), the alert is critical, the cluster has no digest,
+// it is neither snoozed nor acknowledged, the quiet hours let it through and repeatMinutes
+// have passed since it was last posted (a minute early is enough); else "mute" with the reason
+// (snoozed, repeatOff, acknowledged, quiet, notDue). "repeats" marks a posted alert ("notify" or
+// "repeat") that the rule will post again.
+//
+// The answer lists one decision per alert in order, and one digest per cluster that has digest
+// decisions, in the order of their first alert, with at most five keys.
 //
 // Unknown rule fields, a time that is not HH:MM and a zone that is not IANA are errors naming
 // the cluster ("default" for the default rule); the app passes the phone's zone, Go in the
@@ -224,6 +260,10 @@ func resolveAlertRule(name string, base, over alertRule) (resolvedRule, error) {
 		merged.Digest = over.Digest
 	}
 
+	if over.RepeatMinutes != nil {
+		merged.RepeatMinutes = over.RepeatMinutes
+	}
+
 	out := resolvedRule{minSeverity: "all"}
 
 	if merged.MinSeverity != nil && *merged.MinSeverity != "" {
@@ -237,6 +277,15 @@ func resolveAlertRule(name string, base, over alertRule) (resolvedRule, error) {
 
 	if merged.Digest != nil {
 		out.digest = *merged.Digest
+	}
+
+	if merged.RepeatMinutes != nil {
+		m := *merged.RepeatMinutes
+		if m < 0 || m > alertRepeatMax {
+			return out, fmt.Errorf("alert rule %s: repeatMinutes %d: want 0 to %d", name, m, alertRepeatMax)
+		}
+
+		out.repeat = time.Duration(m) * time.Minute
 	}
 
 	if merged.QuietHours != nil {
@@ -328,6 +377,10 @@ func applyAlertRules(rules map[string]resolvedRule, alerts []alertIn, now time.T
 }
 
 func decideAlert(rule resolvedRule, a alertIn, severity string, now time.Time) alertDecision {
+	if a.Ongoing {
+		return decideRepeat(rule, a, severity, now)
+	}
+
 	d := alertDecision{Cluster: a.Cluster, Key: a.Key, Action: alertNotify}
 
 	switch {
@@ -344,6 +397,40 @@ func decideAlert(rule resolvedRule, a alertIn, severity string, now time.Time) a
 	// The recovery of a critical alert is not folded into the digest: it says the page is over.
 	if d.Action == alertNotify && rule.digest && (a.Problem || severity != alertCritical) {
 		d.Action, d.Reason = alertDigest, alertReasonDigest
+	}
+
+	d.Repeats = d.Action == alertNotify && rule.repeats(a, severity)
+
+	return d
+}
+
+// repeats is whether the rule posts a still-firing a again: a critical problem, on a cluster
+// with a repeat and no digest (a digest cluster asked for less noise, not more).
+func (r resolvedRule) repeats(a alertIn, severity string) bool {
+	return r.repeat > 0 && !r.digest && a.Problem && severity == alertCritical
+}
+
+// decideRepeat decides on an ongoing alert: "repeat" when the rule repeats it, it is neither
+// snoozed nor acknowledged, the quiet hours let it through and its repeat is due since it was
+// last posted (or first seen, whichever is later); else "mute", with why. A critical alert is
+// never below the minimum severity.
+func decideRepeat(rule resolvedRule, a alertIn, severity string, now time.Time) alertDecision {
+	d := alertDecision{Cluster: a.Cluster, Key: a.Key, Action: alertMute}
+	last := time.UnixMilli(max(a.LastNotifiedMillis, a.FirstSeenMillis))
+
+	switch {
+	case a.Snoozed:
+		d.Reason = alertReasonSnoozed
+	case !rule.repeats(a, severity):
+		d.Reason = alertReasonRepeatOff
+	case a.Acknowledged:
+		d.Reason = alertReasonAcknowledged
+	case rule.quiet != nil && !rule.quiet.exceptCritical && !rule.quiet.quietUntil(now).IsZero():
+		d.Reason, d.Until = alertReasonQuiet, rule.quiet.quietUntil(now).UnixMilli()
+	case now.Sub(last) < rule.repeat-alertRepeatSlack:
+		d.Reason = alertReasonNotDue
+	default:
+		d.Action, d.Reason, d.Repeats = alertRepeat, alertReasonRepeat, true
 	}
 
 	return d

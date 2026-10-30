@@ -26,6 +26,7 @@ import name.levis.ichor.ui.overview.sendWake
 
 private const val ACTION_SNOOZE = "name.levis.ichor.ALERT_SNOOZE"
 private const val ACTION_WAKE = "name.levis.ichor.ALERT_WAKE"
+private const val ACTION_ACKNOWLEDGE = "name.levis.ichor.ALERT_ACKNOWLEDGE"
 private const val KEY_CLUSTER = "cluster"
 private const val KEY_ALERT = "alert"
 private const val KEY_HOST = "host"
@@ -57,7 +58,13 @@ fun alertActionButton(context: Context, alert: Alert, action: AlertAction, finge
         PendingIntent.getActivity(context, requestCode, open, flags)
     } else {
         val broadcast = Intent(context, AlertActionReceiver::class.java)
-            .setAction(if (action == AlertAction.WAKE) ACTION_WAKE else ACTION_SNOOZE)
+            .setAction(
+                when (action) {
+                    AlertAction.WAKE -> ACTION_WAKE
+                    AlertAction.ACKNOWLEDGE -> ACTION_ACKNOWLEDGE
+                    else -> ACTION_SNOOZE
+                },
+            )
             .putExtra(KEY_CLUSTER, fingerprint)
             .putExtra(KEY_ALERT, alert.key)
             .putExtra(KEY_HOST, alert.subject)
@@ -69,6 +76,7 @@ fun alertActionButton(context: Context, alert: Alert, action: AlertAction, finge
         AlertAction.SYNC -> R.string.argo_sync
         AlertAction.RECONCILE -> R.string.flux_reconcile
         AlertAction.SILENCE -> R.string.alert_action_silence_hour
+        AlertAction.ACKNOWLEDGE -> R.string.alert_action_acknowledge
         AlertAction.SNOOZE -> R.string.alert_action_snooze
     }
     return NotificationCompat.Action.Builder(0, res.getString(title), intent)
@@ -78,7 +86,10 @@ fun alertActionButton(context: Context, alert: Alert, action: AlertAction, finge
         .build()
 }
 
-/** Snooze and Wake from an alert's notification. Wake runs as work: the receiver must return at once. */
+/**
+ * Snooze, Acknowledge and Wake from an alert's notification. Wake runs as work: the receiver must
+ * return at once. Acknowledge keeps the notification: it only stops the alert's repeats.
+ */
 class AlertActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val cluster = intent.getStringExtra(KEY_CLUSTER).orEmpty()
@@ -91,6 +102,7 @@ class AlertActionReceiver : BroadcastReceiver() {
                 snoozes.snooze(cluster, key, now + SNOOZE_MILLIS)
                 NotificationManagerCompat.from(context).cancel(alertNotificationId(cluster, key))
             }
+            ACTION_ACKNOWLEDGE -> (context.applicationContext as TalosApp).alertAcks.acknowledge(cluster, key, System.currentTimeMillis())
             ACTION_WAKE -> {
                 val data = workDataOf(KEY_CLUSTER to cluster, KEY_ALERT to key, KEY_HOST to intent.getStringExtra(KEY_HOST).orEmpty())
                 WorkManager.getInstance(context).enqueueUniqueWork(

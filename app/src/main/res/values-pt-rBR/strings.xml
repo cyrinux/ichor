@@ -6008,4 +6008,9 @@
     <string name="alert_rules_digest_text">Críticos: %1$d, avisos: %2$d</string>
     <string name="alert_rules_muted_quiet">silenciado · horário silencioso até %1$s</string>
     <string name="alert_rules_muted_severity">silenciado · abaixo da gravidade mínima do cluster</string>
+    <string name="alert_repeat_title">Repetir alertas críticos a cada</string>
+    <string name="alert_repeat_minutes">%1$d min</string>
+    <string name="alert_repeat_hint">Um alerta crítico que continua ativo é publicado de novo até você confirmá-lo ou adiá-lo. As verificações ocorrem a cada %1$d min, então uma repetição espera a próxima.</string>
+    <string name="alert_repeat_still_firing">Ainda ativo · %1$d min · %2$s</string>
+    <string name="alert_action_acknowledge">Confirmar</string>
 </resources>

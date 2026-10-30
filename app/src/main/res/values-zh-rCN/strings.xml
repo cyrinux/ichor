@@ -5877,4 +5877,9 @@
     <string name="alert_rules_digest_text">严重：%1$d，警告：%2$d</string>
     <string name="alert_rules_muted_quiet">已静音 · 免打扰至 %1$s</string>
     <string name="alert_rules_muted_severity">已静音 · 低于该集群的最低严重级别</string>
+    <string name="alert_repeat_title">重复严重告警的间隔</string>
+    <string name="alert_repeat_minutes">%1$d 分钟</string>
+    <string name="alert_repeat_hint">仍在触发的严重告警会再次发布，直到你确认或暂停它。检查每 %1$d 分钟运行一次，因此重复会等到下一次检查。</string>
+    <string name="alert_repeat_still_firing">仍在触发 · %1$d 分钟 · %2$s</string>
+    <string name="alert_action_acknowledge">确认</string>
 </resources>

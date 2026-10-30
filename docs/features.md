@@ -329,7 +329,11 @@ Part of the [Ichor documentation](../README.md#documentation).
   per cluster. They are applied when each check runs, by the Go core: an alert kept quiet
   shows "muted · quiet hours until 07:00" or "muted · below the cluster's minimum severity"
   in the cluster's "Since you last looked" card, and is not posted again once the window ends.
-  The rules travel in backups.
+  A rule can also repeat critical alerts (off, every 5, 15, 30 or 60 minutes): a node down,
+  an etcd alarm or another critical alert that still fires is posted again, "Still firing ·
+  25 min", until you tap Acknowledge on it, snooze it, or it recovers; acknowledging keeps the
+  alert and its history. The repeat waits for the next check (15 minutes at the shortest on
+  both platforms), and a digest cluster does not repeat. The rules travel in backups.
 - **Widgets:** the home-screen widget, and on Wear OS a tile and a complication with the health
   of the cluster on screen on the phone (ready count in its colour, "N down", etcd alarms; the
   check's age once it is over an hour old). The phone sends them its last background check

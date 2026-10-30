@@ -6004,4 +6004,9 @@
     <string name="alert_rules_digest_text">Kritisch: %1$d, Warnungen: %2$d</string>
     <string name="alert_rules_muted_quiet">stumm · Ruhezeit bis %1$s</string>
     <string name="alert_rules_muted_severity">stumm · unter dem Mindestschweregrad des Clusters</string>
+    <string name="alert_repeat_title">Kritische Warnungen wiederholen alle</string>
+    <string name="alert_repeat_minutes">%1$d Min.</string>
+    <string name="alert_repeat_hint">Eine kritische Warnung, die weiter besteht, wird erneut gemeldet, bis du sie bestätigst oder pausierst. Geprüft wird alle %1$d Min., eine Wiederholung wartet also auf die nächste Prüfung.</string>
+    <string name="alert_repeat_still_firing">Besteht weiter · %1$d Min. · %2$s</string>
+    <string name="alert_action_acknowledge">Bestätigen</string>
 </resources>

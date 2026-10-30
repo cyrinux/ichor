@@ -103,7 +103,11 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             // Snoozed from their notification: nothing, problem or resolved, until it is over.
             app.alertSnoozes.prune(now)
             app.alertMutes.prune(now)
-            postAll(app, run.alerts + proposals + signIns.alerts, now)
+            // A recovered alert's acknowledgement ends: firing again, it repeats again.
+            firingKeys(reads, run.state).forEach { (cluster, keys) -> app.alertAcks.retainFiring(cluster, keys) }
+            val ongoing = ongoingAlerts(reads, run.state, run.alerts)
+            val notified = postAll(app, run.alerts + proposals + signIns.alerts, ongoing, run.state, now)
+            if (notified != run.state) store.saveState(notified)
             store.setSignInNotified(signIns.notified)
         }
         ClusterWidget().updateAll(applicationContext)
@@ -153,21 +157,25 @@ private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, no
 }
 
 /**
- * Posts a run's alerts under the alert rules (quiet hours, minimum severity, digest), decided
- * once over every cluster's: each one Go says to notify on its own, one digest per digest
- * cluster; the ones quiet hours or the minimum severity muted are recorded for the history, the
- * snoozed ones dropped. Without rules, or when Go refuses them, every alert not snoozed is
- * posted as before (see [alertPlan]): a rules error never drops an alert.
+ * Posts a run's alerts under the alert rules (quiet hours, minimum severity, digest, repeat),
+ * decided once over every cluster's: each one Go says to notify on its own, one digest per
+ * digest cluster; the ones quiet hours or the minimum severity muted are recorded for the
+ * history, the snoozed ones dropped. The [ongoing] ones (see [ongoingAlerts]) are posted again
+ * when Go says their repeat is due. Without rules, or when Go refuses them, every alert not
+ * snoozed is posted as before (see [alertPlan]) and nothing repeats: a rules error never drops
+ * an alert. Returns [state] with the posted alerts' times (see [withNotified]).
  */
-private suspend fun postAll(app: TalosApp, clusters: List<ClusterAlerts>, now: Long) {
-    if (clusters.isEmpty()) return
+private suspend fun postAll(app: TalosApp, clusters: List<ClusterAlerts>, ongoing: List<ClusterAlerts>, state: MonitorState, now: Long): MonitorState {
+    if (clusters.isEmpty() && ongoing.isEmpty()) return state
     val rules = app.monitorStore.alertRules.value
-    val inputs = alertInputs(clusters) { cluster, key -> app.alertSnoozes.isSnoozed(cluster, key, now) }
-    val decisions = if (rules == AlertRules.NONE) {
+    val snoozed = { cluster: String, key: String -> app.alertSnoozes.isSnoozed(cluster, key, now) }
+    val inputs = alertInputs(clusters, snoozed)
+    val ongoingInputs = if (rules == AlertRules.NONE) emptyList() else repeatInputs(ongoing, state, snoozed, app.alertAcks::isAcknowledged)
+    val decisions = if (rules == AlertRules.NONE || inputs.size + ongoingInputs.size == 0) {
         null
     } else {
         try {
-            app.alertRulesRepository.decide(rules, inputs, now)
+            app.alertRulesRepository.decide(rules, inputs + ongoingInputs, now)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -175,11 +183,16 @@ private suspend fun postAll(app: TalosApp, clusters: List<ClusterAlerts>, now: L
             null
         }
     }
-    val plan = alertPlan(clusters, inputs, decisions)
-    plan.notify.forEach { post(app, it) }
+    val plan = alertPlan(clusters, inputs, decisions?.let { it.copy(decisions = it.decisions.take(inputs.size)) })
+    val repeats = repeatPlan(ongoing, ongoingInputs, decisions?.decisions?.drop(inputs.size), now)
+    // Posted alerts that will repeat get Acknowledge.
+    val repeating = decisions?.decisions.orEmpty().filter { it.repeats }.map { it.cluster to it.key }.toSet()
+    plan.notify.forEach { post(app, it, repeating) }
+    repeats.forEach { post(app, ClusterAlerts(it.context, listOf(it.alert)), repeating, stillFiringMinutes = it.minutes) }
     plan.muted.forEach { app.alertMutes.record(it.context.fingerprint, it.alert.key, AlertMute(it.reason, it.until, now)) }
     val hide = app.appLock.enabled.value
     plan.digests.forEach { postDigest(app, it, clusterLabel(app, it.context), it.context.clusterId, hide) }
+    return withNotified(state, plan.notify + repeats.map { ClusterAlerts(it.context, listOf(it.alert)) }, now)
 }
 
 private const val TAG = "MonitorWorker"
@@ -187,15 +200,22 @@ private const val TAG = "MonitorWorker"
 private fun clusterLabel(app: TalosApp, context: ContextSummary): String =
     ClusterLabels(app.clusterNames.names.value, app.uiPreferences.privacyMask.value.enabled).of(context)
 
-/** Posts the alerts of one cluster, named after it as the app shows it. */
-private fun post(app: TalosApp, cluster: ClusterAlerts) {
+/**
+ * Posts the alerts of one cluster, named after it as the app shows it; the ones in [repeating]
+ * (fingerprint, key) get Acknowledge. [stillFiringMinutes]: a repeat, since how long it fires.
+ */
+private fun post(app: TalosApp, cluster: ClusterAlerts, repeating: Set<Pair<String, String>>, stillFiringMinutes: Long? = null) {
     val context = cluster.context
     val fingerprint = context.fingerprint
     val hide = app.appLock.enabled.value
     val label = clusterLabel(app, context)
     val canReboot = context.allows(Feature.POWER)
     cluster.alerts.forEach { alert ->
-        val actions = alert.actions(canWake = canWake(app, fingerprint, alert), canReboot = canReboot)
+        val actions = alert.actions(
+            canWake = canWake(app, fingerprint, alert),
+            canReboot = canReboot,
+            canAcknowledge = (fingerprint to alert.key) in repeating,
+        )
         postAlert(
             app,
             alert,
@@ -204,6 +224,7 @@ private fun post(app: TalosApp, cluster: ClusterAlerts) {
             actions = actions,
             fingerprint = fingerprint,
             cluster = label,
+            stillFiringMinutes = stillFiringMinutes,
         )
     }
 }
@@ -251,7 +272,7 @@ fun monitorRun(
             return@forEach
         }
         val evaluation = snapshot?.let { evaluate(previous, it, now) }
-        (evaluation?.next ?: previous)?.let { clusters[key] = it }
+        (evaluation?.next?.let { withAlertTimes(previous, it, now) } ?: previous)?.let { clusters[key] = it }
         val reachable = snapshot != null && !snapshot.unreachableAsAWhole
         val step = reachStep(before.reach[key], reachable, unreachableRuns, unreachableAlerts)
         // An answer resets the count: nothing to keep then.
