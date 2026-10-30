@@ -1,6 +1,726 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Cloud host: user data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud-Anbieter: User Data"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proveedor cloud: user data"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hébergeur cloud : user data"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Provider cloud: user data"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラウドホスト：user data"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Provedor de nuvem: user data"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облачный хостинг: user data"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хмарний хостинг: user data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "云主机：user data"
+          }
+        }
+      }
+    },
+    "Create the server from a Talos cloud image below and paste this text as its user data: Talos reads it at first boot and joins the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle den Server aus einem der Talos-Cloud-Images unten und füge diesen Text als User Data ein: Talos liest ihn beim ersten Start und tritt dem Cluster bei."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea el servidor a partir de una imagen cloud de Talos de abajo y pega este texto como su user data: Talos lo lee en el primer arranque y se une al clúster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créez le serveur à partir d'une image cloud Talos ci-dessous et collez ce texte comme user data : Talos le lit au premier démarrage et rejoint le cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea il server da un'immagine cloud Talos qui sotto e incolla questo testo come user data: Talos lo legge al primo avvio ed entra nel cluster."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下の Talos クラウドイメージからサーバーを作成し、このテキストを user data として貼り付けます。Talos は初回起動時に読み取り、クラスターに参加します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crie o servidor a partir de uma imagem de nuvem do Talos abaixo e cole este texto como user data: o Talos o lê na primeira inicialização e entra no cluster."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создайте сервер из облачного образа Talos ниже и вставьте этот текст как user data: Talos прочитает его при первом запуске и присоединится к кластеру."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створіть сервер з хмарного образу Talos нижче й вставте цей текст як user data: Talos прочитає його під час першого запуску й приєднається до кластера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用下方的 Talos 云镜像创建服务器，并将此文本粘贴为其 user data：Talos 在首次启动时读取它并加入集群。"
+          }
+        }
+      }
+    },
+    "Omni's join config: create the server from a Talos cloud image below with this text as its user data, and the machine shows up among Omni's machines, not yet allocated." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omnis Beitrittskonfiguration: Erstelle den Server aus einem der Talos-Cloud-Images unten mit diesem Text als User Data, dann erscheint die Maschine unter Omnis Maschinen, noch nicht zugewiesen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración de unión de Omni: crea el servidor a partir de una imagen cloud de Talos de abajo con este texto como user data, y la máquina aparece entre las máquinas de Omni, aún sin asignar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuration d'adhésion d'Omni : créez le serveur à partir d'une image cloud Talos ci-dessous avec ce texte comme user data, et la machine apparaît parmi les machines d'Omni, pas encore allouée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configurazione di adesione di Omni: crea il server da un'immagine cloud Talos qui sotto con questo testo come user data, e la macchina compare tra le macchine di Omni, non ancora assegnata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni の参加設定です。下の Talos クラウドイメージからこのテキストを user data としてサーバーを作成すると、マシンは未割り当てのまま Omni のマシン一覧に表示されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A configuração de entrada do Omni: crie o servidor a partir de uma imagem de nuvem do Talos abaixo com este texto como user data, e a máquina aparece entre as máquinas do Omni, ainda não alocada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфигурация присоединения Omni: создайте сервер из облачного образа Talos ниже с этим текстом в качестве user data, и машина появится среди машин Omni, пока не распределённая."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфігурація приєднання Omni: створіть сервер з хмарного образу Talos нижче з цим текстом як user data, і машина з'явиться серед машин Omni, ще не розподілена."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omni 的加入配置：用下方的 Talos 云镜像创建服务器，并以此文本作为 user data，机器随后会出现在 Omni 的机器列表中，尚未分配。"
+          }
+        }
+      }
+    },
+    "Make the user data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Data erstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generar el user data"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Générer le user data"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genera lo user data"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "user data を作成"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerar o user data"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создать user data"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити user data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成 user data"
+          }
+        }
+      }
+    },
+    "%@ of the %@ most clouds accept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ von den %2$@, die die meisten Clouds annehmen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of the %2$@ most clouds accept"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de los %2$@ que aceptan la mayoría de los clouds"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sur les %2$@ acceptés par la plupart des clouds"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ dei %2$@ accettati dalla maggior parte dei cloud"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@（多くのクラウドの上限は %2$@）"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ dos %2$@ que a maioria das nuvens aceita"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ из %2$@, которые принимает большинство облаков"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ з %2$@, які приймає більшість хмар"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@，多数云接受的上限为 %2$@"
+          }
+        }
+      }
+    },
+    "Show the text, secrets hidden" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text anzeigen, Geheimnisse verborgen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar el texto, con los secretos ocultos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le texte, secrets masqués"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra il testo, segreti nascosti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テキストを表示（シークレットは非表示）"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar o texto, segredos ocultos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать текст, секреты скрыты"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати текст, секрети приховано"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示文本（隐藏机密）"
+          }
+        }
+      }
+    },
+    "Hide the text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar el texto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer le texte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi il testo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テキストを隠す"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar o texto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть текст"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сховати текст"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏文本"
+          }
+        }
+      }
+    },
+    "Too long for a QR code: copy or share it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu lang für einen QR-Code: kopieren oder teilen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demasiado largo para un código QR: cópialo o compártelo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trop long pour un QR code : copiez-le ou partagez-le."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troppo lungo per un codice QR: copialo o condividilo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR コードには長すぎます。コピーまたは共有してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Longo demais para um QR code: copie ou compartilhe."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слишком длинный для QR-кода: скопируйте или поделитесь."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задовгий для QR-коду: скопіюйте або поділіться ним."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "太长，无法生成二维码：请复制或分享。"
+          }
+        }
+      }
+    },
+    "Talos cloud images" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos-Cloud-Images"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imágenes cloud de Talos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images cloud Talos"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immagini cloud Talos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos クラウドイメージ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagens de nuvem do Talos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облачные образы Talos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хмарні образи Talos"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos 云镜像"
+          }
+        }
+      }
+    },
+    "Talos %@, %@: create the server, or the snapshot it starts from, from your provider's image." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@: Erstelle den Server oder den Snapshot, von dem er startet, aus dem Image deines Anbieters."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@: create the server, or the snapshot it starts from, from your provider's image."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@: crea el servidor, o el snapshot del que parte, a partir de la imagen de tu proveedor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@ : créez le serveur, ou le snapshot dont il part, à partir de l'image de votre hébergeur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@: crea il server, o lo snapshot da cui parte, dall'immagine del tuo provider."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@、%2$@：プロバイダーのイメージからサーバー、またはその起動元のスナップショットを作成します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@: crie o servidor, ou o snapshot de onde ele parte, a partir da imagem do seu provedor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@: создайте сервер или снимок, с которого он стартует, из образа вашего провайдера."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@, %2$@: створіть сервер або знімок, з якого він стартує, з образу вашого провайдера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %1$@，%2$@：用你的服务商对应的镜像创建服务器，或创建它启动所用的快照。"
+          }
+        }
+      }
+    },
+    "Copy the cluster's secrets?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Geheimnisse des Clusters kopieren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Copiar los secretos del clúster?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier les secrets du cluster ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiare i segreti del cluster?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラスターのシークレットをコピーしますか？"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar os segredos do cluster?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать секреты кластера?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопіювати секрети кластера?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制集群的机密？"
+          }
+        }
+      }
+    },
+    "This text carries the cluster's secrets (its CA, tokens and keys): whoever holds it can join a node to the cluster. Paste it only into your cloud provider's user data field." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Text enthält die Geheimnisse des Clusters (CA, Tokens und Schlüssel): Wer ihn hat, kann dem Cluster einen Knoten hinzufügen. Füge ihn nur in das User-Data-Feld deines Cloud-Anbieters ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este texto contiene los secretos del clúster (su CA, tokens y claves): quien lo tenga puede unir un nodo al clúster. Pégalo solo en el campo user data de tu proveedor cloud."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce texte contient les secrets du cluster (sa CA, ses jetons et ses clés) : qui le détient peut faire rejoindre un nœud au cluster. Collez-le uniquement dans le champ user data de votre hébergeur cloud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo testo contiene i segreti del cluster (la sua CA, i token e le chiavi): chi lo possiede può aggiungere un nodo al cluster. Incollalo solo nel campo user data del tuo provider cloud."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このテキストにはクラスターのシークレット（CA、トークン、鍵）が含まれます。持っている人は誰でもノードをクラスターに参加させられます。クラウドプロバイダーの user data 欄にのみ貼り付けてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este texto contém os segredos do cluster (sua CA, tokens e chaves): quem o tiver pode adicionar um nó ao cluster. Cole-o apenas no campo user data do seu provedor de nuvem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот текст содержит секреты кластера (его CA, токены и ключи): любой, у кого он есть, может присоединить узел к кластеру. Вставляйте его только в поле user data вашего облачного провайдера."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей текст містить секрети кластера (його CA, токени й ключі): будь-хто, хто його має, може приєднати вузол до кластера. Вставляйте його лише в поле user data вашого хмарного провайдера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此文本包含集群的机密（CA、令牌和密钥）：持有者可以将节点加入集群。只把它粘贴到云服务商的 user data 字段中。"
+          }
+        }
+      }
+    },
     "On-call" : {
       "extractionState" : "manual",
       "localizations" : {

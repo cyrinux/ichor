@@ -3,7 +3,8 @@ import IchorCore
 
 /// "Boot a new machine…": the phone cannot serve a network boot (privileged ports), so it hands
 /// over what does: the booter command for a laptop of the machine's network, the ISO, the iPXE
-/// URL, and on Omni the join arguments. "The machine is up" continues with Add a node.
+/// URL, on Omni the join arguments, and for a cloud host the user data to paste. "The machine
+/// is up" continues with Add a node.
 struct BootMediaView: View {
     @Binding var path: [Route]
     @Environment(AppModel.self) private var model
@@ -33,6 +34,8 @@ struct BootMediaView: View {
                 targetSection(value)
                 mediaSections(value)
             }
+            // A server at a cloud provider boots its own image and reads the config as user data.
+            CloudUserDataCard(omni: model.activeSummary?.omni == true)
             // Add a node takes a machine in maintenance mode; Omni adds its machines itself.
             if let context = model.activeSummary, !context.omni {
                 Section {

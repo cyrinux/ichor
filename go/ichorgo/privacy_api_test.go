@@ -10,14 +10,14 @@ import (
 	"testing"
 )
 
-// Exported functions whose result is a credential or file the user saves: only their errors
-// are masked. The shells' terminal stream (debug, pod and VM console) is not masked at all, nor its snippets
+// Exported functions whose result is a credential or file the user saves (a new node's config,
+// its cloud user data): only their errors are masked. The shells' terminal stream (debug, pod and VM console) is not masked at all, nor its snippets
 // (fixed commands whose well-known addresses masking would break), nor the GitHub links of
 // integration requests (opened, not shown; built from already masked results), nor share
 // links (built from the masked names on screen), nor the alert rules' decisions (the app's own
 // fingerprints and keys, matched back), nor a config's digest (a hash, which masking
 // a word could corrupt), nor the name of a backup file format (a fixed word).
-var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeConfigSealed", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "PluginFetchURL", "PluginUserExport", "PluginQRPayload", "RunbookStoreGet", "QRCodeText", "QRPart", "QRPartsJoin", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "BackupFormatOf", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "PartsLookupLink", "BuildShareLink", "SearchSnapshots", "SearchScreens", "DemoSearchEntries", "FleetSummary", "DemoFleetSummary", "AlertRulesApply", "ServiceAccountTemplates", "DiscoverOmniClusters", "SetOmniServiceAccount", "ConfigDigest"}
+var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeConfigSealed", "NodeCloudUserData", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "PluginFetchURL", "PluginUserExport", "PluginQRPayload", "RunbookStoreGet", "QRCodeText", "QRPart", "QRPartsJoin", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "BackupFormatOf", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "PartsLookupLink", "BuildShareLink", "SearchSnapshots", "SearchScreens", "DemoSearchEntries", "FleetSummary", "DemoFleetSummary", "AlertRulesApply", "ServiceAccountTemplates", "DiscoverOmniClusters", "SetOmniServiceAccount", "ConfigDigest"}
 
 // The shells (and the VM console) wrap their listener in newDebugSession: status and exit
 // masked, not the terminal.
