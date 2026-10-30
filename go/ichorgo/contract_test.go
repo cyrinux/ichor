@@ -50,6 +50,16 @@ var contractFixtures = []struct {
 	}},
 	{"update-proposal-plan", contractUpdatePlan},
 	{"diag-entries", contractDiagEntries},
+	{"oncall-incidents", func() any {
+		alerts := demoAMAlerts(contractNow)
+		inputs := make([]onCallAmAlert, 0, len(alerts))
+
+		for _, a := range alerts {
+			inputs = append(inputs, onCallAmAlert{Fingerprint: a.Fingerprint, Labels: a.Labels})
+		}
+
+		return matchOnCall(demoOnCall(contractNow), inputs)
+	}},
 	{"fleet-summary", func() any {
 		now := contractNow.UnixMilli()
 
