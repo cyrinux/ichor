@@ -5679,6 +5679,7 @@
     <string name="runbook_state_ok">完成</string>
     <string name="runbook_state_failed">失败</string>
     <string name="runbook_state_skipped">已跳过</string>
+    <string name="runbook_wait_elapsed">已等待 %1$s / %2$s</string>
     <string name="runbook_confirm_title">运行步骤 %1$s？</string>
     <string name="runbook_confirm_text">在 %2$s 上执行 %1$s</string>
     <string name="runbook_confirm">运行步骤</string>

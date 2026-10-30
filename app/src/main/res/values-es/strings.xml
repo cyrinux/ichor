@@ -5812,6 +5812,7 @@
     <string name="runbook_state_ok">Hecho</string>
     <string name="runbook_state_failed">Falló</string>
     <string name="runbook_state_skipped">Omitido</string>
+    <string name="runbook_wait_elapsed">Esperado %1$s de %2$s</string>
     <string name="runbook_confirm_title">¿Ejecutar el paso %1$s?</string>
     <string name="runbook_confirm_text">%1$s en %2$s</string>
     <string name="runbook_confirm">Ejecutar paso</string>

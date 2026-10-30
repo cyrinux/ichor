@@ -5812,6 +5812,7 @@
     <string name="runbook_state_ok">Fait</string>
     <string name="runbook_state_failed">Échec</string>
     <string name="runbook_state_skipped">Ignorée</string>
+    <string name="runbook_wait_elapsed">Attente : %1$s sur %2$s</string>
     <string name="runbook_confirm_title">Lancer l\'étape %1$s ?</string>
     <string name="runbook_confirm_text">%1$s sur %2$s</string>
     <string name="runbook_confirm">Lancer l\'étape</string>

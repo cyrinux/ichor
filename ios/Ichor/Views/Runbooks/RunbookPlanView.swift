@@ -127,6 +127,9 @@ private struct RunbookPlanStepRow: View {
             }
             Text(verbatim: "\(step.action) · \(step.target.label)")
                 .font(.system(.subheadline, design: .monospaced))
+            if !step.detail.isEmpty {
+                Text(verbatim: step.detail).font(.caption).foregroundStyle(.secondary)
+            }
             Text(verbatim: step.role).font(.caption).foregroundStyle(.secondary)
             if step.allowed {
                 if step.continueOnError {
