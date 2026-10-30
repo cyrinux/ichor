@@ -317,7 +317,7 @@ data class SignInRenewal(
 
     /**
      * [signInRequired], but not Sign in with Google's hour-long token, which the app renews
-     * itself with Google's SDK on the cluster's screen ([REASON_GOOGLE_NATIVE]).
+     * itself with Google's SDK ([REASON_GOOGLE_NATIVE], see GoogleTokenRenewer).
      */
     val needsUser: Boolean get() = signInRequired && reason != REASON_GOOGLE_NATIVE
 

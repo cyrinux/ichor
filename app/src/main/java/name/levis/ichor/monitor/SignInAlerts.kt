@@ -54,7 +54,7 @@ fun signInAlert(cluster: String): Alert = Alert(key = SIGN_IN_KEY, kind = AlertK
 suspend fun renewSignIns(app: TalosApp, contexts: List<ContextSummary>, label: (ContextSummary) -> String): SignInAlertPlan {
     val notified = app.monitorStore.signInNotified.value
     val renewals = try {
-        app.kubeAuthRepository.renewAll()
+        app.kubeAuthRepository.renewAll().also { app.googleTokenRenewer.renewExpired(it) }
     } catch (e: CancellationException) {
         throw e
     } catch (_: Exception) {
