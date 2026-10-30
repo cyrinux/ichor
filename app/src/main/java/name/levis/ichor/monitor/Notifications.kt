@@ -71,6 +71,7 @@ fun canPostNotifications(context: Context): Boolean =
  * screen of the alert's subject a tap opens like a share link; null opens the app only.
  * [actions]: its buttons (see [Alert.actions]), for the cluster of fingerprint [fingerprint].
  * [cluster]: the cluster's name as the app shows it, in the notification's header.
+ * [stillFiringMinutes]: a repeat of an alert firing for that long ("Still firing · 25 min").
  */
 fun postAlert(
     context: Context,
@@ -80,12 +81,15 @@ fun postAlert(
     actions: List<AlertAction> = emptyList(),
     fingerprint: String = "",
     cluster: String? = null,
+    stillFiringMinutes: Long? = null,
 ) {
     if (!canPostNotifications(context)) return
     ensureAlertChannels(context)
     val res = AppLocale.wrap(context)
     val title = alertTitle(res, alert)
-    val text = alertText(res, alert)
+    val text = alertText(res, alert).let { text ->
+        stillFiringMinutes?.let { res.getString(R.string.alert_repeat_still_firing, it.toInt(), text) } ?: text
+    }
 
     val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
     val link = clusterId?.let { id -> alert.shareTarget()?.let { shareLinkFor(it, id) } }
@@ -106,6 +110,8 @@ fun postAlert(
     // Every watched cluster alerts: which one this is about, next to the app's name.
     cluster?.takeIf { it.isNotBlank() }?.let(builder::setSubText)
     actions.mapNotNull { alertActionButton(context, alert, it, fingerprint, link) }.forEach(builder::addAction)
+    // A repeat replaces the alert's notification and sounds again.
+    if (stillFiringMinutes != null) builder.setOnlyAlertOnce(false)
 
     try {
         NotificationManagerCompat.from(context).notify(alertNotificationId(fingerprint, alert.key), builder.build())

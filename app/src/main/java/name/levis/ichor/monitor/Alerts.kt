@@ -70,15 +70,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             if (before.health != state.health) alerts += nodeAlert(addr, state)
         }
         if (cur.etcdChecked && prev.etcdChecked) {
-            (cur.etcdAlarms - prev.etcdAlarms.toSet()).forEach { alarm ->
-                alerts += Alert(
-                    key = "etcd:$alarm",
-                    kind = AlertKind.ETCD_ALARM,
-                    problem = true,
-                    subject = alarm.substringAfter(':'),
-                    detail = alarm.substringBefore(':'),
-                )
-            }
+            (cur.etcdAlarms - prev.etcdAlarms.toSet()).forEach { alarm -> alerts += etcdAlert(alarm) }
         }
     }
 
@@ -271,4 +263,34 @@ private fun nodeAlert(addr: String, state: NodeState): Alert {
         NodeHealth.NOT_READY -> Alert("node:$addr", AlertKind.NODE_NOT_READY, true, state.hostname, reason)
         NodeHealth.UNREACHABLE -> Alert("node:$addr", AlertKind.NODE_UNREACHABLE, true, state.hostname, reason)
     }
+}
+
+/** [alarm] "member:alarm": the alarm is the subject, the member the detail. */
+private fun etcdAlert(alarm: String): Alert = Alert(
+    key = "etcd:$alarm",
+    kind = AlertKind.ETCD_ALARM,
+    problem = true,
+    subject = alarm.substringAfter(':'),
+    detail = alarm.substringBefore(':'),
+)
+
+/**
+ * The problem alerts [snapshot] still holds, as they were posted: its nodes not ready, its etcd
+ * alarms and the issues of its tracks already notified (not the warnings still pending). What a
+ * repeat posts again; the certificate (warned daily already), the volume trends and an
+ * unreachable cluster are not among them.
+ */
+fun firingAlerts(snapshot: ClusterSnapshot): List<Alert> {
+    val nodes = snapshot.nodes.filterValues { it.health != NodeHealth.READY }.map { (addr, state) -> nodeAlert(addr, state) }
+    val etcd = if (snapshot.etcdChecked) snapshot.etcdAlarms.map(::etcdAlert) else emptyList()
+    fun track(issues: Map<String, String>, alertOf: (String, String, Boolean) -> Alert) =
+        issues.map { (key, value) -> alertOf(key, value, true) }
+    return nodes + etcd +
+        track(snapshot.dataIssues, ::dataAlert) +
+        track(snapshot.gitopsIssues, ::gitopsAlert) +
+        track(snapshot.checkupIssues, ::checkupAlert) +
+        track(snapshot.amIssues, ::amAlert) +
+        track(snapshot.storageIssues, ::storageAlert) +
+        track(snapshot.sensorIssues, ::sensorAlert) +
+        track(snapshot.pluginIssues, ::pluginAlert)
 }

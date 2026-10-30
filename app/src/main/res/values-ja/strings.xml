@@ -5877,4 +5877,9 @@
     <string name="alert_rules_digest_text">重大: %1$d、警告: %2$d</string>
     <string name="alert_rules_muted_quiet">ミュート · おやすみ時間（%1$s まで）</string>
     <string name="alert_rules_muted_severity">ミュート · クラスタの最低重要度未満</string>
+    <string name="alert_repeat_title">重大なアラートを繰り返す間隔</string>
+    <string name="alert_repeat_minutes">%1$d 分</string>
+    <string name="alert_repeat_hint">発生中の重大なアラートは、確認するかスヌーズするまで再通知されます。チェックは %1$d 分ごとなので、繰り返しは次のチェックを待ちます。</string>
+    <string name="alert_repeat_still_firing">発生中 · %1$d 分 · %2$s</string>
+    <string name="alert_action_acknowledge">確認</string>
 </resources>

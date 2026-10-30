@@ -6270,4 +6270,9 @@
     <string name="alert_rules_digest_text">Критических: %1$d, предупреждений: %2$d</string>
     <string name="alert_rules_muted_quiet">без звука · тихие часы до %1$s</string>
     <string name="alert_rules_muted_severity">без звука · ниже минимальной важности кластера</string>
+    <string name="alert_repeat_title">Повторять критические оповещения каждые</string>
+    <string name="alert_repeat_minutes">%1$d мин</string>
+    <string name="alert_repeat_hint">Критическое оповещение, которое всё ещё активно, публикуется снова, пока вы не подтвердите или не отложите его. Проверки идут каждые %1$d мин, поэтому повтор ждёт следующей проверки.</string>
+    <string name="alert_repeat_still_firing">Всё ещё активно · %1$d мин · %2$s</string>
+    <string name="alert_action_acknowledge">Подтвердить</string>
 </resources>

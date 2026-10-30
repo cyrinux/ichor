@@ -14,6 +14,8 @@ enum class AlertAction(val inApp: Boolean) {
     SYNC(true),
     RECONCILE(true),
     SILENCE(true),
+    /** Stops the alert's repeats, the notification stays (see [AlertAcks]). */
+    ACKNOWLEDGE(false),
     SNOOZE(false),
 }
 
@@ -26,9 +28,10 @@ const val SILENCE_ACTION_MINUTES = 60L
 /**
  * The buttons [this] alert gets, at most three (Android's limit): none for a "resolved" or "ready
  * again" one. [canWake]: a Wake-on-LAN target is known for the node; [canReboot]: the cluster's
- * role may reboot it (a Talos cluster).
+ * role may reboot it (a Talos cluster); [canAcknowledge]: its rule repeats it. With all four, a
+ * node alert drops Reboot, which its screen still offers.
  */
-fun Alert.actions(canWake: Boolean, canReboot: Boolean): List<AlertAction> {
+fun Alert.actions(canWake: Boolean, canReboot: Boolean, canAcknowledge: Boolean = false): List<AlertAction> {
     if (!problem) return emptyList()
     val own = when (kind) {
         AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE -> listOfNotNull(
@@ -40,8 +43,12 @@ fun Alert.actions(canWake: Boolean, canReboot: Boolean): List<AlertAction> {
         AlertKind.AM_FIRING -> listOf(AlertAction.SILENCE)
         else -> emptyList()
     }
-    return own + AlertAction.SNOOZE
+    val all = own + listOfNotNull(AlertAction.ACKNOWLEDGE.takeIf { canAcknowledge }) + AlertAction.SNOOZE
+    return if (all.size > MAX_ALERT_ACTIONS) all - AlertAction.REBOOT else all
 }
+
+/** Android shows three buttons on a notification. */
+private const val MAX_ALERT_ACTIONS = 3
 
 /**
  * What an [AlertAction.inApp] button asks the app for: [action] on [target], the node's address
@@ -58,7 +65,7 @@ data class AlertActionRequest(val action: AlertAction, val target: String) {
         AlertAction.SYNC -> link.target == ShareTarget.ARGO_APP && "${link.namespace}/${link.name}" == target
         AlertAction.RECONCILE -> link.target == ShareTarget.FLUX_APP && "${link.kind} ${link.namespace}/${link.name}" == target
         AlertAction.SILENCE -> link.target == ShareTarget.ALERTS
-        AlertAction.WAKE, AlertAction.SNOOZE -> false
+        AlertAction.WAKE, AlertAction.ACKNOWLEDGE, AlertAction.SNOOZE -> false
     }
 
     companion object {
@@ -76,7 +83,7 @@ fun Alert.actionRequest(action: AlertAction): AlertActionRequest? {
         // The node's address, the Alertmanager alert's fingerprint.
         AlertAction.REBOOT, AlertAction.SILENCE -> key.substringAfter(':')
         AlertAction.SYNC, AlertAction.RECONCILE -> subject
-        AlertAction.WAKE, AlertAction.SNOOZE -> return null
+        AlertAction.WAKE, AlertAction.ACKNOWLEDGE, AlertAction.SNOOZE -> return null
     }
     return AlertActionRequest(action, target)
 }

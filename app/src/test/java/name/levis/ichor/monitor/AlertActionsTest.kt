@@ -23,6 +23,19 @@ class AlertActionsTest {
     }
 
     @Test
+    fun aRepeatingAlertGetsAcknowledgeAndStaysWithinThreeButtons() {
+        val all = down.actions(canWake = true, canReboot = true, canAcknowledge = true)
+        assertEquals(listOf(AlertAction.WAKE, AlertAction.ACKNOWLEDGE, AlertAction.SNOOZE), all)
+        assertEquals(
+            listOf(AlertAction.REBOOT, AlertAction.ACKNOWLEDGE, AlertAction.SNOOZE),
+            down.actions(canWake = false, canReboot = true, canAcknowledge = true),
+        )
+        assertEquals(listOf(AlertAction.SILENCE, AlertAction.ACKNOWLEDGE, AlertAction.SNOOZE), firing.actions(canWake = false, canReboot = false, canAcknowledge = true))
+        assertNull(down.actionRequest(AlertAction.ACKNOWLEDGE))
+        assertFalse(AlertAction.ACKNOWLEDGE.inApp)
+    }
+
+    @Test
     fun gitOpsAndAlertmanagerAlertsGetTheirAction() {
         assertEquals(listOf(AlertAction.SYNC, AlertAction.SNOOZE), argo.actions(canWake = true, canReboot = true))
         assertEquals(listOf(AlertAction.RECONCILE, AlertAction.SNOOZE), flux.actions(canWake = true, canReboot = true))

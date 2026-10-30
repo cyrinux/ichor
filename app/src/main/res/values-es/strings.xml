@@ -6013,4 +6013,9 @@
     <string name="alert_rules_digest_text">Críticas: %1$d, advertencias: %2$d</string>
     <string name="alert_rules_muted_quiet">silenciada · horas de silencio hasta las %1$s</string>
     <string name="alert_rules_muted_severity">silenciada · por debajo de la gravedad mínima del clúster</string>
+    <string name="alert_repeat_title">Repetir alertas críticas cada</string>
+    <string name="alert_repeat_minutes">%1$d min</string>
+    <string name="alert_repeat_hint">Una alerta crítica que sigue activa se vuelve a publicar hasta que la confirmes o la pospongas. Las comprobaciones se hacen cada %1$d min, así que una repetición espera a la siguiente.</string>
+    <string name="alert_repeat_still_firing">Sigue activa · %1$d min · %2$s</string>
+    <string name="alert_action_acknowledge">Confirmar</string>
 </resources>

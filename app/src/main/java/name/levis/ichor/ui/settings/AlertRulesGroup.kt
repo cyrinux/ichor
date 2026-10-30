@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ALERT_REPEAT_CHOICES
 import name.levis.ichor.model.ALERT_SEVERITY_ALL
 import name.levis.ichor.model.AlertRule
 import name.levis.ichor.model.QuietHours
@@ -51,6 +52,15 @@ fun AlertRulesGroup(app: TalosApp, enabled: Boolean) {
     RuleSwitch(stringResource(R.string.alert_rules_digest), stringResource(R.string.alert_rules_digest_desc), rule.digest == true, enabled) { on ->
         update { it.copy(digest = on.takeIf { d -> d }) }
     }
+    val interval by store.intervalMinutes.collectAsStateWithLifecycle()
+    val repeat = rule.repeatMinutes ?: 0
+    RuleSegments(
+        stringResource(R.string.alert_repeat_title),
+        ALERT_REPEAT_CHOICES.map { repeatLabel(it) },
+        ALERT_REPEAT_CHOICES.indexOf(repeat).coerceAtLeast(0),
+        enabled,
+    ) { i -> update { it.copy(repeatMinutes = ALERT_REPEAT_CHOICES[i].takeIf { m -> m > 0 }) } }
+    MutedText(stringResource(R.string.alert_repeat_hint, interval.toInt()))
     OutlinedButton(onClick = { perCluster = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
         val count = rules.clusters.size
         Text(

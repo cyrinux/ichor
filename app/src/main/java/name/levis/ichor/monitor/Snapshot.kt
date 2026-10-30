@@ -102,6 +102,10 @@ data class ClusterSnapshot(
      * not, never unreachable), there is no etcd, and [certNotAfter] is the kubeconfig's credentials.
      */
     val kube: Boolean = false,
+    /** When each problem alert this snapshot still holds (see [firingAlerts]) was first seen, by alert key. */
+    val firstSeen: Map<String, Long> = emptyMap(),
+    /** When each of them was last posted, by alert key: what a repeat counts from (see [withAlertTimes]). */
+    val lastNotified: Map<String, Long> = emptyMap(),
 ) {
     val readyCount: Int get() = nodes.values.count { it.health == NodeHealth.READY }
     val notReadyCount: Int get() = nodes.values.count { it.health == NodeHealth.NOT_READY }

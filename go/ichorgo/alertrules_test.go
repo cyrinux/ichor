@@ -127,6 +127,102 @@ func TestAlertRulesDecide(t *testing.T) {
 	}
 }
 
+const repeat15 = `{"default":{"repeatMinutes":15}}`
+
+// TestAlertRulesRepeat: an ongoing critical alert is posted again once its repeat is due, never
+// a warning, an acknowledged, snoozed or digest one, nor one the quiet hours keep quiet.
+func TestAlertRulesRepeat(t *testing.T) {
+	now := rulesAt(t, "2026-06-01T12:00:00Z")
+	minutesAgo := func(m int64) int64 { return now - m*60_000 }
+	ongoing := func(change func(*alertIn)) alertIn {
+		a := alertIn{
+			Cluster: rulesProd, Key: "node:10.0.0.1", Kind: "node", Problem: true, Ongoing: true,
+			FirstSeenMillis: minutesAgo(40), LastNotifiedMillis: minutesAgo(16),
+		}
+		if change != nil {
+			change(&a)
+		}
+
+		return a
+	}
+	muted := func(reason string) alertDecision { return alertDecision{Action: alertMute, Reason: reason} }
+	repeated := alertDecision{Action: alertRepeat, Reason: alertReasonRepeat, Repeats: true}
+
+	cases := []struct {
+		name  string
+		rules string
+		alert alertIn
+		want  alertDecision
+	}{
+		{"due", repeat15, ongoing(nil), repeated},
+		{"a minute early is due", repeat15, ongoing(func(a *alertIn) { a.LastNotifiedMillis = minutesAgo(14) }), repeated},
+		{"not due", repeat15, ongoing(func(a *alertIn) { a.LastNotifiedMillis = minutesAgo(10) }), muted(alertReasonNotDue)},
+		{"first seen later than last posted", repeat15,
+			ongoing(func(a *alertIn) { a.FirstSeenMillis, a.LastNotifiedMillis = minutesAgo(5), minutesAgo(30) }), muted(alertReasonNotDue)},
+		{"acknowledged", repeat15, ongoing(func(a *alertIn) { a.Acknowledged = true }), muted(alertReasonAcknowledged)},
+		{"snoozed", repeat15, ongoing(func(a *alertIn) { a.Snoozed = true }), muted(alertReasonSnoozed)},
+		{"warning never repeats", repeat15, ongoing(func(a *alertIn) { a.Kind, a.Severity = "am", "warning" }), muted(alertReasonRepeatOff)},
+		{"critical by label repeats", repeat15, ongoing(func(a *alertIn) { a.Kind, a.Severity = "am", "critical" }), repeated},
+		{"off without a repeat", ``, ongoing(nil), muted(alertReasonRepeatOff)},
+		{"off at zero", `{"default":{"repeatMinutes":0}}`, ongoing(nil), muted(alertReasonRepeatOff)},
+		{"cluster turns it off", `{"default":{"repeatMinutes":15},"clusters":{"` + rulesProd + `":{"repeatMinutes":0}}}`,
+			ongoing(nil), muted(alertReasonRepeatOff)},
+		{"cluster turns it on", `{"clusters":{"` + rulesProd + `":{"repeatMinutes":5}}}`,
+			ongoing(func(a *alertIn) { a.LastNotifiedMillis = minutesAgo(6) }), repeated},
+		{"digest cluster does not repeat", `{"default":{"repeatMinutes":15,"digest":true}}`, ongoing(nil), muted(alertReasonRepeatOff)},
+		{"a recovery is never ongoing", repeat15, ongoing(func(a *alertIn) { a.Problem = false }), muted(alertReasonRepeatOff)},
+		{"quiet hours mute it", `{"default":{"repeatMinutes":15,"quietHours":{"start":"11:00","end":"13:00","tz":"UTC"}}}`,
+			ongoing(nil), alertDecision{Action: alertMute, Reason: alertReasonQuiet, Until: rulesAt(t, "2026-06-01T13:00:00Z")}},
+		{"except critical lets it through",
+			`{"default":{"repeatMinutes":15,"quietHours":{"start":"11:00","end":"13:00","tz":"UTC","exceptCritical":true}}}`,
+			ongoing(nil), repeated},
+		{"minimum severity critical keeps it", `{"default":{"repeatMinutes":15,"minSeverity":"critical"}}`, ongoing(nil), repeated},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := runAlertRules(t, c.rules, []alertIn{c.alert}, now)
+			c.want.Cluster, c.want.Key = c.alert.Cluster, c.alert.Key
+
+			if len(got.Decisions) != 1 || got.Decisions[0] != c.want {
+				t.Errorf("decisions = %+v, want %+v", got.Decisions, c.want)
+			}
+
+			if len(got.Digests) != 0 {
+				t.Errorf("digests = %+v, want none", got.Digests)
+			}
+		})
+	}
+}
+
+// TestAlertRulesRepeatsFlag: a posted critical alert is marked "repeats" when its rule repeats
+// it, so the app offers Acknowledge; a warning, a recovery or a digest cluster's are not.
+func TestAlertRulesRepeatsFlag(t *testing.T) {
+	now := rulesAt(t, "2026-06-01T12:00:00Z")
+	node := alertIn{Cluster: rulesProd, Key: "node:10.0.0.1", Kind: "node", Problem: true}
+	cases := []struct {
+		name  string
+		rules string
+		alert alertIn
+		want  bool
+	}{
+		{"critical with a repeat", repeat15, node, true},
+		{"critical without a repeat", ``, node, false},
+		{"warning", repeat15, alertIn{Cluster: rulesProd, Key: "am:slow", Kind: "am", Severity: "warning", Problem: true}, false},
+		{"recovery", repeat15, alertIn{Cluster: rulesProd, Key: "node:10.0.0.1", Kind: "node"}, false},
+		{"digest cluster", `{"default":{"repeatMinutes":15,"digest":true}}`, node, false},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := runAlertRules(t, c.rules, []alertIn{c.alert}, now)
+			if len(got.Decisions) != 1 || got.Decisions[0].Repeats != c.want {
+				t.Errorf("decisions = %+v, want repeats %v", got.Decisions, c.want)
+			}
+		})
+	}
+}
+
 // Europe/Paris goes from CET to CEST on 2026-03-29 at 02:00 and back on 2026-10-25 at 03:00:
 // the window keeps its wall-clock times, so the night is an hour shorter or longer.
 func TestAlertRulesDST(t *testing.T) {
@@ -243,6 +339,8 @@ func TestAlertRulesErrors(t *testing.T) {
 		{"Local is not a zone", `{"default":{"quietHours":{"start":"23:00","end":"07:00","tz":"Local"}}}`, `[]`, `"Local" is not an IANA zone`},
 		{"no zone", `{"default":{"quietHours":{"start":"23:00","end":"07:00"}}}`, `[]`, "no time zone"},
 		{"bad floor", `{"clusters":{"` + rulesProd + `":{"minSeverity":"high"}}}`, `[]`, "alert rule " + rulesProd + `: minSeverity "high"`},
+		{"repeat too long", `{"default":{"repeatMinutes":1441}}`, `[]`, "alert rule default: repeatMinutes 1441: want 0 to 1440"},
+		{"negative repeat", `{"clusters":{"` + rulesLab + `":{"repeatMinutes":-5}}}`, `[]`, "alert rule " + rulesLab + ": repeatMinutes -5"},
 		{"trailing data", `{} {}`, `[]`, "data after the rules object"},
 		{"bad alerts", `{}`, `{}`, "invalid alerts"},
 	}

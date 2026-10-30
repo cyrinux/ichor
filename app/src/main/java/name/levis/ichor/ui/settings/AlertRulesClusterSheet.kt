@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ALERT_REPEAT_CHOICES
 import name.levis.ichor.model.AlertRule
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.QuietHours
@@ -47,7 +48,7 @@ internal fun ruleClusters(contexts: List<ContextSummary>): List<ContextSummary> 
 
 /**
  * Per-cluster overrides of the alert rules: for each stored cluster (the demo while it is
- * stored), quiet hours, the minimum severity and the digest, each "as default" unless set.
+ * stored), quiet hours, the minimum severity, the digest and the repeat, each "as default" unless set.
  * A removed cluster's overrides go with it (see [name.levis.ichor.monitor.MonitorStore.retainAlertRules]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,7 +86,7 @@ fun AlertRulesClusterSheet(app: TalosApp, onDismiss: () -> Unit) {
     }
 }
 
-/** A cluster's three overrides, each with an "as default" choice. */
+/** A cluster's four overrides, each with an "as default" choice. */
 @Composable
 private fun ClusterRuleEditor(rule: AlertRule, onChange: (AlertRule) -> Unit) {
     val asDefault = stringResource(R.string.alert_rules_as_default)
@@ -121,4 +122,10 @@ private fun ClusterRuleEditor(rule: AlertRule, onChange: (AlertRule) -> Unit) {
         },
         enabled = true,
     ) { i -> onChange(rule.copy(digest = if (i == 0) null else i == 2)) }
+    RuleSegments(
+        stringResource(R.string.alert_repeat_title),
+        listOf(asDefault) + ALERT_REPEAT_CHOICES.map { repeatLabel(it) },
+        rule.repeatMinutes?.let { ALERT_REPEAT_CHOICES.indexOf(it) + 1 }?.coerceAtLeast(0) ?: 0,
+        enabled = true,
+    ) { i -> onChange(rule.copy(repeatMinutes = if (i == 0) null else ALERT_REPEAT_CHOICES[i - 1])) }
 }

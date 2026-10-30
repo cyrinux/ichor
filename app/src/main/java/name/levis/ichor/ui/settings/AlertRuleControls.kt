@@ -57,6 +57,11 @@ fun severityLabel(severity: String): String = stringResource(
     },
 )
 
+/** "Off" for 0, else "15 min": a repeat choice. */
+@Composable
+fun repeatLabel(minutes: Int): String =
+    if (minutes <= 0) stringResource(R.string.alert_rules_off) else stringResource(R.string.alert_repeat_minutes, minutes)
+
 /** A segmented choice among [labels], [selected] its index, under a [title] that also labels it for a screen reader. */
 @Composable
 fun RuleSegments(title: String, labels: List<String>, selected: Int, enabled: Boolean, onSelect: (Int) -> Unit) {

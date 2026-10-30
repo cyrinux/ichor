@@ -80,6 +80,7 @@ import name.levis.ichor.ui.apps.AppIconLoader
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.quicksettings.ClusterTileService
 import name.levis.ichor.monitor.AlertActionToken
+import name.levis.ichor.monitor.AlertAcks
 import name.levis.ichor.monitor.AlertMutes
 import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
@@ -454,6 +455,9 @@ class TalosApp : Application() {
     /** The alerts the rules kept quiet, for the history line that says why. */
     val alertMutes by lazy { AlertMutes(getSharedPreferences(AlertMutes.FILE, Context.MODE_PRIVATE)) }
 
+    /** The alerts acknowledged from their notification: their repeat stops until they fire again. */
+    val alertAcks by lazy { AlertAcks(getSharedPreferences(AlertAcks.FILE, Context.MODE_PRIVATE)) }
+
     /** Decides what the alert rules do with a run's alerts (in the Go core). */
     val alertRulesRepository by lazy { AlertRulesRepository() }
 
@@ -652,6 +656,7 @@ class TalosApp : Application() {
                     // A removed cluster's snoozes go with it (its snapshot at the next check).
                     alertSnoozes.retain(it.summary.contexts.map { c -> c.fingerprint })
                     alertMutes.retain(it.summary.contexts.map { c -> c.fingerprint })
+                    alertAcks.retain(it.summary.contexts.map { c -> c.fingerprint })
                     monitorStore.retainAlertRules(it.summary.contexts.map { c -> c.fingerprint })
                     kubeServers.sync(it.summary)
                     kubeAccess.sync(it.summary)
