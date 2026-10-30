@@ -9,17 +9,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,9 +77,9 @@ private fun ImagePullContent(run: ImagePullRunState, onStop: () -> Unit, onClose
             }
         }
         if (run.running) {
-            OutlinedButton(onClick = onStop, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.image_pull_stop)) }
+            IchorOutlinedButton(onClick = onStop, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.image_pull_stop)) }
         } else {
-            Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_close)) }
+            IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_close)) }
         }
     }
 }
@@ -147,10 +147,10 @@ fun ImagePullDialog(onPull: (String, ImagePullNamespace) -> Unit, onDismiss: () 
             }
         },
         confirmButton = {
-            TextButton(onClick = { onPull(image.trim(), namespace) }, enabled = image.isNotBlank()) {
+            IchorTextButton(onClick = { onPull(image.trim(), namespace) }, enabled = image.isNotBlank()) {
                 Text(stringResource(R.string.image_pull_start))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

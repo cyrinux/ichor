@@ -12,7 +12,7 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -134,9 +134,9 @@ internal fun SupportCard(onFunding: () -> Unit) {
             Text(stringResource(R.string.overview_support_title), style = MaterialTheme.typography.titleSmall)
             MutedText(stringResource(R.string.overview_support_body))
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = prompt::never) { Text(stringResource(R.string.overview_support_never)) }
-                TextButton(onClick = prompt::later) { Text(stringResource(R.string.overview_support_later)) }
-                TextButton(onClick = {
+                IchorTextButton(onClick = prompt::never) { Text(stringResource(R.string.overview_support_never)) }
+                IchorTextButton(onClick = prompt::later) { Text(stringResource(R.string.overview_support_later)) }
+                IchorTextButton(onClick = {
                     prompt.later()
                     if (BuildConfig.FEATURE_FUNDING) onFunding() else openUrl(context, SPONSOR_URL)
                 }) { Text(stringResource(if (BuildConfig.FEATURE_FUNDING) R.string.funding_title else R.string.overview_support_sponsor)) }

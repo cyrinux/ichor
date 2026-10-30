@@ -24,10 +24,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -213,7 +213,7 @@ private fun MetaKeyListView(list: MetaKeyList, enabled: Boolean, onAdd: () -> Un
         if (list.keys.isEmpty()) item { MutedText(stringResource(R.string.meta_empty)) }
         items(list.keys, key = { it.key }) { key -> MetaKeyCard(key, enabled, onEdit, onDelete) }
         item {
-            OutlinedButton(onClick = onAdd, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = onAdd, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.meta_add))
             }
         }
@@ -315,10 +315,10 @@ private fun MetaEditDialog(current: MetaKey?, known: List<MetaKey>, onWrite: (In
             }
         },
         confirmButton = {
-            TextButton(onClick = { key?.let { onWrite(it, value) } }, enabled = writable && value.isNotEmpty()) {
+            IchorTextButton(onClick = { key?.let { onWrite(it, value) } }, enabled = writable && value.isNotEmpty()) {
                 Text(stringResource(R.string.meta_write_action))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

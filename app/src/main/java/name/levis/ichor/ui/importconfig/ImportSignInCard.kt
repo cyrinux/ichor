@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +66,6 @@ fun SignInFailedCard(failed: List<SignInFailure>, onDone: () -> Unit) {
                 }
             }
         }
-        Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+        IchorButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
     }
 }

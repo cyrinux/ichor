@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -97,7 +97,7 @@ fun ProposalsCard(
                 if (onReconcile != null && (status == ProposalStatus.MERGED || status == ProposalStatus.OTHER_REVISION)) {
                     MutedText(stringResource(if (status == ProposalStatus.MERGED) R.string.proposals_not_deployed else R.string.proposals_other_revision))
                     Row(Modifier.padding(top = 4.dp)) {
-                        OutlinedButton(onClick = onReconcile) { Text(stringResource(R.string.proposals_reconcile)) }
+                        IchorOutlinedButton(onClick = onReconcile) { Text(stringResource(R.string.proposals_reconcile)) }
                     }
                 }
             }

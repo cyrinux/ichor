@@ -10,13 +10,13 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Science
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,7 +58,7 @@ fun TalosPatchCard(info: TalosPatchInfo, onTry: () -> Unit, modifier: Modifier =
     ) {
         if (info.tryable) {
             MutedText(stringResource(R.string.talos_patch_hint))
-            OutlinedButton(onClick = onTry, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.talos_patch_try)) }
+            IchorOutlinedButton(onClick = onTry, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.talos_patch_try)) }
         } else {
             MutedText(stringResource(R.string.talos_patch_cannot, info.note))
         }
@@ -104,7 +104,7 @@ fun TalosPatchNodeSheet(talos: TalosRepository, info: TalosPatchInfo, onPick: (N
                         )
                     }
                     MutedText(stringResource(R.string.talos_patch_pick_hint))
-                    Button(
+                    IchorButton(
                         onClick = { n.data.firstOrNull { it.node == picked }?.let(onPick) },
                         enabled = picked != null,
                         modifier = Modifier.fillMaxWidth(),

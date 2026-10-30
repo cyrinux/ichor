@@ -15,7 +15,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +24,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -105,12 +105,12 @@ private fun ValueSheet(sheet: ConfigSheet.Value, onEdit: (ConfigEdit) -> Unit, o
     if (node.description.isNotEmpty()) MutedText(node.description)
     ConfigValueInput(type, node.allowed, value) { value = it }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        TextButton(onClick = onRemove) {
+        IchorTextButton(onClick = onRemove) {
             Text(stringResource(R.string.machine_config_remove), color = LocalStatusColors.current.bad)
         }
         Spacer(Modifier.weight(1f))
-        TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-        Button(enabled = value != node.value && isComplete(type, node.allowed, value), onClick = { onEdit(ConfigEdit.set(sheet.doc, node.path, type, value)) }) {
+        IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        IchorButton(enabled = value != node.value && isComplete(type, node.allowed, value), onClick = { onEdit(ConfigEdit.set(sheet.doc, node.path, type, value)) }) {
             Text(stringResource(R.string.machine_config_save))
         }
     }
@@ -169,8 +169,8 @@ private fun AddSheet(sheet: ConfigSheet.Add, onEdit: (ConfigEdit) -> Unit, onDis
     val sent = if (type == ConfigType.BOOLEAN && value.isEmpty()) "false" else value
     Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(Modifier.weight(1f))
-        TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-        Button(
+        IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        IchorButton(
             enabled = (isList || key.isNotEmpty()) && isComplete(type, picked?.allowed.orEmpty(), sent),
             onClick = { onEdit(ConfigEdit.add(sheet.doc, node.path, if (isList) "" else key, type, sent)) },
         ) { Text(stringResource(R.string.machine_config_add)) }

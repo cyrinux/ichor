@@ -8,7 +8,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,12 +59,12 @@ internal fun KubeServerDialog(saved: String, onSave: (String) -> Unit, onDismiss
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            IchorTextButton(onClick = {
                 runCatching { Ichorgo.normalizeKubeServer(input) }
                     .onSuccess(onSave)
                     .onFailure { error = it.uiText() }
             }) { Text(stringResource(R.string.common_ok)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

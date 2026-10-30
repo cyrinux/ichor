@@ -14,7 +14,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,7 +74,7 @@ fun RunbooksScreen(onBack: () -> Unit, onOpen: (id: String) -> Unit) {
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.runbooks_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {

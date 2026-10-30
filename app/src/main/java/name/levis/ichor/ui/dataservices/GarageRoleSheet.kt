@@ -15,7 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -24,7 +24,7 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -175,12 +175,12 @@ private fun RoleForm(node: GarageLayoutNode, zones: List<String>, saving: Boolea
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { addTag() }),
-        trailingIcon = if (newTag.isNotBlank()) ({ OutlinedButton(onClick = ::addTag) { Text(stringResource(R.string.garage_role_tag_add_button)) } }) else null,
+        trailingIcon = if (newTag.isNotBlank()) ({ IchorOutlinedButton(onClick = ::addTag) { Text(stringResource(R.string.garage_role_tag_add_button)) } }) else null,
     )
 
     Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)) {
         if (saving) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-        Button(onClick = { onStage(zone.trim(), capacity ?: 0L, gateway, tags) }, enabled = canStage) {
+        IchorButton(onClick = { onStage(zone.trim(), capacity ?: 0L, gateway, tags) }, enabled = canStage) {
             Text(stringResource(R.string.garage_layout_stage))
         }
     }

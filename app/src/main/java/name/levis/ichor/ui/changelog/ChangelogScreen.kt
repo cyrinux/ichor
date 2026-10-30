@@ -10,7 +10,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,7 +58,7 @@ fun ChangelogScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.changelog_title)) },
                 navigationIcon = { BackButton(onBack) },
             )

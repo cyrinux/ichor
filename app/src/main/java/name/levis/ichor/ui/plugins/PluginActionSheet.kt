@@ -16,11 +16,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,7 +72,7 @@ fun PluginActionButtons(items: List<PluginAction>, ref: PluginRef?, runner: Plug
         items.forEach { a ->
             val target = if (runner != null && a.usable) ref else null
             val busy = target != null && runner != null && pluginActionKey(target, a.id) in runner.busy
-            OutlinedButton(
+            IchorOutlinedButton(
                 onClick = {
                     when {
                         target == null -> Unit
@@ -153,8 +153,8 @@ private fun PluginActionDialog(action: PluginAction, target: PluginRef, onDismis
             onDismissRequest = onDismiss,
             title = { Text(title) },
             text = { Column(Modifier.verticalScroll(rememberScrollState())) { form() } },
-            confirmButton = { TextButton(onClick = run, enabled = problems.isEmpty()) { Text(action.label) } },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+            confirmButton = { IchorTextButton(onClick = run, enabled = problems.isEmpty()) { Text(action.label) } },
+            dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }

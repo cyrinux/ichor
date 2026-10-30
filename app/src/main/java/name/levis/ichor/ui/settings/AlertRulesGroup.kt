@@ -2,7 +2,7 @@ package name.levis.ichor.ui.settings
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -61,7 +61,7 @@ fun AlertRulesGroup(app: TalosApp, enabled: Boolean) {
         enabled,
     ) { i -> update { it.copy(repeatMinutes = ALERT_REPEAT_CHOICES[i].takeIf { m -> m > 0 }) } }
     MutedText(stringResource(R.string.alert_repeat_hint, interval.toInt()))
-    OutlinedButton(onClick = { perCluster = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { perCluster = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
         val count = rules.clusters.size
         Text(
             if (count == 0) {

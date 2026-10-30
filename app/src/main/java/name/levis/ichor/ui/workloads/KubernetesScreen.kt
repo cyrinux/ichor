@@ -9,8 +9,8 @@ import androidx.compose.material3.PrimaryScrollableTabRow
 import name.levis.ichor.ui.design.IchorScaffold
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -173,10 +173,10 @@ fun KubernetesScreen(
 
     IchorScaffold(
         topBar = {
-            if (customizing) TopAppBar(
+            if (customizing) IchorTopAppBar(
                 title = { Text(stringResource(R.string.bar_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
+                actions = { IchorTextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else IchorTopAppBar(
                 title = { Text("Kubernetes") },
                 navigationIcon = { BackButton(onBack) },
                 actions = {

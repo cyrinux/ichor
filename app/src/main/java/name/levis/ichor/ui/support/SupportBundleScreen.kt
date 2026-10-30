@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,8 +20,8 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -102,7 +102,7 @@ fun SupportBundleScreen(
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.support_bundle_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -173,7 +173,7 @@ private fun RunCard(state: SupportBundleState, vm: SupportBundleViewModel) {
                     run.nodes.forEach { node -> NodeProgress(state.hostname(node), node, run.progress) }
                     // Cluster-wide steps (etcd, writing the archive) are reported without a node.
                     NodeProgress(stringResource(R.string.support_bundle_cluster), BUNDLE_CLUSTER, run.progress)
-                    TextButton(onClick = vm::cancel) { Text(stringResource(R.string.common_cancel)) }
+                    IchorTextButton(onClick = vm::cancel) { Text(stringResource(R.string.common_cancel)) }
                 }
                 else -> {
                     (run as? SupportRun.Failed)?.let { InlineError(stringResource(R.string.support_bundle_failed, it.message.asString())) }
@@ -185,12 +185,12 @@ private fun RunCard(state: SupportBundleState, vm: SupportBundleViewModel) {
                     when {
                         nodes == null && state.nodesError != null -> {
                             InlineError(state.nodesError.asString())
-                            TextButton(onClick = vm::load) { Text(stringResource(R.string.common_retry)) }
+                            IchorTextButton(onClick = vm::load) { Text(stringResource(R.string.common_retry)) }
                         }
                         nodes == null -> LinearProgressIndicator(Modifier.fillMaxWidth())
                         else -> nodes.forEach { node -> NodeChoice(node, node.node in state.selected) { vm.toggle(node.node) } }
                     }
-                    Button(onClick = vm::start, enabled = state.selected.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+                    IchorButton(onClick = vm::start, enabled = state.selected.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.support_bundle_create))
                     }
                 }
@@ -248,9 +248,9 @@ private fun BundleRow(file: SupportBundleFile, onSave: () -> Unit, onShare: () -
             Text(file.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
             MutedText("${formatBytes(file.size)} · $date")
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = onSave) { Text(stringResource(R.string.capture_save)) }
-                TextButton(onClick = onShare) { Text(stringResource(R.string.capture_share)) }
-                TextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete)) }
+                IchorTextButton(onClick = onSave) { Text(stringResource(R.string.capture_save)) }
+                IchorTextButton(onClick = onShare) { Text(stringResource(R.string.capture_share)) }
+                IchorTextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete)) }
             }
         }
     }

@@ -16,7 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -249,8 +249,8 @@ fun ReplicaCountDialog(label: String, current: Int, choices: IntRange, onConfirm
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(count) }, enabled = count != current) { Text(stringResource(R.string.longhorn_replicas_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onConfirm(count) }, enabled = count != current) { Text(stringResource(R.string.longhorn_replicas_confirm)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

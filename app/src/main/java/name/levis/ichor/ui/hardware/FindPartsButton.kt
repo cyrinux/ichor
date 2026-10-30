@@ -7,7 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -34,7 +34,7 @@ internal fun FindPartsButton(kind: String, manufacturer: String, model: String, 
     val context = LocalContext.current
     val label = stringResource(R.string.hardware_find_parts)
     val hint = stringResource(R.string.hardware_find_parts_hint)
-    TextButton(onClick = { openUrl(context, url) }, modifier = Modifier.semantics { contentDescription = "$label. $hint" }) {
+    IchorTextButton(onClick = { openUrl(context, url) }, modifier = Modifier.semantics { contentDescription = "$label. $hint" }) {
         Icon(Icons.Outlined.Build, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text(label)

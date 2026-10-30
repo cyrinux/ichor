@@ -15,12 +15,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -77,13 +77,13 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
         when {
             run.running -> {
                 Text(stringResource(R.string.upgrade_cannot_cancel), style = MaterialTheme.typography.bodySmall)
-                OutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
+                IchorOutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.upgrade_stop_following))
                 }
             }
             run.error != null -> {
                 Text(stringResource(R.string.upgrade_failed, run.error), color = colors.bad)
-                Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
             }
             else -> {
                 Text(
@@ -91,7 +91,7 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
                     color = colors.ok,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
             }
         }
     }

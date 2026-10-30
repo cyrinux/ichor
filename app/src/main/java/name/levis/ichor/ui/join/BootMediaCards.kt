@@ -20,7 +20,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -111,7 +111,7 @@ private fun BootQrSheet(title: String, text: String, onDismiss: () -> Unit) {
                 contentDescription = stringResource(R.string.boot_media_qr, title),
                 onTooLarge = { MutedText(stringResource(R.string.boot_media_qr_too_large)) },
             )
-            TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.common_close)) }
+            IchorTextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.common_close)) }
         }
     }
 }

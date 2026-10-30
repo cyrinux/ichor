@@ -13,11 +13,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -54,14 +54,14 @@ fun CertificateDetailsSheet(state: CertDetailsState, renewing: Boolean, onReload
         LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             item { Header(state, onReload) }
             if (!state.cert.issuing) item {
-                OutlinedButton(onClick = onRenew, enabled = !renewing) { Text(stringResource(R.string.certmanager_renew)) }
+                IchorOutlinedButton(onClick = onRenew, enabled = !renewing) { Text(stringResource(R.string.certmanager_renew)) }
             }
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error ->
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         InlineError(error.asString())
-                        if (state.details == null) OutlinedButton(onClick = onReload) { Text(stringResource(R.string.common_retry)) }
+                        if (state.details == null) IchorOutlinedButton(onClick = onReload) { Text(stringResource(R.string.common_retry)) }
                     }
                 }
             }
@@ -107,7 +107,7 @@ private fun Header(state: CertDetailsState, onReload: () -> Unit) {
                 Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        IconButton(onClick = onReload, enabled = !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
+        IchorIconButton(onClick = onReload, enabled = !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
     }
 }
 

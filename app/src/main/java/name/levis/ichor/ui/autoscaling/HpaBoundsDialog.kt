@@ -9,10 +9,10 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -58,9 +58,9 @@ fun HpaBoundsDialog(row: HpaRow, onSave: (Int, Int) -> Unit, onDismiss: () -> Un
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(min, max) }, enabled = valid && changed) { Text(stringResource(R.string.autoscaling_bounds_save)) }
+            IchorTextButton(onClick = { onSave(min, max) }, enabled = valid && changed) { Text(stringResource(R.string.autoscaling_bounds_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -69,11 +69,11 @@ fun HpaBoundsDialog(row: HpaRow, onSave: (Int, Int) -> Unit, onDismiss: () -> Un
 fun ReplicaStepper(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        IconButton(onClick = { onChange(value - 1) }, enabled = value > range.first) {
+        IchorIconButton(onClick = { onChange(value - 1) }, enabled = value > range.first) {
             Icon(Icons.Outlined.Remove, stringResource(R.string.autoscaling_stepper_less, label))
         }
         Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
-        IconButton(onClick = { onChange(value + 1) }, enabled = value < range.last) {
+        IchorIconButton(onClick = { onChange(value + 1) }, enabled = value < range.last) {
             Icon(Icons.Outlined.Add, stringResource(R.string.autoscaling_stepper_more, label))
         }
     }

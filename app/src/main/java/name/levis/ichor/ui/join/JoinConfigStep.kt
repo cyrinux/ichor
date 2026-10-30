@@ -13,7 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -129,7 +129,7 @@ fun JoinConfigStep(vm: JoinConfigViewModel, disks: List<String>) {
             TemplatePicker(joinTemplates(nodes), form.template) { vm.pick(it, nodes) }
             if (form.template.isNotBlank()) {
                 ConfigFields(form, disks, vm)
-                Button(onClick = vm::generate, enabled = form.complete && preview != UiState.Loading, modifier = Modifier.fillMaxWidth()) {
+                IchorButton(onClick = vm::generate, enabled = form.complete && preview != UiState.Loading, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.join_config_preview))
                 }
             }

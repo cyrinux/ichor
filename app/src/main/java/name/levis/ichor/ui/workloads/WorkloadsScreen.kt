@@ -14,7 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -268,7 +268,7 @@ private fun WorkloadRow(workload: KubeWorkload, restarting: Boolean, onRestart: 
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
             val denied = rememberKubeDenial(KubeAction.restart(workload.kind), workload.namespace) != null
-            IconButton(onClick = onRestart, enabled = workload.canRestart && !denied) {
+            IchorIconButton(onClick = onRestart, enabled = workload.canRestart && !denied) {
                 Icon(Icons.Outlined.RestartAlt, stringResource(R.string.workloads_restart, workload.name))
             }
         }

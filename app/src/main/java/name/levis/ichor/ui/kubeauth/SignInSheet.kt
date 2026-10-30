@@ -19,7 +19,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -27,11 +27,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -102,7 +102,7 @@ fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) 
                 SignInUi.Loading, SignInUi.Done -> Box(Modifier.fillMaxWidth().padding(24.dp), Alignment.Center) { CircularProgressIndicator() }
                 is SignInUi.Failed -> {
                     Text(s.message, color = LocalStatusColors.current.bad)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
                 }
                 is SignInUi.Ready -> {
                     SignInTitle(s.info)
@@ -110,7 +110,7 @@ fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) 
                         CredentialsForm(s.info, s.checking, onSubmit = vm::submit, onGoogle = signInWithGoogle)
                     } else {
                         MutedText(stringResource(R.string.kube_signin_browser_hint))
-                        Button(onClick = vm::startSignIn, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.kube_signin_action)) }
+                        IchorButton(onClick = vm::startSignIn, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.kube_signin_action)) }
                     }
                     s.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
                 }
@@ -148,7 +148,7 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
     // Sign in with Google (Play build): Google's own picker, nothing to type.
     if (fields == listOf(GCP_GOOGLE_SIGN_IN)) {
         MutedText(stringResource(R.string.kube_signin_google_hint))
-        Button(onClick = onGoogle, enabled = !checking, modifier = Modifier.fillMaxWidth()) {
+        IchorButton(onClick = onGoogle, enabled = !checking, modifier = Modifier.fillMaxWidth()) {
             if (checking) {
                 CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
             } else {
@@ -218,7 +218,7 @@ private fun RoleChoices(info: KubeSignInInfo, checking: Boolean, onSubmit: (List
 /** The sheet's Sign in button, a spinner while [checking]. */
 @Composable
 private fun SignInButton(checking: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = !checking && enabled, modifier = Modifier.fillMaxWidth()) {
+    IchorButton(onClick = onClick, enabled = !checking && enabled, modifier = Modifier.fillMaxWidth()) {
         if (checking) {
             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
         } else {
@@ -251,13 +251,13 @@ internal fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit, onCode: (Strin
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 Text(stringResource(R.string.kube_signin_waiting_browser))
             }
-            OutlinedButton(onClick = { open(prompt.url) }) { Text(stringResource(R.string.kube_signin_open_again)) }
+            IchorOutlinedButton(onClick = { open(prompt.url) }) { Text(stringResource(R.string.kube_signin_open_again)) }
             // A web redirect page (not Go's loopback address): it shows a code when the
             // browser cannot bring the app back by itself.
             if (prompt.redirectPrefix.startsWith("https://")) PasteSignInCode(onCode)
         }
     }
-    TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+    IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
 }
 
 /** The sign-in code a web redirect page shows, pasted when the browser did not come back. */
@@ -273,7 +273,7 @@ private fun PasteSignInCode(onCode: (String) -> Unit) {
         textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
         modifier = Modifier.fillMaxWidth(),
     )
-    Button(onClick = { onCode(code) }, enabled = code.isNotBlank()) { Text(stringResource(R.string.kube_signin_paste_code_action)) }
+    IchorButton(onClick = { onCode(code) }, enabled = code.isNotBlank()) { Text(stringResource(R.string.kube_signin_paste_code_action)) }
 }
 
 @Composable
@@ -290,11 +290,11 @@ private fun DeviceCode(prompt: SignInPrompt, onOpen: () -> Unit) {
         )
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = { copyToClipboard(context, context.getString(R.string.kube_signin_code), prompt.userCode) }) {
+        IchorOutlinedButton(onClick = { copyToClipboard(context, context.getString(R.string.kube_signin_code), prompt.userCode) }) {
             Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
             Text(stringResource(R.string.kube_signin_copy_code))
         }
-        Button(onClick = onOpen) { Text(stringResource(R.string.kube_signin_open_page)) }
+        IchorButton(onClick = onOpen) { Text(stringResource(R.string.kube_signin_open_page)) }
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)

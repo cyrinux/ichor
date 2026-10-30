@@ -6,7 +6,7 @@ import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
@@ -66,9 +66,9 @@ fun ArgoRevertDialog(
         text = { Text(listOf(text, stringResource(R.string.argo_revert_text_change, healer.app.name)).filter { it.isNotEmpty() }.joinToString("\n\n")) },
         confirmButton = {
             Column(horizontalAlignment = Alignment.End) {
-                TextButton(onClick = onFreezeFirst) { Text(stringResource(R.string.argo_revert_freeze_first, healer.app.name)) }
-                TextButton(onClick = onAnyway) { Text(confirm) }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                IchorTextButton(onClick = onFreezeFirst) { Text(stringResource(R.string.argo_revert_freeze_first, healer.app.name)) }
+                IchorTextButton(onClick = onAnyway) { Text(confirm) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
             }
         },
     )

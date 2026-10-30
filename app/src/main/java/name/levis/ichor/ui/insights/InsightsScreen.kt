@@ -3,15 +3,15 @@ package name.levis.ichor.ui.insights
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -76,7 +76,7 @@ fun InsightsScreen(
     if (state.recording) KeepScreenOn()
     fun time(at: Long) = formatDateTime(at, DateFormat.SHORT, DateFormat.MEDIUM)
     IchorScaffold(topBar = {
-        TopAppBar(title = { Text(stringResource(R.string.insights_title)) }, navigationIcon = {
+        IchorTopAppBar(title = { Text(stringResource(R.string.insights_title)) }, navigationIcon = {
             BackButton(onBack)
         })
     }) { padding ->
@@ -104,13 +104,13 @@ fun InsightsScreen(
                             item {
                                 Column {
                                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Button(onClick = { vm.refresh() }, enabled = !state.busy) { Text(stringResource(R.string.common_refresh)) }
-                                        TextButton(onClick = { vm.saveBaseline() }, enabled = state.snapshot != null && !state.busy) { Text(stringResource(R.string.insights_save_baseline)) }
+                                        IchorButton(onClick = { vm.refresh() }, enabled = !state.busy) { Text(stringResource(R.string.common_refresh)) }
+                                        IchorTextButton(onClick = { vm.saveBaseline() }, enabled = state.snapshot != null && !state.busy) { Text(stringResource(R.string.insights_save_baseline)) }
                                     }
                                     state.baselineAt?.let { at ->
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             MutedText(stringResource(R.string.insights_baseline_at, time(at)), Modifier.weight(1f))
-                                            TextButton(onClick = { vm.deleteBaseline() }) { Text(stringResource(R.string.insights_delete_baseline)) }
+                                            IchorTextButton(onClick = { vm.deleteBaseline() }) { Text(stringResource(R.string.insights_delete_baseline)) }
                                         }
                                     } ?: MutedText(stringResource(R.string.insights_peer_reference))
                                 }

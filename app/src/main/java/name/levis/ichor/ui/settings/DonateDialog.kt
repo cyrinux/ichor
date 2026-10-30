@@ -18,7 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +48,7 @@ fun middleEllipsis(address: String, keep: Int = 8): String =
 
 @Composable
 fun DonationRow(donation: Donation, onClick: () -> Unit) {
-    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+    IchorTextButton(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
         Icon(donation.icon, contentDescription = null)
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Text(stringResource(donation.label))
@@ -86,10 +86,10 @@ fun DonateDialog(donation: Donation, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = { openWallet(context, uri) }) { Text(stringResource(R.string.about_donate_open_wallet)) }
+            IchorTextButton(onClick = { openWallet(context, uri) }) { Text(stringResource(R.string.about_donate_open_wallet)) }
         },
         dismissButton = {
-            TextButton(onClick = { copyAddress(context, address) }) { Text(stringResource(R.string.about_donate_copy)) }
+            IchorTextButton(onClick = { copyAddress(context, address) }) { Text(stringResource(R.string.about_donate_copy)) }
         },
     )
 }

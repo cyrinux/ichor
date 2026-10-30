@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,8 +53,8 @@ fun PanicSection(appLock: AppLock) {
                 Text(stringResource(R.string.panic_connected_app, panicAppLabel(context, connected)), style = MaterialTheme.typography.bodyMedium)
                 MutedText(stringResource(if (response == PanicResponse.DELETE_CONFIG) R.string.panic_response_delete else R.string.panic_response_lock))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { changing = true }) { Text(stringResource(R.string.panic_change)) }
-                    OutlinedButton(onClick = {
+                    IchorOutlinedButton(onClick = { changing = true }) { Text(stringResource(R.string.panic_change)) }
+                    IchorOutlinedButton(onClick = {
                         val disconnect = Intent(PanicActions.DISCONNECT).setPackage(connected)
                         if (context.packageManager.resolveActivity(disconnect, 0) != null) tellTrigger.launch(disconnect)
                         appLock.setPanicConnection(null, PanicResponse.LOCK)

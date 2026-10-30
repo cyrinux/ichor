@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,17 +63,17 @@ fun MaintenanceRunView(run: MaintenanceRunState, onStop: () -> Unit, onClose: ()
             run.running && run.stopping -> MutedText(stringResource(R.string.maintenance_stopping, run.hostname))
             run.running -> {
                 MutedText(stringResource(R.string.maintenance_stop_hint))
-                OutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
+                IchorOutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.maintenance_stop))
                 }
             }
             run.error != null -> {
                 Text(stringResource(R.string.maintenance_failed, run.error), color = colors.bad)
-                Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
             }
             else -> {
                 Text(stringResource(run.doneText, run.hostname), color = colors.ok, style = MaterialTheme.typography.titleMedium)
-                Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
             }
         }
     }

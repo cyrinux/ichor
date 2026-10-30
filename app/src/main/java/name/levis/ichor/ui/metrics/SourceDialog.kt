@@ -19,7 +19,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -123,11 +123,11 @@ fun SourceDialog(
         },
         confirmButton = {
             Row {
-                TextButton(enabled = outcome != SourceOutcome.Busy, onClick = { run(onTest) }) { Text(stringResource(R.string.metrics_test)) }
-                TextButton(enabled = outcome != SourceOutcome.Busy, onClick = { run(onSave, onDismiss) }) { Text(stringResource(R.string.metrics_save)) }
+                IchorTextButton(enabled = outcome != SourceOutcome.Busy, onClick = { run(onTest) }) { Text(stringResource(R.string.metrics_test)) }
+                IchorTextButton(enabled = outcome != SourceOutcome.Busy, onClick = { run(onSave, onDismiss) }) { Text(stringResource(R.string.metrics_save)) }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -160,7 +160,7 @@ private fun Discovered(
             }
         }
     }
-    TextButton(onClick = onDiscover, enabled = !discovering) { Text(stringResource(R.string.metrics_search_again)) }
+    IchorTextButton(onClick = onDiscover, enabled = !discovering) { Text(stringResource(R.string.metrics_search_again)) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

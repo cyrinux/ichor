@@ -15,7 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -274,7 +274,7 @@ private fun VeleroRestoreProgress(backup: String, restoreName: String?, p: Veler
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.velero_restore_close)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.velero_restore_close)) } },
     )
 }
 

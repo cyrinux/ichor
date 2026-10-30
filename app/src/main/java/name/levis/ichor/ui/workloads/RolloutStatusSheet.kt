@@ -15,7 +15,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,7 +104,7 @@ fun RolloutStatusSheet(restarts: WorkloadRestarts) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (status?.done != true) InfoNotice(stringResource(R.string.rollout_leave_hint), Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
-                    TextButton(onClick = restarts::stopFollowing) { Text(stringResource(R.string.argo_net_close)) }
+                    IchorTextButton(onClick = restarts::stopFollowing) { Text(stringResource(R.string.argo_net_close)) }
                 }
             }
         }

@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -59,7 +59,7 @@ internal fun HelmRollbackFollowBody(follow: HelmRollbackFollowState, onStop: () 
     }
     FollowOutcome(follow)
     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
-        OutlinedButton(onClick = onStop) {
+        IchorOutlinedButton(onClick = onStop) {
             Text(stringResource(if (follow.ended) R.string.common_close else R.string.helm_rollback_stop_following))
         }
     }

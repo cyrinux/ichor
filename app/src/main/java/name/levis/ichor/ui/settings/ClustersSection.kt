@@ -1,9 +1,9 @@
 package name.levis.ichor.ui.settings
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,27 +58,27 @@ fun ClustersSection(configs: ConfigRepository, onReimport: () -> Unit, onIssueCo
     if (config?.activeSummary?.allows(Feature.ISSUE_CONFIG) == true) {
         MutedText(stringResource(R.string.settings_issue_desc))
         val issue = rememberClusterSupport(TalosFeature.ISSUE_CONFIG)
-        OutlinedButton(onClick = onIssueConfig, enabled = issue.supported, modifier = Modifier.fillMaxWidth()) {
+        IchorOutlinedButton(onClick = onIssueConfig, enabled = issue.supported, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_issue_open))
         }
         issue.notice?.let { InfoNotice(it.text()) }
         // Omni holds an Omni cluster's CA: Go refuses it with the reason, the button stays.
-        OutlinedButton(onClick = onRotateCA, enabled = issue.supported, modifier = Modifier.fillMaxWidth()) {
+        IchorOutlinedButton(onClick = onRotateCA, enabled = issue.supported, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_rotate_ca_open))
         }
     }
     keyProtection?.let {
         InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))
     }
-    OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_import_new)) }
+    IchorOutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_import_new)) }
     // The demo has its sample incidents without settings.
     config?.activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }?.let { fingerprint ->
         MutedText(stringResource(R.string.oncall_row_desc))
-        OutlinedButton(onClick = { onCallOpen = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.oncall_title)) }
+        IchorOutlinedButton(onClick = { onCallOpen = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.oncall_title)) }
         if (onCallOpen) OnCallSheet(LocalContext.current.applicationContext as TalosApp, fingerprint) { onCallOpen = false }
     }
     BackupSection(hasConfig = config != null, vm = backupVm)
-    OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.settings_delete_config))
     }
 
@@ -99,7 +99,7 @@ fun ClustersSection(configs: ConfigRepository, onReimport: () -> Unit, onIssueCo
         ) {
             Text(stringResource(R.string.settings_delete_body))
             if (config != null) {
-                TextButton(onClick = {
+                IchorTextButton(onClick = {
                     confirmDelete = false
                     backup()
                 }) { Text(stringResource(R.string.settings_delete_backup_first)) }

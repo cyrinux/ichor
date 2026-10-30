@@ -30,8 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -112,7 +112,7 @@ fun SourceBrowserScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         val app = target as? SourceTarget.App
@@ -203,10 +203,10 @@ private fun Breadcrumb(dir: String, onOpen: (String) -> Unit) {
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TextButton(onClick = { onOpen("") }, enabled = parts.isNotEmpty()) { Text(stringResource(R.string.gitops_source_root)) }
+        IchorTextButton(onClick = { onOpen("") }, enabled = parts.isNotEmpty()) { Text(stringResource(R.string.gitops_source_root)) }
         parts.forEachIndexed { i, (label, path) ->
             Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-            TextButton(onClick = { onOpen(path) }, enabled = i < parts.lastIndex) { Text(label, fontFamily = FontFamily.Monospace) }
+            IchorTextButton(onClick = { onOpen(path) }, enabled = i < parts.lastIndex) { Text(label, fontFamily = FontFamily.Monospace) }
         }
     }
 }

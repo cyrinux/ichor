@@ -15,7 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,7 +63,7 @@ fun TailscaleScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.tailscale_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },

@@ -10,14 +10,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -63,7 +63,7 @@ fun NodeLossSheet(
                 }
                 is UiState.Failed -> {
                     InlineError(s.message.asString())
-                    TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                    IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                 }
                 is UiState.Loaded -> PlanBody(s.data, state, onToggle, onSimulate, onScale)
             }
@@ -101,7 +101,7 @@ private fun PlanBody(
             }
         }
         if (state.selected.size > 1) {
-            Button(onClick = onSimulate) { Text(stringResource(R.string.capacity_loss_simulate, state.selected.size)) }
+            IchorButton(onClick = onSimulate) { Text(stringResource(R.string.capacity_loss_simulate, state.selected.size)) }
         }
     }
     MutedText(

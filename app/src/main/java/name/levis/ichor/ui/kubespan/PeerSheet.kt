@@ -10,7 +10,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,7 +97,7 @@ private fun PeerDiagnosis(peer: KubeSpanDiagPeer, node: KubeSpanDiag) {
     }
 
     var details by remember { mutableStateOf(false) }
-    TextButton(onClick = { details = !details }) { Text(stringResource(R.string.kubespan_diag_details)) }
+    IchorTextButton(onClick = { details = !details }) { Text(stringResource(R.string.kubespan_diag_details)) }
     if (details) {
         val lines = listOfNotNull(
             "publicKey: ${peer.publicKey}",

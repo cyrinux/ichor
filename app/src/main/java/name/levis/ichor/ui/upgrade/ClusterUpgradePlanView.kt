@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
@@ -97,7 +97,7 @@ fun ClusterUpgradePlanView(
                 if (p.upToDate) Text(stringResource(R.string.cluster_upgrade_up_to_date, p.version), color = colors.ok)
                 if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
                 MutedText(stringResource(R.string.cluster_upgrade_keep_open))
-                Button(
+                IchorButton(
                     onClick = { onStart(ClusterUpgradeChoice(p.version, drain && !p.drain, warnings.isEmpty() || understood)) },
                     enabled = p.canStart && busyWith == null && (warnings.isEmpty() || understood),
                     modifier = Modifier.fillMaxWidth(),

@@ -5,7 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,7 +49,7 @@ fun LocalNetworkNotice(onGranted: () -> Unit, modifier: Modifier = Modifier, cen
             style = MaterialTheme.typography.bodySmall,
             textAlign = if (centered) TextAlign.Center else TextAlign.Start,
         )
-        OutlinedButton(onClick = { launcher.launch(LOCAL_NETWORK_PERMISSION) }, modifier = Modifier.padding(top = 4.dp)) {
+        IchorOutlinedButton(onClick = { launcher.launch(LOCAL_NETWORK_PERMISSION) }, modifier = Modifier.padding(top = 4.dp)) {
             Text(stringResource(R.string.local_network_allow))
         }
     }

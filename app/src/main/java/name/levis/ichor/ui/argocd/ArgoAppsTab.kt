@@ -27,10 +27,10 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -207,7 +207,7 @@ private fun Controls(
  */
 @Composable
 private fun SelectButton(selecting: Boolean, onSelecting: (Boolean) -> Unit, enabled: Boolean) {
-    TextButton(onClick = { onSelecting(!selecting) }, enabled = enabled || selecting) {
+    IchorTextButton(onClick = { onSelecting(!selecting) }, enabled = enabled || selecting) {
         Text(stringResource(if (selecting) R.string.common_cancel else R.string.argo_select))
     }
 }
@@ -217,7 +217,7 @@ private fun GroupByMenu(groupBy: ArgoGroupBy, onGroupBy: (ArgoGroupBy) -> Unit, 
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
         // Same height, corners and outline as the search field beside it, so the row reads as one.
-        OutlinedButton(
+        IchorOutlinedButton(
             onClick = { open = true },
             shape = OutlinedTextFieldDefaults.shape,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),

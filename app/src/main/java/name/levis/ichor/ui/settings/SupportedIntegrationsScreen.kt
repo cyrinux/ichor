@@ -19,8 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -101,7 +101,7 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.supported_integrations_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -133,7 +133,7 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
                 MutedText(stringResource(R.string.supported_integrations_desc))
                 view.problem?.let { MutedText(it.asString(), Modifier.padding(top = 4.dp)) }
                 if (view.retryable) {
-                    TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.common_retry)) }
+                    IchorTextButton(onClick = { attempt++ }) { Text(stringResource(R.string.common_retry)) }
                 }
             }
             items(view.list.items, key = { it.id }) { SupportedIntegrationRow(it, checked = view.list.checked) }

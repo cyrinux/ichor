@@ -19,7 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -123,7 +123,7 @@ private fun Footer(onInsights: () -> Unit, onCapacity: () -> Unit) {
 
 @Composable
 internal fun SummaryFooterButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    TextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
+    IchorTextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(label, modifier = Modifier.padding(start = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }

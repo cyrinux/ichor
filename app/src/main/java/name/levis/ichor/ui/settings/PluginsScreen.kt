@@ -11,12 +11,12 @@ import androidx.compose.material3.AlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -107,11 +107,11 @@ fun PluginsSection(plugins: PluginRepository) {
             }
         }
     }
-    OutlinedButton(onClick = { importing = true }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { importing = true }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.plugins_import))
     }
     MutedText(stringResource(R.string.plugins_explainer))
-    TextButton(onClick = { uriHandler.openUri(PLUGIN_DOCS_URL) }) { Text(stringResource(R.string.plugins_docs)) }
+    IchorTextButton(onClick = { uriHandler.openUri(PLUGIN_DOCS_URL) }) { Text(stringResource(R.string.plugins_docs)) }
 
     Text(stringResource(R.string.plugins_builtin), style = MaterialTheme.typography.titleSmall)
     IchorCard(Modifier.fillMaxWidth()) {
@@ -138,12 +138,12 @@ fun PluginsSection(plugins: PluginRepository) {
             title = { Text(stringResource(R.string.plugins_remove_title, item.name.ifEmpty { item.id })) },
             text = { Text(stringResource(R.string.plugins_remove_text)) },
             confirmButton = {
-                TextButton(onClick = {
+                IchorTextButton(onClick = {
                     removing = null
                     change { plugins.remove(item.id) }
                 }) { Text(stringResource(R.string.plugins_remove)) }
             },
-            dismissButton = { TextButton(onClick = { removing = null }) { Text(stringResource(R.string.common_cancel)) } },
+            dismissButton = { IchorTextButton(onClick = { removing = null }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }
@@ -175,7 +175,7 @@ private fun ImportedRow(item: PluginUserItem, onEnabled: (Boolean) -> Unit, onRe
             enabled = item.usable,
             modifier = Modifier.semantics { contentDescription = enabledLabel },
         )
-        IconButton(onClick = onRemove) {
+        IchorIconButton(onClick = onRemove) {
             Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.plugins_remove))
         }
     }

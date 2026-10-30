@@ -19,10 +19,10 @@ import androidx.compose.material3.AlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -282,8 +282,8 @@ private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotT
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onPick(selected) }) { Text(stringResource(R.string.etcd_snapshot_continue)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onPick(selected) }) { Text(stringResource(R.string.etcd_snapshot_continue)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -298,7 +298,7 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
             when (state) {
                 SnapshotState.Idle -> {
                     MutedText(stringResource(R.string.etcd_snapshot_explainer))
-                    OutlinedButton(onClick = onSave, enabled = notice == null, modifier = Modifier.fillMaxWidth()) {
+                    IchorOutlinedButton(onClick = onSave, enabled = notice == null, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.etcd_snapshot_save))
                     }
                     notice?.let { InfoNotice(it.text()) }
@@ -320,7 +320,7 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                     } else {
                         LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
-                    TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+                    IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 }
                 is SnapshotState.Saving -> {
                     Text(stringResource(R.string.etcd_snapshot_saving), style = MaterialTheme.typography.bodySmall)
@@ -348,9 +348,9 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                         Text(state.sha256, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                     }
                     FlowRow {
-                        TextButton(onClick = { restore = true }) { Text(stringResource(R.string.etcd_snapshot_restore)) }
-                        TextButton(onClick = { copyToClipboard(context, "SHA-256", state.sha256) }) { Text(stringResource(R.string.etcd_snapshot_copy_sha)) }
-                        TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                        IchorTextButton(onClick = { restore = true }) { Text(stringResource(R.string.etcd_snapshot_restore)) }
+                        IchorTextButton(onClick = { copyToClipboard(context, "SHA-256", state.sha256) }) { Text(stringResource(R.string.etcd_snapshot_copy_sha)) }
+                        IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                     }
                     if (restore) {
                         SnapshotRestoreDialog(snapshotRestoreCommands(state.fileName, state.mode, state.sha256)) { restore = false }
@@ -358,7 +358,7 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                 }
                 is SnapshotState.Failed -> {
                     Text(state.message.asString(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
             }
         }

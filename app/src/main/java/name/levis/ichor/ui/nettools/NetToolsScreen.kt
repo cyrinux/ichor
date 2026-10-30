@@ -13,17 +13,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -130,7 +130,7 @@ fun NetToolsScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.node_menu_net_tools))
@@ -204,7 +204,7 @@ fun NetToolsScreen(
                 else -> Unit
             }
             MutedText(stringResource(R.string.net_tools_privileged))
-            Button(onClick = ::start, enabled = problem == null, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = ::start, enabled = problem == null, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.net_tools_run))
             }
         }
@@ -220,17 +220,17 @@ private fun RunView(run: NetToolRunState, onCancel: () -> Unit, onAgain: () -> U
         run.running -> {
             LinearProgressIndicator(Modifier.fillMaxWidth())
             OutputLines(run.lines.takeLast(OUTPUT_TAIL))
-            OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_cancel)) }
+            IchorOutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_cancel)) }
         }
         result != null -> {
             NetToolResultCard(result)
             RawOutput(result.raw)
-            Button(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
+            IchorButton(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
         }
         else -> {
             Text(run.error.orEmpty().ifEmpty { stringResource(R.string.net_tools_no_answer) }, color = colors.bad)
             if (run.lines.isNotEmpty()) OutputLines(run.lines.takeLast(OUTPUT_TAIL))
-            Button(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
+            IchorButton(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
         }
     }
 }

@@ -13,7 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,7 +62,7 @@ fun EditCheckSection(check: UiState<GitOpsEditCheck>, onRetry: () -> Unit, modif
             }
             is UiState.Failed -> Row(verticalAlignment = Alignment.CenterVertically) {
                 MutedText(stringResource(R.string.gitops_check_failed, check.message.asString()), Modifier.weight(1f))
-                TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
             }
             is UiState.Loaded -> CheckResult(check.data)
         }

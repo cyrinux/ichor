@@ -20,7 +20,7 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -118,7 +118,7 @@ private fun ServiceRow(
                 }
                 if (actions.isNotEmpty()) {
                     Box {
-                        IconButton(onClick = { menuOpen = true }) {
+                        IchorIconButton(onClick = { menuOpen = true }) {
                             Icon(Icons.Outlined.MoreVert, stringResource(R.string.service_actions))
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {

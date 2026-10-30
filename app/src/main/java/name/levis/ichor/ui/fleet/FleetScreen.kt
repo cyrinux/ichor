@@ -16,8 +16,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -74,7 +74,7 @@ fun FleetScreen(onBack: () -> Unit, onHome: () -> Unit, onAlertsSettings: () -> 
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.fleet_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -127,7 +127,7 @@ private fun AlertsOffCard(onAlertsSettings: () -> Unit) {
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.fleet_alerts_off), style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = onAlertsSettings) { Text(stringResource(R.string.fleet_alerts_settings)) }
+            IchorTextButton(onClick = onAlertsSettings) { Text(stringResource(R.string.fleet_alerts_settings)) }
         }
     }
 }

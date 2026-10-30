@@ -13,7 +13,7 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -129,12 +129,12 @@ fun AddDiscoveredNodesDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            IchorTextButton(
                 enabled = selected.isNotEmpty(),
                 onClick = { onAdd(nodes.filter { it.address in selected }) },
             ) { Text(pluralStringResource(R.plurals.discover_nodes_add, selected.size, selected.size)) }
         },
-        dismissButton = { TextButton(onClick = onNotNow) { Text(stringResource(R.string.discover_nodes_not_now)) } },
+        dismissButton = { IchorTextButton(onClick = onNotNow) { Text(stringResource(R.string.discover_nodes_not_now)) } },
     )
 }
 

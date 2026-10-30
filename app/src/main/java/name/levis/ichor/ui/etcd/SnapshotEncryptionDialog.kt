@@ -14,7 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -123,7 +123,7 @@ fun SnapshotEncryptionDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            IchorTextButton(
                 enabled = ready,
                 onClick = {
                     onConfirm(
@@ -136,7 +136,7 @@ fun SnapshotEncryptionDialog(
                 },
             ) { Text(stringResource(R.string.etcd_snapshot_continue)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -192,9 +192,9 @@ fun SnapshotRestoreDialog(commands: String, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = { copyToClipboard(context, "talosctl", commands) }) { Text(stringResource(R.string.etcd_snapshot_restore_copy)) }
+            IchorTextButton(onClick = { copyToClipboard(context, "talosctl", commands) }) { Text(stringResource(R.string.etcd_snapshot_restore_copy)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
     )
 }
 

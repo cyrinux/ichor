@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,11 +64,11 @@ fun TalosUpdateCard(offer: TalosUpdateOffer, canUpgrade: Boolean, onRollout: () 
             }
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 if (offer.notes.startsWith("https://")) {
-                    TextButton(onClick = { openUrl(context, offer.notes) }) { Text(stringResource(R.string.overview_talos_release_notes)) }
+                    IchorTextButton(onClick = { openUrl(context, offer.notes) }) { Text(stringResource(R.string.overview_talos_release_notes)) }
                 } else {
                     Spacer(Modifier)
                 }
-                TextButton(onClick = onSkip) { Text(stringResource(R.string.overview_talos_skip, offer.latest)) }
+                IchorTextButton(onClick = onSkip) { Text(stringResource(R.string.overview_talos_skip, offer.latest)) }
             }
         }
     }

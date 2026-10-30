@@ -25,7 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -100,7 +100,7 @@ fun KubeSpanScreen(
     IchorScaffold(
         bottomBar = { DataFreshness(if (tab == MAP_TAB) mapState else state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text("KubeSpan") },
                 navigationIcon = { BackButton(onBack) },
             )

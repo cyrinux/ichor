@@ -14,7 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -114,11 +114,11 @@ internal fun NewBackupDialog(onConfirm: (BackupSeal, Boolean) -> Unit, onDismiss
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(newBackupSeal(input), includeSecrets) }, enabled = error == null) {
+            IchorTextButton(onClick = { onConfirm(newBackupSeal(input), includeSecrets) }, enabled = error == null) {
                 Text(stringResource(R.string.backup_create_confirm))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

@@ -1,7 +1,7 @@
 package name.levis.ichor.ui.dataservices
 
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
@@ -37,7 +37,7 @@ fun CnpgDestroyButtons(cluster: CnpgCluster, busy: Boolean, onDestroy: (String) 
     if (instances.isEmpty()) return
     val denial = rememberKubeDenial(KubeAction.CNPG_DESTROY, cluster.namespace)
     instances.forEach { instance ->
-        OutlinedButton(onClick = { onDestroy(instance) }, enabled = !busy && denial == null) {
+        IchorOutlinedButton(onClick = { onDestroy(instance) }, enabled = !busy && denial == null) {
             Text(stringResource(R.string.cnpg_destroy_instance, instance))
         }
     }

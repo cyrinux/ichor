@@ -17,7 +17,7 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Switch
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -75,7 +75,7 @@ fun NetworkScreen(node: String, hostname: String, onBack: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.network_title))

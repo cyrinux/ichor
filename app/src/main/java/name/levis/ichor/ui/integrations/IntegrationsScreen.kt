@@ -12,15 +12,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,7 +66,7 @@ fun IntegrationsScreen(onBack: () -> Unit) {
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.integrations_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
@@ -110,7 +110,7 @@ private fun Report(report: IntegrationReport, picked: Set<String>, vm: Integrati
             item { MutedText(stringResource(R.string.integrations_supported, report.supported.joinToString(", "))) }
         }
         item {
-            OutlinedButton(onClick = { openInBrowser(context, INTEGRATION_FORM_URL) }, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = { openInBrowser(context, INTEGRATION_FORM_URL) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.integrations_other))
             }
         }
@@ -133,8 +133,8 @@ private fun FamilyCard(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             ) {
-                OutlinedButton(onClick = onSearch) { Text(stringResource(R.string.integrations_search)) }
-                Button(onClick = onRequest, enabled = family.groups.any { it.name in picked }) {
+                IchorOutlinedButton(onClick = onSearch) { Text(stringResource(R.string.integrations_search)) }
+                IchorButton(onClick = onRequest, enabled = family.groups.any { it.name in picked }) {
                     Text(stringResource(R.string.integrations_request))
                 }
             }

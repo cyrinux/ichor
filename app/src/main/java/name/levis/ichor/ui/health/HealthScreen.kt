@@ -16,14 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -181,7 +181,7 @@ fun HealthScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.health_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -254,7 +254,7 @@ private fun HealthHeader(state: HealthState, onRerun: () -> Unit) {
                 Text("", Modifier.weight(1f))
             }
         }
-        if (!state.running) Button(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
+        if (!state.running) IchorButton(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
     }
     state.error?.let { Text(it, color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
 }

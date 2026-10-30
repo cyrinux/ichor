@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,7 +81,7 @@ fun DriftChangeCard(change: DriftChange, hostname: String, onFix: (DriftFix) -> 
                 rows.forEach { DriftRowLine(it) }
             }
             change.fix()?.let { fix ->
-                TextButton(onClick = { onFix(fix) }) { Text(stringResource(R.string.insights_fix)) }
+                IchorTextButton(onClick = { onFix(fix) }) { Text(stringResource(R.string.insights_fix)) }
             }
         }
     }

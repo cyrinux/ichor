@@ -9,16 +9,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -317,7 +317,7 @@ private fun PlanContent(
     if (plan != null) PlanBody(plan, state.options, optionsEnabled = !state.running, onOptions = onOptions)
     state.error?.let { InlineError(it.asString()) }
     if (plan == null && state.error != null && !state.loading) {
-        OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+        IchorOutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
     }
     if (state.running) {
         // The rollback is one call: the hooks run (and are waited for) inside it.
@@ -325,8 +325,8 @@ private fun PlanContent(
         LinearProgressIndicator(Modifier.fillMaxWidth())
     }
     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-        TextButton(onClick = onDismiss, enabled = !state.running) { Text(stringResource(R.string.common_cancel)) }
-        Button(onClick = onConfirm, enabled = plan?.canRun == true && !state.running && !state.loading) {
+        IchorTextButton(onClick = onDismiss, enabled = !state.running) { Text(stringResource(R.string.common_cancel)) }
+        IchorButton(onClick = onConfirm, enabled = plan?.canRun == true && !state.running && !state.loading) {
             if (state.running) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
             Text(stringResource(R.string.helm_rollback_title, target.toString()), modifier = Modifier.padding(start = if (state.running) 8.dp else 0.dp))
         }

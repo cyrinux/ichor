@@ -7,14 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,7 +66,7 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
 
     IchorScaffold(
         topBar = {
-            TopAppBar(title = { Text(loaded?.second?.name ?: stringResource(R.string.runbooks_title)) }, navigationIcon = { BackButton(onBack) })
+            IchorTopAppBar(title = { Text(loaded?.second?.name ?: stringResource(R.string.runbooks_title)) }, navigationIcon = { BackButton(onBack) })
         },
     ) { padding ->
         val current = loaded
@@ -84,7 +84,7 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
                     Text(stringResource(R.string.runbook_blocked), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                 }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                Button(
+                IchorButton(
                     onClick = {
                         // The core refuses the demo before any step: its reason shows on the run screen.
                         runCatching { app.runbookManager.start(yaml, plan, continueIds) }

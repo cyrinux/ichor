@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,25 +56,25 @@ fun SupportSection(
     if (summary?.allows(Feature.SUPPORT_BUNDLE) == true) {
         MutedText(stringResource(R.string.settings_support_bundle_desc))
         val support = rememberClusterSupport(TalosFeature.SUPPORT_BUNDLE)
-        OutlinedButton(onClick = onSupportBundle, enabled = support.supported, modifier = Modifier.fillMaxWidth()) {
+        IchorOutlinedButton(onClick = onSupportBundle, enabled = support.supported, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_support_bundle_open))
         }
         support.notice?.let { InfoNotice(it.text()) }
     }
     // On this device only, whatever the cluster: no role needed.
     MutedText(stringResource(R.string.activity_settings_desc))
-    OutlinedButton(onClick = onActivity, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = onActivity, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.activity_open))
     }
     // Listing the cluster's API groups needs the admin kubeconfig.
     if (summary?.allows(Feature.WORKLOADS) == true) {
         MutedText(stringResource(R.string.settings_integrations_desc))
-        OutlinedButton(onClick = onIntegrations, modifier = Modifier.fillMaxWidth()) {
+        IchorOutlinedButton(onClick = onIntegrations, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_integrations_open))
         }
     }
     val context = LocalContext.current
-    OutlinedButton(onClick = { openInBrowser(context, REPORT_BUG_URL) }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { openInBrowser(context, REPORT_BUG_URL) }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.settings_report_bug))
     }
     DiagnosticsSetting(context.applicationContext as TalosApp, onDiagnostics)
@@ -100,7 +100,7 @@ private fun DiagnosticsSetting(app: TalosApp, onDiagnostics: () -> Unit) {
                 }
                 Switch(checked = persist, onCheckedChange = app::setDiagPersist, modifier = Modifier.padding(start = 12.dp))
             }
-            OutlinedButton(onClick = onDiagnostics, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = onDiagnostics, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_diagnostics_open))
             }
         }

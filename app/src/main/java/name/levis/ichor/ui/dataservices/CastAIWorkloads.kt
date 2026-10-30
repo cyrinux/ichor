@@ -14,7 +14,7 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -95,7 +95,7 @@ private fun LazyListScope.section(section: CastAISection, onShowAll: () -> Unit,
         WorkloadRow(rec, Modifier.clickable { onOpen(rec) })
     }
     if (section.hidden > 0) item(key = "m:" + section.kind) {
-        TextButton(onClick = onShowAll, modifier = Modifier.padding(horizontal = 8.dp)) {
+        IchorTextButton(onClick = onShowAll, modifier = Modifier.padding(horizontal = 8.dp)) {
             Text(stringResource(R.string.castai_show_all_grows, section.rows.size + section.hidden))
         }
     }

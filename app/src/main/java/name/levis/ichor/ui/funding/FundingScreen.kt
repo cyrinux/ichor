@@ -21,8 +21,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -86,7 +86,7 @@ fun FundingScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.funding_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -182,7 +182,7 @@ private fun FeatureCard(
             }
             if (feature.fundable) PriceButtons(priced(feature.products, prices), onBuy)
             feature.issue?.let { url ->
-                TextButton(onClick = { onDiscuss(url) }) { Text(stringResource(R.string.funding_discuss)) }
+                IchorTextButton(onClick = { onDiscuss(url) }) { Text(stringResource(R.string.funding_discuss)) }
             }
         }
     }
@@ -210,7 +210,7 @@ private fun PurchaseResultDialog(result: PurchaseResult, onDismiss: () -> Unit) 
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(body) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
     )
 }
 

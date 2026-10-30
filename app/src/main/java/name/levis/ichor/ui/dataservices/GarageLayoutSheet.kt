@@ -18,7 +18,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -26,14 +26,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -135,7 +135,7 @@ fun GarageLayoutSheet(state: GarageLayoutState, actions: GarageLayoutActions) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         InlineError(error.asString())
-                        if (layout == null) OutlinedButton(onClick = actions::reload) { Text(stringResource(R.string.common_retry)) }
+                        if (layout == null) IchorOutlinedButton(onClick = actions::reload) { Text(stringResource(R.string.common_retry)) }
                     }
                 }
             }
@@ -153,8 +153,8 @@ fun GarageLayoutSheet(state: GarageLayoutState, actions: GarageLayoutActions) {
                 item {
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
                         if (state.busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                        OutlinedButton(onClick = { confirmRevert = true }, enabled = editable && !state.busy) { Text(stringResource(R.string.garage_layout_revert)) }
-                        Button(onClick = { confirmApply = true }, enabled = editable && !state.busy && layout.preview?.ok != false) {
+                        IchorOutlinedButton(onClick = { confirmRevert = true }, enabled = editable && !state.busy) { Text(stringResource(R.string.garage_layout_revert)) }
+                        IchorButton(onClick = { confirmApply = true }, enabled = editable && !state.busy && layout.preview?.ok != false) {
                             Text(stringResource(R.string.garage_layout_apply_version, layout.nextVersion))
                         }
                     }
@@ -193,7 +193,7 @@ private fun Header(state: GarageLayoutState, onReload: () -> Unit) {
             Text(stringResource(R.string.garage_layout_title), style = MaterialTheme.typography.titleLarge)
             Text(state.instance.label, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        IconButton(onClick = onReload, enabled = !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
+        IchorIconButton(onClick = onReload, enabled = !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
     }
 }
 
@@ -225,7 +225,7 @@ private fun Summary(layout: GarageLayout, onRedundancy: (() -> Unit)?) {
         if (layout.gatewayNodes > 0) InfoRow(stringResource(R.string.garage_layout_gateways), "${layout.gatewayNodes}")
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) { InfoRow(stringResource(R.string.garage_layout_zone_redundancy), redundancyLabel(layout.zoneRedundancy)) }
-            if (onRedundancy != null) TextButton(onClick = onRedundancy) { Text(stringResource(R.string.garage_layout_change)) }
+            if (onRedundancy != null) IchorTextButton(onClick = onRedundancy) { Text(stringResource(R.string.garage_layout_change)) }
         }
     }
 }
@@ -348,7 +348,7 @@ private fun CandidateRow(node: GarageLayoutNode, onAdd: (() -> Unit)?) {
         stringResource(R.string.garage_node_down).takeIf { !node.up },
     ).joinToString(" · ").ifEmpty { null }
     ResourceRow(if (node.up) ServiceHealth.IDLE else ServiceHealth.WARNING, node.label, subtitle = subtitle, trailing = {
-        if (onAdd != null) TextButton(onClick = onAdd) { Text(stringResource(R.string.garage_layout_add)) }
+        if (onAdd != null) IchorTextButton(onClick = onAdd) { Text(stringResource(R.string.garage_layout_add)) }
     })
 }
 
@@ -377,7 +377,7 @@ private fun History(layout: GarageLayout, onSkip: (() -> Unit)?) {
             )
             if (onSkip != null) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onSkip) { Text(stringResource(R.string.garage_layout_skip), color = colors.bad) }
+                    IchorTextButton(onClick = onSkip) { Text(stringResource(R.string.garage_layout_skip), color = colors.bad) }
                 }
             }
         }
@@ -489,8 +489,8 @@ private fun ZoneRedundancyDialog(layout: GarageLayout, onPick: (String) -> Unit,
             }
         },
         confirmButton = {
-            TextButton(onClick = { onPick(picked) }, enabled = picked != current) { Text(stringResource(R.string.garage_layout_stage)) }
+            IchorTextButton(onClick = { onPick(picked) }, enabled = picked != current) { Text(stringResource(R.string.garage_layout_stage)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

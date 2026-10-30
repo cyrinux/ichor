@@ -16,9 +16,9 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -72,12 +72,12 @@ fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onCompare:
                     Text("${f.kind}/${f.name}", style = MaterialTheme.typography.labelLarge, fontFamily = FontFamily.Monospace, color = colors.bad)
                     if (f.message.isNotEmpty()) MutedText(f.message)
                     if (onCompare != null && f.name.isNotEmpty()) {
-                        TextButton(onClick = { onCompare(f) }, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                        IchorTextButton(onClick = { onCompare(f) }, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
                     }
                 }
             }
             if (op.phase == "Running") {
-                OutlinedButton(onClick = onTerminate, enabled = !busy) {
+                IchorOutlinedButton(onClick = onTerminate, enabled = !busy) {
                     Icon(Icons.Outlined.StopCircle, contentDescription = null, tint = colors.bad, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_terminate), color = colors.bad, modifier = Modifier.padding(start = 6.dp))
                 }

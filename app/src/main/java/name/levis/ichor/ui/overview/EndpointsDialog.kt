@@ -17,11 +17,11 @@ import androidx.compose.material.icons.outlined.NetworkCheck
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -121,18 +121,18 @@ fun EndpointsDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { add() }),
                     trailingIcon = {
-                        IconButton(onClick = add, enabled = isEndpoint(draft.trim())) {
+                        IchorIconButton(onClick = add, enabled = isEndpoint(draft.trim())) {
                             Icon(Icons.Outlined.Add, stringResource(R.string.endpoints_add))
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                TextButton(onClick = onScan) { Text(stringResource(R.string.endpoint_scan_action)) }
+                IchorTextButton(onClick = onScan) { Text(stringResource(R.string.endpoint_scan_action)) }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
         confirmButton = {
-            TextButton(
+            IchorTextButton(
                 enabled = !saving && endpoints.isNotEmpty() && endpoints != context.endpoints,
                 onClick = {
                     saving = true
@@ -152,7 +152,7 @@ fun EndpointsDialog(
                 },
             ) { Text(stringResource(R.string.endpoints_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !saving) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss, enabled = !saving) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -178,8 +178,8 @@ private fun EndpointRow(endpoint: String, result: ProbeResult?, onTest: () -> Un
         if (result == ProbeResult.Running) {
             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
         } else {
-            IconButton(onClick = onTest) { Icon(Icons.Outlined.NetworkCheck, stringResource(R.string.endpoints_test, endpoint)) }
+            IchorIconButton(onClick = onTest) { Icon(Icons.Outlined.NetworkCheck, stringResource(R.string.endpoints_test, endpoint)) }
         }
-        IconButton(onClick = onRemove) { Icon(Icons.Outlined.Delete, stringResource(R.string.endpoints_remove, endpoint)) }
+        IchorIconButton(onClick = onRemove) { Icon(Icons.Outlined.Delete, stringResource(R.string.endpoints_remove, endpoint)) }
     }
 }

@@ -17,14 +17,14 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,7 +81,7 @@ fun AddClusterHelpDialog(onDismiss: () -> Unit) {
                 BringToPhoneHelp()
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },
     )
 }
 
@@ -129,7 +129,7 @@ private fun KubeconfigHelp() {
     MutedText(stringResource(R.string.help_kube_signin))
     Step(stringResource(R.string.help_kube_flatten))
     Command("kubectl config view --flatten --minify > kubeconfig-phone")
-    TextButton(onClick = { serviceAccount = true }) { Text(stringResource(R.string.sa_help_title)) }
+    IchorTextButton(onClick = { serviceAccount = true }) { Text(stringResource(R.string.sa_help_title)) }
 }
 
 /** A dedicated Talos identity for the phone, with the role it gets. */
@@ -198,7 +198,7 @@ internal fun Command(command: String, @StringRes copyLabel: Int = R.string.help_
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f).padding(vertical = 8.dp),
             )
-            IconButton(onClick = { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(command, command))) } }) {
+            IchorIconButton(onClick = { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(command, command))) } }) {
                 Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(copyLabel))
             }
         }

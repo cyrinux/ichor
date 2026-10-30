@@ -6,7 +6,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import name.levis.ichor.R
@@ -138,7 +138,7 @@ private fun LanguageSetting(prefs: UiPreferences) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.common_cancel)) } },
+            confirmButton = { IchorTextButton(onClick = { picking = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }

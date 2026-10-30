@@ -16,7 +16,7 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -86,7 +86,7 @@ fun KubeNodesScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.overview_stat_nodes)) },
                 navigationIcon = { BackButton(onBack) },
             )

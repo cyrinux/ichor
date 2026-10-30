@@ -26,7 +26,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -152,7 +152,7 @@ fun WakeOnLanDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            IchorTextButton(onClick = {
                 parseWolTarget(mac, broadcast, port).fold(
                     onSuccess = onSave,
                     onFailure = { error = (it as? WolInputException)?.error },
@@ -161,9 +161,9 @@ fun WakeOnLanDialog(
         },
         dismissButton = {
             if (saved != null) {
-                TextButton(onClick = { onSave(null) }) { Text(stringResource(R.string.wol_forget)) }
+                IchorTextButton(onClick = { onSave(null) }) { Text(stringResource(R.string.wol_forget)) }
             }
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+            IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

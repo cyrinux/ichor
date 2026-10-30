@@ -12,7 +12,7 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -98,7 +98,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
 private fun SettingsPageScaffold(page: SettingsPage, snackbar: SnackbarHostState, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(page.title)) },
                 navigationIcon = { BackButton(onBack) },
             )

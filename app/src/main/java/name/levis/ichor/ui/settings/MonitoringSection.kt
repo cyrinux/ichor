@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -255,11 +255,11 @@ fun MonitoringSection(app: TalosApp) {
             // The Quick Settings tile shows the same snapshot; below Android 13 it is added from the shade's editor.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val context = LocalContext.current
-                OutlinedButton(onClick = { ClusterTileService.requestAdd(context) }, modifier = Modifier.fillMaxWidth()) {
+                IchorOutlinedButton(onClick = { ClusterTileService.requestAdd(context) }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.settings_add_tile))
                 }
             }
-            OutlinedButton(onClick = { app.launchSync(runNow = true) }, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = { app.launchSync(runNow = true) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.common_check_now))
             }
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }

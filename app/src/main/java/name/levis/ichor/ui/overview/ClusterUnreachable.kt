@@ -22,13 +22,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,10 +101,10 @@ fun ClusterUnreachableBox(
             Spacer(Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (outage.cause == OutageCause.NETWORK) {
-                    Button(onClick = { openVpnSettings(context) }) { Text(stringResource(R.string.common_vpn_settings)) }
-                    OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                    IchorButton(onClick = { openVpnSettings(context) }) { Text(stringResource(R.string.common_vpn_settings)) }
+                    IchorOutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                 } else {
-                    Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                    IchorButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                 }
             }
             // Android 17 keeps the Wi-Fi/Ethernet network out of reach until allowed: often the cause.
@@ -114,12 +114,12 @@ fun ClusterUnreachableBox(
             // A talosconfig shared from elsewhere may list no endpoint reachable from here.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                 if (outage.cause == OutageCause.NETWORK) {
-                    onScan?.let { OutlinedButton(onClick = it) { Text(stringResource(R.string.endpoint_scan_action)) } }
+                    onScan?.let { IchorOutlinedButton(onClick = it) { Text(stringResource(R.string.endpoint_scan_action)) } }
                 }
-                onEditEndpoints?.let { TextButton(onClick = it) { Text(stringResource(R.string.endpoints_edit)) } }
+                onEditEndpoints?.let { IchorTextButton(onClick = it) { Text(stringResource(R.string.endpoints_edit)) } }
             }
             // The nodes stay one tap away: their actions sheet can still wake a node over LAN.
-            TextButton(onClick = onShowNodes) {
+            IchorTextButton(onClick = onShowNodes) {
                 Text(pluralStringResource(R.plurals.overview_unreachable_show_nodes, outage.nodes, outage.nodes))
             }
             Spacer(Modifier.height(4.dp))
@@ -156,9 +156,9 @@ fun LastKnownBanner(outage: ClusterOutage, onRetry: () -> Unit, modifier: Modifi
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                 if (outage.cause == OutageCause.NETWORK) {
-                    OutlinedButton(onClick = { openVpnSettings(context) }) { Text(stringResource(R.string.common_vpn_settings)) }
+                    IchorOutlinedButton(onClick = { openVpnSettings(context) }) { Text(stringResource(R.string.common_vpn_settings)) }
                 }
-                OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                IchorOutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
             }
             if (outage.cause == OutageCause.NETWORK) {
                 LocalNetworkNotice(onGranted = onRetry, modifier = Modifier.padding(top = 8.dp))

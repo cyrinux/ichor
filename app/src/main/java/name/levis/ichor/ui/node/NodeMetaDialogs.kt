@@ -11,7 +11,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,11 +53,11 @@ internal fun TaintEditDialog(initial: NodeTaintEdit?, onSave: (NodeTaintEdit) ->
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(NodeTaintEdit(key.trim(), value.trim(), effect)) }, enabled = valid) {
+            IchorTextButton(onClick = { onSave(NodeTaintEdit(key.trim(), value.trim(), effect)) }, enabled = valid) {
                 Text(stringResource(R.string.common_ok))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -81,11 +81,11 @@ internal fun LabelEditDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(key.trim(), value.trim()) }, enabled = key.isNotBlank()) {
+            IchorTextButton(onClick = { onSave(key.trim(), value.trim()) }, enabled = key.isNotBlank()) {
                 Text(stringResource(R.string.common_ok))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

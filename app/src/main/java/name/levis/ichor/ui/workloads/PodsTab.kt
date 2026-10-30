@@ -29,7 +29,7 @@ import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -318,11 +318,11 @@ internal fun PodRow(
             PodPullLine(pod, pullLinks)
             usage?.let { PodUsage(it, Modifier.padding(top = 2.dp, end = 8.dp)) }
         }
-        IconButton(onClick = onLogs) {
+        IchorIconButton(onClick = onLogs) {
             Icon(Icons.AutoMirrored.Outlined.Article, stringResource(R.string.pod_logs_open, pod.name))
         }
         if (onFlows != null) {
-            IconButton(onClick = onFlows) {
+            IchorIconButton(onClick = onFlows) {
                 Icon(Icons.Outlined.Stream, stringResource(R.string.pods_live_flows, pod.name))
             }
         }
@@ -330,7 +330,7 @@ internal fun PodRow(
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
             val denied = rememberKubeDenial(KubeAction.DELETE_POD, pod.namespace) != null
-            IconButton(onClick = onDelete, enabled = pod.status != "Terminating" && !denied) {
+            IchorIconButton(onClick = onDelete, enabled = pod.status != "Terminating" && !denied) {
                 Icon(Icons.Outlined.Delete, stringResource(R.string.pods_delete, pod.name))
             }
         }

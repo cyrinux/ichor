@@ -16,7 +16,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,7 +79,7 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.flux_title))

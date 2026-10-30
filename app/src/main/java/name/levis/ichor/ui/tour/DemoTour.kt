@@ -17,12 +17,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -181,7 +181,7 @@ private fun TourCard(step: TourStep, position: TourPosition, target: Rect, heigh
                         modifier = Modifier.weight(1f),
                     )
                     // Read first: a TalkBack user can leave the tour before anything else.
-                    TextButton(onClick = onSkip, modifier = Modifier.testTag(SMOKE_TOUR_SKIP).semantics { traversalIndex = -1f }) {
+                    IchorTextButton(onClick = onSkip, modifier = Modifier.testTag(SMOKE_TOUR_SKIP).semantics { traversalIndex = -1f }) {
                         Text(stringResource(R.string.tour_skip))
                     }
                 }
@@ -191,7 +191,7 @@ private fun TourCard(step: TourStep, position: TourPosition, target: Rect, heigh
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     StepDots(position, Modifier.weight(1f))
-                    Button(onClick = onNext) {
+                    IchorButton(onClick = onNext) {
                         Text(stringResource(if (position.last) R.string.tour_done else R.string.tour_next))
                     }
                 }

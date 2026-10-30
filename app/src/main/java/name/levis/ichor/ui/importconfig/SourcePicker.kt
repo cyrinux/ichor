@@ -23,7 +23,7 @@ import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -31,7 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -162,7 +162,7 @@ private fun Sources(
 private fun DemoButton(onDemo: (kube: Boolean) -> Unit) {
     var choosing by rememberSaveable { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { choosing = true }) { Text(stringResource(R.string.demo_try)) }
+        IchorTextButton(onClick = { choosing = true }) { Text(stringResource(R.string.demo_try)) }
         DropdownMenu(expanded = choosing, onDismissRequest = { choosing = false }) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.demo_talos)) },
@@ -290,7 +290,7 @@ private fun PasteSource(text: String, onText: (String) -> Unit, onYaml: (String)
             textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
-        Button(onClick = { onYaml(text) }, enabled = text.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+        IchorButton(onClick = { onYaml(text) }, enabled = text.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.import_validate))
         }
     }

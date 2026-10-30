@@ -3,7 +3,7 @@ package name.levis.ichor.ui.insights
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -51,7 +51,7 @@ fun IncidentEvidenceBody(entry: IncidentEntry, timestamp: String) {
             else -> if (entry.detail.isNotBlank()) Text(entry.detail, maxLines = 4)
         }
         if (entry.detail.isNotBlank()) {
-            TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) {
+            IchorTextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) {
                 Text(stringResource(if (expanded) R.string.evidence_hide_details else R.string.evidence_details))
             }
             if (expanded) Text(entry.detail, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)

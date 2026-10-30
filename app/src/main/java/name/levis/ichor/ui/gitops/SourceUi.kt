@@ -13,10 +13,10 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Key
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -141,7 +141,7 @@ fun GitHostMissingBox(host: String, url: String, onAddToken: (() -> Unit)?, modi
     val web = rememberGitWebUrl()
     EmptyState(Icons.Outlined.Key, stringResource(R.string.gitops_source_no_token, host), modifier) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (onAddToken != null) Button(onClick = onAddToken) { Text(stringResource(R.string.gitops_source_add_token)) }
+            if (onAddToken != null) IchorButton(onClick = onAddToken) { Text(stringResource(R.string.gitops_source_add_token)) }
             if (url.isNotEmpty()) OpenInBrowserButton { openUrl(context, web(url)) }
         }
     }
@@ -149,7 +149,7 @@ fun GitHostMissingBox(host: String, url: String, onAddToken: (() -> Unit)?, modi
 
 @Composable
 internal fun OpenInBrowserButton(onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick) {
+    IchorOutlinedButton(onClick = onClick) {
         Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(stringResource(R.string.gitops_source_open_browser), modifier = Modifier.padding(start = 8.dp))
     }

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,7 +58,7 @@ fun PolicySwitchButtons(policy: KyvernoPolicy, busy: Boolean, onSetAction: (Stri
     Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             targets.forEach { target ->
-                OutlinedButton(onClick = { confirming = target }, enabled = !busy && denial == null) {
+                IchorOutlinedButton(onClick = { confirming = target }, enabled = !busy && denial == null) {
                     Text(stringResource(switchLabel(target)))
                 }
             }

@@ -22,7 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -166,7 +166,7 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
 fun LikelyCauseBanner(causes: List<LikelyCause>, modifier: Modifier = Modifier, onNodes: (() -> Unit)? = null) {
     if (causes.isEmpty()) return
     val link: (@Composable () -> Unit)? = onNodes?.let { open ->
-        @Composable { TextButton(onClick = open) { Text(stringResource(R.string.common_label_nodes)) } }
+        @Composable { IchorTextButton(onClick = open) { Text(stringResource(R.string.common_label_nodes)) } }
     }
     CauseBanner(causes.map { it.text() }.joinToString(" · "), modifier, action = link)
 }

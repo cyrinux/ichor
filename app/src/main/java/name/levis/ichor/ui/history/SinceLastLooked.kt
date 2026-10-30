@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,7 +72,7 @@ fun SinceLastLookedCard(fingerprint: String) {
             }
             if (lines.size > SINCE_MAX_LINES) MutedText(stringResource(R.string.history_since_more, lines.size - SINCE_MAX_LINES))
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = {
+                IchorTextButton(onClick = {
                     app.lastLooked.mark(fingerprint, System.currentTimeMillis())
                     since = null
                 }) { Text(stringResource(R.string.history_since_dismiss)) }

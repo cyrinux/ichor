@@ -13,7 +13,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,7 +88,7 @@ private fun GroupCard(group: PromRuleGroup, now: Long, onLink: (PromLink) -> Uni
             if (group.lastEvaluation > 0) MutedText(stringResource(R.string.monitoring_last_evaluation, ageSince(group.lastEvaluation, now)))
         }
         group.ruleRef?.let { ref ->
-            TextButton(onClick = { onLink(PromLink.Object(ref)) }, modifier = Modifier.padding(start = 4.dp)) {
+            IchorTextButton(onClick = { onLink(PromLink.Object(ref)) }, modifier = Modifier.padding(start = 4.dp)) {
                 Text(stringResource(R.string.monitoring_rule_from, "${ref.namespace}/${ref.name}"), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }

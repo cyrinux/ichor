@@ -14,7 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.NotificationsOff
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -138,7 +138,7 @@ fun SilenceSheet(
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Button(
+            IchorButton(
                 onClick = { matchers?.let { onSilence(it, chosen, comment.trim()) } },
                 enabled = valid,
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),

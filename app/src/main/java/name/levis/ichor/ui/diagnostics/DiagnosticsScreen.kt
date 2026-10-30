@@ -26,8 +26,8 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -93,7 +93,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.diagnostics_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -174,7 +174,7 @@ private fun ExitCard(exit: ExitRecord) {
             if (exit.description.isNotEmpty()) Text(exit.description, style = MaterialTheme.typography.bodySmall)
             MutedText(stringResource(R.string.diagnostics_exit_details, exit.status, exit.importance, formatBytes(exit.pss * 1024)))
             if (exit.trace.isNotEmpty()) {
-                TextButton(onClick = { showTrace = !showTrace }) {
+                IchorTextButton(onClick = { showTrace = !showTrace }) {
                     Text(stringResource(if (showTrace) R.string.diagnostics_trace_hide else R.string.diagnostics_trace_show))
                 }
                 if (showTrace) {
@@ -238,13 +238,13 @@ private fun ExportDialog(export: DiagExport, onShare: (java.io.File) -> Unit, on
         },
         confirmButton = {
             ready?.let { r ->
-                TextButton(onClick = { onShare(r.file) }) { Text(stringResource(R.string.diagnostics_share)) }
+                IchorTextButton(onClick = { onShare(r.file) }) { Text(stringResource(R.string.diagnostics_share)) }
             }
         },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
-                ready?.let { r -> TextButton(onClick = { onSave(r.file) }) { Text(stringResource(R.string.diagnostics_save)) } }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
+                ready?.let { r -> IchorTextButton(onClick = { onSave(r.file) }) { Text(stringResource(R.string.diagnostics_save)) } }
             }
         },
     )

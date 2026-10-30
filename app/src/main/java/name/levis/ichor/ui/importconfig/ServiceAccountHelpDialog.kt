@@ -15,7 +15,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -88,7 +88,7 @@ fun ServiceAccountHelpDialog(onDismiss: () -> Unit) {
                 template?.let { TemplateSteps(it) }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },
     )
 }
 

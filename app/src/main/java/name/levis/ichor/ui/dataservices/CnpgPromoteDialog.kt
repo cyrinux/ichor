@@ -1,7 +1,7 @@
 package name.levis.ichor.ui.dataservices
 
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
@@ -34,7 +34,7 @@ fun CnpgPromoteToasts(results: Flow<CnpgPromoteResult>) = ResultToasts(results) 
 fun CnpgPromoteButtons(cluster: CnpgCluster, busy: Boolean, onPromote: (String) -> Unit) {
     val denial = rememberKubeDenial(KubeAction.CNPG_PROMOTE, cluster.namespace)
     cluster.promotablePods.forEach { pod ->
-        OutlinedButton(onClick = { onPromote(pod.name) }, enabled = !busy && denial == null) {
+        IchorOutlinedButton(onClick = { onPromote(pod.name) }, enabled = !busy && denial == null) {
             Text(stringResource(R.string.cnpg_promote_instance, pod.name))
         }
     }

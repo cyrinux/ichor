@@ -16,7 +16,7 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,7 +31,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -126,7 +126,7 @@ fun MetricsScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.metrics_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -244,8 +244,8 @@ private fun NoSource(state: MetricsState, modifier: Modifier, onSetUp: () -> Uni
             else -> {
                 Text(stringResource(R.string.metrics_none_found), style = MaterialTheme.typography.titleMedium)
                 MutedText(state.discoveryError ?: state.error ?: stringResource(R.string.metrics_none_found_hint))
-                Button(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
-                androidx.compose.material3.TextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
+                IchorButton(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
+                name.levis.ichor.ui.design.IchorTextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
             }
         }
     }
@@ -257,7 +257,7 @@ private fun RefusedCard(onEdit: () -> Unit) {
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.metrics_refused), color = MaterialTheme.colorScheme.error)
-            Button(onClick = onEdit) { Text(stringResource(R.string.metrics_change_credentials)) }
+            IchorButton(onClick = onEdit) { Text(stringResource(R.string.metrics_change_credentials)) }
         }
     }
 }

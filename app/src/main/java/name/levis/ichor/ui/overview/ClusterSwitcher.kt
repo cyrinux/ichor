@@ -46,16 +46,16 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -352,7 +352,7 @@ fun ClusterSheet(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                 )
             }
-            OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+            IchorOutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
                 Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
                 Text(stringResource(R.string.clusters_add))
             }
@@ -544,7 +544,7 @@ private fun ClusterRowMenu(
 ) {
     var open by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { open = true }) {
+        IchorIconButton(onClick = { open = true }) {
             Icon(Icons.Outlined.MoreVert, stringResource(R.string.clusters_options, label))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -673,8 +673,8 @@ private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: 
                 Text(stringResource(R.string.clusters_rename_hint, context.name), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = { onRename(name) }) { Text(stringResource(R.string.common_ok)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onRename(name) }) { Text(stringResource(R.string.common_ok)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -723,8 +723,8 @@ private fun ClusterColorDialog(name: String, color: Int, onPick: (Int) -> Unit, 
                 Box(Modifier.fillMaxWidth().height(28.dp).background(Color(picked), MaterialTheme.shapes.small))
             }
         },
-        confirmButton = { TextButton(onClick = { onPick(picked) }) { Text(stringResource(R.string.common_ok)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onPick(picked) }) { Text(stringResource(R.string.common_ok)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

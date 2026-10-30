@@ -13,12 +13,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -131,15 +131,15 @@ fun TalosRolloutDialog(
         },
         confirmButton = {
             rollout.next?.let { next ->
-                Button(onClick = { pick(next) }, enabled = rollout.canOpen(next)) {
+                IchorButton(onClick = { pick(next) }, enabled = rollout.canOpen(next)) {
                     Text(stringResource(R.string.overview_talos_rollout_next, next.node.hostname))
                 }
             }
         },
         dismissButton = {
             Row {
-                onUpgradeAll?.let { TextButton(onClick = it) { Text(stringResource(R.string.cluster_upgrade_all)) } }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
+                onUpgradeAll?.let { IchorTextButton(onClick = it) { Text(stringResource(R.string.cluster_upgrade_all)) } }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
             }
         },
     )

@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,7 +103,7 @@ fun BootMediaScreen(
     val secureBoot by vm.secureBoot.collectAsStateWithLifecycle()
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.boot_media_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -123,7 +123,7 @@ fun BootMediaScreen(
                 }
             }
             if (onAddNode != null) {
-                Button(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
+                IchorButton(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
             } else {
                 InfoNotice(stringResource(R.string.boot_media_omni_next))
             }

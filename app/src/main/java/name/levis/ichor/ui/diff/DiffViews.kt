@@ -25,7 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -167,7 +167,7 @@ private fun KeepLiveAction(resource: KubeDiffResource, onClick: () -> Unit) {
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
-        TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
+        IchorTextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
             Icon(Icons.Outlined.Save, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.gitops_keep_live), modifier = Modifier.padding(start = 8.dp))
         }
@@ -183,7 +183,7 @@ private fun OpenSourceAction(onClick: () -> Unit, searching: Boolean) {
             Text(stringResource(R.string.gitops_find_searching), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     } else {
-        TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
+        IchorTextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
             Icon(Icons.AutoMirrored.Outlined.InsertDriveFile, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.gitops_find_open), modifier = Modifier.padding(start = 8.dp))
         }

@@ -12,7 +12,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,7 +93,7 @@ fun SensorsCard(s: NodeSensors) {
                 InfoRow(stringResource(R.string.hardware_throttle_events), stringResource(R.string.hardware_throttle_counts, it.coreEvents.toInt(), it.packageEvents.toInt()))
             }
             if (s.voltages.isNotEmpty() || s.thermalZones.isNotEmpty()) {
-                TextButton(onClick = { more = !more }) {
+                IchorTextButton(onClick = { more = !more }) {
                     Text(stringResource(if (more) R.string.hardware_sensors_less else R.string.hardware_sensors_more))
                 }
                 if (more) {

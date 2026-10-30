@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -108,7 +108,7 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
             MutedText(stringResource(if (talosContext.isKube) R.string.settings_kube_desc_imported else R.string.settings_kube_desc))
             if (!talosContext.allows(Feature.KUBECONFIG)) {
                 RoleNotice(Feature.KUBECONFIG, talosContext.roles)
-            } else OutlinedButton(
+            } else IchorOutlinedButton(
                 onClick = ::export,
                 enabled = state != ExportState.Working,
                 modifier = Modifier.fillMaxWidth(),

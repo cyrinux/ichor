@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.NotificationsActive
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,18 +83,18 @@ fun AlertsOfferCard() {
                 Text(stringResource(R.string.monitor_notifications_blocked), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                TextButton(onClick = { app.uiPreferences.setAlertsOfferPending(false) }) {
+                IchorTextButton(onClick = { app.uiPreferences.setAlertsOfferPending(false) }) {
                     Text(stringResource(R.string.alerts_offer_not_now))
                 }
                 if (blocked) {
-                    Button(onClick = {
+                    IchorButton(onClick = {
                         context.startActivity(
                             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                         )
                     }) { Text(stringResource(R.string.alerts_offer_open_settings)) }
                 } else {
-                    Button(onClick = {
+                    IchorButton(onClick = {
                         if (!canPostNotifications(context) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             permission.launch(Manifest.permission.POST_NOTIFICATIONS)
                         } else {

@@ -18,17 +18,17 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -95,7 +95,7 @@ fun ProposeSheet(
                 readOnly = form.baseFixed,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { branchOpen = !branchOpen }) {
+                IchorTextButton(onClick = { branchOpen = !branchOpen }) {
                     Icon(if (branchOpen) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.gitops_propose_field_branch), Modifier.padding(start = 6.dp))
                 }
@@ -108,7 +108,7 @@ fun ProposeSheet(
             form.error?.let { error ->
                 Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     ErrorCard(error.asString())
-                    if (form.stale) OutlinedButton(onClick = onReload, enabled = !reloading) { Text(stringResource(R.string.gitops_edit_reload)) }
+                    if (form.stale) IchorOutlinedButton(onClick = onReload, enabled = !reloading) { Text(stringResource(R.string.gitops_edit_reload)) }
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
@@ -116,8 +116,8 @@ fun ProposeSheet(
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                     if (form.sending) MutedText(stringResource(R.string.gitops_propose_opening))
                 }
-                TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.common_cancel)) }
-                Button(
+                IchorTextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.common_cancel)) }
+                IchorButton(
                     onClick = onPropose,
                     enabled = !busy && form.title.isNotBlank() && form.message.isNotBlank() && form.base.isNotBlank(),
                 ) { Text(stringResource(R.string.gitops_propose_open)) }
@@ -169,11 +169,11 @@ fun ProposeResult(result: GitProposalResult, tool: String, onDone: () -> Unit, m
         MutedText(if (tool.isEmpty()) stringResource(R.string.repo_propose_applies) else stringResource(R.string.gitops_propose_applies, gitOpsToolLabel(tool)))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (result.url.isNotEmpty()) {
-                Button(onClick = { openUrl(context, result.url) }) {
+                IchorButton(onClick = { openUrl(context, result.url) }) {
                     Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.gitops_propose_open_link), Modifier.padding(start = 8.dp))
                 }
-                OutlinedButton(onClick = {
+                IchorOutlinedButton(onClick = {
                     copyToClipboard(context, result.branch, result.url)
                     Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
                 }) {
@@ -182,6 +182,6 @@ fun ProposeResult(result: GitProposalResult, tool: String, onDone: () -> Unit, m
                 }
             }
         }
-        TextButton(onClick = onDone) { Text(stringResource(R.string.common_close)) }
+        IchorTextButton(onClick = onDone) { Text(stringResource(R.string.common_close)) }
     }
 }

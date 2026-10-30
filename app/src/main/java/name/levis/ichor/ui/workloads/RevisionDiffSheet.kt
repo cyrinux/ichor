@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -97,7 +97,7 @@ fun RevisionDiffSheet(
             if (manual) Text(stringResource(R.string.revision_diff_manual), color = colors.warn, style = MaterialTheme.typography.bodySmall)
             if (paused) Text(stringResource(R.string.revision_diff_paused), color = colors.warn, style = MaterialTheme.typography.bodySmall)
             KubeDenialNote(denial)
-            Button(
+            IchorButton(
                 onClick = { confirm = true },
                 enabled = !busy && !paused && denial == null && !revision.current,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError),

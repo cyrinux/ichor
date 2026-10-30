@@ -14,20 +14,20 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -148,7 +148,7 @@ internal fun OnCallSheet(app: TalosApp, fingerprint: String, onDismiss: () -> Un
                     keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(onClick = ::addService, enabled = service.isNotBlank()) { Text(stringResource(R.string.oncall_service_add)) }
+                IchorTextButton(onClick = ::addService, enabled = service.isNotBlank()) { Text(stringResource(R.string.oncall_service_add)) }
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 services.forEach { id ->
@@ -163,7 +163,7 @@ internal fun OnCallSheet(app: TalosApp, fingerprint: String, onDismiss: () -> Un
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(
+                IchorOutlinedButton(
                     onClick = {
                         test = TestState.Running
                         scope.launch {
@@ -185,15 +185,15 @@ internal fun OnCallSheet(app: TalosApp, fingerprint: String, onDismiss: () -> Un
             TestResult(test)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 if (stored.token.isNotEmpty()) {
-                    TextButton(onClick = {
+                    IchorTextButton(onClick = {
                         scope.launch {
                             withContext(Dispatchers.IO) { app.onCallStore.save(fingerprint, OnCallConfig()) }
                             onDismiss()
                         }
                     }) { Text(stringResource(R.string.common_delete)) }
                 }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-                Button(
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                IchorButton(
                     onClick = {
                         val config = current()
                         scope.launch {

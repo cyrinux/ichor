@@ -21,7 +21,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -224,7 +224,7 @@ private fun ContainerItem(
         ContainerDetails(row, Modifier.weight(1f), muted, warn)
         if (onRestart != null) {
             Box {
-                IconButton(onClick = { menuOpen = true }) {
+                IchorIconButton(onClick = { menuOpen = true }) {
                     Icon(Icons.Outlined.MoreVert, stringResource(R.string.container_actions))
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {

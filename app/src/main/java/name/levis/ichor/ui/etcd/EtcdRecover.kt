@@ -21,7 +21,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -266,7 +266,7 @@ private fun RecoverAcknowledgment(checked: Boolean, onChange: (Boolean) -> Unit)
         Checkbox(checked = checked, onCheckedChange = null)
         Text(stringResource(R.string.etcd_recover_ack), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 8.dp))
     }
-    TextButton(onClick = { uri.openUri(DISASTER_RECOVERY_URL) }) { Text(stringResource(R.string.etcd_recover_docs)) }
+    IchorTextButton(onClick = { uri.openUri(DISASTER_RECOVERY_URL) }) { Text(stringResource(R.string.etcd_recover_docs)) }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -333,9 +333,9 @@ private fun EtcdRecoverDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            IchorTextButton(
                 onClick = {
-                    val n = node ?: return@TextButton
+                    val n = node ?: return@IchorTextButton
                     val key = if (opener == SnapshotOpener.SECRET_KEY) secret else ""
                     val pass = if (opener == SnapshotOpener.PASSPHRASE) secret else ""
                     onNext(RecoverChoice(n, hostnames[n] ?: n, key, pass, skipHash && opener == SnapshotOpener.NONE))
@@ -343,7 +343,7 @@ private fun EtcdRecoverDialog(
                 enabled = ready,
             ) { Text(stringResource(R.string.etcd_recover_next)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -379,15 +379,15 @@ fun EtcdRecoverPanel(state: EtcdRecoverState, onCancel: () -> Unit, onDismiss: (
                 }
             }
             when {
-                state.running -> TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+                state.running -> IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 state.loading || state.picked != null && !state.finished -> {}
                 failed -> {
                     Text(state.error.orEmpty(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 state.finished -> {
                     Text(stringResource(R.string.etcd_recover_done), color = colors.ok)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
             }
         }

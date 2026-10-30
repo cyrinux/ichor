@@ -22,7 +22,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -229,7 +229,7 @@ private fun VulnRow(v: ImageVuln, expanded: Boolean, onToggle: () -> Unit) {
             if (v.description.isNotEmpty()) Text(v.description, style = MaterialTheme.typography.bodySmall)
             if (v.score > 0) MutedText(stringResource(R.string.imagescan_score, "%.1f".format(v.score)) + " " + v.vector)
             if (v.url.startsWith("https://") || v.url.startsWith("http://")) {
-                TextButton(onClick = { uri.openUri(v.url) }, contentPadding = PaddingValues(0.dp)) {
+                IchorTextButton(onClick = { uri.openUri(v.url) }, contentPadding = PaddingValues(0.dp)) {
                     Text(stringResource(R.string.imagescan_open_advisory))
                 }
             }

@@ -15,7 +15,7 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -155,7 +155,7 @@ private fun NodeTimeRow(t: NodeTime, hostname: String) {
             onDismissRequest = { showError = false },
             title = { Text(hostname) },
             text = { Text(t.error.orEmpty(), style = MaterialTheme.typography.bodySmall) },
-            confirmButton = { TextButton(onClick = { showError = false }) { Text(stringResource(R.string.common_ok)) } },
+            confirmButton = { IchorTextButton(onClick = { showError = false }) { Text(stringResource(R.string.common_ok)) } },
         )
     }
 }

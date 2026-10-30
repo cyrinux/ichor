@@ -15,7 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -79,7 +79,7 @@ fun SnippetPickerDialog(
         },
         confirmButton = {
             if (selected != null) {
-                TextButton(
+                IchorTextButton(
                     onClick = {
                         val params = selected.params.associate { p -> p.name to (values[p.name] ?: if (p.type == "bool") "false" else "") }
                         onApply(selected.id, params)
@@ -90,9 +90,9 @@ fun SnippetPickerDialog(
         },
         dismissButton = {
             if (selected != null) {
-                TextButton(onClick = { selectedId = null }) { Text(stringResource(R.string.common_back)) }
+                IchorTextButton(onClick = { selectedId = null }) { Text(stringResource(R.string.common_back)) }
             } else {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
             }
         },
     )

@@ -15,7 +15,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
@@ -23,7 +23,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -126,7 +126,7 @@ private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
         visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
         trailingIcon = {
-            IconButton(onClick = { keyVisible = !keyVisible }) {
+            IchorIconButton(onClick = { keyVisible = !keyVisible }) {
                 Icon(
                     if (keyVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = stringResource(if (keyVisible) R.string.ai_api_key_hide else R.string.ai_api_key_show),
@@ -135,7 +135,7 @@ private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
         },
         modifier = Modifier.fillMaxWidth(),
     )
-    TextButton(onClick = { uriHandler.openUri(provider.keyUrl) }) { Text(stringResource(R.string.ai_get_key)) }
+    IchorTextButton(onClick = { uriHandler.openUri(provider.keyUrl) }) { Text(stringResource(R.string.ai_get_key)) }
     ModelField(app, settings, provider, apiKey)
     OutlinedTextField(
         value = settings.baseUrl,
@@ -168,7 +168,7 @@ private fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider
         modifier = Modifier.fillMaxWidth(),
     )
     Box {
-        TextButton(
+        IchorTextButton(
             enabled = !loading,
             onClick = {
                 loading = true

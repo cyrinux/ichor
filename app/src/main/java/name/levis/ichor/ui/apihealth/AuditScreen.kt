@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -19,7 +19,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -82,7 +82,7 @@ fun AuditScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.audit_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -108,7 +108,7 @@ private fun AuditIntro(minutes: Int, onMinutes: (Int) -> Unit, onRun: () -> Unit
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Button(onClick = onRun, enabled = !running) { Text(stringResource(R.string.audit_run)) }
+            IchorButton(onClick = onRun, enabled = !running) { Text(stringResource(R.string.audit_run)) }
             if (running) {
                 CircularProgressIndicator(Modifier.padding(4.dp))
                 MutedText(stringResource(R.string.audit_reading))

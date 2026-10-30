@@ -14,7 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,7 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -132,7 +132,7 @@ fun JoinNodeScreen(
     val inspection by vm.inspection.collectAsStateWithLifecycle()
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.join_node_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -179,7 +179,7 @@ private fun AddressField(address: String, onAddress: (String) -> Unit, onInspect
             keyboardActions = KeyboardActions(onGo = { onInspect() }),
             modifier = Modifier.weight(1f),
         )
-        Button(onClick = onInspect, enabled = !busy && joinAddress(address).isNotEmpty()) {
+        IchorButton(onClick = onInspect, enabled = !busy && joinAddress(address).isNotEmpty()) {
             Text(stringResource(R.string.join_node_inspect))
         }
     }

@@ -14,7 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -110,7 +110,7 @@ fun MaintenancePlanView(
         if (!drainOnly) Checks(plan, action, ticked) { i, on -> ticked = if (on) ticked + i else ticked - i }
         if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
         KubeDenialNote(denial)
-        Button(
+        IchorButton(
             onClick = { onStart(MaintenanceChoice(action, includeBare, maintenanceAcknowledged(plan, action, ticked.size))) },
             enabled = maintenanceCanStart(plan, action, ticked.size, busyWith != null) && denial == null,
             modifier = Modifier.fillMaxWidth(),

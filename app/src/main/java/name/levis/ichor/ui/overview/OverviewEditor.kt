@@ -22,7 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -284,7 +284,7 @@ fun <C, A : Enum<A>> HomeEditor(
         }
         if (!layout.isDefault) item(key = "reset") {
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().animateItem()) {
-                TextButton(onClick = { change(layout.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
+                IchorTextButton(onClick = { change(layout.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
             }
         }
     }

@@ -10,17 +10,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FolderOpen
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -113,7 +113,7 @@ fun CaptureScreen(
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.capture_title))
@@ -244,7 +244,7 @@ private fun CaptureBar(session: CaptureSession, onStop: () -> Unit) {
                     },
                 )
             }
-            if (session.running) Button(onClick = onStop) { Text(stringResource(R.string.capture_stop)) }
+            if (session.running) IchorButton(onClick = onStop) { Text(stringResource(R.string.capture_stop)) }
         }
     }
 }
@@ -254,10 +254,10 @@ private fun FinishedActions(session: CaptureSession, onSave: () -> Unit, onShare
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val hasFile = session.file.exists()
-            Button(onClick = onSave, enabled = hasFile) { Text(stringResource(R.string.capture_save)) }
-            OutlinedButton(onClick = onShare, enabled = hasFile) { Text(stringResource(R.string.capture_share)) }
-            TextButton(onClick = onDelete, enabled = hasFile) { Text(stringResource(R.string.common_delete)) }
+            IchorButton(onClick = onSave, enabled = hasFile) { Text(stringResource(R.string.capture_save)) }
+            IchorOutlinedButton(onClick = onShare, enabled = hasFile) { Text(stringResource(R.string.capture_share)) }
+            IchorTextButton(onClick = onDelete, enabled = hasFile) { Text(stringResource(R.string.common_delete)) }
         }
-        TextButton(onClick = onNew) { Text(stringResource(R.string.capture_new)) }
+        IchorTextButton(onClick = onNew) { Text(stringResource(R.string.capture_new)) }
     }
 }

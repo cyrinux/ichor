@@ -10,11 +10,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileOpen
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -53,7 +53,7 @@ internal fun TalosFormSource(form: TalosForm, onForm: (TalosForm) -> Unit, onSub
             TalosFormMode.DIRECT -> DirectFields(form, onForm)
             TalosFormMode.OMNI -> OmniFields(form, onForm)
         }
-        Button(onClick = { onSubmit(form) }, enabled = form.canSubmit, modifier = Modifier.fillMaxWidth()) {
+        IchorButton(onClick = { onSubmit(form) }, enabled = form.canSubmit, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.import_form_continue))
         }
     }
@@ -152,7 +152,7 @@ private fun PemField(value: String, onValue: (String) -> Unit, label: String) {
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
             modifier = Modifier.fillMaxWidth(),
         )
-        OutlinedButton(onClick = pickFile) {
+        IchorOutlinedButton(onClick = pickFile) {
             Icon(Icons.Outlined.FileOpen, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
             Text(stringResource(R.string.import_form_pick_file))
         }

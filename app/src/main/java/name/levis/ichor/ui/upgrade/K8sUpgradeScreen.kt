@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -24,7 +24,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -163,7 +163,7 @@ fun K8sUpgradeScreen(
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.k8s_upgrade_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -278,7 +278,7 @@ private fun PlanView(
                     onChange = onDryRunFirst,
                 )
                 MutedText(stringResource(R.string.cluster_upgrade_keep_open))
-                Button(onClick = onStart, enabled = p.canStart, modifier = Modifier.fillMaxWidth()) {
+                IchorButton(onClick = onStart, enabled = p.canStart, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(if (dryRunFirst) R.string.k8s_upgrade_dry_run else R.string.k8s_upgrade_now))
                 }
             }

@@ -19,10 +19,10 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Upgrade
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -113,7 +113,7 @@ fun FluxActionButtons(
     val denial = rememberKubeDenial(KubeAction.fluxReconcile(app.kind), app.namespace)
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (app.canCorrectDrift) {
-            Button(onClick = onCorrectDrift, enabled = !busy && denial == null) {
+            IchorButton(onClick = onCorrectDrift, enabled = !busy && denial == null) {
                 Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.flux_action_correct_drift), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
@@ -127,27 +127,27 @@ fun FluxActionButtons(
 @Composable
 private fun FluxActionRow(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)?, onAction: (FluxAction) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Button(onClick = { onAction(FluxAction.RECONCILE) }, enabled = !busy && app.canReconcile) {
+        IchorButton(onClick = { onAction(FluxAction.RECONCILE) }, enabled = !busy && app.canReconcile) {
             ButtonContent(Icons.Outlined.Refresh, FluxAction.RECONCILE)
         }
-        OutlinedButton(onClick = { onAction(FluxAction.RECONCILE_WITH_SOURCE) }, enabled = !busy && app.canReconcile) {
+        IchorOutlinedButton(onClick = { onAction(FluxAction.RECONCILE_WITH_SOURCE) }, enabled = !busy && app.canReconcile) {
             ButtonContent(Icons.Outlined.Sync, FluxAction.RECONCILE_WITH_SOURCE)
         }
         val toggle = if (app.suspended) FluxAction.RESUME else FluxAction.SUSPEND
-        OutlinedButton(onClick = { onAction(toggle) }, enabled = !busy) {
+        IchorOutlinedButton(onClick = { onAction(toggle) }, enabled = !busy) {
             ButtonContent(if (app.suspended) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, toggle)
         }
         if (app.isKustomization && onDiff != null) {
-            OutlinedButton(onClick = onDiff) {
+            IchorOutlinedButton(onClick = onDiff) {
                 Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.flux_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         if (app.isHelmRelease) {
-            OutlinedButton(onClick = { onAction(FluxAction.FORCE) }, enabled = !busy && app.canForce) {
+            IchorOutlinedButton(onClick = { onAction(FluxAction.FORCE) }, enabled = !busy && app.canForce) {
                 ButtonContent(Icons.Outlined.Upgrade, FluxAction.FORCE)
             }
-            OutlinedButton(onClick = { onAction(FluxAction.RESET) }, enabled = !busy && app.canForce) {
+            IchorOutlinedButton(onClick = { onAction(FluxAction.RESET) }, enabled = !busy && app.canForce) {
                 ButtonContent(Icons.Outlined.RestartAlt, FluxAction.RESET)
             }
         }

@@ -17,12 +17,12 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -157,7 +157,7 @@ private fun UnlockDialog(
         },
         confirmButton = {
             // The progress sits on the button just pressed, so the dialog keeps its size.
-            TextButton(onClick = { onConfirm(passphrase) }, enabled = !working && passphrase.isNotEmpty()) {
+            IchorTextButton(onClick = { onConfirm(passphrase) }, enabled = !working && passphrase.isNotEmpty()) {
                 if (working) {
                     CircularProgressIndicator(Modifier.size(16.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
@@ -167,7 +167,7 @@ private fun UnlockDialog(
                 }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !working) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss, enabled = !working) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -183,7 +183,7 @@ internal fun PassphraseField(value: String, onValue: (String) -> Unit, label: St
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false, imeAction = ImeAction.Next),
         trailingIcon = {
-            IconButton(onClick = { visible = !visible }) {
+            IchorIconButton(onClick = { visible = !visible }) {
                 Icon(
                     if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = stringResource(if (visible) R.string.backup_passphrase_hide else R.string.backup_passphrase_show),

@@ -13,7 +13,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -124,7 +124,7 @@ private fun ActionRow(rollout: ArgoRollout, busy: Boolean, onAction: (ArgoRollou
             } else {
                 ButtonDefaults.outlinedButtonColors()
             }
-            OutlinedButton(onClick = { onAction(action) }, enabled = !busy && denial == null, colors = colors) {
+            IchorOutlinedButton(onClick = { onAction(action) }, enabled = !busy && denial == null, colors = colors) {
                 Text(stringResource(action.label))
             }
         }

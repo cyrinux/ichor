@@ -24,8 +24,8 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -129,7 +129,7 @@ fun ArgoAppScreen(
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(name) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -396,10 +396,10 @@ private fun WavesHeader(selecting: Boolean, count: Int, onSelecting: (Boolean) -
     Row(verticalAlignment = Alignment.CenterVertically) {
         SectionTitle(stringResource(R.string.argo_waves), Modifier.weight(1f))
         if (selecting) {
-            TextButton(onClick = { onSelecting(false) }) { Text(stringResource(R.string.common_cancel)) }
+            IchorTextButton(onClick = { onSelecting(false) }) { Text(stringResource(R.string.common_cancel)) }
             FilledTonalButton(onClick = onSyncSelected, enabled = enabled && count > 0) { Text(stringResource(R.string.argo_sync_selected, count)) }
         } else {
-            TextButton(onClick = { onSelecting(true) }, enabled = enabled) { Text(stringResource(R.string.argo_select)) }
+            IchorTextButton(onClick = { onSelecting(true) }, enabled = enabled) { Text(stringResource(R.string.argo_select)) }
         }
     }
 }

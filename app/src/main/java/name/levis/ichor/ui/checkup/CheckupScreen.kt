@@ -23,8 +23,8 @@ import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedCard
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -157,7 +157,7 @@ fun CheckupScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.checkup_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -343,26 +343,26 @@ private fun SectionBody(
     if (section.truncated > 0) MutedText(stringResource(R.string.checkup_truncated, section.truncated.toString()))
     when (section.id) {
         CheckupSectionId.CAPACITY -> {
-            TextButton(onClick = links.onOpenCapacity) { Text(stringResource(R.string.capacity_checkup_link)) }
+            IchorTextButton(onClick = links.onOpenCapacity) { Text(stringResource(R.string.capacity_checkup_link)) }
             NodeRequests(report.nodes)
         }
         CheckupSectionId.NODES -> NodeTaints(report.nodes)
         CheckupSectionId.STORAGE -> VolumeLevels(report.volumes)
         CheckupSectionId.HELM -> HelmReleases(report.releases, now, links.onOpenRelease)
         CheckupSectionId.LOAD_BALANCERS -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
-            TextButton(onClick = links.onOpenLoadBalancing) { Text(stringResource(R.string.lb_open)) }
+            IchorTextButton(onClick = links.onOpenLoadBalancing) { Text(stringResource(R.string.lb_open)) }
         }
         CheckupSectionId.MONITORING -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
-            TextButton(onClick = links.onOpenMonitoring) { Text(stringResource(R.string.checkup_open_monitoring)) }
+            IchorTextButton(onClick = links.onOpenMonitoring) { Text(stringResource(R.string.checkup_open_monitoring)) }
         }
         CheckupSectionId.POLICIES -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
-            TextButton(onClick = links.onOpenPolicies) { Text(stringResource(R.string.checkup_open_policies)) }
+            IchorTextButton(onClick = links.onOpenPolicies) { Text(stringResource(R.string.checkup_open_policies)) }
         }
         CheckupSectionId.TAILSCALE -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
-            TextButton(onClick = links.onOpenTailscale) { Text(stringResource(R.string.checkup_open_tailscale)) }
+            IchorTextButton(onClick = links.onOpenTailscale) { Text(stringResource(R.string.checkup_open_tailscale)) }
         }
         CheckupSectionId.CLUSTER_API -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
-            TextButton(onClick = links.onOpenClusterLifecycle) { Text(stringResource(R.string.checkup_open_cluster_lifecycle)) }
+            IchorTextButton(onClick = links.onOpenClusterLifecycle) { Text(stringResource(R.string.checkup_open_cluster_lifecycle)) }
         }
     }
 }

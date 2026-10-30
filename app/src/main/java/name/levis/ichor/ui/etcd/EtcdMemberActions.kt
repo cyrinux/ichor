@@ -13,11 +13,11 @@ import androidx.compose.material3.AlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -152,7 +152,7 @@ fun MemberOverflow(actions: MemberActions) {
     if (actions.onRemove == null && actions.onReplace == null) return
     var open by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { open = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
+        IchorIconButton(onClick = { open = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             actions.onReplace?.let { onReplace ->
                 FeatureMenuItem(
@@ -197,13 +197,13 @@ fun MemberActionPanel(state: MemberActionState, onDismiss: () -> Unit) {
         is MemberActionState.Done -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 if (state.changed) Text(state.message.asString(), color = colors.ok) else InfoNotice(state.message.asString())
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
             }
         }
         is MemberActionState.Failed -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InlineError(state.message.asString())
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
             }
         }
     }
@@ -221,7 +221,7 @@ fun PlanningDialog(member: EtcdMemberRef, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

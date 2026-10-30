@@ -25,7 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,9 +62,9 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -257,7 +257,7 @@ fun EtcdScreen(
     IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text("etcd") },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -506,7 +506,7 @@ private fun EtcdContent(
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(stringResource(R.string.etcd_recover_lost), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
-                        OutlinedButton(onClick = onRecover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_recover_button)) }
+                        IchorOutlinedButton(onClick = onRecover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_recover_button)) }
                     }
                 }
             }
@@ -521,12 +521,12 @@ private fun EtcdContent(
                 }
                 onFix?.let { onFix ->
                     item {
-                        Button(onClick = onFix, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_fix_button)) }
+                        IchorButton(onClick = onFix, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_fix_button)) }
                     }
                 }
                 alarms.onDisarm?.let { onDisarm ->
                     item {
-                        OutlinedButton(onClick = onDisarm, enabled = alarms.state != DisarmState.Running, modifier = Modifier.fillMaxWidth()) {
+                        IchorOutlinedButton(onClick = onDisarm, enabled = alarms.state != DisarmState.Running, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(if (alarms.state == DisarmState.Running) R.string.etcd_disarming else R.string.etcd_disarm_alarms))
                         }
                     }
@@ -536,7 +536,7 @@ private fun EtcdContent(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(failed.message, color = colors.bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                        TextButton(onClick = alarms.onDismiss) { Text(stringResource(R.string.common_ok)) }
+                        IchorTextButton(onClick = alarms.onDismiss) { Text(stringResource(R.string.common_ok)) }
                     }
                 }
             }
@@ -605,11 +605,11 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: Etcd
             InfoRow(stringResource(R.string.etcd_storage_version), status.version)
             status.errors.forEach { Text(it, color = colors.bad, style = MaterialTheme.typography.bodySmall) }
             if (onDefrag != null && status.reclaimable > 0) {
-                TextButton(onClick = onDefrag) { Text(stringResource(R.string.etcd_defragment_member, formatBytes(status.reclaimable))) }
+                IchorTextButton(onClick = onDefrag) { Text(stringResource(R.string.etcd_defragment_member, formatBytes(status.reclaimable))) }
             }
             actions?.onForfeit?.let { onForfeit ->
                 val notice = actions.support.notice
-                TextButton(onClick = onForfeit, enabled = actions.enabled && notice == null) { Text(stringResource(R.string.etcd_forfeit)) }
+                IchorTextButton(onClick = onForfeit, enabled = actions.enabled && notice == null) { Text(stringResource(R.string.etcd_forfeit)) }
                 notice?.let { InfoNotice(it.text()) }
             }
         }
@@ -674,17 +674,17 @@ private fun DefragPanel(
                         pluralStringResource(R.plurals.etcd_defrag_done, defrag.members, defrag.members, formatBytes(defrag.reclaimed)),
                         color = colors.ok,
                     )
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 is DefragState.Failed -> {
                     Text(defrag.message, color = colors.bad)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 DefragState.Idle -> {
                     Text(pluralStringResource(R.plurals.etcd_reclaimable_across, order.size, formatBytes(reclaimable), order.size), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.etcd_defrag_explainer))
                     if (canDefrag) {
-                        OutlinedButton(
+                        IchorOutlinedButton(
                             onClick = { onDefrag(DefragRequest(order, hostnames)) },
                             enabled = order.isNotEmpty() && reclaimable > 0,
                             modifier = Modifier.fillMaxWidth(),
@@ -717,7 +717,7 @@ private fun DefragConfirmDialog(request: DefragRequest, onConfirm: () -> Unit, o
                 Text(stringResource(R.string.etcd_confirm_reclaim, formatBytes(request.targets.sumOf { it.reclaimable })), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.etcd_defragment)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.etcd_defragment)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

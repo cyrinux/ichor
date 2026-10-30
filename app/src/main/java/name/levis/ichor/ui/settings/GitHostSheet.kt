@@ -11,18 +11,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -153,7 +153,7 @@ internal fun GitHostSheet(app: TalosApp, editing: GitHost?, onDismiss: () -> Uni
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
                 trailingIcon = {
-                    TextButton(onClick = {
+                    IchorTextButton(onClick = {
                         scope.launch {
                             pastedText(clipboard, context)?.let {
                                 token = it.trim()
@@ -165,15 +165,15 @@ internal fun GitHostSheet(app: TalosApp, editing: GitHost?, onDismiss: () -> Uni
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = ::runCheck, enabled = canCheck) {
+                IchorOutlinedButton(onClick = ::runCheck, enabled = canCheck) {
                     Text(stringResource(if (check == CheckState.Running) R.string.git_host_checking else R.string.git_host_check))
                 }
                 if (check == CheckState.Running) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             }
             CheckResult(check)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-                Button(
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                IchorButton(
                     onClick = {
                         store.set(normalized, kind, token, parseGitHostAliases(aliases, normalized))
                         (check as? CheckState.Done)?.let { store.rememberLogin(normalized, it.check.login) }

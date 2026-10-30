@@ -9,17 +9,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -150,7 +150,7 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
             ) { Text(stringResource(R.string.netperf_seconds, seconds)) }
         }
     }
-    Button(onClick = onStart, enabled = setup.ready, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_start)) }
+    IchorButton(onClick = onStart, enabled = setup.ready, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_start)) }
 }
 
 @Composable
@@ -176,13 +176,13 @@ private fun NetPerfStatus(session: NetPerfSession, onStop: () -> Unit, onReset: 
             if (progress?.phase != NETPERF_PHASE_CLEANING) {
                 MutedText(stringResource(R.string.netperf_keep_open), modifier = gutter)
             }
-            OutlinedButton(onClick = onStop, enabled = !session.stopping, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_stop)) }
+            IchorOutlinedButton(onClick = onStop, enabled = !session.stopping, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_stop)) }
         }
         else -> {
             val context = LocalContext.current
             session.error?.let { InlineError(stringResource(R.string.netperf_failed, it.resolve(context)), gutter) }
             if (session.stopped) Text(stringResource(R.string.netperf_stopped), modifier = gutter)
-            OutlinedButton(onClick = onReset, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_again)) }
+            IchorOutlinedButton(onClick = onReset, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_again)) }
         }
     }
 }
@@ -213,7 +213,7 @@ private fun NetPerfConfirmDialog(setup: NetPerfSetup, onConfirm: () -> Unit, onD
                 if (setup.hostNetwork) Text(stringResource(R.string.netperf_confirm_host), color = LocalStatusColors.current.warn)
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.netperf_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.netperf_confirm)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

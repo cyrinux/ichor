@@ -18,7 +18,7 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,7 +86,7 @@ fun ObjectSummaryContent(
                         s.owners.forEach { o ->
                             OwnerRow(o, onOwner)
                             if (onGitOpsDiff != null && o.hasGitOpsDiff) {
-                                TextButton(onClick = { onGitOpsDiff(o) }) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                                IchorTextButton(onClick = { onGitOpsDiff(o) }) { Text(stringResource(R.string.gitops_compare_with_git)) }
                             }
                         }
                     }
@@ -216,7 +216,7 @@ private fun KeyValues(title: String, entries: List<Pair<String, String>>, key: S
         }
     }
     if (entries.size > METADATA_PREVIEW) {
-        TextButton(onClick = { all = !all }) {
+        IchorTextButton(onClick = { all = !all }) {
             Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, entries.size.toString()))
         }
     }

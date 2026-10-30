@@ -99,7 +99,7 @@ fun StorageScreen(
     result?.let {
         androidx.compose.material3.AlertDialog(onDismissRequest = { result = null },
             title = { Text(stringResource(R.string.snapshot_create)) }, text = { Text(it) },
-            confirmButton = { androidx.compose.material3.TextButton(onClick = { result = null }) { Text(stringResource(R.string.common_ok)) } })
+            confirmButton = { name.levis.ichor.ui.design.IchorTextButton(onClick = { result = null }) { Text(stringResource(R.string.common_ok)) } })
     }
     KubeScopedList(
         title = stringResource(R.string.storage_title),

@@ -18,7 +18,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -26,13 +26,13 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -212,7 +212,7 @@ fun UpgradeScreen(
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.upgrade_title), hostname) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -386,7 +386,7 @@ private fun UpgradeSetup(
             SelectionContainer { Text(image, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace) }
             ExtensionCheckRow(plan.node, image)
             // Pulling the installer on every node first keeps each node's reboot short.
-            OutlinedButton(onClick = { onPrePull(image) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.upgrade_prepull)) }
+            IchorOutlinedButton(onClick = { onPrePull(image) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.upgrade_prepull)) }
             MutedText(stringResource(R.string.upgrade_prepull_desc))
         }
         if (version.trim().isNotEmpty() && version.trim() == plan.currentVersion) {
@@ -415,7 +415,7 @@ private fun UpgradeSetup(
         if (otherRunning != null) {
             Text(stringResource(R.string.upgrade_other_running, otherRunning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
-        Button(
+        IchorButton(
             onClick = {
                 val drained = plan.drainable && drain
                 onStart(UpgradeChoice(version.trim(), image, stage && !plan.drainable, force, upgradeRisks(plan, versionRisk), drained))

@@ -16,8 +16,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -109,7 +109,7 @@ fun KubeEventsScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.kube_events_stream_title))
@@ -148,7 +148,7 @@ fun KubeEventsScreen(
             }
             if (state.feed.paused) PausedBar(state.feed.pendingCount, onResume = vm::resume)
             if (!state.streaming && state.error != null) {
-                TextButton(onClick = { attempt++ }, modifier = Modifier.padding(horizontal = 8.dp)) { Text(stringResource(R.string.common_retry)) }
+                IchorTextButton(onClick = { attempt++ }, modifier = Modifier.padding(horizontal = 8.dp)) { Text(stringResource(R.string.common_retry)) }
             }
             val rest = Modifier.weight(1f)
             when {
@@ -174,6 +174,6 @@ private fun PausedBar(pending: Int, onResume: () -> Unit) {
             if (pending > 0) pluralStringResource(R.plurals.kube_events_pending, pending, pending) else stringResource(R.string.kube_events_paused),
             modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = onResume) { Text(stringResource(R.string.kube_events_resume)) }
+        IchorTextButton(onClick = onResume) { Text(stringResource(R.string.kube_events_resume)) }
     }
 }

@@ -20,14 +20,14 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -184,7 +184,7 @@ fun RevisionText(revision: String, url: String, style: TextStyle, color: Color, 
 @Composable
 fun ArgoDiffButton(app: ArgoApp, onDiff: () -> Unit) {
     Column {
-        OutlinedButton(onClick = onDiff, modifier = Modifier.fillMaxWidth()) {
+        IchorOutlinedButton(onClick = onDiff, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.argo_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -208,7 +208,7 @@ fun ConditionBanners(conditions: List<ArgoCondition>, onDiff: (() -> Unit)? = nu
                         Text(c.message, style = MaterialTheme.typography.bodySmall)
                         // A sync or comparison error: the diff names the objects, each with its file in Git.
                         if (onDiff != null && c.type.endsWith("Error")) {
-                            TextButton(onClick = onDiff, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                            IchorTextButton(onClick = onDiff, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
                         }
                     }
                 }
@@ -221,14 +221,14 @@ fun ConditionBanners(conditions: List<ArgoCondition>, onDiff: (() -> Unit)? = nu
 @Composable
 fun ArgoActionButtons(busy: Boolean, running: Boolean, onSync: () -> Unit, onRefresh: () -> Unit, onHardRefresh: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        Button(onClick = onSync, enabled = !busy && !running, modifier = Modifier.weight(1f)) {
+        IchorButton(onClick = onSync, enabled = !busy && !running, modifier = Modifier.weight(1f)) {
             Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.argo_sync), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        OutlinedButton(onClick = onRefresh, enabled = !busy, modifier = Modifier.weight(1f)) {
+        IchorOutlinedButton(onClick = onRefresh, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.argo_refresh), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        OutlinedButton(onClick = onHardRefresh, enabled = !busy, modifier = Modifier.weight(1f)) {
+        IchorOutlinedButton(onClick = onHardRefresh, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.argo_hard_refresh), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }

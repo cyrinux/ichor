@@ -11,14 +11,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.selection.triStateToggleable
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -193,7 +193,7 @@ private fun SweepProgress(sweep: PodSweepRun, onStop: () -> Unit) {
         )
         LinearProgressIndicator(progress = { sweep.fraction }, modifier = Modifier.fillMaxWidth())
         MutedText(stringResource(R.string.pod_sweep_background))
-        OutlinedButton(onClick = onStop, enabled = !sweep.stopping, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.operation_stop)) }
+        IchorOutlinedButton(onClick = onStop, enabled = !sweep.stopping, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.operation_stop)) }
     }
 }
 
@@ -277,7 +277,7 @@ private fun SanitizeRow(pod: SanitizePod, showNamespace: Boolean, checked: Boole
 @Composable
 private fun DeleteBar(count: Int, enabled: Boolean, denial: KubePermission?, onDelete: () -> Unit) {
     Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Button(
+        IchorButton(
             onClick = onDelete,
             enabled = enabled && count > 0,
             colors = ButtonDefaults.buttonColors(containerColor = LocalStatusColors.current.bad),

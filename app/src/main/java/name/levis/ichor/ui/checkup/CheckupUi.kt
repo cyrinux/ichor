@@ -20,7 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -100,7 +100,7 @@ fun FindingCard(f: CheckupFinding, now: Long, onDelete: (() -> Unit)? = null, on
                 }
                 checkupFix(f.kind, f.reason, f.extra).takeIf { it != 0 }?.let { MutedText(stringResource(it)) }
                 if (onDelete != null) {
-                    TextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete), color = colors.bad) }
+                    IchorTextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete), color = colors.bad) }
                 }
             }
             if (onOpen != null) {
@@ -124,7 +124,7 @@ private fun <T> MeasuredList(title: String, rows: List<T>, row: @Composable (T) 
     Text(title, style = MaterialTheme.typography.labelLarge)
     (if (all) rows else rows.take(LIST_PREVIEW)).forEach { row(it) }
     if (rows.size > LIST_PREVIEW) {
-        TextButton(onClick = { all = !all }) {
+        IchorTextButton(onClick = { all = !all }) {
             Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, rows.size.toString()))
         }
     }

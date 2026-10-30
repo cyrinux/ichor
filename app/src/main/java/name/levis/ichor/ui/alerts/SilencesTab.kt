@@ -16,7 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -121,7 +121,7 @@ private fun SilenceCard(silence: AmSilence, expiring: Boolean, canExpire: Boolea
             if (silence.state != AmSilenceState.EXPIRED) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                     if (expiring) CircularProgressIndicator(Modifier.padding(end = 8.dp), strokeWidth = 2.dp)
-                    TextButton(onClick = onExpire, enabled = !expiring && canExpire) {
+                    IchorTextButton(onClick = onExpire, enabled = !expiring && canExpire) {
                         Text(stringResource(R.string.alerts_expire), color = if (canExpire) colors.bad else colors.muted)
                     }
                 }

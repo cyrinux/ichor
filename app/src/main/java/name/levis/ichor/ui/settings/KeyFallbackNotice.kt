@@ -11,7 +11,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,7 +62,7 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(
+                IchorTextButton(
                     enabled = !moving,
                     onClick = click@{
                         // A second tap before the button shows disabled: one move at a time.
@@ -76,7 +76,7 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
                         }
                     },
                 ) { Text(stringResource(R.string.security_key_move)) }
-                TextButton(enabled = !moving, onClick = configs::dismissKeyFallback) { Text(stringResource(R.string.common_ok)) }
+                IchorTextButton(enabled = !moving, onClick = configs::dismissKeyFallback) { Text(stringResource(R.string.common_ok)) }
             }
         }
     }

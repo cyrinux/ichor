@@ -17,7 +17,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -183,8 +183,8 @@ private fun AdhocRow(b: VeleroAdhocBackup, actions: VeleroActions, onDelete: () 
         if (VeleroActions.deleteKey(b.namespace, b.name) in busy) Text(stringResource(R.string.velero_deleting), style = MaterialTheme.typography.labelSmall)
         else {
             // Only a partially failed backup can be a restore source; the others failed for good.
-            if (b.phase == "PartiallyFailed") TextButton(onClick = onRestore) { Text(stringResource(R.string.velero_restore)) }
-            TextButton(onClick = onDelete) { Text(stringResource(R.string.velero_delete)) }
+            if (b.phase == "PartiallyFailed") IchorTextButton(onClick = onRestore) { Text(stringResource(R.string.velero_restore)) }
+            IchorTextButton(onClick = onDelete) { Text(stringResource(R.string.velero_delete)) }
         }
     }
 }

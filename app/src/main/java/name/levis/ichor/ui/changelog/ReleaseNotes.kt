@@ -10,7 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -81,7 +81,7 @@ fun WhatsNewDialog(versionName: String, releases: List<ChangelogRelease>, onFull
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.changelog_updated_to, versionName)) },
         text = { ReleaseNotesList(releases, Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
-        dismissButton = { TextButton(onClick = onFullChangelog) { Text(stringResource(R.string.changelog_full)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
+        dismissButton = { IchorTextButton(onClick = onFullChangelog) { Text(stringResource(R.string.changelog_full)) } },
     )
 }

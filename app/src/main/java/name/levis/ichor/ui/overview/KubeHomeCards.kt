@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -76,7 +76,7 @@ internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
             Text(message.asString(), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SignInAction(message, onSignedIn = onRetry)
-                Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                IchorButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
             }
         }
     }

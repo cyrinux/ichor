@@ -12,7 +12,7 @@ import androidx.compose.material3.AlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -233,8 +233,8 @@ private fun EtcdFixConfirmDialog(order: List<String>, canSnapshot: Boolean, onCo
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(snapshot) }) { Text(stringResource(R.string.etcd_fix_start)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onConfirm(snapshot) }) { Text(stringResource(R.string.etcd_fix_start)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -276,14 +276,14 @@ fun EtcdFixPanel(state: EtcdFixState, onCancel: () -> Unit, onDismiss: () -> Uni
             }
             state.snapshotSaved?.let { Text(stringResource(R.string.etcd_fix_snapshot_saved, it), style = MaterialTheme.typography.bodySmall) }
             when {
-                state.running -> TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+                state.running -> IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 failed -> {
                     Text(state.error.orEmpty(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 else -> {
                     Text(stringResource(R.string.etcd_fix_done), color = colors.ok)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
             }
         }

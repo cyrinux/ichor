@@ -11,16 +11,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -109,7 +109,7 @@ fun KubeGreenScheduleToasts(results: Flow<KubeGreenScheduleResult>) = ResultToas
 fun KubeGreenEditButton(info: KubeGreenSleepInfo, busy: Boolean, onEdit: () -> Unit) {
     val denial = rememberKubeCanDenial("patch", "kube-green.com", "sleepinfos", info.namespace, info.name)
     Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        OutlinedButton(onClick = onEdit, enabled = !busy && denial == null) { Text(stringResource(R.string.kubegreen_edit_schedule)) }
+        IchorOutlinedButton(onClick = onEdit, enabled = !busy && denial == null) { Text(stringResource(R.string.kubegreen_edit_schedule)) }
         KubeDenialNote(denial)
     }
 }
@@ -190,12 +190,12 @@ fun KubeGreenScheduleSheet(info: KubeGreenSleepInfo, onDismiss: () -> Unit, onSa
                 supportingText = if (!zoneValid) ({ Text(stringResource(R.string.kubegreen_zone_invalid)) }) else null,
             )
             if (zone.trim() != phoneZone) {
-                TextButton(onClick = { zone = phoneZone }) { Text(stringResource(R.string.kubegreen_use_phone_zone, phoneZone)) }
+                IchorTextButton(onClick = { zone = phoneZone }) { Text(stringResource(R.string.kubegreen_use_phone_zone, phoneZone)) }
             }
 
             healer?.let { Text(stringResource(R.string.argo_revert_text_change, it.app.name), color = LocalStatusColors.current.warn) }
 
-            Button(onClick = { onSave(schedule) }, enabled = canSave, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = { onSave(schedule) }, enabled = canSave, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.kubegreen_save))
             }
         }

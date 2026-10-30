@@ -13,7 +13,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -114,7 +114,7 @@ private fun ActionRow(vm: VirtualMachine, busy: Boolean, onAction: (VmAction) ->
     SectionTitle(stringResource(R.string.vm_actions), Modifier.padding(top = 8.dp))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         shown.forEach { action ->
-            OutlinedButton(onClick = { onAction(action) }, enabled = !busy && vm.allows(action) && denials[action] == null) {
+            IchorOutlinedButton(onClick = { onAction(action) }, enabled = !busy && vm.allows(action) && denials[action] == null) {
                 Text(stringResource(action.label))
             }
         }
@@ -130,7 +130,7 @@ private fun ConsoleRow(vm: VirtualMachine, onConsole: () -> Unit) {
     val denial = rememberKubeDenial(KubeAction.VM_CONSOLE, vm.namespace)
     val running = vm.phase == "Running"
     SectionTitle(stringResource(R.string.vm_console_title), Modifier.padding(top = 8.dp))
-    OutlinedButton(onClick = onConsole, enabled = running && denial == null) { Text(stringResource(R.string.vm_console)) }
+    IchorOutlinedButton(onClick = onConsole, enabled = running && denial == null) { Text(stringResource(R.string.vm_console)) }
     if (!running) MutedText(stringResource(R.string.vm_console_start_first)) else KubeDenialNote(denial)
 }
 

@@ -16,13 +16,13 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -134,7 +134,7 @@ fun ReplaceControlPlaneScreen(
 
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { ClusterScreenTitle(stringResource(R.string.cp_replace_title)) }, navigationIcon = { BackButton(onBack) }) },
+        topBar = { IchorTopAppBar(title = { ClusterScreenTitle(stringResource(R.string.cp_replace_title)) }, navigationIcon = { BackButton(onBack) }) },
     ) { padding ->
         when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
@@ -230,10 +230,10 @@ private fun ReplaceSteps(
                     CpRemoveState.Running -> LinearProgressIndicator(Modifier.fillMaxWidth())
                     is CpRemoveState.Failed -> {
                         InlineError(remove.message.asString())
-                        TextButton(onClick = actions.onDismissRemove) { Text(stringResource(R.string.common_ok)) }
+                        IchorTextButton(onClick = actions.onDismissRemove) { Text(stringResource(R.string.common_ok)) }
                     }
                     CpRemoveState.Idle -> if (plan.state(CpStep.REMOVE_MEMBER) == CpStepState.READY) {
-                        OutlinedButton(onClick = actions.onRemove) { Text(stringResource(R.string.etcd_remove_member)) }
+                        IchorOutlinedButton(onClick = actions.onRemove) { Text(stringResource(R.string.etcd_remove_member)) }
                     }
                 }
             }
@@ -244,7 +244,7 @@ private fun ReplaceSteps(
                     resetRunning -> LinearProgressIndicator(Modifier.fillMaxWidth())
                     plan.state(CpStep.RESET_OR_POWER_OFF) == CpStepState.SKIPPED -> MutedText(stringResource(R.string.cp_replace_power_off))
                     plan.state(CpStep.RESET_OR_POWER_OFF) == CpStepState.READY ->
-                        OutlinedButton(onClick = actions.onReset) { Text(stringResource(R.string.node_menu_reset)) }
+                        IchorOutlinedButton(onClick = actions.onReset) { Text(stringResource(R.string.node_menu_reset)) }
                 }
             }
         }
@@ -254,8 +254,8 @@ private fun ReplaceSteps(
                     MutedText(stringResource(R.string.cp_replace_boot_body, plan.template.hostname.ifBlank { plan.template.node }))
                     Text(APPLY_CONFIG_COMMAND, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = actions.onOpenConfig) { Text(stringResource(R.string.cp_replace_open_template)) }
-                        TextButton(onClick = actions.onCopyCommand) { Text(stringResource(R.string.cp_replace_copy_command)) }
+                        IchorOutlinedButton(onClick = actions.onOpenConfig) { Text(stringResource(R.string.cp_replace_open_template)) }
+                        IchorTextButton(onClick = actions.onCopyCommand) { Text(stringResource(R.string.cp_replace_copy_command)) }
                     }
                 }
             }
@@ -289,14 +289,14 @@ private fun WaitCard(plan: CpReplacePlan, join: CpJoinState, actions: StepAction
                 Text(stringResource(R.string.cp_replace_waiting), style = MaterialTheme.typography.bodyMedium)
                 LinearProgressIndicator(Modifier.fillMaxWidth())
                 if (join.detail.isNotBlank()) MutedText(join.detail)
-                TextButton(onClick = actions.onStopWait) { Text(stringResource(R.string.cp_replace_wait_stop)) }
+                IchorTextButton(onClick = actions.onStopWait) { Text(stringResource(R.string.cp_replace_wait_stop)) }
             }
             is CpJoinState.Failed -> {
                 InlineError(join.message.asString())
-                OutlinedButton(onClick = actions.onWait) { Text(stringResource(R.string.common_retry)) }
+                IchorOutlinedButton(onClick = actions.onWait) { Text(stringResource(R.string.common_retry)) }
             }
             CpJoinState.Idle -> if (plan.state(CpStep.WAIT_MEMBER) == CpStepState.READY) {
-                OutlinedButton(onClick = actions.onWait) { Text(stringResource(R.string.cp_replace_wait_start)) }
+                IchorOutlinedButton(onClick = actions.onWait) { Text(stringResource(R.string.cp_replace_wait_start)) }
             }
         }
     }

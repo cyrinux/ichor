@@ -19,18 +19,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -163,7 +163,7 @@ fun PortForwardScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.kb_forward_title))
@@ -208,9 +208,9 @@ fun PortForwardScreen(
                     modifier = Modifier.weight(1f),
                 )
                 if (running) {
-                    OutlinedButton(onClick = vm::stop) { Text(stringResource(R.string.kb_forward_stop)) }
+                    IchorOutlinedButton(onClick = vm::stop) { Text(stringResource(R.string.kb_forward_stop)) }
                 } else {
-                    Button(onClick = { port?.let(vm::start) }, enabled = port != null) { Text(stringResource(R.string.kb_forward_start)) }
+                    IchorButton(onClick = { port?.let(vm::start) }, enabled = port != null) { Text(stringResource(R.string.kb_forward_start)) }
                 }
             }
             forward?.let { ForwardStatus(it) }
@@ -236,7 +236,7 @@ private fun ForwardStatus(f: ForwardState) {
                     SelectionContainer(Modifier.weight(1f)) { Text(url, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace) }
                     TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.kb_copy), onClick = { copyWithToast(context, url, url, sensitive = false) })
                 }
-                Button(onClick = {
+                IchorButton(onClick = {
                     try {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                     } catch (_: ActivityNotFoundException) {

@@ -22,13 +22,13 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -111,7 +111,7 @@ fun ArgoWindowsScreen(onBack: () -> Unit) {
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.argo_windows_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
@@ -155,7 +155,7 @@ private fun Windows(
             item(key = "title-$section") {
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     SectionTitle(stringResource(section.title), Modifier.weight(1f))
-                    if (section == WindowSection.EXPIRED) TextButton(onClick = { onClear(list) }) { Text(stringResource(R.string.argo_windows_clear)) }
+                    if (section == WindowSection.EXPIRED) IchorTextButton(onClick = { onClear(list) }) { Text(stringResource(R.string.argo_windows_clear)) }
                 }
             }
             // Two identical windows (possible from Git) share an id: the position tells them apart.
@@ -206,10 +206,10 @@ private fun WindowRow(pw: ProjectWindow, section: WindowSection, busy: Boolean, 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
                 when {
                     ichor != null && section == WindowSection.ACTIVE -> {
-                        OutlinedButton(onClick = onExtend, enabled = !busy) { Text(stringResource(R.string.argo_freeze_extend_hour)) }
+                        IchorOutlinedButton(onClick = onExtend, enabled = !busy) { Text(stringResource(R.string.argo_freeze_extend_hour)) }
                         FilledTonalButton(onClick = onEnd, enabled = !busy) { Text(stringResource(R.string.argo_unfreeze)) }
                     }
-                    ichor == null -> OutlinedButton(onClick = onRemove, enabled = !busy) { Text(stringResource(R.string.argo_window_remove)) }
+                    ichor == null -> IchorOutlinedButton(onClick = onRemove, enabled = !busy) { Text(stringResource(R.string.argo_window_remove)) }
                 }
             }
         }

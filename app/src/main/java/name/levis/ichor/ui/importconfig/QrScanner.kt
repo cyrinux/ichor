@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -69,7 +69,7 @@ fun QrScanner(onScanned: (String) -> Unit, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(stringResource(R.string.import_camera_needed))
-            Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }, Modifier.padding(top = 12.dp)) {
+            IchorButton(onClick = { launcher.launch(Manifest.permission.CAMERA) }, Modifier.padding(top = 12.dp)) {
                 Text(stringResource(R.string.import_grant_camera))
             }
         }

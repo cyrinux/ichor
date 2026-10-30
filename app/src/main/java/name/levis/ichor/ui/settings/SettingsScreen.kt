@@ -12,7 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -34,7 +34,7 @@ fun SettingsScreen(configs: ConfigRepository, onBack: () -> Unit, onOpen: (Setti
     val config by configs.config.collectAsStateWithLifecycle()
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = { BackButton(onBack) },
             )

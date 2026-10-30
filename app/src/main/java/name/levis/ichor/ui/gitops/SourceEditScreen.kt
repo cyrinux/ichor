@@ -15,15 +15,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -140,7 +140,7 @@ fun SourceEditScreen(
 
     IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(path.substringAfterLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -156,7 +156,7 @@ fun SourceEditScreen(
                 navigationIcon = { BackButton { back() } },
                 actions = {
                     if (edit != null && edit.review == null && edit.result == null) {
-                        TextButton(onClick = vm::review) { Text(stringResource(R.string.gitops_edit_review)) }
+                        IchorTextButton(onClick = vm::review) { Text(stringResource(R.string.gitops_edit_review)) }
                     }
                 },
             )
@@ -241,8 +241,8 @@ private fun EditReview(
         is UiState.Failed -> Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             ErrorCard(review.message.asString())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
-                TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                IchorOutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
+                IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
             }
         }
         is UiState.Loaded -> {
@@ -250,7 +250,7 @@ private fun EditReview(
             if (file == null || file.change != DiffChange.CHANGED) {
                 Column(modifier.fillMaxSize()) {
                     InfoBox(stringResource(R.string.gitops_edit_no_change), Modifier.weight(1f))
-                    OutlinedButton(onClick = onBack, modifier = Modifier.padding(16.dp).navigationBarsPadding()) { Text(stringResource(R.string.kb_back_to_editor)) }
+                    IchorOutlinedButton(onClick = onBack, modifier = Modifier.padding(16.dp).navigationBarsPadding()) { Text(stringResource(R.string.kb_back_to_editor)) }
                 }
                 return
             }
@@ -293,14 +293,14 @@ private fun EditReview(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
+                    IchorOutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
                     // Both wait for the .sops.yaml read (a quick one), never for the build.
                     if (onStage != null) {
-                        OutlinedButton(onClick = { guarded(true) }, enabled = sopsCheck != UiState.Loading) {
+                        IchorOutlinedButton(onClick = { guarded(true) }, enabled = sopsCheck != UiState.Loading) {
                             Text(stringResource(R.string.staged_stage))
                         }
                     }
-                    Button(onClick = { guarded(false) }, enabled = sopsCheck != UiState.Loading) {
+                    IchorButton(onClick = { guarded(false) }, enabled = sopsCheck != UiState.Loading) {
                         Text(stringResource(R.string.gitops_edit_continue))
                     }
                     // The pull request can still be opened: the person decides.

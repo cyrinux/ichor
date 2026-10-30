@@ -37,7 +37,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -164,7 +164,7 @@ fun LonghornSnapshotsSheet(volume: LonghornVolume, actions: LonghornActions, onD
                             Text(stringResource(R.string.longhorn_take_snapshot), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         val backingUp = longhornActionKey(volume.namespace, volume.name) in busy || volume.backingUp
-                        OutlinedButton(
+                        IchorOutlinedButton(
                             onClick = { actions.run(longhornActionKey(volume.namespace, volume.name), volume.namespace, volume.name, volume.label, LonghornAction.BACKUP) },
                             enabled = canAct && !backingUp,
                             modifier = Modifier.weight(1f),

@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,7 +104,7 @@ private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
                 onChange = { replacing = it },
                 description = stringResource(R.string.join_apply_replacing_help, request.hostname),
             )
-            Button(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.join_apply_join))
             }
         }
@@ -151,17 +151,17 @@ private fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: () ->
     when {
         run.running -> {
             MutedText(stringResource(R.string.join_run_stop_hint))
-            OutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.join_run_stop))
             }
         }
         run.error != null -> {
             Text(run.error, color = colors.bad)
-            Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+            IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
         }
         else -> {
             Text(stringResource(R.string.join_run_done, run.hostname, run.address), color = colors.ok, style = MaterialTheme.typography.titleMedium)
-            Button(
+            IchorButton(
                 onClick = {
                     onClose()
                     onOpenNode()
