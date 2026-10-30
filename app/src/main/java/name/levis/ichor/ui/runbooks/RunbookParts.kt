@@ -2,12 +2,18 @@ package name.levis.ichor.ui.runbooks
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,6 +29,8 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.pinScope
 import name.levis.ichor.model.RunbookStepState
 import name.levis.ichor.ui.theme.LocalStatusColors
+import kotlinx.coroutines.delay
+import java.util.Locale
 
 /** Where the runbooks of the cluster on screen are kept (as its pins: see [pinScope]); null while none is. */
 @Composable
@@ -69,3 +77,30 @@ internal fun StepHeadline(action: String, id: String, destructive: Boolean) {
         if (destructive) DestructiveBadge()
     }
 }
+
+/** A wait step's ring while it runs: the time waited of its timeout, ticking each second. */
+@Composable
+internal fun WaitProgress(startedAt: Long, timeoutSeconds: Int) {
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(startedAt) {
+        while (true) {
+            now = System.currentTimeMillis()
+            delay(1_000)
+        }
+    }
+    val waited = waitedSeconds(startedAt, now, timeoutSeconds)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CircularProgressIndicator(progress = { waited.toFloat() / timeoutSeconds }, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        Text(
+            stringResource(R.string.runbook_wait_elapsed, minutesClock(waited), minutesClock(timeoutSeconds.toLong())),
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
+}
+
+/** The whole seconds waited since [startedAt] (unix ms) at [now], within 0..[timeoutSeconds]. */
+internal fun waitedSeconds(startedAt: Long, now: Long, timeoutSeconds: Int): Long =
+    ((now - startedAt) / 1_000).coerceIn(0, timeoutSeconds.toLong())
+
+/** Seconds as "m:ss". */
+internal fun minutesClock(seconds: Long): String = String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60)

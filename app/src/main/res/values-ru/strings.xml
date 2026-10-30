@@ -35,6 +35,7 @@
     <string name="common_updated_ago">Обновлено %1$s · %2$s</string>
     <string name="common_refreshing_showing">Обновление… (показаны данные от %1$s)</string>
     <string name="common_refresh_failed">Не удалось обновить: %1$s</string>
+    <string name="common_load_failed">Не удалось загрузить: %1$s</string>
     <string name="common_showing_data_from">Показаны данные от %1$s (%2$s)</string>
     <string name="common_status_ready">Готов</string>
     <string name="common_status_not_ready">Не готов</string>
@@ -1231,7 +1232,6 @@
     <string name="node_pressure_io">Дисковый ввод-вывод</string>
     <string name="node_pressure_most">Больше всего затронуто: %1$s</string>
     <string name="node_pressure_details">Подробности</string>
-    <string name="node_pressure_unavailable">Давление недоступно: %1$s</string>
     <plurals name="node_cgroups_oom">
         <item quantity="one">%1$s: завершён по OOM %2$d раз с момента загрузки</item>
         <item quantity="few">%1$s: завершён по OOM %2$d раза с момента загрузки</item>
@@ -1576,7 +1576,6 @@
     <string name="upgrade_target_version">Целевая версия</string>
     <string name="upgrade_target_hint">например v1.14.2</string>
     <string name="upgrade_bad_version">Это не версия Talos (vX.Y.Z)</string>
-    <string name="upgrade_releases_failed">Не удалось получить список релизов Talos: %1$s</string>
     <string name="upgrade_prerelease">%1$s (предварительный выпуск)</string>
     <string name="upgrade_image">Образ установщика</string>
     <string name="upgrade_same_version">%1$s уже установлена.</string>
@@ -2128,7 +2127,6 @@
     <string name="apps_detail_workloads">Рабочие нагрузки</string>
     <string name="apps_detail_workloads_loading">Поиск рабочих нагрузок…</string>
     <string name="apps_detail_workloads_none">Его не запускает ни один Deployment, StatefulSet или DaemonSet.</string>
-    <string name="apps_detail_workloads_failed">Не удалось получить список рабочих нагрузок: %1$s</string>
     <string name="apps_detail_routes">Веб-доступ</string>
     <string name="apps_detail_routes_loading">Поиск адресов…</string>
     <string name="apps_detail_routes_failed">Не удалось найти адреса: %1$s</string>
@@ -3018,7 +3016,6 @@
     <string name="argo_net_problem_service">У Service %1$s нет готовых подов</string>
     <string name="argo_net_problem_backend">У %1$s %2$s нет исправного бэкенда</string>
     <string name="argo_net_empty">Нет Service: это приложение не принимает трафик</string>
-    <string name="argo_net_failed">Не удалось построить схему сети: %1$s</string>
     <string name="argo_net_legend_ok">Обслуживает</string>
     <string name="argo_net_legend_warning">Деградирован</string>
     <string name="argo_net_legend_critical">Не работает</string>
@@ -4650,7 +4647,6 @@
     <string name="mono_text_smaller">Мельче</string>
     <!-- Alertmanager -->
     <string name="alerts_title">Оповещения</string>
-    <string name="alerts_unreadable">Не удалось прочитать оповещения: %1$s</string>
     <string name="alerts_loading">Чтение оповещений…</string>
     <string name="alerts_none_firing">Активных оповещений нет.</string>
     <string name="alerts_severity_critical">Критично</string>
@@ -4868,7 +4864,6 @@
     <string name="imagescan_saved_open_failed">Не удалось открыть отчёт: %1$s</string>
     <string name="imagescan_saved_system">Системные образы · %1$s</string>
     <string name="imagescan_system_loading">Чтение системных образов узла…</string>
-    <string name="imagescan_system_unavailable">Для системных образов нужна роль os:admin: %1$s</string>
     <string name="imagescan_system_hint">Проверяет образы, которые Talos запускает на этом узле (kubelet, etcd, control plane), по digest на известные уязвимости с помощью %1$s. Сканирование выполняется как Job в пространстве имён %2$s и затем удаляется.</string>
     <string name="imagescan_system_scan">Сканировать системные образы</string>
     <string name="imagescan_object_refs_note">Сканирование по ссылкам на образы в spec этой рабочей нагрузки: результаты относятся к этим тегам, а не обязательно к тому, что запущено сейчас.</string>
@@ -5110,6 +5105,21 @@
     <string name="boot_media_qr_too_large">Слишком длинно для QR-кода: используйте «Копировать» или «Поделиться».</string>
     <string name="boot_media_machine_up">Машина запустилась: добавить её</string>
     <string name="boot_media_omni_next">Omni добавит машину, как только она загрузится с этими аргументами</string>
+    <string name="cloud_user_data_title">Облачный хостинг: user data</string>
+    <string name="cloud_user_data_intro">Создайте сервер из облачного образа Talos ниже и вставьте этот текст как user data: Talos прочитает его при первом запуске и присоединится к кластеру.</string>
+    <string name="cloud_user_data_omni_intro">Конфигурация присоединения Omni: создайте сервер из облачного образа Talos ниже с этим текстом в качестве user data, и машина появится среди машин Omni, пока не распределённая.</string>
+    <string name="cloud_user_data_make">Создать user data</string>
+    <string name="cloud_user_data_size">%1$s из %2$s, которые принимает большинство облаков</string>
+    <string name="cloud_user_data_preview_show">Показать текст, секреты скрыты</string>
+    <string name="cloud_user_data_preview_hide">Скрыть текст</string>
+    <string name="cloud_user_data_no_qr">Слишком длинный для QR-кода: скопируйте или поделитесь.</string>
+    <string name="cloud_user_data_images">Облачные образы Talos</string>
+    <string name="cloud_user_data_images_hint">Talos %1$s, %2$s: создайте сервер или снимок, с которого он стартует, из образа вашего провайдера.</string>
+    <string name="cloud_user_data_copy">Копировать</string>
+    <string name="cloud_user_data_share">Поделиться</string>
+    <string name="cloud_user_data_confirm">Продолжить</string>
+    <string name="cloud_user_data_confirm_title">Скопировать секреты кластера?</string>
+    <string name="cloud_user_data_confirm_body">Этот текст содержит секреты кластера (его CA, токены и ключи): любой, у кого он есть, может присоединить узел к кластеру. Вставляйте его только в поле user data вашего облачного провайдера.</string>
     <string name="join_node_address">Адрес узла</string>
     <string name="join_node_inspect">Проверить</string>
     <string name="join_node_maintenance">Режим обслуживания</string>
@@ -5880,7 +5890,6 @@
     <string name="plugins_remove">Удалить</string>
     <string name="plugins_remove_title">Удалить %1$s?</string>
     <string name="plugins_remove_text">Его файл будет удалён с этого телефона, а его вкладка исчезнет.</string>
-    <string name="plugins_load_failed">Плагины: %1$s</string>
     <string name="plugins_explainer">Импортированный плагин читает только объявленные им ресурсы, с вашим собственным доступом к Kubernetes, и не обращается ни к чему, кроме API Kubernetes.</string>
     <string name="plugins_source_paste">Вставить</string>
     <string name="plugins_source_file">Файл</string>
@@ -5928,7 +5937,6 @@
     <string name="repo_update_bot_present">Бот настроен: %1$s</string>
     <string name="repo_update_bot_none">В этом репозитории нет бота обновлений.</string>
     <string name="repo_update_bot_propose">Предложить конфигурацию…</string>
-    <string name="repo_update_bot_failed">Не удалось прочитать репозиторий: %1$s</string>
     <string name="repo_update_bot_sheet_title">Добавить конфигурацию бота обновления зависимостей</string>
     <string name="repo_update_bot_sheet_body">Приложение составило %1$s по найденным файлам. Проверьте его и откройте pull request: ничего не изменится, пока вы его не сольёте.</string>
     <string name="repo_update_bot_continue">Перейти к pull request</string>
@@ -6066,6 +6074,7 @@
     <string name="runbook_state_ok">Готово</string>
     <string name="runbook_state_failed">Ошибка</string>
     <string name="runbook_state_skipped">Пропущено</string>
+    <string name="runbook_wait_elapsed">Ожидание %1$s из %2$s</string>
     <string name="runbook_confirm_title">Выполнить шаг %1$s?</string>
     <string name="runbook_confirm_text">%1$s для %2$s</string>
     <string name="runbook_confirm">Выполнить шаг</string>

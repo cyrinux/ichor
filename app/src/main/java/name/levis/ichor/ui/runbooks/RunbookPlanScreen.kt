@@ -110,6 +110,7 @@ internal fun RunbookPlanSteps(plan: RunbookPlan, continueIds: Set<String>, onTog
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             StepHeadline(step.action, step.id, step.destructive)
             Text(step.target.label, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
+            if (step.detail.isNotEmpty()) MutedText(step.detail)
             if (step.role.isNotEmpty()) MutedText(stringResource(R.string.runbook_role, step.role))
             if (!step.allowed) {
                 Text(stringResource(R.string.runbook_denied, step.denied), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)

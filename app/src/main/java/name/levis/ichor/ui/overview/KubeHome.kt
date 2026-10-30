@@ -377,6 +377,7 @@ fun KubeHomeScreen(
                     clusterLifecycle = lifecycleShown != null,
                     argoRollouts = rolloutsShown,
                     alerts = alertsShown,
+                    cardRetry = OverviewCardRetry(argo = argoVm::refresh, flux = fluxVm::refresh, alerts = alertsVm::refresh),
                     // A skeleton while the pods are listed, as on the Talos overview.
                     apps = if (apps is UiState.Loading) apps else appsShown,
                     pins = pins,
@@ -413,6 +414,7 @@ private fun KubeHomeList(
     clusterLifecycle: Boolean,
     argoRollouts: Boolean,
     alerts: UiState<AlertsOverview?>?,
+    cardRetry: OverviewCardRetry,
     /** The apps from the pods; null when the credentials may not list them. */
     apps: UiState<Inventory>?,
     pins: ClusterPins?,
@@ -484,13 +486,13 @@ private fun KubeHomeList(
                     }
                 }
                 KubeHomeCard.ARGO_CD -> if (argo != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(argo, argoTile = appsById[ARGO_CD_CATALOG_ID], downNodes = downNodes, onOpen = nav.onArgoCD) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(argo, argoTile = appsById[ARGO_CD_CATALOG_ID], downNodes = downNodes, onOpen = nav.onArgoCD, onRetry = cardRetry.argo) }
                 }
                 KubeHomeCard.FLUX -> if (flux != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(flux, fluxTile = appsById[FLUX_CATALOG_ID], onOpen = nav.onFlux) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(flux, fluxTile = appsById[FLUX_CATALOG_ID], onOpen = nav.onFlux, onRetry = cardRetry.flux) }
                 }
                 KubeHomeCard.ALERTS -> if (alerts != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(alerts, onOpen = nav.onAlerts) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(alerts, onOpen = nav.onAlerts, onRetry = cardRetry.alerts) }
                 }
             }
         }

@@ -195,6 +195,7 @@ private fun systemImagesUi(node: String, vm: SystemImagesViewModel, onOpen: (Ima
         scanner = scanner,
         canScan = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
         onScan = vm::scan,
+        onRetry = vm::refresh,
         onStop = vm::stop,
         onOpen = onOpen,
     )

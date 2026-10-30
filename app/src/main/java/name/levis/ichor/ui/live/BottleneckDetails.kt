@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.model.Bottlenecks
 import name.levis.ichor.util.formatBytes
@@ -37,6 +38,6 @@ fun BottleneckContent(detail: Bottlenecks) {
                 Text(stringResource(R.string.insights_net_rate, rate(net.read), rate(net.write), number(net.errors), number(net.drops)))
             }
             Text(stringResource(R.string.insights_metrics_note), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 12.dp))
-            detail.errors.forEach { (section, error) -> Text("$section: $error", color = MaterialTheme.colorScheme.error) }
+            detail.errors.forEach { (section, error) -> LoadFailureRow("$section: $error", onRetry = null, compact = true) }
     }
 }

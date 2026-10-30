@@ -148,6 +148,12 @@ private struct RunbookStepStateRow: View {
             }
             Text(verbatim: "\(step.action) · \(step.target.label)")
                 .font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
+            if !step.detail.isEmpty {
+                Text(verbatim: step.detail).font(.caption).foregroundStyle(.secondary)
+            }
+            if let state, state.state == .running, step.timeoutSeconds > 0 {
+                RunbookWaitProgress(startedAt: state.startedAt, timeoutSeconds: step.timeoutSeconds)
+            }
             if let message = state?.message, !message.isEmpty {
                 Text(verbatim: message).font(.caption).foregroundStyle(state?.state == .failed ? .red : .secondary)
             }
@@ -189,6 +195,30 @@ private struct RunbookStepStateRow: View {
         case .ok: .green
         case .failed: .red
         case .skipped, .pending: .secondary
+        }
+    }
+}
+
+/// A wait step's ring while it runs: the time waited of its timeout, ticking each second. Same
+/// as Android's WaitProgress.
+private struct RunbookWaitProgress: View {
+    let startedAt: Int64
+    let timeoutSeconds: Int
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let now = Int64(context.date.timeIntervalSince1970 * 1000)
+            let waited = runbookWaitedSeconds(startedAt: startedAt, now: now, timeoutSeconds: timeoutSeconds)
+            let elapsed = runbookClock(waited)
+            let timeout = runbookClock(timeoutSeconds)
+            HStack(spacing: 8) {
+                Gauge(value: Double(waited), in: 0...Double(max(timeoutSeconds, 1))) { EmptyView() }
+                    .gaugeStyle(.accessoryCircularCapacity)
+                    .scaleEffect(0.4)
+                    .frame(width: 24, height: 24)
+                    .accessibilityHidden(true)
+                Text("Waited \(elapsed) of \(timeout)").font(.caption)
+            }
         }
     }
 }

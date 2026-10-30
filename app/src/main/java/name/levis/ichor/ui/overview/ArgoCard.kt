@@ -70,8 +70,8 @@ private const val MAX_PROBLEMS = 2
  * contexts have no inventory).
  */
 @Composable
-fun ArgoCard(state: UiState<ArgoStatus>, argoTile: InventoryApp?, downNodes: Set<String>, onOpen: () -> Unit) =
-    GitOpsCardFrame(argoTile ?: ARGO_CD_TILE, R.string.argo_card_title, state, { it.apps.size }, { s -> s.problemApps.map { it.serviceHealth } }, onOpen) {
+fun ArgoCard(state: UiState<ArgoStatus>, argoTile: InventoryApp?, downNodes: Set<String>, onOpen: () -> Unit, onRetry: (() -> Unit)? = null) =
+    GitOpsCardFrame(argoTile ?: ARGO_CD_TILE, R.string.argo_card_title, state, { it.apps.size }, { s -> s.problemApps.map { it.serviceHealth } }, onOpen, onRetry) {
         Body(it, downNodes)
     }
 

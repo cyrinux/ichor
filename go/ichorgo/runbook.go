@@ -50,6 +50,11 @@ type runbookParams struct {
 	Action      string `yaml:"action"`
 	IncludeBare bool   `yaml:"includeBare"`
 	Acknowledge bool   `yaml:"acknowledge"`
+	// wait and assert (runbook_conditions.go).
+	Until           string `yaml:"until"`
+	TimeoutSeconds  *int   `yaml:"timeoutSeconds"`
+	IntervalSeconds *int   `yaml:"intervalSeconds"`
+	MinReplicas     *int   `yaml:"minReplicas"`
 }
 
 // set lists the parameters given, by their YAML name.
@@ -68,6 +73,10 @@ func (p runbookParams) set() []string {
 	add("action", p.Action != "")
 	add("includeBare", p.IncludeBare)
 	add("acknowledge", p.Acknowledge)
+	add("until", p.Until != "")
+	add("timeoutSeconds", p.TimeoutSeconds != nil)
+	add("intervalSeconds", p.IntervalSeconds != nil)
+	add("minReplicas", p.MinReplicas != nil)
 
 	return out
 }
@@ -76,6 +85,8 @@ func (p runbookParams) set() []string {
 const (
 	targetWorkload = iota // namespace and name, kind optional
 	targetNode
+	targetCluster   // kind Cluster only: the whole cluster (etcd)
+	targetCondition // wait and assert: the target of their params.until
 )
 
 // runbookAction is one entry of the catalogue.
@@ -88,6 +99,9 @@ type runbookAction struct {
 	roles []string
 	// access: the kubeActionChecks key for the target kind ("" kind = the default one).
 	access map[string]string
+	// kubeNode: a node target read through the Kubernetes API, so a kubeconfig cluster may
+	// run it too.
+	kubeNode bool
 }
 
 var kubeAdmin = []string{adminRole}
@@ -111,6 +125,21 @@ var runbookActions = map[string]runbookAction{
 	// Drains through the Kubernetes API, then reboots or shuts down: os:admin.
 	"nodeMaintenance": {target: targetNode, params: []string{"action", "includeBare", "acknowledge"}, destructive: true, roles: kubeAdmin,
 		access: map[string]string{"": "drainNode"}},
+	// Reads only: the target, the role and the reads come from params.until.
+	"wait":   {target: targetCondition, params: []string{"until", "timeoutSeconds", "intervalSeconds", "minReplicas"}},
+	"assert": {target: targetCondition, params: []string{"until", "minReplicas"}},
+}
+
+// of is the catalogue entry step s runs under: for wait and assert, the one of its condition.
+func (a runbookAction) of(s runbookStep) runbookAction {
+	if a.target != targetCondition {
+		return a
+	}
+
+	c := runbookConditions[s.Params.Until]
+	a.target, a.kinds, a.roles, a.kubeNode = c.target, c.kinds, c.roles, c.target == targetNode
+
+	return a
 }
 
 // runbookActionNames is the catalogue in order, for messages.
@@ -209,6 +238,14 @@ func (s *runbookStep) validate() error {
 		return fmt.Errorf("unknown action %q (%s)", s.Action, strings.Join(runbookActionNames(), ", "))
 	}
 
+	if a.target == targetCondition {
+		if _, ok := runbookConditions[s.Params.Until]; !ok {
+			return fmt.Errorf("%s needs params.until: %s", s.Action, strings.Join(runbookConditionNames(), ", "))
+		}
+
+		a = a.of(*s)
+	}
+
 	t := &s.Target
 	t.Kind, t.Namespace, t.Name, t.Node = strings.TrimSpace(t.Kind), strings.TrimSpace(t.Namespace), strings.TrimSpace(t.Name), strings.TrimSpace(t.Node)
 
@@ -233,6 +270,18 @@ func (a runbookAction) validateTarget(t *runbookTarget) error {
 
 		if t.Kind != "" || t.Namespace != "" || t.Name != "" {
 			return errors.New("a node action takes target.node only")
+		}
+
+		return nil
+	}
+
+	if a.target == targetCluster {
+		if t.Kind == "" {
+			t.Kind = clusterKind
+		}
+
+		if t.Kind != clusterKind || t.Namespace != "" || t.Name != "" || t.Node != "" {
+			return errors.New("this step takes target.kind Cluster only")
 		}
 
 		return nil
@@ -287,6 +336,8 @@ func (s *runbookStep) validateParams() error {
 		if !slices.Contains([]string{maintenanceReboot, maintenanceShutdown, maintenanceNone}, p.Action) {
 			return fmt.Errorf("params.action must be %s, %s or %s", maintenanceReboot, maintenanceShutdown, maintenanceNone)
 		}
+	case "wait", "assert":
+		return validateConditionParams(s.Action, p)
 	}
 
 	return nil
@@ -316,6 +367,11 @@ type runbookPlanStep struct {
 	Role            string        `json:"role"`
 	Allowed         bool          `json:"allowed"`
 	Denied          string        `json:"denied"`
+	// Detail says what a wait or assert step checks ("wait up to 5 min for ingest-api to be
+	// available"), "" for the other actions.
+	Detail string `json:"detail"`
+	// TimeoutSeconds is how long a wait step may wait, 0 for the other actions.
+	TimeoutSeconds int `json:"timeoutSeconds"`
 }
 
 type runbookPlanResult struct {
@@ -327,8 +383,9 @@ type runbookPlanResult struct {
 
 // RunbookPlan validates runbookYAML (docs/runbooks.md) and says what each step will do,
 // without running anything: {"name","description","steps":[{"id","action","target":{"kind",
-// "namespace","name","node"},"destructive","continueOnError","role","allowed","denied"}],
-// "errors":[]}. role is
+// "namespace","name","node"},"destructive","continueOnError","role","allowed","denied",
+// "detail","timeoutSeconds"}],"errors":[]}. detail and timeoutSeconds describe a wait or
+// assert step (empty and 0 otherwise). role is
 // the Talos role the step needs; allowed false with denied the reason when the credentials'
 // role or the cluster's RBAC refuses it. A runbook that does not load is an error naming the
 // step. In the demo every step is allowed (StartRunbook refuses the run). kubeServer: see
@@ -347,8 +404,9 @@ func RunbookPlan(configYAML, contextName, kubeServer, runbookYAML string) (out s
 	plan := runbookPlanResult{Name: rb.Name, Description: rb.Description, Steps: make([]runbookPlanStep, 0, len(rb.Steps)), Errors: []string{}}
 
 	for _, s := range rb.Steps {
-		a := runbookActions[s.Action]
+		a := runbookActions[s.Action].of(s)
 		ps := runbookPlanStep{ID: s.ID, Action: s.Action, Target: s.Target, Destructive: a.destructive, ContinueOnError: s.ContinueOnError, Role: a.roles[0]}
+		ps.Detail, ps.TimeoutSeconds = s.conditionDetail()
 		ps.Denied = gate.denied(s, a)
 		ps.Allowed = ps.Denied == ""
 		plan.Steps = append(plan.Steps, ps)
@@ -419,12 +477,16 @@ func (g *runbookGate) denied(s runbookStep, a runbookAction) string {
 		return ""
 	}
 
-	if a.target == targetNode && g.kube {
-		return "this cluster is reached through a kubeconfig: node actions need its talosconfig"
+	if g.kube && (a.target == targetNode && !a.kubeNode || a.target == targetCluster) {
+		return "this cluster is reached through a kubeconfig: node and etcd steps need its talosconfig"
 	}
 
 	if g.rolesKnown && !slices.ContainsFunc(a.roles, func(r string) bool { return slices.Contains(g.roles, r) }) {
 		return "needs the " + strings.Join(a.roles, " or ") + " role"
+	}
+
+	if reads := s.conditionReads(); len(reads) > 0 {
+		return g.deniedReads(reads)
 	}
 
 	key := a.access[s.Target.Kind]

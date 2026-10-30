@@ -133,6 +133,12 @@ Screens build on one small set, the same names on both apps (`ui/components/` on
 - An explanatory paragraph is an `InfoHint`; at most one filled button per screen, and row
   actions live in the row's menu or sheet.
 - Errors are a whole-screen error or an inline section error, never a plain line of text.
+- A section, card or sheet whose read failed shows one muted row with a warning glyph,
+  "Couldn't load: <reason>" and Retry (`LoadFailureRow` / `SectionLoaded` on Android,
+  `LoadFailureRow` / `LoadStateView` on iOS), never red text.
+- Toasts are for the outcome of an action only, never for a load failure.
+- Red (`bad`, `colorScheme.error`, `.red`) means a cluster state or an invalid input; a read
+  that a retry may fix is not red (`just a11y-check` flags red text in a `UiState.Failed` branch).
 
 ## Measuring a cold start
 

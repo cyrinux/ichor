@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -31,14 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.model.PacketDetail
 import name.levis.ichor.model.PacketLayer
 import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
-import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.MonoScreen
 import name.levis.ichor.ui.components.ScalableMonoText
 import name.levis.ichor.ui.components.monoTextStyle
@@ -52,7 +52,9 @@ import androidx.compose.ui.text.font.FontFamily
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PacketDetailSheet(captures: CaptureRepository, file: File, packet: PacketSummary, onDismiss: () -> Unit) {
-    val state by produceState<UiState<PacketDetail>>(UiState.Loading, file, packet.n) {
+    var attempt by remember { mutableIntStateOf(0) }
+    val state by produceState<UiState<PacketDetail>>(UiState.Loading, file, packet.n, attempt) {
+        value = UiState.Loading
         value = uiStateOf { captures.detail(file, packet.n) }
     }
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -70,11 +72,7 @@ fun PacketDetailSheet(captures: CaptureRepository, file: File, packet: PacketSum
         )
         when (val s = state) {
             UiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(32.dp))
-            is UiState.Failed -> Text(
-                s.message.asString(),
-                color = LocalStatusColors.current.bad,
-                modifier = Modifier.padding(16.dp),
-            )
+            is UiState.Failed -> LoadFailureRow(s.message, { attempt++ }, Modifier.padding(16.dp))
             is UiState.Loaded -> ScalableMonoText(MonoScreen.CAPTURE) { DetailContent(s.data) }
         }
     }

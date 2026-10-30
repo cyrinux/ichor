@@ -74,6 +74,8 @@ internal class OverviewCardData(
     val argo: UiState<ArgoStatus>?,
     val flux: UiState<FluxStatus>?,
     val alerts: UiState<AlertsOverview?>?,
+    /** Read the Argo CD, Flux or Alerts card again after a failed read (Retry on the card). */
+    val retry: OverviewCardRetry,
     val pins: ClusterPins?,
     /** The role may use the Kubernetes API: the Kubernetes screens card shows. */
     val kubeTools: Boolean,
@@ -82,6 +84,9 @@ internal class OverviewCardData(
     /** The operators the cluster runs, asked only while that card is shown. */
     val operators: KubeOperators,
 )
+
+/** The reads the overview's GitOps and Alerts cards offer to run again. */
+internal class OverviewCardRetry(val argo: () -> Unit, val flux: () -> Unit, val alerts: () -> Unit)
 
 /** What the role may do on the overview's nodes. */
 internal class NodeListAccess(
@@ -323,11 +328,11 @@ private fun OverviewItems.overviewCard(
         OverviewCard.ARGO_CD -> if (cards.argo != null) item(key = card.name) {
             val argoTile = (cards.apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }
             val downNodes = remember(overview) { overview.downHostnames() }
-            Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(cards.argo, argoTile, downNodes, nav.onArgoCD) }
+            Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(cards.argo, argoTile, downNodes, nav.onArgoCD, cards.retry.argo) }
         }
         OverviewCard.FLUX -> if (cards.flux != null) item(key = card.name) {
             val fluxTile = (cards.apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == FLUX_CATALOG_ID }
-            Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(cards.flux, fluxTile, nav.onFlux) }
+            Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(cards.flux, fluxTile, nav.onFlux, cards.retry.flux) }
         }
         OverviewCard.NODES -> if (overview.nodes.isNotEmpty()) item(key = card.name) {
             Box(Modifier.tourAnchor(TourAnchor.Nodes)) {
@@ -336,7 +341,7 @@ private fun OverviewItems.overviewCard(
             }
         }
         OverviewCard.ALERTS -> if (cards.alerts != null) item(key = card.name) {
-            Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(cards.alerts, nav.onAlerts) }
+            Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(cards.alerts, nav.onAlerts, cards.retry.alerts) }
         }
         OverviewCard.TOOLS -> if (cards.kubeTools) item(key = card.name) {
             val ops = cards.operators

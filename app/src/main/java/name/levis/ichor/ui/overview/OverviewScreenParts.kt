@@ -181,6 +181,7 @@ internal fun rememberOverviewCards(
             argo = argo.takeIf { argoHinted },
             flux = flux.takeIf { fluxHinted },
             alerts = alertsShown,
+            retry = OverviewCardRetry(argo = argoVm::refresh, flux = fluxVm::refresh, alerts = alertsVm::refresh),
             pins = pins,
             kubeTools = kubernetes,
             toolPlugins = (plugins as? UiState.Loaded)?.data?.homeTiles.orEmpty(),

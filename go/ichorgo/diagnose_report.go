@@ -43,12 +43,15 @@ func renderDiagnosis(d diagnosisData) string {
 	// Log lines are raw bytes from the nodes: the report must be text all the way to the UI
 	// (an invalid string does not cross to Swift at all).
 	// The tags are neutralized here rather than when sending: what is shown is what is sent.
-	report := neutralizeTags(strings.ToValidUTF8(strings.TrimRight(b.String(), "\n"), "\uFFFD"))
+	raw := strings.ToValidUTF8(strings.TrimRight(b.String(), "\n"), "\uFFFD")
+	clean := scrubSecrets(raw)
+
+	report := neutralizeTags(clean)
 	if len(report) > maxReportBytes {
 		report = clipUTF8(report, maxReportBytes) + "\n[The report was cut here: it is too large to send whole.]"
 	}
 
-	return report + "\n"
+	return report + "\n" + scrubFooter(raw, clean)
 }
 
 func renderNodeList(b *strings.Builder, nodes []nodeDiagnosis) {

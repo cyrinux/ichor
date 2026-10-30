@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoStatus
@@ -43,7 +44,6 @@ import name.levis.ichor.ui.argocd.OwnerChip
 import name.levis.ichor.ui.argocd.SyncGlyph
 import name.levis.ichor.ui.argocd.freezeClock
 import name.levis.ichor.ui.argocd.waveProgress
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
@@ -64,6 +64,8 @@ data class AppArgoUi(
     val onRefresh: (ArgoApp) -> Unit,
     val onOpen: (ArgoApp) -> Unit,
     val onOpenArgoCD: () -> Unit,
+    /** Reads Argo CD again after a failed read. */
+    val onRetry: () -> Unit,
 )
 
 /** Argo CD's tile: the GitOps summary; any other app: one card per Application deploying it. */
@@ -71,14 +73,14 @@ fun LazyListScope.appArgoSection(argo: AppArgoUi) {
     val loaded = (argo.state as? UiState.Loaded)?.data
     if (argo.isArgoCD) {
         item(key = "argo-title") { SectionTitle(stringResource(R.string.argo_card_title)) }
-        item(key = "argo-summary") { ArgoCDSummary(argo.state, argo.onOpenArgoCD) }
+        item(key = "argo-summary") { ArgoCDSummary(argo.state, argo.onOpenArgoCD, argo.onRetry) }
         return
     }
     // Nothing deploys it, or not known yet: the section stays out of the way.
     if (loaded == null || argo.apps.isEmpty()) {
         if (argo.state is UiState.Failed) item(key = "argo-failed") {
             SectionTitle(stringResource(R.string.argo_title))
-            MutedText(stringResource(R.string.data_services_unreadable, argo.state.message.asString()))
+            LoadFailureRow(argo.state.message, argo.onRetry, compact = true)
         }
         return
     }
@@ -89,11 +91,11 @@ fun LazyListScope.appArgoSection(argo: AppArgoUi) {
 }
 
 @Composable
-private fun ArgoCDSummary(state: UiState<ArgoStatus>, onOpen: () -> Unit) {
+private fun ArgoCDSummary(state: UiState<ArgoStatus>, onOpen: () -> Unit, onRetry: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when (state) {
             UiState.Loading -> MutedText(stringResource(R.string.argo_loading))
-            is UiState.Failed -> MutedText(stringResource(R.string.data_services_unreadable, state.message.asString()))
+            is UiState.Failed -> LoadFailureRow(state.message, onRetry, compact = true)
             is UiState.Loaded -> {
                 ArgoSummary(state.data)
                 state.data.apps.filter { it.isRunning }.forEach { SyncingLine(it) }

@@ -29,10 +29,12 @@ type fakeOmniAPI struct {
 	denyList bool
 	endpoint string // what the talosconfigs name
 
-	// The join config: the default token's ID and the kernel args given for it.
-	joinToken string
-	joinArgs  []string
-	denyJoin  bool
+	// The join config: the default token's ID and the kernel args and the config document
+	// given for it ("" for a bare SideroLinkConfig).
+	joinToken  string
+	joinArgs   []string
+	joinConfig string
+	denyJoin   bool
 }
 
 func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
@@ -81,7 +83,7 @@ func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
 		}
 
 		resp = protowire.AppendTag(resp, 2, protowire.BytesType)
-		resp = protowire.AppendString(resp, "apiVersion: v1alpha1\nkind: SideroLinkConfig\n")
+		resp = protowire.AppendString(resp, cmpOr(f.joinConfig, "apiVersion: v1alpha1\nkind: SideroLinkConfig\n"))
 	default:
 		_ = req
 

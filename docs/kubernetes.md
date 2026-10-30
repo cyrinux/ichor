@@ -271,6 +271,20 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     command line for a PXE server of your own. Each has Copy, Share and a QR code. On an Omni
     cluster it adds the join kernel arguments, which carry the join token (hidden in privacy
     mode).
+  - **On a cloud host (Boot a new machine → Cloud host: user data):** Hetzner Cloud, OpenStack
+    (OVHcloud Public Cloud) and Scaleway create a server from an image plus a user data text, and
+    Talos reads that text as its machine config at first boot. Create the server from the Talos
+    cloud image the card lists for your Talos version and schematic (`hcloud`, `openstack`,
+    `scaleway`), and paste the user data the app gives you: on an Omni cluster it is Omni's join
+    config, and the machine appears among Omni's machines, not yet allocated; on a plain Talos
+    cluster it is the full config of a new member (role, host name and install disk asked, made
+    from a member as below), and the node joins on its own. That text carries the cluster's
+    secrets: the first Copy or Share asks to confirm, privacy mode refuses it, and each one is
+    recorded in the activity log. It is too long for a QR code. Most clouds accept up to 32 KiB of
+    user data (Hetzner's limit); a larger config shows a warning. Scaleway needs the Talos guide's
+    disk layout, and some of its instance types need `apply-config` instead. Scaleway Elastic Metal
+    and Dedibox cannot install a custom image without KVM or rescue mode, so they are not
+    supported. The app calls no provider API: it never creates, bills or deletes a server.
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

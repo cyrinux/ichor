@@ -214,12 +214,12 @@ fun AppsScreen(
                     nodes = nodes,
                     routes = if (canRestart) routes else null,
                     restart = if (canRestart) {
-                        AppRestartUi(workloads, restarting, onRestart = { confirm = it }, onPods = { podsOf = it.podSelection })
+                        AppRestartUi(workloads, restarting, onRestart = { confirm = it }, onPods = { podsOf = it.podSelection }, onRetry = workloadsVm::refresh)
                     } else {
                         null
                     },
                     argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
-                    flux = if (isFlux) AppFluxUi(fluxState, onFlux) else null,
+                    flux = if (isFlux) AppFluxUi(fluxState, onFlux, fluxVm::refresh) else null,
                     scan = if (canRestart) {
                         AppScanUi(
                             operator = operatorReports,
@@ -276,6 +276,7 @@ private fun argoUi(
     onRefresh = { vm.act(listOf(it), ArgoAction.REFRESH) },
     onOpen = { onArgoApp(it.namespace, it.name) },
     onOpenArgoCD = onArgoCD,
+    onRetry = vm::refresh,
 )
 
 private fun Map<String, NodeOverview>.openNode(addr: String, onNode: (String, String, String) -> Unit) {

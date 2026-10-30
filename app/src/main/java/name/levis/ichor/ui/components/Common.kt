@@ -90,7 +90,8 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
         Icon(
             Icons.Outlined.ErrorOutline,
             contentDescription = null,
-            tint = LocalStatusColors.current.bad,
+            // Warning, not red: the read failed, the cluster is not broken (red is for its state).
+            tint = LocalStatusColors.current.warn,
             modifier = Modifier.size(40.dp),
         )
         Spacer(Modifier.height(12.dp))

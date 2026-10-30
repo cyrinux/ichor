@@ -29,6 +29,7 @@
     <string name="common_updated_ago">Atualizado %1$s · %2$s</string>
     <string name="common_refreshing_showing">Atualizando… (exibindo dados de %1$s)</string>
     <string name="common_refresh_failed">Não foi possível atualizar: %1$s</string>
+    <string name="common_load_failed">Não foi possível carregar: %1$s</string>
     <string name="common_showing_data_from">Exibindo dados de %1$s (%2$s)</string>
     <string name="common_status_ready">Pronto</string>
     <string name="common_status_not_ready">Não pronto</string>
@@ -1153,7 +1154,6 @@
     <string name="node_pressure_io">E/S de disco</string>
     <string name="node_pressure_most">Mais afetado: %1$s</string>
     <string name="node_pressure_details">Detalhes</string>
-    <string name="node_pressure_unavailable">Pressão indisponível: %1$s</string>
     <plurals name="node_cgroups_oom">
         <item quantity="one">%1$s: encerrado por OOM %2$d vez desde o boot</item>
         <item quantity="other">%1$s: encerrado por OOM %2$d vezes desde o boot</item>
@@ -1476,7 +1476,6 @@
     <string name="upgrade_target_version">Versão de destino</string>
     <string name="upgrade_target_hint">ex.: v1.14.2</string>
     <string name="upgrade_bad_version">Não é uma versão do Talos (vX.Y.Z)</string>
-    <string name="upgrade_releases_failed">Não foi possível listar as releases do Talos: %1$s</string>
     <string name="upgrade_prerelease">%1$s (pré-release)</string>
     <string name="upgrade_image">Imagem do instalador</string>
     <string name="upgrade_same_version">%1$s já está instalado.</string>
@@ -2010,7 +2009,6 @@
     <string name="apps_detail_workloads">Cargas de trabalho</string>
     <string name="apps_detail_workloads_loading">Procurando as cargas de trabalho…</string>
     <string name="apps_detail_workloads_none">Nenhum Deployment, StatefulSet ou DaemonSet o executa.</string>
-    <string name="apps_detail_workloads_failed">Não foi possível listar as cargas de trabalho: %1$s</string>
     <string name="apps_detail_routes">Acesso web</string>
     <string name="apps_detail_routes_loading">Procurando os endereços…</string>
     <string name="apps_detail_routes_failed">Não foi possível encontrar os endereços: %1$s</string>
@@ -2846,7 +2844,6 @@
     <string name="argo_net_problem_service">O Service %1$s não tem pods prontos</string>
     <string name="argo_net_problem_backend">%1$s %2$s não tem backend íntegro</string>
     <string name="argo_net_empty">Nenhum Service: este app não recebe tráfego</string>
-    <string name="argo_net_failed">Não foi possível desenhar a rede: %1$s</string>
     <string name="argo_net_legend_ok">Atendendo</string>
     <string name="argo_net_legend_warning">Degradado</string>
     <string name="argo_net_legend_critical">Quebrado</string>
@@ -4436,7 +4433,6 @@
     <string name="mono_text_smaller">Texto menor</string>
     <!-- Alertmanager -->
     <string name="alerts_title">Alertas</string>
-    <string name="alerts_unreadable">Não foi possível ler os alertas: %1$s</string>
     <string name="alerts_loading">Lendo os alertas…</string>
     <string name="alerts_none_firing">Nenhum alerta disparando.</string>
     <string name="alerts_severity_critical">Crítico</string>
@@ -4640,7 +4636,6 @@
     <string name="imagescan_saved_open_failed">Não foi possível abrir o relatório: %1$s</string>
     <string name="imagescan_saved_system">Imagens do sistema · %1$s</string>
     <string name="imagescan_system_loading">Lendo as imagens do sistema do nó…</string>
-    <string name="imagescan_system_unavailable">As imagens do sistema exigem o papel os:admin: %1$s</string>
     <string name="imagescan_system_hint">Verifica as imagens que o Talos executa neste nó (kubelet, etcd, o control plane), por digest, em busca de vulnerabilidades conhecidas com %1$s. Roda como um Job no namespace %2$s, que se exclui depois.</string>
     <string name="imagescan_system_scan">Verificar imagens do sistema</string>
     <string name="imagescan_object_refs_note">Verificado pelas referências de imagem na spec desta carga de trabalho: os resultados valem para essas tags, não necessariamente para o que está rodando agora.</string>
@@ -4866,6 +4861,21 @@
     <string name="boot_media_qr_too_large">Longo demais para um código QR: use Copiar ou Compartilhar.</string>
     <string name="boot_media_machine_up">A máquina iniciou: adicioná-la</string>
     <string name="boot_media_omni_next">O Omni adiciona a máquina assim que ela inicializa com estes argumentos</string>
+    <string name="cloud_user_data_title">Provedor de nuvem: user data</string>
+    <string name="cloud_user_data_intro">Crie o servidor a partir de uma imagem de nuvem do Talos abaixo e cole este texto como user data: o Talos o lê na primeira inicialização e entra no cluster.</string>
+    <string name="cloud_user_data_omni_intro">A configuração de entrada do Omni: crie o servidor a partir de uma imagem de nuvem do Talos abaixo com este texto como user data, e a máquina aparece entre as máquinas do Omni, ainda não alocada.</string>
+    <string name="cloud_user_data_make">Gerar o user data</string>
+    <string name="cloud_user_data_size">%1$s dos %2$s que a maioria das nuvens aceita</string>
+    <string name="cloud_user_data_preview_show">Mostrar o texto, segredos ocultos</string>
+    <string name="cloud_user_data_preview_hide">Ocultar o texto</string>
+    <string name="cloud_user_data_no_qr">Longo demais para um QR code: copie ou compartilhe.</string>
+    <string name="cloud_user_data_images">Imagens de nuvem do Talos</string>
+    <string name="cloud_user_data_images_hint">Talos %1$s, %2$s: crie o servidor, ou o snapshot de onde ele parte, a partir da imagem do seu provedor.</string>
+    <string name="cloud_user_data_copy">Copiar</string>
+    <string name="cloud_user_data_share">Compartilhar</string>
+    <string name="cloud_user_data_confirm">Continuar</string>
+    <string name="cloud_user_data_confirm_title">Copiar os segredos do cluster?</string>
+    <string name="cloud_user_data_confirm_body">Este texto contém os segredos do cluster (sua CA, tokens e chaves): quem o tiver pode adicionar um nó ao cluster. Cole-o apenas no campo user data do seu provedor de nuvem.</string>
     <string name="join_node_address">Endereço do nó</string>
     <string name="join_node_inspect">Inspecionar</string>
     <string name="join_node_maintenance">Modo de manutenção</string>
@@ -5624,7 +5634,6 @@
     <string name="plugins_remove">Remover</string>
     <string name="plugins_remove_title">Remover %1$s?</string>
     <string name="plugins_remove_text">O arquivo dele é excluído deste telefone e a aba dele desaparece.</string>
-    <string name="plugins_load_failed">Plugins: %1$s</string>
     <string name="plugins_explainer">Um plugin importado lê apenas os recursos que declara, com o seu próprio acesso ao Kubernetes, e não se comunica com nada além da API do Kubernetes.</string>
     <string name="plugins_source_paste">Colar</string>
     <string name="plugins_source_file">Arquivo</string>
@@ -5672,7 +5681,6 @@
     <string name="repo_update_bot_present">Há um bot configurado: %1$s</string>
     <string name="repo_update_bot_none">Nenhum bot de atualização neste repositório.</string>
     <string name="repo_update_bot_propose">Propor uma configuração…</string>
-    <string name="repo_update_bot_failed">Não foi possível ler o repositório: %1$s</string>
     <string name="repo_update_bot_sheet_title">Adicionar uma configuração de bot de atualização de dependências</string>
     <string name="repo_update_bot_sheet_body">O app escreveu %1$s para os arquivos encontrados. Revise e abra um pull request: nada muda até você fazer o merge.</string>
     <string name="repo_update_bot_continue">Continuar para o pull request</string>
@@ -5810,6 +5818,7 @@
     <string name="runbook_state_ok">Concluído</string>
     <string name="runbook_state_failed">Falhou</string>
     <string name="runbook_state_skipped">Ignorado</string>
+    <string name="runbook_wait_elapsed">Aguardou %1$s de %2$s</string>
     <string name="runbook_confirm_title">Executar a etapa %1$s?</string>
     <string name="runbook_confirm_text">%1$s em %2$s</string>
     <string name="runbook_confirm">Executar etapa</string>

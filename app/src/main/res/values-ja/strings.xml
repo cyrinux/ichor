@@ -26,6 +26,7 @@
     <string name="common_updated_ago">%1$sに更新 · %2$s</string>
     <string name="common_refreshing_showing">更新中…（%1$sのデータを表示中）</string>
     <string name="common_refresh_failed">更新できませんでした：%1$s</string>
+    <string name="common_load_failed">読み込めませんでした：%1$s</string>
     <string name="common_showing_data_from">%1$sのデータを表示中（%2$s）</string>
     <string name="common_status_ready">準備完了</string>
     <string name="common_status_not_ready">未準備</string>
@@ -1114,7 +1115,6 @@
     <string name="node_pressure_io">ディスク I/O</string>
     <string name="node_pressure_most">最も影響を受けているもの：%1$s</string>
     <string name="node_pressure_details">詳細</string>
-    <string name="node_pressure_unavailable">プレッシャーを取得できません：%1$s</string>
     <plurals name="node_cgroups_oom">
         <item quantity="other">%1$s：起動後%2$d回 OOM Kill されました</item>
     </plurals>
@@ -1426,7 +1426,6 @@
     <string name="upgrade_target_version">ターゲットバージョン</string>
     <string name="upgrade_target_hint">例：v1.14.2</string>
     <string name="upgrade_bad_version">Talos のバージョン（vX.Y.Z）ではありません</string>
-    <string name="upgrade_releases_failed">Talos のリリースを一覧表示できませんでした：%1$s</string>
     <string name="upgrade_prerelease">%1$s（プレリリース）</string>
     <string name="upgrade_image">インストーラーイメージ</string>
     <string name="upgrade_same_version">%1$s はすでにインストールされています。</string>
@@ -1951,7 +1950,6 @@
     <string name="apps_detail_workloads">ワークロード</string>
     <string name="apps_detail_workloads_loading">ワークロードを検索中…</string>
     <string name="apps_detail_workloads_none">これを実行している Deployment、StatefulSet、DaemonSet はありません。</string>
-    <string name="apps_detail_workloads_failed">ワークロードを一覧表示できませんでした：%1$s</string>
     <string name="apps_detail_routes">Web アクセス</string>
     <string name="apps_detail_routes_loading">アドレスを検索中…</string>
     <string name="apps_detail_routes_failed">アドレスが見つかりませんでした：%1$s</string>
@@ -2760,7 +2758,6 @@
     <string name="argo_net_problem_service">Service %1$s に準備完了の Pod がありません</string>
     <string name="argo_net_problem_backend">%1$s %2$s に正常なバックエンドがありません</string>
     <string name="argo_net_empty">Service なし：このアプリはトラフィックを受け付けません</string>
-    <string name="argo_net_failed">ネットワークを描画できませんでした：%1$s</string>
     <string name="argo_net_legend_ok">稼働中</string>
     <string name="argo_net_legend_warning">低下</string>
     <string name="argo_net_legend_critical">障害</string>
@@ -4329,7 +4326,6 @@
     <string name="mono_text_smaller">文字を小さく</string>
     <!-- Alertmanager -->
     <string name="alerts_title">アラート</string>
-    <string name="alerts_unreadable">アラートを読み取れませんでした：%1$s</string>
     <string name="alerts_loading">アラートを読み取り中…</string>
     <string name="alerts_none_firing">発生中のアラートはありません。</string>
     <string name="alerts_severity_critical">緊急</string>
@@ -4526,7 +4522,6 @@
     <string name="imagescan_saved_open_failed">レポートを開けませんでした：%1$s</string>
     <string name="imagescan_saved_system">システムイメージ · %1$s</string>
     <string name="imagescan_system_loading">ノードのシステムイメージを読み取り中…</string>
-    <string name="imagescan_system_unavailable">システムイメージには os:admin ロールが必要です：%1$s</string>
     <string name="imagescan_system_hint">Talos がこのノードで実行しているイメージ（kubelet、etcd、コントロールプレーン）を、ダイジェストで %1$s を使って既知の脆弱性をチェックします。スキャンは %2$s 名前空間の Job として実行され、終了後に自動で削除されます。</string>
     <string name="imagescan_system_scan">システムイメージをスキャン</string>
     <string name="imagescan_object_refs_note">このワークロードの spec にあるイメージ参照でスキャンしました。結果はそのタグに対するもので、現在実行中のものとは限りません。</string>
@@ -4744,6 +4739,21 @@
     <string name="boot_media_qr_too_large">QR コードには長すぎます。コピーまたは共有を使ってください。</string>
     <string name="boot_media_machine_up">マシンが起動しました：追加する</string>
     <string name="boot_media_omni_next">このパラメータで起動すると、Omni がマシンを追加します</string>
+    <string name="cloud_user_data_title">クラウドホスト：user data</string>
+    <string name="cloud_user_data_intro">下の Talos クラウドイメージからサーバーを作成し、このテキストを user data として貼り付けます。Talos は初回起動時に読み取り、クラスターに参加します。</string>
+    <string name="cloud_user_data_omni_intro">Omni の参加設定です。下の Talos クラウドイメージからこのテキストを user data としてサーバーを作成すると、マシンは未割り当てのまま Omni のマシン一覧に表示されます。</string>
+    <string name="cloud_user_data_make">user data を作成</string>
+    <string name="cloud_user_data_size">%1$s（多くのクラウドの上限は %2$s）</string>
+    <string name="cloud_user_data_preview_show">テキストを表示（シークレットは非表示）</string>
+    <string name="cloud_user_data_preview_hide">テキストを隠す</string>
+    <string name="cloud_user_data_no_qr">QR コードには長すぎます。コピーまたは共有してください。</string>
+    <string name="cloud_user_data_images">Talos クラウドイメージ</string>
+    <string name="cloud_user_data_images_hint">Talos %1$s、%2$s：プロバイダーのイメージからサーバー、またはその起動元のスナップショットを作成します。</string>
+    <string name="cloud_user_data_copy">コピー</string>
+    <string name="cloud_user_data_share">共有</string>
+    <string name="cloud_user_data_confirm">続行</string>
+    <string name="cloud_user_data_confirm_title">クラスターのシークレットをコピーしますか？</string>
+    <string name="cloud_user_data_confirm_body">このテキストにはクラスターのシークレット（CA、トークン、鍵）が含まれます。持っている人は誰でもノードをクラスターに参加させられます。クラウドプロバイダーの user data 欄にのみ貼り付けてください。</string>
     <string name="join_node_address">ノードのアドレス</string>
     <string name="join_node_inspect">調査</string>
     <string name="join_node_maintenance">メンテナンスモード</string>
@@ -5496,7 +5506,6 @@
     <string name="plugins_remove">削除</string>
     <string name="plugins_remove_title">%1$s を削除しますか？</string>
     <string name="plugins_remove_text">ファイルがこのスマートフォンから削除され、タブが消えます。</string>
-    <string name="plugins_load_failed">プラグイン：%1$s</string>
     <string name="plugins_explainer">インポートしたプラグインは、宣言したリソースのみを、あなた自身の Kubernetes アクセス権で読み取り、Kubernetes API 以外とは通信しません。</string>
     <string name="plugins_source_paste">貼り付け</string>
     <string name="plugins_source_file">ファイル</string>
@@ -5544,7 +5553,6 @@
     <string name="repo_update_bot_present">ボットが設定されています: %1$s</string>
     <string name="repo_update_bot_none">このリポジトリには更新ボットがありません。</string>
     <string name="repo_update_bot_propose">設定を提案…</string>
-    <string name="repo_update_bot_failed">リポジトリを読み取れませんでした: %1$s</string>
     <string name="repo_update_bot_sheet_title">依存関係更新ボットの設定を追加</string>
     <string name="repo_update_bot_sheet_body">見つかったファイルをもとに %1$s を作成しました。内容を確認してからプルリクエストを開いてください。マージするまで何も変わりません。</string>
     <string name="repo_update_bot_continue">プルリクエストへ進む</string>
@@ -5682,6 +5690,7 @@
     <string name="runbook_state_ok">完了</string>
     <string name="runbook_state_failed">失敗</string>
     <string name="runbook_state_skipped">スキップ</string>
+    <string name="runbook_wait_elapsed">待機 %1$s / %2$s</string>
     <string name="runbook_confirm_title">ステップ %1$s を実行しますか？</string>
     <string name="runbook_confirm_text">%2$s で %1$s</string>
     <string name="runbook_confirm">ステップを実行</string>

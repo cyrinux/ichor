@@ -13,7 +13,9 @@ Android (app/src/main/java/**/*.kt):
   "button", with nothing saying what it does;
 - a Text in ui/ with maxLines = 1 and neither overflow nor autoSize cuts its last letters at a
   large font scale or on a small phone: give it overflow = TextOverflow.Ellipsis, or autoSize
-  for a number (the widgets' Glance Text has no overflow).
+  for a number (the widgets' Glance Text has no overflow);
+- a UiState.Failed branch painting a Text red (.bad or colorScheme.error) on its line or the
+  next three: a failed read is not a cluster state, use LoadFailureRow (muted, with Retry).
 
 Run: python3 scripts/check-accessibility.py
 """
@@ -41,6 +43,8 @@ ICON_BUTTON = re.compile(r"\b\w*IconButton\(")
 # A description on the icon or a label on the button itself.
 # Text( and BasicText(, not TextField( nor a wrapper such as MutedText( (no overflow there).
 TEXT_CALL = re.compile(r"(?<![\w.])(Basic)?Text\(")
+FAILED_BRANCH = re.compile(r"UiState\.Failed\s*->")
+RED = re.compile(r"\.bad\b|colorScheme\.error\b")
 ICON_LABEL = re.compile(r"contentDescription\s*=(?!\s*null)|semantics\s*[({]|onClickLabel")
 
 
@@ -135,6 +139,19 @@ def single_line_texts_without_overflow(source: str) -> list[int]:
     return found
 
 
+def red_load_failures(source: str) -> list[int]:
+    """1-based lines of UiState.Failed branches whose Text is painted red within four lines."""
+    lines = source.splitlines()
+    found = []
+    for i, line in enumerate(lines):
+        if not FAILED_BRANCH.search(line):
+            continue
+        window = lines[i : i + 4]
+        if any(TEXT_CALL.search(w) for w in window) and any(RED.search(w) for w in window):
+            found.append(i + 1)
+    return found
+
+
 def main() -> int:
     problems = []
     for path in sorted(IOS_SOURCES.rglob("*.swift")):
@@ -147,6 +164,7 @@ def main() -> int:
         rel = path.relative_to(ROOT)
         problems += [f"{rel}:{n}: text below {MIN_SP}.sp, use MaterialTheme.typography" for n in small_sp(text)]
         problems += [f"{rel}:{n}: IconButton whose icon has no contentDescription" for n in unlabeled_icon_buttons(text)]
+        problems += [f"{rel}:{n}: red text for a failed read, use LoadFailureRow" for n in red_load_failures(text)]
         if "ui" in rel.parts:
             problems += [f"{rel}:{n}: Text with maxLines = 1 and no overflow" for n in single_line_texts_without_overflow(text)]
     for p in problems:

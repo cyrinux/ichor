@@ -24,6 +24,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.DriftFix
@@ -91,7 +92,7 @@ fun InsightsScreen(
                     NetPerfTab(netPerf)
                 } else {
                     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(if (page == 1) 4.dp else 12.dp)) {
-                        state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
+                        state.error?.let { item { LoadFailureRow(it, onRetry = { vm.refresh() }) } }
                         if (page == 0) {
                             item {
                                 val drift = stringResource(R.string.insights_drift)

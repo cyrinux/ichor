@@ -45,6 +45,8 @@ type Diagnosis struct {
 	// wrong names (real ones in screenshot mode, or fakes nobody can map back).
 	screenshotMode   bool
 	screenshotResets int
+	// names hides the Kubernetes names in report, nil unless it was asked to be anonymized.
+	names *diagnosisNames
 	// kind picks the instructions sent with the report; the zero value is the full diagnosis.
 	kind diagnosisKind
 }
@@ -58,9 +60,10 @@ const (
 )
 
 // CollectDiagnosis reads the state of the cluster (os:reader calls only) into a report.
-// Nothing leaves the phone here. With anonymize, the nodes' names, addresses and domain
-// are replaced with placeholders, and answers get the real ones back before they are
-// shown; in screenshot mode the report is masked like everything else on screen.
+// Nothing leaves the phone here. With anonymize, the nodes' names, addresses and domain and
+// the Kubernetes namespaces and pod names are replaced with placeholders, and answers get
+// the real ones back before they are shown; in screenshot mode the report is masked like
+// everything else on screen. What looks like a secret is stripped either way.
 //
 // kubeServer is the cluster's Kubernetes API address the user set ("" for the kubeconfig's):
 // with os:admin, the Argo CD and Flux apps that are not fine are added (see collectGitOps).
@@ -88,6 +91,11 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 // applyMask hides the cluster's names and addresses in d.report: with screenshot mode's
 // mask when it is on, else with a mask of its own when anonymize is set.
 func (d *Diagnosis) applyMask(configYAML string, anonymize bool, data diagnosisData) {
+	if anonymize {
+		d.names = newDiagnosisNames(data, d.report)
+		d.report = d.names.mask(d.report)
+	}
+
 	switch {
 	case d.screenshotMode:
 		d.mask = privacy
@@ -240,6 +248,10 @@ func (d *Diagnosis) outOfDate() bool {
 // names or the placeholders they read in the report: placeholders are first turned back
 // into what they stand for, so both end up as the report's placeholders.
 func (d *Diagnosis) maskNote(note string) string {
+	if d.names != nil {
+		note = d.names.mask(d.names.reveal(note))
+	}
+
 	if d.mask == nil {
 		return note
 	}
@@ -250,6 +262,10 @@ func (d *Diagnosis) maskNote(note string) string {
 // reveal puts the real names and addresses back in an answer written about placeholders.
 // (In screenshot mode the listener then masks them again, like everything displayed.)
 func (d *Diagnosis) reveal(answer string) string {
+	if d.names != nil {
+		answer = d.names.reveal(answer)
+	}
+
 	if d.mask == nil {
 		return answer
 	}

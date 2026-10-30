@@ -38,11 +38,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.copyToClipboard
@@ -147,10 +147,7 @@ private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                     Text(stringResource(R.string.ai_collecting))
                 }
-                is UiState.Failed -> {
-                    Text(report.message.asString(), color = LocalStatusColors.current.bad)
-                    IchorOutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
-                }
+                is UiState.Failed -> LoadFailureRow(report.message, onRetry)
                 is UiState.Loaded -> {
                     val data = report.data
                     Row(verticalAlignment = Alignment.CenterVertically) {
