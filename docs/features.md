@@ -284,6 +284,12 @@ Part of the [Ichor documentation](../README.md#documentation).
 - **Alertmanager:** the cluster's alerts grouped by name, worst first, and its silences. Swipe an
   alert to silence it (the form opens with matchers that mute only that alert; nothing is sent
   before **Silence**), swipe a silence to expire it (iPhone and iPad).
+- **On-call (PagerDuty):** set a token, your PagerDuty email and the services to watch per cluster
+  (**On-call**, under Settings → Clusters on Android and in a cluster's menu on iOS; **Test** checks
+  the token). An alert with an open incident shows **Triggered** or **Acknowledged by …**. Its sheet
+  acknowledges or resolves the incident, and its notification gets **Acknowledge page**, which runs
+  without opening the app once the device is unlocked. The action log records both. The token stays
+  in the Keystore or Keychain and is never in a backup: a restore asks you to set it again.
 - **Node taints and labels:** a node's menu → **Taints and labels…** lists them, with the ones
   Kubernetes, Talos or the cloud set locked unless shown. Review shows the change, the API
   server's dry-run verdict and the pods a new `NoExecute` taint would evict; a taint change asks

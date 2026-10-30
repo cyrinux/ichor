@@ -368,6 +368,21 @@ enum BackgroundMonitor {
         return out
     }
 
+    /// A client of the stored cluster `fingerprint`, whichever is on screen, as a check would use it;
+    /// nil when it is gone or waits for its VPN. For a notification's action, with the app closed.
+    static func client(forFingerprint fingerprint: String) async -> TalosClient? {
+        TalosClient.applyStoredPrivacyMask()
+        TalosClient.applyStoredAuditEvents()
+        let stored = StoredConfigs.load()
+        let parsed = await stored.parsed()
+        guard let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube),
+            let context = summary.contexts.first(where: { $0.fingerprint == fingerprint })
+        else { return nil }
+        let jobs = await checkJobs(
+            for: [context], stored: stored, kubeContexts: parsed.kube?.contexts ?? [], snapshots: [:])
+        return jobs.first?.client
+    }
+
     /// The clusters of `contexts` to check now: a VPN-only one waits for its VPN (without it the
     /// check could only time out), and a cluster whose config is not stored is left out.
     private static func checkJobs(

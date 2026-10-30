@@ -20,6 +20,35 @@ final class OnCallTests: XCTestCase {
         XCTAssertTrue(OnCallConfig(token: "sample", serviceIds: ["P1"]).isSet)
     }
 
+    func testAcknowledgePageTakesTheAcknowledgePlace() {
+        let paged = alertActions(key: "am:f00d", problem: true, canWake: false, canAcknowledgePage: true)
+        XCTAssertEqual(paged, [.silence, .acknowledgePage, .snooze])
+        XCTAssertEqual(withAcknowledge(paged), paged)
+        XCTAssertEqual(alertActions(key: "am:f00d", problem: false, canWake: false, canAcknowledgePage: true), [])
+        XCTAssertEqual(alertActions(key: "cert", problem: true, canWake: false, canAcknowledgePage: true), [.snooze])
+        XCTAssertFalse(AlertAction.acknowledgePage.changesCluster)
+    }
+
+    func testEveryAlertmanagerActionSetHasOneCategory() {
+        let sets = alertActionSets(kind: "alertmanager")
+        XCTAssertTrue(sets.contains([.silence, .acknowledgePage, .snooze]))
+        XCTAssertEqual(
+            Set(sets.map { alertCategory(kind: "alertmanager", actions: $0, hideDetails: false) }).count, sets.count)
+    }
+
+    func testABackupOnlySaysAnIntegrationWasSet() throws {
+        let clusters = backupClusters(
+            fingerprints: ["a", "b"], names: [:], colors: [:], kubeServers: [:], oncallSet: ["a"])
+        XCTAssertEqual(clusters["a"]?.oncallSet, true)
+        XCTAssertNil(clusters["b"]?.oncallSet)
+        let json = String(decoding: try JSONEncoder().encode(clusters), as: UTF8.self)
+        XCTAssertFalse(json.contains("token"))
+        XCTAssertTrue(onCallTokenNeeded(clusters, fingerprints: ["a", "b"]) { _ in false })
+        XCTAssertFalse(onCallTokenNeeded(clusters, fingerprints: ["a", "b"]) { $0 == "a" })
+        XCTAssertFalse(onCallTokenNeeded(clusters, fingerprints: ["b"]) { _ in false })
+        XCTAssertFalse(onCallTokenNeeded(nil, fingerprints: ["a"]) { _ in false })
+    }
+
     func testAnUnknownStatusDecodes() throws {
         let decoded = try TalosJSON.decode(
             OnCallIncidents.self,

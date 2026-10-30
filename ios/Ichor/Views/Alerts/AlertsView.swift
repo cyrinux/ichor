@@ -31,6 +31,10 @@ struct AlertsView: View {
     @State private var withExpired = false
     /// The cluster's Talos nodes, for an alert's node link (none on a cluster without Talos).
     @State private var nodes: [NodeOverview] = []
+    /// The pager's open incidents; nil without an on-call integration.
+    @State private var onCall: OnCallIncidents?
+    /// Why the last read of the incidents failed; what was read before stays.
+    @State private var onCallError: String?
     @State private var selected: AMAlert?
     /// Silence 1 h chosen on the selected alert's notification: the comment its form starts with.
     @State private var silenceComment: String?
@@ -106,7 +110,10 @@ struct AlertsView: View {
                     announce(String(localized: "Silenced"))
                     Task { await reload() }
                 },
-                silenceComment: silenceComment)
+                silenceComment: silenceComment,
+                incident: onCall?.incident(of: alert.fingerprint),
+                confidence: onCall?.matches[alert.fingerprint]?.confidence ?? .alertname,
+                actOnIncident: actOnIncident)
         }
         .sheet(isPresented: $sourceOpen) {
             SourceSheet(
@@ -231,10 +238,15 @@ struct AlertsView: View {
                     Text("Showing the first 1000 of \(alerts.total) alerts.").font(.footnote).foregroundStyle(
                         .secondary)
                 }
+                if let onCallError {
+                    Text("Could not read PagerDuty: \(onCallError)").font(.footnote).foregroundStyle(.secondary)
+                }
                 ForEach(groups) { group in
                     Section {
                         ForEach(group.alerts) { alert in
-                            AlertListRow(alert: alert, open: { selected = alert }, silence: { silenceFromRow(alert) })
+                            AlertListRow(
+                                alert: alert, incident: onCall?.incident(of: alert.fingerprint),
+                                open: { selected = alert }, silence: { silenceFromRow(alert) })
                         }
                     } header: {
                         HStack(spacing: 6) {
@@ -330,6 +342,8 @@ struct AlertsView: View {
         state = known.map { LoadState<AMAlerts>.loaded($0, at: Date()) } ?? .loading
         silences = .loading
         nodes = []
+        onCall = nil
+        onCallError = nil
         // The search starts below: no "none found" in between.
         if source == nil { discovering = true }
         resolved = true
@@ -404,9 +418,47 @@ struct AlertsView: View {
             AlertsStore.shared.remember(read, key: key)
         }
         takeAlertAction()
+        if case .loaded(let read, _, _) = alerts { await loadOnCall(read, client: client, key: key) }
+    }
+
+    /// The incidents behind `alerts`, after them: the alerts never wait for the pager. The demo
+    /// answers without settings.
+    private func loadOnCall(_ alerts: AMAlerts, client: TalosClient, key: String) async {
+        let demo = model.activeSummary?.demo == true
+        let config = demo ? OnCallConfig() : OnCallStore.read(fingerprint)
+        guard demo || config.isSet else {
+            onCall = nil
+            onCallError = nil
+            return
+        }
+        do {
+            let read = try await client.onCallIncidents(config, alerts: alerts)
+            guard key == model.alertsKey else { return }
+            onCall = read
+            onCallError = nil
+        } catch {
+            if key == model.alertsKey { onCallError = error.localizedDescription }
+        }
     }
 
     // MARK: - Actions
+
+    /// A verb on an incident from the alert sheet, then a reload; nil when done, else why not.
+    private func actOnIncident(_ incident: OnCallIncident, _ verb: OnCallVerb) async -> String? {
+        guard let client = model.client else { return nil }
+        let demo = model.activeSummary?.demo == true
+        do {
+            try await client.onCallAct(
+                demo ? OnCallConfig() : OnCallStore.read(fingerprint), id: incident.id, verb: verb)
+        } catch {
+            return error.localizedDescription
+        }
+        succeeded += 1
+        announce(
+            verb == .acknowledge ? String(localized: "Incident acknowledged") : String(localized: "Incident resolved"))
+        await reload()
+        return nil
+    }
 
     /// Silences `matchers` from the alert sheet; nil when done, else why not.
     private func silence(_ matchers: [AMMatcher], minutes: Int, comment: String) async -> String? {
@@ -441,6 +493,7 @@ struct AlertsView: View {
 /// screen loads for the source's namespace), and the context menu shares the alerts screen.
 private struct AlertListRow: View {
     let alert: AMAlert
+    let incident: OnCallIncident?
     let open: () -> Void
     let silence: () -> Void
 
@@ -450,7 +503,7 @@ private struct AlertListRow: View {
 
     var body: some View {
         Button(action: open) {
-            AlertRow(alert: alert)
+            AlertRow(alert: alert, incident: incident)
         }
         .foregroundStyle(.primary)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -478,9 +531,10 @@ private struct AlertListRow: View {
 }
 
 /// An alert in its group: what it is about, its summary, since when, and its state when it is not
-/// plainly firing.
+/// plainly firing, and the on-call incident's state.
 private struct AlertRow: View {
     let alert: AMAlert
+    let incident: OnCallIncident?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -493,6 +547,7 @@ private struct AlertRow: View {
                 if alert.state != .active {
                     Text(alert.stateLabel).font(.caption).foregroundStyle(.secondary)
                 }
+                if let incident { OnCallBadgeLabel(incident: incident) }
             }
             if !alert.summary.isEmpty {
                 Text(verbatim: alert.summary).font(.caption).foregroundStyle(.secondary).lineLimit(2)

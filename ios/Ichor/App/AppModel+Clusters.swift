@@ -303,6 +303,7 @@ extension AppModel {
         PublicIPStore.wipe()
         MetricsStore.keep(fingerprints: [])  // their credentials go with the config
         AlertmanagerStore.keep(fingerprints: [])
+        OnCallStore.keep(fingerprints: [])
         WakeOnLanStore.shared.wipe()
         KubeAuthStore.shared.wipe()  // its sealed item went with the others
         settings.storeVpnOnly([])
@@ -401,6 +402,7 @@ extension AppModel {
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         AlertmanagerStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
+        OnCallStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         // A removed cluster's background state goes too: its snapshot, unreachable count and snoozes.
         settings.storeMonitorUnwatched(
             keepVpnOnly(saved: settings.monitorUnwatched, fingerprints: newSummary.contexts.map(\.fingerprint)))

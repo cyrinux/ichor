@@ -4,28 +4,33 @@ import Foundation
 /// Wake run in the background and change nothing on the cluster; the others only open the app on
 /// the alert's screen, which asks for the usual confirmation before anything is sent.
 public enum AlertAction: String, CaseIterable, Hashable, Sendable {
-    case wake, reboot, sync, reconcile, silence, acknowledge, snooze
+    case wake, reboot, sync, reconcile, silence, acknowledge, acknowledgePage, snooze
 
     /// Changes the cluster: never run from the notification, only confirmed in the app.
     public var changesCluster: Bool {
         switch self {
         case .reboot, .sync, .reconcile, .silence: true
-        case .wake, .acknowledge, .snooze: false
+        // The page is the pager's, not the cluster's: acknowledged from the notification once unlocked.
+        case .wake, .acknowledge, .acknowledgePage, .snooze: false
         }
     }
 }
 
 /// `actions` with Acknowledge before Snooze: an alert its rule repeats (only one Snooze offers).
+/// Acknowledge page already stops the repeats, so it takes its place.
 public func withAcknowledge(_ actions: [AlertAction]) -> [AlertAction] {
-    guard let snooze = actions.firstIndex(of: .snooze), !actions.contains(.acknowledge) else { return actions }
+    guard let snooze = actions.firstIndex(of: .snooze), !actions.contains(.acknowledge),
+        !actions.contains(.acknowledgePage)
+    else { return actions }
     var out = actions
     out.insert(.acknowledge, at: snooze)
     return out
 }
 
 /// The actions of an alert's notification: none for a "resolved" or "ready again" one; Wake
-/// only for a node with a Wake-on-LAN MAC known (`canWake`). Snooze comes last.
-public func alertActions(key: String, problem: Bool, canWake: Bool) -> [AlertAction] {
+/// only for a node with a Wake-on-LAN MAC known (`canWake`); Acknowledge page only for an
+/// Alertmanager alert of a cluster with an on-call integration (`canAcknowledgePage`). Snooze comes last.
+public func alertActions(key: String, problem: Bool, canWake: Bool, canAcknowledgePage: Bool = false) -> [AlertAction] {
     guard problem else { return [] }
     let parts = key.split(separator: ":", maxSplits: 1).map(String.init)
     let subject = parts.count > 1 ? parts[1] : ""
@@ -37,7 +42,7 @@ public func alertActions(key: String, problem: Bool, canWake: Bool) -> [AlertAct
         case "flux": return [.reconcile, .snooze]
         default: return [.snooze]
         }
-    case "am": return [.silence, .snooze]
+    case "am": return canAcknowledgePage ? [.silence, .acknowledgePage, .snooze] : [.silence, .snooze]
     case "etcd", "data", "checkup", "storage", "sensor", "cert", "unreachable": return [.snooze]
     default: return []
     }
@@ -82,14 +87,14 @@ public func alertCategory(kind: String, actions: [AlertAction], hideDetails: Boo
 /// with Acknowledge (see withAcknowledge): one notification category each.
 public func alertActionSets(kind: String) -> [[AlertAction]] {
     let sets = baseActionSets(kind: kind)
-    return sets + sets.filter { $0.contains(.snooze) }.map(withAcknowledge)
+    return sets + sets.filter { $0.contains(.snooze) && !$0.contains(.acknowledgePage) }.map(withAcknowledge)
 }
 
 private func baseActionSets(kind: String) -> [[AlertAction]] {
     switch kind {
     case "node": [[], [.reboot, .snooze], [.wake, .reboot, .snooze]]
     case "gitops": [[], [.sync, .snooze], [.reconcile, .snooze], [.snooze]]
-    case "alertmanager": [[], [.silence, .snooze]]
+    case "alertmanager": [[], [.silence, .snooze], [.silence, .acknowledgePage, .snooze]]
     default: [[], [.snooze]]
     }
 }

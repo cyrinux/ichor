@@ -95,6 +95,8 @@ struct ClustersView: View {
     @State private var editingEndpoints: ContextSummary?
     /// The cluster whose repository sheet is open.
     @State private var editingRepo: ContextSummary?
+    /// The cluster whose on-call sheet is open.
+    @State private var editingOnCall: ContextSummary?
     /// The cluster whose Kubernetes API address is being set.
     @State private var editingServer: ContextSummary?
     /// The cluster whose action audit log is open.
@@ -164,6 +166,7 @@ struct ClustersView: View {
             ClusterRepoSheet(
                 context: context, label: model.labels.of(context), saved: git.repos[context.fingerprint])
         }
+        .sheet(item: $editingOnCall) { OnCallSheet(fingerprint: $0.fingerprint) }
         .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
         .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }
         .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
@@ -372,6 +375,11 @@ struct ClustersView: View {
                 editingRepo = context
             } label: {
                 Label("Cluster repository", systemImage: "folder.badge.gearshape")
+            }
+            Button {
+                editingOnCall = context
+            } label: {
+                Label("On-call", systemImage: "bell.and.waves.left.and.right")
             }
         }
         // An Omni cluster's Kubernetes goes through Omni, with its sign-in: no link.

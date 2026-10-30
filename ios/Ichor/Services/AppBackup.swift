@@ -48,7 +48,8 @@ enum AppBackup {
                 wakeOnLan: WakeOnLanStore.shared.allTargets,
                 kubeAccess: model.kubeAccess,
                 repos: model.git.repos,
-                auditEvents: model.settings.auditEventClusters
+                auditEvents: model.settings.auditEventClusters,
+                oncallSet: Set(fingerprints.filter { OnCallStore.read($0).isSet })
             ),
             kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints),
             // iOS pins nothing in screenshot mode: the stored pins are all of the real scope.
@@ -153,7 +154,12 @@ enum AppBackup {
             BackgroundMonitor.alertsEnabled = on
             if on { BackgroundMonitor.schedule() }
         }
-        return pluginsNote
+        let tokenNeeded = onCallTokenNeeded(
+            payload.clusters, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? []
+        ) { OnCallStore.read($0).isSet }
+        let onCallNote = tokenNeeded ? String(localized: "Set the on-call token again: backups never carry it.") : nil
+        let notes = [pluginsNote, onCallNote].compactMap { $0 }
+        return notes.isEmpty ? nil : notes.joined(separator: "\n")
     }
 
     /// Stores a format 5 backup's plugins, each checked again here; the line the restore shows
