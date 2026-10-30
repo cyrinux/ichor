@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Remove
@@ -108,6 +109,8 @@ fun WorkloadSheet(
     val busy by actions.busy.collectAsStateWithLifecycle()
     // kube-green may have the namespace asleep: say it, and warn before a change it would undo.
     val kubeGreen = rememberKubeGreenNamespace(workload.namespace)
+    var showLogs by rememberSaveable(workload.key) { mutableStateOf(false) }
+    if (showLogs) WorkloadLogsSheet(workload, onDismiss = { showLogs = false })
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
@@ -139,6 +142,11 @@ fun WorkloadSheet(
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.pods_title))
                     }
+                }
+                OutlinedButton(onClick = { showLogs = true }) {
+                    Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.workload_logs_open))
                 }
                 if (workload.canPauseRollout) {
                     PauseButton(workload, enabled = workload.key !in busy && pauseDenial == null) { actions.pauseRollout(workload, it) }

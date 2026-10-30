@@ -5900,4 +5900,14 @@
     <string name="panic_disconnect">断开连接</string>
     <string name="panic_delete_confirm_title">紧急时删除配置？</string>
     <string name="panic_confirm">确认</string>
+    <string name="workload_logs_open">所有 Pod 的日志</string>
+    <string name="pod_logs_filter_hint">筛选行</string>
+    <string name="pod_logs_filter_regex">正则表达式</string>
+    <string name="pod_logs_since_minutes">%1$d 分钟</string>
+    <string name="pod_logs_since_hours">%1$d 小时</string>
+    <string name="pod_logs_since_all">全部</string>
+    <string name="workload_logs_tail">每个 Pod %1$d 行</string>
+    <string name="workload_logs_matched">匹配 %1$s / %2$s</string>
+    <string name="workload_logs_truncated">已截断</string>
+    <string name="workload_logs_pod">Pod %1$s</string>
 </resources>

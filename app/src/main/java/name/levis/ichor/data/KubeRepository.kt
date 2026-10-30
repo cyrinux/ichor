@@ -51,6 +51,8 @@ import name.levis.ichor.model.RoutePod
 import name.levis.ichor.model.SELECTED_PODS_PAGE
 import name.levis.ichor.model.SupportedIntegrations
 import name.levis.ichor.model.WorkloadRef
+import name.levis.ichor.model.LogFilter
+import name.levis.ichor.model.WorkloadLogs
 import name.levis.ichor.model.toGoJson
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.Ichorgo
@@ -219,10 +221,16 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     /**
      * `kubectl logs POD [-c CONTAINER] [--previous] --tail=N` through the Kubernetes API
      * (os:admin): [previous] reads the container's last terminated run. [container] "" for a
-     * pod with one container.
+     * pod with one container. [filter] keeps the matching lines of the time range asked.
      */
-    suspend fun podLogs(pod: KubePod, container: String, previous: Boolean, tailLines: Int): String = go.kube { cfg, ctx, server ->
-        Ichorgo.kubePodLogs(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong())
+    suspend fun podLogs(pod: KubePod, container: String, previous: Boolean, tailLines: Int, filter: LogFilter = LogFilter()): String = go.kube { cfg, ctx, server ->
+        Ichorgo.kubePodLogsFiltered(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong(), filter.text, filter.regex, filter.sinceMinutes.toLong())
+    }
+
+    /** The logs of [workload]'s pods merged by time, `kubectl logs -l` through the Kubernetes API (os:admin). */
+    suspend fun workloadLogs(workload: KubeWorkload, filter: LogFilter, tailLines: Int): WorkloadLogs = go.kube { cfg, ctx, server ->
+        val json = Ichorgo.kubeWorkloadLogs(cfg, ctx, server, workload.kind, workload.namespace, workload.name, "", filter.text, filter.regex, filter.sinceMinutes.toLong(), tailLines.toLong())
+        TalosJson.decodeFromString(WorkloadLogs.serializer(), json)
     }
 
     /** The cluster's namespaces, to pick the scope of the Kubernetes lists (os:admin). */

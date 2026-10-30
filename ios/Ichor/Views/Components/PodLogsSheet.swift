@@ -21,6 +21,7 @@ struct PodLogsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var state: LoadState<String> = .loading
     @State private var previous = false
+    @State private var filter = LogFilter()
     /// "" lets Kubernetes pick the only container.
     @State private var container: String
     /// The pod's containers (from the API's error with an older core).
@@ -56,6 +57,7 @@ struct PodLogsSheet: View {
                 if following {
                     FollowList(follower: follower, display: $display)
                 } else {
+                    LogFilterFields(filter: $filter).padding(.horizontal).padding(.vertical, 8)
                     LoadStateView(state: state, retry: { refreshes += 1 }) { text in
                         LogText(lines: podLogLines(text), previous: previous)
                     }
@@ -114,7 +116,7 @@ struct PodLogsSheet: View {
                 }
             }
             // The screenshot mode's generation too: the log is read again under the new names.
-            .task(id: "\(container)/\(previous)/\(refreshes)/\(following)/\(model.dataGeneration)") {
+            .task(id: "\(container)/\(previous)/\(filter)/\(refreshes)/\(following)/\(model.dataGeneration)") {
                 if following { await follow() } else { await load() }
             }
             // A previous run's log has no new lines.
@@ -161,12 +163,15 @@ struct PodLogsSheet: View {
         guard let client = model.client else { return }
         if await readDetail(client) { return }
         generation += 1
-        let (asked, askedPrevious, mine) = (container, previous, generation)
+        let (asked, askedPrevious, askedFilter, mine) = (container, previous, filter, generation)
         // Still the selection on screen, and no newer load started.
-        let current = { !Task.isCancelled && mine == generation && asked == container && askedPrevious == previous }
+        let current = {
+            !Task.isCancelled && mine == generation && asked == container && askedPrevious == previous
+                && askedFilter == filter
+        }
         state = .loading
         do {
-            let text = try await client.podLogs(pod, container: asked, previous: askedPrevious)
+            let text = try await client.podLogs(pod, container: asked, previous: askedPrevious, filter: askedFilter)
             guard current() else { return }
             state = .loaded(text, at: Date())
         } catch {

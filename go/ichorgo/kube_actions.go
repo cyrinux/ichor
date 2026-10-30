@@ -364,6 +364,12 @@ func KubePodLogs(configYAML, contextName, kubeServer, namespace, pod, container 
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
+
+	return readPodLog(configYAML, contextName, kubeServer, namespace, pod, container, previous, tailLines, 0)
+}
+
+// readPodLog is KubePodLogs bounded to the last sinceMinutes (0: no bound); contextName is unmasked.
+func readPodLog(configYAML, contextName, kubeServer, namespace, pod, container string, previous bool, tailLines, sinceMinutes int) (string, error) {
 	namespace, pod = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(pod))
 	container = privacy.reveal(strings.TrimSpace(container))
 
@@ -379,18 +385,7 @@ func KubePodLogs(configYAML, contextName, kubeServer, namespace, pod, container 
 		tailLines = maxLogTail
 	}
 
-	// No limitBytes: Kubernetes applies it to the start of the tail, which would drop the
-	// newest lines (the crash the log was opened for). The size is bounded below instead.
-	query := url.Values{}
-	query.Set("tailLines", strconv.Itoa(tailLines))
-
-	if container != "" {
-		query.Set("container", container)
-	}
-
-	if previous {
-		query.Set("previous", "true")
-	}
+	query := podLogQuery(container, previous, tailLines, sinceMinutes)
 
 	if isDemoContext(configYAML, contextName) {
 		return demoPodLog(pod, previous), nil

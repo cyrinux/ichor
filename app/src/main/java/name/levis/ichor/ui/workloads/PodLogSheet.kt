@@ -62,6 +62,7 @@ import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePod
+import name.levis.ichor.model.LogFilter
 import name.levis.ichor.model.POD_LOG_TAIL
 import name.levis.ichor.model.containersToChoose
 import name.levis.ichor.model.logLines
@@ -88,7 +89,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 
 /** What the log sheet shows: the current or [previous] run of [container] ("" for the only one). */
-data class PodLogQuery(val container: String = "", val previous: Boolean = false)
+data class PodLogQuery(val container: String = "", val previous: Boolean = false, val filter: LogFilter = LogFilter())
 
 /**
  * The log of the pod the sheet shows ([open]), through the Kubernetes API; for a pod with
@@ -152,7 +153,7 @@ class PodLogViewModel(private val kube: KubeRepository) : ViewModel() {
         _query.value = query
         _state.value = UiState.Loading
         job = viewModelScope.launch {
-            val outcome = cancellableCatching { kube.podLogs(pod, query.container, query.previous, POD_LOG_TAIL) }
+            val outcome = cancellableCatching { kube.podLogs(pod, query.container, query.previous, POD_LOG_TAIL, query.filter) }
             val choices = outcome.exceptionOrNull()?.message?.let(::containersToChoose).orEmpty()
             // Several containers the pod list did not name (older core): the API names them.
             if (query.container.isEmpty() && choices.isNotEmpty()) {
@@ -224,7 +225,7 @@ fun PodLogSheet(
                     Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()
                 })
                 TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.pod_logs_share), enabled = hasText, onClick = {
-                    shareLog(context, pod, text())
+                    shareLog(context, pod.name, text())
                 })
             }
             // CPU and memory now, against its limit or request (metrics-server, when there is one).
@@ -303,6 +304,8 @@ fun PodLogSheet(
             } else {
                 InfoNotice(stringResource(R.string.pod_logs_tail, POD_LOG_TAIL), Modifier.padding(horizontal = 16.dp))
             }
+            // A followed log streams as it is written, and events are not lines: nothing to filter.
+            if (!follow && !events) LogFilterBar(query.filter, { vm.load(query.copy(filter = it)) })
             Box(Modifier.weight(1f).upwardScrollStaysInSheet()) {
                 if (events) {
                     KubeEventsList(pod.namespace, "Pod", pod.name, Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp))
@@ -343,15 +346,15 @@ private fun copyLog(context: Context, pod: KubePod, text: String) = copyToClipbo
 private fun sharedLogs(context: Context) = File(context.cacheDir, "logs")
 
 /** Removes the shared log file, once the sheet closes. */
-private fun deleteSharedLogs(context: Context) {
+internal fun deleteSharedLogs(context: Context) {
     sharedLogs(context).listFiles()?.forEach { it.delete() }
 }
 
 /** Shares the log as a file in the cache: it can be larger than an intent can carry as text. One file, replaced each time. */
-private fun shareLog(context: Context, pod: KubePod, text: String) {
+internal fun shareLog(context: Context, name: String, text: String) {
     deleteSharedLogs(context)
     val dir = sharedLogs(context).apply { mkdirs() }
-    val file = File(dir, "${pod.name}.log")
+    val file = File(dir, "$name.log")
     try {
         file.writeText(text)
     } catch (e: java.io.IOException) {

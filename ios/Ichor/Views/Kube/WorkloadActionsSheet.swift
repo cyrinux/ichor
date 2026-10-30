@@ -60,6 +60,11 @@ struct WorkloadActionsSheet: View {
                             Label("Pods", systemImage: "cube")
                         }
                     }
+                    NavigationLink {
+                        WorkloadLogsSheet(workload: workload)
+                    } label: {
+                        Label("Logs of all pods", systemImage: "doc.text")
+                    }
                 }
                 if workload.canPauseRollout { pauseSection }
                 if workload.canScale { scaleSection }

@@ -6293,4 +6293,14 @@
     <string name="panic_disconnect">Отключить</string>
     <string name="panic_delete_confirm_title">Удалять конфигурацию по сигналу тревоги?</string>
     <string name="panic_confirm">Подтвердить</string>
+    <string name="workload_logs_open">Логи всех подов</string>
+    <string name="pod_logs_filter_hint">Фильтровать строки</string>
+    <string name="pod_logs_filter_regex">Регулярное выражение</string>
+    <string name="pod_logs_since_minutes">%1$d мин</string>
+    <string name="pod_logs_since_hours">%1$d ч</string>
+    <string name="pod_logs_since_all">Всё</string>
+    <string name="workload_logs_tail">%1$d строк на под</string>
+    <string name="workload_logs_matched">Совпало %1$s из %2$s</string>
+    <string name="workload_logs_truncated">обрезано</string>
+    <string name="workload_logs_pod">Под %1$s</string>
 </resources>
