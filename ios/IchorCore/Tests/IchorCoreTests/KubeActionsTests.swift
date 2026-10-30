@@ -7,14 +7,17 @@ final class KubeActionsTests: XCTestCase {
         XCTAssertTrue(KubeWorkload(kind: "StatefulSet", namespace: "a", name: "b").canScale)
         XCTAssertFalse(KubeWorkload(kind: "DaemonSet", namespace: "a", name: "b").canScale)
         XCTAssertTrue(KubeWorkload(kind: "Deployment", namespace: "a", name: "b").hasHistory)
-        XCTAssertFalse(KubeWorkload(kind: "StatefulSet", namespace: "a", name: "b").hasHistory)
+        XCTAssertTrue(KubeWorkload(kind: "StatefulSet", namespace: "a", name: "b").hasHistory)
+        XCTAssertTrue(KubeWorkload(kind: "DaemonSet", namespace: "a", name: "b").hasHistory)
+        XCTAssertTrue(KubeWorkload(kind: "Deployment", namespace: "a", name: "b").canPauseRollout)
+        XCTAssertFalse(KubeWorkload(kind: "DaemonSet", namespace: "a", name: "b").canPauseRollout)
         XCTAssertTrue(scaleNeedsTypedName(0))
         XCTAssertFalse(scaleNeedsTypedName(1))
     }
 
     func testRevisionsDecoding() throws {
         let list = try TalosJSON.decode(
-            DeploymentRevisionList.self,
+            WorkloadRevisionList.self,
             from: """
                 {"revisions":[{"revision":3,"replicaSet":"web-7d9c6","created":1700000000000,"images":["nginx:1.27"],
                                "changeCause":"bump nginx","replicas":2,"current":true},
@@ -29,7 +32,7 @@ final class KubeActionsTests: XCTestCase {
                 current: true))
         XCTAssertEqual(list.revisions[1].images, [])
         XCTAssertFalse(list.revisions[1].current)
-        XCTAssertEqual(try TalosJSON.decode(DeploymentRevisionList.self, from: #"{"revisions":null}"#).revisions, [])
+        XCTAssertEqual(try TalosJSON.decode(WorkloadRevisionList.self, from: #"{"revisions":null}"#).revisions, [])
     }
 
     func testPodLogContainerChoices() {

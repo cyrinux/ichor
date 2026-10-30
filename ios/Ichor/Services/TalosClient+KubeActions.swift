@@ -2,7 +2,7 @@ import Foundation
 import Ichorgo
 import IchorCore
 
-/// Small kubectl actions: scale, CronJob suspend/resume, Deployment rollback and pod logs
+/// Small kubectl actions: scale, CronJob suspend/resume, rollback, rollout pause and pod logs
 /// through the Kubernetes API (os:admin; see TalosClient for the conventions).
 extension TalosClient {
     /// `kubectl scale`: returns a warning when a HorizontalPodAutoscaler manages the replicas
@@ -23,21 +23,37 @@ extension TalosClient {
         }
     }
 
-    /// A Deployment's revisions, newest first, like `kubectl rollout history`.
-    func deploymentRevisions(_ workload: KubeWorkload) async throws -> [DeploymentRevision] {
-        let list: DeploymentRevisionList = try await Self.json {
-            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeDeploymentRevisions(config, context, kubeServer, workload.namespace, workload.name, $0)
+    /// A Deployment's, StatefulSet's or DaemonSet's revisions, newest first, like `kubectl
+    /// rollout history`.
+    func workloadRevisions(_ workload: KubeWorkload) async throws -> WorkloadRevisionList {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeWorkloadRevisions(
+                config, context, kubeServer, workload.kind, workload.namespace, workload.name, $0)
         }
-        return list.revisions
     }
 
-    /// `kubectl rollout undo --to-revision`: starts a rolling update to that revision's template.
+    /// The pod template diff from what the workload runs now to `revision`: what a rollback undoes.
+    func revisionDiff(_ workload: KubeWorkload, revision: Int) async throws -> RevisionDiff {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeRevisionDiff(
+                config, context, kubeServer, workload.kind, workload.namespace, workload.name, revision, $0)
+        }
+    }
+
+    /// `kubectl rollout undo --to-revision`: the workload gets that revision's pod template back.
     func rollback(_ workload: KubeWorkload, to revision: Int) async throws {
         try await Self.run {
             [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeRollbackDeployment(
-                config, context, kubeServer, workload.namespace, workload.name, revision, error)
+            _ = IchorgoKubeRollbackWorkload(
+                config, context, kubeServer, workload.kind, workload.namespace, workload.name, revision, error)
+        }
+    }
+
+    /// `kubectl rollout pause|resume` of a Deployment.
+    func pauseRollout(_ workload: KubeWorkload, paused: Bool) async throws {
+        try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeRolloutPause(config, context, kubeServer, workload.namespace, workload.name, paused, error)
         }
     }
 

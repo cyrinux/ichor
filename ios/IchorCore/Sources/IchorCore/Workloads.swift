@@ -202,17 +202,20 @@ public struct KubeRolloutStatus: Decodable, Equatable, Sendable {
     public let failed: Bool
     /// Pods are only replaced when deleted (OnDelete, StatefulSet partition): a restart replaces none.
     public let manual: Bool
+    /// A Deployment whose rollout is paused (`kubectl rollout pause`): a template change waits.
+    public let paused: Bool
     /// The new pods first, the newest first.
     public let pods: [KubeRolloutPod]
 
     public init(
         workload: KubeWorkload, done: Bool = false, failed: Bool = false, manual: Bool = false,
-        pods: [KubeRolloutPod] = []
+        paused: Bool = false, pods: [KubeRolloutPod] = []
     ) {
         self.workload = workload
         self.done = done
         self.failed = failed
         self.manual = manual
+        self.paused = paused
         self.pods = pods
     }
 
@@ -222,13 +225,14 @@ public struct KubeRolloutStatus: Decodable, Equatable, Sendable {
         done = try c.field(.done, false)
         failed = try c.field(.failed, false)
         manual = try c.field(.manual, false)
+        paused = try c.field(.paused, false)
         pods = try c.field(.pods, [])
     }
 
     /// New pods running and ready.
     public var newReady: Int { pods.filter { $0.updated && $0.healthy }.count }
 
-    private enum CodingKeys: String, CodingKey { case workload, done, failed, manual, pods }
+    private enum CodingKeys: String, CodingKey { case workload, done, failed, manual, paused, pods }
 }
 
 /// A pod of a workload during a rollout.

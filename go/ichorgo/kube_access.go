@@ -211,8 +211,19 @@ var kubeActionChecks = map[string][]accessNeed{
 	"restartDaemonSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "daemonsets"}, true}},
 	"scale":              {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments", Subresource: "scale"}, true}},
 	"scaleStatefulSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets", Subresource: "scale"}, true}},
-	"deletePod":          {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
-	"execPod":            {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
+	// A Deployment's rollback is restartWorkload's patch (its ReplicaSets are read by any
+	// reader of the namespace); a StatefulSet's or DaemonSet's reads its ControllerRevisions.
+	"rollbackStatefulSet": {
+		{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets"}, true},
+		{ssarAttributes{Verb: "list", Group: "apps", Resource: "controllerrevisions"}, true},
+	},
+	"rollbackDaemonSet": {
+		{ssarAttributes{Verb: "patch", Group: "apps", Resource: "daemonsets"}, true},
+		{ssarAttributes{Verb: "list", Group: "apps", Resource: "controllerrevisions"}, true},
+	},
+	"pauseRollout": {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments"}, true}},
+	"deletePod":    {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
+	"execPod":      {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
 	// k9s sanitize: list the namespace's pods for the preview, then delete the dead ones.
 	"sanitizePods": {
 		{ssarAttributes{Verb: "delete", Resource: "pods"}, true},
@@ -262,7 +273,8 @@ type accessNeed struct {
 // KubeActionAccess says which of the app's Kubernetes actions the credentials may run in
 // namespace ("" for cluster-wide): {"namespace", "actions": {name: {allowed, unknown, verb,
 // group, resource, namespace, reason}}}, names restartWorkload (restartStatefulSet,
-// restartDaemonSet), scale (scaleStatefulSet), deletePod, execPod, debugPod, debugNode, suspendCronJob,
+// restartDaemonSet), scale (scaleStatefulSet), rollbackStatefulSet, rollbackDaemonSet,
+// pauseRollout, deletePod, execPod, debugPod, debugNode, suspendCronJob,
 // triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
 // fluxReconcileBucket), cordonNode, drainNode, autoscale, autoscaleKeda, cnpgPromote, cnpgDestroy, createVolumeSnapshot,

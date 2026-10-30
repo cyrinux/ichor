@@ -57,6 +57,7 @@ class KubeAccessTest {
         assertEquals(
             listOf(
                 "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
+                "rollbackStatefulSet", "rollbackDaemonSet", "pauseRollout",
                 "deletePod", "sanitizePods", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
                 "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
                 "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "editNodeMeta", "cnpgPromote", "cnpgDestroy", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornEngineUpgrade", "longhornSnapshot", "longhornReplicas", "longhornNode",
@@ -78,6 +79,10 @@ class KubeAccessTest {
         assertEquals(KubeAction.SCALE_STATEFUL_SET, KubeAction.scale("StatefulSet"))
         // A DaemonSet runs one pod per node: never scaled.
         assertNull(KubeAction.scale("DaemonSet"))
+        assertEquals(KubeAction.RESTART_WORKLOAD, KubeAction.rollback("Deployment"))
+        assertEquals(KubeAction.ROLLBACK_STATEFUL_SET, KubeAction.rollback("StatefulSet"))
+        assertEquals(KubeAction.ROLLBACK_DAEMON_SET, KubeAction.rollback("DaemonSet"))
+        assertNull(KubeAction.rollback("CronJob"))
         assertEquals(KubeAction.FLUX_RECONCILE, KubeAction.fluxReconcile("Kustomization"))
         assertEquals(KubeAction.FLUX_RECONCILE_HELM_RELEASE, KubeAction.fluxReconcile("HelmRelease"))
         assertEquals(KubeAction.FLUX_RECONCILE_GIT_REPOSITORY, KubeAction.fluxReconcile("GitRepository"))

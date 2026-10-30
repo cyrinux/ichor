@@ -87,6 +87,7 @@ struct RolloutStatusSheet: View {
 
     private var stateLabel: LocalizedStringKey {
         guard let status else { return "Starting the rollout…" }
+        if status.paused { return "Rollout paused: template changes wait until it resumes" }
         if status.manual { return "Pods are only replaced when deleted (OnDelete): delete them to restart them." }
         if status.done { return "Rollout complete" }
         if status.failed { return "Stalled: the progress deadline was exceeded" }
@@ -95,7 +96,7 @@ struct RolloutStatusSheet: View {
 
     private var stateColor: Color {
         guard let status else { return .secondary }
-        if status.manual { return .orange }
+        if status.manual || status.paused { return .orange }
         return status.done ? .green : status.failed ? .red : .orange
     }
 

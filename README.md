@@ -35,7 +35,8 @@ tour** shows it again.
   or wake a node, upgrade Talos node by node or the whole cluster, upgrade Kubernetes, add,
   replace, reset or wipe a node, recover etcd, rotate the Talos CA. Alerts when a node goes down, with quiet hours, a per-cluster
   minimum severity and a digest.
-- **Any Kubernetes cluster:** workloads, pods, logs and shells, a browser of every object with
+- **Any Kubernetes cluster:** workloads with rollout history and undo for Deployments,
+  StatefulSets and DaemonSets (the pod template diff first) and a Deployment's pause, pods, logs and shells, a browser of every object with
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling,
   policies, virtual machines, capacity, live events and Alertmanager, with RBAC checked before
   you tap. Clusters come from a kubeconfig or a cloud account: EKS, GKE, AKS, DigitalOcean,

@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_actions.go: scale, CronJob suspend, Deployment rollback, pod logs.
+// Mirrors go/ichorgo/kube_actions.go: scale, CronJob suspend, rollback, pod logs.
 
 /// KubeScale's upper bound.
 public let kubeMaxScaleReplicas = 1000
@@ -11,15 +11,13 @@ public let kubePodLogTail = 1000
 extension KubeWorkload {
     /// Deployments and StatefulSets scale; a DaemonSet runs one pod per node.
     public var canScale: Bool { kind == "Deployment" || kind == "StatefulSet" }
-
-    /// Only Deployments keep revisions (their ReplicaSets) to roll back to.
-    public var hasHistory: Bool { kind == "Deployment" }
 }
 
 /// Scaling to zero stops every pod: the user types the workload's name to confirm it.
 public func scaleNeedsTypedName(_ replicas: Int) -> Bool { replicas == 0 }
 
-/// One revision of a Deployment, one of its ReplicaSets (KubeDeploymentRevisions).
+/// One revision of a workload (KubeWorkloadRevisions): one of a Deployment's ReplicaSets, or
+/// one of a StatefulSet's or DaemonSet's ControllerRevisions (named in `replicaSet`).
 public struct DeploymentRevision: Decodable, Equatable, Identifiable, Sendable {
     public let revision: Int
     public let replicaSet: String
@@ -29,7 +27,7 @@ public struct DeploymentRevision: Decodable, Equatable, Identifiable, Sendable {
     /// The kubernetes.io/change-cause annotation, "" when none.
     public let changeCause: String
     public let replicas: Int
-    /// The revision the Deployment runs now (rolling back to it is refused).
+    /// The revision the workload runs now (rolling back to it is refused).
     public let current: Bool
 
     public var id: Int { revision }
@@ -61,20 +59,6 @@ public struct DeploymentRevision: Decodable, Equatable, Identifiable, Sendable {
         replicas = try c.field(.replicas, 0)
         current = try c.field(.current, false)
     }
-}
-
-/// Newest first.
-public struct DeploymentRevisionList: Decodable, Equatable, Sendable {
-    public let revisions: [DeploymentRevision]
-
-    public init(revisions: [DeploymentRevision] = []) { self.revisions = revisions }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        revisions = try c.field(.revisions, [])
-    }
-
-    private enum CodingKeys: String, CodingKey { case revisions }
 }
 
 /// The containers the Kubernetes API offers when a pod's log is asked without a container

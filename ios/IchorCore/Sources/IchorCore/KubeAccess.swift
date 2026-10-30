@@ -8,6 +8,9 @@ import Foundation
 public enum KubeAction: String, CaseIterable, Sendable {
     case createVolumeSnapshot
     case restartWorkload, restartStatefulSet, restartDaemonSet, scale, scaleStatefulSet
+    /// A StatefulSet's or DaemonSet's rollback (patch it, list its ControllerRevisions); a
+    /// Deployment's rollout pause and resume.
+    case rollbackStatefulSet, rollbackDaemonSet, pauseRollout
     case deletePod, sanitizePods, execPod, debugPod, debugNode, suspendCronJob, triggerCronJob, helmRollback, argoSync
     case fluxReconcile, fluxReconcileHelmRelease, fluxReconcileGitRepository, fluxReconcileOCIRepository
     case fluxReconcileHelmRepository, fluxReconcileBucket, cordonNode, drainNode
@@ -46,6 +49,16 @@ public enum KubeAction: String, CaseIterable, Sendable {
         case "Deployment": .restartWorkload
         case "StatefulSet": .restartStatefulSet
         case "DaemonSet": .restartDaemonSet
+        default: nil
+        }
+    }
+
+    /// A rollback of a `kind` workload: a Deployment's is its restart's patch.
+    public static func rollback(kind: String) -> KubeAction? {
+        switch kind {
+        case "Deployment": .restartWorkload
+        case "StatefulSet": .rollbackStatefulSet
+        case "DaemonSet": .rollbackDaemonSet
         default: nil
         }
     }

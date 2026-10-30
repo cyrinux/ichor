@@ -41,6 +41,7 @@ import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.workloadsKey
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubeRevision
+import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.PodSelection
 import name.levis.ichor.model.podSelection
@@ -51,7 +52,7 @@ import name.levis.ichor.model.namespaces
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.CardListPadding
-import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.KubeDenialNote
@@ -125,7 +126,7 @@ fun WorkloadsTab(
     PollWhileStarted { vm.follow() }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
     var opened by remember { mutableStateOf<String?>(null) }
-    var rollback by remember { mutableStateOf<Pair<KubeWorkload, KubeRevision>?>(null) }
+    var revisionOf by remember { mutableStateOf<Pair<KubeRevision, KubeRevisionList>?>(null) }
     var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
     val listed = (state as? UiState.Loaded)?.data?.items
     LaunchedEffect(focusKey, listed) {
@@ -142,12 +143,35 @@ fun WorkloadsTab(
     RolloutStatusSheet(vm.restarts)
 
     // The live row, so the sheet follows a refresh (new replica count, new revision).
-    (state as? UiState.Loaded)?.data?.items?.firstOrNull { it.key == opened }?.let { w ->
+    val openedWorkload = (state as? UiState.Loaded)?.data?.items?.firstOrNull { it.key == opened }
+    // A revision's diff replaces the workload's sheet; closing it goes back to the sheet.
+    val shownRevision = revisionOf
+    if (openedWorkload != null && shownRevision != null) {
+        val (revision, history) = shownRevision
+        val busy by vm.actions.busy.collectAsStateWithLifecycle()
+        RevisionDiffSheet(
+            workload = openedWorkload,
+            revision = revision,
+            manual = history.manual,
+            paused = history.paused,
+            actions = vm.actions,
+            denial = rememberKubeActionAccess(openedWorkload.namespace)?.denial(KubeAction.rollback(openedWorkload.kind)),
+            busy = openedWorkload.key in busy,
+            onRollback = {
+                revisionOf = null
+                // The rollout sheet takes over once the rollback is accepted.
+                opened = null
+                vm.actions.rollback(openedWorkload, revision, history.manual)
+            },
+            onDismiss = { revisionOf = null },
+        )
+    }
+    openedWorkload?.takeIf { shownRevision == null }?.let { w ->
         WorkloadSheet(
             workload = w,
             actions = vm.actions,
             onRestart = { confirm = w },
-            onRollback = { rollback = w to it },
+            onRevision = { revision, history -> revisionOf = revision to history },
             onDismiss = { opened = null },
             onAutoscaling = { opened = null; onAutoscaling() },
             onPods = w.podSelection?.let { selection ->
@@ -159,22 +183,6 @@ fun WorkloadsTab(
             },
         )
     }
-    rollback?.let { (w, revision) ->
-        ConfirmDialog(
-            title = stringResource(R.string.workloads_rollback_title, w.name, revision.revision),
-            text = stringResource(R.string.workloads_rollback_text, w.namespace, revision.images.joinToString(", ").ifEmpty { revision.replicaSet }),
-            confirm = stringResource(R.string.workloads_rollback),
-            onConfirm = {
-                rollback = null
-                // The rollout sheet takes over once the rollback is accepted.
-                opened = null
-                vm.actions.rollback(w, revision)
-            },
-            onDismiss = { rollback = null },
-            destructive = true,
-        )
-    }
-
     confirm?.let { w ->
         RestartConfirmDialog(
             workload = w,

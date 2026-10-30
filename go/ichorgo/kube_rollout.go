@@ -42,7 +42,10 @@ type kubeRolloutStatus struct {
 	Failed bool `json:"failed"`
 	// Manual: pods are only replaced when deleted (OnDelete, StatefulSet partition), so a
 	// restart replaces none on its own.
-	Manual bool             `json:"manual"`
+	Manual bool `json:"manual"`
+	// Paused: a Deployment whose rollout is paused (`kubectl rollout pause`): a template
+	// change waits until it resumes.
+	Paused bool             `json:"paused"`
 	Pods   []kubeRolloutPod `json:"pods"`
 	// Stale: the controller has not observed the latest spec yet (status.observedGeneration
 	// < metadata.generation), so Done and Failed may still describe the previous one. Not
@@ -53,7 +56,8 @@ type kubeRolloutStatus struct {
 // KubeRolloutStatus is the rollout state of one Deployment, StatefulSet or DaemonSet and its
 // pods, old and new, like `kubectl rollout status KIND/NAME -n NAMESPACE` (os:admin), polled
 // by the apps while a restart rolls out: {workload:{...},done,failed,pods:[{name,status,
-// healthy,ready,containers,restarts,node,created,updated}]}. kubeServer: see KubePods.
+// healthy,ready,containers,restarts,node,created,updated}],manual,paused}. kubeServer: see
+// KubePods.
 func KubeRolloutStatus(configYAML, contextName, kubeServer, kind, namespace, name string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -92,6 +96,7 @@ func rolloutStatus(ctx context.Context, k *kubeClient, wk workloadKind, namespac
 		Done:     w.State == workloadReady || w.State == workloadScaledDown,
 		Failed:   progressDeadlineExceeded(obj),
 		Manual:   manualUpdates(wk.kind, obj),
+		Paused:   wk.kind == "Deployment" && obj.Spec.Paused,
 		Pods:     []kubeRolloutPod{},
 		Stale:    stale,
 	}

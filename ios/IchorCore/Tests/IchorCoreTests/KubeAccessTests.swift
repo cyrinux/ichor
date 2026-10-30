@@ -76,6 +76,10 @@ final class KubeAccessTests: XCTestCase {
         XCTAssertEqual(KubeAction.scale(kind: "Deployment"), .scale)
         XCTAssertEqual(KubeAction.scale(kind: "StatefulSet"), .scaleStatefulSet)
         XCTAssertNil(KubeAction.scale(kind: "DaemonSet"), "one pod per node: never scaled")
+        XCTAssertEqual(KubeAction.rollback(kind: "Deployment"), .restartWorkload)
+        XCTAssertEqual(KubeAction.rollback(kind: "StatefulSet"), .rollbackStatefulSet)
+        XCTAssertEqual(KubeAction.rollback(kind: "DaemonSet"), .rollbackDaemonSet)
+        XCTAssertNil(KubeAction.rollback(kind: "CronJob"))
         XCTAssertEqual(
             kubeDistinctActions([.restartWorkload, nil, .restartDaemonSet, .restartWorkload]),
             [.restartWorkload, .restartDaemonSet])
@@ -124,6 +128,7 @@ final class KubeAccessTests: XCTestCase {
             [
                 "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale",
                 "scaleStatefulSet",
+                "rollbackStatefulSet", "rollbackDaemonSet", "pauseRollout",
                 "deletePod", "sanitizePods", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob",
                 "helmRollback", "argoSync",
                 "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
