@@ -9,6 +9,7 @@ import com.google.android.gms.wearable.DataItem
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
+import name.levis.ichor.widget.FleetTally
 import name.levis.ichor.widget.WEAR_PAYLOAD_KEY
 import name.levis.ichor.widget.WEAR_SNAPSHOT_PATH
 import name.levis.ichor.widget.WearCluster
@@ -25,6 +26,9 @@ object WatchSnapshotStore {
 
     /** The cluster on screen on the phone, or null before the first payload. */
     fun active(context: Context): WearCluster? = load(context)?.clusters?.firstOrNull()
+
+    /** The whole fleet's tally, or null before a phone app that sends one. */
+    fun fleet(context: Context): FleetTally? = load(context)?.fleet
 
     fun save(context: Context, bytes: ByteArray?) {
         val edit = prefs(context).edit()
@@ -57,13 +61,13 @@ object WatchSnapshotStore {
         }.onFailure { done() }
     }
 
-    /** Redraws the tile and the complications from the stored payload. */
+    /** Redraws the tiles and the complications from the stored payload. */
     fun requestRedraw(context: Context) {
-        runCatching { TileService.getUpdater(context).requestUpdate(ClusterTileService::class.java) }
-        runCatching {
-            ComplicationDataSourceUpdateRequester
-                .create(context, ComponentName(context, ClusterComplicationService::class.java))
-                .requestUpdateAll()
+        listOf(ClusterTileService::class.java, FleetTileService::class.java).forEach { tile ->
+            runCatching { TileService.getUpdater(context).requestUpdate(tile) }
+        }
+        listOf(ClusterComplicationService::class.java, FleetComplicationService::class.java).forEach { source ->
+            runCatching { ComplicationDataSourceUpdateRequester.create(context, ComponentName(context, source)).requestUpdateAll() }
         }
     }
 

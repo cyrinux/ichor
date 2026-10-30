@@ -48,15 +48,16 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.monitor.ClusterSnapshot
 import java.util.Date
 
-private val Card = Color(0xFF18263A)
-private val Primary = Color(0xFFE8EEF5)
-private val Secondary = Color(0xFF93A3B8)
-private val Ok = Color(0xFF5BD18B)
-private val Warn = Color(0xFFF2C14E)
-private val Bad = Color(0xFFF0716B)
+// The website mockup's dark card, shared with the fleet widget.
+internal val Card = Color(0xFF18263A)
+internal val Primary = Color(0xFFE8EEF5)
+internal val Secondary = Color(0xFF93A3B8)
+internal val Ok = Color(0xFF5BD18B)
+internal val Warn = Color(0xFFF2C14E)
+internal val Bad = Color(0xFFF0716B)
 
 /** Below this height (one launcher cell) only the context and the count fit. */
-private val CompactHeight = 90.dp
+internal val CompactHeight = 90.dp
 
 /**
  * Home-screen summary from the last background check of the widget's cluster (picked when it is
@@ -163,7 +164,7 @@ private fun StatusChip(res: Context, item: StatusItem) {
 }
 
 @Composable
-private fun Label(text: String) {
+internal fun Label(text: String) {
     Text(text, style = TextStyle(color = ColorProvider(Secondary), fontSize = 12.sp), maxLines = 1)
 }
 

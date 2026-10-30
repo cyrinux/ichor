@@ -6024,4 +6024,10 @@
     <string name="alert_repeat_hint">A critical alert that still fires is posted again until you acknowledge or snooze it. Checks run every %1$d min, so a repeat waits for the next check.</string>
     <string name="alert_repeat_still_firing">Still firing · %1$d min · %2$s</string>
     <string name="alert_action_acknowledge">Acknowledge</string>
+    <string name="fleet_widget_description">How many of your clusters need attention, from the last background check</string>
+    <string name="fleet_widget_need_attention">need attention</string>
+    <string name="fleet_widget_all_fine">All %1$d fine</string>
+    <string name="fleet_widget_oldest">Oldest check %1$s</string>
+    <string name="fleet_widget_count" translatable="false">%1$d / %2$d</string>
+    <string name="fleet_widget_row" translatable="false">%1$s · %2$s</string>
 </resources>

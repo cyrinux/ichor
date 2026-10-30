@@ -72,6 +72,9 @@ import kotlinx.coroutines.launch
 enum class DeepLink {
     ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH,
 
+    // The fleet widget (FleetWidget): the fleet screen.
+    FLEET,
+
     // A followed run's notification (OperationService): the screen it shows on.
     UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE, ARGO_APP, FLUX_APP, WORKLOAD, NETPERF, RUNBOOK, CA_ROTATION;
 
@@ -207,6 +210,10 @@ fun Navigation(
             // check here (its refresh action asks for one); nothing to search before an import.
             DeepLink.SEARCH -> if (!startWithImport) {
                 nav.navigate(Routes.SEARCH) { launchSingleTop = true }
+            }
+            // The fleet widget: the last background checks only, so no role check either.
+            DeepLink.FLEET -> if (!startWithImport) {
+                nav.navigate(Routes.FLEET) { launchSingleTop = true }
             }
             // A followed run's notification: back on the screen that shows it, while it is followed.
             DeepLink.UPGRADE -> app.upgradeManager.current.value?.takeIf { !startWithImport }?.let {

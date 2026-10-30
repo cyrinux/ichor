@@ -109,7 +109,7 @@ private fun chip(label: String, color: Int): LayoutElement =
         .addContent(text(label, 13f, WatchColors.PRIMARY))
         .build()
 
-private fun text(value: String, size: Float, color: Int, bold: Boolean = false, maxLines: Int = 1): LayoutElement =
+internal fun text(value: String, size: Float, color: Int, bold: Boolean = false, maxLines: Int = 1): LayoutElement =
     Text.Builder()
         .setText(value)
         .setMaxLines(maxLines)
@@ -122,4 +122,4 @@ private fun text(value: String, size: Float, color: Int, bold: Boolean = false, 
         )
         .build()
 
-private fun gap(height: Float): LayoutElement = Spacer.Builder().setHeight(dp(height)).build()
+internal fun gap(height: Float): LayoutElement = Spacer.Builder().setHeight(dp(height)).build()

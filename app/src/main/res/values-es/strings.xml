@@ -6018,4 +6018,8 @@
     <string name="alert_repeat_hint">Una alerta crítica que sigue activa se vuelve a publicar hasta que la confirmes o la pospongas. Las comprobaciones se hacen cada %1$d min, así que una repetición espera a la siguiente.</string>
     <string name="alert_repeat_still_firing">Sigue activa · %1$d min · %2$s</string>
     <string name="alert_action_acknowledge">Confirmar</string>
+    <string name="fleet_widget_description">Cuántos de tus clústeres necesitan atención, según la última comprobación en segundo plano</string>
+    <string name="fleet_widget_need_attention">necesitan atención</string>
+    <string name="fleet_widget_all_fine">Los %1$d bien</string>
+    <string name="fleet_widget_oldest">Comprobación más antigua %1$s</string>
 </resources>

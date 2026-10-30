@@ -59,5 +59,38 @@
                 android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
                 android:value="900" />
         </service>
+
+        <!-- Every cluster at once: how many need attention (counts only). -->
+        <service
+            android:name=".FleetTileService"
+            android:description="@string/wear_fleet_tile_description"
+            android:exported="true"
+            android:icon="@drawable/ic_ichor"
+            android:label="@string/wear_fleet_tile_label"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/ic_ichor" />
+        </service>
+
+        <service
+            android:name=".FleetComplicationService"
+            android:exported="true"
+            android:icon="@drawable/ic_ichor"
+            android:label="@string/wear_fleet_complication_label"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT,RANGED_VALUE" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="900" />
+        </service>
     </application>
 </manifest>

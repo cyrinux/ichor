@@ -27,4 +27,13 @@
     <string name="wear_tone_warn">Warn</string>
     <string name="wear_tone_bad">Alert</string>
     <string name="wear_tone_stale">Stale</string>
+    <string name="wear_fleet_title">All clusters</string>
+    <string name="wear_fleet_tile_label">Fleet health</string>
+    <string name="wear_fleet_tile_description">How many of your clusters need attention</string>
+    <string name="wear_fleet_complication_label">Clusters needing attention</string>
+    <string name="wear_fleet_short">%1$d/%2$d</string>
+    <string name="wear_fleet_attention">%1$d of %2$d need attention</string>
+    <string name="wear_fleet_need_attention">need attention</string>
+    <string name="wear_fleet_all_fine">All %1$d fine</string>
+    <string name="wear_fleet_unchecked">Not checked: %1$d</string>
 </resources>

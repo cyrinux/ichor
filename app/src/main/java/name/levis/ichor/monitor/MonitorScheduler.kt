@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.widget.ClusterWidget
+import name.levis.ichor.widget.FleetWidget
 import name.levis.ichor.widget.staleInMillis
 import java.util.concurrent.TimeUnit
 
@@ -34,7 +35,8 @@ fun runNowDelayMs(foreground: Boolean, overviewLoaded: Boolean): Long =
 suspend fun syncMonitoring(context: Context, runNow: Boolean = false) {
     val app = context.applicationContext as TalosApp
     val widgets = runCatching {
-        GlanceAppWidgetManager(context).getGlanceIds(ClusterWidget::class.java).isNotEmpty()
+        val manager = GlanceAppWidgetManager(context)
+        manager.getGlanceIds(ClusterWidget::class.java).isNotEmpty() || manager.getGlanceIds(FleetWidget::class.java).isNotEmpty()
     }.getOrDefault(false)
     val needed = app.monitorStore.alertsEnabled.value || widgets
     val work = WorkManager.getInstance(context)

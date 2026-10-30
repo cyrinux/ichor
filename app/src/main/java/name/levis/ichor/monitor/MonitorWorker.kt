@@ -2,7 +2,6 @@ package name.levis.ichor.monitor
 
 import android.content.Context
 import android.util.Log
-import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.CoroutineWorker
@@ -31,7 +30,8 @@ import name.levis.ichor.model.needsEndpoint
 import name.levis.ichor.model.wakeTargets
 import name.levis.ichor.model.wolKey
 import name.levis.ichor.util.StartupTrace
-import name.levis.ichor.widget.ClusterWidget
+import name.levis.ichor.widget.refreshFleetGlance
+import name.levis.ichor.widget.updateAllWidgets
 
 /**
  * Periodic check of every watched cluster (see [monitoredContexts]), each within
@@ -57,7 +57,7 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         if (stored == null) {
             // Config deleted: forget what we saw so the widget stops showing it.
             store.clearSnapshots()
-            ClusterWidget().updateAll(applicationContext)
+            updateAllWidgets(applicationContext)
             app.syncWear()
             return Result.success()
         }
@@ -110,7 +110,8 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             if (notified != run.state) store.saveState(notified)
             store.setSignInNotified(signIns.notified)
         }
-        ClusterWidget().updateAll(applicationContext)
+        app.refreshFleetGlance(now, stored.summary)
+        updateAllWidgets(applicationContext)
         app.syncWear()
         return Result.success()
     }
@@ -280,7 +281,8 @@ fun monitorRun(
         val found = evaluation?.alerts.orEmpty() + listOfNotNull(step.alert)
         if (found.isNotEmpty()) alerts += ClusterAlerts(read.context, found)
     }
-    return MonitorRun(MonitorState(clusters, reach, active), alerts)
+    // The fleet is ranked again once the run is over (refreshFleetGlance): the widget keeps the last one till then.
+    return MonitorRun(MonitorState(clusters, reach, active, before.fleet), alerts)
 }
 
 /** Whether Wake-on-LAN knows where to wake the node of a node [alert]: a saved target or a MAC it was seen with. */
@@ -290,10 +292,10 @@ private fun canWake(app: TalosApp, fingerprint: String, alert: Alert): Boolean {
     return wakeTargets(app.wakeOnLan.targets.value[key], app.wakeOnLan.seen.value[key].orEmpty()).isNotEmpty()
 }
 
-/** Redraws the widget from the stored snapshots, without any network call. */
+/** Redraws the widgets from the stored snapshots, without any network call. */
 class WidgetRefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        ClusterWidget().updateAll(applicationContext)
+        updateAllWidgets(applicationContext)
         return Result.success()
     }
 }
