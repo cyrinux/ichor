@@ -6289,4 +6289,14 @@
     <string name="panic_disconnect">Відключити</string>
     <string name="panic_delete_confirm_title">Видаляти конфігурацію за сигналом тривоги?</string>
     <string name="panic_confirm">Підтвердити</string>
+    <string name="workload_logs_open">Журнали всіх подів</string>
+    <string name="pod_logs_filter_hint">Фільтрувати рядки</string>
+    <string name="pod_logs_filter_regex">Регулярний вираз</string>
+    <string name="pod_logs_since_minutes">%1$d хв</string>
+    <string name="pod_logs_since_hours">%1$d год</string>
+    <string name="pod_logs_since_all">Усе</string>
+    <string name="workload_logs_tail">%1$d рядків на под</string>
+    <string name="workload_logs_matched">Збіглося %1$s з %2$s</string>
+    <string name="workload_logs_truncated">обрізано</string>
+    <string name="workload_logs_pod">Под %1$s</string>
 </resources>

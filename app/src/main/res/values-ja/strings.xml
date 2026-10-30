@@ -5900,4 +5900,14 @@
     <string name="panic_disconnect">接続解除</string>
     <string name="panic_delete_confirm_title">パニック時に設定を削除しますか？</string>
     <string name="panic_confirm">確認</string>
+    <string name="workload_logs_open">すべての Pod のログ</string>
+    <string name="pod_logs_filter_hint">行を絞り込む</string>
+    <string name="pod_logs_filter_regex">正規表現</string>
+    <string name="pod_logs_since_minutes">%1$d 分</string>
+    <string name="pod_logs_since_hours">%1$d 時間</string>
+    <string name="pod_logs_since_all">すべて</string>
+    <string name="workload_logs_tail">Pod ごとに %1$d 行</string>
+    <string name="workload_logs_matched">%2$s 行中 %1$s 行が一致</string>
+    <string name="workload_logs_truncated">切り詰め</string>
+    <string name="workload_logs_pod">Pod %1$s</string>
 </resources>

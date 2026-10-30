@@ -2,6 +2,18 @@
 
 Part of the [Ichor documentation](../README.md#documentation).
 
+## Workload logs
+
+**Logs of all pods** on a Deployment, StatefulSet or DaemonSet reads the logs of its pods through
+the Kubernetes API (`get pods/log`), like `kubectl logs -l`, and merges them by time with a
+coloured chip per pod. Type in the filter to keep the lines holding that text, whatever the case,
+or turn on `.*` for a regular expression (Go syntax), pick a time range (15 min to 24 h, or all)
+and the lines per pod, then copy or share the result as a file. The footer says how many lines
+matched of those read, and "truncated" when a limit was reached: the first 20 pods, 2,000 lines
+per pod, 4 MiB in all, keeping the newest. A pod that cannot answer (still starting, its node
+down) shows no lines; a refused `pods/log` shows the refusal. Only what the kubelet still keeps
+can be read. A pod's own log sheet has the same filter and time range.
+
 ## Image vulnerability scan
 
 **Scan images** on an app's sheet (and on a Talos node's Images screen, and on the Summary of a

@@ -6027,4 +6027,14 @@
     <string name="panic_disconnect">Trennen</string>
     <string name="panic_delete_confirm_title">Konfiguration bei Panik löschen?</string>
     <string name="panic_confirm">Bestätigen</string>
+    <string name="workload_logs_open">Logs aller Pods</string>
+    <string name="pod_logs_filter_hint">Zeilen filtern</string>
+    <string name="pod_logs_filter_regex">Regulärer Ausdruck</string>
+    <string name="pod_logs_since_minutes">%1$d Min.</string>
+    <string name="pod_logs_since_hours">%1$d Std.</string>
+    <string name="pod_logs_since_all">Alles</string>
+    <string name="workload_logs_tail">%1$d Zeilen pro Pod</string>
+    <string name="workload_logs_matched">%1$s von %2$s passen</string>
+    <string name="workload_logs_truncated">gekürzt</string>
+    <string name="workload_logs_pod">Pod %1$s</string>
 </resources>

@@ -6031,4 +6031,14 @@
     <string name="panic_disconnect">Desconectar</string>
     <string name="panic_delete_confirm_title">Excluir a configuração em caso de pânico?</string>
     <string name="panic_confirm">Confirmar</string>
+    <string name="workload_logs_open">Logs de todos os pods</string>
+    <string name="pod_logs_filter_hint">Filtrar linhas</string>
+    <string name="pod_logs_filter_regex">Expressão regular</string>
+    <string name="pod_logs_since_minutes">%1$d min</string>
+    <string name="pod_logs_since_hours">%1$d h</string>
+    <string name="pod_logs_since_all">Tudo</string>
+    <string name="workload_logs_tail">%1$d linhas por pod</string>
+    <string name="workload_logs_matched">%1$s de %2$s correspondem</string>
+    <string name="workload_logs_truncated">truncado</string>
+    <string name="workload_logs_pod">Pod %1$s</string>
 </resources>

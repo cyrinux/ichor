@@ -349,6 +349,11 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "workload-logs", args: "KIND NAMESPACE NAME [FILTER]", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeWorkloadLogs(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), "", flag.Arg(4), false, 0, 0)
+
+		return out, err
+	}},
 	{name: "maintenance-plan", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeMaintenancePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 

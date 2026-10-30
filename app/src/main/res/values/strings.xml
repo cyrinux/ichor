@@ -6044,4 +6044,14 @@
     <string name="panic_disconnect">Disconnect</string>
     <string name="panic_delete_confirm_title">Delete the config on panic?</string>
     <string name="panic_confirm">Confirm</string>
+    <string name="workload_logs_open">Logs of all pods</string>
+    <string name="pod_logs_filter_hint">Filter lines</string>
+    <string name="pod_logs_filter_regex">Regular expression</string>
+    <string name="pod_logs_since_minutes">%1$d min</string>
+    <string name="pod_logs_since_hours">%1$d h</string>
+    <string name="pod_logs_since_all">All</string>
+    <string name="workload_logs_tail">%1$d lines per pod</string>
+    <string name="workload_logs_matched">Matched %1$s of %2$s</string>
+    <string name="workload_logs_truncated">truncated</string>
+    <string name="workload_logs_pod">Pod %1$s</string>
 </resources>

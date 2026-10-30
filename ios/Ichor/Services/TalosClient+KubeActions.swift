@@ -58,14 +58,26 @@ extension TalosClient {
     }
 
     /// The last `tailLines` of a container's log (the previous run's with `previous`), as text.
-    /// `container` may be "" for a pod with one container.
-    func podLogs(_ pod: KubePod, container: String, previous: Bool, tailLines: Int = kubePodLogTail) async throws
-        -> String
-    {
+    /// `container` may be "" for a pod with one container. `filter` keeps the matching lines of
+    /// the time range asked.
+    func podLogs(
+        _ pod: KubePod, container: String, previous: Bool, tailLines: Int = kubePodLogTail,
+        filter: LogFilter = LogFilter()
+    ) async throws -> String {
         try await Self.run {
             [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
-            IchorgoKubePodLogs(
-                config, context, kubeServer, pod.namespace, pod.name, container, previous, tailLines, error)
+            IchorgoKubePodLogsFiltered(
+                config, context, kubeServer, pod.namespace, pod.name, container, previous, tailLines, filter.text,
+                filter.regex, filter.sinceMinutes, error)
+        }
+    }
+
+    /// The logs of `workload`'s pods merged by time, `kubectl logs -l` through the Kubernetes API.
+    func workloadLogs(_ workload: KubeWorkload, filter: LogFilter, tailLines: Int) async throws -> WorkloadLogs {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeWorkloadLogs(
+                config, context, kubeServer, workload.kind, workload.namespace, workload.name, "", filter.text,
+                filter.regex, filter.sinceMinutes, tailLines, $0)
         }
     }
 

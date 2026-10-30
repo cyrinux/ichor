@@ -23,3 +23,41 @@ func demoPodLog(pod string, previous bool) string {
 
 	return b.String()
 }
+
+// demoWorkloadLogs is an hour and a half of the demo pods of a workload, a line every few
+// minutes from each, a few of them timing out.
+func demoWorkloadLogs(wk workloadKind, namespace, name string, match func(string) bool, sinceMinutes int) workloadLogs {
+	messages := []string{
+		`level=info msg="request done" status=200`,
+		`level=info msg="connected to the database"`,
+		`level=warn msg="slow query" took=2.1s`,
+		`level=error msg="upstream timeout" after=30s`,
+	}
+
+	now := time.Now()
+
+	var reads []podLogText
+
+	for _, pod := range demoSelectedPods("", func(p kubePod) bool {
+		return p.Namespace == namespace && ownedByWorkload(p.Owner, wk.kind, name)
+	}).Pods {
+		var b strings.Builder
+
+		// Each pod its own minutes, so that their lines interleave.
+		for i, minutes := 0, 90+len(reads); minutes > 0; i, minutes = i+1, minutes-7 {
+			if sinceMinutes == 0 || minutes <= sinceMinutes {
+				at := now.Add(-time.Duration(minutes) * time.Minute).UTC().Format(time.RFC3339Nano)
+				fmt.Fprintf(&b, "%s %s\n", at, messages[i%len(messages)])
+			}
+		}
+
+		container := ""
+		if len(pod.ContainerNames) > 0 {
+			container = pod.ContainerNames[0]
+		}
+
+		reads = append(reads, podLogText{name: pod.Name, container: container, log: b.String()})
+	}
+
+	return mergeWorkloadLogs(reads, match, sinceMinutes)
+}

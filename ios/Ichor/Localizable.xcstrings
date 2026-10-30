@@ -143125,6 +143125,105 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Масштабирование" } }
       }
     },
+    "Logs of all pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Journaux de tous les pods" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Registros de todos los pods" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Журнали всіх подів" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Logs aller Pods" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Log di tutti i pod" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有 Pod 的日志" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべての Pod のログ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Logs de todos os pods" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Логи всех подов" } }
+      }
+    },
+    "Regular expression" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Expression régulière" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Expresión regular" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Регулярний вираз" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Regulärer Ausdruck" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Espressione regolare" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正则表达式" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "正規表現" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Expressão regular" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Регулярное выражение" } }
+      }
+    },
+    "%lld lines per pod" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld lignes par pod" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld líneas por pod" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld рядків на под" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Zeilen pro Pod" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld righe per pod" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每个 Pod %lld 行" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Pod ごとに %lld 行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld linhas por pod" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%lld строк на под" } }
+      }
+    },
+    "Matched %lld of %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Matched %1$lld of %2$lld" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld sur %2$lld correspondent" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld coinciden" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Збіглося %1$lld з %2$lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld von %2$lld passen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld di %2$lld corrispondono" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "匹配 %1$lld / %2$lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld 行中 %1$lld 行が一致" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld correspondem" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Совпало %1$lld из %2$lld" } }
+      }
+    },
+    "truncated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "tronqué" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "truncado" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "обрізано" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "gekürzt" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "troncato" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已截断" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "切り詰め" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "truncado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "обрезано" } }
+      }
+    },
+    "Time range" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Période" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Periodo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Період" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeitraum" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Periodo" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "时间范围" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "期間" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Período" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Период" } }
+      }
+    },
+    "Lines per pod" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lignes par pod" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Líneas por pod" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Рядків на под" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeilen pro Pod" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Righe per pod" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每个 Pod 的行数" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Pod ごとの行数" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Linhas por pod" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Строк на под" } }
+      }
+    },
     "Scale…" : {
       "extractionState" : "manual",
       "localizations" : {
