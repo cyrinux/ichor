@@ -12,6 +12,7 @@ import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.printToString
 import androidx.test.core.app.ActivityScenario
@@ -57,8 +58,8 @@ class DemoScreenshots {
         openDemo().use {
             openNodeEntry(NodeMenuEntry.CAPTURE)
             val start = hasTestTag(SMOKE_CAPTURE_START) and isEnabled()
-            scrollTo(start)
-            compose.onNode(start).performClick()
+            waitFor(start)
+            compose.onNode(start).performScrollTo().performClick()
             capture("capture", CAPTURE_SETTLE)
         }
         openDemo().use {
@@ -144,8 +145,8 @@ class DemoScreenshots {
         const val TIMEOUT = 30_000L
         const val SETTLE = 2_500L
 
-        /** The live graphs need a few samples before they draw a line. */
-        const val GRAPHS_SETTLE = 30_000L
+        /** Most of the live graphs' three minutes, so that they draw more than a sliver. */
+        const val GRAPHS_SETTLE = 150_000L
 
         /** A screenful of sample packets. */
         const val CAPTURE_SETTLE = 8_000L
