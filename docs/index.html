@@ -93,566 +93,25 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <style>
-      :root {
-        --navy: #14243b;
-        --navy-2: #1c3150;
-        --navy-ink: #e8eef5;
-        --navy-ink-2: #93a3b8;
-        --bg: #f6f8fa;
-        --ink: #14243b;
-        --ink-2: #51627a;
-        --line: #d5dde5;
-        --accent: #ff7a45;
-        --accent-ink: #b4461b;
-        --ready: #5bd18b;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #101823;
-          --ink: #e4eaf1;
-          --ink-2: #9aabc0;
-          --line: #2a3a4e;
-          --accent-ink: #ff9466;
-        }
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html {
-        scroll-behavior: smooth;
-        -webkit-text-size-adjust: 100%;
-      }
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--ink);
-        font: 400 1.0625rem/1.6 "IBM Plex Sans", system-ui, sans-serif;
-      }
-      a {
-        color: inherit;
-      }
-      a:focus-visible,
-      button:focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 3px;
-        border-radius: 6px;
-      }
-
-      /* Top bar: brand on the left, menu on the right, nothing else. */
-      .bar {
-        position: fixed;
-        inset: 0 0 auto;
-        z-index: 20;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.9rem 1.25rem;
-        color: var(--navy-ink);
-        transition: background 0.25s, box-shadow 0.25s;
-      }
-      .bar.solid {
-        background: color-mix(in srgb, var(--navy) 92%, transparent);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 1px 0 rgb(255 255 255 / 0.08);
-      }
-      .bar .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.55rem;
-        text-decoration: none;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-        opacity: 0;
-        transition: opacity 0.25s;
-      }
-      .bar.solid .brand {
-        opacity: 1;
-      }
-      .bar .brand svg {
-        width: 1.6rem;
-        height: 1.6rem;
-      }
-      .bar nav {
-        display: flex;
-        align-items: center;
-        gap: 1.4rem;
-        font-size: 0.95rem;
-      }
-      .bar nav a {
-        text-decoration: none;
-        opacity: 0.85;
-      }
-      .bar nav a:hover {
-        opacity: 1;
-      }
-      .menu-button {
-        display: grid;
-        place-items: center;
-        width: 2.6rem;
-        height: 2.6rem;
-        border: 0;
-        border-radius: 50%;
-        background: rgb(255 255 255 / 0.08);
-        color: inherit;
-        cursor: pointer;
-      }
-      .menu-button span,
-      .menu-button span::before,
-      .menu-button span::after {
-        display: block;
-        width: 1.1rem;
-        height: 2px;
-        border-radius: 1px;
-        background: currentColor;
-        position: relative;
-        transition: transform 0.25s, background 0.25s;
-      }
-      .menu-button span::before,
-      .menu-button span::after {
-        content: "";
-        position: absolute;
-      }
-      .menu-button span::before {
-        top: -6px;
-      }
-      .menu-button span::after {
-        top: 6px;
-      }
-      body.menu-open .menu-button span {
-        background: transparent;
-      }
-      body.menu-open .menu-button span::before {
-        transform: translateY(6px) rotate(45deg);
-      }
-      body.menu-open .menu-button span::after {
-        transform: translateY(-6px) rotate(-45deg);
-      }
-      .links {
-        display: none;
-      }
-      @media (min-width: 52rem) {
-        .links {
-          display: contents;
-        }
-      }
-
-      /* Full-screen menu: the table of contents of what Ichor does. */
-      .overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 15;
-        display: flex;
-        flex-direction: column;
-        justify-content: safe center;
-        overflow-y: auto;
-        padding: 5rem 2rem 2rem;
-        background: var(--navy);
-        color: var(--navy-ink);
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.25s, visibility 0.25s;
-      }
-      body.menu-open .overlay {
-        opacity: 1;
-        visibility: visible;
-      }
-      body.menu-open {
-        overflow: hidden;
-      }
-      .overlay ol {
-        list-style: none;
-        margin: 0 auto;
-        padding: 0;
-        width: min(100%, 28rem);
-        counter-reset: item;
-      }
-      .overlay li a {
-        display: flex;
-        align-items: baseline;
-        gap: 1rem;
-        padding: 0.55rem 0;
-        text-decoration: none;
-        font-size: 1.6rem;
-        font-weight: 300;
-        border-bottom: 1px solid rgb(255 255 255 / 0.08);
-      }
-      .overlay li a::before {
-        counter-increment: item;
-        content: counter(item, decimal-leading-zero);
-        font: 500 0.8rem "IBM Plex Mono", ui-monospace, monospace;
-        color: var(--accent);
-      }
-      .overlay li a small {
-        margin-left: auto;
-        font-size: 0.85rem;
-        color: var(--navy-ink-2);
-      }
-      .overlay .meta {
-        margin: 2rem auto 0;
-        width: min(100%, 28rem);
-        display: flex;
-        gap: 1.5rem;
-        font-size: 0.95rem;
-        color: var(--navy-ink-2);
-      }
-
-      .overlay .langs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem 1rem;
-        margin: 1rem auto 0;
-        width: min(100%, 28rem);
-        font-size: 0.9rem;
-        color: var(--navy-ink-2);
-      }
-      .overlay .langs a {
-        text-decoration: none;
-      }
-      .overlay .langs a[aria-current] {
-        color: var(--navy-ink);
-        font-weight: 600;
-      }
-
-      /* Hero: one colour, the mark, one sentence, two badges, one phone. */
-      .hero {
-        min-height: 100svh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 6rem 1.5rem 0;
-        background: radial-gradient(120% 70% at 50% 0%, var(--navy-2), var(--navy));
-        color: var(--navy-ink);
-        overflow: hidden;
-      }
-      .mark {
-        display: grid;
-        place-items: center;
-        width: 7.5rem;
-        height: 7.5rem;
-        border: 2px solid rgb(232 238 245 / 0.9);
-        border-radius: 50%;
-      }
-      .mark svg {
-        width: 4.4rem;
-        height: 4.4rem;
-      }
-      .mark .pulse {
-        color: var(--accent);
-      }
-      .hero h1 {
-        margin: 1rem 0 0;
-        font-size: clamp(3rem, 12vw, 4.5rem);
-        font-weight: 300;
-        letter-spacing: 0.01em;
-        line-height: 1.1;
-      }
-      .tagline {
-        margin: 2.2rem 0 0;
-        max-width: 22ch;
-        font-size: clamp(1.6rem, 6.4vw, 2.4rem);
-        font-weight: 300;
-        line-height: 1.3;
-      }
-      .tagline b {
-        font-weight: 600;
-      }
-      .badges {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.9rem;
-        margin-top: 2.4rem;
-      }
-      .badge {
-        display: flex;
-        align-items: center;
-        gap: 0.7rem;
-        width: 12.5rem;
-        padding: 0.55rem 1.1rem 0.6rem 0.9rem;
-        border: 1px solid #a6a6a6;
-        border-radius: 10px;
-        background: #000;
-        color: #fff;
-        text-decoration: none;
-        text-align: left;
-        line-height: 1.15;
-      }
-      .badge svg {
-        width: 1.8rem;
-        height: 1.8rem;
-        flex: none;
-      }
-      .badge small {
-        display: block;
-        font-size: 0.72rem;
-        letter-spacing: 0.02em;
-      }
-      .badge strong {
-        font-size: 1.3rem;
-        font-weight: 500;
-      }
-      .demo {
-        margin: 1.2rem 0 0;
-        font-size: 0.95rem;
-        color: var(--navy-ink-2);
-      }
-      .demo b {
-        color: var(--navy-ink);
-        font-weight: 500;
-      }
-      .device {
-        margin-top: 1.2rem;
-        width: min(78vw, 20rem);
-        aspect-ratio: 540 / 1045;
-        padding: 0.7rem 0.7rem 0;
-        border: 0.45rem solid #05090f;
-        border-bottom: 0;
-        border-radius: 2.6rem 2.6rem 0 0;
-        background: #05090f;
-        box-shadow: 0 -20px 60px rgb(0 0 0 / 0.35);
-        /* Only the top of the phone shows; the rest is under the fold. */
-        height: min(46svh, 26rem);
-        overflow: hidden;
-      }
-      .device img {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 2rem 2rem 0 0;
-      }
-      .scroll-hint {
-        margin-top: 1.2rem;
-        color: var(--navy-ink-2);
-        animation: nudge 2s ease-in-out infinite;
-      }
-      @keyframes nudge {
-        50% {
-          transform: translateY(6px);
-        }
-      }
-
-      /* Below the fold: one idea per screen. */
-      .strip {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem 1.6rem;
-        margin: 0;
-        padding: 1.4rem 1.5rem;
-        list-style: none;
-        border-bottom: 1px solid var(--line);
-        color: var(--ink-2);
-        font: 500 0.9rem "IBM Plex Mono", ui-monospace, monospace;
-      }
-      .strip li:first-child {
-        color: var(--accent);
-      }
-      .feature {
-        display: grid;
-        gap: 2.5rem;
-        align-items: center;
-        max-width: 64rem;
-        margin: 0 auto;
-        padding: 5.5rem 1.5rem;
-        scroll-margin-top: 3rem;
-      }
-      @media (min-width: 52rem) {
-        .feature {
-          grid-template-columns: 1fr 1fr;
-          gap: 4rem;
-        }
-        .feature:nth-of-type(even) .shot {
-          order: -1;
-        }
-      }
-      .feature + .feature {
-        border-top: 1px solid var(--line);
-      }
-      .eyebrow {
-        margin: 0;
-        font: 500 0.8rem "IBM Plex Mono", ui-monospace, monospace;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--accent);
-      }
-      .feature h2 {
-        margin: 0.6rem 0 0;
-        font-size: clamp(1.8rem, 5vw, 2.4rem);
-        font-weight: 400;
-        line-height: 1.2;
-      }
-      .feature p.lead {
-        margin: 1rem 0 0;
-        color: var(--ink-2);
-      }
-      .feature ul {
-        margin: 1.4rem 0 0;
-        padding: 0;
-        list-style: none;
-      }
-      .feature li {
-        padding: 0.7rem 0 0.7rem 1.6rem;
-        border-top: 1px solid var(--line);
-        position: relative;
-      }
-      .feature li::before {
-        content: "";
-        position: absolute;
-        left: 0.2rem;
-        top: 1.25rem;
-        width: 0.55rem;
-        height: 0.55rem;
-        border-radius: 50%;
-        background: var(--accent);
-      }
-      .feature li b {
-        font-weight: 600;
-      }
-      .shot {
-        justify-self: center;
-        width: min(70vw, 17rem);
-        padding: 0.5rem;
-        border-radius: 2.2rem;
-        background: #05090f;
-        box-shadow: 0 30px 60px -20px rgb(20 36 59 / 0.45);
-      }
-      .shot img {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 1.8rem;
-      }
-      .providers {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.6rem;
-        justify-self: stretch;
-      }
-      .providers span {
-        padding: 1rem;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        font-weight: 500;
-        text-align: center;
-      }
-      .providers span:first-child {
-        grid-column: 1 / -1;
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-      pre.yaml {
-        justify-self: stretch;
-        margin: 0;
-        padding: 1.4rem;
-        border-radius: 14px;
-        background: var(--navy);
-        color: var(--navy-ink);
-        font: 0.88rem/1.6 "IBM Plex Mono", ui-monospace, monospace;
-        overflow-x: auto;
-      }
-      pre.yaml i {
-        font-style: normal;
-        color: var(--navy-ink-2);
-      }
-      pre.yaml b {
-        font-weight: 400;
-        color: var(--accent);
-      }
-
-      .trust {
-        background: var(--navy);
-        color: var(--navy-ink);
-      }
-      .trust > div {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-        gap: 2rem;
-        max-width: 64rem;
-        margin: 0 auto;
-        padding: 4.5rem 1.5rem;
-      }
-      .trust h3 {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 600;
-      }
-      .trust p {
-        margin: 0.4rem 0 0;
-        font-size: 0.95rem;
-        color: var(--navy-ink-2);
-      }
-      .end {
-        padding: 6rem 1.5rem;
-        text-align: center;
-      }
-      .end h2 {
-        margin: 0 auto;
-        max-width: 20ch;
-        font-size: clamp(1.8rem, 5vw, 2.4rem);
-        font-weight: 300;
-        line-height: 1.25;
-      }
-      .end .more {
-        margin: 2rem 0 0;
-      }
-      .end .more a {
-        color: var(--accent-ink);
-        font-weight: 500;
-      }
-      footer {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem 1.6rem;
-        padding: 2rem 1.5rem 3rem;
-        border-top: 1px solid var(--line);
-        font-size: 0.9rem;
-        color: var(--ink-2);
-      }
-
-      /* Sections ease in as they scroll into view. */
-      .reveal {
-        opacity: 0;
-        transform: translateY(24px);
-        transition: opacity 0.6s, transform 0.6s;
-      }
-      .reveal.seen {
-        opacity: 1;
-        transform: none;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
-        .reveal {
-          opacity: 1;
-          transform: none;
-          transition: none;
-        }
-        .scroll-hint {
-          animation: none;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="site.css" />
+    <link rel="stylesheet" href="home.css" />
     <meta
       name="google-site-verification"
       content="lpVs7M2E7c8dphSqSBVfq_Gifch93KEnzBxpJHi_xPo"
     />
   </head>
-  <body>
-    <header class="bar" id="bar">
-      <a class="brand" href="#top" aria-label="Ichor, back to top">
+  <body data-home>
+    <header class="site-bar" id="bar">
+      <a class="site-brand" href="./" aria-label="Ichor, back to top">
         <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#glyph" /></svg>
         <span translate="no">ichor</span>
       </a>
       <nav aria-label="Primary">
-        <span class="links">
-          <a data-i18n href="#clusters">Clusters</a>
-          <a data-i18n href="#watch">Watch</a>
-          <a data-i18n href="#operate">Operate</a>
-          <a data-i18n href="#plugins">Plugins</a>
+        <span class="site-links">
+          <a data-i18n href="./#clusters">Clusters</a>
+          <a data-i18n href="./#watch">Watch</a>
+          <a data-i18n href="./#operate">Operate</a>
+          <a data-i18n href="./#plugins">Plugins</a>
           <a data-i18n href="features.html">Features</a>
           <a href="https://github.com/cyrinux/ichor" translate="no">GitHub</a>
         </span>
@@ -664,13 +123,13 @@
 
     <div class="overlay" id="menu" aria-label="What Ichor does">
       <ol>
-        <li><a data-i18n href="#clusters">Clusters <small>Talos, Omni, EKS…</small></a></li>
-        <li><a data-i18n href="#watch">Watch <small>alerts, logs</small></a></li>
-        <li><a data-i18n href="#operate">Operate <small>upgrades, GitOps</small></a></li>
-        <li><a data-i18n href="#measure">Measure <small>network, storage</small></a></li>
-        <li><a data-i18n href="#plugins">Plugins <small>any CRD</small></a></li>
-        <li><a data-i18n href="#trust">Privacy <small>no tracking</small></a></li>
-        <li><a data-i18n href="#get">Get the app</a></li>
+        <li><a data-i18n href="./#clusters">Clusters <small>Talos, Omni, EKS…</small></a></li>
+        <li><a data-i18n href="./#watch">Watch <small>alerts, logs</small></a></li>
+        <li><a data-i18n href="./#operate">Operate <small>upgrades, GitOps</small></a></li>
+        <li><a data-i18n href="./#measure">Measure <small>network, storage</small></a></li>
+        <li><a data-i18n href="./#plugins">Plugins <small>any CRD</small></a></li>
+        <li><a data-i18n href="./#trust">Privacy <small>no tracking</small></a></li>
+        <li><a data-i18n href="./#get">Get the app</a></li>
         <li><a data-i18n href="features.html">Everything else <small>the full tour</small></a></li>
       </ol>
       <p class="meta">
@@ -733,8 +192,8 @@
         <svg class="scroll-hint" width="22" height="22" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
         <div class="device">
-          <img src="screenshots/overview.webp" width="540" height="1045"
-            alt="The Ichor overview: a cluster's nodes, their health and live usage." />
+          <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/overview-light.webp" /><img src="screenshots/overview.webp" width="540" height="1045"
+            alt="The Ichor overview: a cluster's nodes, their health and live usage." /></picture>
         </div>
       </section>
 
@@ -757,7 +216,7 @@
             <li><b>Your identity, your RBAC</b>: the app says what you may do before you tap.</li>
           </ul>
         </div>
-        <div class="providers" aria-hidden="true" translate="no">
+        <div class="provider-grid" aria-hidden="true" translate="no">
           <span>Talos Linux</span><span>Omni</span><span>EKS</span><span>GKE</span>
           <span>AKS</span><span>DigitalOcean</span><span>Rancher</span>
         </div>
@@ -774,7 +233,7 @@
             <li><b>Thirty days of history</b>: uptime, what changed since you last looked, a storage forecast.</li>
           </ul>
         </div>
-        <div class="shot"><img src="screenshots/logs.webp" width="540" height="1045" loading="lazy" alt="A node's service logs, streaming." /></div>
+        <div class="shot"><picture><source media="(prefers-color-scheme: light)" srcset="screenshots/logs-light.webp" /><img src="screenshots/logs.webp" width="540" height="1045" loading="lazy" alt="A node's service logs, streaming." /></picture></div>
       </section>
 
       <section class="feature reveal" id="operate">
@@ -788,7 +247,7 @@
             <li><b>Runbooks</b>: an ordered list of actions, its plan shown before it runs.</li>
           </ul>
         </div>
-        <div class="shot"><img src="screenshots/upgrade.webp" width="540" height="1045" loading="lazy" alt="A cluster-wide Talos upgrade, node by node." /></div>
+        <div class="shot"><picture><source media="(prefers-color-scheme: light)" srcset="screenshots/upgrade-light.webp" /><img src="screenshots/upgrade.webp" width="540" height="1045" loading="lazy" alt="A cluster-wide Talos upgrade, node by node." /></picture></div>
       </section>
 
       <section class="feature reveal" id="measure">
@@ -802,7 +261,7 @@
             <li><b>Capacity</b>: what losing a node would cost, before it happens.</li>
           </ul>
         </div>
-        <div class="shot"><img src="screenshots/graphs.webp" width="540" height="1045" loading="lazy" alt="Live CPU, memory and network graphs." /></div>
+        <div class="shot"><picture><source media="(prefers-color-scheme: light)" srcset="screenshots/graphs-light.webp" /><img src="screenshots/graphs.webp" width="540" height="1045" loading="lazy" alt="Live CPU, memory and network graphs." /></picture></div>
       </section>
 
       <section class="feature reveal" id="plugins">
@@ -860,49 +319,52 @@
             <span data-i18n><small>DOWNLOAD FOR</small><strong>iPhone</strong></span>
           </a>
         </div>
+        <p class="call">
+          Looking for <strong>Play Store beta testers</strong>: join on
+          <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a> or
+          <a href="features.html#beta">sign up by mail</a>.
+        </p>
       </section>
     </main>
 
-    <footer>
-      <a data-i18n href="features.html">Every feature</a>
-      <a data-i18n href="features.html#faq">FAQ</a>
-      <a data-i18n href="features.html#support">Support the project</a>
-      <a data-i18n href="privacy.html">Privacy</a>
-      <a href="https://github.com/cyrinux/ichor" translate="no">GitHub</a>
-      <span translate="no">Apache-2.0</span>
+    <footer class="site-footer">
+      <div class="footer-links">
+        <a data-i18n href="features.html">Every feature</a>
+        <a data-i18n href="features.html#faq">FAQ</a>
+        <a data-i18n href="features.html#support">Support the project</a>
+        <a data-i18n href="plugins/">Plugin reference</a>
+        <a data-i18n href="features.html#plugin-request">Plugin request</a>
+        <a data-i18n href="privacy.html">Privacy policy</a>
+        <a data-i18n href="https://github.com/cyrinux/ichor">Source on GitHub</a>
+        <a href="https://www.talos.dev" translate="no">Talos Linux</a>
+      </div>
+      <div class="ci-badges" translate="no">
+          <a href="https://github.com/cyrinux/ichor/actions/workflows/android.yml">
+            <img
+              src="https://github.com/cyrinux/ichor/actions/workflows/android.yml/badge.svg?branch=main"
+              alt="Android CI"
+              height="20"
+              loading="lazy"
+            />
+          </a>
+          <a href="https://github.com/cyrinux/ichor/actions/workflows/ios.yml">
+            <img
+              src="https://github.com/cyrinux/ichor/actions/workflows/ios.yml/badge.svg?branch=main"
+              alt="iOS CI"
+              height="20"
+              loading="lazy"
+            />
+          </a>
+        </div>
+      <p class="foss">
+          Open-source build: <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D" translate="no">Obtainium</a> ·
+          <a href="https://github.com/cyrinux/ichor/releases/latest">APK</a>
+        </p>
+      <p class="legal">
+          Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of
+          Sidero Labs, Inc.
+        </p>
     </footer>
-
-    <script>
-      // The detailed sections moved to features.html: an old link to one of them (#argocd,
-      // #plugin-request, #beta…) lands there.
-      const target = decodeURIComponent(location.hash.slice(1));
-      if (target && !document.getElementById(target)) {
-        location.replace("features.html" + location.hash);
-      }
-
-      const bar = document.getElementById("bar");
-      const button = document.getElementById("menu-button");
-      const hero = document.querySelector(".hero");
-
-      new IntersectionObserver(([entry]) => {
-        bar.classList.toggle("solid", !entry.isIntersecting);
-      }, { rootMargin: "-64px 0px 0px" }).observe(hero);
-
-      const setMenu = (open) => {
-        document.body.classList.toggle("menu-open", open);
-        button.setAttribute("aria-expanded", String(open));
-      };
-      button.addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
-      document.querySelectorAll("#menu a").forEach((link) => link.addEventListener("click", () => setMenu(false)));
-      document.addEventListener("keydown", (event) => event.key === "Escape" && setMenu(false));
-
-      const reveal = new IntersectionObserver((entries) => {
-        entries.filter((entry) => entry.isIntersecting).forEach((entry) => {
-          entry.target.classList.add("seen");
-          reveal.unobserve(entry.target);
-        });
-      }, { threshold: 0.15 });
-      document.querySelectorAll(".reveal").forEach((element) => reveal.observe(element));
-    </script>
+    <script src="site.js"></script>
   </body>
 </html>

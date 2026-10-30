@@ -1,0 +1,461 @@
+/* Shared by every page: tokens, top bar, menu, badges, footer. */
+:root {
+  --navy: #14243b;
+  --navy-2: #1c3150;
+  --navy-ink: #e8eef5;
+  --navy-ink-2: #93a3b8;
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --ink: #14243b;
+  --ink-2: #51627a;
+  --line: #d5dde5;
+  --accent: #ff7a45;
+  --ready: #1b7f45;
+  --warn: #8a6100;
+  --down: #c0282d;
+  --phone: #0f1a2a;
+  --phone-ink: #e8eef5;
+  --phone-ink-2: #93a3b8;
+  --phone-card: #18263a;
+  --measure: 68ch;
+  --accent-ink: #b4461b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101823;
+    --surface: #16212f;
+    --ready: #5bd18b;
+    --warn: #f2c14e;
+    --down: #ff6b6b;
+    --phone: #05090f;
+    --phone-card: #121e2e;
+    --ink: #e4eaf1;
+    --ink-2: #9aabc0;
+    --line: #2a3a4e;
+    --accent-ink: #ff9466;
+  }
+
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 "IBM Plex Sans", system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.site-bar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  color: var(--navy-ink);
+  transition: background 0.25s, box-shadow 0.25s;
+}
+
+.site-bar.solid {
+  background: color-mix(in srgb, var(--navy) 92%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.site-bar .site-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.site-bar.solid .site-brand {
+  opacity: 1;
+}
+
+.site-bar .site-brand svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.site-bar nav {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  font-size: 0.95rem;
+}
+
+.site-bar nav a {
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.site-bar nav a:hover {
+  opacity: 1;
+}
+
+.menu-button {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.08);
+  color: inherit;
+  cursor: pointer;
+}
+
+.menu-button span,
+.menu-button span::before,
+.menu-button span::after {
+  display: block;
+  width: 1.1rem;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  position: relative;
+  transition: transform 0.25s, background 0.25s;
+}
+
+.menu-button span::before,
+.menu-button span::after {
+  content: "";
+  position: absolute;
+}
+
+.menu-button span::before {
+  top: -6px;
+}
+
+.menu-button span::after {
+  top: 6px;
+}
+
+body.menu-open .menu-button span {
+  background: transparent;
+}
+
+body.menu-open .menu-button span::before {
+  transform: translateY(6px) rotate(45deg);
+}
+
+body.menu-open .menu-button span::after {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.site-links {
+  display: none;
+}
+
+@media (min-width: 52rem) {
+  .site-links {
+    display: contents;
+  }
+
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  overflow-y: auto;
+  padding: 5rem 2rem 2rem;
+  background: var(--navy);
+  color: var(--navy-ink);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+}
+
+body.menu-open .overlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.menu-open {
+  overflow: hidden;
+}
+
+.overlay ol {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  width: min(100%, 28rem);
+  counter-reset: item;
+}
+
+.overlay li a {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  text-decoration: none;
+  font-size: 1.6rem;
+  font-weight: 300;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.overlay li a::before {
+  counter-increment: item;
+  content: counter(item, decimal-leading-zero);
+  font: 500 0.8rem "IBM Plex Mono", ui-monospace, monospace;
+  color: var(--accent);
+}
+
+.overlay li a small {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--navy-ink-2);
+}
+
+.overlay .meta {
+  margin: 2rem auto 0;
+  width: min(100%, 28rem);
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--navy-ink-2);
+}
+
+.overlay .langs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 1rem auto 0;
+  width: min(100%, 28rem);
+  font-size: 0.9rem;
+  color: var(--navy-ink-2);
+}
+
+.overlay .langs a {
+  text-decoration: none;
+}
+
+.overlay .langs a[aria-current] {
+  color: var(--navy-ink);
+  font-weight: 600;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 2.4rem;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 12.5rem;
+  padding: 0.55rem 1.1rem 0.6rem 0.9rem;
+  border: 1px solid #a6a6a6;
+  border-radius: 10px;
+  background: #000;
+  color: #fff;
+  text-decoration: none;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.badge svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: none;
+}
+
+.badge small {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.badge strong {
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+@keyframes nudge {
+  50% {
+          transform: translateY(6px);
+  };
+}
+
+.eyebrow {
+  margin: 0;
+  font: 500 0.8rem "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.end {
+  padding: 6rem 1.5rem;
+  text-align: center;
+}
+
+.end h2 {
+  margin: 0 auto;
+  max-width: 20ch;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 300;
+  line-height: 1.25;
+}
+
+.end .more {
+  margin: 2rem 0 0;
+}
+
+.end .more a {
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+
+.reveal.seen {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+}
+
+/* Anchors land under the fixed bar. */
+[id] {
+  scroll-margin-top: 4.5rem;
+}
+code,
+.cmd {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+/* Long commands and identifiers break instead of widening the page. */
+:not(pre) > code {
+  overflow-wrap: anywhere;
+}
+.wrap {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+.button.primary {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.button:hover {
+  border-color: var(--ink-2);
+}
+.button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.note {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin-top: 1rem;
+}
+
+/* The beta testers call, on the closing section of both pages. */
+.call {
+  margin: 1.5rem auto 0;
+  max-width: 44ch;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+
+/* Footer */
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 2.5rem 1.5rem 3rem;
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  text-align: center;
+}
+.site-footer .footer-links,
+.site-footer .ci-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+}
+.site-footer .ci-badges {
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.site-footer .ci-badges img {
+  display: block;
+  height: 20px;
+}
+.site-footer .foss {
+  font-size: 0.78rem;
+  opacity: 0.7;
+  margin: 1rem 0 0;
+}
+.site-footer .legal {
+  margin: 0.75rem 0 0;
+}

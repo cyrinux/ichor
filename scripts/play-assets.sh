@@ -21,7 +21,7 @@ overview="$out/phoneScreenshots/1_overview.png"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# Brand, from docs/index.html and the launcher icon.
+# Brand, from docs/site.css and the launcher icon.
 BG_ICON="#101418"   # @color/ic_launcher_background
 PHONE="#0F1A2A"
 GLOW="#1E3350"

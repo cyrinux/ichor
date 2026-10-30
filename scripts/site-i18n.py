@@ -140,7 +140,7 @@ def localize_urls(html: str, lang: str, page: str) -> str:
             return match.group(0)
         return f'{match.group(1)}="../{url}"'
 
-    html = re.sub(r'\b(href|src)="([^"]+)"', asset, html)
+    html = re.sub(r'\b(href|src|srcset)="([^"]+)"', asset, html)
     html = re.sub(r"<a [^>]*hreflang=\"[^\"]+\"[^>]*>", language_link, html)
     html = re.sub(r'<html lang="en"', f'<html lang="{lang}"', html, count=1)
     page_url = SITE + f"{lang}/" + ("" if page == "index.html" else page)
