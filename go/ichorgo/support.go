@@ -66,6 +66,7 @@ func StartSupportBundle(configYAML, contextName, kubeServer, nodes, destPath str
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", 0, msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		size, err := runSupportBundle(ctx, configYAML, contextName, kubeServer, nodes, destPath, listener)
 		if err != nil {

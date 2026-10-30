@@ -291,6 +291,7 @@ func StartTalosSignIn(storedYAML, contextName string, listener SignInListener) *
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(storedYAML, contextName)()
 
 		err := runOmniSignIn(ctx, storedYAML, contextName, listener)
 		if errors.Is(err, context.Canceled) {

@@ -136,8 +136,8 @@ private suspend fun readAll(app: TalosApp, stored: StoredConfig, before: Monitor
                     if (heldBackForVpn(app.vpnOnly.fingerprints.value, context.fingerprint, vpnUp)) {
                         ClusterRead(context, snapshot = null, skipped = true)
                     } else {
-                        val reading = readWithin { readCluster(app, context, before.clusters[monitorKeyOf(context)], now) }
-                        ClusterRead(context, reading?.snapshot, detail = reading?.detail)
+                        readWithin { readClusterOrSkip(app, context, before.clusters[monitorKeyOf(context)], now) }
+                            ?: ClusterRead(context, snapshot = null)
                     }
                 }
             }

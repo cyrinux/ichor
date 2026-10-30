@@ -154,7 +154,7 @@ func joinConfigFor(configYAML, contextName string, req joinConfigRequest) (strin
 		return buildJoinConfig(text, req)
 	}
 
-	r, err := withNodeSession(configYAML, contextName, req.template, configPreviewTimeout, func(ctx context.Context, s *session) (joinResult, error) {
+	r, err := withNodeSessionFrom(context.Background(), configYAML, contextName, req.template, configPreviewTimeout, func(ctx context.Context, s *session) (joinResult, error) {
 		text, err := machineConfigYAML(ctx, s, req.template, true)
 		if err != nil {
 			return joinResult{}, err

@@ -68,6 +68,12 @@ only (requests, errors, the client cache, the follow loop): no kubeconfig parsin
 data, masking or audit, which stay in the facade (`go/ichorgo/kube_alias.go` holds the
 wrappers).
 
+Every synchronous read funnel (`withKube`, `withSession`, `withNodeSession`) derives from the
+cluster's `callParent`, and the apps call `CancelCalls` when they switch cluster. Mutations
+keep a background parent (`kubeMutate`, `nodeAction`, the `*From` variants). A followed run
+holds its cluster's scope (`defer holdCalls(…)()` after `onPanic`, guarded by
+`callscope_guard_test.go`); screen-bound streams are listed in `screenBoundRuns`.
+
 ## Facade contract
 
 The apps decode the Go core's JSON with their own Kotlin and Swift types, leniently, so a

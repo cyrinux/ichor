@@ -74,6 +74,7 @@ func StartConfigApply(configYAML, contextName, node, baseYAML, draftYAML, mode s
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		err := recordedRun(configYAML, contextName, func() auditAction {
 			return auditAction{Action: "config-apply", Node: node, Params: "mode=" + mode}

@@ -167,6 +167,7 @@ func StartImageScan(configYAML, contextName, kubeServer, pods, options string, l
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		report, err := startImageScan(ctx, kubeTarget{configYAML, contextName, kubeServer}, pods, options, emit)
 

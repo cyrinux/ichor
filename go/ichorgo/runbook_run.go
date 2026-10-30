@@ -81,6 +81,7 @@ func StartRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs 
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnError)
+		defer holdCalls(configYAML, contextName)()
 
 		rb, err := loadRunbook(runbookYAML)
 		if err == nil {

@@ -48,7 +48,8 @@ func maskErr(err *error) {
 		*err = panicError(r)
 	}
 
-	if *err == nil {
+	// Not a failure, and the apps match its text: a masked word must not change it.
+	if *err == nil || errors.Is(*err, errCallsCancelled) {
 		return
 	}
 
