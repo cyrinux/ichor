@@ -40,7 +40,8 @@ report; redact them or use a throwaway cluster.
 In scope:
 
 - the Android and iOS apps, and the shared Go core in this repository;
-- how the apps store and handle cluster credentials and other secrets;
+- how the apps store and handle cluster credentials and other secrets (a PagerDuty token, for
+  example, stays in the sealed per-cluster store and out of backups, logs and support bundles);
 - the in-cluster components and manifests shipped from this repository;
 - the build and release pipeline in this repository.
 

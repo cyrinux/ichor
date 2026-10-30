@@ -127,6 +127,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             AlertAckStore.acknowledge(cluster: cluster, alertKey: alertKey)
             return
         }
+        if action == AlertAction.acknowledgePage.rawValue {
+            await AlertNotificationActions.acknowledgePage(
+                cluster: cluster, alertKey: alertKey, notification: identifier, title: content.title)
+            return
+        }
         if action == AlertAction.wake.rawValue {
             let host = content.userInfo[AlertNotificationActions.hostKey] as? String ?? ""
             await AlertNotificationActions.wake(cluster: cluster, alertKey: alertKey, hostname: host)
