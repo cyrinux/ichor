@@ -40,9 +40,10 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartNetPerf(
+        let started = IchorgoStartNetPerf(
             kubeConfig, kubeContext, kubeAPIServer, setup.server, setup.client,
-            setup.hostNetwork, setup.seconds, bridge).map(GoObject.init)
+            setup.hostNetwork, setup.seconds, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
             run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole test

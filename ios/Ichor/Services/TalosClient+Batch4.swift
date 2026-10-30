@@ -39,10 +39,11 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartPacketCapture(
+        let started = IchorgoStartPacketCapture(
             config, context, node, options.interface, options.trimmedFilter,
             options.promiscuous, options.snapLen, options.duration.seconds,
-            options.sizeLimit.bytes, destPath, bridge).map(GoObject.init)
+            options.sizeLimit.bytes, destPath, bridge)
+        let run = started.map(GoObject.init)
         let flusher = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
@@ -71,10 +72,11 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartPacketCapturePair(
+        let started = IchorgoStartPacketCapturePair(
             config, context, "\(node),\(options.peer)", options.interfaces, options.trimmedFilter,
             options.promiscuous, options.snapLen, options.duration.seconds,
-            options.sizeLimit.bytes, destPath, bridge).map(GoObject.init)
+            options.sizeLimit.bytes, destPath, bridge)
+        let run = started.map(GoObject.init)
         let flusher = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
