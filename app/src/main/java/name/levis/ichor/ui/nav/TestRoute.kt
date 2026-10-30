@@ -1,11 +1,11 @@
 package name.levis.ichor.ui.nav
 
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.navigation.NavHostController
 
 /**
- * A route to open, set by the screenshot walk (androidTest DemoScreenshots) to reach a screen
- * directly. Only debug builds listen (Navigation.kt).
+ * The app's navigation, for the screenshot walk (androidTest DemoScreenshots) to open a screen
+ * directly. Only debug builds set it (Navigation.kt).
  */
 object TestRoute {
-    val route = MutableStateFlow<String?>(null)
+    var nav: NavHostController? = null
 }

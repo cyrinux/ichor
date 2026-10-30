@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -134,13 +135,9 @@ fun Navigation(
     }
 
     if (BuildConfig.DEBUG) {
-        LaunchedEffect(nav) {
-            TestRoute.route.collect { route ->
-                if (route != null) {
-                    TestRoute.route.value = null
-                    nav.navigate(route)
-                }
-            }
+        DisposableEffect(nav) {
+            TestRoute.nav = nav
+            onDispose { TestRoute.nav = null }
         }
     }
 

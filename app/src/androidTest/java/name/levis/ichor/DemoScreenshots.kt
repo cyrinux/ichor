@@ -86,14 +86,14 @@ class DemoScreenshots {
     fun captureTheFeatures() {
         shell("mkdir -p $DIR")
         FEATURE_SHOTS.forEach { (name, route) ->
-            openDemo().use {
-                TestRoute.route.value = route
+            openDemo().use { scenario ->
+                scenario.onActivity { TestRoute.nav!!.navigate(route) }
                 capture("feature-$name", FEATURE_SETTLE)
             }
         }
         // The recorder is the Insights screen's second tab.
-        openDemo().use {
-            TestRoute.route.value = Routes.INSIGHTS
+        openDemo().use { scenario ->
+            scenario.onActivity { TestRoute.nav!!.navigate(Routes.INSIGHTS) }
             val recorder = hasText(ApplicationProvider.getApplicationContext<Context>().getString(R.string.insights_tab_recorder))
             waitFor(recorder)
             compose.onNode(recorder).performClick()
