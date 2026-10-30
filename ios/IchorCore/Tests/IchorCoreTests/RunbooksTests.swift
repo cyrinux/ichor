@@ -110,7 +110,8 @@ final class RunbooksTests: XCTestCase {
         XCTAssertEqual(summary.params[1].prompt, "app", "no prompt: the name")
         XCTAssertEqual(summary.params[1].kind, "string")
 
-        let values = RunbookParam.initialValues(summary.params, remembered: ["ns": "demo-shop", "gone": "y", "old": " "])
+        let remembered = ["ns": "demo-shop", "gone": "y", "old": " "]
+        let values = RunbookParam.initialValues(summary.params, remembered: remembered)
         XCTAssertEqual(values, ["ns": "demo-shop", "app": "ingest-api", "old": "x"])
         XCTAssertEqual(RunbookParam.missing(summary.params, values: values), [])
         XCTAssertEqual(RunbookParam.missing(summary.params, values: ["ns": " "]), ["ns"])

@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.runbooks
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.RunbookValueMemory
 import name.levis.ichor.model.RunbookParam
 import name.levis.ichor.model.RunbookPlan
 import name.levis.ichor.model.initialRunbookValues
@@ -62,13 +64,14 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
     var continueIds by remember(id) { mutableStateOf(emptySet<String>()) }
     val coroutines = rememberCoroutineScope()
+    val memory = remember { RunbookValueMemory(app.getSharedPreferences(RunbookValueMemory.FILE, Context.MODE_PRIVATE)) }
 
     // The plan of the values given; what the core says of them stays on screen.
     suspend fun planWithValues(yaml: String) {
         try {
             plan = app.runbookRepository.plan(yaml, values)
             error = null
-            if (params.isNotEmpty() && scope != null) app.runbookValues.save(scope, id, values)
+            if (params.isNotEmpty() && scope != null) memory.save(scope, id, values)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -85,7 +88,7 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
             if (params.isEmpty()) {
                 planWithValues(yaml)
             } else {
-                values = initialRunbookValues(params, app.runbookValues.load(scope, id))
+                values = initialRunbookValues(params, memory.load(scope, id))
                 choices = runbookValueChoices(app, params)
             }
         } catch (e: CancellationException) {
@@ -124,8 +127,7 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
                 Modifier.pageContent(padding).verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                val plan = current
-                if (plan.description.isNotEmpty()) MutedText(plan.description)
+                if (current.description.isNotEmpty()) MutedText(current.description)
                 if (params.isNotEmpty()) {
                     MutedText(stringResource(R.string.runbook_params_values, runbookValuesLabel(values)))
                     TextButton(onClick = {
@@ -133,19 +135,19 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
                         continueIds = emptySet()
                     }) { Text(stringResource(R.string.runbook_params_change)) }
                 }
-                RunbookPlanSteps(plan, continueIds, onToggleContinue = { stepId, on -> continueIds = if (on) continueIds + stepId else continueIds - stepId })
-                if (!plan.canRun(continueIds)) {
+                RunbookPlanSteps(current, continueIds, onToggleContinue = { stepId, on -> continueIds = if (on) continueIds + stepId else continueIds - stepId })
+                if (!current.canRun(continueIds)) {
                     Text(stringResource(R.string.runbook_blocked), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                 }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 Button(
                     onClick = {
                         // The core refuses the demo before any step: its reason shows on the run screen.
-                        runCatching { app.runbookManager.start(yaml, plan, continueIds, values) }
+                        runCatching { app.runbookManager.start(yaml, current, continueIds, values) }
                             .onSuccess { started -> if (started) onRunning() else error = app.getString(R.string.runbook_already_running) }
                             .onFailure { error = it.userMessage() }
                     },
-                    enabled = plan.canRun(continueIds),
+                    enabled = current.canRun(continueIds),
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.runbook_run)) }
             }
