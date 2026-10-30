@@ -526,6 +526,9 @@
     <string name="settings_theme_light">Світла</string>
     <string name="settings_theme_dark">Темна</string>
     <string name="settings_theme_black">Чорна</string>
+    <string name="settings_ui_style">Стиль інтерфейсу</string>
+    <string name="settings_ui_style_desc">Як відображаються картки, панелі та кнопки</string>
+    <string name="settings_ui_style_material3">Material 3</string>
     <string name="settings_language">Мова</string>
     <string name="settings_language_system">Системна</string>
     <string name="settings_live_cluster_stats">Навантаження кластера наживо</string>
@@ -579,7 +582,7 @@
     <string name="settings_delete_backup_first">Спершу створити резервну копію</string>
 
     <string name="settings_section_clusters">Кластери й резервні копії</string>
-    <string name="settings_page_appearance_summary">Тема, мова, використання наживо</string>
+    <string name="settings_page_appearance_summary">Тема, стиль, мова, використання наживо</string>
     <string name="settings_page_security_summary">Блокування застосунку, ключі безпеки</string>
     <string name="settings_page_privacy_summary">Режим знімків екрана, події кластера, значки застосунків, останній відомий стан</string>
     <string name="settings_page_alerts_summary">Фонові перевірки, спостереження, пороги</string>

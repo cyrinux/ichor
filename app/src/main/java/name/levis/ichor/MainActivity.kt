@@ -50,7 +50,7 @@ import name.levis.ichor.ui.importconfig.ConfigUnreadableScreen
 import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.debug.shellKey
-import name.levis.ichor.ui.theme.TalosTheme
+import name.levis.ichor.ui.design.IchorTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -129,6 +129,7 @@ class MainActivity : FragmentActivity() {
 
         setContent {
             val themeMode by app.uiPreferences.themeMode.collectAsStateWithLifecycle()
+            val uiStyle by app.uiPreferences.uiStyle.collectAsStateWithLifecycle()
             val dark = themeMode.isDark(isSystemInDarkTheme())
             // System bars follow the app theme (not just the system one): transparent over
             // the app background, with icons contrasting with it.
@@ -144,7 +145,7 @@ class MainActivity : FragmentActivity() {
             // The palette follows the cluster on screen (its main color, see ClusterColors).
             val stored by app.configRepository.config.collectAsStateWithLifecycle()
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
-            TalosTheme(themeMode, seed = clusterColors.seedOf(stored?.activeSummary)) {
+            IchorTheme(themeMode, uiStyle, clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
                     LockGate(app, LaunchTargets(deepLink, openCluster, backupFile, openShell, openTarget), onWiped = ::recreate)
                 }

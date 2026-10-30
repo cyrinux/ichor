@@ -65,6 +65,7 @@ data class BackupPayload(
 data class BackupSettings(
     /** "auto", "light", "dark" or "black". */
     val themeMode: String? = null,
+    val uiStyle: String? = null,
     /** BCP-47 language tag, "" for the system's. Android only. */
     val language: String? = null,
     val liveClusterStats: Boolean? = null,

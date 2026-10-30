@@ -45,6 +45,16 @@ enum class ThemeMode(@StringRes val label: Int) {
     }
 }
 
+/** The design language that draws the chrome (cards, bars, buttons), independent of [ThemeMode]. */
+enum class UiStyle(@StringRes val label: Int) {
+    MATERIAL3(R.string.settings_ui_style_material3),
+    ;
+
+    companion object {
+        fun parse(name: String?): UiStyle = entries.firstOrNull { it.name == name } ?: MATERIAL3
+    }
+}
+
 /**
  * Screenshot mode: the Go core replaces IPs, hostnames, context names and [extraWords] in
  * everything it returns, so screens can be shared without leaking the cluster's identity.
@@ -62,6 +72,9 @@ data class PrivacyMask(val enabled: Boolean = false, val extraWords: String = ""
 class UiPreferences(private val prefs: SharedPreferences) {
     private val _themeMode = MutableStateFlow(ThemeMode.parse(prefs.getString(KEY_THEME, null)))
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+    private val _uiStyle = MutableStateFlow(UiStyle.parse(prefs.getString(KEY_UI_STYLE, null)))
+    val uiStyle: StateFlow<UiStyle> = _uiStyle.asStateFlow()
 
     /** When the app lock is on, screenshots and the recents preview are blocked unless this is set. */
     private val _allowScreenshots = MutableStateFlow(prefs.getBoolean(KEY_SCREENSHOTS, false))
@@ -340,6 +353,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _themeMode.value = mode
     }
 
+    fun setUiStyle(style: UiStyle) {
+        prefs.edit().putString(KEY_UI_STYLE, style.name).apply()
+        _uiStyle.value = style
+    }
+
     /** Committed synchronously: the activity is recreated right after and reads it back. */
     fun setLanguage(tag: String) {
         prefs.edit().putString(KEY_LANGUAGE, tag).commit()
@@ -349,6 +367,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
     companion object {
         const val FILE = "ichor-ui"
         private const val KEY_THEME = "theme_mode"
+        private const val KEY_UI_STYLE = "ui_style"
         private const val KEY_SCREENSHOTS = "allow_screenshots"
         private const val KEY_LANGUAGE = "language"
         private const val KEY_PRIVACY_MASK = "privacy_mask"

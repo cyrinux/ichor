@@ -60,6 +60,7 @@ fun AppearanceSection(prefs: UiPreferences) {
             ) { Text(stringResource(option.label)) }
         }
     }
+    UiStyleSetting(prefs)
     LanguageSetting(prefs)
     LiveClusterStatsSetting(prefs)
     AddToHomeSetting(prefs)

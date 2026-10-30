@@ -104,6 +104,7 @@ class BackupManager(
                 activeContextIndex = configs.activeIndex(),
                 settings = BackupSettings(
                     themeMode = ui.themeMode.value.name.lowercase(),
+                    uiStyle = ui.uiStyle.value.name.lowercase(),
                     language = ui.language.value,
                     liveClusterStats = ui.liveClusterStats.value,
                     remoteAppIcons = ui.remoteAppIcons.value,
@@ -209,6 +210,7 @@ class BackupManager(
         }
 
         settings.themeMode?.let { ui.setThemeMode(ThemeMode.parse(it.uppercase())) }
+        settings.uiStyle?.let { ui.setUiStyle(UiStyle.parse(it.uppercase())) }
         settings.liveClusterStats?.let(ui::setLiveClusterStats)
         settings.remoteAppIcons?.let(ui::setRemoteAppIcons)
         // Alerts need this device's notification permission; without it they stay off.

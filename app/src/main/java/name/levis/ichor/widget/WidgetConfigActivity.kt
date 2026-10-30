@@ -34,7 +34,7 @@ import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.monitoredContexts
-import name.levis.ichor.ui.theme.TalosTheme
+import name.levis.ichor.ui.design.IchorTheme
 
 /**
  * Picks the cluster a widget shows, when it is placed (before Android 12) or reconfigured: one of
@@ -56,6 +56,7 @@ class WidgetConfigActivity : ComponentActivity() {
         val app = application as TalosApp
         setContent {
             val themeMode by app.uiPreferences.themeMode.collectAsStateWithLifecycle()
+            val uiStyle by app.uiPreferences.uiStyle.collectAsStateWithLifecycle()
             // The configs may still be sealed (security key): then only "the cluster on screen" is offered.
             val stored by produceState(app.configRepository.config.value) {
                 value = value ?: runCatching { app.configRepository.load() }.getOrNull()
@@ -66,7 +67,7 @@ class WidgetConfigActivity : ComponentActivity() {
             val choices by app.widgetClusters.choices.collectAsStateWithLifecycle()
             // Each with the fingerprints of all its contexts: the widget may have been set on another one.
             val clusters = stored?.let { s -> monitoredContexts(s.summary, s.activeContext, unwatched).map { it to clusterFingerprints(s.summary, it) } }.orEmpty()
-            TalosTheme(themeMode) {
+            IchorTheme(themeMode, uiStyle) {
                 Surface(Modifier.fillMaxSize()) {
                     WidgetClusterPicker(
                         clusters = clusters,
