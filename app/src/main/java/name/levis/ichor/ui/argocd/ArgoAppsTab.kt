@@ -45,8 +45,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.ui.asString
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.denialText
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.rememberKubeDenialAcross
 import name.levis.ichor.model.ArgoAction
@@ -139,22 +141,18 @@ fun ArgoAppsTab(
             }
             items(list, key = { it.key }) { app ->
                 val toggle = { onSelection(if (app.key in selection) selection - app.key else selection + app.key) }
-                val denied = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace) != null
-                val swipeEnabled = !selecting && app.key !in busy && !app.isRunning && !denied
-                val sync = { onAct(app, ArgoAction.SYNC) }
-                val refresh = { onAct(app, ArgoAction.REFRESH) }
-                SwipeableArgoRow(swipeEnabled = swipeEnabled, onSync = sync, onRefresh = refresh) {
-                    ArgoAppRow(
-                        app = app,
-                        downNodes = downNodes,
-                        selected = app.key in selection,
-                        busy = app.key in busy,
-                        onClick = { if (selecting) toggle() else onOpen(app) },
-                        onLongClick = toggle,
-                        onClickLabel = if (selecting) null else stringResource(R.string.common_open),
-                        onSync = sync.takeIf { swipeEnabled },
-                        onRefresh = refresh.takeIf { swipeEnabled },
-                    )
+                val denial = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace)
+                val swipeEnabled = !selecting && app.key !in busy && !app.isRunning && denial == null
+                SwipeableArgoRow(
+                    swipeEnabled = swipeEnabled,
+                    denial = denial?.denialText()?.asString(),
+                    onSync = { onAct(app, ArgoAction.SYNC) },
+                    onRefresh = { onAct(app, ArgoAction.REFRESH) },
+                    onSelect = toggle,
+                    onClick = { if (selecting) toggle() else onOpen(app) },
+                    onClickLabel = if (selecting) null else stringResource(R.string.common_open),
+                ) {
+                    ArgoAppRow(app = app, downNodes = downNodes, selected = app.key in selection, busy = app.key in busy)
                 }
                 HorizontalDivider()
             }

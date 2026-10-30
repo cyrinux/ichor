@@ -165,7 +165,7 @@
     <string name="overview_support_later">Ahora no</string>
     <string name="overview_support_sponsor">Patrocinar</string>
     <string name="overview_swipe_live">En directo</string>
-    <string name="overview_swipe_actions">Acciones</string>
+    <string name="row_actions">Acciones</string>
     <string name="overview_action_live_graphs">Gráficos en directo</string>
     <string name="overview_action_services_logs">Servicios y registros</string>
     <string name="overview_action_kernel_log">Registro del kernel</string>

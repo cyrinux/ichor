@@ -162,7 +162,7 @@
     <string name="overview_support_later">Not now</string>
     <string name="overview_support_sponsor">Sponsor</string>
     <string name="overview_swipe_live">Live</string>
-    <string name="overview_swipe_actions">Actions</string>
+    <string name="row_actions">Actions</string>
     <string name="overview_action_live_graphs">Live graphs</string>
     <string name="overview_action_services_logs">Services and logs</string>
     <string name="overview_action_kernel_log">Kernel log</string>

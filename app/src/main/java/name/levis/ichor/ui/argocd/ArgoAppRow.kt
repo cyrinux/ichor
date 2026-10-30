@@ -1,14 +1,11 @@
 package name.levis.ichor.ui.argocd
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,25 +13,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
@@ -43,88 +35,60 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.likelyCause
+import name.levis.ichor.ui.components.QuickActionRow
+import name.levis.ichor.ui.components.RowAction
 import name.levis.ichor.ui.components.color
 import name.levis.ichor.util.timeAgo
 
 private val ICON = 40.dp
 
 /**
- * An app row that swipes: right to sync, left to refresh. The row snaps back and the action
- * runs; swiping is off while [swipeEnabled] is false (multi-select, a request in flight).
+ * An app row that swipes: right to sync, left to refresh; a long press lists Sync, Refresh and
+ * Select. The row snaps back and the action runs; swiping is off while [swipeEnabled] is false
+ * (multi-select, a request in flight, or [denial]: why the account cannot sync here).
  */
 @Composable
-fun SwipeableArgoRow(swipeEnabled: Boolean, onSync: () -> Unit, onRefresh: () -> Unit, content: @Composable () -> Unit) {
-    val state = rememberSwipeToDismissBoxState()
-    LaunchedEffect(state.currentValue) {
-        when (state.currentValue) {
-            SwipeToDismissBoxValue.StartToEnd -> onSync()
-            SwipeToDismissBoxValue.EndToStart -> onRefresh()
-            SwipeToDismissBoxValue.Settled -> return@LaunchedEffect
-        }
-        state.reset()
-    }
-    SwipeToDismissBox(
-        state = state,
-        enableDismissFromStartToEnd = swipeEnabled,
-        enableDismissFromEndToStart = swipeEnabled,
-        backgroundContent = { SwipeBackground(state.dismissDirection) },
-    ) { content() }
-}
-
-@Composable
-private fun SwipeBackground(direction: SwipeToDismissBoxValue) {
-    if (direction == SwipeToDismissBoxValue.Settled) return
-    val sync = direction == SwipeToDismissBoxValue.StartToEnd
-    val container = if (sync) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer
-    val content = if (sync) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onTertiaryContainer
-    Box(
-        Modifier.fillMaxSize().background(container).padding(horizontal = 24.dp),
-        contentAlignment = if (sync) Alignment.CenterStart else Alignment.CenterEnd,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(if (sync) Icons.Outlined.Sync else Icons.Outlined.Refresh, contentDescription = null, tint = content)
-            Text(stringResource(if (sync) R.string.argo_sync else R.string.argo_refresh), color = content, style = MaterialTheme.typography.labelLarge)
-        }
-    }
+fun SwipeableArgoRow(
+    swipeEnabled: Boolean,
+    denial: String?,
+    onSync: () -> Unit,
+    onRefresh: () -> Unit,
+    onSelect: () -> Unit,
+    onClick: () -> Unit,
+    onClickLabel: String?,
+    content: @Composable () -> Unit,
+) {
+    val sync = RowAction(Icons.Outlined.Sync, stringResource(R.string.argo_sync), onSync, enabled = swipeEnabled, disabledReason = denial)
+    val refresh = RowAction(Icons.Outlined.Refresh, stringResource(R.string.argo_refresh), onRefresh, enabled = swipeEnabled, disabledReason = denial)
+    val select = RowAction(Icons.Outlined.CheckCircle, stringResource(R.string.argo_select), onSelect)
+    QuickActionRow(
+        leading = sync,
+        trailing = refresh,
+        menu = listOf(sync, refresh, select),
+        onClick = onClick,
+        swipeEnabled = swipeEnabled,
+        onClickLabel = onClickLabel,
+        content = content,
+    )
 }
 
 /**
  * Icon, name with its owner, chart@version or revision and when it was deployed, its health
  * and sync glyphs; under it the running sync's wave progress, or the likely cause of a problem.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArgoAppRow(
     app: ArgoApp,
     downNodes: Set<String>,
     selected: Boolean,
     busy: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    onClickLabel: String? = null,
-    onSync: (() -> Unit)? = null,
-    onRefresh: (() -> Unit)? = null,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val background = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
-    // The swipes, for TalkBack and switch access: offered only while the row can swipe.
-    val syncLabel = stringResource(R.string.argo_sync)
-    val refreshLabel = stringResource(R.string.argo_refresh)
+    // Tap, long press and the TalkBack actions belong to the SwipeableArgoRow around it.
     Row(
         Modifier.fillMaxWidth().background(background)
-            .combinedClickable(
-                onClick = onClick,
-                onClickLabel = onClickLabel,
-                onLongClick = onLongClick,
-                onLongClickLabel = stringResource(R.string.argo_select),
-            )
-            .semantics {
-                this.selected = selected
-                customActions = listOfNotNull(
-                    onSync?.let { CustomAccessibilityAction(syncLabel) { it(); true } },
-                    onRefresh?.let { CustomAccessibilityAction(refreshLabel) { it(); true } },
-                )
-            }
+            .semantics { this.selected = selected }
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

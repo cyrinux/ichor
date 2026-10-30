@@ -145,7 +145,7 @@
     <string name="overview_support_later">後で</string>
     <string name="overview_support_sponsor">支援する</string>
     <string name="overview_swipe_live">ライブ</string>
-    <string name="overview_swipe_actions">操作</string>
+    <string name="row_actions">操作</string>
     <string name="overview_action_live_graphs">ライブグラフ</string>
     <string name="overview_action_services_logs">サービスとログ</string>
     <string name="overview_action_kernel_log">カーネルログ</string>
