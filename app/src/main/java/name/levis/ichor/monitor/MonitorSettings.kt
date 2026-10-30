@@ -214,6 +214,11 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _state.value = state
     }
 
+    /** Keeps [fleet], ranked from the snapshots stored now, for the fleet widget and the watch. */
+    fun saveFleet(fleet: FleetGlance) {
+        if (fleet != _state.value.fleet) saveState(_state.value.copy(fleet = fleet))
+    }
+
     /** Forgets every cluster's snapshot (and how often it could not be read). */
     fun clearSnapshots() {
         snapshotFile.delete()
@@ -260,14 +265,17 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
 /**
  * What the background checks keep: each watched cluster's last snapshot and [reach], by context
  * fingerprint, and [active], the fingerprint of the cluster on screen at the last check (what a
- * widget without a cluster of its own shows while the config is not loaded). [clusters] has no
- * default, so a single snapshot (an older version's file) never decodes as an empty state.
+ * widget without a cluster of its own shows while the config is not loaded), and [fleet], what
+ * the fleet widget and the watch show of every cluster. [clusters] has no default, so a single
+ * snapshot (an older version's file) never decodes as an empty state.
  */
 @Serializable
 data class MonitorState(
     val clusters: Map<String, ClusterSnapshot>,
     val reach: Map<String, Reach> = emptyMap(),
     val active: String = "",
+    /** The fleet as ranked after the last check (empty in an older version's file). */
+    val fleet: FleetGlance = FleetGlance(),
 ) {
     companion object {
         val EMPTY = MonitorState(emptyMap())

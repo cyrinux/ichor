@@ -18,6 +18,8 @@ const val WEAR_PAYLOAD_KEY = "payload"
 data class WearPayload(
     /** The cluster on screen on the phone first. */
     val clusters: List<WearCluster> = emptyList(),
+    /** The whole fleet's tally (null from an older phone app, or before the first check). */
+    val fleet: FleetTally? = null,
 )
 
 @Serializable

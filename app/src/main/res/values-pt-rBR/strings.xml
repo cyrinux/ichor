@@ -6013,4 +6013,8 @@
     <string name="alert_repeat_hint">Um alerta crítico que continua ativo é publicado de novo até você confirmá-lo ou adiá-lo. As verificações ocorrem a cada %1$d min, então uma repetição espera a próxima.</string>
     <string name="alert_repeat_still_firing">Ainda ativo · %1$d min · %2$s</string>
     <string name="alert_action_acknowledge">Confirmar</string>
+    <string name="fleet_widget_description">Quantos dos seus clusters precisam de atenção, segundo a última verificação em segundo plano</string>
+    <string name="fleet_widget_need_attention">precisam de atenção</string>
+    <string name="fleet_widget_all_fine">Todos os %1$d ok</string>
+    <string name="fleet_widget_oldest">Verificação mais antiga %1$s</string>
 </resources>

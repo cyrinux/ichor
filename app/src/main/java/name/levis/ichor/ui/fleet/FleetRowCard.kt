@@ -110,8 +110,9 @@ private fun findingText(finding: FleetFinding, masked: Boolean): String {
     return if (finding.subjectShown(masked)) stringResource(R.string.fleet_finding, track, finding.subject) else track
 }
 
+/** The word for [finding]'s track, as the fleet screen and the fleet widget show it. */
 @StringRes
-private fun trackLabel(finding: FleetFinding): Int = when (finding.track) {
+internal fun trackLabel(finding: FleetFinding): Int = when (finding.track) {
     "nodes" -> R.string.overview_stat_nodes
     "reach" -> R.string.fleet_track_reach
     "etcd" -> R.string.fleet_track_etcd

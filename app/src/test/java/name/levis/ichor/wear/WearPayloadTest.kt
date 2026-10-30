@@ -2,14 +2,20 @@ package name.levis.ichor.wear
 
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.FleetFinding
+import name.levis.ichor.model.FleetTone
 import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.monitor.ClusterSnapshot
+import name.levis.ichor.monitor.FleetGlance
+import name.levis.ichor.monitor.FleetGlanceRow
 import name.levis.ichor.monitor.MonitorState
 import name.levis.ichor.monitor.NodeState
+import name.levis.ichor.widget.FleetTally
 import name.levis.ichor.widget.NodeCounts
 import name.levis.ichor.widget.encodeWearPayload
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class WearPayloadTest {
@@ -70,6 +76,22 @@ class WearPayloadTest {
 
     @Test
     fun noSnapshotSendsAnEmptyPayload() {
-        assertEquals(emptyList<Any>(), wearPayload(MonitorState.EMPTY, null, null, emptyMap(), masked = false).clusters)
+        val p = wearPayload(MonitorState.EMPTY, null, null, emptyMap(), masked = false)
+        assertEquals(emptyList<Any>(), p.clusters)
+        assertNull(p.fleet)
+    }
+
+    @Test
+    fun theFleetGoesAsCountsOnly() {
+        val fleet = FleetGlance(
+            listOf(
+                FleetGlanceRow("fl", "Home lab", FleetTone.BAD, now, FleetFinding("nodes", "critical", "cp-2 unreachable")),
+                FleetGlanceRow("fe", "admin@edge", FleetTone.OK, now - 60_000),
+            ),
+        )
+        val p = wearPayload(state.copy(fleet = fleet), summary, "admin@lab", emptyMap(), masked = false, now = now)
+        assertEquals(FleetTally(bad = 1, ok = 1, total = 2, takenAt = now), p.fleet)
+        val json = encodeWearPayload(p).decodeToString()
+        assertFalse(json, json.contains("cp-2") || json.contains("Home lab"))
     }
 }

@@ -6009,4 +6009,8 @@
     <string name="alert_repeat_hint">Eine kritische Warnung, die weiter besteht, wird erneut gemeldet, bis du sie bestätigst oder pausierst. Geprüft wird alle %1$d Min., eine Wiederholung wartet also auf die nächste Prüfung.</string>
     <string name="alert_repeat_still_firing">Besteht weiter · %1$d Min. · %2$s</string>
     <string name="alert_action_acknowledge">Bestätigen</string>
+    <string name="fleet_widget_description">Wie viele deiner Cluster Aufmerksamkeit brauchen, aus der letzten Hintergrundprüfung</string>
+    <string name="fleet_widget_need_attention">brauchen Aufmerksamkeit</string>
+    <string name="fleet_widget_all_fine">Alle %1$d in Ordnung</string>
+    <string name="fleet_widget_oldest">Älteste Prüfung %1$s</string>
 </resources>

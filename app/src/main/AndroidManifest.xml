@@ -250,6 +250,18 @@
                 android:resource="@xml/cluster_widget_info" />
         </receiver>
 
+        <!-- How many clusters need attention; a tap opens the fleet screen. -->
+        <receiver
+            android:name=".widget.FleetWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/fleet_widget_info" />
+        </receiver>
+
         <!-- Picks the cluster a widget shows (launched by the home screen only). -->
         <activity
             android:name=".widget.WidgetConfigActivity"

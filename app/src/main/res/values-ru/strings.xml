@@ -6275,4 +6275,8 @@
     <string name="alert_repeat_hint">Критическое оповещение, которое всё ещё активно, публикуется снова, пока вы не подтвердите или не отложите его. Проверки идут каждые %1$d мин, поэтому повтор ждёт следующей проверки.</string>
     <string name="alert_repeat_still_firing">Всё ещё активно · %1$d мин · %2$s</string>
     <string name="alert_action_acknowledge">Подтвердить</string>
+    <string name="fleet_widget_description">Сколько ваших кластеров требуют внимания, по последней фоновой проверке</string>
+    <string name="fleet_widget_need_attention">требуют внимания</string>
+    <string name="fleet_widget_all_fine">Все %1$d в порядке</string>
+    <string name="fleet_widget_oldest">Самая старая проверка %1$s</string>
 </resources>

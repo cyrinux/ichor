@@ -6018,4 +6018,8 @@
     <string name="alert_repeat_hint">Une alerte critique toujours active est republiée jusqu\'à ce que vous l\'acquittiez ou la reportiez. Les vérifications ont lieu toutes les %1$d min : une répétition attend la suivante.</string>
     <string name="alert_repeat_still_firing">Toujours active · %1$d min · %2$s</string>
     <string name="alert_action_acknowledge">Acquitter</string>
+    <string name="fleet_widget_description">Combien de vos clusters demandent votre attention, d\'après la dernière vérification en arrière-plan</string>
+    <string name="fleet_widget_need_attention">à surveiller</string>
+    <string name="fleet_widget_all_fine">Les %1$d sont sains</string>
+    <string name="fleet_widget_oldest">Plus ancienne vérification %1$s</string>
 </resources>

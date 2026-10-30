@@ -7,8 +7,8 @@ import name.levis.ichor.data.Diagnostics
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.PrivacyMask
-import androidx.glance.appwidget.updateAll
-import name.levis.ichor.widget.ClusterWidget
+import name.levis.ichor.widget.refreshFleetGlance
+import name.levis.ichor.widget.updateAllWidgets
 import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.cancelPostedAlerts
 import name.levis.ichor.monitor.syncMonitoring
@@ -35,7 +35,8 @@ fun TalosApp.selectCluster(name: String) {
 fun TalosApp.renameCluster(fingerprint: String, name: String) {
     clusterNames.set(fingerprint, name)
     ProcessLifecycleOwner.get().lifecycleScope.launch {
-        ClusterWidget().updateAll(this@renameCluster)
+        refreshFleetGlance()
+        updateAllWidgets(this@renameCluster)
         syncWear()
     }
 }
@@ -146,7 +147,7 @@ fun TalosApp.setPrivacyMask(mask: PrivacyMask) {
         if (!maskSwitcher.switch(mask)) return@launch
         // What was posted with real names goes; a running operation is shown again masked.
         if (mask.enabled) cancelNamedNotifications()
-        ClusterWidget().updateAll(this@setPrivacyMask)
+        updateAllWidgets(this@setPrivacyMask)
         syncWear()
         syncMonitoring(this@setPrivacyMask, runNow = true)
     }

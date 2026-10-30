@@ -5882,4 +5882,8 @@
     <string name="alert_repeat_hint">発生中の重大なアラートは、確認するかスヌーズするまで再通知されます。チェックは %1$d 分ごとなので、繰り返しは次のチェックを待ちます。</string>
     <string name="alert_repeat_still_firing">発生中 · %1$d 分 · %2$s</string>
     <string name="alert_action_acknowledge">確認</string>
+    <string name="fleet_widget_description">最後のバックグラウンドチェックで対応が必要なクラスタの数</string>
+    <string name="fleet_widget_need_attention">要対応</string>
+    <string name="fleet_widget_all_fine">%1$d 個すべて正常</string>
+    <string name="fleet_widget_oldest">最も古いチェック %1$s</string>
 </resources>

@@ -342,6 +342,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   Google library, so they send nothing to a watch. On Android, a Quick Settings tile shows the
   same: the cluster on screen and "All nodes ready" or "2 of 3 nodes ready" from the last check;
   a tap opens the app, a long press its checkup (Settings → Monitoring adds it, Android 13+).
+  A second widget counts the whole fleet: "2 / 6 need attention" in the worst cluster's colour,
+  up to three "name · finding" rows, "All 6 fine" otherwise, dimmed with the oldest check's age
+  once no check is under an hour old; a tap opens the fleet screen. It is drawn from the ranking
+  the background check keeps (the fleet screen's rules), with the app's names (masked in
+  screenshot mode), and the demo alone shows the demo's fleet. Wear OS gets a fleet tile and a
+  complication ("2/6", short text or ranged value) from the same check: counts only, no name.
 - **Data services:** the storage, database and backup operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, Velero, Rook Ceph, CSI VolumeSnapshots, backup
   CronJobs) on one tabbed screen, each with its health and what needs a look. The other
