@@ -37,6 +37,9 @@ an issue first so we can agree on the approach before you spend time on it.
 - No `panic(` in Go outside tests (`scripts/check-panics.py`): return an error. `onPanic` is
   the last net, not the first; the few exceptions (init-time embedded files, re-panics) are
   listed with a reason in the script.
+- `ios/Ichor/Views` is organised by feature folder, each mirroring Android `ui/` packages (the
+  table is in `ios/Ichor/Views/README.md`): a new screen goes in the folder of its Android twin,
+  a view several folders use goes in `Components/`.
 - Swift sources follow `ios/.swift-format` (4 spaces, 120 columns): the macOS CI `ios` job runs
   `swift-format lint --strict` before the build and fails on any finding. Run `just ios-format`
   on a Mac (it uses the selected Xcode's swift-format) and commit the result. Keep a pure reformat
@@ -92,7 +95,7 @@ Do the same on Android and iOS:
 ## UI components
 
 Screens build on one small set, the same names on both apps (`ui/components/` on Android,
-`ios/Ichor/Views/SharedComponents.swift` and `Components.swift` on iOS):
+`ios/Ichor/Views/Components/SharedComponents.swift` and `Components.swift` on iOS):
 
 - Health colours come only from the status tokens (ok / warn / bad / muted), never from the
   cluster's colour.
