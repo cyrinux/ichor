@@ -322,7 +322,14 @@ Part of the [Ichor documentation](../README.md#documentation).
 - **Background:** alerts, a home-screen widget and a fleet screen with every cluster's last check, worst first. Alerts are off until you turn them on: after the first real cluster is added, the home offers them once and asks for the notification permission there. The findings of the plugins the cluster runs
   (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify
   like the data services' problems, in the app's language, and clear when they go away
-  ([docs/plugins.md](plugins.md#findings)).
+  ([docs/plugins.md](plugins.md#findings)). Alert rules (Settings → Monitoring → Rules) set
+  quiet hours (a window in the phone's zone or another, critical alerts let through if you
+  want), a minimum severity (all, warnings, critical) and a digest (one notification per
+  cluster and check, "3 findings on staging-eu", instead of one per alert), by default and
+  per cluster. They are applied when each check runs, by the Go core: an alert kept quiet
+  shows "muted · quiet hours until 07:00" or "muted · below the cluster's minimum severity"
+  in the cluster's "Since you last looked" card, and is not posted again once the window ends.
+  The rules travel in backups.
 - **Widgets:** the home-screen widget, and on Wear OS a tile and a complication with the health
   of the cluster on screen on the phone (ready count in its colour, "N down", etcd alarms; the
   check's age once it is over an hour old). The phone sends them its last background check

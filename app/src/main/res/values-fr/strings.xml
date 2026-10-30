@@ -5955,4 +5955,43 @@
     <string name="fleet_empty">Aucun cluster pour l\'instant.</string>
     <string name="fleet_demo_hint">Les clusters fictifs de la démo : un appui revient à la démo.</string>
     <string name="fleet_one_cluster">La liste s\'allonge avec chaque cluster ajouté.</string>
+    <string name="alert_rules_title">Règles</string>
+    <string name="alert_rules_hint">Appliquées à chaque vérification : une alerte levée pendant les heures calmes n\'est pas renvoyée quand elles se terminent.</string>
+    <string name="alert_rules_quiet">Heures calmes</string>
+    <string name="alert_rules_quiet_desc">Aucune notification entre ces heures</string>
+    <string name="alert_rules_from">De %1$s</string>
+    <string name="alert_rules_until">Jusqu\'à %1$s</string>
+    <string name="alert_rules_zone">Fuseau horaire : %1$s</string>
+    <string name="alert_rules_zone_phone">Celui du téléphone (%1$s)</string>
+    <string name="alert_rules_zone_title">Fuseau horaire</string>
+    <string name="alert_rules_zone_search">Rechercher</string>
+    <string name="alert_rules_pick_start">Début des heures calmes</string>
+    <string name="alert_rules_pick_end">Fin des heures calmes</string>
+    <string name="alert_rules_except_critical">Sauf critiques</string>
+    <string name="alert_rules_except_critical_desc">Un nœud en panne, une alarme etcd, un cluster injoignable et les autres alertes critiques notifient quand même</string>
+    <string name="alert_rules_min_severity">Gravité minimale</string>
+    <string name="alert_rules_severity_all">Toutes</string>
+    <string name="alert_rules_severity_warning">Avertissements</string>
+    <string name="alert_rules_severity_critical">Critiques</string>
+    <string name="alert_rules_digest">Résumé</string>
+    <string name="alert_rules_digest_desc">Une notification par cluster et par vérification avec ses totaux, au lieu d\'une par alerte</string>
+    <string name="alert_rules_per_cluster">Par cluster</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="one">Par cluster : %1$d cluster</item>
+        <item quantity="other">Par cluster : %1$d clusters</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">Règles par cluster</string>
+    <string name="alert_rules_no_clusters">Aucun cluster enregistré.</string>
+    <string name="alert_rules_as_default">Par défaut</string>
+    <string name="alert_rules_own">Règles propres</string>
+    <string name="alert_rules_off">Désactivé</string>
+    <string name="alert_rules_on">Activé</string>
+    <string name="alert_rules_custom">Personnalisé</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="one">%1$d constat sur %2$s</item>
+        <item quantity="other">%1$d constats sur %2$s</item>
+    </plurals>
+    <string name="alert_rules_digest_text">Critiques : %1$d, avertissements : %2$d</string>
+    <string name="alert_rules_muted_quiet">en sourdine · heures calmes jusqu\'à %1$s</string>
+    <string name="alert_rules_muted_severity">en sourdine · sous la gravité minimale du cluster</string>
 </resources>

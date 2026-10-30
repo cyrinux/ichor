@@ -5961,4 +5961,43 @@
     <string name="fleet_demo_hint">The demo\'s made-up clusters: a tap goes back to the demo.</string>
     <string name="fleet_one_cluster">The list grows with each cluster you add.</string>
     <string name="fleet_track_etcd" translatable="false">etcd</string>
+    <string name="alert_rules_title">Rules</string>
+    <string name="alert_rules_hint">Applied at each check: an alert raised during quiet hours is not posted again once they end.</string>
+    <string name="alert_rules_quiet">Quiet hours</string>
+    <string name="alert_rules_quiet_desc">No notification between these times</string>
+    <string name="alert_rules_from">From %1$s</string>
+    <string name="alert_rules_until">Until %1$s</string>
+    <string name="alert_rules_zone">Time zone: %1$s</string>
+    <string name="alert_rules_zone_phone">Phone\'s (%1$s)</string>
+    <string name="alert_rules_zone_title">Time zone</string>
+    <string name="alert_rules_zone_search">Search</string>
+    <string name="alert_rules_pick_start">Quiet hours start</string>
+    <string name="alert_rules_pick_end">Quiet hours end</string>
+    <string name="alert_rules_except_critical">Except critical</string>
+    <string name="alert_rules_except_critical_desc">A node down, an etcd alarm, an unreachable cluster and other critical alerts still notify</string>
+    <string name="alert_rules_min_severity">Minimum severity</string>
+    <string name="alert_rules_severity_all">All</string>
+    <string name="alert_rules_severity_warning">Warnings</string>
+    <string name="alert_rules_severity_critical">Critical</string>
+    <string name="alert_rules_digest">Digest</string>
+    <string name="alert_rules_digest_desc">One notification per cluster and check with its counts, instead of one per alert</string>
+    <string name="alert_rules_per_cluster">Per cluster</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="one">Per cluster: %1$d cluster</item>
+        <item quantity="other">Per cluster: %1$d clusters</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">Rules per cluster</string>
+    <string name="alert_rules_no_clusters">No cluster stored yet.</string>
+    <string name="alert_rules_as_default">As default</string>
+    <string name="alert_rules_own">Own rules</string>
+    <string name="alert_rules_off">Off</string>
+    <string name="alert_rules_on">On</string>
+    <string name="alert_rules_custom">Custom</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="one">%1$d finding on %2$s</item>
+        <item quantity="other">%1$d findings on %2$s</item>
+    </plurals>
+    <string name="alert_rules_digest_text">Critical: %1$d, warnings: %2$d</string>
+    <string name="alert_rules_muted_quiet">muted · quiet hours until %1$s</string>
+    <string name="alert_rules_muted_severity">muted · below the cluster\'s minimum severity</string>
 </resources>

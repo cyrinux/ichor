@@ -20,15 +20,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.text.format.DateFormat
+import java.util.Date
 import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ALERT_REASON_QUIET
 import name.levis.ichor.model.HISTORY_NOT_READY
 import name.levis.ichor.model.HistoryAlertSpan
 import name.levis.ichor.model.HistorySince
 import name.levis.ichor.model.hasNews
 import name.levis.ichor.model.historyNodeName
 import name.levis.ichor.model.newAlerts
+import name.levis.ichor.monitor.AlertMute
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.localizedDuration
 
@@ -55,11 +59,17 @@ fun SinceLastLookedCard(fingerprint: String) {
         app.lastLooked.mark(fingerprint, System.currentTimeMillis())
     }
     val shown = since ?: return
-    val lines = sinceLines(shown)
+    val lines = sinceLines(shown) { key, from, to -> app.alertMutes.during(fingerprint, key, from, to) }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.history_since_title), style = MaterialTheme.typography.titleSmall)
-            lines.take(SINCE_MAX_LINES).forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            lines.take(SINCE_MAX_LINES).forEach { line ->
+                Column {
+                    Text(line.text, style = MaterialTheme.typography.bodyMedium)
+                    // Why the phone stayed silent: the alert rules kept it quiet.
+                    line.mute?.let { MutedText(mutedLabel(it)) }
+                }
+            }
             if (lines.size > SINCE_MAX_LINES) MutedText(stringResource(R.string.history_since_more, lines.size - SINCE_MAX_LINES))
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = {
@@ -71,19 +81,38 @@ fun SinceLastLookedCard(fingerprint: String) {
     }
 }
 
-/** One line per event, most pressing first: still down, new alerts, recovered, resolved, upgrades. */
+/** One event of the card, and the alert rules' mute of it when they kept it quiet. */
+private data class SinceLine(val text: String, val mute: AlertMute? = null)
+
+/**
+ * One line per event, most pressing first: still down, new alerts, recovered, resolved, upgrades.
+ * [muteOf]: the mute of an alert key while it was open (from, to; null: still open).
+ */
 @Composable
-private fun sinceLines(since: HistorySince): List<String> = buildList {
-    since.nodesDown.forEach { add(stringResource(R.string.history_since_down, historyNodeName(it.node, it.hostname), stateLabel(it.state))) }
-    since.newAlerts.forEach { add(stringResource(R.string.history_since_alert_open, alertLabel(it))) }
+private fun sinceLines(since: HistorySince, muteOf: (key: String, from: Long, to: Long?) -> AlertMute?): List<SinceLine> = buildList {
+    since.nodesDown.forEach {
+        val text = stringResource(R.string.history_since_down, historyNodeName(it.node, it.hostname), stateLabel(it.state))
+        add(SinceLine(text, muteOf("node:${it.node}", it.downAt, null)))
+    }
+    since.newAlerts.forEach { add(SinceLine(stringResource(R.string.history_since_alert_open, alertLabel(it)), muteOf(it.key, it.openedAt, it.closedAt))) }
     since.nodesRecovered.forEach {
         val seconds = ((it.upAt ?: it.downAt) - it.downAt) / 1000
-        add(stringResource(R.string.history_since_recovered, historyNodeName(it.node, it.hostname), stateLabel(it.state), localizedDuration(seconds)))
+        val text = stringResource(R.string.history_since_recovered, historyNodeName(it.node, it.hostname), stateLabel(it.state), localizedDuration(seconds))
+        add(SinceLine(text, muteOf("node:${it.node}", it.downAt, it.upAt)))
     }
-    since.alertsResolved.forEach { add(stringResource(R.string.history_since_alert_resolved, alertLabel(it))) }
-    since.upgrades.forEach { add(stringResource(R.string.history_since_upgrade, historyNodeName(it.node, it.hostname), it.from, it.to)) }
+    since.alertsResolved.forEach {
+        add(SinceLine(stringResource(R.string.history_since_alert_resolved, alertLabel(it)), muteOf(it.key, it.openedAt, it.closedAt)))
+    }
+    since.upgrades.forEach { add(SinceLine(stringResource(R.string.history_since_upgrade, historyNodeName(it.node, it.hostname), it.from, it.to))) }
     val olderOpen = since.alertsOpen.size - since.newAlerts.size
-    if (olderOpen > 0) add(pluralStringResource(R.plurals.history_since_still_open, olderOpen, olderOpen))
+    if (olderOpen > 0) add(SinceLine(pluralStringResource(R.plurals.history_since_still_open, olderOpen, olderOpen)))
+}
+
+/** "muted · quiet hours until 07:00" (in the phone's time format), or "muted · below the cluster's minimum severity". */
+@Composable
+private fun mutedLabel(mute: AlertMute): String = when (mute.reason) {
+    ALERT_REASON_QUIET -> stringResource(R.string.alert_rules_muted_quiet, DateFormat.getTimeFormat(LocalContext.current).format(Date(mute.until)))
+    else -> stringResource(R.string.alert_rules_muted_severity)
 }
 
 @Composable

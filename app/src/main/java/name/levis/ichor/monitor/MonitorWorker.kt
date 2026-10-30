@@ -1,11 +1,13 @@
 package name.levis.ichor.monitor
 
 import android.content.Context
+import android.util.Log
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -19,6 +21,7 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.HistoryForecast
 import name.levis.ichor.model.HistoryRecord
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.AlertRules
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
@@ -99,7 +102,8 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         if (store.alertsEnabled.value) {
             // Snoozed from their notification: nothing, problem or resolved, until it is over.
             app.alertSnoozes.prune(now)
-            (run.alerts + proposals + signIns.alerts).forEach { post(app, it, now) }
+            app.alertMutes.prune(now)
+            postAll(app, run.alerts + proposals + signIns.alerts, now)
             store.setSignInNotified(signIns.notified)
         }
         ClusterWidget().updateAll(applicationContext)
@@ -148,14 +152,49 @@ private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, no
     }.toMap()
 }
 
-/** Posts the alerts of one cluster that are not snoozed, named after it as the app shows it. */
-private fun post(app: TalosApp, cluster: ClusterAlerts, now: Long) {
+/**
+ * Posts a run's alerts under the alert rules (quiet hours, minimum severity, digest), decided
+ * once over every cluster's: each one Go says to notify on its own, one digest per digest
+ * cluster; the ones quiet hours or the minimum severity muted are recorded for the history, the
+ * snoozed ones dropped. Without rules, or when Go refuses them, every alert not snoozed is
+ * posted as before (see [alertPlan]): a rules error never drops an alert.
+ */
+private suspend fun postAll(app: TalosApp, clusters: List<ClusterAlerts>, now: Long) {
+    if (clusters.isEmpty()) return
+    val rules = app.monitorStore.alertRules.value
+    val inputs = alertInputs(clusters) { cluster, key -> app.alertSnoozes.isSnoozed(cluster, key, now) }
+    val decisions = if (rules == AlertRules.NONE) {
+        null
+    } else {
+        try {
+            app.alertRulesRepository.decide(rules, inputs, now)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "alert rules not applied, posting every alert: ${e.message}")
+            null
+        }
+    }
+    val plan = alertPlan(clusters, inputs, decisions)
+    plan.notify.forEach { post(app, it) }
+    plan.muted.forEach { app.alertMutes.record(it.context.fingerprint, it.alert.key, AlertMute(it.reason, it.until, now)) }
+    val hide = app.appLock.enabled.value
+    plan.digests.forEach { postDigest(app, it, clusterLabel(app, it.context), it.context.clusterId, hide) }
+}
+
+private const val TAG = "MonitorWorker"
+
+private fun clusterLabel(app: TalosApp, context: ContextSummary): String =
+    ClusterLabels(app.clusterNames.names.value, app.uiPreferences.privacyMask.value.enabled).of(context)
+
+/** Posts the alerts of one cluster, named after it as the app shows it. */
+private fun post(app: TalosApp, cluster: ClusterAlerts) {
     val context = cluster.context
     val fingerprint = context.fingerprint
     val hide = app.appLock.enabled.value
-    val label = ClusterLabels(app.clusterNames.names.value, app.uiPreferences.privacyMask.value.enabled).of(context)
+    val label = clusterLabel(app, context)
     val canReboot = context.allows(Feature.POWER)
-    app.alertSnoozes.unsnoozed(cluster.alerts, fingerprint, now).forEach { alert ->
+    cluster.alerts.forEach { alert ->
         val actions = alert.actions(canWake = canWake(app, fingerprint, alert), canReboot = canReboot)
         postAlert(
             app,

@@ -5950,4 +5950,43 @@
     <string name="fleet_empty">Nenhum cluster ainda.</string>
     <string name="fleet_demo_hint">Os clusters fictícios da demo: um toque volta para a demo.</string>
     <string name="fleet_one_cluster">A lista cresce a cada cluster que você adiciona.</string>
+    <string name="alert_rules_title">Regras</string>
+    <string name="alert_rules_hint">Aplicadas a cada verificação: um alerta surgido no horário silencioso não é enviado de novo quando ele termina.</string>
+    <string name="alert_rules_quiet">Horário silencioso</string>
+    <string name="alert_rules_quiet_desc">Nenhuma notificação entre esses horários</string>
+    <string name="alert_rules_from">Das %1$s</string>
+    <string name="alert_rules_until">Até %1$s</string>
+    <string name="alert_rules_zone">Fuso horário: %1$s</string>
+    <string name="alert_rules_zone_phone">O do telefone (%1$s)</string>
+    <string name="alert_rules_zone_title">Fuso horário</string>
+    <string name="alert_rules_zone_search">Pesquisar</string>
+    <string name="alert_rules_pick_start">Início do horário silencioso</string>
+    <string name="alert_rules_pick_end">Fim do horário silencioso</string>
+    <string name="alert_rules_except_critical">Exceto críticos</string>
+    <string name="alert_rules_except_critical_desc">Um nó fora do ar, um alarme do etcd, um cluster inacessível e outros alertas críticos ainda notificam</string>
+    <string name="alert_rules_min_severity">Gravidade mínima</string>
+    <string name="alert_rules_severity_all">Todos</string>
+    <string name="alert_rules_severity_warning">Avisos</string>
+    <string name="alert_rules_severity_critical">Críticos</string>
+    <string name="alert_rules_digest">Resumo</string>
+    <string name="alert_rules_digest_desc">Uma notificação por cluster e verificação com suas contagens, em vez de uma por alerta</string>
+    <string name="alert_rules_per_cluster">Por cluster</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="one">Por cluster: %1$d cluster</item>
+        <item quantity="other">Por cluster: %1$d clusters</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">Regras por cluster</string>
+    <string name="alert_rules_no_clusters">Nenhum cluster salvo ainda.</string>
+    <string name="alert_rules_as_default">Como o padrão</string>
+    <string name="alert_rules_own">Regras próprias</string>
+    <string name="alert_rules_off">Desativado</string>
+    <string name="alert_rules_on">Ativado</string>
+    <string name="alert_rules_custom">Personalizado</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="one">%1$d achado em %2$s</item>
+        <item quantity="other">%1$d achados em %2$s</item>
+    </plurals>
+    <string name="alert_rules_digest_text">Críticos: %1$d, avisos: %2$d</string>
+    <string name="alert_rules_muted_quiet">silenciado · horário silencioso até %1$s</string>
+    <string name="alert_rules_muted_severity">silenciado · abaixo da gravidade mínima do cluster</string>
 </resources>

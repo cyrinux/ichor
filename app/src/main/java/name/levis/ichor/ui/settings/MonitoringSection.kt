@@ -236,6 +236,8 @@ fun MonitoringSection(app: TalosApp) {
                     modifier = Modifier.semantics { contentDescription = runsLabel },
                 )
             }
+            // When the alerts above post: quiet hours, the minimum severity and a digest, per cluster too.
+            AlertRulesGroup(app, enabled)
             Text(stringResource(R.string.monitor_check_every), style = MaterialTheme.typography.labelLarge)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 MonitorStore.INTERVALS.forEachIndexed { index, minutes ->

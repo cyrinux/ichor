@@ -81,6 +81,8 @@ data class BackupSettings(
     val appLockMode: String? = null,
     val storageWarnPercent: Int? = null,
     val storageCriticalPercent: Int? = null,
+    /** Quiet hours, minimum severity and digest; its cluster overrides by fingerprint. Older backups have none. */
+    val alertRules: AlertRules? = null,
 )
 
 @Serializable
@@ -276,3 +278,7 @@ fun signsOutOnRemoval(contexts: List<ContextSummary>, name: String): Boolean {
 /** The sign-ins of [kubeAuth] (a backup's) for the restored kubeconfig clusters [fingerprints]. */
 fun restoredKubeAuth(kubeAuth: Map<String, String>?, fingerprints: List<String>): Map<String, String> =
     kubeAuth.orEmpty().filter { (fp, state) -> fp.isNotBlank() && fp in fingerprints && state.isNotBlank() }
+
+/** The alert rules for a backup, cluster overrides only of [fingerprints]; null when none is set. */
+fun backupAlertRules(rules: AlertRules, fingerprints: List<String>): AlertRules? =
+    rules.retain(fingerprints).takeIf { it != AlertRules.NONE }

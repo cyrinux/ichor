@@ -106,6 +106,11 @@ func TestAlertRulesDecide(t *testing.T) {
 		{"quiet comes before digest", `{"default":{"digest":true,"quietHours":{"start":"23:00","end":"07:00","tz":"Europe/Paris"}}}`,
 			warning, "2026-06-01T22:00:00Z",
 			alertDecision{Action: alertMute, Reason: alertReasonQuiet, Until: rulesAt(t, "2026-06-02T05:00:00Z")}},
+		{"recovery of a critical skips the digest", `{"default":{"digest":true}}`,
+			alertIn{Cluster: rulesProd, Key: "node:10.0.0.1", Kind: "node"}, "2026-06-01T12:00:00Z", alertDecision{Action: alertNotify}},
+		{"recovery of a warning goes to the digest", `{"default":{"digest":true}}`,
+			alertIn{Cluster: rulesProd, Key: "am:slow", Kind: "am", Severity: "warning"}, "2026-06-01T12:00:00Z",
+			alertDecision{Action: alertDigest, Reason: alertReasonDigest}},
 		{"floor comes before digest", `{"default":{"digest":true,"minSeverity":"critical"}}`, warning, "2026-06-01T12:00:00Z",
 			alertDecision{Action: alertMute, Reason: alertReasonSeverity}},
 	}
