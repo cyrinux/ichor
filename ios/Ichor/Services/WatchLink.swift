@@ -42,10 +42,12 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     private static func payload() -> WatchPayload {
         let defaults = SharedStore.defaults
         let active = SharedSnapshot.activeCluster(from: defaults)
+        let now = Date()
         return watchPayload(
             clusters: SharedSnapshot.clusters(from: defaults),
             snapshots: SharedSnapshot.loadAll(from: defaults), active: active,
-            masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled), sentAt: Date())
+            masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled), sentAt: now,
+            fleet: SharedFleet.load(from: defaults)?.tally(at: now))
     }
 
     private func setPending(_ value: Bool) {

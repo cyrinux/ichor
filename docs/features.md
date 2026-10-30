@@ -348,6 +348,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   the background check keeps (the fleet screen's rules), with the app's names (masked in
   screenshot mode), and the demo alone shows the demo's fleet. Wear OS gets a fleet tile and a
   complication ("2/6", short text or ranged value) from the same check: counts only, no name.
+  On iOS the same fleet widget sits on the Home Screen and the Lock Screen, and the Apple Watch
+  gets a fleet complication and the counts above its cluster list, from the phone's last check.
 - **Data services:** the storage, database and backup operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, Velero, Rook Ceph, CSI VolumeSnapshots, backup
   CronJobs) on one tabbed screen, each with its health and what needs a look. The other

@@ -289,6 +289,8 @@ enum BackgroundMonitor {
             // The storage trends come from the ring with this run's record in it.
             outcomes += await evaluateTrends(history, jobs: jobs, snapshots: &snapshots, now: now)
         }
+        // Ranked before the save, which reloads the widgets and sends the watch the new tally.
+        await publishFleet(contexts: summary.contexts, snapshots: snapshots, reachability: reach, now: now)
         SharedStore.save(snapshots)
         // The pull requests opened from the phone: their states are kept even with alerts off,
         // so turning them on does not tell old merges.

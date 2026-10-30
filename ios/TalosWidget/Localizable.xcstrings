@@ -1316,6 +1316,133 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizado %@" } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновлено %@" } }
       }
+    },
+    "All clusters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tous les clusters" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todos los clústeres" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Cluster" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i cluster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усі кластери" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてのクラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todos os clusters" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все кластеры" } }
+      }
+    },
+    "Not checked: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non vérifiés : %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin comprobar: %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht geprüft: %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non controllati: %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не перевірено: %lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未检查：%lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未確認: %lld" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não verificados: %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не проверено: %lld" } }
+      }
+    },
+    "All %lld fine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les %lld sont sains" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los %lld bien" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle %lld in Ordnung" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i %lld a posto" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усі %lld гаразд" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部 %lld 个正常" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 件すべて正常" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todos os %lld ok" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все %lld в порядке" } }
+      }
+    },
+    "%lld of %lld need attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld of %2$lld need attention" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld sur %2$lld à examiner" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld requieren atención" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld von %2$lld brauchen Aufmerksamkeit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld su %2$lld da guardare" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld з %2$lld потребують уваги" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld 个中有 %1$lld 个需要关注" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld 件中 %1$lld 件が要確認" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld precisam de atenção" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld из %2$lld требуют внимания" } }
+      }
+    },
+    "need attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "à examiner" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "requieren atención" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "brauchen Aufmerksamkeit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "da guardare" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "потребують уваги" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需要关注" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "要確認" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "precisam de atenção" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "требуют внимания" } }
+      }
+    },
+    "Never checked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Jamais vérifié" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nunca comprobado" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nie geprüft" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mai controllato" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ніколи не перевірявся" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从未检查" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未確認のまま" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nunca verificado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ни разу не проверялся" } }
+      }
+    },
+    "Oldest check %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Plus ancienne vérification il y a %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobación más antigua hace %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Älteste Prüfung vor %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Controllo più vecchio %@ fa" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Найстаріша перевірка %@ тому" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最早的检查在 %@ 前" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最も古いチェックは %@ 前" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Verificação mais antiga há %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Самая старая проверка %@ назад" } }
+      }
+    },
+    "Fleet status" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "État de la flotte" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estado de la flota" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Flottenstatus" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Stato della flotta" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стан флоту" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群总览" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フリートの状態" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Estado da frota" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Состояние парка" } }
+      }
+    },
+    "How many of your clusters need attention, from the last background check." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Combien de vos clusters sont à examiner, d’après la dernière vérification en arrière-plan." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cuántos de tus clústeres requieren atención, según la última comprobación en segundo plano." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wie viele deiner Cluster Aufmerksamkeit brauchen, aus der letzten Hintergrundprüfung." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Quanti dei tuoi cluster sono da guardare, dall’ultimo controllo in background." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Скільки ваших кластерів потребують уваги, за останньою фоновою перевіркою." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "根据最近一次后台检查，需要关注的集群数量。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最後のバックグラウンドチェックで要確認のクラスターの数。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Quantos dos seus clusters precisam de atenção, segundo a última verificação em segundo plano." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сколько ваших кластеров требуют внимания, по последней фоновой проверке." } }
+      }
     }
   },
   "version" : "1.0"

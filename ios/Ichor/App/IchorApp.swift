@@ -71,6 +71,9 @@ struct IchorApp: App {
                     if let kind = OperationKind(link: url) {
                         // A run's Live Activity: its screen.
                         NotificationRouter.shared.pendingOperation = kind
+                    } else if isFleetLink(url) {
+                        // The fleet widget: the fleet screen.
+                        NotificationRouter.shared.pendingFleet = true
                     } else if url.scheme == "ichor", url.host == "open" {
                         NotificationRouter.shared.pendingShareLink = url
                     }
@@ -435,6 +438,9 @@ struct MainNavigation: View {
             .onChange(of: NotificationRouter.shared.pendingSearch) { _, pending in
                 if pending { openSearch() }
             }
+            .onChange(of: NotificationRouter.shared.pendingFleet) { _, pending in
+                if pending { openFleet() }
+            }
             .onChange(of: NotificationRouter.shared.pendingOperation) { _, pending in
                 if pending != nil { openOperation() }
             }
@@ -442,6 +448,7 @@ struct MainNavigation: View {
             .onChange(of: model.lock.locked) { _, locked in
                 if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
                 if !locked, NotificationRouter.shared.pendingSearch { openSearch() }
+                if !locked, NotificationRouter.shared.pendingFleet { openFleet() }
                 if !locked, NotificationRouter.shared.pendingOperation != nil { openOperation() }
                 if !locked { openImport() }
             }
@@ -457,6 +464,7 @@ struct MainNavigation: View {
                 if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
                 if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
                 if NotificationRouter.shared.pendingSearch { openSearch() }
+                if NotificationRouter.shared.pendingFleet { openFleet() }
                 if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
                 if NotificationRouter.shared.pendingOperation != nil { openOperation() }
                 openImport()
@@ -675,6 +683,13 @@ struct MainNavigation: View {
         guard !model.lock.locked, NotificationRouter.shared.pendingSearch else { return }
         NotificationRouter.shared.pendingSearch = false
         path = [.search]
+    }
+
+    /// From the fleet widget: the fleet screen over the cluster on screen's home, once unlocked.
+    private func openFleet() {
+        guard !model.lock.locked, NotificationRouter.shared.pendingFleet else { return }
+        NotificationRouter.shared.pendingFleet = false
+        path = [.fleet]
     }
 
     /// From a share link: like a quick action, the overview of the cluster it names (the

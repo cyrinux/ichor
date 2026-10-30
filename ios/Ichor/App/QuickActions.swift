@@ -123,6 +123,10 @@ final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
             NotificationRouter.shared.pendingOperation = kind
             return
         }
+        if isFleetLink(url) {
+            NotificationRouter.shared.pendingFleet = true
+            return
+        }
         guard url.scheme == "ichor", url.host == "open" else { return }
         NotificationRouter.shared.pendingShareLink = url
     }

@@ -1167,6 +1167,91 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "etcd: nenhum alarme" } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "etcd: нет сигналов" } }
       }
+    },
+    "All clusters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tous les clusters" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todos los clústeres" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Cluster" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i cluster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усі кластери" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてのクラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todos os clusters" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все кластеры" } }
+      }
+    },
+    "Not checked: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non vérifiés : %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin comprobar: %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht geprüft: %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non controllati: %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не перевірено: %lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未检查：%lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未確認: %lld" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não verificados: %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не проверено: %lld" } }
+      }
+    },
+    "All %lld fine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les %lld sont sains" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los %lld bien" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle %lld in Ordnung" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i %lld a posto" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усі %lld гаразд" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部 %lld 个正常" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 件すべて正常" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todos os %lld ok" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все %lld в порядке" } }
+      }
+    },
+    "%lld of %lld need attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld of %2$lld need attention" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld sur %2$lld à examiner" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld requieren atención" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld von %2$lld brauchen Aufmerksamkeit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld su %2$lld da guardare" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld з %2$lld потребують уваги" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld 个中有 %1$lld 个需要关注" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld 件中 %1$lld 件が要確認" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld precisam de atenção" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld из %2$lld требуют внимания" } }
+      }
+    },
+    "Fleet health" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Santé de la flotte" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salud de la flota" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Flottenzustand" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Salute della flotta" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стан флоту" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群健康" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フリートの状態" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Saúde da frota" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Здоровье парка" } }
+      }
+    },
+    "How many of your clusters need attention, from your iPhone's last check." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Combien de vos clusters sont à examiner, d’après la dernière vérification de votre iPhone." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cuántos de tus clústeres requieren atención, según la última comprobación de tu iPhone." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wie viele deiner Cluster Aufmerksamkeit brauchen, aus der letzten Prüfung deines iPhone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Quanti dei tuoi cluster sono da guardare, dall’ultimo controllo del tuo iPhone." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Скільки ваших кластерів потребують уваги, за останньою перевіркою вашого iPhone." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "根据 iPhone 最近一次检查，需要关注的集群数量。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "iPhone の最後のチェックで要確認のクラスターの数。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Quantos dos seus clusters precisam de atenção, segundo a última verificação do seu iPhone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сколько ваших кластеров требуют внимания, по последней проверке вашего iPhone." } }
+      }
     }
   },
   "version" : "1.0"

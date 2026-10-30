@@ -22,6 +22,9 @@ final class NotificationRouter {
     /// The "Search clusters" quick action was chosen: open the search, once unlocked.
     var pendingSearch = false
 
+    /// The fleet widget was tapped (ichor://fleet): open the fleet screen, once unlocked.
+    var pendingFleet = false
+
     /// A freeze reminder was tapped: open the Argo CD sync windows.
     var pendingArgoWindows = false
 
