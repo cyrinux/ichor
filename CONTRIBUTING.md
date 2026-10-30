@@ -34,6 +34,9 @@ an issue first so we can agree on the approach before you spend time on it.
   (an AGP bump that renames checks, a category emptied), delete it, run the check twice (the
   first run writes it and stops) and review the diff in the PR.
 - No source file over 800 lines (`just length-check`); split it by domain instead.
+- No `panic(` in Go outside tests (`scripts/check-panics.py`): return an error. `onPanic` is
+  the last net, not the first; the few exceptions (init-time embedded files, re-panics) are
+  listed with a reason in the script.
 - Swift sources follow `ios/.swift-format` (4 spaces, 120 columns): the macOS CI `ios` job runs
   `swift-format lint --strict` before the build and fails on any finding. Run `just ios-format`
   on a Mac (it uses the selected Xcode's swift-format) and commit the result. Keep a pure reformat
