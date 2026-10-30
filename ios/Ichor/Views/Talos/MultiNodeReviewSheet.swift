@@ -230,6 +230,7 @@ struct MultiApplyView: View {
     let onOutcome: (_ failed: Bool) -> Void
 
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @Environment(\.dismiss) private var dismiss
     @State private var started = false
     /// Refused before starting (another rollout runs, or no client).
@@ -283,7 +284,7 @@ struct MultiApplyView: View {
         }
         .interactiveDismissDisabled(outcome == nil)
         .sheet(item: $proposingFor) { n in
-            if let repo = model.activeClusterRepo {
+            if let repo = git.repo(for: model.activeSummary) {
                 ProposeInGitSheet(repo: repo, base: base, draft: draft, hostname: n.hostname, role: roles[n.node])
             }
         }
@@ -297,7 +298,7 @@ struct MultiApplyView: View {
     /// found by hostname.
     private func proposable(_ n: MultiConfigNodeState) -> Bool {
         outcome != nil && n.nodeState == .done && !n.hostname.isEmpty && !draft.isEmpty
-            && model.activeClusterRepo != nil
+            && git.repo(for: model.activeSummary) != nil
     }
 
     private func row(_ n: MultiConfigNodeState) -> some View {

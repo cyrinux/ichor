@@ -10,10 +10,11 @@ struct ProposeInGitButton: View {
     var label: LocalizedStringKey = "Propose in Git"
 
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @State private var proposing = false
 
     var body: some View {
-        if model.activeClusterRepo != nil {
+        if git.repo(for: model.activeSummary) != nil {
             VStack(spacing: 6) {
                 Button {
                     proposing = true
@@ -26,7 +27,7 @@ struct ProposeInGitButton: View {
                     .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
             .sheet(isPresented: $proposing) {
-                if let repo = model.activeClusterRepo {
+                if let repo = git.repo(for: model.activeSummary) {
                     ProposeInGitSheet(repo: repo, base: base, draft: draft, hostname: hostname)
                 }
             }

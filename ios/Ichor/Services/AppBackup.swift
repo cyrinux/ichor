@@ -26,7 +26,7 @@ enum AppBackup {
         let fingerprints = summary.contexts.map(\.fingerprint)
         let aiBackup = await ai.backup(includeKeys: includeSecrets)
         // The pull requests opened from the phone: format 4 only when there are some.
-        let proposals = backupProposals(model.proposals, fingerprints: fingerprints)
+        let proposals = backupProposals(model.git.proposals, fingerprints: fingerprints)
         // The imported plugins: format 5 only when there are some.
         let plugins = backupPlugins(try await TalosClient.exportPlugins())
         // A cluster whose CA was rotated keeps its fingerprint where the backup is restored.
@@ -47,7 +47,7 @@ enum AppBackup {
                 vpnOnly: model.settings.vpnOnly,
                 wakeOnLan: WakeOnLanStore.shared.allTargets,
                 kubeAccess: model.kubeAccess,
-                repos: model.clusterRepos,
+                repos: model.git.repos,
                 auditEvents: model.settings.auditEventClusters
             ),
             kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints),
@@ -125,7 +125,7 @@ enum AppBackup {
         PinStore.shared.restore(restoredPins(payload, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? []))
         // A format 4 backup's pull requests; an older one leaves the stored ones as they are.
         if let proposals = restoredProposals(payload, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? []) {
-            model.storeProposals(proposals)
+            model.git.store(proposals: proposals)
         }
         gitHosts.restore(restoredGitHosts(payload))
         let pluginsNote = await restorePlugins(payload)

@@ -10,6 +10,7 @@ struct ProposalsSection: View {
     var reconcile: (() -> Void)?
 
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @Environment(GitHostStore.self) private var hosts
     @Environment(\.openURL) private var openURL
     @State private var views: [String: ProposalView] = [:]
@@ -22,7 +23,8 @@ struct ProposalsSection: View {
     }
 
     private var records: [GitProposalRecord] {
-        model.proposals(tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name)
+        git.proposals(
+            for: model.activeSummary, tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name)
     }
 
     private var demo: Bool { model.activeSummary?.demo == true }
@@ -89,10 +91,10 @@ struct ProposalsSection: View {
             }
         }
         .swipeActions {
-            Button("Forget this proposal", role: .destructive) { model.forgetProposal(record) }
+            Button("Forget this proposal", role: .destructive) { git.forget(record, for: model.activeSummary) }
         }
         .contextMenu {
-            Button("Forget this proposal", role: .destructive) { model.forgetProposal(record) }
+            Button("Forget this proposal", role: .destructive) { git.forget(record, for: model.activeSummary) }
         }
     }
 
