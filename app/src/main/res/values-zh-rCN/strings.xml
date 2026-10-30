@@ -5664,6 +5664,10 @@
     <string name="runbooks_remove">移除</string>
     <string name="runbooks_remove_title">移除 %1$s？</string>
     <string name="runbooks_remove_text">运行手册将从此手机移除。集群上不会有任何变化。</string>
+    <string name="runbook_params_title">本次运行的值</string>
+    <string name="runbook_params_continue">继续</string>
+    <string name="runbook_params_change">更改值</string>
+    <string name="runbook_params_values">值：%1$s</string>
     <string name="runbook_open_plan">显示计划</string>
     <string name="runbook_field_yaml">运行手册 YAML</string>
     <string name="runbook_field_url">运行手册文件的 https:// 地址</string>

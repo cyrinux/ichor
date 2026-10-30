@@ -6,22 +6,52 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
 
 // Runbooks (docs/runbooks.md).
 var runbookCommands = []command{
-	{name: "runbook-plan", args: "FILE", run: func(e env) (string, error) {
+	{name: "runbook-plan", args: "FILE [name=value ...]", run: func(e env) (string, error) {
 		// Read-only: each step with destructive, role and allowed.
 		src, err := readRunbookFile()
 		if err != nil {
 			return "", err
 		}
 
-		return ichorgo.RunbookPlan(e.cfg, e.context, e.kubeServer, src)
+		values, _, err := runbookProbeArgs(flag.Args()[2:])
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.RunbookPlanWith(e.cfg, e.context, e.kubeServer, src, values)
 	}},
-	{name: "runbook-run", args: "FILE [-yes]", run: probeRunbookRun},
+	{name: "runbook-run", args: "FILE [name=value ...] [-yes]", run: probeRunbookRun},
+}
+
+// runbookProbeArgs reads the name=value arguments and -yes after the file.
+func runbookProbeArgs(args []string) (valuesJSON string, yes bool, err error) {
+	values := map[string]string{}
+
+	for _, arg := range args {
+		if arg == "-yes" {
+			yes = true
+
+			continue
+		}
+
+		name, value, ok := strings.Cut(arg, "=")
+		if !ok {
+			return "", false, fmt.Errorf("%q is not name=value", arg)
+		}
+
+		values[name] = value
+	}
+
+	b, err := json.Marshal(values)
+
+	return string(b), yes, err
 }
 
 func readRunbookFile() (string, error) {
@@ -42,18 +72,23 @@ func probeRunbookRun(e env) (string, error) {
 		return "", err
 	}
 
-	planJSON, err := ichorgo.RunbookPlan(e.cfg, e.context, e.kubeServer, src)
+	values, yes, err := runbookProbeArgs(flag.Args()[2:])
 	if err != nil {
 		return "", err
 	}
 
-	if err := refuseDestructive(planJSON, flag.Arg(2) == "-yes"); err != nil {
+	planJSON, err := ichorgo.RunbookPlanWith(e.cfg, e.context, e.kubeServer, src, values)
+	if err != nil {
+		return "", err
+	}
+
+	if err := refuseDestructive(planJSON, yes); err != nil {
 		return "", err
 	}
 
 	// -yes confirmed every destructive step up front: confirm each as it waits.
 	r := runbookProbe{done: make(chan string, 1), failed: make(chan string, 1), waits: make(chan int, 64)}
-	run := ichorgo.StartRunbook(e.cfg, e.context, e.kubeServer, src, "", r)
+	run := ichorgo.StartRunbookWith(e.cfg, e.context, e.kubeServer, src, "", values, r)
 
 	for {
 		select {

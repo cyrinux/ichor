@@ -11,6 +11,9 @@ struct RunbookPlanView: View {
     @Environment(AppModel.self) private var model
     @State private var yaml: String?
     @State private var plan: RunbookPlan?
+    @State private var params: [RunbookParam] = []
+    @State private var values: [String: String] = [:]
+    @State private var choices: [String: [String]] = [:]
     @State private var continueIDs: Set<String> = []
     @State private var failure: String?
 
@@ -19,10 +22,23 @@ struct RunbookPlanView: View {
 
     var body: some View {
         Form {
-            if let failure {
+            if let failure, plan == nil, params.isEmpty {
                 Section { Text(verbatim: failure).foregroundStyle(.red) }
             }
-            if let plan {
+            if plan == nil, !params.isEmpty {
+                RunbookParamsForm(params: params, values: $values, choices: choices, failure: failure) {
+                    Task { await planWithValues() }
+                }
+            } else if let plan {
+                if !params.isEmpty {
+                    Section {
+                        Text("Values: \(RunbookParam.label(values))").font(.footnote).foregroundStyle(.secondary)
+                        Button("Change the values") {
+                            self.plan = nil
+                            continueIDs = []
+                        }
+                    }
+                }
                 RunbookPlanSections(plan: plan, continueIDs: $continueIDs, editable: true)
                 Section {
                     Button {
@@ -58,16 +74,43 @@ struct RunbookPlanView: View {
                 return
             }
             yaml = text
-            plan = try await client.runbookPlan(yaml: text)
-            failure = nil
+            params = try await TalosClient.runbookSummary(yaml: text).params
+            if params.isEmpty {
+                await planWithValues()
+            } else if plan == nil {
+                values = RunbookParam.initialValues(params, remembered: remembered)
+                choices = await client.runbookValueChoices(params)
+            } else {
+                await planWithValues()
+            }
         } catch {
             failure = error.localizedDescription
         }
     }
 
+    /// The plan of the values given; what the core says of them stays on screen.
+    private func planWithValues() async {
+        guard let yaml, let client = model.client else { return }
+        do {
+            plan = try await client.runbookPlan(yaml: yaml, values: values)
+            failure = nil
+            if !params.isEmpty { UserDefaults.standard.set(values, forKey: memoryKey) }
+        } catch {
+            failure = error.localizedDescription
+        }
+    }
+
+    /// The values last given to this runbook of this cluster: a rerun starts from them.
+    private var memoryKey: String { "runbook.values.\(fingerprint).\(id)" }
+    private var remembered: [String: String] {
+        UserDefaults.standard.dictionary(forKey: memoryKey) as? [String: String] ?? [:]
+    }
+
     private func start(_ plan: RunbookPlan) {
         guard let yaml, let client = model.client else { return }
-        if job.start(id: id, fingerprint: fingerprint, yaml: yaml, plan: plan, continueIDs: continueIDs, client: client)
+        if job.start(
+            id: id, fingerprint: fingerprint, yaml: yaml, plan: plan, continueIDs: continueIDs, values: values,
+            client: client)
         {
             path.append(.runbookRun(id: id))
         }

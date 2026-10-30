@@ -28,6 +28,8 @@ var delegatedRuns = map[string]string{
 	"StartEtcdSnapshot":          "startSnapshot",
 	"StartEtcdSnapshotEncrypted": "startSnapshot",
 	"StartNodeJoin":              "nodeJoin.start",
+	"StartRunbook":               "startRunbook",
+	"StartRunbookWith":           "startRunbook",
 }
 
 // TestCallScopeGuard checks every Start*: a new run fails here until it holds its cluster's

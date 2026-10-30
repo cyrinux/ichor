@@ -17,8 +17,9 @@ be stopped. A step the cluster's permissions refuse keeps Run off until you let 
 past it ("continue on error").
 
 Runbooks cannot do anything the app cannot already do: there are no loops or branches, and
-the only checks are the `wait` and `assert` steps below, which read and never change anything. The Go API is `RunbookSummary`, `RunbookPlan` and `StartRunbook`
-(`go/ichorgo/runbook.go`, `runbook_run.go`); from a computer, `just probe runbook-plan FILE
+the only checks are the `wait` and `assert` steps below, which read and never change anything.
+The Go API is `RunbookSummary`, `RunbookPlanWith` and `StartRunbookWith`
+(`go/ichorgo/runbook.go`, `runbook_params.go`, `runbook_run.go`); from a computer, `just probe runbook-plan FILE
 -context CTX` prints the plan and `just probe runbook-run FILE -yes -context CTX` runs it
 (`-yes` is required when a step is destructive, and confirms each such step).
 
@@ -28,10 +29,12 @@ the only checks are the `wait` and `assert` steps below, which read and never ch
 schemaVersion: ichor.dev/runbook/v1alpha1
 name: Restart ingestion            # required
 description: Scale down, restart.  # optional
+params:                            # optional, at most 16: see Parameters
+  - {name: ns, prompt: Namespace, kind: namespace}
 steps:                             # 1 to 50
   - id: scale-down                 # required, unique: errors and the run name it
     action: scale                  # one of the actions below
-    target: {kind: Deployment, namespace: demo-shop, name: ingest-api}
+    target: {kind: Deployment, namespace: "${ns}", name: ingest-api}
     params: {replicas: 1}
     continueOnError: false         # true: a failure of this step does not stop the run
 ```
@@ -40,6 +43,31 @@ Unknown keys, unknown actions, a missing target and a parameter the action does 
 are errors that name the step. A Kubernetes action takes `target.namespace` and
 `target.name` (and `target.kind` when it lists kinds); a node action takes `target.node`
 only (an address or hostname of the talosconfig).
+
+## Parameters
+
+A runbook can ask for values once, before its plan, so one file serves every namespace or
+node. Each entry of `params` has:
+
+| Key | Meaning |
+|---|---|
+| `name` | Required: a lowercase letter, then letters and digits. Steps write it `${name}` |
+| `prompt` | The field's label; the name when absent |
+| `default` | Prefills the field; a parameter without one is required |
+| `kind` | `string` (default); `namespace`, `workload` or `node` offer the cluster's own as a picker (you can still type one); `int`; `bool` |
+
+`${name}` works in any value of a step's `target` and `params`, and is replaced before the
+step is checked, so the checks, the plan and the permission gate all see the final step. An
+unknown `${name}` is an error naming the step, a required parameter without a value keeps
+the run from starting, and `$${` is a literal `${`. Values are text put in place of a value:
+they cannot add keys or steps, and there are no expressions.
+
+YAML needs quotes around `${name}` inside `{…}`: `target: {namespace: "${ns}", name: api}`.
+
+The plan shown when you import a runbook leaves `${name}` as it is written, and does not ask
+the cluster about those steps; Run asks for the values first and plans them. The app
+remembers the last values per runbook and cluster. From a computer, pass them after the
+file: `just probe runbook-plan FILE ns=demo-shop -context CTX`.
 
 ## Actions
 
@@ -102,6 +130,18 @@ steps:
   - {id: stop-ingest, action: scale, target: {namespace: demo-shop, name: ingest-api}, params: {replicas: 0}}
   - {id: compact, action: triggerCronJob, target: {namespace: demo-shop, name: store-compaction}}
   - {id: start-ingest, action: scale, target: {namespace: demo-shop, name: ingest-api}, params: {replicas: 2}}
+```
+
+Restart an app in any namespace:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Restart an app in any namespace
+params:
+  - {name: ns, prompt: Namespace, kind: namespace}
+  - {name: app, prompt: Workload, kind: workload, default: ingest-api}
+steps:
+  - {id: restart, action: rolloutRestart, target: {namespace: "${ns}", name: "${app}"}}
 ```
 
 Snapshot etcd, then reboot a worker after draining it:

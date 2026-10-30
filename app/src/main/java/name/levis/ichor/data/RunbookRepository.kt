@@ -4,11 +4,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.RunbookItem
 import name.levis.ichor.model.RunbookList
 import name.levis.ichor.model.RunbookPlan
 import name.levis.ichor.model.RunbookResult
 import name.levis.ichor.model.RunbookStepState
+import name.levis.ichor.model.RunbookSummary
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.RunbookListener
@@ -47,21 +50,35 @@ class RunbookRepository(go: GoCall) : GoRepository(go) {
     /** An https download for the import sheet (at most 1 MiB): the file as it is. */
     suspend fun download(url: String): String = withContext(Dispatchers.IO) { Ichorgo.pluginFetchURL(url) }
 
-    /** What each step would do on the cluster on screen; nothing runs. */
+    /** What [yaml] asks for before its plan. */
+    suspend fun summary(yaml: String): RunbookSummary = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(RunbookSummary.serializer(), Ichorgo.runbookSummary(yaml))
+    }
+
+    /** What each step would do on the cluster on screen, a parameter still shown as written; nothing runs. */
     suspend fun plan(yaml: String): RunbookPlan = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(RunbookPlan.serializer(), Ichorgo.runbookPlan(cfg, ctx, server, yaml))
     }
 
-    /** Starts [yaml] on the cluster on screen, going past the steps [continueIds] names when they fail. */
-    fun start(yaml: String, continueIds: Set<String>): RunbookHandle {
+    /** What each step would do with [values] in place; a missing required value is an error. Nothing runs. */
+    suspend fun plan(yaml: String, values: Map<String, String>): RunbookPlan = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(RunbookPlan.serializer(), Ichorgo.runbookPlanWith(cfg, ctx, server, yaml, valuesJson(values)))
+    }
+
+    private fun valuesJson(values: Map<String, String>): String =
+        TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), values)
+
+    /** Starts [yaml] with [values] on the cluster on screen, going past the steps [continueIds] names when they fail. */
+    fun start(yaml: String, continueIds: Set<String>, values: Map<String, String>): RunbookHandle {
         val target = go.kubeTarget()
         val events = Channel<RunbookEvent>(Channel.UNLIMITED) // never drop the final event
-        val run = Ichorgo.startRunbook(
+        val run = Ichorgo.startRunbookWith(
             target.yaml,
             target.context,
             target.server,
             yaml,
             continueIds.joinToString(","),
+            valuesJson(values),
             object : RunbookListener {
                 override fun onStep(index: Long, stateJSON: String) {
                     runCatching { TalosJson.decodeFromString(RunbookStepState.serializer(), stateJSON) }

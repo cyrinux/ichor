@@ -15,6 +15,8 @@ import name.levis.ichor.ui.FollowedRun
 /** The runbook the app runs: at most one at a time, with each step's last state. */
 data class RunbookRunState(
     val plan: RunbookPlan,
+    /** What it was asked for: its header shows them. */
+    val values: Map<String, String> = emptyMap(),
     val steps: List<RunbookStepState> = plan.steps.mapIndexed { i, s -> RunbookStepState(index = i, id = s.id) },
     /** The run's end: every step ran or was skipped, all ok. */
     val ok: Boolean = false,
@@ -41,7 +43,7 @@ data class RunbookRunState(
  * runs once a run starts (the notification).
  */
 class RunbookManager(
-    private val startRun: (yaml: String, continueIds: Set<String>) -> RunbookHandle,
+    private val startRun: (yaml: String, continueIds: Set<String>, values: Map<String, String>) -> RunbookHandle,
     private val onStarted: () -> Unit = {},
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
 ) {
@@ -49,13 +51,13 @@ class RunbookManager(
     val current: StateFlow<RunbookRunState?> = _current.asStateFlow()
     private var handle: RunbookHandle? = null
 
-    /** Starts [yaml] (whose plan is [plan]) unless a runbook runs; false then. Throws when it cannot start. */
+    /** Starts [yaml] with [values] (whose plan is [plan]) unless a runbook runs; false then. Throws when it cannot start. */
     @Synchronized
-    fun start(yaml: String, plan: RunbookPlan, continueIds: Set<String>): Boolean {
+    fun start(yaml: String, plan: RunbookPlan, continueIds: Set<String>, values: Map<String, String> = emptyMap()): Boolean {
         if (_current.value?.running == true) return false
-        val h = startRun(yaml, continueIds)
+        val h = startRun(yaml, continueIds, values)
         handle = h
-        _current.value = RunbookRunState(plan)
+        _current.value = RunbookRunState(plan, values)
         scope.launch {
             for (event in h.events) apply(event)
             synchronized(this@RunbookManager) { if (handle === h) handle = null }

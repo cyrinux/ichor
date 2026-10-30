@@ -1,0 +1,7 @@
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Restart an app in any namespace
+params:
+  - {name: ns, prompt: Namespace, kind: namespace}
+  - {name: app, prompt: Workload, kind: workload, default: ingest-api}
+steps:
+  - {id: restart, action: rolloutRestart, target: {namespace: "${ns}", name: "${app}"}}

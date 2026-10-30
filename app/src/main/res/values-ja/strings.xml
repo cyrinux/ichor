@@ -5664,6 +5664,10 @@
     <string name="runbooks_remove">削除</string>
     <string name="runbooks_remove_title">%1$s を削除しますか？</string>
     <string name="runbooks_remove_text">ランブックがこのスマートフォンから削除されます。クラスターには何も変更されません。</string>
+    <string name="runbook_params_title">この実行の値</string>
+    <string name="runbook_params_continue">続行</string>
+    <string name="runbook_params_change">値を変更</string>
+    <string name="runbook_params_values">値: %1$s</string>
     <string name="runbook_open_plan">計画を表示</string>
     <string name="runbook_field_yaml">ランブックの YAML</string>
     <string name="runbook_field_url">ランブックファイルの https:// アドレス</string>
