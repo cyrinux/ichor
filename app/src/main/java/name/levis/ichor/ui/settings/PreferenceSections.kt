@@ -219,4 +219,5 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
         }
     }
     error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
+    PanicSection(appLock)
 }

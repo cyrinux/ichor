@@ -28,6 +28,17 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data android:scheme="https" />
         </intent>
+        <!-- A panic app (Ripple or any PanicKit trigger): Android 11+ hides it otherwise, and
+             Ichor could neither show its name nor tell it about a disconnect. -->
+        <intent>
+            <action android:name="info.guardianproject.panic.action.TRIGGER" />
+        </intent>
+        <intent>
+            <action android:name="info.guardianproject.panic.action.CONNECT" />
+        </intent>
+        <intent>
+            <action android:name="info.guardianproject.panic.action.DISCONNECT" />
+        </intent>
     </queries>
 
     <application
@@ -53,6 +64,26 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="ichor" android:host="signin" />
+            </intent-filter>
+        </activity>
+
+        <!-- A panic app's trigger, connect and disconnect. Keep it without launchMode: under
+             singleTask or singleInstance getCallingActivity() is null, and the sender of a trigger
+             cannot be verified. Exported with no permission, as the protocol needs: an unverified
+             sender can only lock. -->
+        <activity
+            android:name=".security.PanicResponderActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Ichor">
+            <intent-filter>
+                <action android:name="info.guardianproject.panic.action.TRIGGER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="info.guardianproject.panic.action.CONNECT" />
+                <action android:name="info.guardianproject.panic.action.DISCONNECT" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

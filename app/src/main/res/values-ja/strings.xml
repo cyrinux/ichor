@@ -5886,4 +5886,18 @@
     <string name="fleet_widget_need_attention">要対応</string>
     <string name="fleet_widget_all_fine">%1$d 個すべて正常</string>
     <string name="fleet_widget_oldest">最も古いチェック %1$s</string>
+    <string name="panic_section_title">パニックボタン</string>
+    <string name="panic_not_connected">Ripple などのパニックアプリから Ichor を接続してください。接続するまで、パニックアプリは Ichor をロックすることしかできません。</string>
+    <string name="panic_connected_app">%1$s に接続済み</string>
+    <string name="panic_response_lock">Ichor をロック</string>
+    <string name="panic_response_lock_desc">Ichor を開くときに指紋、PIN、またはセキュリティキーが必要になります。何も削除されません。</string>
+    <string name="panic_response_delete">このスマートフォンから Ichor の保存済み設定とサインイン情報を削除</string>
+    <string name="panic_response_delete_desc">クラスターには影響しません。元に戻せません。Ichor を使うには設定を再インポートするか、バックアップから復元してください。</string>
+    <string name="panic_delete_needs_lock">削除はアプリロックをオンにすると利用できます。</string>
+    <string name="panic_config_title">パニックアプリへの応答</string>
+    <string name="panic_config_body">%1$s がパニック信号を送ったとき、Ichor はどうしますか？</string>
+    <string name="panic_change">変更</string>
+    <string name="panic_disconnect">接続解除</string>
+    <string name="panic_delete_confirm_title">パニック時に設定を削除しますか？</string>
+    <string name="panic_confirm">確認</string>
 </resources>

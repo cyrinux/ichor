@@ -6013,4 +6013,18 @@
     <string name="fleet_widget_need_attention">brauchen Aufmerksamkeit</string>
     <string name="fleet_widget_all_fine">Alle %1$d in Ordnung</string>
     <string name="fleet_widget_oldest">Älteste Prüfung %1$s</string>
+    <string name="panic_section_title">Panik-Taste</string>
+    <string name="panic_not_connected">Verbinde Ichor über eine Panik-App wie Ripple; bis dahin kann jede Panik-App Ichor nur sperren.</string>
+    <string name="panic_connected_app">Verbunden mit %1$s</string>
+    <string name="panic_response_lock">Ichor sperren</string>
+    <string name="panic_response_lock_desc">Beim Öffnen von Ichor werden Fingerabdruck, PIN oder Sicherheitsschlüssel verlangt. Nichts wird gelöscht.</string>
+    <string name="panic_response_delete">Gespeicherte Konfigurationen und Anmeldungen von Ichor von diesem Telefon löschen</string>
+    <string name="panic_response_delete_desc">Deine Cluster bleiben unberührt. Das lässt sich nicht rückgängig machen: Importiere danach eine Konfiguration erneut oder stelle ein Backup wieder her.</string>
+    <string name="panic_delete_needs_lock">Das Löschen ist verfügbar, sobald die App-Sperre aktiv ist.</string>
+    <string name="panic_config_title">Auf eine Panik-App reagieren</string>
+    <string name="panic_config_body">Was soll Ichor tun, wenn %1$s den Panik-Auslöser sendet?</string>
+    <string name="panic_change">Ändern</string>
+    <string name="panic_disconnect">Trennen</string>
+    <string name="panic_delete_confirm_title">Konfiguration bei Panik löschen?</string>
+    <string name="panic_confirm">Bestätigen</string>
 </resources>

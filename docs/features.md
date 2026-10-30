@@ -423,6 +423,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   searches.
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
   over NFC or USB), which can also seal the stored configs so that nothing reads them without it.
+- **Panic button (Android):** Ichor answers Ripple and any other PanicKit trigger. Any panic app
+  can lock it; only the one you connect, once you opt in, can delete Ichor's saved configs and
+  sign-ins from the phone. Clusters themselves are never touched.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and
   how to fix it, a model downloaded to the phone that answers without sending anything, or hand
   the question to an assistant app (see [AI diagnosis](ai.md#ai-diagnosis-optional)).

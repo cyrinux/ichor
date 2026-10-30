@@ -56,6 +56,7 @@ tour** shows it again.
   scans, thirty days of history and an optional AI diagnosis.
 - **Operating safely:** read-only by default, typed confirmations, dry runs, an encrypted audit
   log, runbooks with a confirmation per destructive step, a security key or biometric lock,
+  a panic-app response (lock, or delete the saved configs; Android),
   configs sealed in the phone's security chip, backups that move between Android and iPhone.
 
 The full list, screen by screen, is in [docs/features.md](docs/features.md); the

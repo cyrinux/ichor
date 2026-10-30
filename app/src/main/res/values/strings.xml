@@ -6030,4 +6030,18 @@
     <string name="fleet_widget_oldest">Oldest check %1$s</string>
     <string name="fleet_widget_count" translatable="false">%1$d / %2$d</string>
     <string name="fleet_widget_row" translatable="false">%1$s · %2$s</string>
+    <string name="panic_section_title">Panic button</string>
+    <string name="panic_not_connected">Connect Ichor from a panic app such as Ripple; until then any panic app can only lock Ichor.</string>
+    <string name="panic_connected_app">Connected to %1$s</string>
+    <string name="panic_response_lock">Lock Ichor</string>
+    <string name="panic_response_lock_desc">Opening Ichor asks for your fingerprint, PIN or security key. Nothing is deleted.</string>
+    <string name="panic_response_delete">Delete Ichor\'s saved configs and sign-ins from this phone</string>
+    <string name="panic_response_delete_desc">Your clusters are not touched. This cannot be undone: re-import a config or restore a backup to use Ichor again.</string>
+    <string name="panic_delete_needs_lock">Deleting is available once the app lock is on.</string>
+    <string name="panic_config_title">Respond to a panic app</string>
+    <string name="panic_config_body">What should Ichor do when %1$s sends its panic trigger?</string>
+    <string name="panic_change">Change</string>
+    <string name="panic_disconnect">Disconnect</string>
+    <string name="panic_delete_confirm_title">Delete the config on panic?</string>
+    <string name="panic_confirm">Confirm</string>
 </resources>

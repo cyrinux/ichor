@@ -6022,4 +6022,18 @@
     <string name="fleet_widget_need_attention">richiedono attenzione</string>
     <string name="fleet_widget_all_fine">Tutti i %1$d a posto</string>
     <string name="fleet_widget_oldest">Controllo più vecchio %1$s</string>
+    <string name="panic_section_title">Pulsante antipanico</string>
+    <string name="panic_not_connected">Collega Ichor da un\'app antipanico come Ripple; fino ad allora qualsiasi app antipanico può solo bloccare Ichor.</string>
+    <string name="panic_connected_app">Collegato a %1$s</string>
+    <string name="panic_response_lock">Blocca Ichor</string>
+    <string name="panic_response_lock_desc">All\'apertura, Ichor chiederà impronta, PIN o chiave di sicurezza. Non viene eliminato nulla.</string>
+    <string name="panic_response_delete">Elimina da questo telefono le configurazioni e gli accessi salvati di Ichor</string>
+    <string name="panic_response_delete_desc">I tuoi cluster non vengono toccati. L\'operazione è irreversibile: reimporta una configurazione o ripristina un backup per usare Ichor.</string>
+    <string name="panic_delete_needs_lock">L\'eliminazione è disponibile quando il blocco dell\'app è attivo.</string>
+    <string name="panic_config_title">Rispondi a un\'app antipanico</string>
+    <string name="panic_config_body">Cosa deve fare Ichor quando %1$s invia il segnale di panico?</string>
+    <string name="panic_change">Modifica</string>
+    <string name="panic_disconnect">Scollega</string>
+    <string name="panic_delete_confirm_title">Eliminare la configurazione in caso di panico?</string>
+    <string name="panic_confirm">Conferma</string>
 </resources>

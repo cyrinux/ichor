@@ -6279,4 +6279,18 @@
     <string name="fleet_widget_need_attention">требуют внимания</string>
     <string name="fleet_widget_all_fine">Все %1$d в порядке</string>
     <string name="fleet_widget_oldest">Самая старая проверка %1$s</string>
+    <string name="panic_section_title">Тревожная кнопка</string>
+    <string name="panic_not_connected">Подключите Ichor из тревожного приложения, например Ripple; до этого любое такое приложение может только заблокировать Ichor.</string>
+    <string name="panic_connected_app">Подключено к %1$s</string>
+    <string name="panic_response_lock">Заблокировать Ichor</string>
+    <string name="panic_response_lock_desc">При открытии Ichor запросит отпечаток, PIN-код или ключ безопасности. Ничего не удаляется.</string>
+    <string name="panic_response_delete">Удалить с этого телефона сохранённые конфигурации и входы Ichor</string>
+    <string name="panic_response_delete_desc">Ваши кластеры не затрагиваются. Это нельзя отменить: чтобы пользоваться Ichor, снова импортируйте конфигурацию или восстановите резервную копию.</string>
+    <string name="panic_delete_needs_lock">Удаление доступно, когда включена блокировка приложения.</string>
+    <string name="panic_config_title">Ответ на тревожное приложение</string>
+    <string name="panic_config_body">Что делать Ichor, когда %1$s отправит сигнал тревоги?</string>
+    <string name="panic_change">Изменить</string>
+    <string name="panic_disconnect">Отключить</string>
+    <string name="panic_delete_confirm_title">Удалять конфигурацию по сигналу тревоги?</string>
+    <string name="panic_confirm">Подтвердить</string>
 </resources>

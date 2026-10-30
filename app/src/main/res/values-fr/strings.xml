@@ -6022,4 +6022,18 @@
     <string name="fleet_widget_need_attention">à surveiller</string>
     <string name="fleet_widget_all_fine">Les %1$d sont sains</string>
     <string name="fleet_widget_oldest">Plus ancienne vérification %1$s</string>
+    <string name="panic_section_title">Bouton de panique</string>
+    <string name="panic_not_connected">Connectez Ichor depuis une app de panique comme Ripple ; d\'ici là, toute app de panique peut seulement verrouiller Ichor.</string>
+    <string name="panic_connected_app">Connecté à %1$s</string>
+    <string name="panic_response_lock">Verrouiller Ichor</string>
+    <string name="panic_response_lock_desc">L\'ouverture d\'Ichor demandera votre empreinte, votre code ou votre clé de sécurité. Rien n\'est supprimé.</string>
+    <string name="panic_response_delete">Supprimer de ce téléphone les configurations et connexions enregistrées d\'Ichor</string>
+    <string name="panic_response_delete_desc">Vos clusters ne sont pas touchés. Action irréversible : réimportez une configuration ou restaurez une sauvegarde pour utiliser Ichor.</string>
+    <string name="panic_delete_needs_lock">La suppression est disponible une fois le verrouillage de l\'app activé.</string>
+    <string name="panic_config_title">Répondre à une app de panique</string>
+    <string name="panic_config_body">Que doit faire Ichor quand %1$s envoie son signal de panique ?</string>
+    <string name="panic_change">Modifier</string>
+    <string name="panic_disconnect">Déconnecter</string>
+    <string name="panic_delete_confirm_title">Supprimer la configuration en cas de panique ?</string>
+    <string name="panic_confirm">Confirmer</string>
 </resources>
