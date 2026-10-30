@@ -67,7 +67,10 @@ type runbookResult struct {
 // StartRunbook is StartRunbookWith with no values: a runbook with a required parameter does
 // not start.
 func StartRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs string, listener RunbookListener) *RunbookRun {
-	return StartRunbookWith(configYAML, contextName, kubeServer, runbookYAML, continueIDs, "", listener)
+	contextName = unmaskContext(configYAML, contextName)
+	listener = maskedRunbookListener{listener}
+
+	return startRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs, "", listener)
 }
 
 // StartRunbookWith runs the steps of runbookYAML in order (docs/runbooks.md), with valuesJSON
@@ -82,6 +85,11 @@ func StartRunbookWith(configYAML, contextName, kubeServer, runbookYAML, continue
 	contextName = unmaskContext(configYAML, contextName)
 	listener = maskedRunbookListener{listener}
 
+	return startRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs, valuesJSON, listener)
+}
+
+// startRunbook is the run, its context unmasked and its listener masked.
+func startRunbook(configYAML, contextName, kubeServer, runbookYAML, continueIDs, valuesJSON string, listener RunbookListener) *RunbookRun {
 	ctx, cancel := context.WithCancel(context.Background())
 	handle := &RunbookRun{cancel: cancel, confirm: make(chan int, 1)}
 

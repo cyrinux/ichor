@@ -355,12 +355,14 @@ type runbookPlanResult struct {
 func RunbookPlan(configYAML, contextName, kubeServer, runbookYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	contextName = unmaskContext(configYAML, contextName)
+
 	rb, err := loadRunbook(runbookYAML)
 	if err != nil {
 		return "", err
 	}
 
-	return planRunbook(configYAML, unmaskContext(configYAML, contextName), kubeServer, rb)
+	return planRunbook(configYAML, contextName, kubeServer, rb)
 }
 
 // RunbookPlanWith validates runbookYAML (docs/runbooks.md) with valuesJSON ({"name":"value"},
@@ -375,6 +377,8 @@ func RunbookPlan(configYAML, contextName, kubeServer, runbookYAML string) (out s
 func RunbookPlanWith(configYAML, contextName, kubeServer, runbookYAML, valuesJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	contextName = unmaskContext(configYAML, contextName)
+
 	values, err := parseRunbookValues(valuesJSON)
 	if err != nil {
 		return "", err
@@ -385,7 +389,7 @@ func RunbookPlanWith(configYAML, contextName, kubeServer, runbookYAML, valuesJSO
 		return "", err
 	}
 
-	return planRunbook(configYAML, unmaskContext(configYAML, contextName), kubeServer, rb)
+	return planRunbook(configYAML, contextName, kubeServer, rb)
 }
 
 func planRunbook(configYAML, contextName, kubeServer string, rb runbook) (string, error) {
