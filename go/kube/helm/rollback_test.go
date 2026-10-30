@@ -1,4 +1,4 @@
-package ichorgo
+package helm
 
 import (
 	"context"
@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/kubetest"
 )
 
 const (
@@ -105,14 +107,14 @@ metadata:
   annotations: {helm.sh/resource-policy: keep}
 `
 
-func helmRollbackAPI(t *testing.T, extraV1 map[string]any) *fakeKubeAPI {
+func helmRollbackAPI(t *testing.T, extraV1 map[string]any) *kubetest.FakeAPI {
 	t.Helper()
 
 	// After a failed upgrade Helm leaves the previous revision deployed.
 	v1 := helmSecretData(t, helmTestRelease(1, "deployed", "1.0.0", helmTestManifestV1, extraV1))
 	v2 := helmSecretData(t, helmTestRelease(2, "failed", "1.1.0", helmTestManifestV2, nil))
 
-	return newFakeKubeAPI(t, map[string]string{
+	return kubetest.New(t, map[string]string{
 		"GET " + helmTestSecrets: `{"kind":"Table","apiVersion":"meta.k8s.io/v1","columnDefinitions":[],"rows":[` +
 			helmRow("sh.helm.release.v1.site.v1", "site", 1, "deployed") + "," +
 			helmRow("site-v1-copy", "site", 1, "deployed") + "," +
@@ -140,12 +142,9 @@ func helmRollbackAPI(t *testing.T, extraV1 map[string]any) *fakeKubeAPI {
 func TestHelmRollbackPlanAndRun(t *testing.T) {
 	f := helmRollbackAPI(t, nil)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{})
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,30 +154,28 @@ func TestHelmRollbackPlanAndRun(t *testing.T) {
 		t.Fatalf("plan %+v", p)
 	}
 
-	want := []helmChange{
-		{Action: helmChangeKeep, Kind: "ConfigMap", Namespace: "web", Name: "site-keep"},
-		{Action: helmChangeCreate, Kind: "ServiceAccount", Namespace: "web", Name: "site"},
-		{Action: helmChangeUpdate, Kind: "ConfigMap", Namespace: "web", Name: "site"},
-		{Action: helmChangeUpdate, Kind: "Deployment", Namespace: "web", Name: "site"},
-		{Action: helmChangeDelete, Kind: "Service", Namespace: "web", Name: "site-extra"},
+	want := []Change{
+		{Action: ChangeKeep, Kind: "ConfigMap", Namespace: "web", Name: "site-keep"},
+		{Action: ChangeCreate, Kind: "ServiceAccount", Namespace: "web", Name: "site"},
+		{Action: ChangeUpdate, Kind: "ConfigMap", Namespace: "web", Name: "site"},
+		{Action: ChangeUpdate, Kind: "Deployment", Namespace: "web", Name: "site"},
+		{Action: ChangeDelete, Kind: "Service", Namespace: "web", Name: "site-extra"},
 	}
 	if !reflect.DeepEqual(p.Changes, want) {
 		t.Fatalf("changes:\n got  %+v\n want %+v", p.Changes, want)
 	}
 
 	// The plan only dry-runs.
-	for _, r := range f.recorded() {
-		if r.method != "GET" && !strings.Contains(r.query, "dryRun=All") {
+	for _, r := range f.Recorded() {
+		if r.Method != "GET" && !strings.Contains(r.Query, "dryRun=All") {
 			t.Fatalf("plan wrote: %+v", r)
 		}
 	}
 
-	f.mu.Lock()
-	f.requests = nil
-	f.mu.Unlock()
+	f.ForgetRequests()
 
 	now := time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC)
-	if _, err := runHelmRollback(context.Background(), k, rb, now); err != nil {
+	if _, err := runRollback(context.Background(), k, rb, now); err != nil {
 		t.Fatal(err)
 	}
 
@@ -186,10 +183,10 @@ func TestHelmRollbackPlanAndRun(t *testing.T) {
 
 	bodies := map[string]string{}
 
-	for _, r := range f.recorded() {
-		if r.method != "GET" {
-			writes = append(writes, r.method+" "+r.path)
-			bodies[r.method+" "+r.path] = r.body
+	for _, r := range f.Recorded() {
+		if r.Method != "GET" {
+			writes = append(writes, r.Method+" "+r.Path)
+			bodies[r.Method+" "+r.Path] = r.Body
 		}
 	}
 
@@ -260,7 +257,7 @@ func helmSecretPayload(t *testing.T, body string, path ...string) map[string]any
 		v = v.(map[string]any)[key]
 	}
 
-	payload, _, err := decodeHelmPayload(v.(string))
+	payload, _, err := decodePayload(v.(string))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,81 +268,42 @@ func helmSecretPayload(t *testing.T, body string, path ...string) map[string]any
 func TestHelmRollbackBlockers(t *testing.T) {
 	f := helmRollbackAPI(t, nil)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
 	for _, rev := range []int{2, 3} {
-		if _, err := prepareHelmRollback(context.Background(), k, "web", "site", rev, helmRollbackOptions{}); err == nil {
+		if _, err := prepareRollback(context.Background(), k, "web", "site", rev, Options{}); err == nil {
 			t.Errorf("revision %d accepted", rev)
 		}
 	}
 }
 
 func TestHelmFluxOwner(t *testing.T) {
-	objs, err := parseHelmManifest("kind: Deployment\nmetadata:\n  name: a\n  labels:\n    helm.toolkit.fluxcd.io/name: podinfo\n    helm.toolkit.fluxcd.io/namespace: flux-system\n")
+	objs, err := parseManifest("kind: Deployment\nmetadata:\n  name: a\n  labels:\n    helm.toolkit.fluxcd.io/name: podinfo\n    helm.toolkit.fluxcd.io/namespace: flux-system\n")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got := helmFluxOwner("web", []helmObject{{Body: objs[0]}}); got != "flux-system/podinfo" {
+	if got := fluxOwner("web", []object{{Body: objs[0]}}); got != "flux-system/podinfo" {
 		t.Fatalf("got %q", got)
-	}
-}
-
-func TestKubeHelmRollbackDemo(t *testing.T) {
-	cfg, err := DemoConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	out, err := KubeHelmRollbackPlan(cfg, "", "", "ingress-nginx", "ingress-nginx", 0, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var p helmRollbackPlan
-	if err := json.Unmarshal([]byte(out), &p); err != nil {
-		t.Fatal(err)
-	}
-
-	if p.From != 7 || p.To != 6 || len(p.Changes) == 0 || p.ToChart != "ingress-nginx-4.12.0" && p.ToChart != "ingress-nginx-4.13.0" {
-		t.Fatalf("plan %+v", p)
-	}
-
-	if err := KubeHelmRollback(cfg, "", "", "ingress-nginx", "ingress-nginx", 6, ""); err == nil {
-		t.Fatal("demo rolled back")
-	}
-
-	if _, err := KubeHelmRollbackPlan(cfg, "", "", "web", "../x", 1, ""); err == nil {
-		t.Fatal("bad name accepted")
-	}
-
-	if _, err := KubeHelmRollbackPlan(cfg, "", "", "web", "site", -1, ""); err == nil {
-		t.Fatal("negative revision accepted")
 	}
 }
 
 func TestHelmRollbackKeepsWhatLiveSaysToKeep(t *testing.T) {
 	f := helmRollbackAPI(t, nil)
 
-	f.mu.Lock()
-	f.answers["GET "+helmTestService] = `{"apiVersion":"v1","kind":"Service","metadata":{"name":"site-extra","namespace":"web","annotations":{"helm.sh/resource-policy":"keep"}}}`
-	f.mu.Unlock()
+	f.Mu.Lock()
+	f.Answers["GET "+helmTestService] = `{"apiVersion":"v1","kind":"Service","metadata":{"name":"site-extra","namespace":"web","annotations":{"helm.sh/resource-policy":"keep"}}}`
+	f.Mu.Unlock()
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 1, helmRollbackOptions{})
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 1, Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, c := range rb.plan.Changes {
-		if c.Name == "site-extra" && c.Action != helmChangeKeep {
+		if c.Name == "site-extra" && c.Action != ChangeKeep {
 			t.Fatalf("live keep ignored: %+v", c)
 		}
 	}
@@ -358,28 +316,25 @@ func TestHelmRollbackKeepsWhatLiveSaysToKeep(t *testing.T) {
 }
 
 func TestHelmTargetRef(t *testing.T) {
-	refs := []helmSecretRef{{revision: 5}, {revision: 3}}
+	refs := []SecretRef{{Revision: 5}, {Revision: 3}}
 
-	if _, err := helmTargetRef(refs, 0); err == nil {
+	if _, err := pickTargetRef(refs, 0); err == nil {
 		t.Error("revision 0 took 3, not 4")
 	}
 
-	if ref, err := helmTargetRef(refs, 3); err != nil || ref.revision != 3 {
+	if ref, err := pickTargetRef(refs, 3); err != nil || ref.Revision != 3 {
 		t.Errorf("got %+v %v", ref, err)
 	}
 }
 
 func TestHelmObjectsGoToTheReleaseNamespace(t *testing.T) {
-	f := newFakeKubeAPI(t, map[string]string{"GET /api/v1": helmTestDiscover})
+	f := kubetest.New(t, map[string]string{"GET /api/v1": helmTestDiscover})
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
 	manifest := "apiVersion: v1\nkind: ConfigMap\nmetadata: {name: a}\n---\napiVersion: v1\nkind: ConfigMap\nmetadata: {name: b, namespace: other}\n"
 
-	objs, err := helmObjects(context.Background(), newKubeKinds(k), manifest, "monitoring")
+	objs, err := objects(context.Background(), newKindResolver(k.Client), manifest, "monitoring")
 	if err != nil || len(objs) != 2 {
 		t.Fatalf("%+v %v", objs, err)
 	}
@@ -391,34 +346,29 @@ func TestHelmObjectsGoToTheReleaseNamespace(t *testing.T) {
 
 // helmRollbackWrites prepares the rollback of site to v1 with optionsJSON on f, runs it and
 // returns the plan, the run's writes in order and its error.
-func helmRollbackWrites(t *testing.T, f *fakeKubeAPI, optionsJSON string) (helmRollbackPlan, []fakeKubeRequest, error) {
+func helmRollbackWrites(t *testing.T, f *kubetest.FakeAPI, optionsJSON string) (Plan, []kubetest.Request, error) {
 	t.Helper()
 
-	opts, err := parseHelmRollbackOptions(optionsJSON)
+	opts, err := ParseRollbackOptions(optionsJSON)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	k := Env{Client: f.KubeClient(t)}
+
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, opts)
-	if err != nil {
-		t.Fatal(err)
-	}
+	f.ForgetRequests()
 
-	f.mu.Lock()
-	f.requests = nil
-	f.mu.Unlock()
+	pruneErr, runErr := runRollback(context.Background(), k, rb, time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC))
 
-	pruneErr, runErr := runHelmRollback(context.Background(), k, rb, time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC))
+	var writes []kubetest.Request
 
-	var writes []fakeKubeRequest
-
-	for _, r := range f.recorded() {
-		if r.method != "GET" {
+	for _, r := range f.Recorded() {
+		if r.Method != "GET" {
 			writes = append(writes, r)
 		}
 	}
@@ -426,10 +376,10 @@ func helmRollbackWrites(t *testing.T, f *fakeKubeAPI, optionsJSON string) (helmR
 	return rb.plan, writes, errors.Join(runErr, pruneErr)
 }
 
-func writeKeys(writes []fakeKubeRequest) []string {
+func writeKeys(writes []kubetest.Request) []string {
 	out := make([]string, 0, len(writes))
 	for _, w := range writes {
-		out = append(out, w.method+" "+w.path)
+		out = append(out, w.Method+" "+w.Path)
 	}
 
 	return out
@@ -437,17 +387,14 @@ func writeKeys(writes []fakeKubeRequest) []string {
 
 func TestHelmRollbackForceReplaces(t *testing.T) {
 	f := helmRollbackAPI(t, nil)
-	f.answerWith("GET "+helmTestDeploy, 200, `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"site","namespace":"web","resourceVersion":"9","labels":{"app":"site","tier":"web"}},
+	f.AnswerWith("GET "+helmTestDeploy, 200, `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"site","namespace":"web","resourceVersion":"9","labels":{"app":"site","tier":"web"}},
 	  "spec":{"replicas":1,"template":{"spec":{"containers":[{"name":"web","image":"site:v2"}]}}}}`)
-	f.answerWith("PUT "+helmTestCM, 200, `{}`)
-	f.answerWith("PUT "+helmTestDeploy, 200, `{}`)
+	f.AnswerWith("PUT "+helmTestCM, 200, `{}`)
+	f.AnswerWith("PUT "+helmTestDeploy, 200, `{}`)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{Force: true})
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, Options{Force: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -461,15 +408,15 @@ func TestHelmRollbackForceReplaces(t *testing.T) {
 		actions[c.Kind+"/"+c.Name] = c.Action
 	}
 
-	if actions["ConfigMap/site"] != helmChangeReplace || actions["Deployment/site"] != helmChangeReplace || actions["ServiceAccount/site"] != helmChangeCreate {
+	if actions["ConfigMap/site"] != ChangeReplace || actions["Deployment/site"] != ChangeReplace || actions["ServiceAccount/site"] != ChangeCreate {
 		t.Fatalf("changes %v", actions)
 	}
 
 	dryPuts := 0
 
-	for _, r := range f.recorded() {
-		if r.method == "PUT" && (r.path == helmTestCM || r.path == helmTestDeploy) {
-			if !strings.Contains(r.query, "dryRun=All") {
+	for _, r := range f.Recorded() {
+		if r.Method == "PUT" && (r.Path == helmTestCM || r.Path == helmTestDeploy) {
+			if !strings.Contains(r.Query, "dryRun=All") {
 				t.Fatalf("plan replaced for real: %+v", r)
 			}
 
@@ -500,12 +447,12 @@ func TestHelmRollbackForceReplaces(t *testing.T) {
 	}
 
 	for _, w := range writes[2:4] {
-		if strings.Contains(w.query, "dryRun") || w.contentType != "application/json" {
-			t.Errorf("replace %s?%s (%s)", w.path, w.query, w.contentType)
+		if strings.Contains(w.Query, "dryRun") || w.ContentType != "application/json" {
+			t.Errorf("replace %s?%s (%s)", w.Path, w.Query, w.ContentType)
 		}
 
 		var body map[string]any
-		if err := json.Unmarshal([]byte(w.body), &body); err != nil {
+		if err := json.Unmarshal([]byte(w.Body), &body); err != nil {
 			t.Fatal(err)
 		}
 
@@ -514,28 +461,28 @@ func TestHelmRollbackForceReplaces(t *testing.T) {
 
 		if meta["resourceVersion"] == nil || annotations["meta.helm.sh/release-name"] != "site" || annotations["meta.helm.sh/release-namespace"] != "web" ||
 			meta["labels"].(map[string]any)["app.kubernetes.io/managed-by"] != "Helm" {
-			t.Errorf("replace body %s", w.body)
+			t.Errorf("replace body %s", w.Body)
 		}
 	}
 
-	if !strings.Contains(writes[2].body, `"resourceVersion":"5"`) || !strings.Contains(writes[2].body, `"data":{"a":"1"}`) {
-		t.Errorf("configmap %s", writes[2].body)
+	if !strings.Contains(writes[2].Body, `"resourceVersion":"5"`) || !strings.Contains(writes[2].Body, `"data":{"a":"1"}`) {
+		t.Errorf("configmap %s", writes[2].Body)
 	}
 
-	if !strings.Contains(writes[3].body, `"resourceVersion":"9"`) || !strings.Contains(writes[3].body, `"image":"site:v1"`) {
-		t.Errorf("deployment %s", writes[3].body)
+	if !strings.Contains(writes[3].Body, `"resourceVersion":"9"`) || !strings.Contains(writes[3].Body, `"image":"site:v1"`) {
+		t.Errorf("deployment %s", writes[3].Body)
 	}
 }
 
 func TestHelmRollbackForceWithNothingToChange(t *testing.T) {
 	f := helmRollbackAPI(t, nil)
 	// The ConfigMap already reads as v1 renders it: a patch drops it, a replace is sent.
-	f.answerWith("GET "+helmTestCM, 200, `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"site","namespace":"web","resourceVersion":"5",
+	f.AnswerWith("GET "+helmTestCM, 200, `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"site","namespace":"web","resourceVersion":"5",
 	  "annotations":{"meta.helm.sh/release-name":"site","meta.helm.sh/release-namespace":"web"},"labels":{"app.kubernetes.io/managed-by":"Helm"}},"data":{"a":"1"}}`)
-	f.answerWith("PUT "+helmTestCM, 200, `{}`)
-	f.answerWith("PUT "+helmTestDeploy, 200, `{}`)
+	f.AnswerWith("PUT "+helmTestCM, 200, `{}`)
+	f.AnswerWith("PUT "+helmTestDeploy, 200, `{}`)
 
-	for opts, want := range map[string]string{"": "", `{"force":true}`: helmChangeReplace} {
+	for opts, want := range map[string]string{"": "", `{"force":true}`: ChangeReplace} {
 		plan, _, _ := helmRollbackWrites(t, f, opts)
 
 		got := ""
@@ -556,7 +503,7 @@ func TestHelmRollbackPrunesHistory(t *testing.T) {
 	v1 := helmTestSecrets + "/sh.helm.release.v1.site.v1"
 
 	f := helmRollbackAPI(t, nil)
-	f.answerWith("DELETE "+v1, 200, `{}`)
+	f.AnswerWith("DELETE "+v1, 200, `{}`)
 
 	plan, writes, err := helmRollbackWrites(t, f, `{"historyMax":2}`)
 	if err != nil {
@@ -584,8 +531,8 @@ func TestHelmRollbackPrunesHistory(t *testing.T) {
 		}
 
 		for _, w := range writes {
-			if w.method == "DELETE" && strings.Contains(w.path, "/secrets/") {
-				t.Errorf("options %q pruned %s", opts, w.path)
+			if w.Method == "DELETE" && strings.Contains(w.Path, "/secrets/") {
+				t.Errorf("options %q pruned %s", opts, w.Path)
 			}
 		}
 	}
@@ -595,21 +542,17 @@ func TestHelmRollbackPruneRefusedStillRollsBack(t *testing.T) {
 	v1 := helmTestSecrets + "/sh.helm.release.v1.site.v1"
 
 	f := helmRollbackAPI(t, nil)
-	f.answerWith("DELETE "+v1, 403, `{"kind":"Status","status":"Failure","reason":"Forbidden","code":403,"message":"secrets \"sh.helm.release.v1.site.v1\" is forbidden"}`)
+	f.AnswerWith("DELETE "+v1, 403, `{"kind":"Status","status":"Failure","reason":"Forbidden","code":403,"message":"secrets \"sh.helm.release.v1.site.v1\" is forbidden"}`)
 
 	_, writes, err := helmRollbackWrites(t, f, `{"historyMax":2}`)
-	if err == nil || !strings.HasPrefix(err.Error(), helmPrunePrefix) || !strings.Contains(err.Error(), "revision 1") {
+	if err == nil || !strings.HasPrefix(err.Error(), PrunePrefix) || !strings.Contains(err.Error(), "revision 1") {
 		t.Fatalf("err %v", err)
-	}
-
-	if got := kubeMutationError(err); got.Error() != err.Error() {
-		t.Errorf("mutation error %q", got)
 	}
 
 	deployed := false
 
 	for _, w := range writes {
-		if w.method == "PUT" && strings.HasSuffix(w.path, ".v3") && strings.Contains(w.body, `"status":"deployed"`) {
+		if w.Method == "PUT" && strings.HasSuffix(w.Path, ".v3") && strings.Contains(w.Body, `"status":"deployed"`) {
 			deployed = true
 		}
 	}
@@ -621,14 +564,11 @@ func TestHelmRollbackPruneRefusedStillRollsBack(t *testing.T) {
 
 func TestHelmRollbackFailedKeepsHistory(t *testing.T) {
 	f := helmRollbackAPI(t, nil)
-	f.answerWith("DELETE "+helmTestSecrets+"/sh.helm.release.v1.site.v1", 200, `{}`)
+	f.AnswerWith("DELETE "+helmTestSecrets+"/sh.helm.release.v1.site.v1", 200, `{}`)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{HistoryMax: 1})
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, Options{HistoryMax: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -638,75 +578,18 @@ func TestHelmRollbackFailedKeepsHistory(t *testing.T) {
 	}
 
 	// The change fails for real after a dry run that passed.
-	f.answerWith("PATCH "+helmTestDeploy, 409, `{"kind":"Status","reason":"Conflict","code":409,"message":"conflict"}`)
+	f.AnswerWith("PATCH "+helmTestDeploy, 409, `{"kind":"Status","reason":"Conflict","code":409,"message":"conflict"}`)
 
-	f.mu.Lock()
-	f.requests = nil
-	f.mu.Unlock()
+	f.ForgetRequests()
 
-	if _, err := runHelmRollback(context.Background(), k, rb, time.Now()); err == nil {
+	if _, err := runRollback(context.Background(), k, rb, time.Now()); err == nil {
 		t.Fatal("no error")
 	}
 
-	for _, r := range f.recorded() {
-		if r.method == "DELETE" && strings.Contains(r.path, "/secrets/") {
-			t.Fatalf("a failed rollback pruned %s", r.path)
+	for _, r := range f.Recorded() {
+		if r.Method == "DELETE" && strings.Contains(r.Path, "/secrets/") {
+			t.Fatalf("a failed rollback pruned %s", r.Path)
 		}
-	}
-}
-
-func TestKubeHelmRollbackDemoOptions(t *testing.T) {
-	cfg, err := DemoConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	out, err := KubeHelmRollbackPlan(cfg, "", "", "ingress-nginx", "ingress-nginx", 0, `{"force":true,"historyMax":2}`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var p helmRollbackPlan
-	if err := json.Unmarshal([]byte(out), &p); err != nil {
-		t.Fatal(err)
-	}
-
-	if !p.Force || p.HistoryMax != 2 || !reflect.DeepEqual(p.Prune, []int{5, 6}) || p.Workloads != 2 || p.Changes[0].Action != helmChangeReplace {
-		t.Fatalf("plan %+v", p)
-	}
-
-	if _, err := KubeHelmRollbackPlan(cfg, "", "", "ingress-nginx", "ingress-nginx", 0, `{"historyMax":-2}`); err == nil {
-		t.Fatal("negative history max accepted")
-	}
-
-	if err := KubeHelmRollback(cfg, "", "", "ingress-nginx", "ingress-nginx", 6, `{"historyMax":2}`); err == nil {
-		t.Fatal("demo rolled back")
-	}
-}
-
-// Through the exported call: kubeDo unwraps an error to the API's, so a prune refused must
-// keep its prefix past it, and the rollback is still deployed.
-func TestKubeHelmRollbackPruneRefusedKeepsPrefix(t *testing.T) {
-	v1 := helmTestSecrets + "/sh.helm.release.v1.site.v1"
-
-	f := helmRollbackAPI(t, nil)
-	f.answerWith("DELETE "+v1, 403, `{"kind":"Status","status":"Failure","reason":"Forbidden","code":403,"message":"secrets \"sh.helm.release.v1.site.v1\" is forbidden"}`)
-
-	err := KubeHelmRollback(f.kubeconfigFor(f.URL), "admin@test", "", "web", "site", 0, `{"historyMax":2}`)
-	if err == nil || !strings.HasPrefix(err.Error(), helmPrunePrefix) || !strings.Contains(err.Error(), "revision 1") {
-		t.Fatalf("err %v", err)
-	}
-
-	deployed := false
-
-	for _, r := range f.recorded() {
-		if r.method == "PUT" && strings.HasSuffix(r.path, ".v3") && strings.Contains(r.body, `"status":"deployed"`) {
-			deployed = true
-		}
-	}
-
-	if !deployed {
-		t.Fatal("the rollback was not recorded as deployed")
 	}
 }
 
@@ -714,15 +597,12 @@ func TestKubeHelmRollbackPruneRefusedKeepsPrefix(t *testing.T) {
 // plan is the one sent, and a conflict is retried once on another fresh read.
 func TestHelmRollbackForceReadsLiveAgain(t *testing.T) {
 	f := helmRollbackAPI(t, nil)
-	f.answerWith("PUT "+helmTestCM, 200, `{}`)
-	f.answerWith("PUT "+helmTestDeploy, 200, `{}`)
+	f.AnswerWith("PUT "+helmTestCM, 200, `{}`)
+	f.AnswerWith("PUT "+helmTestDeploy, 200, `{}`)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{Force: true})
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, Options{Force: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -734,28 +614,26 @@ func TestHelmRollbackForceReadsLiveAgain(t *testing.T) {
 
 	// Bumped between the plan and the run; the first PUT then conflicts with a write made
 	// right after its read.
-	f.answerWith("GET "+helmTestCM, 200, cm("6"))
-	f.answerWith("PUT "+helmTestCM, 409, `{"kind":"Status","reason":"Conflict","code":409,"message":"the object has been modified"}`)
-	f.beforeAnswer = func(r *http.Request) {
+	f.AnswerWith("GET "+helmTestCM, 200, cm("6"))
+	f.AnswerWith("PUT "+helmTestCM, 409, `{"kind":"Status","reason":"Conflict","code":409,"message":"the object has been modified"}`)
+	f.BeforeAnswer = func(r *http.Request) {
 		if r.Method == http.MethodPut && r.URL.Path == helmTestCM {
-			f.answerWith("GET "+helmTestCM, 200, cm("7"))
-			f.answerWith("PUT "+helmTestCM, 200, `{}`)
+			f.AnswerWith("GET "+helmTestCM, 200, cm("7"))
+			f.AnswerWith("PUT "+helmTestCM, 200, `{}`)
 		}
 	}
 
-	f.mu.Lock()
-	f.requests = nil
-	f.mu.Unlock()
+	f.ForgetRequests()
 
-	if pruneErr, err := runHelmRollback(context.Background(), k, rb, time.Now()); err != nil || pruneErr != nil {
+	if pruneErr, err := runRollback(context.Background(), k, rb, time.Now()); err != nil || pruneErr != nil {
 		t.Fatal(err, pruneErr)
 	}
 
 	var puts []string
 
-	for _, r := range f.recorded() {
-		if r.method == "PUT" && r.path == helmTestCM {
-			puts = append(puts, r.body)
+	for _, r := range f.Recorded() {
+		if r.Method == "PUT" && r.Path == helmTestCM {
+			puts = append(puts, r.Body)
 		}
 	}
 

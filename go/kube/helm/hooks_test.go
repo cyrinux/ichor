@@ -1,4 +1,4 @@
-package ichorgo
+package helm
 
 import (
 	"context"
@@ -9,6 +9,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube"
+
+	"github.com/cyrinux/ichor/go/kube/kubetest"
 )
 
 const (
@@ -28,13 +32,13 @@ func helmTestHookJob(name string) string {
 
 // helmHooksAPI is helmRollbackAPI whose target revision (1) has a pre-rollback Job (weight
 // -5, no delete policy: before-hook-creation) and a post-rollback Job with postPolicies.
-func helmHooksAPI(t *testing.T, postPolicies ...string) *fakeKubeAPI {
+func helmHooksAPI(t *testing.T, postPolicies ...string) *kubetest.FakeAPI {
 	t.Helper()
 
-	interval := helmHookPollInterval
-	helmHookPollInterval = time.Millisecond
+	interval := HookPollInterval
+	HookPollInterval = time.Millisecond
 
-	t.Cleanup(func() { helmHookPollInterval = interval })
+	t.Cleanup(func() { HookPollInterval = interval })
 
 	post := []any{}
 	for _, p := range postPolicies {
@@ -48,16 +52,16 @@ func helmHooksAPI(t *testing.T, postPolicies ...string) *fakeKubeAPI {
 		map[string]any{"name": "site-test", "kind": "Pod", "manifest": "kind: Pod", "events": []any{"test"}},
 	}})
 
-	f.answerWith("GET /apis/batch/v1", 200, `{"groupVersion":"batch/v1","resources":[{"name":"jobs","kind":"Job","namespaced":true,"verbs":["get","create","delete"]}]}`)
-	f.answerWith("POST "+helmTestJobs, 200, `{}`)
-	f.answerWith("GET "+helmTestPreJob, 200, helmTestJobRunning)
-	f.answerWith("GET "+helmTestPostJob, 200, helmTestJobComplete)
-	f.answerWith("DELETE "+helmTestPostJob, 200, `{}`)
+	f.AnswerWith("GET /apis/batch/v1", 200, `{"groupVersion":"batch/v1","resources":[{"name":"jobs","kind":"Job","namespaced":true,"verbs":["get","create","delete"]}]}`)
+	f.AnswerWith("POST "+helmTestJobs, 200, `{}`)
+	f.AnswerWith("GET "+helmTestPreJob, 200, helmTestJobRunning)
+	f.AnswerWith("GET "+helmTestPostJob, 200, helmTestJobComplete)
+	f.AnswerWith("DELETE "+helmTestPostJob, 200, `{}`)
 
 	// The pre-rollback Job runs once read, then completes.
-	f.beforeAnswer = func(r *http.Request) {
+	f.BeforeAnswer = func(r *http.Request) {
 		if r.Method == http.MethodGet && r.URL.Path == helmTestPreJob {
-			f.answerWith("GET "+helmTestPreJob, 200, helmTestJobComplete)
+			f.AnswerWith("GET "+helmTestPreJob, 200, helmTestJobComplete)
 		}
 	}
 
@@ -65,21 +69,18 @@ func helmHooksAPI(t *testing.T, postPolicies ...string) *fakeKubeAPI {
 }
 
 func TestHelmRollbackPlansHooks(t *testing.T) {
-	f := helmHooksAPI(t, helmHookSucceeded)
+	f := helmHooksAPI(t, HookSucceeded)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	k := Env{Client: f.KubeClient(t)}
+
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	want := []helmHook{
-		{Name: "site-migrate", Kind: "Job", Event: helmHookPreRollback, Weight: -5, DeletePolicies: []string{helmHookBeforeCreation}},
-		{Name: "site-notify", Kind: "Job", Event: helmHookPostRollback, DeletePolicies: []string{helmHookSucceeded}},
+	want := []Hook{
+		{Name: "site-migrate", Kind: "Job", Event: HookPreRollback, Weight: -5, DeletePolicies: []string{HookBeforeCreation}},
+		{Name: "site-notify", Kind: "Job", Event: HookPostRollback, DeletePolicies: []string{HookSucceeded}},
 	}
 	if !reflect.DeepEqual(rb.plan.Hooks, want) || len(rb.plan.Blockers) != 0 {
 		t.Fatalf("hooks %+v blockers %v", rb.plan.Hooks, rb.plan.Blockers)
@@ -100,12 +101,12 @@ func TestHelmRollbackPlansHooks(t *testing.T) {
 
 	dryRuns := 0
 
-	for _, r := range f.recorded() {
-		if r.method != "GET" && !strings.Contains(r.query, "dryRun=All") {
+	for _, r := range f.Recorded() {
+		if r.Method != "GET" && !strings.Contains(r.Query, "dryRun=All") {
 			t.Fatalf("plan wrote: %+v", r)
 		}
 
-		if strings.HasPrefix(r.path, helmTestJobs) {
+		if strings.HasPrefix(r.Path, helmTestJobs) {
 			dryRuns++
 		}
 	}
@@ -125,7 +126,7 @@ func TestHelmRollbackPlansHooks(t *testing.T) {
 }
 
 func TestHelmRollbackRunsHooks(t *testing.T) {
-	f := helmHooksAPI(t, helmHookSucceeded)
+	f := helmHooksAPI(t, HookSucceeded)
 
 	_, writes, err := helmRollbackWrites(t, f, "")
 	if err != nil {
@@ -149,33 +150,33 @@ func TestHelmRollbackRunsHooks(t *testing.T) {
 		t.Fatalf("writes:\n got  %v\n want %v", got, want)
 	}
 
-	if b := writes[2].body; !strings.Contains(b, `"name":"site-migrate"`) || strings.Contains(b, "meta.helm.sh/release-name") || strings.Contains(writes[2].query, "dryRun") {
-		t.Errorf("hook created as %s?%s", b, writes[2].query)
+	if b := writes[2].Body; !strings.Contains(b, `"name":"site-migrate"`) || strings.Contains(b, "meta.helm.sh/release-name") || strings.Contains(writes[2].Query, "dryRun") {
+		t.Errorf("hook created as %s?%s", b, writes[2].Query)
 	}
 
 	// The pre-rollback Job was read until it completed, before any change.
 	reads := 0
 
-	for _, r := range f.recorded() {
-		if r.method == "GET" && r.path == helmTestPreJob {
+	for _, r := range f.Recorded() {
+		if r.Method == "GET" && r.Path == helmTestPreJob {
 			reads++
 		}
 
-		if r.method == "PATCH" && reads < 2 {
+		if r.Method == "PATCH" && reads < 2 {
 			t.Fatal("a change ran before the pre-rollback hook completed")
 		}
 	}
 
-	if !strings.Contains(writes[len(writes)-1].body, `"status":"deployed"`) {
-		t.Errorf("v3 %s", writes[len(writes)-1].body)
+	if !strings.Contains(writes[len(writes)-1].Body, `"status":"deployed"`) {
+		t.Errorf("v3 %s", writes[len(writes)-1].Body)
 	}
 }
 
 func TestHelmRollbackPreHookFails(t *testing.T) {
-	f := helmHooksAPI(t, helmHookSucceeded)
-	f.beforeAnswer = nil
-	f.answerWith("GET "+helmTestPreJob, 200, helmTestJobFailed)
-	f.answerWith("DELETE "+helmTestSecrets+"/sh.helm.release.v1.site.v1", 200, `{}`)
+	f := helmHooksAPI(t, HookSucceeded)
+	f.BeforeAnswer = nil
+	f.AnswerWith("GET "+helmTestPreJob, 200, helmTestJobFailed)
+	f.AnswerWith("DELETE "+helmTestSecrets+"/sh.helm.release.v1.site.v1", 200, `{}`)
 
 	_, writes, err := helmRollbackWrites(t, f, `{"historyMax":2}`)
 	if err == nil || !strings.Contains(err.Error(), "pre-rollback hook Job site-migrate failed: Job failed: BackoffLimitExceeded") ||
@@ -193,17 +194,17 @@ func TestHelmRollbackPreHookFails(t *testing.T) {
 		t.Fatalf("writes:\n got  %v\n want %v", got, want)
 	}
 
-	v3 := helmSecretPayload(t, writes[3].body, "data", "release")["info"].(map[string]any)
-	if v3["status"] != helmStatusFailed || !strings.Contains(v3["description"].(string), "pre-rollback hook Job site-migrate failed") {
+	v3 := helmSecretPayload(t, writes[3].Body, "data", "release")["info"].(map[string]any)
+	if v3["status"] != StatusFailed || !strings.Contains(v3["description"].(string), "pre-rollback hook Job site-migrate failed") {
 		t.Errorf("v3 %v", v3)
 	}
 }
 
 func TestHelmRollbackPostHookFails(t *testing.T) {
-	f := helmHooksAPI(t, helmHookSucceeded, helmHookFailed)
-	f.answerWith("GET "+helmTestPostJob, 200, helmTestJobFailed)
-	f.answerWith("DELETE "+helmTestSecrets+"/sh.helm.release.v1.site.v1", 200, `{}`)
-	f.answerWith("PUT "+helmTestSecrets+"/sh.helm.release.v1.site.v2", 200, `{}`)
+	f := helmHooksAPI(t, HookSucceeded, HookFailed)
+	f.AnswerWith("GET "+helmTestPostJob, 200, helmTestJobFailed)
+	f.AnswerWith("DELETE "+helmTestSecrets+"/sh.helm.release.v1.site.v1", 200, `{}`)
+	f.AnswerWith("PUT "+helmTestSecrets+"/sh.helm.release.v1.site.v2", 200, `{}`)
 
 	_, writes, err := helmRollbackWrites(t, f, `{"historyMax":2}`)
 	if err == nil || !strings.Contains(err.Error(), "revision 3 recorded as failed: post-rollback hook Job site-notify failed") || strings.Contains(err.Error(), "site.v2") {
@@ -224,54 +225,36 @@ func TestHelmRollbackPostHookFails(t *testing.T) {
 	}
 
 	// The changes stay, the history is not pruned, v3 failed and the current v2 superseded.
-	if !strings.Contains(writes[len(writes)-1].body, `"status":"failed"`) || !strings.Contains(writes[len(writes)-2].body, `"status":"superseded"`) {
-		t.Errorf("statuses %s / %s", writes[len(writes)-2].body, writes[len(writes)-1].body)
-	}
-}
-
-// Through the exported call, the hook's failure keeps its message past the Kubernetes call
-// wrapper.
-func TestKubeHelmRollbackHookFailureNamesTheHook(t *testing.T) {
-	f := helmHooksAPI(t)
-	f.beforeAnswer = nil
-	f.answerWith("GET "+helmTestPreJob, 200, helmTestJobFailed)
-
-	err := KubeHelmRollback(f.kubeconfigFor(f.URL), "admin@test", "", "web", "site", 0, "")
-	if err == nil || !strings.HasPrefix(err.Error(), "rollback stopped before any change") || !strings.Contains(err.Error(), "Job site-migrate failed") {
-		t.Fatalf("err %v", err)
+	if !strings.Contains(writes[len(writes)-1].Body, `"status":"failed"`) || !strings.Contains(writes[len(writes)-2].Body, `"status":"superseded"`) {
+		t.Errorf("statuses %s / %s", writes[len(writes)-2].Body, writes[len(writes)-1].Body)
 	}
 }
 
 func TestHelmRollbackRefusedHookBlocks(t *testing.T) {
 	f := helmHooksAPI(t)
-	f.answerWith("POST "+helmTestJobs, 403, `{"kind":"Status","status":"Failure","reason":"Forbidden","code":403,"message":"jobs.batch is forbidden"}`)
+	f.AnswerWith("POST "+helmTestJobs, 403, `{"kind":"Status","status":"Failure","reason":"Forbidden","code":403,"message":"jobs.batch is forbidden"}`)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{})
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if len(rb.plan.Hooks) != 2 || !strings.Contains(rb.plan.Hooks[0].Error, "forbidden") || len(rb.plan.Blockers) != 1 ||
-		!strings.Contains(rb.plan.Blockers[0], "2 of the hooks") || !reflect.DeepEqual(rb.plan.Hooks[1].DeletePolicies, []string{helmHookBeforeCreation}) {
+		!strings.Contains(rb.plan.Blockers[0], "2 of the hooks") || !reflect.DeepEqual(rb.plan.Hooks[1].DeletePolicies, []string{HookBeforeCreation}) {
 		t.Fatalf("plan hooks %+v blockers %v", rb.plan.Hooks, rb.plan.Blockers)
 	}
 
-	f.mu.Lock()
-	f.requests = nil
-	f.mu.Unlock()
+	f.ForgetRequests()
 
-	if _, err := runHelmRollback(context.Background(), k, rb, time.Now()); err == nil {
+	if _, err := runRollback(context.Background(), k, rb, time.Now()); err == nil {
 		t.Fatal("ran with a refused hook")
 	}
 
-	for _, r := range f.recorded() {
-		if r.method != "GET" {
-			t.Fatalf("wrote %s %s", r.method, r.path)
+	for _, r := range f.Recorded() {
+		if r.Method != "GET" {
+			t.Fatalf("wrote %s %s", r.Method, r.Path)
 		}
 	}
 }
@@ -279,17 +262,14 @@ func TestHelmRollbackRefusedHookBlocks(t *testing.T) {
 // An object already named as the hook is fine when before-hook-creation deletes it first;
 // the run waits for it to be gone before creating the hook.
 func TestHelmRollbackHookReplacesLeftover(t *testing.T) {
-	f := helmHooksAPI(t, helmHookSucceeded)
-	f.answerWith("POST "+helmTestJobs, 409, `{"kind":"Status","status":"Failure","reason":"AlreadyExists","code":409,"message":"jobs.batch \"site-migrate\" already exists"}`)
-	f.answerWith("GET "+helmTestPreJob, 200, helmTestJobComplete)
-	f.answerWith("DELETE "+helmTestPreJob, 200, `{}`)
+	f := helmHooksAPI(t, HookSucceeded)
+	f.AnswerWith("POST "+helmTestJobs, 409, `{"kind":"Status","status":"Failure","reason":"AlreadyExists","code":409,"message":"jobs.batch \"site-migrate\" already exists"}`)
+	f.AnswerWith("GET "+helmTestPreJob, 200, helmTestJobComplete)
+	f.AnswerWith("DELETE "+helmTestPreJob, 200, `{}`)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{})
+	rb, err := prepareRollback(context.Background(), k, "web", "site", 0, Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -301,32 +281,30 @@ func TestHelmRollbackHookReplacesLeftover(t *testing.T) {
 
 	// The leftover goes once deleted; then the create succeeds.
 	deleted := false
-	f.beforeAnswer = func(r *http.Request) {
+	f.BeforeAnswer = func(r *http.Request) {
 		switch {
 		case r.Method == http.MethodDelete && r.URL.Path == helmTestPreJob && !strings.Contains(r.URL.RawQuery, "dryRun"):
 			deleted = true
-			f.mu.Lock()
-			delete(f.answers, "GET "+helmTestPreJob)
-			f.mu.Unlock()
+			f.Mu.Lock()
+			delete(f.Answers, "GET "+helmTestPreJob)
+			f.Mu.Unlock()
 		case r.Method == http.MethodGet && r.URL.Path == helmTestPreJob && deleted:
-			f.answerWith("POST "+helmTestJobs, 200, `{}`)
-			f.answerWith("GET "+helmTestPreJob, 200, helmTestJobComplete)
+			f.AnswerWith("POST "+helmTestJobs, 200, `{}`)
+			f.AnswerWith("GET "+helmTestPreJob, 200, helmTestJobComplete)
 		}
 	}
 
-	f.mu.Lock()
-	f.requests = nil
-	f.mu.Unlock()
+	f.ForgetRequests()
 
-	if err := runHelmHooks(context.Background(), k, rb.preHooks); err != nil {
+	if err := runHooks(context.Background(), k, rb.preHooks); err != nil {
 		t.Fatal(err)
 	}
 
 	var seq []string
 
-	for _, r := range f.recorded() {
-		if strings.HasPrefix(r.path, helmTestJobs) {
-			seq = append(seq, r.method+" "+r.path)
+	for _, r := range f.Recorded() {
+		if strings.HasPrefix(r.Path, helmTestJobs) {
+			seq = append(seq, r.Method+" "+r.Path)
 		}
 	}
 
@@ -337,16 +315,16 @@ func TestHelmRollbackHookReplacesLeftover(t *testing.T) {
 }
 
 func TestHelmEventHooksOrder(t *testing.T) {
-	rel := helmRelease{Hooks: []helmReleaseHook{
-		{Name: "c", Events: []string{helmHookPreRollback}, Weight: 1},
-		{Name: "b", Events: []string{helmHookPreRollback}},
-		{Name: "a", Events: []string{helmHookPreRollback}, Weight: 1},
-		{Name: "z", Events: []string{helmHookPreRollback}, Weight: -3},
-		{Name: "post", Events: []string{helmHookPostRollback}},
+	rel := Release{Hooks: []ReleaseHook{
+		{Name: "c", Events: []string{HookPreRollback}, Weight: 1},
+		{Name: "b", Events: []string{HookPreRollback}},
+		{Name: "a", Events: []string{HookPreRollback}, Weight: 1},
+		{Name: "z", Events: []string{HookPreRollback}, Weight: -3},
+		{Name: "post", Events: []string{HookPostRollback}},
 	}}
 
 	var names []string
-	for _, h := range helmEventHooks(rel, helmHookPreRollback) {
+	for _, h := range eventHooks(rel, HookPreRollback) {
 		names = append(names, h.Name)
 	}
 
@@ -373,7 +351,7 @@ func TestHelmHookDone(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		done, err := helmHookDone(c.kind, live)
+		done, err := hookDone(c.kind, live)
 		if done != c.done || (err == nil) != c.ok {
 			t.Errorf("%s %s: done %t err %v", c.kind, c.live, done, err)
 		}
@@ -399,42 +377,17 @@ func TestHelmRollbackWithoutHooks(t *testing.T) {
 	}
 }
 
-func TestKubeHelmRollbackDemoHook(t *testing.T) {
-	cfg, err := DemoConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	out, err := KubeHelmRollbackPlan(cfg, "", "", "ingress-nginx", "ingress-nginx", 0, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var p helmRollbackPlan
-	if err := json.Unmarshal([]byte(out), &p); err != nil {
-		t.Fatal(err)
-	}
-
-	if len(p.Hooks) != 1 || p.Hooks[0].Event != helmHookPreRollback || p.Hooks[0].Kind != "Job" || p.Hooks[0].Weight != -5 {
-		t.Fatalf("demo hooks %+v", p.Hooks)
-	}
-
-	if err := KubeHelmRollback(cfg, "", "", "ingress-nginx", "ingress-nginx", 6, ""); err == nil || err.Error() != errDemoUnavailable.Error() {
-		t.Fatalf("demo rollback: %v", err)
-	}
-}
-
 // A hook Job deleted while waited for (ttlSecondsAfterFinished: 0) is done, as Helm's
 // watcher takes watch.Deleted: the rollback goes on and is deployed.
 func TestHelmRollbackHookDeletedWhileWaited(t *testing.T) {
-	f := helmHooksAPI(t, helmHookSucceeded)
-	f.answerWith("GET "+helmTestPreJob, 200, helmTestJobRunning)
+	f := helmHooksAPI(t, HookSucceeded)
+	f.AnswerWith("GET "+helmTestPreJob, 200, helmTestJobRunning)
 
-	f.beforeAnswer = func(r *http.Request) {
+	f.BeforeAnswer = func(r *http.Request) {
 		if r.Method == http.MethodGet && r.URL.Path == helmTestPreJob {
-			f.mu.Lock()
-			delete(f.answers, "GET "+helmTestPreJob) // the next read is a 404
-			f.mu.Unlock()
+			f.Mu.Lock()
+			delete(f.Answers, "GET "+helmTestPreJob) // the next read is a 404
+			f.Mu.Unlock()
 		}
 	}
 
@@ -445,14 +398,14 @@ func TestHelmRollbackHookDeletedWhileWaited(t *testing.T) {
 
 	reads := 0
 
-	for _, r := range f.recorded() {
-		if r.method == "GET" && r.path == helmTestPreJob {
+	for _, r := range f.Recorded() {
+		if r.Method == "GET" && r.Path == helmTestPreJob {
 			reads++
 		}
 	}
 
-	if reads != 2 || !strings.Contains(writes[len(writes)-1].body, `"status":"deployed"`) {
-		t.Fatalf("%d reads, last write %s", reads, writes[len(writes)-1].body)
+	if reads != 2 || !strings.Contains(writes[len(writes)-1].Body, `"status":"deployed"`) {
+		t.Fatalf("%d reads, last write %s", reads, writes[len(writes)-1].Body)
 	}
 }
 
@@ -461,11 +414,11 @@ func TestHelmRollbackTimeoutPerHook(t *testing.T) {
 		hooks int
 		want  time.Duration
 	}{
-		{0, helmPlanTimeout},
-		{1, helmPlanTimeout + 10*time.Minute},
-		{3, helmPlanTimeout + 30*time.Minute},
+		{0, PlanTimeout},
+		{1, PlanTimeout + 10*time.Minute},
+		{3, PlanTimeout + 30*time.Minute},
 	} {
-		if got := helmRollbackTimeout(c.hooks); got != c.want {
+		if got := rollbackTimeout(c.hooks); got != c.want {
 			t.Errorf("%d hooks: %s, want %s", c.hooks, got, c.want)
 		}
 	}
@@ -477,29 +430,26 @@ func TestDryRunHelmHookConflict(t *testing.T) {
 	const crds = "/apis/apiextensions.k8s.io/v1/customresourcedefinitions"
 
 	conflict := `{"kind":"Status","status":"Failure","reason":"AlreadyExists","code":409,"message":"already exists"}`
-	f := newFakeKubeAPI(t, map[string]string{})
-	f.answerWith("POST "+helmTestJobs, 409, conflict)
-	f.answerWith("POST "+crds, 409, conflict)
-	f.answerWith("DELETE "+helmTestPreJob, 200, `{}`)
-	f.answerWith("DELETE "+crds+"/widgets.example.com", 200, `{}`)
+	f := kubetest.New(t, map[string]string{})
+	f.AnswerWith("POST "+helmTestJobs, 409, conflict)
+	f.AnswerWith("POST "+crds, 409, conflict)
+	f.AnswerWith("DELETE "+helmTestPreJob, 200, `{}`)
+	f.AnswerWith("DELETE "+crds+"/widgets.example.com", 200, `{}`)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	step := func(kind, path string) helmHookStep {
-		return helmHookStep{
-			hook: helmHook{Kind: kind, DeletePolicies: []string{helmHookBeforeCreation}},
-			obj:  helmObject{Kind: kind, Path: path, Body: map[string]any{"kind": kind}},
+	step := func(kind, path string) hookStep {
+		return hookStep{
+			hook: Hook{Kind: kind, DeletePolicies: []string{HookBeforeCreation}},
+			obj:  object{Kind: kind, Path: path, Body: map[string]any{"kind": kind}},
 		}
 	}
 
-	if err := dryRunHelmHook(context.Background(), k, step("Job", helmTestPreJob)); err != nil {
+	if err := dryRunHook(context.Background(), k, step("Job", helmTestPreJob)); err != nil {
 		t.Errorf("Job: %v", err)
 	}
 
-	if err := dryRunHelmHook(context.Background(), k, step(helmKindCRD, crds+"/widgets.example.com")); kubeCode(err) != http.StatusConflict {
+	if err := dryRunHook(context.Background(), k, step(kindCRD, crds+"/widgets.example.com")); kube.Code(err) != http.StatusConflict {
 		t.Errorf("CRD: %v", err)
 	}
 }
@@ -522,14 +472,14 @@ func TestHelmHookWaitError(t *testing.T) {
 		ctx  context.Context
 		want string
 	}{
-		{expired(context.Background(), errHelmHookTimeout), "not done after 5m0s"},
-		{expired(context.Background(), errHelmRollbackTimeout), "the rollback ran out of time"},
-		{expired(rollbackDeadline, errHelmHookTimeout), "the rollback ran out of time"},
-		{expired(cancelled, errHelmHookTimeout), "stopped while waiting: context canceled"},
+		{expired(context.Background(), errHookTimeout), "not done after 5m0s"},
+		{expired(context.Background(), errRollbackTimeout), "the rollback ran out of time"},
+		{expired(rollbackDeadline, errHookTimeout), "the rollback ran out of time"},
+		{expired(cancelled, errHookTimeout), "stopped while waiting: context canceled"},
 	} {
 		<-c.ctx.Done()
 
-		if err := helmHookWaitError(c.ctx); err == nil || err.Error() != c.want {
+		if err := hookWaitError(c.ctx); err == nil || err.Error() != c.want {
 			t.Errorf("got %v, want %q", err, c.want)
 		}
 	}
@@ -539,16 +489,13 @@ func TestHelmHookWaitError(t *testing.T) {
 func TestPollHelmHookRollbackDeadline(t *testing.T) {
 	f := helmHooksAPI(t)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := Env{Client: f.KubeClient(t)}
 
-	ctx, cancel := context.WithTimeoutCause(context.Background(), 20*time.Millisecond, errHelmRollbackTimeout)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), 20*time.Millisecond, errRollbackTimeout)
 	defer cancel()
 
-	err = pollHelmHook(ctx, k, helmTestPreJob, func(map[string]any, bool) (bool, error) { return false, nil })
-	if !errors.Is(err, errHelmRollbackTimeout) {
+	err := pollHook(ctx, k, helmTestPreJob, func(map[string]any, bool) (bool, error) { return false, nil })
+	if !errors.Is(err, errRollbackTimeout) {
 		t.Fatalf("err %v", err)
 	}
 }
@@ -557,7 +504,7 @@ func TestPollHelmHookRollbackDeadline(t *testing.T) {
 func TestHelmFailureDescription(t *testing.T) {
 	err := errors.Join(errors.New("pre-rollback hook Job site-migrate failed: Job failed"), errors.New("delete: forbidden\n"))
 
-	got := helmFailureDescription("site", err)
+	got := failureDescription("site", err)
 	if want := `Rollback "site" failed: pre-rollback hook Job site-migrate failed: Job failed; delete: forbidden`; got != want {
 		t.Fatalf("got  %q\nwant %q", got, want)
 	}

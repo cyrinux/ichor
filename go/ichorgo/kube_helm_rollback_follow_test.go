@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/helm"
 )
 
 const helmFollowManifest = `apiVersion: v1
@@ -26,10 +28,10 @@ spec:
 func fastHelmFollow(t *testing.T, timeout time.Duration) {
 	t.Helper()
 
-	interval, oldTimeout, step := helmWaitInterval, helmWaitTimeout, helmDemoStep
-	helmWaitInterval, helmWaitTimeout, helmDemoStep = 5*time.Millisecond, timeout, time.Millisecond
+	interval, oldTimeout, step := helm.WaitInterval, helm.WaitTimeout, helmDemoStep
+	helm.WaitInterval, helm.WaitTimeout, helmDemoStep = 5*time.Millisecond, timeout, time.Millisecond
 
-	t.Cleanup(func() { helmWaitInterval, helmWaitTimeout, helmDemoStep = interval, oldTimeout, step })
+	t.Cleanup(func() { helm.WaitInterval, helm.WaitTimeout, helmDemoStep = interval, oldTimeout, step })
 }
 
 // helmFollowDeployment is the release's Deployment with ready of 2 pods ready (all of them
@@ -94,7 +96,7 @@ func helmFollowSteps(t *testing.T, r *followRecorder) []string {
 			t.Fatalf("progress keys: %s", js)
 		}
 
-		var p helmRollbackProgress
+		var p helm.Progress
 		if err := json.Unmarshal([]byte(js), &p); err != nil {
 			t.Fatal(err)
 		}
@@ -118,7 +120,7 @@ func TestHelmRollbackFollow(t *testing.T) {
 	rec := newFollowRecorder()
 	StartHelmRollbackFollow(cfg, "admin@test", "", "web", "site", rec)
 
-	if done := rec.wait(t); done != [2]string{helmWaitSucceeded, ""} {
+	if done := rec.wait(t); done != [2]string{helm.WaitSucceeded, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -139,7 +141,7 @@ func TestHelmRollbackFollowFailed(t *testing.T) {
 	rec := newFollowRecorder()
 	StartHelmRollbackFollow(cfg, "admin@test", "", "web", "site", rec)
 
-	if done := rec.wait(t); done != [2]string{helmWaitFailed, ""} {
+	if done := rec.wait(t); done != [2]string{helm.WaitFailed, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -159,7 +161,7 @@ func TestHelmRollbackFollowStaleNotFailed(t *testing.T) {
 	rec := newFollowRecorder()
 	StartHelmRollbackFollow(cfg, "admin@test", "", "web", "site", rec)
 
-	if done := rec.wait(t); done != [2]string{helmWaitSucceeded, ""} {
+	if done := rec.wait(t); done != [2]string{helm.WaitSucceeded, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -212,7 +214,7 @@ func TestHelmRollbackFollowTimeoutAfterSlowListing(t *testing.T) {
 func assertHelmFollowTimedOut(t *testing.T, rec *followRecorder) {
 	t.Helper()
 
-	if done := rec.wait(t); done != [2]string{helmWaitTimedOut, ""} {
+	if done := rec.wait(t); done != [2]string{helm.WaitTimedOut, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -258,29 +260,6 @@ func TestHelmRollbackFollowCancelAndInvalid(t *testing.T) {
 	}
 }
 
-func TestHelmWaitPhase(t *testing.T) {
-	ws := []helmRollbackWorkload{{Done: true}, {Manual: true}, {}}
-
-	if p := withHelmWaitPhase(helmRollbackProgress{Total: 3, Workloads: ws}); p.Phase != helmWaitRunning || p.Done != 2 {
-		t.Fatalf("got %+v", p)
-	}
-
-	ws[2].Done = true
-	if p := withHelmWaitPhase(helmRollbackProgress{Total: 3, Workloads: ws}); p.Phase != helmWaitSucceeded || p.Done != 3 {
-		t.Fatalf("got %+v", p)
-	}
-
-	ws[0].Failed = true
-	if p := withHelmWaitPhase(helmRollbackProgress{Total: 3, Workloads: ws}); p.Phase != helmWaitFailed {
-		t.Fatalf("got %+v", p)
-	}
-
-	// No workload to wait for: done at once.
-	if got := helmWorkloads([]helmObject{{APIVersion: "v1", Kind: "ConfigMap"}, {APIVersion: "apps/v1", Kind: "DaemonSet"}}); len(got) != 1 {
-		t.Fatalf("workloads %+v", got)
-	}
-}
-
 func TestHelmRollbackFollowDemo(t *testing.T) {
 	fastHelmFollow(t, time.Minute)
 	noKubeDial(t)
@@ -288,7 +267,7 @@ func TestHelmRollbackFollowDemo(t *testing.T) {
 	rec := newFollowRecorder()
 	StartHelmRollbackFollow(demoKubeconfigForTest(t), "", "", "ingress-nginx", "ingress-nginx", rec)
 
-	if done := rec.wait(t); done != [2]string{helmWaitSucceeded, ""} {
+	if done := rec.wait(t); done != [2]string{helm.WaitSucceeded, ""} {
 		t.Fatalf("done %q", done)
 	}
 

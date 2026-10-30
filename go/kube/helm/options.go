@@ -1,4 +1,4 @@
-package ichorgo
+package helm
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // The options of a Helm rollback, as `helm rollback --force --history-max N`: force replaces
@@ -18,44 +20,44 @@ import (
 // the rollback is deployed (Helm's storage.removeLeastRecent). Kubernetes access: create,
 // update and delete on secrets in the release namespace, update on each replaced kind.
 
-// helmPrunePrefix starts the error of a rollback that is done but whose old revisions could
+// PrunePrefix starts the error of a rollback that is done but whose old revisions could
 // not all be deleted.
-const helmPrunePrefix = "history not pruned: "
+const PrunePrefix = "history not pruned: "
 
-// helmRollbackOptions is the optionsJSON of KubeHelmRollbackPlan and KubeHelmRollback.
-type helmRollbackOptions struct {
+// Options is the optionsJSON of a rollback and its plan.
+type Options struct {
 	Force bool `json:"force"`
 	// HistoryMax is how many revisions to keep, the new one included; 0 keeps them all.
 	HistoryMax int `json:"historyMax"`
 }
 
-// parseHelmRollbackOptions reads optionsJSON; "" is no option.
-func parseHelmRollbackOptions(optionsJSON string) (helmRollbackOptions, error) {
-	var opts helmRollbackOptions
+// ParseRollbackOptions reads optionsJSON; "" is no option.
+func ParseRollbackOptions(optionsJSON string) (Options, error) {
+	var opts Options
 
 	if strings.TrimSpace(optionsJSON) == "" {
 		return opts, nil
 	}
 
 	if err := json.Unmarshal([]byte(optionsJSON), &opts); err != nil {
-		return helmRollbackOptions{}, fmt.Errorf("invalid rollback options: %w", err)
+		return Options{}, fmt.Errorf("invalid rollback options: %w", err)
 	}
 
 	if opts.HistoryMax < 0 {
-		return helmRollbackOptions{}, fmt.Errorf("invalid history max %d (0 keeps every revision)", opts.HistoryMax)
+		return Options{}, fmt.Errorf("invalid history max %d (0 keeps every revision)", opts.HistoryMax)
 	}
 
 	return opts, nil
 }
 
-func (o helmRollbackOptions) auditParams(revision int) string {
+func (o Options) AuditParams(revision int) string {
 	return fmt.Sprintf("revision=%d force=%t historyMax=%d", revision, o.Force, o.HistoryMax)
 }
 
-// helmPruneRefs are the revisions to delete after a rollback (refs newest first), oldest
+// pruneRefs are the revisions to delete after a rollback (refs newest first), oldest
 // first: after it there are len(refs)+1 revisions, the historyMax newest stay. The new
 // revision, the newest, is never one of them.
-func helmPruneRefs(refs []helmSecretRef, historyMax int) []helmSecretRef {
+func pruneRefs(refs []SecretRef, historyMax int) []SecretRef {
 	extra := len(refs) + 1 - historyMax
 	if historyMax <= 0 || extra <= 0 {
 		return nil
@@ -67,46 +69,46 @@ func helmPruneRefs(refs []helmSecretRef, historyMax int) []helmSecretRef {
 	return oldest[:min(extra, len(oldest))]
 }
 
-func helmRevisions(refs []helmSecretRef) []int {
+func revisions(refs []SecretRef) []int {
 	out := make([]int, 0, len(refs))
 	for _, ref := range refs {
-		out = append(out, ref.revision)
+		out = append(out, ref.Revision)
 	}
 
 	return out
 }
 
-// pruneHelmHistory deletes the Secrets of refs (by their own name: a copy Helm did not name
+// pruneHistory deletes the Secrets of refs (by their own name: a copy Helm did not name
 // goes too). One already gone is fine; the others refused are named in the error.
-func pruneHelmHistory(ctx context.Context, k *kubeClient, refs []helmSecretRef) error {
+func pruneHistory(ctx context.Context, k Env, refs []SecretRef) error {
 	errs := []error{}
 
 	for _, ref := range refs {
-		path := scopedPath("/api/v1", ref.namespace, "secrets") + "/" + url.PathEscape(ref.secret)
+		path := kube.ScopedPath("/api/v1", ref.Namespace, "secrets") + "/" + url.PathEscape(ref.Secret)
 
-		if err := k.do(ctx, http.MethodDelete, path, "application/json", nil, nil); err != nil && !isNotFound(err) {
-			errs = append(errs, fmt.Errorf("revision %d: %w", ref.revision, kubeError(err)))
+		if err := k.Do(ctx, http.MethodDelete, path, "application/json", nil, nil); err != nil && !kube.IsNotFound(err) {
+			errs = append(errs, fmt.Errorf("revision %d: %w", ref.Revision, k.apiError(err)))
 		}
 	}
 
 	if err := errors.Join(errs...); err != nil {
-		return fmt.Errorf(helmPrunePrefix+"%w", err)
+		return fmt.Errorf(PrunePrefix+"%w", err)
 	}
 
 	return nil
 }
 
-// helmImmutableFields are the spec fields the API server assigns and then refuses to see
+// immutableFields are the spec fields the API server assigns and then refuses to see
 // changed: a replace copies them from the live object when the target does not set them.
-var helmImmutableFields = map[string][]string{
+var immutableFields = map[string][]string{
 	"Service":               {"clusterIP", "clusterIPs", "ipFamilies", "ipFamilyPolicy", "healthCheckNodePort"},
 	"PersistentVolumeClaim": {"volumeName", "storageClassName"},
 }
 
-// helmReplaceBody is what a replace PUTs: the target rendering (ownership already stamped)
+// replaceBody is what a replace PUTs: the target rendering (ownership already stamped)
 // with the live resourceVersion, so a concurrent change makes it fail instead of being
 // overwritten, and the live immutable fields. obj.Body is left as it is.
-func helmReplaceBody(obj helmObject, live map[string]any) map[string]any {
+func replaceBody(obj object, live map[string]any) map[string]any {
 	body := maps.Clone(obj.Body)
 
 	meta := cloneMap(body["metadata"])
@@ -116,7 +118,7 @@ func helmReplaceBody(obj helmObject, live map[string]any) map[string]any {
 
 	body["metadata"] = meta
 
-	fields := helmImmutableFields[obj.Kind]
+	fields := immutableFields[obj.Kind]
 	if len(fields) == 0 {
 		return body
 	}
@@ -136,26 +138,26 @@ func helmReplaceBody(obj helmObject, live map[string]any) map[string]any {
 	return body
 }
 
-// replaceHelmObject PUTs obj's target rendering to path (with its query) built on a fresh
+// replaceObject PUTs obj's target rendering to path (with its query) built on a fresh
 // read of the live object: the plan's read may be minutes old, and a controller or the
 // status writer bumps the resourceVersion meanwhile. A conflict (written between that read
 // and the PUT) is retried once on another fresh read.
-func replaceHelmObject(ctx context.Context, k *kubeClient, obj helmObject, path string) error {
+func replaceObject(ctx context.Context, k Env, obj object, path string) error {
 	var err error
 
 	for range 2 {
 		var live map[string]any
-		if err = k.get(ctx, obj.Path, &live); err != nil {
+		if err = k.Get(ctx, obj.Path, &live); err != nil {
 			return err
 		}
 
-		body, mErr := json.Marshal(helmReplaceBody(obj, live))
+		body, mErr := json.Marshal(replaceBody(obj, live))
 		if mErr != nil {
 			return mErr
 		}
 
-		err = k.do(ctx, http.MethodPut, path, "application/json", body, nil)
-		if kubeCode(err) != http.StatusConflict {
+		err = k.Do(ctx, http.MethodPut, path, "application/json", body, nil)
+		if kube.Code(err) != http.StatusConflict {
 			return err
 		}
 	}
@@ -180,15 +182,33 @@ func mapField(obj map[string]any, key string) map[string]any {
 	return m
 }
 
-// helmWorkloads are the Deployments, StatefulSets and DaemonSets (apps/v1) among objs.
-func helmWorkloads(objs []helmObject) []helmObject {
-	out := []helmObject{}
+// workloadObjects are the Deployments, StatefulSets and DaemonSets (apps/v1) among objs.
+func workloadObjects(objs []object) []object {
+	out := []object{}
 
 	for _, o := range objs {
-		if _, err := findWorkloadKind(o.Kind); err == nil && strings.HasPrefix(o.APIVersion, "apps/") {
+		if isWorkloadKind(o.Kind) && strings.HasPrefix(o.APIVersion, "apps/") {
 			out = append(out, o)
 		}
 	}
 
 	return out
+}
+
+// isWorkloadKind tells a kind the follow can wait for.
+func isWorkloadKind(kind string) bool {
+	return slices.ContainsFunc([]string{"Deployment", "StatefulSet", "DaemonSet"}, func(k string) bool {
+		return strings.EqualFold(k, strings.TrimSpace(kind))
+	})
+}
+
+// PruneRevisions are the revisions of history (newest first) a rollback keeping historyMax
+// deletes, oldest first.
+func PruneRevisions(history []Revision, historyMax int) []int {
+	refs := make([]SecretRef, 0, len(history))
+	for _, h := range history {
+		refs = append(refs, SecretRef{Revision: h.Revision})
+	}
+
+	return revisions(pruneRefs(refs, historyMax))
 }

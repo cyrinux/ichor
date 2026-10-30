@@ -1,4 +1,4 @@
-package ichorgo
+package helm
 
 import (
 	"reflect"
@@ -38,7 +38,7 @@ func TestLiveMatchesIgnoresServerDefaults(t *testing.T) {
 }
 
 func TestParseHelmManifestReadsAsHelm(t *testing.T) {
-	objs, err := parseHelmManifest("---\n# Source: x\nkind: A\nmetadata: {name: a}\nspec: {enabled: yes, date: 2024-01-01}\n---\n# only a comment\n---\nkind: B\nkind: C\n")
+	objs, err := parseManifest("---\n# Source: x\nkind: A\nmetadata: {name: a}\nspec: {enabled: yes, date: 2024-01-01}\n---\n# only a comment\n---\nkind: B\nkind: C\n")
 	if err != nil || len(objs) != 2 {
 		t.Fatalf("%+v %v", objs, err)
 	}

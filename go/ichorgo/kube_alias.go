@@ -70,6 +70,11 @@ func (k *kubeClient) request(ctx context.Context, method, path, accept, contentT
 	return k.api().Request(ctx, method, path, accept, contentType, body, header)
 }
 
+// scopedPath: see kube.ScopedPath.
+func scopedPath(group, namespace, resource string) string {
+	return kube.ScopedPath(group, namespace, resource)
+}
+
 func serviceProxyPath(namespace, service, path string) string {
 	return kube.ServiceProxyPath(namespace, service, path)
 }

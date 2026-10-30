@@ -1,4 +1,4 @@
-package ichorgo
+package helm
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cyrinux/ichor/go/kube"
 	sigsyaml "sigs.k8s.io/yaml"
 )
 
@@ -18,17 +19,17 @@ import (
 // three-way merge that moves a live object from one revision's manifest to another's.
 
 const (
-	helmAnnotationPolicy    = "helm.sh/resource-policy" // "keep": never deleted by Helm
-	helmAnnotationRelease   = "meta.helm.sh/release-name"
-	helmAnnotationReleaseNS = "meta.helm.sh/release-namespace"
+	annotationPolicy    = "helm.sh/resource-policy" // "keep": never deleted by Helm
+	annotationRelease   = "meta.helm.sh/release-name"
+	annotationReleaseNS = "meta.helm.sh/release-namespace"
 	// The labels the Flux helm-controller puts on everything it renders: the HelmRelease.
-	fluxHelmLabelName      = "helm.toolkit.fluxcd.io/name"
-	fluxHelmLabelNamespace = "helm.toolkit.fluxcd.io/namespace"
+	fluxLabelName      = "helm.toolkit.fluxcd.io/name"
+	fluxLabelNamespace = "helm.toolkit.fluxcd.io/namespace"
 )
 
-// helmInstallOrder is Helm's install order by kind (releaseutil.InstallOrder); other kinds
+// installOrder is Helm's install order by kind (releaseutil.InstallOrder); other kinds
 // come after, deletion runs the other way round.
-var helmInstallOrder = []string{
+var installOrder = []string{
 	"PriorityClass", "Namespace", "NetworkPolicy", "ResourceQuota", "LimitRange", "PodSecurityPolicy",
 	"PodDisruptionBudget", "ServiceAccount", "Secret", "SecretList", "ConfigMap", "StorageClass",
 	"PersistentVolume", "PersistentVolumeClaim", "CustomResourceDefinition", "ClusterRole",
@@ -38,8 +39,8 @@ var helmInstallOrder = []string{
 	"MutatingWebhookConfiguration", "ValidatingWebhookConfiguration",
 }
 
-// helmObject is one object of a manifest, resolved.
-type helmObject struct {
+// object is one object of a manifest, resolved.
+type object struct {
 	APIVersion string
 	Kind       string
 	Namespace  string // "" for cluster-scoped objects
@@ -49,7 +50,7 @@ type helmObject struct {
 }
 
 // key identifies the object across revisions: the API version may change, its group not.
-func (o helmObject) key() string {
+func (o object) key() string {
 	group, _, _ := strings.Cut(o.APIVersion, "/")
 	if !strings.Contains(o.APIVersion, "/") {
 		group = ""
@@ -58,7 +59,7 @@ func (o helmObject) key() string {
 	return group + "|" + o.Kind + "|" + o.Namespace + "|" + o.Name
 }
 
-func (o helmObject) label() string {
+func (o object) label() string {
 	if o.Namespace == "" {
 		return o.Kind + " " + o.Name
 	}
@@ -66,7 +67,7 @@ func (o helmObject) label() string {
 	return o.Kind + " " + o.Namespace + "/" + o.Name
 }
 
-func (o helmObject) annotation(key string) string {
+func (o object) annotation(key string) string {
 	meta, _ := o.Body["metadata"].(map[string]any)
 	annotations, _ := meta["annotations"].(map[string]any)
 	value, _ := annotations[key].(string)
@@ -74,7 +75,7 @@ func (o helmObject) annotation(key string) string {
 	return value
 }
 
-func (o helmObject) objectLabel(key string) string {
+func (o object) objectLabel(key string) string {
 	meta, _ := o.Body["metadata"].(map[string]any)
 	labels, _ := meta["labels"].(map[string]any)
 	value, _ := labels[key].(string)
@@ -82,16 +83,16 @@ func (o helmObject) objectLabel(key string) string {
 	return value
 }
 
-// helmDocSeparator splits a manifest the way Helm does (releaseutil.SplitManifests).
-var helmDocSeparator = regexp.MustCompile(`(?:^|\s*\n)---\s*`)
+// docSeparator splits a manifest the way Helm does (releaseutil.SplitManifests).
+var docSeparator = regexp.MustCompile(`(?:^|\s*\n)---\s*`)
 
-// parseHelmManifest splits a manifest into its objects, in order, read as Helm reads them
+// parseManifest splits a manifest into its objects, in order, read as Helm reads them
 // (sigs.k8s.io/yaml: YAML 1.1 booleans, the last of repeated keys winning) and through JSON,
 // so they compare the same way as objects read from the API.
-func parseHelmManifest(manifest string) ([]map[string]any, error) {
+func parseManifest(manifest string) ([]map[string]any, error) {
 	out := []map[string]any{}
 
-	for _, doc := range helmDocSeparator.Split(manifest, -1) {
+	for _, doc := range docSeparator.Split(manifest, -1) {
 		raw, err := sigsyaml.YAMLToJSON([]byte(doc))
 		if err != nil {
 			return nil, fmt.Errorf("manifest: %w", err)
@@ -110,18 +111,27 @@ func parseHelmManifest(manifest string) ([]map[string]any, error) {
 	return out, nil
 }
 
-// kubeKinds resolves kinds to resources through discovery, one group version read once.
-type kubeKinds struct {
-	k     *kubeClient
-	lists map[string]discoveryResourceList
+// discoveryList is the part of a group version's discovery document a kind is resolved from.
+type discoveryList struct {
+	Resources []struct {
+		Name       string `json:"name"`
+		Kind       string `json:"kind"`
+		Namespaced bool   `json:"namespaced"`
+	} `json:"resources"`
 }
 
-func newKubeKinds(k *kubeClient) *kubeKinds {
-	return &kubeKinds{k: k, lists: map[string]discoveryResourceList{}}
+// kindResolver resolves kinds to resources through discovery, one group version read once.
+type kindResolver struct {
+	k     kube.Client
+	lists map[string]discoveryList
+}
+
+func newKindResolver(k kube.Client) *kindResolver {
+	return &kindResolver{k: k, lists: map[string]discoveryList{}}
 }
 
 // resolve finds the resource of apiVersion/kind: its plural and whether it is namespaced.
-func (kk *kubeKinds) resolve(ctx context.Context, apiVersion, kind string) (resourceRef, bool, error) {
+func (kk *kindResolver) resolve(ctx context.Context, apiVersion, kind string) (kube.Resource, bool, error) {
 	list, ok := kk.lists[apiVersion]
 	if !ok {
 		path := "/apis/" + apiVersion
@@ -129,12 +139,12 @@ func (kk *kubeKinds) resolve(ctx context.Context, apiVersion, kind string) (reso
 			path = "/api/" + apiVersion
 		}
 
-		if err := kk.k.get(ctx, path, &list); err != nil {
-			if isNotFound(err) {
-				return resourceRef{}, false, fmt.Errorf("%s is not served by this cluster", apiVersion)
+		if err := kk.k.Get(ctx, path, &list); err != nil {
+			if kube.IsNotFound(err) {
+				return kube.Resource{}, false, fmt.Errorf("%s is not served by this cluster", apiVersion)
 			}
 
-			return resourceRef{}, false, err
+			return kube.Resource{}, false, err
 		}
 
 		kk.lists[apiVersion] = list
@@ -147,23 +157,23 @@ func (kk *kubeKinds) resolve(ctx context.Context, apiVersion, kind string) (reso
 				group, version = "", apiVersion
 			}
 
-			ref, err := newResourceRef(group, version, r.Name)
+			ref, err := kube.NewResource(group, version, r.Name)
 
 			return ref, r.Namespaced, err
 		}
 	}
 
-	return resourceRef{}, false, fmt.Errorf("%s %s is not served by this cluster", apiVersion, kind)
+	return kube.Resource{}, false, fmt.Errorf("%s %s is not served by this cluster", apiVersion, kind)
 }
 
-// helmObjects resolves a manifest's objects; those without a namespace go to the release's.
-func helmObjects(ctx context.Context, kk *kubeKinds, manifest, namespace string) ([]helmObject, error) {
-	docs, err := parseHelmManifest(manifest)
+// objects resolves a manifest's objects; those without a namespace go to the release's.
+func objects(ctx context.Context, kk *kindResolver, manifest, namespace string) ([]object, error) {
+	docs, err := parseManifest(manifest)
 	if err != nil {
 		return nil, err
 	}
 
-	out := make([]helmObject, 0, len(docs))
+	out := make([]object, 0, len(docs))
 
 	for _, doc := range docs {
 		apiVersion, _ := doc["apiVersion"].(string)
@@ -187,22 +197,22 @@ func helmObjects(ctx context.Context, kk *kubeKinds, manifest, namespace string)
 			ns = namespace
 		}
 
-		out = append(out, helmObject{
+		out = append(out, object{
 			APIVersion: apiVersion, Kind: kind, Namespace: ns, Name: name,
-			Path: ref.path(ns) + "/" + url.PathEscape(name), Body: doc,
+			Path: ref.Path(ns) + "/" + url.PathEscape(name), Body: doc,
 		})
 	}
 
 	return out, nil
 }
 
-// helmKindRank is a kind's place in Helm's install order.
-func helmKindRank(kind string) int {
-	if i := slices.Index(helmInstallOrder, kind); i >= 0 {
+// kindRank is a kind's place in Helm's install order.
+func kindRank(kind string) int {
+	if i := slices.Index(installOrder, kind); i >= 0 {
 		return i
 	}
 
-	return len(helmInstallOrder)
+	return len(installOrder)
 }
 
 // threeWayMergePatch is the JSON merge patch that moves live from original to modified, the

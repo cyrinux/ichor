@@ -1,139 +1,57 @@
 package ichorgo
 
 import (
-	"cmp"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
-	"slices"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/helm"
 )
 
-// `helm rollback` without the Helm SDK. Like Helm, it records revision N+1 as
-// pending-rollback (the lock), moves every object from the current revision's manifest to the
-// target's (created, three-way patched, deleted unless kept), then marks N+1 deployed and the
-// current one superseded, so the helm CLI agrees afterwards. Unlike the CLI it shows the plan
-// first, dry-run on the API server, and refuses what it would get wrong: another operation in
-// progress, an object some other release owns, a change or a hook the API server refuses. The
-// chart's pre-rollback hooks run before the changes and its post-rollback hooks after them
-// (kube_helm_rollback_hooks.go). A release the Flux helm-controller manages is suspended
-// first, or Flux would upgrade it straight back.
+// `helm rollback` without the Helm SDK: the logic is in go/kube/helm; here are the entry points
+// the apps call, with their mask, audit and demo.
 
-const (
-	helmStatusDeployed        = "deployed"
-	helmStatusSuperseded      = "superseded"
-	helmStatusFailed          = "failed"
-	helmStatusPendingRollback = "pending-rollback"
+// helmEnv is what go/kube/helm needs of k and of the domains still in the facade.
+func helmEnv(k *kubeClient) helm.Env {
+	return helm.Env{
+		Client: k.api(),
+		Error:  kubeError,
+		Fatal:  followFatal,
+		Suspend: func(ctx context.Context, namespace, name string, now time.Time) error {
+			return fluxAction(ctx, k, "HelmRelease", namespace, name, fluxActionSuspend, now)
+		},
+		Rollout: func(ctx context.Context, kind, namespace, name string) (helm.RolloutState, error) {
+			wk, err := findWorkloadKind(kind)
+			if err != nil {
+				return helm.RolloutState{}, err
+			}
 
-	helmChangeCreate = "create"
-	helmChangeUpdate = "update"
-	helmChangeDelete = "delete"
-	helmChangeKeep   = "keep" // helm.sh/resource-policy: keep, left in place as Helm does
-	// helmChangeReplace is an update sent as a PUT of the whole object (the force option),
-	// as `helm rollback --force` does.
-	helmChangeReplace = "replace"
+			st, err := rolloutStatus(ctx, k, wk, namespace, name)
+			if err != nil {
+				return helm.RolloutState{}, err
+			}
 
-	helmLiveParallel = 4
-	helmFieldManager = "ichor"
-
-	// helmPlanTimeout bounds a plan: discovery, a read per object and a dry run per change
-	// and per hook, one after the other.
-	helmPlanTimeout = 3 * time.Minute
-	// helmRecordTimeout is left for recording how a rollback ended, even past the first.
-	helmRecordTimeout = 30 * time.Second
-)
-
-// helmRollbackPlan is what a rollback would do, as JSON for the confirmation.
-type helmRollbackPlan struct {
-	Namespace string `json:"namespace"` // where the release's Secrets are
-	// ReleaseNamespace is where its objects go (a Flux HelmRelease's targetNamespace may differ
-	// from where it stores the release).
-	ReleaseNamespace string       `json:"releaseNamespace"`
-	Name             string       `json:"name"`
-	From             int          `json:"from"` // the current revision
-	To               int          `json:"to"`   // the revision rolled back to
-	FromChart        string       `json:"fromChart"`
-	ToChart          string       `json:"toChart"`
-	FromAppVersion   string       `json:"fromAppVersion"`
-	ToAppVersion     string       `json:"toAppVersion"`
-	Changes          []helmChange `json:"changes"`
-	Unchanged        int          `json:"unchanged"` // objects already as the target renders them
-	// FluxOwner is the HelmRelease ("namespace/name") whose helm-controller manages the
-	// release: the rollback suspends it. "" for a release installed by hand.
-	FluxOwner string `json:"fluxOwner"`
-	// Hooks are the chart's pre-rollback then post-rollback hooks, each event by weight then
-	// name: the order they run in.
-	Hooks []helmHook `json:"hooks"`
-	// Blockers say why the rollback cannot run; empty when it can.
-	Blockers []string `json:"blockers"`
-	// Force: updates are replaced (PUT), not patched.
-	Force bool `json:"force"`
-	// HistoryMax is how many revisions the rollback keeps, 0 for all of them.
-	HistoryMax int `json:"historyMax"`
-	// Prune are the revisions whose Secret the rollback deletes once it is deployed, oldest
-	// first.
-	Prune []int `json:"prune"`
-	// Workloads counts the Deployments, StatefulSets and DaemonSets of the target revision:
-	// what StartHelmRollbackFollow can wait for.
-	Workloads int `json:"workloads"`
-}
-
-// helmChange is one object the rollback creates, updates, deletes or keeps. Error is why the
-// API server refused its dry run.
-type helmChange struct {
-	Action    string `json:"action"`
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	Error     string `json:"error"`
-}
-
-// helmStored is a revision as stored: its Secret, the release as a generic map (rewritten for
-// the new revision, numbers kept exact) and the fields read here.
-type helmStored struct {
-	ref     helmSecretRef
-	payload map[string]any
-	rel     helmRelease
-}
-
-// helmStep is a change ready to run.
-type helmStep struct {
-	action   string
-	obj      helmObject
-	original map[string]any // the current revision's rendering, nil for an object it lacks
-	patch    map[string]any // update only
-	body     map[string]any // replace only: the target with the live resourceVersion
-}
-
-type helmRollback struct {
-	plan    helmRollbackPlan
-	opts    helmRollbackOptions
-	refs    []helmSecretRef // every revision, newest first
-	prune   []helmSecretRef // the revisions deleted once the rollback is deployed
-	current helmStored
-	target  helmStored
-	steps   []helmStep
-	// The hooks run before and after the steps, never part of them.
-	preHooks, postHooks []helmHookStep
+			return helm.RolloutState{
+				Ready: int(st.Workload.Ready), Desired: int(st.Workload.Desired),
+				Done: st.Done, Failed: st.Failed, Manual: st.Manual, Stale: st.Stale,
+			}, nil
+		},
+	}
 }
 
 // KubeHelmRollbackPlan says what rolling the Helm release namespace/name back to revision
 // would do, without doing it (os:admin): every change is dry-run on the API server. revision
 // 0 is the previous one, as for `helm rollback`. optionsJSON is {"force","historyMax"}
-// ("" for neither). JSON helmRollbackPlan. kubeServer: see KubePods.
+// ("" for neither). JSON helm.Plan. kubeServer: see KubePods.
 func KubeHelmRollbackPlan(configYAML, contextName, kubeServer, namespace, name string, revision int, optionsJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	opts, err := parseHelmRollbackOptions(optionsJSON)
+	opts, err := helm.ParseRollbackOptions(optionsJSON)
 	if err != nil {
 		return "", err
 	}
@@ -142,23 +60,18 @@ func KubeHelmRollbackPlan(configYAML, contextName, kubeServer, namespace, name s
 		return "", err
 	}
 
-	demo := func() helmRollbackPlan { return demoHelmRollbackPlan(namespace, name, revision, opts) }
+	demo := func() helm.Plan { return demoHelmRollbackPlan(namespace, name, revision, opts) }
 
 	target := kubeTarget{configYAML, contextName, kubeServer}
 	if isDemoContext(target.config, target.context) {
 		return toJSON(demo())
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), helmPlanTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), helm.PlanTimeout)
 	defer cancel()
 
-	plan, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (helmRollbackPlan, error) {
-		rb, err := prepareHelmRollback(ctx, k, namespace, name, revision, opts)
-		if err != nil {
-			return helmRollbackPlan{}, err
-		}
-
-		return rb.plan, nil
+	plan, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (helm.Plan, error) {
+		return helm.PlanRollback(ctx, helmEnv(k), namespace, name, revision, opts)
 	})
 	if err != nil {
 		return "", err
@@ -180,9 +93,9 @@ func KubeHelmRollback(configYAML, contextName, kubeServer, namespace, name strin
 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
-	opts, optsErr := parseHelmRollbackOptions(optionsJSON)
+	opts, optsErr := helm.ParseRollbackOptions(optionsJSON)
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "helm-rollback", Namespace: namespace, Object: "HelmRelease/" + name, Params: opts.auditParams(revision)})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "helm-rollback", Namespace: namespace, Object: "HelmRelease/" + name, Params: opts.AuditParams(revision)})
 
 	if optsErr != nil {
 		return optsErr
@@ -200,52 +113,26 @@ func KubeHelmRollback(configYAML, contextName, kubeServer, namespace, name strin
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// The prune's error stays out of kubeDo: it would unwrap it to the API error and drop
-	// the prefix that tells the apps the rollback itself is done.
-	// A hook that failed stays out too: its message names the hook, the revision recorded.
-	var pruneErr, hookErr error
+	// The prune's error and a hook's stay out of kubeDo: see helm.Outcome.
+	var outcome helm.Outcome
 
 	err = kubeMutationError(kubeDo(ctx, target, func(ctx context.Context, k *kubeClient) error {
-		// The plan has its own deadline; the run's is sized from the hooks it holds.
-		planCtx, cancelPlan := context.WithTimeout(ctx, helmPlanTimeout)
-		rb, err := prepareHelmRollback(planCtx, k, namespace, name, revision, opts)
-
-		cancelPlan()
-
-		if err != nil {
-			return err
-		}
-
-		runCtx, cancelRun := context.WithTimeoutCause(ctx, helmRollbackTimeout(len(rb.preHooks)+len(rb.postHooks)), errHelmRollbackTimeout)
-		defer cancelRun()
-
 		var runErr error
 
-		pruneErr, runErr = runHelmRollback(runCtx, k, rb, time.Now())
-
-		if failed := (*helmHookError)(nil); errors.As(runErr, &failed) {
-			hookErr, runErr = runErr, nil
-		}
+		outcome, runErr = helm.Rollback(ctx, helmEnv(k), namespace, name, revision, opts)
 
 		return runErr
 	}))
 	if err != nil {
-		return errors.Join(err, pruneErr)
+		return errors.Join(err, outcome.Prune)
 	}
 
-	if hookErr != nil {
-		return hookErr
+	if outcome.Hook != nil {
+		return outcome.Hook
 	}
 
 	// Rolled back: the audit entry and the apps get "history not pruned: ..." alone.
-	return pruneErr
-}
-
-// helmRollbackTimeout bounds the run of a planned rollback with hooks hooks: the plan's work
-// again and the changes, then per hook the wait for before-hook-creation's delete and the
-// wait for the hook itself.
-func helmRollbackTimeout(hooks int) time.Duration {
-	return helmPlanTimeout + time.Duration(hooks)*2*helmHookTimeout
+	return outcome.Prune
 }
 
 func validateHelmRollback(namespace, name string, revision int) error {
@@ -254,494 +141,4 @@ func validateHelmRollback(namespace, name string, revision int) error {
 	}
 
 	return validateKubeName("Helm release", namespace, name)
-}
-
-// prepareHelmRollback reads both revisions and the live objects, and dry-runs every change.
-func prepareHelmRollback(ctx context.Context, k *kubeClient, namespace, name string, revision int, opts helmRollbackOptions) (*helmRollback, error) {
-	refs, err := helmSecretRefs(ctx, k, namespace, name)
-	if err != nil {
-		return nil, err
-	}
-
-	refs = helmHistoryRefs(refs, name)
-	if len(refs) == 0 {
-		return nil, fmt.Errorf("no Helm release %s/%s", namespace, name)
-	}
-
-	targetRef, err := helmTargetRef(refs, revision)
-	if err != nil {
-		return nil, err
-	}
-
-	rb := &helmRollback{refs: refs, opts: opts, prune: helmPruneRefs(refs, opts.HistoryMax)}
-
-	if rb.current, err = readHelmStored(ctx, k, refs[0]); err != nil {
-		return nil, fmt.Errorf("revision %d: %w", refs[0].revision, err)
-	}
-
-	if rb.target, err = readHelmStored(ctx, k, targetRef); err != nil {
-		return nil, fmt.Errorf("revision %d: %w", targetRef.revision, err)
-	}
-
-	cur, tgt := rb.current.rel, rb.target.rel
-	releaseNS := cmp.Or(cur.Namespace, namespace)
-	rb.plan = helmRollbackPlan{
-		Namespace: namespace, ReleaseNamespace: releaseNS, Name: name, From: refs[0].revision, To: targetRef.revision,
-		FromChart: chartLabel(cur), ToChart: chartLabel(tgt),
-		FromAppVersion: cur.Chart.Metadata.AppVersion, ToAppVersion: tgt.Chart.Metadata.AppVersion,
-		Changes: []helmChange{}, Hooks: []helmHook{}, Blockers: helmRollbackBlockers(rb.current),
-		Force: opts.Force, HistoryMax: opts.HistoryMax, Prune: helmRevisions(rb.prune),
-	}
-
-	kinds := newKubeKinds(k)
-
-	curObjs, err := helmObjects(ctx, kinds, cur.Manifest, releaseNS)
-	if err == nil {
-		var tgtObjs []helmObject
-
-		if tgtObjs, err = helmObjects(ctx, kinds, tgt.Manifest, releaseNS); err == nil {
-			rb.plan.Workloads = len(helmWorkloads(tgtObjs))
-			rb.plan.FluxOwner = helmFluxOwner(namespace, curObjs, tgtObjs)
-			err = rb.planSteps(ctx, k, curObjs, tgtObjs)
-		}
-	}
-
-	if err != nil {
-		rb.plan.Blockers = append(rb.plan.Blockers, err.Error())
-	}
-
-	if err := rb.planHooks(ctx, k, kinds, releaseNS); err != nil {
-		rb.plan.Blockers = append(rb.plan.Blockers, err.Error())
-	}
-
-	return rb, nil
-}
-
-// helmHistoryRefs keeps one Secret per revision of release name (the one Helm named, if a
-// copy exists), newest first.
-func helmHistoryRefs(refs []helmSecretRef, name string) []helmSecretRef {
-	byRevision := map[int]helmSecretRef{}
-
-	for _, ref := range refs {
-		if ref.name != name {
-			continue
-		}
-
-		if _, seen := byRevision[ref.revision]; seen && ref.secret != helmSecretName(name, ref.revision) {
-			continue
-		}
-
-		byRevision[ref.revision] = ref
-	}
-
-	out := make([]helmSecretRef, 0, len(byRevision))
-	for _, ref := range byRevision {
-		out = append(out, ref)
-	}
-
-	slices.SortFunc(out, func(a, b helmSecretRef) int { return cmp.Compare(b.revision, a.revision) })
-
-	return out
-}
-
-// helmSecretName is the Secret Helm 3 stores a revision in.
-func helmSecretName(name string, revision int) string {
-	return "sh.helm.release.v1." + name + ".v" + strconv.Itoa(revision)
-}
-
-// helmTargetRef is the revision to roll back to; 0 means the one before the current.
-func helmTargetRef(refs []helmSecretRef, revision int) (helmSecretRef, error) {
-	if revision == 0 {
-		if revision = refs[0].revision - 1; revision < 1 {
-			return helmSecretRef{}, errors.New("there is no earlier revision to roll back to")
-		}
-	}
-
-	if revision == refs[0].revision {
-		return helmSecretRef{}, fmt.Errorf("revision %d is the current one", revision)
-	}
-
-	for _, ref := range refs {
-		if ref.revision == revision {
-			return ref, nil
-		}
-	}
-
-	return helmSecretRef{}, fmt.Errorf("revision %d is not kept any more (Helm keeps the last ones only)", revision)
-}
-
-func chartLabel(rel helmRelease) string {
-	return strings.TrimSuffix(rel.Chart.Metadata.Name+"-"+rel.Chart.Metadata.Version, "-")
-}
-
-// helmRollbackBlockers are the reasons a rollback must not run whatever its objects.
-func helmRollbackBlockers(current helmStored) []string {
-	blockers := []string{}
-
-	if status := cmp.Or(current.rel.Info.Status, current.ref.status); strings.HasPrefix(status, "pending-") {
-		blockers = append(blockers, fmt.Sprintf("another operation is in progress (revision %d is %s)", current.ref.revision, status))
-	}
-
-	return blockers
-}
-
-// helmFluxOwner is the HelmRelease whose helm-controller rendered these objects (it labels
-// each one), "namespace/name", or "".
-func helmFluxOwner(namespace string, lists ...[]helmObject) string {
-	for _, list := range lists {
-		for _, o := range list {
-			if name := o.objectLabel(fluxHelmLabelName); name != "" {
-				return cmp.Or(o.objectLabel(fluxHelmLabelNamespace), namespace) + "/" + name
-			}
-		}
-	}
-
-	return ""
-}
-
-// planSteps compares both renderings with the live objects, keeps the changes that change
-// something and dry-runs them, in Helm's order: creations and updates by kind, deletions in
-// reverse.
-func (rb *helmRollback) planSteps(ctx context.Context, k *kubeClient, current, target []helmObject) error {
-	slices.SortStableFunc(target, func(a, b helmObject) int { return helmKindRank(a.Kind) - helmKindRank(b.Kind) })
-	slices.SortStableFunc(current, func(a, b helmObject) int { return helmKindRank(b.Kind) - helmKindRank(a.Kind) })
-
-	for _, list := range [][]helmObject{current, target} {
-		for _, o := range list {
-			withHelmOwnership(o.Body, rb.plan.Name, rb.plan.ReleaseNamespace)
-		}
-	}
-
-	byKey := map[string]helmObject{}
-	for _, o := range current {
-		byKey[o.key()] = o
-	}
-
-	inTarget := map[string]bool{}
-	steps := []helmStep{}
-
-	for _, o := range target {
-		inTarget[o.key()] = true
-
-		if was, ok := byKey[o.key()]; ok {
-			steps = append(steps, helmStep{action: helmChangeUpdate, obj: o, original: was.Body})
-		} else {
-			steps = append(steps, helmStep{action: helmChangeCreate, obj: o})
-		}
-	}
-
-	for _, o := range current {
-		if inTarget[o.key()] {
-			continue
-		}
-
-		if o.annotation(helmAnnotationPolicy) == "keep" {
-			rb.plan.Changes = append(rb.plan.Changes, helmChange{Action: helmChangeKeep, Kind: o.Kind, Namespace: o.Namespace, Name: o.Name})
-
-			continue
-		}
-
-		steps = append(steps, helmStep{action: helmChangeDelete, obj: o})
-	}
-
-	steps, err := rb.withLive(ctx, k, steps)
-	if err != nil {
-		return err
-	}
-
-	failed := 0
-
-	for _, s := range steps {
-		change := helmChange{Action: s.action, Kind: s.obj.Kind, Namespace: s.obj.Namespace, Name: s.obj.Name}
-		rb.plan.Changes = append(rb.plan.Changes, change)
-
-		if s.action == helmChangeKeep {
-			continue
-		}
-
-		if err := applyHelmStep(ctx, k, s, true); err != nil {
-			rb.plan.Changes[len(rb.plan.Changes)-1].Error = kubeError(err).Error()
-			failed++
-		}
-
-		rb.steps = append(rb.steps, s)
-	}
-
-	if failed > 0 {
-		return fmt.Errorf("the API server refuses %d of the changes (see each one)", failed)
-	}
-
-	return nil
-}
-
-// withLive reads each object as it is now and settles its step: an update whose object is
-// gone becomes a creation, a creation whose object exists becomes an update when the release
-// owns it (refused otherwise), an update with nothing to change and a deletion of what is
-// already gone drop out.
-func (rb *helmRollback) withLive(ctx context.Context, k *kubeClient, steps []helmStep) ([]helmStep, error) {
-	settled := make([]*helmStep, len(steps))
-	errs := make([]error, len(steps))
-	slots := make(chan struct{}, helmLiveParallel)
-
-	var wg sync.WaitGroup
-
-	for i, s := range steps {
-		wg.Go(func() {
-			slots <- struct{}{}
-			defer func() { <-slots }()
-
-			settled[i], errs[i] = rb.settle(ctx, k, s)
-		})
-	}
-
-	wg.Wait()
-
-	if err := errors.Join(errs...); err != nil {
-		return nil, err
-	}
-
-	out := []helmStep{}
-
-	for _, s := range settled {
-		if s != nil {
-			out = append(out, *s)
-		}
-	}
-
-	rb.plan.Unchanged = len(steps) - len(out) - rb.gone(settled, steps)
-
-	return out, nil
-}
-
-// gone counts the deletions dropped because the object no longer exists.
-func (rb *helmRollback) gone(settled []*helmStep, steps []helmStep) int {
-	n := 0
-
-	for i, s := range settled {
-		if s == nil && steps[i].action == helmChangeDelete {
-			n++
-		}
-	}
-
-	return n
-}
-
-func (rb *helmRollback) settle(ctx context.Context, k *kubeClient, s helmStep) (*helmStep, error) {
-	var live map[string]any
-
-	err := k.get(ctx, s.obj.Path, &live)
-
-	switch {
-	case isNotFound(err):
-		if s.action == helmChangeDelete {
-			return nil, nil
-		}
-
-		s.action, s.original = helmChangeCreate, nil
-
-		return &s, nil
-	case err != nil:
-		return nil, fmt.Errorf("%s: %w", s.obj.label(), err)
-	case s.action == helmChangeDelete:
-		// Helm reads the policy on the live object: one annotated since stays.
-		if (helmObject{Body: live}).annotation(helmAnnotationPolicy) == "keep" {
-			s.action = helmChangeKeep
-		}
-
-		return &s, nil
-	}
-
-	if s.action == helmChangeCreate {
-		if !rb.owns(live) {
-			return nil, fmt.Errorf("%s already exists and does not belong to release %s", s.obj.label(), rb.plan.Name)
-		}
-
-		s.action = helmChangeUpdate
-	}
-
-	// Helm replaces unconditionally: a replace with nothing to change is sent all the same.
-	if rb.opts.Force {
-		s.action, s.body = helmChangeReplace, helmReplaceBody(s.obj, live)
-
-		return &s, nil
-	}
-
-	s.patch = threeWayMergePatch(s.original, s.obj.Body, live)
-	if len(s.patch) == 0 {
-		return nil, nil
-	}
-
-	return &s, nil
-}
-
-// withHelmOwnership adds what Helm stamps on every object it installs: the release's name
-// and namespace annotations and the managed-by label. Without them the next helm upgrade
-// would refuse the objects as not its own.
-func withHelmOwnership(obj map[string]any, release, namespace string) {
-	meta, _ := obj["metadata"].(map[string]any)
-	if meta == nil {
-		meta = map[string]any{}
-		obj["metadata"] = meta
-	}
-
-	set := func(field, key, value string) {
-		m, _ := meta[field].(map[string]any)
-		if m == nil {
-			m = map[string]any{}
-			meta[field] = m
-		}
-
-		m[key] = value
-	}
-
-	set("annotations", helmAnnotationRelease, release)
-	set("annotations", helmAnnotationReleaseNS, namespace)
-	set("labels", "app.kubernetes.io/managed-by", "Helm")
-}
-
-// owns tells whether a live object carries this release's ownership annotations.
-func (rb *helmRollback) owns(live map[string]any) bool {
-	o := helmObject{Body: live}
-
-	return o.objectLabel("app.kubernetes.io/managed-by") == "Helm" &&
-		o.annotation(helmAnnotationRelease) == rb.plan.Name && o.annotation(helmAnnotationReleaseNS) == rb.plan.ReleaseNamespace
-}
-
-// applyHelmStep runs one change, or only checks it with dryRun.
-func applyHelmStep(ctx context.Context, k *kubeClient, s helmStep, dryRun bool) error {
-	q := url.Values{"fieldManager": {helmFieldManager}}
-	if dryRun {
-		q.Set("dryRun", "All")
-	}
-
-	switch s.action {
-	case helmChangeCreate:
-		body, err := json.Marshal(s.obj.Body)
-		if err != nil {
-			return err
-		}
-
-		collection := s.obj.Path[:strings.LastIndexByte(s.obj.Path, '/')]
-
-		return k.do(ctx, http.MethodPost, collection+"?"+q.Encode(), "application/json", body, nil)
-	case helmChangeUpdate:
-		body, err := json.Marshal(s.patch)
-		if err != nil {
-			return err
-		}
-
-		return k.do(ctx, http.MethodPatch, s.obj.Path+"?"+q.Encode(), "application/merge-patch+json", body, nil)
-	case helmChangeReplace:
-		if !dryRun {
-			return replaceHelmObject(ctx, k, s.obj, s.obj.Path+"?"+q.Encode())
-		}
-
-		body, err := json.Marshal(s.body)
-		if err != nil {
-			return err
-		}
-
-		return k.do(ctx, http.MethodPut, s.obj.Path+"?"+q.Encode(), "application/json", body, nil)
-	default:
-		q.Del("fieldManager")
-		q.Set("propagationPolicy", "Background")
-
-		err := k.do(ctx, http.MethodDelete, s.obj.Path+"?"+q.Encode(), "application/json", nil, nil)
-		if isNotFound(err) {
-			return nil
-		}
-
-		return err
-	}
-}
-
-// runHelmRollback runs a prepared rollback: Flux suspended, revision N+1 recorded as
-// pending-rollback, the pre-rollback hooks run, every change made, the post-rollback hooks
-// run, then N+1 deployed and the others superseded, then the revisions beyond the history
-// max deleted (a failed rollback leaves them all). A pre-rollback hook that fails records
-// N+1 failed with nothing changed (the current revision stays as it is); a change that
-// fails records it failed and the current one superseded, as Helm. A post-rollback hook that
-// fails does the same: the spec's choice, not Helm's (Helm leaves N+1 pending-rollback).
-// The description recorded is one line; the error returned keeps every detail.
-// A delete refused comes back as pruneErr with err nil: the rollback itself is done.
-func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now time.Time) (pruneErr, err error) {
-	if len(rb.plan.Blockers) > 0 {
-		return nil, errors.New(strings.Join(rb.plan.Blockers, "; "))
-	}
-
-	if owner := rb.plan.FluxOwner; owner != "" {
-		ns, name, _ := strings.Cut(owner, "/")
-		if err := fluxAction(ctx, k, "HelmRelease", ns, name, fluxActionSuspend, now); err != nil {
-			return nil, fmt.Errorf("suspend the HelmRelease %s first: %w", owner, err)
-		}
-	}
-
-	next := rb.plan.From + 1
-	description := fmt.Sprintf("Rollback to %d", rb.plan.To)
-
-	if err := createHelmRevision(ctx, k, rb, next, description, now); err != nil {
-		return nil, fmt.Errorf("record revision %d: %w", next, err)
-	}
-
-	// How it ended is recorded even when the rollback ran out of time: a revision left
-	// pending-rollback would lock the release.
-	record, cancel := context.WithTimeout(context.WithoutCancel(ctx), helmRecordTimeout)
-	defer cancel()
-
-	ns, nextSecret := rb.plan.Namespace, helmSecretName(rb.plan.Name, next)
-
-	if err := runHelmHooks(ctx, k, rb.preHooks); err != nil {
-		return nil, errors.Join(
-			fmt.Errorf("rollback stopped before any change, revision %d recorded as failed: %w", next, err),
-			setHelmStatus(record, k, ns, nextSecret, helmStatusFailed, helmFailureDescription(rb.plan.Name, err), now),
-		)
-	}
-
-	// As Helm: the current revision superseded, the new one failed.
-	failed := func(err error) error {
-		return errors.Join(
-			fmt.Errorf("rollback stopped, revision %d recorded as failed: %w", next, err),
-			setHelmStatus(record, k, ns, rb.current.ref.secret, helmStatusSuperseded, "", now),
-			setHelmStatus(record, k, ns, nextSecret, helmStatusFailed, helmFailureDescription(rb.plan.Name, err), now),
-		)
-	}
-
-	for _, s := range rb.steps {
-		if err := applyHelmStep(ctx, k, s, false); err != nil {
-			return nil, failed(fmt.Errorf("%s %s: %w", s.action, s.obj.label(), kubeError(err)))
-		}
-	}
-
-	if err := runHelmHooks(ctx, k, rb.postHooks); err != nil {
-		return nil, failed(err)
-	}
-
-	// As Helm: every deployed revision superseded (a failed current one stays failed).
-	errs := []error{}
-
-	for _, ref := range rb.refs {
-		if ref.status == helmStatusDeployed {
-			errs = append(errs, setHelmStatus(record, k, ns, ref.secret, helmStatusSuperseded, "", now))
-		}
-	}
-
-	if err := errors.Join(append(errs, setHelmStatus(record, k, ns, nextSecret, helmStatusDeployed, description, now))...); err != nil {
-		return nil, err
-	}
-
-	return pruneHelmHistory(record, k, rb.prune), nil
-}
-
-// helmFailureDescription is a failed rollback's description for the release Secret, on one
-// line: the errors errors.Join put on separate lines joined with "; ".
-func helmFailureDescription(name string, err error) string {
-	lines := []string{}
-
-	for _, line := range strings.FieldsFunc(err.Error(), func(r rune) bool { return r == '\n' || r == '\r' }) {
-		if line = strings.TrimSpace(line); line != "" {
-			lines = append(lines, line)
-		}
-	}
-
-	return fmt.Sprintf("Rollback %q failed: %s", name, strings.Join(lines, "; "))
 }
