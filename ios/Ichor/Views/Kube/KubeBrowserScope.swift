@@ -42,7 +42,9 @@ final class KubeBrowserScope {
 
     /// The cluster whose scope is kept on the device: not the demo, not in screenshot mode.
     private static func cluster(_ model: AppModel) -> String? {
-        model.activeSummary.flatMap { $0.demo || $0.fingerprint.isEmpty || model.privacyMask ? nil : $0.fingerprint }
+        model.activeSummary.flatMap {
+            $0.demo || $0.fingerprint.isEmpty || model.settings.privacyMask ? nil : $0.fingerprint
+        }
     }
 }
 

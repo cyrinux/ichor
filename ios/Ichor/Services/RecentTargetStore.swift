@@ -15,7 +15,9 @@ final class RecentTargetStore {
 
     /// Records `target`, on the active cluster, as opened now.
     func record(_ target: ShareTarget, label: String, detail: String = "", model: AppModel) {
-        guard !model.privacyMask, let cluster = model.activeSummary?.clusterID, !cluster.isEmpty else { return }
+        guard !model.settings.privacyMask, let cluster = model.activeSummary?.clusterID, !cluster.isEmpty else {
+            return
+        }
         var opened = target
         opened.cluster = cluster
         let at = Int64((Date().timeIntervalSince1970 * 1000).rounded())

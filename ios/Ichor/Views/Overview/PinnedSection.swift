@@ -151,6 +151,7 @@ struct PinButton: View {
     let label: String
 
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
 
     var body: some View {
         if let fingerprint, Pin.pinnable.contains(target.target) {
@@ -180,7 +181,7 @@ struct PinButton: View {
     }
 
     private var fingerprint: String? {
-        guard !model.privacyMask, let context = model.activeSummary, !context.isKube, !context.fingerprint.isEmpty
+        guard !settings.privacyMask, let context = model.activeSummary, !context.isKube, !context.fingerprint.isEmpty
         else { return nil }
         return context.fingerprint
     }

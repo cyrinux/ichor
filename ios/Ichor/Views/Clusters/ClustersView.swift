@@ -86,6 +86,7 @@ struct ClusterBar: View {
 /// The imported clusters: pick the one on screen, rename it, give it a color, remove it, add one.
 struct ClustersView: View {
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @State private var removing: ContextSummary?
     @State private var renaming: ContextSummary?
     @State private var newName = ""
@@ -197,7 +198,7 @@ struct ClustersView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("The app takes the colors of the cluster on screen.")
             // What the lock on a row means, once there is one.
-            if model.summary?.contexts.contains(where: { model.vpnOnly.contains($0.fingerprint) }) == true {
+            if model.summary?.contexts.contains(where: { settings.vpnOnly.contains($0.fingerprint) }) == true {
                 Text(
                     "VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it."
                 )
@@ -222,7 +223,7 @@ struct ClustersView: View {
                     VStack(alignment: .leading) {
                         HStack(spacing: 4) {
                             Text(model.labels.of(context)).foregroundStyle(Color.primary)
-                            if model.vpnOnly.contains(context.fingerprint) {
+                            if settings.vpnOnly.contains(context.fingerprint) {
                                 Image(systemName: "lock.shield")
                                     .font(.caption)
                                     .foregroundStyle(Color.secondary)
@@ -251,7 +252,7 @@ struct ClustersView: View {
                         .font(.caption)
                         .foregroundStyle(Color.secondary)
                         // Set on this device instead of the kubeconfig's; hidden in screenshot mode.
-                        if !model.privacyMask, model.usesOwnKubeServer(context),
+                        if !settings.privacyMask, model.usesOwnKubeServer(context),
                             let server = model.kubeServers[context.fingerprint]
                         {
                             Text("API address: \(server)")
@@ -312,7 +313,7 @@ struct ClustersView: View {
         if !context.fingerprint.isEmpty {
             Toggle(
                 isOn: Binding(
-                    get: { model.vpnOnly.contains(context.fingerprint) },
+                    get: { settings.vpnOnly.contains(context.fingerprint) },
                     set: { model.setVpnOnly($0, for: context) })
             ) {
                 Label("VPN only", systemImage: "lock.shield")
@@ -348,7 +349,7 @@ struct ClustersView: View {
         // Next to the endpoints: both say how this phone reaches the cluster. Not in screenshot
         // mode (the field shows the real address), nor for the demo, nor where the calls do not
         // use it (Omni, a linked Kubernetes access).
-        if !model.labels.masked && !model.privacyMask && !context.demo && !context.fingerprint.isEmpty
+        if !model.labels.masked && !settings.privacyMask && !context.demo && !context.fingerprint.isEmpty
             && model.usesOwnKubeServer(context)
         {
             Button {

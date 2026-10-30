@@ -8,12 +8,12 @@ struct LastKnownTarget {
     let generation: Int
 }
 
-/// The last known state (keepLastKnown): what a screen with nothing in memory shows at once,
+/// The last known state (SettingsStore.keepLastKnown): what a screen with nothing in memory shows at once,
 /// while it loads, and what each successful fetch leaves for the next time.
 extension AppModel {
     /// The active cluster's, nil when the setting is off and for the demo (never stored).
     var lastKnownTarget: LastKnownTarget? {
-        guard keepLastKnown, let context = activeSummary, !context.demo, !context.fingerprint.isEmpty else {
+        guard settings.keepLastKnown, let context = activeSummary, !context.demo, !context.fingerprint.isEmpty else {
             return nil
         }
         return LastKnownTarget(fingerprint: context.fingerprint, generation: dataGeneration)
@@ -60,7 +60,7 @@ extension AppModel {
 
     /// Same, under a key of its own (a Kubernetes list of one scope, see kubeListKey).
     func remember(key: String, json: String, at: Date, for target: LastKnownTarget) {
-        guard keepLastKnown, target.generation == dataGeneration else { return }
+        guard settings.keepLastKnown, target.generation == dataGeneration else { return }
         try? LastKnownStore.save(fingerprint: target.fingerprint, entry: LastKnownEntry(key: key, at: at, json: json))
     }
 
@@ -78,6 +78,6 @@ extension AppModel {
     func monitorSeed(kube: Bool) -> ClusterSnapshot? {
         guard let context = activeSummary, !context.demo else { return nil }
         let snapshot = SharedStore.snapshots(activeCluster: monitorClusterKey(context))[monitorClusterKey(context)]
-        return snapshot?.seedable(kube: kube, masked: privacyMask) == true ? snapshot : nil
+        return snapshot?.seedable(kube: kube, masked: settings.privacyMask) == true ? snapshot : nil
     }
 }

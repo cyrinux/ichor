@@ -60,6 +60,7 @@ struct KubeHomeView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @State private var state: LoadState<KubeNodesOverview> = .loading
     /// `state` is only what the last background check saw (a seed), until the cluster answers.
     @State private var fromMonitor = false
@@ -151,7 +152,7 @@ struct KubeHomeView: View {
             }
         }
         .toolbar {
-            if model.privacyMask {
+            if settings.privacyMask {
                 ToolbarItem(placement: .topBarLeading) {
                     Image(systemName: "eye.slash")
                         .font(.footnote)
@@ -239,7 +240,7 @@ struct KubeHomeView: View {
             inventory = .loading
         }
         // The screenshot mode switching: the Kubernetes screen pushed from here holds old names.
-        .onChange(of: model.maskTransition) { _, switching in
+        .onChange(of: settings.maskTransition) { _, switching in
             if switching { screen = nil }
         }
         // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
@@ -260,7 +261,7 @@ struct KubeHomeView: View {
                 // No Talos nodes here: a pinned node shows without its state.
                 PinnedSection(
                     pins: pins.pins, nodes: [], argo: argoStatus, flux: fluxStatus,
-                    masked: model.privacyMask, open: open,
+                    masked: settings.privacyMask, open: open,
                     unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
             }
         case .summary:

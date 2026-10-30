@@ -2,7 +2,7 @@ import Foundation
 import CryptoKit
 import IchorCore
 
-/// The last data fetched from each cluster (optional, see AppModel.keepLastKnown): one file per
+/// The last data fetched from each cluster (optional, see SettingsStore.keepLastKnown): one file per
 /// cluster and domain, AES-GCM sealed with a device-only Keychain key, excluded from backup.
 /// Names are hashes, so node addresses never show in them: a folder per cluster fingerprint
 /// (removed with the cluster), a file per fingerprint and domain key.

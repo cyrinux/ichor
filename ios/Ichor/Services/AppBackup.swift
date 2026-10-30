@@ -44,11 +44,11 @@ enum AppBackup {
                 names: model.clusterNames,
                 colors: model.clusterColors,
                 kubeServers: model.kubeServers,
-                vpnOnly: model.vpnOnly,
+                vpnOnly: model.settings.vpnOnly,
                 wakeOnLan: WakeOnLanStore.shared.allTargets,
                 kubeAccess: model.kubeAccess,
                 repos: model.clusterRepos,
-                auditEvents: model.auditEventClusters
+                auditEvents: model.settings.auditEventClusters
             ),
             kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints),
             // iOS pins nothing in screenshot mode: the stored pins are all of the real scope.
@@ -142,9 +142,9 @@ enum AppBackup {
         // by itself (the lock is required), so the lock is offered again, never enabled.
         // settings.allowScreenshots is Android only: iOS cannot block screenshots.
         if let mask = settings?.privacyMask {
-            await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
+            await model.settings.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
         }
-        if let theme = settings?.themeMode.flatMap(ThemeMode.init(rawValue:)) { model.theme = theme }
+        if let theme = settings?.themeMode.flatMap(ThemeMode.init(rawValue:)) { model.settings.theme = theme }
         if let icons = settings?.remoteAppIcons { AppIconSettings.remoteEnabled = icons }
         if let live = settings?.liveClusterStats { LiveStatsSettings.enabled = live }
         if let alerts = settings?.monitorAlerts {
@@ -195,9 +195,9 @@ enum AppBackup {
 
     private static func backupSettings(model: AppModel, fingerprints: [String]) -> BackupSettings {
         var settings = BackupSettings(
-            themeMode: model.theme.rawValue,
-            privacyMask: model.privacyMask,
-            privacyMaskWords: model.privacyWords,
+            themeMode: model.settings.theme.rawValue,
+            privacyMask: model.settings.privacyMask,
+            privacyMaskWords: model.settings.privacyWords,
             monitorAlerts: BackgroundMonitor.alertsEnabled,
             remoteAppIcons: AppIconSettings.remoteEnabled
         )

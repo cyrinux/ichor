@@ -3,13 +3,13 @@ import IchorCore
 
 /// Settings → Appearance: theme and language (live cluster usage is its own section).
 struct AppearanceSection: View {
-    @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        @Bindable var model = model
+        @Bindable var settings = settings
         Section {
-            Picker("Theme", selection: $model.theme) {
+            Picker("Theme", selection: $settings.theme) {
                 ForEach(ThemeMode.allCases) { Text($0.label).tag($0) }
             }
             .pickerStyle(.segmented)

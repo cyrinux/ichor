@@ -5,7 +5,7 @@ import IchorCore
 /// apply when the field is submitted or the screen closes, not on every keystroke. And the
 /// icons of the Apps inventory: off, only the bundled ones are shown (a third-party request).
 struct PrivacySection: View {
-    @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
     @State private var words = ""
     @FocusState private var editingWords: Bool
@@ -14,9 +14,9 @@ struct PrivacySection: View {
         Section {
             Toggle(
                 isOn: Binding(
-                    get: { model.privacyMask },
+                    get: { settings.privacyMask },
                     set: { on in
-                        Task { await model.setPrivacyMask(on) }
+                        Task { await settings.setPrivacyMask(on) }
                     })
             ) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -26,9 +26,9 @@ struct PrivacySection: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            // No second flip while the names switch (AppModel.maskTransition).
-            .disabled(model.maskTransition)
-            if model.privacyMask {
+            // No second flip while the names switch (SettingsStore.maskTransition).
+            .disabled(settings.maskTransition)
+            if settings.privacyMask {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Also hide these words", text: $words)
                         .textInputAutocapitalization(.never)
@@ -48,8 +48,8 @@ struct PrivacySection: View {
                     .foregroundStyle(.secondary)
                 }
             }
-            // Off: what was kept is deleted (AppModel.setKeepLastKnown).
-            Toggle(isOn: Binding(get: { model.keepLastKnown }, set: { model.setKeepLastKnown($0) })) {
+            // Off: what was kept is deleted (SettingsStore.setKeepLastKnown).
+            Toggle(isOn: Binding(get: { settings.keepLastKnown }, set: { settings.setKeepLastKnown($0) })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Keep last known state")
                     Text(
@@ -62,14 +62,14 @@ struct PrivacySection: View {
         } header: {
             Text("Privacy")
         }
-        .onAppear { words = model.privacyWords }
+        .onAppear { words = settings.privacyWords }
         .onChange(of: editingWords) { _, editing in if !editing { commit() } }
         .onDisappear(perform: commit)
     }
 
     private func commit() {
         words = normalizedMaskWords(words)
-        guard model.privacyMask, words != model.privacyWords else { return }
-        Task { await model.setPrivacyMask(true, words: words) }
+        guard settings.privacyMask, words != settings.privacyWords else { return }
+        Task { await settings.setPrivacyMask(true, words: words) }
     }
 }

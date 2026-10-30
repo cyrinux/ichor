@@ -5,7 +5,9 @@ extension AppModel {
     /// The cluster whose nodes Wake-on-LAN applies to; nil in screenshot mode (node addresses
     /// are masked then and would not match the saved ones, and MACs are revealing).
     var wakeOnLanFingerprint: String? {
-        guard !privacyMask, let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty else { return nil }
+        guard !settings.privacyMask, let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty else {
+            return nil
+        }
         return fingerprint
     }
 

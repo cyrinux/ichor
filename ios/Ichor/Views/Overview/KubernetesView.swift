@@ -44,6 +44,7 @@ struct KubernetesView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
     @State private var tab = Tab.workloads
     @State private var query = ""
     /// The cluster's namespaces; nil while unknown (loading, or failed).
@@ -287,7 +288,7 @@ struct KubernetesView: View {
     /// The cluster whose scope is kept on the device: not the demo, not in screenshot mode
     /// (then the scope picked lasts while the screen does).
     private var scopeCluster: String? {
-        model.activeSummary.flatMap { $0.demo || $0.fingerprint.isEmpty || model.privacyMask ? nil : $0.fingerprint }
+        model.activeSummary.flatMap { $0.demo || $0.fingerprint.isEmpty || settings.privacyMask ? nil : $0.fingerprint }
     }
 
     /// The scope of the lists (L5, L6): the one picked, else the default for what the

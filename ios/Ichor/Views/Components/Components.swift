@@ -193,10 +193,10 @@ struct RoleNotice: View {
 
 /// "True black" theme: pure black list backgrounds for OLED screens.
 struct ThemedBackground: ViewModifier {
-    @Environment(AppModel.self) private var model
+    @Environment(SettingsStore.self) private var settings
 
     func body(content: Content) -> some View {
-        if model.theme == .black {
+        if settings.theme == .black {
             content.scrollContentBackground(.hidden).background(Color.black)
         } else {
             content

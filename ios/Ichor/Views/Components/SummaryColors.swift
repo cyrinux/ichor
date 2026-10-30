@@ -24,7 +24,8 @@ extension AppModel {
     /// The colors of the cluster on screen for `colorScheme`. Computed on every read from the
     /// observed seed and theme, never kept: switching cluster or editing its hue shows at once.
     func summaryColors(for colorScheme: ColorScheme) -> SummaryColors {
-        let appearance: PaletteAppearance = theme == .black ? .trueBlack : (colorScheme == .dark ? .dark : .light)
+        let appearance: PaletteAppearance =
+            settings.theme == .black ? .trueBlack : (colorScheme == .dark ? .dark : .light)
         return SummaryColors(ClusterPalette(seed: seed(of: activeSummary), appearance: appearance))
     }
 }

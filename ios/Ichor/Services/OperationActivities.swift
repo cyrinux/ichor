@@ -125,7 +125,7 @@ enum OperationActivities {
 
     // The setting AppModel keeps (Keys.lock).
     private static var lockEnabled: Bool { UserDefaults.standard.bool(forKey: "appLockEnabled") }
-    /// The screenshot mode (AppModel.setPrivacyMask): no node or cluster name shown either.
+    /// The screenshot mode (SettingsStore.setPrivacyMask): no node or cluster name shown either.
     private static var screenshotMode: Bool { UserDefaults.standard.bool(forKey: PrivacyKeys.enabled) }
 
     /// What each run shows now; none for a kind with no run, nor one cleared.
