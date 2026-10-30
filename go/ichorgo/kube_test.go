@@ -12,7 +12,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -21,15 +20,19 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/kubetest"
 )
 
-// fakeKubeAPI is an API server answering from a path -> JSON table and recording requests.
+// fakeKubeAPI is kubetest.FakeAPI under the names the facade's tests use: the fields they set
+// directly stay here and its hooks read them. Tests that serve by themselves build one around
+// their own server.
 type fakeKubeAPI struct {
 	*httptest.Server
 
+	api          *kubetest.FakeAPI // nil for a test's own server
 	mu           sync.Mutex
 	answers      map[string]string // "GET /path" -> body
-	statuses     map[string]int    // "GET /path" -> HTTP status, 200 when unset
 	requests     []fakeKubeRequest
 	beforeAnswer func(*http.Request)
 	// answerFunc, when set, answers a request from its body (a SelfSubjectAccessReview per
@@ -42,14 +45,7 @@ type fakeKubeAPI struct {
 
 // answerWith makes f answer key ("GET /path") with status and body.
 func (f *fakeKubeAPI) answerWith(key string, status int, body string) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	if f.statuses == nil {
-		f.statuses = map[string]int{}
-	}
-
-	f.answers[key], f.statuses[key] = body, status
+	f.api.AnswerWith(key, status, body)
 }
 
 type fakeKubeRequest struct {
@@ -59,50 +55,32 @@ type fakeKubeRequest struct {
 func newFakeKubeAPI(t *testing.T, answers map[string]string) *fakeKubeAPI {
 	t.Helper()
 
-	f := &fakeKubeAPI{answers: answers}
-	f.Server = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
+	api := kubetest.New(t, answers)
+	f := &fakeKubeAPI{Server: api.Server, api: api, answers: answers}
 
-		f.mu.Lock()
-		f.requests = append(f.requests, fakeKubeRequest{r.Method, r.URL.Path, r.Header.Get("Content-Type"), r.Header.Get("Authorization"), string(body), r.URL.RawQuery})
-		answer, ok := f.answers[r.Method+" "+r.URL.Path]
-		status := f.statuses[r.Method+" "+r.URL.Path]
-		answerFunc, answerQuery := f.answerFunc, f.answerQuery
-		f.mu.Unlock()
-
-		if answerQuery != nil && r.Method == http.MethodGet {
-			if a, found := answerQuery(r.URL.Path, r.URL.RawQuery); found {
-				answer, ok, status = a, true, 0
-			}
+	api.Mu = &f.mu
+	api.OnRequest = func(r kubetest.Request) {
+		f.requests = append(f.requests, fakeKubeRequest{r.Method, r.Path, r.ContentType, r.Auth, r.Body, r.Query})
+	}
+	api.AnswerFunc = func(method, path, body string) (string, bool) {
+		if f.answerFunc == nil {
+			return "", false
 		}
 
-		if answerFunc != nil {
-			if a, found := answerFunc(r.Method, r.URL.Path, string(body)); found {
-				answer, ok, status = a, true, 0
-			}
+		return f.answerFunc(method, path, body)
+	}
+	api.AnswerQuery = func(path, query string) (string, bool) {
+		if f.answerQuery == nil {
+			return "", false
 		}
+
+		return f.answerQuery(path, query)
+	}
+	api.BeforeAnswer = func(r *http.Request) {
 		if f.beforeAnswer != nil {
 			f.beforeAnswer(r)
 		}
-
-		if r.URL.Path == "/version" && !ok {
-			answer, ok = `{"gitVersion":"v1.34.0"}`, true
-		}
-
-		if !ok {
-			w.WriteHeader(http.StatusNotFound)
-			_, _ = io.WriteString(w, `{"kind":"Status","reason":"NotFound","message":"`+r.URL.Path+` not found"}`)
-
-			return
-		}
-
-		if status != 0 {
-			w.WriteHeader(status)
-		}
-
-		_, _ = io.WriteString(w, answer)
-	}))
-	t.Cleanup(f.Close)
+	}
 
 	return f
 }
