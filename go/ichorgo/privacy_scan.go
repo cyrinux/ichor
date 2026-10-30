@@ -146,6 +146,7 @@ type maskTerm struct {
 	match      string // lowercase
 	repl       string
 	suffixOnly bool // single-label domain: only after a dot ("host.lan"), or as the whole value
+	exactCase  bool // a Kubernetes name, always lowercase: "ETCD" is not a namespace "etcd"
 }
 
 // replaceTerms replaces whole-word occurrences of terms (sorted longest first) in a single
@@ -198,7 +199,7 @@ func matchTerm(s string, i int, terms []maskTerm) (maskTerm, bool) {
 			continue
 		}
 
-		if end < len(s) && isWordByte(s[end]) {
+		if t.exactCase && s[i:end] != t.match || end < len(s) && isWordByte(s[end]) {
 			continue
 		}
 
