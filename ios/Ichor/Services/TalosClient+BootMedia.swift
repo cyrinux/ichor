@@ -12,4 +12,15 @@ extension TalosClient {
             IchorgoNodeBootMedia(config, context, template, arch, secureBoot, $0)
         }
     }
+
+    /// The user data of a new node on a cloud host and the Talos cloud images to create it from:
+    /// Omni's join config on Omni (the other arguments are not used), else a new member's full
+    /// config made from `template`'s. Never cached: it carries a credential.
+    func nodeCloudUserData(template: String, role: String, hostname: String, installDisk: String) async throws
+        -> CloudUserData
+    {
+        try await Self.json { [config, context] in
+            IchorgoNodeCloudUserData(config, context, template, role, hostname, installDisk, "", $0)
+        }
+    }
 }

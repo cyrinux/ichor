@@ -145,7 +145,7 @@ fun JoinConfigStep(vm: JoinConfigViewModel, disks: List<String>) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPick: (NodeOverview) -> Unit) {
+internal fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPick: (NodeOverview) -> Unit) {
     if (templates.isEmpty()) {
         InfoNotice(stringResource(R.string.join_config_no_template))
         return
@@ -164,7 +164,7 @@ private fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPi
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConfigViewModel) {
+internal fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConfigViewModel, withAddress: Boolean = true) {
     MutedText(stringResource(R.string.join_config_role, roleLabel(form.role)))
     OutlinedTextField(
         value = form.hostname,
@@ -190,6 +190,11 @@ private fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConf
             }
         }
     }
+    if (withAddress) AddressField(form, vm)
+}
+
+@Composable
+private fun AddressField(form: JoinConfigForm, vm: JoinConfigViewModel) {
     OutlinedTextField(
         value = form.address,
         onValueChange = vm::address,

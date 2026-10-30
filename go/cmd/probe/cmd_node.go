@@ -78,6 +78,18 @@ var nodeCommands = []command{
 
 		return ichorgo.NodeBootMedia(e.cfg, e.context, template, arch, flag.Arg(3) == "secure-boot")
 	}},
+	{name: "node-user-data", args: "[TEMPLATE|-] [worker|controlplane|-] [HOSTNAME|-] [DISK|-]", run: func(e env) (out string, err error) {
+		// Read-only, but the output is a credential: Omni's join config (its join token), or a
+		// new member's full config with the cluster's secrets (recorded in the activity log).
+		args := make([]string, 4)
+		for i := range args {
+			if a := flag.Arg(i + 1); a != "-" {
+				args[i] = a
+			}
+		}
+
+		return ichorgo.NodeCloudUserData(e.cfg, e.context, args[0], args[1], args[2], args[3], "")
+	}},
 	{name: "upgrade-ext", args: "NODE IMAGE", run: func(e env) (out string, err error) {
 		// Read-only: the node's extensions against the Image Factory's list for IMAGE's version.
 		return ichorgo.UpgradeExtensionCheck(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
