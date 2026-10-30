@@ -26,6 +26,7 @@ import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePodPage
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeWorkloadList
+import name.levis.ichor.model.OnCallIncidents
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -48,6 +49,7 @@ class ContractTest {
         "argocd" to Row(ArgoStatus.serializer()) { assertTrue(it.installed && it.apps.isNotEmpty()) },
         "flux" to Row(FluxStatus.serializer()) { assertTrue(it.installed) },
         "alerts" to Row(AmAlerts.serializer()) { assertTrue(it.groups.isNotEmpty()) },
+        "oncall-incidents" to Row(OnCallIncidents.serializer()) { assertEquals("PDEMO01", it.incidentOf("a1c3e5f7a9b1c3d5")?.id) },
         "checkup" to Row(CheckupReport.serializer()),
         "inventory" to Row(Inventory.serializer()),
         "kubespan" to Row(KubeSpanOverview.serializer()) { assertTrue(it.nodes.isNotEmpty()) },
