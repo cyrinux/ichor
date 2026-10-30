@@ -149,7 +149,7 @@ extension AppModel {
         settings.storeVpnOnly(restoredVpnOnly)
         settings.storeAuditEventClusters(restoredAuditEvents)
         storeKubeAccess(links)
-        storeClusterRepos(repos)
+        git.store(repos: repos)
     }
 
     /// Removes the cluster `name` (a context and its credentials) from the store it is in,
@@ -385,8 +385,7 @@ extension AppModel {
         }
         // Per cluster: a context added to a recording cluster records too; removed ones go.
         settings.storeAuditEventClusters(wholeClusters(settings.auditEventClusters, contexts: newSummary.contexts))
-        storeClusterRepos(ClusterRepoStore.keep(clusterRepos, fingerprints: newSummary.contexts.map(\.fingerprint)))
-        storeProposals(ProposalsStore.keep(storedProposals, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        git.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         // Sign-ins and Kubernetes access links go with their clusters.
         let kubeFingerprints = newKubeSummary?.contexts.map(\.fingerprint) ?? []
         storeKubeAccess(

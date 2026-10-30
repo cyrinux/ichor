@@ -48,6 +48,7 @@ struct ProposeSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @Environment(GitHostStore.self) private var hosts
     @Environment(StagedEdits.self) private var staged
     @State private var title = ""
@@ -229,11 +230,12 @@ struct ProposeSheet: View {
             result = opened
             let paths = files.isEmpty ? path : files.map(\.path).joined(separator: ", ")
             // Kept on the phone: the app page tells when it is merged and deployed.
-            model.rememberProposal(
+            git.remember(
                 GitProposalRecord(
                     tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name,
                     repoURL: source.repoURL, path: paths, title: title, url: opened.url,
-                    number: opened.number, branch: opened.branch, commit: opened.commit, forge: opened.forge))
+                    number: opened.number, branch: opened.branch, commit: opened.commit, forge: opened.forge),
+                for: model.activeSummary)
             // Proposed: no longer waiting with the staged files.
             if app.isRepository {
                 let key = StagedKey(source: source)

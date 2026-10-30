@@ -86,6 +86,7 @@ struct ClusterBar: View {
 /// The imported clusters: pick the one on screen, rename it, give it a color, remove it, add one.
 struct ClustersView: View {
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @Environment(SettingsStore.self) private var settings
     @State private var removing: ContextSummary?
     @State private var renaming: ContextSummary?
@@ -161,7 +162,7 @@ struct ClustersView: View {
         .kubeServerAlert(for: $editingServer)
         .sheet(item: $editingRepo) { context in
             ClusterRepoSheet(
-                context: context, label: model.labels.of(context), saved: model.clusterRepos[context.fingerprint])
+                context: context, label: model.labels.of(context), saved: git.repos[context.fingerprint])
         }
         .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
         .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }

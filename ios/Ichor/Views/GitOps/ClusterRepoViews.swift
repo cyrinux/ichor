@@ -7,9 +7,10 @@ import IchorCore
 struct ClusterRepoToolLink<Label: View>: View {
     @ViewBuilder let label: () -> Label
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
 
     var body: some View {
-        if let repo = model.activeClusterRepo {
+        if let repo = git.repo(for: model.activeSummary) {
             NavigationLink {
                 ClusterRepoRootView(repo: repo)
             } label: {
@@ -75,6 +76,7 @@ struct ClusterRepoSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @Environment(GitHostStore.self) private var hosts
     @State private var url: String
     @State private var branch: String
@@ -156,13 +158,15 @@ struct ClusterRepoSheet: View {
                     Text("Edits are never committed to the branch: each one opens a pull or merge request.")
                 }
                 // The active cluster only: a proposal is recorded in the active cluster's audit log.
-                if model.activeSummary?.fingerprint == context.fingerprint, let active = model.activeClusterRepo {
+                if model.activeSummary?.fingerprint == context.fingerprint,
+                    let active = git.repo(for: model.activeSummary)
+                {
                     UpdateBotSection(repo: active)
                 }
                 if saved != nil {
                     Section {
                         Button("Delete", role: .destructive) {
-                            model.setClusterRepo(nil, for: context.fingerprint)
+                            git.setRepo(nil, for: context.fingerprint)
                             dismiss()
                         }
                     }
@@ -174,7 +178,7 @@ struct ClusterRepoSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        model.setClusterRepo(repo, for: context.fingerprint)
+                        git.setRepo(repo, for: context.fingerprint)
                         dismiss()
                     }
                     .disabled(repo == nil)

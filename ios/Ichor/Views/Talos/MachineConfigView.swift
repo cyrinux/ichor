@@ -31,6 +31,7 @@ struct MachineConfigView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @Environment(LockStore.self) private var lockStore
     @AppStorage("machineConfig.tab") private var tab = ConfigTab.pretty
     @State private var state: LoadState<String> = .loading
@@ -93,7 +94,7 @@ struct MachineConfigView: View {
             ConfigTryView(node: node, hostname: hostname, request: nil) { _ in }
         }
         .sheet(isPresented: $comparingGit) {
-            if let repo = model.activeClusterRepo {
+            if let repo = git.repo(for: model.activeSummary) {
                 GitCompareSheet(
                     repo: repo, node: node, hostname: hostname, role: configRole(loadedYAML ?? ""), live: loadedYAML
                 ) { git in
@@ -244,7 +245,7 @@ struct MachineConfigView: View {
                 }
                 .disabled(loadedYAML == nil)
                 Button {
-                    if model.activeClusterRepo != nil {
+                    if git.repo(for: model.activeSummary) != nil {
                         comparingGit = true
                     } else {
                         message = String(

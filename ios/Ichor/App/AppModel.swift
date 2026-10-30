@@ -13,6 +13,8 @@ final class AppModel {
     let lockStore: LockStore
     /// The nodes' features and reachability; views read them from the environment, likewise.
     let nodes: NodesStore
+    /// Each cluster's saved repository and pull requests; views read them from the environment, likewise.
+    let git: ClusterGitStore
 
     // Internal, not private: AppModel+Clusters.swift uses it.
     enum Keys {
@@ -99,16 +101,6 @@ final class AppModel {
     /// fingerprint: the card stays away until a newer one is out. Only on this device.
     private(set) var skippedTalosUpdates: [String: String]
 
-    /// The Git repository saved for each cluster (its Talos and Kubernetes config), by context
-    /// fingerprint; no token in it. Only on this device, and in backups.
-    // Internal, not private(set): AppModel+Settings.swift sets it.
-    var clusterRepos: [String: ClusterRepo]
-
-    /// The pull requests opened from the phone, per cluster (context fingerprint), newest first;
-    /// no token in them. Only on this device.
-    // Internal, not private(set): AppModel+Settings.swift sets it.
-    var proposals: [String: [GitProposalRecord]]
-
     /// Bumped when the screenshot mode changes, so screens reload instead of showing old data.
     // Internal, not private(set): AppModel+Clusters.swift and SettingsStore.swift set it.
     var dataGeneration = 0
@@ -121,10 +113,11 @@ final class AppModel {
     // Internal, not private(set): AppModel+PublicIPs.swift sets it.
     var detectingPublicIPs: Set<String> = []
 
-    init(settings: SettingsStore, lock: LockStore, nodes: NodesStore) {
+    init(settings: SettingsStore, lock: LockStore, nodes: NodesStore, git: ClusterGitStore) {
         self.settings = settings
         lockStore = lock
         self.nodes = nodes
+        self.git = git
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
@@ -132,16 +125,10 @@ final class AppModel {
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
         skippedTalosUpdates =
             UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
-        clusterRepos = ClusterRepoStore.decode(UserDefaults.standard.data(forKey: ClusterRepoStore.key))
-        proposals = ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
         settings.model = self
         lockStore.model = self
         nodes.model = self
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
-        // The background monitor saved the proposals' states (merged, closed).
-        NotificationCenter.default.addObserver(forName: .proposalsChanged, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.reloadProposals() }
-        }
     }
 
     /// Nil while the cluster on screen waits for its VPN (see vpnHeldBack): its calls could only time out.

@@ -52,8 +52,9 @@ an issue first so we can agree on the approach before you spend time on it.
 - On iOS, preferences live in `SettingsStore` (`ios/Ichor/App/SettingsStore.swift`, in the
   environment next to the model), the app lock and its security keys in `LockStore`
   (`ios/Ichor/App/LockStore.swift`, likewise), the nodes' features and reachability in `NodesStore`
-  (`ios/Ichor/App/NodesStore.swift`, likewise); cluster state lives in `AppModel`, which is being
-  split further.
+  (`ios/Ichor/App/NodesStore.swift`, likewise), each cluster's repository and proposals in
+  `ClusterGitStore` (`ios/Ichor/App/ClusterGitStore.swift`, likewise); `AppModel` is the cluster
+  store: configs, selection, per-cluster device settings.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app
   (GPL, AGPL, LGPL for statically linked code); ask in the issue first if unsure.

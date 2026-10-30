@@ -8,6 +8,7 @@ import IchorCore
 /// Android's UpdatesScreen.kt.
 struct UpdatesView: View {
     @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
     @Environment(GitHostStore.self) private var hosts
     @State private var session = UpdatesSession.shared
     @State private var state: LoadState<ClusterUpdates> = .loading
@@ -205,7 +206,8 @@ struct UpdatesView: View {
         if session.results[key] == nil { state = .loading }
         let key = self.key
         do {
-            let updates = try await client.clusterUpdates(repo: model.activeClusterRepo, hosts: hosts, demo: demo)
+            let updates = try await client.clusterUpdates(
+                repo: git.repo(for: model.activeSummary), hosts: hosts, demo: demo)
             session.store(updates, for: key)
             state = .loaded(updates, at: Date())
         } catch {
@@ -222,7 +224,7 @@ struct UpdatesView: View {
         defer { resolving = nil }
         do {
             let target = try await client.updateEditTarget(
-                row, version: version, repo: model.activeClusterRepo, hosts: hosts, demo: demo)
+                row, version: version, repo: git.repo(for: model.activeSummary), hosts: hosts, demo: demo)
             guard let app = target.app?.ref, let source = target.source, !target.path.isEmpty else {
                 notes[row.id] = target.note
                 return
@@ -264,7 +266,7 @@ extension UpdatesView {
         defer { planning = false }
         do {
             let plan = try await client.updateProposalPlan(
-                selection, repo: model.activeClusterRepo, hosts: hosts, demo: demo)
+                selection, repo: git.repo(for: model.activeSummary), hosts: hosts, demo: demo)
             for skip in plan.skipped where selection.indices.contains(skip.index) {
                 notes[selection[skip.index].row.id] = skip.reason
             }
