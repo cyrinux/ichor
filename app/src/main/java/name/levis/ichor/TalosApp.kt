@@ -80,6 +80,7 @@ import name.levis.ichor.ui.apps.AppIconLoader
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.quicksettings.ClusterTileService
 import name.levis.ichor.monitor.AlertActionToken
+import name.levis.ichor.monitor.AlertMutes
 import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.wholeClusters
@@ -108,6 +109,7 @@ import name.levis.ichor.data.ClusterUpgradeManager
 import name.levis.ichor.data.ConfigTryManager
 import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.ClusterNames
+import name.levis.ichor.data.AlertRulesRepository
 import name.levis.ichor.data.FleetRepository
 import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
@@ -449,6 +451,12 @@ class TalosApp : Application() {
     /** The alerts snoozed from their notification. */
     val alertSnoozes by lazy { AlertSnoozes(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
 
+    /** The alerts the rules kept quiet, for the history line that says why. */
+    val alertMutes by lazy { AlertMutes(getSharedPreferences(AlertMutes.FILE, Context.MODE_PRIVATE)) }
+
+    /** Decides what the alert rules do with a run's alerts (in the Go core). */
+    val alertRulesRepository by lazy { AlertRulesRepository() }
+
     /** The secret an alert's in-app button carries, so no other app can ask for its confirmation. */
     val alertActionToken by lazy { AlertActionToken(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
 
@@ -643,6 +651,8 @@ class TalosApp : Application() {
                     widgetClusters.sync(it.summary)
                     // A removed cluster's snoozes go with it (its snapshot at the next check).
                     alertSnoozes.retain(it.summary.contexts.map { c -> c.fingerprint })
+                    alertMutes.retain(it.summary.contexts.map { c -> c.fingerprint })
+                    monitorStore.retainAlertRules(it.summary.contexts.map { c -> c.fingerprint })
                     kubeServers.sync(it.summary)
                     kubeAccess.sync(it.summary)
                     // Omni sign-ins are kept under their own key, not a fingerprint.

@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
+import name.levis.ichor.model.AlertRules
+import name.levis.ichor.model.AlertRulesJson
 
 /**
  * Background monitoring preferences plus the last snapshot of each watched cluster (shared with
@@ -184,6 +186,20 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _unreachableRuns.value = kept
     }
 
+    private val _alertRules = MutableStateFlow(decodeAlertRules(prefs.getString(KEY_ALERT_RULES, null)))
+
+    /** Quiet hours, minimum severity and digest, by default and per cluster, read at post time (see [AlertRules]). */
+    val alertRules: StateFlow<AlertRules> = _alertRules.asStateFlow()
+
+    fun setAlertRules(rules: AlertRules) {
+        if (rules == _alertRules.value) return
+        prefs.edit().putString(KEY_ALERT_RULES, AlertRulesJson.encodeToString(AlertRules.serializer(), rules)).apply()
+        _alertRules.value = rules
+    }
+
+    /** Drops the overrides of the clusters not among [fingerprints]: a removed cluster's go with it. */
+    fun retainAlertRules(fingerprints: Collection<String>) = setAlertRules(_alertRules.value.retain(fingerprints))
+
     private val _state = MutableStateFlow(readState())
 
     /** What the last checks saw of each cluster, observable: the widget redraws from it while its session is alive. */
@@ -233,6 +249,7 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_SENSORS = "sensors_watched"
         private const val KEY_SENSOR_THRESHOLD = "sensor_threshold"
         private const val KEY_SIGN_IN_NOTIFIED = "sign_in_notified"
+        private const val KEY_ALERT_RULES = "alert_rules"
 
         /** Automatic, or a °C in [SENSOR_THRESHOLD_RANGE]. */
         fun sensorThresholdOf(value: Int): Int = if (value == SENSOR_THRESHOLD_AUTO) value else value.coerceIn(SENSOR_THRESHOLD_RANGE)
@@ -265,3 +282,7 @@ internal fun decodeMonitorState(json: String): MonitorState? {
     if (legacy.fingerprint.isBlank()) return MonitorState.EMPTY
     return MonitorState(clusters = mapOf(legacy.fingerprint to legacy), active = legacy.fingerprint)
 }
+
+/** The stored rules; none when absent or unreadable (an older or broken value notifies as before). */
+internal fun decodeAlertRules(json: String?): AlertRules =
+    json?.let { runCatching { AlertRulesJson.decodeFromString(AlertRules.serializer(), it) }.getOrNull() } ?: AlertRules.NONE

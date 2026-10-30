@@ -6204,4 +6204,47 @@
     <string name="fleet_empty">Кластерів ще немає.</string>
     <string name="fleet_demo_hint">Вигадані кластери демо: дотик повертає до демо.</string>
     <string name="fleet_one_cluster">Список зростає з кожним доданим кластером.</string>
+    <string name="alert_rules_title">Правила</string>
+    <string name="alert_rules_hint">Застосовуються під час кожної перевірки: сповіщення, що виникло в тихі години, не надсилається повторно після їх закінчення.</string>
+    <string name="alert_rules_quiet">Тихі години</string>
+    <string name="alert_rules_quiet_desc">Без сповіщень у цей час</string>
+    <string name="alert_rules_from">З %1$s</string>
+    <string name="alert_rules_until">До %1$s</string>
+    <string name="alert_rules_zone">Часовий пояс: %1$s</string>
+    <string name="alert_rules_zone_phone">Як на телефоні (%1$s)</string>
+    <string name="alert_rules_zone_title">Часовий пояс</string>
+    <string name="alert_rules_zone_search">Пошук</string>
+    <string name="alert_rules_pick_start">Початок тихих годин</string>
+    <string name="alert_rules_pick_end">Кінець тихих годин</string>
+    <string name="alert_rules_except_critical">Крім критичних</string>
+    <string name="alert_rules_except_critical_desc">Недоступний вузол, тривога etcd, недоступний кластер та інші критичні сповіщення все одно надходять</string>
+    <string name="alert_rules_min_severity">Мінімальна важливість</string>
+    <string name="alert_rules_severity_all">Усі</string>
+    <string name="alert_rules_severity_warning">Попередження</string>
+    <string name="alert_rules_severity_critical">Критичні</string>
+    <string name="alert_rules_digest">Зведення</string>
+    <string name="alert_rules_digest_desc">Одне сповіщення на кластер і перевірку з лічильниками замість одного на кожне сповіщення</string>
+    <string name="alert_rules_per_cluster">Для кластерів</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="one">Для кластерів: %1$d кластер</item>
+        <item quantity="few">Для кластерів: %1$d кластери</item>
+        <item quantity="many">Для кластерів: %1$d кластерів</item>
+        <item quantity="other">Для кластерів: %1$d кластера</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">Правила для кластерів</string>
+    <string name="alert_rules_no_clusters">Кластерів ще немає.</string>
+    <string name="alert_rules_as_default">За замовчуванням</string>
+    <string name="alert_rules_own">Власні правила</string>
+    <string name="alert_rules_off">Вимк.</string>
+    <string name="alert_rules_on">Увімк.</string>
+    <string name="alert_rules_custom">Власні</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="one">%1$d знахідка в %2$s</item>
+        <item quantity="few">%1$d знахідки в %2$s</item>
+        <item quantity="many">%1$d знахідок в %2$s</item>
+        <item quantity="other">%1$d знахідки в %2$s</item>
+    </plurals>
+    <string name="alert_rules_digest_text">Критичних: %1$d, попереджень: %2$d</string>
+    <string name="alert_rules_muted_quiet">без звуку · тихі години до %1$s</string>
+    <string name="alert_rules_muted_severity">без звуку · нижче мінімальної важливості кластера</string>
 </resources>

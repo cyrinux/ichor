@@ -123,7 +123,8 @@ type resolvedRule struct {
 // ("severity"; a recovery, problem false, always passes the floor); inside the quiet hours an
 // alert is muted ("quiet", until = the window's end in unix ms) unless the window lets
 // critical alerts through and the alert is critical (a recovery of a critical alert too);
-// then a digest cluster's alert goes to its digest ("digest"). A missing severity is
+// then a digest cluster's alert goes to its digest ("digest"), except the recovery of a
+// critical alert, which is posted on its own. A missing severity is
 // "warning", or "critical" for the unreachable, node and etcd kinds; an unknown one is a
 // warning. The answer lists one decision per alert in order, and one digest per cluster that
 // has digest decisions, in the order of their first alert, with at most five keys.
@@ -340,7 +341,8 @@ func decideAlert(rule resolvedRule, a alertIn, severity string, now time.Time) a
 		}
 	}
 
-	if d.Action == alertNotify && rule.digest {
+	// The recovery of a critical alert is not folded into the digest: it says the page is over.
+	if d.Action == alertNotify && rule.digest && (a.Problem || severity != alertCritical) {
 		d.Action, d.Reason = alertDigest, alertReasonDigest
 	}
 

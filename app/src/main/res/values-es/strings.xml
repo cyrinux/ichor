@@ -5955,4 +5955,43 @@
     <string name="fleet_empty">Aún no hay clústeres.</string>
     <string name="fleet_demo_hint">Los clústeres inventados de la demo: un toque vuelve a la demo.</string>
     <string name="fleet_one_cluster">La lista crece con cada clúster que añadas.</string>
+    <string name="alert_rules_title">Reglas</string>
+    <string name="alert_rules_hint">Se aplican en cada comprobación: una alerta surgida en las horas de silencio no se vuelve a enviar cuando terminan.</string>
+    <string name="alert_rules_quiet">Horas de silencio</string>
+    <string name="alert_rules_quiet_desc">Ninguna notificación entre estas horas</string>
+    <string name="alert_rules_from">Desde %1$s</string>
+    <string name="alert_rules_until">Hasta %1$s</string>
+    <string name="alert_rules_zone">Zona horaria: %1$s</string>
+    <string name="alert_rules_zone_phone">La del teléfono (%1$s)</string>
+    <string name="alert_rules_zone_title">Zona horaria</string>
+    <string name="alert_rules_zone_search">Buscar</string>
+    <string name="alert_rules_pick_start">Inicio de las horas de silencio</string>
+    <string name="alert_rules_pick_end">Fin de las horas de silencio</string>
+    <string name="alert_rules_except_critical">Salvo críticas</string>
+    <string name="alert_rules_except_critical_desc">Un nodo caído, una alarma de etcd, un clúster inaccesible y otras alertas críticas siguen notificando</string>
+    <string name="alert_rules_min_severity">Gravedad mínima</string>
+    <string name="alert_rules_severity_all">Todas</string>
+    <string name="alert_rules_severity_warning">Advertencias</string>
+    <string name="alert_rules_severity_critical">Críticas</string>
+    <string name="alert_rules_digest">Resumen</string>
+    <string name="alert_rules_digest_desc">Una notificación por clúster y comprobación con sus recuentos, en lugar de una por alerta</string>
+    <string name="alert_rules_per_cluster">Por clúster</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="one">Por clúster: %1$d clúster</item>
+        <item quantity="other">Por clúster: %1$d clústeres</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">Reglas por clúster</string>
+    <string name="alert_rules_no_clusters">Aún no hay ningún clúster guardado.</string>
+    <string name="alert_rules_as_default">Como el predeterminado</string>
+    <string name="alert_rules_own">Reglas propias</string>
+    <string name="alert_rules_off">Desactivado</string>
+    <string name="alert_rules_on">Activado</string>
+    <string name="alert_rules_custom">Personalizado</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="one">%1$d hallazgo en %2$s</item>
+        <item quantity="other">%1$d hallazgos en %2$s</item>
+    </plurals>
+    <string name="alert_rules_digest_text">Críticas: %1$d, advertencias: %2$d</string>
+    <string name="alert_rules_muted_quiet">silenciada · horas de silencio hasta las %1$s</string>
+    <string name="alert_rules_muted_severity">silenciada · por debajo de la gravedad mínima del clúster</string>
 </resources>

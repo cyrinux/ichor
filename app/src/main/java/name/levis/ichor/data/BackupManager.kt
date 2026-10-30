@@ -12,6 +12,7 @@ import name.levis.ichor.model.BackupSeal
 import name.levis.ichor.model.BackupSecrets
 import name.levis.ichor.model.BackupSettings
 import name.levis.ichor.model.backupAi
+import name.levis.ichor.model.backupAlertRules
 import name.levis.ichor.model.backupClusters
 import name.levis.ichor.model.backupGitHosts
 import name.levis.ichor.model.backupKubeAuth
@@ -106,6 +107,7 @@ class BackupManager(
                     appLockMode = lockMode(),
                     storageWarnPercent = monitor.storageWarnPercent.value,
                     storageCriticalPercent = monitor.storageCriticalPercent.value,
+                    alertRules = backupAlertRules(monitor.alertRules.value, fingerprints),
                 ),
                 clusters = backupClusters(
                     fingerprints,
@@ -207,6 +209,7 @@ class BackupManager(
         // Warn first: it moves critical above it, then critical lands where the backup had it.
         settings.storageWarnPercent?.let(monitor::setStorageWarnPercent)
         settings.storageCriticalPercent?.let(monitor::setStorageCriticalPercent)
+        settings.alertRules?.let { monitor.setAlertRules(it.retain(fingerprints)) }
         // settings.appLockMode is never applied: the lock's secret is device-bound. With a real
         // cluster restored and no lock here, the app shows the lock onboarding (lockRequired).
         restoreExtras(payload, fingerprints)

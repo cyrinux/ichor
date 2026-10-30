@@ -5821,4 +5821,41 @@
     <string name="fleet_empty">还没有集群。</string>
     <string name="fleet_demo_hint">演示中的虚构集群：点按会回到演示。</string>
     <string name="fleet_one_cluster">每添加一个集群，列表就会增加一项。</string>
+    <string name="alert_rules_title">规则</string>
+    <string name="alert_rules_hint">每次检查时应用：免打扰时段内出现的告警在时段结束后不会再次发送。</string>
+    <string name="alert_rules_quiet">免打扰时段</string>
+    <string name="alert_rules_quiet_desc">这段时间内不发送通知</string>
+    <string name="alert_rules_from">从 %1$s</string>
+    <string name="alert_rules_until">至 %1$s</string>
+    <string name="alert_rules_zone">时区：%1$s</string>
+    <string name="alert_rules_zone_phone">手机时区（%1$s）</string>
+    <string name="alert_rules_zone_title">时区</string>
+    <string name="alert_rules_zone_search">搜索</string>
+    <string name="alert_rules_pick_start">免打扰开始时间</string>
+    <string name="alert_rules_pick_end">免打扰结束时间</string>
+    <string name="alert_rules_except_critical">严重告警除外</string>
+    <string name="alert_rules_except_critical_desc">节点宕机、etcd 告警、集群无法访问及其他严重告警仍会通知</string>
+    <string name="alert_rules_min_severity">最低严重级别</string>
+    <string name="alert_rules_severity_all">全部</string>
+    <string name="alert_rules_severity_warning">警告</string>
+    <string name="alert_rules_severity_critical">严重</string>
+    <string name="alert_rules_digest">摘要</string>
+    <string name="alert_rules_digest_desc">每个集群每次检查发送一条带计数的通知，而不是每条告警一条</string>
+    <string name="alert_rules_per_cluster">按集群</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="other">按集群：%1$d 个集群</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">按集群设置规则</string>
+    <string name="alert_rules_no_clusters">尚未保存任何集群。</string>
+    <string name="alert_rules_as_default">与默认相同</string>
+    <string name="alert_rules_own">自定义规则</string>
+    <string name="alert_rules_off">关</string>
+    <string name="alert_rules_on">开</string>
+    <string name="alert_rules_custom">自定义</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="other">%2$s 上有 %1$d 项发现</item>
+    </plurals>
+    <string name="alert_rules_digest_text">严重：%1$d，警告：%2$d</string>
+    <string name="alert_rules_muted_quiet">已静音 · 免打扰至 %1$s</string>
+    <string name="alert_rules_muted_severity">已静音 · 低于该集群的最低严重级别</string>
 </resources>

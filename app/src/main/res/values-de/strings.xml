@@ -5946,4 +5946,43 @@
     <string name="fleet_empty">Noch kein Cluster.</string>
     <string name="fleet_demo_hint">Die erfundenen Cluster der Demo: Ein Tippen führt zurück zur Demo.</string>
     <string name="fleet_one_cluster">Die Liste wächst mit jedem Cluster, den du hinzufügst.</string>
+    <string name="alert_rules_title">Regeln</string>
+    <string name="alert_rules_hint">Bei jeder Prüfung angewendet: Eine Warnung aus der Ruhezeit wird nach deren Ende nicht erneut gesendet.</string>
+    <string name="alert_rules_quiet">Ruhezeit</string>
+    <string name="alert_rules_quiet_desc">Keine Benachrichtigung zwischen diesen Uhrzeiten</string>
+    <string name="alert_rules_from">Von %1$s</string>
+    <string name="alert_rules_until">Bis %1$s</string>
+    <string name="alert_rules_zone">Zeitzone: %1$s</string>
+    <string name="alert_rules_zone_phone">Die des Telefons (%1$s)</string>
+    <string name="alert_rules_zone_title">Zeitzone</string>
+    <string name="alert_rules_zone_search">Suchen</string>
+    <string name="alert_rules_pick_start">Beginn der Ruhezeit</string>
+    <string name="alert_rules_pick_end">Ende der Ruhezeit</string>
+    <string name="alert_rules_except_critical">Außer kritische</string>
+    <string name="alert_rules_except_critical_desc">Ein ausgefallener Knoten, ein etcd-Alarm, ein nicht erreichbarer Cluster und andere kritische Warnungen benachrichtigen trotzdem</string>
+    <string name="alert_rules_min_severity">Mindestschweregrad</string>
+    <string name="alert_rules_severity_all">Alle</string>
+    <string name="alert_rules_severity_warning">Warnungen</string>
+    <string name="alert_rules_severity_critical">Kritisch</string>
+    <string name="alert_rules_digest">Zusammenfassung</string>
+    <string name="alert_rules_digest_desc">Eine Benachrichtigung pro Cluster und Prüfung mit ihren Zahlen statt einer pro Warnung</string>
+    <string name="alert_rules_per_cluster">Pro Cluster</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="one">Pro Cluster: %1$d Cluster</item>
+        <item quantity="other">Pro Cluster: %1$d Cluster</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">Regeln pro Cluster</string>
+    <string name="alert_rules_no_clusters">Noch kein Cluster gespeichert.</string>
+    <string name="alert_rules_as_default">Wie Standard</string>
+    <string name="alert_rules_own">Eigene Regeln</string>
+    <string name="alert_rules_off">Aus</string>
+    <string name="alert_rules_on">An</string>
+    <string name="alert_rules_custom">Eigene</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="one">%1$d Befund auf %2$s</item>
+        <item quantity="other">%1$d Befunde auf %2$s</item>
+    </plurals>
+    <string name="alert_rules_digest_text">Kritisch: %1$d, Warnungen: %2$d</string>
+    <string name="alert_rules_muted_quiet">stumm · Ruhezeit bis %1$s</string>
+    <string name="alert_rules_muted_severity">stumm · unter dem Mindestschweregrad des Clusters</string>
 </resources>

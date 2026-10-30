@@ -5821,4 +5821,41 @@
     <string name="fleet_empty">クラスターはまだありません。</string>
     <string name="fleet_demo_hint">デモの架空のクラスター: タップするとデモに戻ります。</string>
     <string name="fleet_one_cluster">クラスターを追加するたびに一覧が増えます。</string>
+    <string name="alert_rules_title">ルール</string>
+    <string name="alert_rules_hint">チェックのたびに適用されます。おやすみ時間中に発生したアラートは、終了後に改めて通知されません。</string>
+    <string name="alert_rules_quiet">おやすみ時間</string>
+    <string name="alert_rules_quiet_desc">この時間帯は通知しません</string>
+    <string name="alert_rules_from">開始 %1$s</string>
+    <string name="alert_rules_until">終了 %1$s</string>
+    <string name="alert_rules_zone">タイムゾーン: %1$s</string>
+    <string name="alert_rules_zone_phone">端末の設定（%1$s）</string>
+    <string name="alert_rules_zone_title">タイムゾーン</string>
+    <string name="alert_rules_zone_search">検索</string>
+    <string name="alert_rules_pick_start">おやすみ時間の開始</string>
+    <string name="alert_rules_pick_end">おやすみ時間の終了</string>
+    <string name="alert_rules_except_critical">重大なものを除く</string>
+    <string name="alert_rules_except_critical_desc">ノードのダウン、etcd アラーム、到達不能なクラスタなどの重大なアラートは引き続き通知します</string>
+    <string name="alert_rules_min_severity">最低重要度</string>
+    <string name="alert_rules_severity_all">すべて</string>
+    <string name="alert_rules_severity_warning">警告</string>
+    <string name="alert_rules_severity_critical">重大</string>
+    <string name="alert_rules_digest">ダイジェスト</string>
+    <string name="alert_rules_digest_desc">アラートごとではなく、クラスタとチェックごとに件数をまとめて 1 件通知します</string>
+    <string name="alert_rules_per_cluster">クラスタごと</string>
+    <plurals name="alert_rules_per_cluster_count">
+        <item quantity="other">クラスタごと: %1$d 件のクラスタ</item>
+    </plurals>
+    <string name="alert_rules_cluster_title">クラスタごとのルール</string>
+    <string name="alert_rules_no_clusters">保存されたクラスタはまだありません。</string>
+    <string name="alert_rules_as_default">デフォルトどおり</string>
+    <string name="alert_rules_own">独自のルール</string>
+    <string name="alert_rules_off">オフ</string>
+    <string name="alert_rules_on">オン</string>
+    <string name="alert_rules_custom">カスタム</string>
+    <plurals name="alert_rules_digest_title">
+        <item quantity="other">%2$s で %1$d 件の検出</item>
+    </plurals>
+    <string name="alert_rules_digest_text">重大: %1$d、警告: %2$d</string>
+    <string name="alert_rules_muted_quiet">ミュート · おやすみ時間（%1$s まで）</string>
+    <string name="alert_rules_muted_severity">ミュート · クラスタの最低重要度未満</string>
 </resources>
