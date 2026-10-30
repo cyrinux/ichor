@@ -302,6 +302,8 @@ extension AppModel {
         storeVpnOnly([])
         storeMonitorUnwatched([])
         AlertSnoozeStore.keep(clusters: [])
+        AlertRulesStore.keep(fingerprints: [])
+        AlertMuteStore.keep(clusters: [])
         storeKubeAccess([:])
         publicIPReports = [:]
         SharedStore.clear()  // the widget stops showing the old clusters
@@ -399,6 +401,8 @@ extension AppModel {
         SharedStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
         HistoryStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
         AlertSnoozeStore.keep(clusters: newSummary.contexts.map(\.fingerprint))
+        AlertRulesStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
+        AlertMuteStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
         let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }
         if kept.count != publicIPReports.count {
             publicIPReports = kept

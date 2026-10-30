@@ -38,7 +38,7 @@ enum AppBackup {
             talosconfig: model.yaml ?? "",
             kubeconfig: model.kubeYAML,
             activeContextIndex: summary.contexts.firstIndex { $0.name == model.activeContext },
-            settings: backupSettings(model: model),
+            settings: backupSettings(model: model, fingerprints: fingerprints),
             clusters: backupClusters(
                 fingerprints: fingerprints,
                 names: model.clusterNames,
@@ -133,6 +133,10 @@ enum AppBackup {
             await ai.restore(payload.ai, keys: payload.secrets?.aiKeys ?? [:])
         }
         restoreStorageThresholds(settings)
+        // The alert rules, overrides only of the clusters restored; an older backup has none.
+        if let rules = settings?.alertRules {
+            AlertRulesStore.save(rules.keeping(model.summary?.contexts.map(\.fingerprint) ?? []))
+        }
         // settings.appLockMode is not applied: a lock's secret is bound to the device it was set
         // on. With a real cluster restored and no lock here, RootView shows LockOnboardingView
         // by itself (the lock is required), so the lock is offered again, never enabled.
@@ -189,7 +193,7 @@ enum AppBackup {
         return kept.isEmpty ? nil : kept
     }
 
-    private static func backupSettings(model: AppModel) -> BackupSettings {
+    private static func backupSettings(model: AppModel, fingerprints: [String]) -> BackupSettings {
         var settings = BackupSettings(
             themeMode: model.theme.rawValue,
             privacyMask: model.privacyMask,
@@ -203,6 +207,7 @@ enum AppBackup {
         let thresholds = BackgroundMonitor.storageThresholds
         settings.storageWarnPercent = thresholds.warn
         settings.storageCriticalPercent = thresholds.crit
+        settings.alertRules = AlertRulesStore.load().forBackup(fingerprints: fingerprints)
         return settings
     }
 

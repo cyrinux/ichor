@@ -219,6 +219,8 @@ enum BackgroundMonitor {
         let clusterKeys = summary.contexts.map(monitorClusterKey)
         AlertSnoozeStore.keep(clusters: summary.contexts.map(\.fingerprint))
         HistoryStore.keep(clusters: clusterKeys)
+        AlertMuteStore.keep(clusters: clusterKeys)
+        AlertRulesStore.keep(fingerprints: summary.contexts.map(\.fingerprint))
         var snapshots = keepingClusters(
             SharedStore.snapshots(activeCluster: summary.context(named: activeName).map(monitorClusterKey)),
             clusters: clusterKeys)
@@ -288,9 +290,16 @@ enum BackgroundMonitor {
         // so turning them on does not tell old merges.
         let proposals = await checkProposals(contexts: contexts.filter { !$0.needsEndpoint }, now: now)
         guard alertsEnabled else { return }
-        await post(outcomes, now: now)
-        await postProposals(proposals, now: now)
-        if let signIns { await postSignIns(signIns, contexts: contexts, now: now) }
+        // One rules decision over every cluster's alerts, pull requests and sign-ins (postAll).
+        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
+        let labels = ClusterLabels(names: names, masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled))
+        let snoozes = AlertSnoozeStore.current(now: now)
+        var posts = await pending(outcomes, labels: labels, snoozes: snoozes, now: now)
+        posts += pendingProposals(proposals, labels: labels, snoozes: snoozes, now: now)
+        if let signIns {
+            posts += pendingSignIns(signIns, contexts: contexts, labels: labels, snoozes: snoozes, now: now)
+        }
+        await postAll(posts, now: now)
     }
 
     /// One record per cluster read (or not answering) in each one's sealed ring. A track not read

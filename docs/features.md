@@ -322,7 +322,7 @@ Part of the [Ichor documentation](../README.md#documentation).
 - **Background:** alerts, a home-screen widget and a fleet screen with every cluster's last check, worst first. Alerts are off until you turn them on: after the first real cluster is added, the home offers them once and asks for the notification permission there. The findings of the plugins the cluster runs
   (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify
   like the data services' problems, in the app's language, and clear when they go away
-  ([docs/plugins.md](plugins.md#findings)). Alert rules (Settings → Monitoring → Rules) set
+  ([docs/plugins.md](plugins.md#findings)). Alert rules (Settings → Monitoring → Rules on Android, Settings → Alerts → Rules on iOS) set
   quiet hours (a window in the phone's zone or another, critical alerts let through if you
   want), a minimum severity (all, warnings, critical) and a digest (one notification per
   cluster and check, "3 findings on staging-eu", instead of one per alert), by default and

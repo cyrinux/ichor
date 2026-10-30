@@ -14,7 +14,9 @@ struct SettingsPageView: View {
                 LiveStatsSection()
             case .security: SecuritySection()
             case .privacy: PrivacySection()
-            case .alerts: MonitoringSection()
+            case .alerts:
+                MonitoringSection()
+                AlertRulesSection()
             case .ai: AISection()
             case .gitHosts: GitHostsView()
             case .plugins: PluginsSettingsView()
