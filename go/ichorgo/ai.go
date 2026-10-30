@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/netip"
 	"net/url"
 	"slices"
 	"strings"
@@ -37,6 +38,9 @@ const (
 	answerDeclined   = "the model declined to answer this request; try another model"
 	answerIncomplete = "the answer was cut off before the end; try again"
 )
+
+// Names only a local network serves.
+var localNameSuffixes = []string{".local", ".internal", ".lan", ".localhost"}
 
 // The providers' own APIs; tests point them at a fake.
 var (
@@ -192,6 +196,10 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 			return aiRequest{}, errors.New("an API key is only sent over https: use an https base URL, or leave the key empty")
 		}
 
+		if u.Scheme == "http" && !onLocalNetwork(u.Hostname()) {
+			return aiRequest{}, errors.New("a report only travels over https; plain http is for a server on your own network")
+		}
+
 		req.baseURL = strings.TrimRight(baseURL, "/")
 	}
 
@@ -204,6 +212,20 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 	}
 
 	return req, nil
+}
+
+// onLocalNetwork tells whether a host is on the phone's own network, the only place a report
+// may cross in clear: loopback, link-local, a private range, or a name only such a network serves.
+func onLocalNetwork(host string) bool {
+	if addr, err := netip.ParseAddr(host); err == nil {
+		addr = addr.Unmap()
+
+		return addr.IsLoopback() || addr.IsLinkLocalUnicast() || addr.IsPrivate()
+	}
+
+	host = strings.ToLower(strings.TrimSuffix(host, "."))
+
+	return host == "localhost" || slices.ContainsFunc(localNameSuffixes, func(suffix string) bool { return strings.HasSuffix(host, suffix) })
 }
 
 // streamAnswer asks the model and calls emit with each piece of the answer as it arrives.

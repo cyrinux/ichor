@@ -153,5 +153,8 @@ func renderHealthExplanation(lines []string, failure string, d diagnosisData) st
 	renderNodeList(&b, d.Nodes)
 	renderEvents(&b, d)
 
-	return neutralizeTags(strings.ToValidUTF8(strings.TrimRight(b.String(), "\n"), "�")) + "\n"
+	raw := strings.ToValidUTF8(strings.TrimRight(b.String(), "\n"), "�")
+	clean := scrubSecrets(raw)
+
+	return neutralizeTags(clean) + "\n" + scrubFooter(raw, clean)
 }
