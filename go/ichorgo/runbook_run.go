@@ -14,7 +14,8 @@ import (
 type RunbookListener interface {
 	// OnStep gets {"index","id","state","message","startedAt","endedAt"} when step index (from
 	// 0) starts and when it ends: state waiting (a destructive step waits for Confirm),
-	// running, ok, failed or skipped; times in unix ms.
+	// running, ok, failed or skipped; times in unix ms. A wait step also sends running again
+	// after each check, its message the value it last saw ("2/3 available").
 	OnStep(index int, stateJSON string)
 	// OnDone gets {"ok","steps":[…]} once every step ran or was skipped.
 	OnDone(resultJSON string)
@@ -175,7 +176,13 @@ func (r runbookExec) run(ctx context.Context, rb runbook) runbookResult {
 		st.State, st.StartedAt = runbookRunning, time.Now().UnixMilli()
 		emitJSON(st, func(js string) { r.listener.OnStep(i, js) })
 
-		msg, err := r.step(ctx, s)
+		// A wait step reports what it last saw while it waits.
+		progress := func(observed string) {
+			st.Message = observed
+			emitJSON(st, func(js string) { r.listener.OnStep(i, js) })
+		}
+
+		msg, err := r.step(ctx, s, progress)
 
 		st.EndedAt, st.State, st.Message = time.Now().UnixMilli(), runbookOK, msg
 		if err != nil {
@@ -216,7 +223,7 @@ func (r runbookExec) record(rb runbook, res runbookResult) {
 }
 
 // step runs one step through its exported function; the message says what it did.
-func (r runbookExec) step(ctx context.Context, s runbookStep) (string, error) {
+func (r runbookExec) step(ctx context.Context, s runbookStep, progress func(string)) (string, error) {
 	cfg, cluster, server := r.target.config, r.target.context, r.target.server
 	t, p := s.Target, s.Params
 
@@ -243,6 +250,8 @@ func (r runbookExec) step(ctx context.Context, s runbookStep) (string, error) {
 		return "reboot requested (mode " + p.Mode + ")", Reboot(cfg, cluster, t.Node, p.Mode)
 	case "nodeMaintenance":
 		return r.maintenance(ctx, t.Node, p)
+	case "wait", "assert":
+		return r.conditionStep(ctx, s, progress)
 	}
 
 	return "", fmt.Errorf("unknown action %q", s.Action)

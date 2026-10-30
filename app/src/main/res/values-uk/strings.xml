@@ -6074,6 +6074,7 @@
     <string name="runbook_state_ok">Готово</string>
     <string name="runbook_state_failed">Не вдалося</string>
     <string name="runbook_state_skipped">Пропущено</string>
+    <string name="runbook_wait_elapsed">Очікування %1$s з %2$s</string>
     <string name="runbook_confirm_title">Виконати крок %1$s?</string>
     <string name="runbook_confirm_text">%1$s для %2$s</string>
     <string name="runbook_confirm">Виконати крок</string>

@@ -25,8 +25,12 @@ data class RunbookList(val items: List<RunbookItem> = emptyList())
 data class RunbookTarget(val kind: String = "", val namespace: String = "", val name: String = "", val node: String = "") {
     val isNode: Boolean get() = node.isNotEmpty()
 
-    /** "Deployment demo-shop/ingest-api", or the node. */
-    val label: String get() = if (isNode) node else listOf(kind, "$namespace/$name").filter { it.isNotBlank() }.joinToString(" ")
+    /** "Deployment demo-shop/ingest-api", the node, or "Cluster" for a whole-cluster check. */
+    val label: String get() = when {
+        isNode -> node
+        namespace.isEmpty() && name.isEmpty() -> kind
+        else -> listOf(kind, "$namespace/$name").filter { it.isNotBlank() }.joinToString(" ")
+    }
 }
 
 /** One step of RunbookPlan: what it does, and whether the role and the cluster's RBAC allow it. */
@@ -40,6 +44,10 @@ data class RunbookPlanStep(
     val role: String = "",
     val allowed: Boolean = true,
     val denied: String = "",
+    /** What a wait or assert step checks ("wait up to 5 min for ingest-api to be available"); empty otherwise. */
+    val detail: String = "",
+    /** How long a wait step may wait; 0 for the other actions. */
+    val timeoutSeconds: Int = 0,
 )
 
 @Serializable

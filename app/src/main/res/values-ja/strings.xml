@@ -5694,6 +5694,7 @@
     <string name="runbook_state_ok">完了</string>
     <string name="runbook_state_failed">失敗</string>
     <string name="runbook_state_skipped">スキップ</string>
+    <string name="runbook_wait_elapsed">待機 %1$s / %2$s</string>
     <string name="runbook_confirm_title">ステップ %1$s を実行しますか？</string>
     <string name="runbook_confirm_text">%2$s で %1$s</string>
     <string name="runbook_confirm">ステップを実行</string>

@@ -5827,6 +5827,7 @@
     <string name="runbook_state_ok">Fatto</string>
     <string name="runbook_state_failed">Non riuscito</string>
     <string name="runbook_state_skipped">Saltato</string>
+    <string name="runbook_wait_elapsed">Atteso %1$s di %2$s</string>
     <string name="runbook_confirm_title">Eseguire il passaggio %1$s?</string>
     <string name="runbook_confirm_text">%1$s su %2$s</string>
     <string name="runbook_confirm">Esegui passaggio</string>

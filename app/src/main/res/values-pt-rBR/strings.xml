@@ -5822,6 +5822,7 @@
     <string name="runbook_state_ok">Concluído</string>
     <string name="runbook_state_failed">Falhou</string>
     <string name="runbook_state_skipped">Ignorado</string>
+    <string name="runbook_wait_elapsed">Aguardou %1$s de %2$s</string>
     <string name="runbook_confirm_title">Executar a etapa %1$s?</string>
     <string name="runbook_confirm_text">%1$s em %2$s</string>
     <string name="runbook_confirm">Executar etapa</string>
