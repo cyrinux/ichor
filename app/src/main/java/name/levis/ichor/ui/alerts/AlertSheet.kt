@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.AmAlert
 import name.levis.ichor.model.KubePermission
+import name.levis.ichor.model.OnCallIncident
+import name.levis.ichor.model.OnCallIncidents
 import name.levis.ichor.model.objectLinks
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.KubeDenialNote
@@ -60,7 +62,8 @@ class AlertObjectLinks(
  * One alert: its summary and description, when it started, its receivers and state, its
  * labels and other annotations, the runbook and the rule's graph, the pod, namespace or node
  * it is about ([nodes]: the cluster's node names and addresses), and "Silence".
- * [silenceDenial]: why the credentials cannot silence, if known.
+ * [silenceDenial]: why the credentials cannot silence, if known. With an incident behind it in
+ * [onCall], what the pager says and its actions.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -71,6 +74,9 @@ fun AlertSheet(
     silenceDenial: KubePermission?,
     onSilence: () -> Unit,
     onDismiss: () -> Unit,
+    onCall: OnCallIncidents? = null,
+    onCallBusy: (String) -> Boolean = { false },
+    onCallAct: (OnCallIncident, String) -> Unit = { _, _ -> },
 ) {
     val uri = LocalUriHandler.current
     val objects = remember(alert, nodes) { alert.objectLinks(nodes) }
@@ -115,6 +121,13 @@ fun AlertSheet(
                 Text(stringResource(R.string.alerts_silence), modifier = Modifier.padding(start = 8.dp))
             }
             KubeDenialNote(silenceDenial)
+            onCall?.incidentOf(alert.fingerprint)?.let { incident ->
+                OnCallIncidentSection(
+                    incident,
+                    onCall.matches[alert.fingerprint]?.confidence.orEmpty(),
+                    onCallBusy(incident.id),
+                ) { verb -> onCallAct(incident, verb) }
+            }
             SectionTitle(stringResource(R.string.alerts_labels))
             alert.labels.toSortedMap().forEach { (name, value) -> InfoRow(name, value, mono = true) }
             val others = alert.annotations.filterKeys { it !in SHOWN_ANNOTATIONS }

@@ -42,7 +42,7 @@ sealed interface BackupState {
     data class Restored(val outcome: RestoreOutcome) : BackupState
 
     /** Restored and acted on; [plugins] stays for the status line when the backup had some. */
-    data class RestoreDone(val plugins: PluginRestoreResult? = null) : BackupState
+    data class RestoreDone(val plugins: PluginRestoreResult? = null, val onCallTokenNeeded: Boolean = false) : BackupState
 
     data class Failed(val message: UiText) : BackupState
 }
@@ -76,7 +76,7 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
     /** The restore's outcome, for the screen to act on once (recomposition, recreate()). */
     fun takeRestored(): RestoreOutcome? {
         val restored = _state.value as? BackupState.Restored ?: return null
-        _state.value = BackupState.RestoreDone(restored.outcome.plugins)
+        _state.value = BackupState.RestoreDone(restored.outcome.plugins, restored.outcome.onCallTokenNeeded)
         return restored.outcome
     }
 

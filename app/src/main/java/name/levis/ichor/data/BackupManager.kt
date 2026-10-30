@@ -39,7 +39,13 @@ import kotlinx.serialization.builtins.serializer
  * What a restore changed that the screen on display has to act on; [plugins] when the backup
  * carried imported plugins (format 5).
  */
-data class RestoreOutcome(val languageChanged: Boolean, val language: String, val plugins: PluginRestoreResult? = null)
+data class RestoreOutcome(
+    val languageChanged: Boolean,
+    val language: String,
+    val plugins: PluginRestoreResult? = null,
+    /** A restored cluster had an on-call integration: its token is not in the backup, set it again. */
+    val onCallTokenNeeded: Boolean = false,
+)
 
 /**
  * Backs up the talosconfig, the kubeconfig and the settings that go with them into a file sealed with a
@@ -73,6 +79,8 @@ class BackupManager(
     private val plugins: PluginRepository? = null,
     /** The clusters that record actions; null leaves them out. */
     private val auditEvents: AuditEventClusters? = null,
+    /** Whether a cluster has an on-call integration on this device; the backup only says that. */
+    private val onCallSet: (String) -> Boolean = { false },
 ) {
     /**
      * The backup file of the stored config and settings, sealed as [seal] says (the app's format,
@@ -119,6 +127,7 @@ class BackupManager(
                     kubeAccess.links.value,
                     clusterRepos.repos.value,
                     auditEvents?.fingerprints?.value.orEmpty(),
+                    fingerprints.filter(onCallSet).toSet(),
                 ),
                 kubeAuth = backupKubeAuth(signInKeys(stored.summary.contexts), kubeAuth.all(), Ichorgo::kubeAuthForBackup),
                 // The real scope only (pinScope with screenshot mode off): masked pins hold made-up names.
@@ -220,7 +229,8 @@ class BackupManager(
         if (languageChanged) ui.setLanguage(language)
 
         onRestored()
-        return RestoreOutcome(languageChanged, language ?: ui.language.value, pluginsBack)
+        val onCallNeeded = fingerprints.any { payload.clusters[it]?.oncallSet == true && !onCallSet(it) }
+        return RestoreOutcome(languageChanged, language ?: ui.language.value, pluginsBack, onCallNeeded)
     }
 
     /**

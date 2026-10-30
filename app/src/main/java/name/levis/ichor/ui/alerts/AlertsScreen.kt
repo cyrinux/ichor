@@ -32,6 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.model.OnCallVerb
+import name.levis.ichor.data.onCallRepository
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KUBE_NODES
 import name.levis.ichor.data.OVERVIEW
@@ -78,7 +81,12 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     val key = "alerts-$fingerprint-$invalidations"
     val vm: AlertsViewModel = viewModel(
         key = key,
-        factory = factory { AlertsViewModel(app.alertmanagerRepository, app.kubeRepository, app.alertmanagerStore, fingerprint) },
+        factory = factory {
+            AlertsViewModel(
+                app.alertmanagerRepository, app.kubeRepository, app.alertmanagerStore, fingerprint,
+                app.onCallRepository, app.onCallStore, config?.activeSummary?.isDemo == true,
+            )
+        },
     )
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
@@ -132,7 +140,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
                 }
                 SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
                     when (page) {
-                        0 -> AlertsTab(state.alerts, state.filter, vm::setFilter, onAlert = { opened = it }, onRefresh = vm::refresh)
+                        0 -> AlertsTab(state.alerts, state.filter, vm::setFilter, onAlert = { opened = it }, onRefresh = vm::refresh, onCall = state.onCall, onCallError = state.onCallError)
                         else -> SilencesTab(
                             state.silences,
                             state.withExpired,
@@ -156,6 +164,9 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
             silenceDenial = silenceDenial,
             onSilence = { opened = null; silencing = alert },
             onDismiss = { opened = null },
+            onCall = state.onCall,
+            onCallBusy = { it in busy },
+            onCallAct = vm::act,
         )
     }
     silencing?.let { alert ->
@@ -230,6 +241,9 @@ private fun NoSource(state: AlertsState, modifier: Modifier, onSetUp: () -> Unit
 private fun ActionToasts(vm: AlertsViewModel) = ResultToasts(vm.results) { context, r ->
     val error = r.error?.resolve(context)
     val text = when {
+        error != null && r.onCallVerb != null -> context.getString(R.string.oncall_action_failed, error)
+        r.onCallVerb == OnCallVerb.ACKNOWLEDGE -> context.getString(R.string.oncall_acknowledged)
+        r.onCallVerb == OnCallVerb.RESOLVE -> context.getString(R.string.oncall_resolved)
         error != null && r.expired -> context.getString(R.string.alerts_expire_failed, error)
         error != null -> context.getString(R.string.alerts_silence_failed, error)
         r.expired -> context.getString(R.string.alerts_expired)

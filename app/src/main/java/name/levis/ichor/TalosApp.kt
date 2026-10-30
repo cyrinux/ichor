@@ -136,6 +136,7 @@ import name.levis.ichor.data.HistoryStore
 import name.levis.ichor.data.LastLooked
 import name.levis.ichor.data.LiveFocus
 import name.levis.ichor.data.AlertmanagerRepository
+import name.levis.ichor.data.OnCallStore
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
@@ -181,7 +182,7 @@ class TalosApp : Application() {
     }
     val kubeAuthRepository: KubeAuthRepository by lazy { KubeAuthRepository(configRepository, onSignInChanged = { googleTokenRenewer.forget(it) }) }
     /** The Go core's credentials and the results cache, shared by the repositories below. */
-    private val goCall by lazy {
+    internal val goCall by lazy {
         GoCall(configRepository, kubeServers, offlineCache, idle = maskSwitcher::awaitIdle, googleRenewer = googleTokenRenewer)
     }
     val talosRepository by lazy { TalosRepository(goCall) }
@@ -387,6 +388,7 @@ class TalosApp : Application() {
     /** Each cluster's Prometheus/Mimir source and saved PromQL panels (Metrics screen). */
     val metricsStore by lazy { MetricsStore(this) }
     val alertmanagerStore by lazy { AlertmanagerStore(this) }
+    val onCallStore by lazy { OnCallStore(this) }
     /** Each cluster's 30-day history ring, one record per monitor run, sealed per cluster. */
     val historyStore by lazy {
         HistoryStore(ClusterSecureFiles(this, "history")) { ring, record, now -> Ichorgo.historyAppend(ring, record, now) }
@@ -508,6 +510,7 @@ class TalosApp : Application() {
             proposals = proposals,
             plugins = pluginRepository,
             auditEvents = auditEventClusters,
+            onCallSet = { onCallStore.read(it).isSet },
         )
     }
 
@@ -680,6 +683,7 @@ class TalosApp : Application() {
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
                     launch(Dispatchers.IO) { alertmanagerStore.sync(fingerprints) }
+                    launch(Dispatchers.IO) { onCallStore.sync(fingerprints) }
                     launch(Dispatchers.IO) { historyStore.sync(fingerprints) }
                     lastLooked.sync(it.summary)
                 }

@@ -101,6 +101,8 @@ data class BackupCluster(
     val repository: BackupClusterRepo? = null,
     /** "Record actions in the cluster" (a Kubernetes Event per change); absent in older backups: off. */
     val auditEvents: Boolean = false,
+    /** An on-call integration is set up for it: only that, its token never leaves the device. */
+    val oncallSet: Boolean = false,
 )
 
 @Serializable
@@ -163,6 +165,7 @@ fun backupClusters(
     kubeAccess: Map<String, String> = emptyMap(),
     repos: Map<String, ClusterRepo> = emptyMap(),
     auditEvents: Set<String> = emptySet(),
+    oncallSet: Set<String> = emptySet(),
 ): Map<String, BackupCluster> = fingerprints.filter { it.isNotBlank() }.distinct().associateWith { fp ->
     BackupCluster(
         name = names[fp],
@@ -175,6 +178,7 @@ fun backupClusters(
         kubeAccess = kubeAccess[fp],
         repository = repos[fp]?.let { BackupClusterRepo(it.repoURL, it.branch, it.talosDir, it.kubernetesDir) },
         auditEvents = fp in auditEvents,
+        oncallSet = fp in oncallSet,
     )
 }
 

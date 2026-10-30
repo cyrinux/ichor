@@ -15,12 +15,17 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.AlertmanagerStore
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.data.OnCallRepository
+import name.levis.ichor.data.OnCallStore
 import name.levis.ichor.model.AlertmanagerConfig
 import name.levis.ichor.model.AmAlerts
 import name.levis.ichor.model.AmFilter
 import name.levis.ichor.model.AmMatcher
 import name.levis.ichor.model.AmSilence
 import name.levis.ichor.model.AmSilences
+import name.levis.ichor.model.OnCallConfig
+import name.levis.ichor.model.OnCallIncident
+import name.levis.ichor.model.OnCallIncidents
 import name.levis.ichor.model.PromSource
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiState
@@ -46,26 +51,35 @@ data class AlertsState(
     val withExpired: Boolean = false,
     val filter: AmFilter = AmFilter(),
     val error: String? = null,
+    /** The pager's open incidents; null without an on-call integration. */
+    val onCall: OnCallIncidents? = null,
+    /** Why the last read of the incidents failed; what was read before stays. */
+    val onCallError: String? = null,
 )
 
-/** The outcome of a silence created ([silenceId]) or expired, or why it failed. */
-data class AlertActionResult(val expired: Boolean, val silenceId: String, val error: UiText?)
+/** The outcome of a silence created ([silenceId]) or expired, of a verb on an incident ([onCallVerb]), or why it failed. */
+data class AlertActionResult(val expired: Boolean, val silenceId: String, val error: UiText?, val onCallVerb: String? = null)
 
 /**
  * The Alerts screen of the cluster [fingerprint]: its Alertmanager (the one chosen in [store],
  * else the likeliest found), its alerts (every state, filtered on the phone) and silences, and
- * silencing or expiring.
+ * silencing or expiring; with an on-call integration in [onCallStore] (the [demo] needs none),
+ * the incident behind each alert, acknowledged or resolved from here.
  */
 class AlertsViewModel(
     private val alertmanager: AlertmanagerRepository,
     private val kube: KubeRepository,
     private val store: AlertmanagerStore,
     private val fingerprint: String,
+    private val onCall: OnCallRepository,
+    private val onCallStore: OnCallStore,
+    private val demo: Boolean,
 ) : ViewModel() {
     private val _state = MutableStateFlow(AlertsState())
     val state: StateFlow<AlertsState> = _state.asStateFlow()
     private var alertsJob: Job? = null
     private var silencesJob: Job? = null
+    private var onCallJob: Job? = null
     private val actions = KeyedActions<AlertActionResult>(viewModelScope)
 
     /** Silence IDs being expired, and "silence" while one is being created. */
@@ -150,7 +164,35 @@ class AlertsViewModel(
             val outcome = cancellableCatching { alertmanager.alerts(source) }
             if (_state.value.source != source) return@launch
             _state.update { s -> s.copy(alerts = outcome.fold({ UiState.Loaded(it) }, { s.alerts.refreshFailed(it.uiText()) })) }
+            outcome.getOrNull()?.let(::loadOnCall)
         }
+    }
+
+    /** Reads the incidents behind [alerts], after them: the alerts never wait for the pager. */
+    private fun loadOnCall(alerts: AmAlerts) {
+        onCallJob?.cancel()
+        onCallJob = viewModelScope.launch {
+            val outcome = cancellableCatching {
+                val config = onCallConfig()
+                if (demo || config.isSet) onCall.incidents(config, alerts) else null
+            }
+            _state.update { s ->
+                outcome.fold({ s.copy(onCall = it, onCallError = null) }, { s.copy(onCallError = it.userMessage()) })
+            }
+        }
+    }
+
+    /** The demo has no settings: the core answers it without. */
+    private suspend fun onCallConfig(): OnCallConfig =
+        if (demo) OnCallConfig() else withContext(Dispatchers.IO) { onCallStore.read(fingerprint) }
+
+    /** Acknowledges or resolves [incident]; the alerts and incidents reload once done. */
+    fun act(incident: OnCallIncident, verb: String) {
+        actions.launch(incident.id, {
+            onCall.act(onCallConfig(), incident.id, verb)
+        }, {
+            AlertActionResult(expired = false, silenceId = "", error = it.exceptionOrNull()?.uiText(), onCallVerb = verb)
+        }, ::refresh)
     }
 
     private fun loadSilences() {
