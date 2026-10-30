@@ -1,0 +1,26 @@
+id: health-etcd-unhealthy
+kind: health
+report: |
+  Talos cluster health check, 2026-10-01 18:04 UTC
+
+  HEALTH CHECK
+    waiting for etcd to be healthy: etcd members not healthy on 10.0.0.9  ← failed
+  Failure: not healthy after 1m0s: waiting for etcd to be healthy: etcd members not healthy on 10.0.0.9
+
+  NODES (3: 3 ready, 0 not ready, 0 unreachable)
+  - cp-1 [10.0.0.7]: controlplane, Talos v1.14.1, stage running, ready
+  - cp-2 [10.0.0.8]: controlplane, Talos v1.14.1, stage running, ready
+  - cp-3 [10.0.0.9]: controlplane, Talos v1.14.1, stage running, ready
+
+  EVENTS
+    2026-10-01 18:03:00 10.0.0.9 error: service etcd failed: exit code 1
+expect:
+  must:
+    - "etcd"
+    - "Check next"
+    - ["cp-3", "10.0.0.9"]
+  mustNot:
+    - "talosctl reset"
+    - "remove-member"
+    - "systemctl"
+  maxWords: 180

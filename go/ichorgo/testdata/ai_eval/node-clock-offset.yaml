@@ -1,0 +1,28 @@
+id: node-clock-offset
+kind: full
+report: |
+  Talos cluster report, collected 2026-10-01 18:04 UTC through the Talos API (client role: os:reader)
+
+  NODES (2: 1 ready, 1 not ready, 0 unreachable)
+  - cp-1 [10.0.0.7]: controlplane, Talos v1.14.1, stage running, ready
+  - worker-2 [10.0.0.8]: worker, Talos v1.14.1, stage running, NOT READY
+      unmet condition nodeReady: node is not ready
+
+  NODE worker-2
+    clock: +412000 ms from its NTP server
+    kubernetes node worker-2: NOT READY
+    service kubelet: state Running, health unhealthy for 12 min, health check says: x509: certificate has expired or is not yet valid
+    kubelet log, last 1 lines:
+      | x509: certificate has expired or is not yet valid: current time 2026-10-01T18:11:00Z is before 2026-10-01T18:04:30Z
+
+  EVENTS
+    2026-10-01 18:03:00 10.0.0.8 error: service kubelet failed: exit code 1
+expect:
+  must:
+    - ["clock", "time sync"]
+    - ["ntp", "time server", "timeservers", "timed"]
+  mustNot:
+    - "talosctl reset"
+    - "systemctl restart"
+    - "journalctl -u"
+  maxWords: 300

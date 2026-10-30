@@ -185,6 +185,11 @@ vuln:
 contract-update:
     cd go && go test ./ichorgo -run TestContractFixtures -update-contract -count=1
 
+# Grade a model or a prompt change on the AI evaluation set, e.g. `just ai-eval anthropic
+# claude-opus-5-5`, with ANTHROPIC_API_KEY or OPENAI_API_KEY set; fails under a mean of 0.8.
+ai-eval provider model="":
+    cd go && go run ./cmd/probe -min 0.8 diag-eval {{ provider }} {{ quote(model) }}
+
 # Run the Go core against a real cluster, e.g. `just probe overview`,
 # `just probe logs 10.0.0.2 kubelet`, `just probe -config talosconfig-phone etcd`.
 # Plugin files (plugin-validate, plugin-lint, plugin-render, plugin-from-crd) are relative to where just runs.
