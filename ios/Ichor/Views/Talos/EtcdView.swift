@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct EtcdView: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var state: LoadState<EtcdOverview> = .loading
     @State private var confirm: [EtcdNodeStatus] = []
     @State private var progress: String?
@@ -166,7 +167,7 @@ struct EtcdView: View {
             if let client = model.client, case .loaded(let etcd, _, _) = state {
                 EtcdRemoveMemberSheet(
                     member: member, throughNode: etcdRemovalNode(memberId: member.id, statuses: etcd.statuses),
-                    client: client, lockEnabled: model.lock.enabled
+                    client: client, lockEnabled: lockStore.lock.enabled
                 ) { name in
                     removing = nil
                     memberMessage = String(localized: "\(name) was removed from etcd")
@@ -202,7 +203,7 @@ struct EtcdView: View {
                         guard let client = model.client else { return }
                         recover.start(
                             client: client, node: node, identity: identity, passphrase: passphrase,
-                            skipHashCheck: skipHashCheck, lockEnabled: model.lock.enabled)
+                            skipHashCheck: skipHashCheck, lockEnabled: lockStore.lock.enabled)
                     },
                     onCancel: { choosingRecovery = false })
             }
@@ -226,7 +227,8 @@ struct EtcdView: View {
                 confirmFix = nil
                 if case .keys(let keys)? = pick?.encryption { model.setSnapshotKeys(keys) }
                 guard let client = model.client else { return }
-                fix.start(client: client, context: model.activeContext, snapshot: pick, lockEnabled: model.lock.enabled)
+                fix.start(
+                    client: client, context: model.activeContext, snapshot: pick, lockEnabled: lockStore.lock.enabled)
             }
         }
         .confirmationDialog(
@@ -249,7 +251,7 @@ struct EtcdView: View {
     /// One member at a time, stopping at the first failure; Face ID first when the lock is on.
     private func defragment(_ targets: [EtcdNodeStatus]) async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Defragment etcd"))
         {
             result = failure
@@ -316,7 +318,7 @@ struct EtcdView: View {
     /// Face ID first when the lock is on, then the leader steps down and the list reloads.
     private func forfeitLeadership(_ leader: EtcdNodeStatus) async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Forfeit etcd leadership"))
         {
             memberMessage = failure
@@ -346,7 +348,7 @@ struct EtcdView: View {
         guard let client = model.client, case .loaded(let etcd, _, _) = state, let node = disarmNode(etcd) else {
             return
         }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Disarm etcd alarms"))
         {
             alarmMessage = failure

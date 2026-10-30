@@ -99,12 +99,12 @@ private struct SecurityKeyPromptView: View {
 /// and the "Require the key" mode that seals the stored configs with them. Each change is
 /// checked first, like the other lock settings.
 struct SecurityKeysSection: View {
-    @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var flow: SecurityKeyFlow?
     @State private var message: String?
     @State private var busy = false
 
-    private var keys: [EnrolledKey] { model.securityKeys?.keys ?? [] }
+    private var keys: [EnrolledKey] { lockStore.securityKeys?.keys ?? [] }
 
     var body: some View {
         Section {
@@ -134,7 +134,7 @@ struct SecurityKeysSection: View {
             if !keys.isEmpty {
                 Toggle(
                     isOn: Binding(
-                        get: { model.requiresKey },
+                        get: { lockStore.requiresKey },
                         set: { on in on ? checked(String(localized: "Require the key")) { flow = .require } : release()
                         })
                 ) {
@@ -180,19 +180,19 @@ struct SecurityKeysSection: View {
     }
 
     private func remove(_ key: EnrolledKey) {
-        guard let current = model.securityKeys else { return }
+        guard let current = lockStore.securityKeys else { return }
         if current.required, current.keys.count == 1 {
             message = String(localized: "Turn off “Require the key” before removing the last key.")
             return
         }
         checked(String(localized: "Remove \(key.label)")) {
-            model.setSecurityKeys(current.without(credentialId: key.credentialId))
+            lockStore.setSecurityKeys(current.without(credentialId: key.credentialId))
         }
     }
 
     /// Turns the requirement off: a tap first (the prompt asks for it), then the items are unsealed.
     private func release() {
-        guard let current = model.securityKeys else { return }
+        guard let current = lockStore.securityKeys else { return }
         busy = true
         Task {
             defer { busy = false }
@@ -202,12 +202,12 @@ struct SecurityKeysSection: View {
             }
             message = nil
             // Unsealed while the data key is still held; a failure puts the requirement back.
-            model.setSecurityKeys(current.released())
+            lockStore.setSecurityKeys(current.released())
             do {
                 try SecureConfigStore.reseal()
                 SecurityKeySession.shared.clear()
             } catch {
-                model.setSecurityKeys(current)
+                lockStore.setSecurityKeys(current)
                 message = securityKeyMessage(error)
             }
         }
@@ -224,7 +224,7 @@ enum SecurityKeyFlow: String, Identifiable {
 /// insists on it for new credentials, errors) and applies the result to the app lock.
 private struct SecurityKeyFlowView: View {
     let flow: SecurityKeyFlow
-    @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(\.dismiss) private var dismiss
     @State private var instruction = ""
     @State private var error: String?
@@ -328,7 +328,7 @@ private struct SecurityKeyFlowView: View {
     }
 
     private func enrolStep(pin: String?) async throws {
-        let enrolment = model.securityKeys ?? SecurityKeyEnrolment.create()
+        let enrolment = lockStore.securityKeys ?? SecurityKeyEnrolment.create()
         if added == nil {
             let label = enrolment.keys.isEmpty ? String(localized: "Security key") : String(localized: "Spare key")
             added = try await SecurityKeyClient.withConnection(
@@ -354,12 +354,12 @@ private struct SecurityKeyFlowView: View {
             }
             key = try SecurityKeyCrypto.wrapping(key, dek: dek, assertion: assertion)
         }
-        model.setSecurityKeys(enrolment.with(key))
+        lockStore.setSecurityKeys(enrolment.with(key))
         done = true
     }
 
     private func nextRequireInstruction() -> String {
-        let keys = model.securityKeys?.keys ?? []
+        let keys = lockStore.securityKeys?.keys ?? []
         guard let next = keys.first(where: { key in !wrapped.contains { $0.credentialId == key.credentialId } }) else {
             return ""
         }
@@ -369,7 +369,7 @@ private struct SecurityKeyFlowView: View {
     /// One tap per enrolled key wraps the new data key for it; after the last, the stored configs
     /// are sealed. A failure while sealing puts everything back.
     private func requireStep() async throws {
-        guard let enrolment = model.securityKeys, !enrolment.required else {
+        guard let enrolment = lockStore.securityKeys, !enrolment.required else {
             done = true
             return
         }
@@ -398,12 +398,12 @@ private struct SecurityKeyFlowView: View {
         for key in wrapped { updated = updated.with(key) }
         updated.mode = .required
         SecurityKeySession.shared.provide(dek)
-        model.setSecurityKeys(updated)
+        lockStore.setSecurityKeys(updated)
         do {
             try SecureConfigStore.reseal()
         } catch {
             // Back to Enclave-only items while the data key is still held, then forget it.
-            model.setSecurityKeys(enrolment)
+            lockStore.setSecurityKeys(enrolment)
             try? SecureConfigStore.reseal()
             SecurityKeySession.shared.clear()
             throw error

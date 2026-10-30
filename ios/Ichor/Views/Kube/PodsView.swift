@@ -38,6 +38,7 @@ struct PodsView: View {
     var restartSupport = FeatureSupport(supported: true)
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var query = ""
     @State private var sort = ProcessSort.cpu
     /// A system container waiting for the typed hostname.
@@ -156,7 +157,9 @@ extension PodsView {
     private func restart(_ container: NodeContainer) async {
         kubeRestart = nil
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: confirmationTitle(container)) {
+        if lockStore.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: confirmationTitle(container))
+        {
             resultMessage = failure
             return
         }

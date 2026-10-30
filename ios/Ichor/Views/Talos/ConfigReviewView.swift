@@ -15,6 +15,7 @@ struct ConfigReviewView: View {
     let onFinished: () -> Void
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(\.dismiss) private var dismiss
     @State private var preview: LoadState<ConfigPreview> = .loading
     @State private var timeout = 300
@@ -179,7 +180,7 @@ struct ConfigReviewView: View {
     /// Like a try: a fresh Face ID / passcode first when the app lock is on.
     private func startApply(_ mode: ConfigApplyMode) async {
         message = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(
                 reason: String(localized: "Apply the machine config of \(hostname)"))
         {
@@ -207,7 +208,7 @@ struct ConfigReviewView: View {
 
     private func startTry() async {
         message = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(
                 reason: String(localized: "Try a config change on \(hostname)"))
         {

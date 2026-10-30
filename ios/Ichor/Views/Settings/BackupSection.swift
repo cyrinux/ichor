@@ -14,6 +14,7 @@ struct BackupSection: View {
     /// Set from elsewhere in Settings (the delete confirmation's "Back up first") to start a backup.
     @Binding var requested: Bool
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(AISettings.self) private var ai
     @Environment(GitHostStore.self) private var gitHosts
     @State private var askingPassphrase = false
@@ -81,7 +82,7 @@ struct BackupSection: View {
 
     /// The file holds the clusters' credentials: with the app lock on, prove it is the owner first.
     private func startBackup() async {
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(
                 reason: String(localized: "Back up clusters and their credentials"))
         {
@@ -158,6 +159,7 @@ struct RestoreBackupButton: View {
 /// backup…" does. Waits for the app lock.
 private struct ReceivedBackupRestore: ViewModifier {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var confirming: PickedBackup?
     @State private var picked: PickedBackup?
     /// Said once the passphrase sheet is gone (an alert does not show while it closes).
@@ -168,7 +170,7 @@ private struct ReceivedBackupRestore: ViewModifier {
         content
             .onAppear { take(NotificationRouter.shared.pendingBackup) }
             .onChange(of: NotificationRouter.shared.pendingBackup) { _, data in take(data) }
-            .onChange(of: model.lock.locked) { _, locked in
+            .onChange(of: lockStore.lock.locked) { _, locked in
                 if !locked { take(NotificationRouter.shared.pendingBackup) }
             }
             .alert("Restore a backup", isPresented: $confirming.isPresent(), presenting: confirming) { backup in
@@ -193,7 +195,7 @@ private struct ReceivedBackupRestore: ViewModifier {
     }
 
     private func take(_ data: Data?) {
-        guard let data, !model.lock.locked else { return }
+        guard let data, !lockStore.lock.locked else { return }
         NotificationRouter.shared.pendingBackup = nil
         Task {
             // Sealed for age keys only: it cannot open here.

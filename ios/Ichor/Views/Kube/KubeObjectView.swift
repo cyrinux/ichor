@@ -29,6 +29,7 @@ struct KubeObjectView: View {
     private enum Tab: Hashable { case summary, data, yaml }
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab = Tab.summary
@@ -291,7 +292,7 @@ struct KubeObjectView: View {
     /// Showing a Secret's values needs a fresh Face ID / passcode when the app lock is on;
     /// hiding them reads the object again so they leave the screen and memory.
     private func setReveal(_ on: Bool) async {
-        if on, model.lock.enabled,
+        if on, lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(
                 reason: String(localized: "Show the values of Secret \(name)"))
         {

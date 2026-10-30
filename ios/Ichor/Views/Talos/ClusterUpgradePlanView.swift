@@ -9,6 +9,7 @@ struct ClusterUpgradePlanView: View {
     let initialVersion: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var releases: [TalosRelease] = []
     @State private var releasesError: String?
     @State private var version = ""
@@ -197,7 +198,7 @@ struct ClusterUpgradePlanView: View {
     /// Like an upgrade: a fresh Face ID / passcode first when the app lock is on.
     private func start(_ p: ClusterUpgradePlan) async {
         message = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Upgrade the cluster \(cluster)"))
         {
             message = failure

@@ -164,6 +164,7 @@ struct ResourceDetailView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var state: LoadState<ResourceDocument> = .loading
     /// A sensitive resource is not asked for before the first "Show".
@@ -278,7 +279,7 @@ struct ResourceDetailView: View {
 
     /// With the app lock on, showing a sensitive resource needs a fresh Face ID / passcode.
     private func reveal() async {
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Show a sensitive resource"))
         {
             message = failure

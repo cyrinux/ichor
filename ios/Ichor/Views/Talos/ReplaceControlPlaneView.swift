@@ -11,6 +11,7 @@ struct ReplaceControlPlaneView: View {
     let hostname: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var node: String
     @State private var state: LoadState<CpReplacePlan> = .loading
     /// The voting members to wait past, from the first plan read.
@@ -172,7 +173,7 @@ struct ReplaceControlPlaneView: View {
             EtcdRemoveMemberSheet(
                 member: EtcdMember(id: plan.member.id, hostname: plan.member.hostname),
                 throughNode: plan.template.node.isEmpty ? nil : plan.template.node,
-                client: client, lockEnabled: model.lock.enabled,
+                client: client, lockEnabled: lockStore.lock.enabled,
                 remove: { try await client.controlPlaneReplaceRemove(memberID: $0) }
             ) { name in
                 removing = false
@@ -207,7 +208,7 @@ struct ReplaceControlPlaneView: View {
 
     private func performReset(_ request: NodeResetSheet.Request, name: String) async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(name)"))
         {
             message = failure

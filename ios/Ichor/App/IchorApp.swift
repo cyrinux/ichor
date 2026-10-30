@@ -7,7 +7,7 @@ import UserNotifications
 @main
 struct IchorApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var model = AppModel(settings: SettingsStore())
+    @State private var model = AppModel(settings: SettingsStore(), lock: LockStore())
     @State private var support = SupportPrompt()
     @State private var ai = AISettings()
     @State private var gitHosts = GitHostStore()
@@ -58,6 +58,7 @@ struct IchorApp: App {
             RootView()
                 .environment(model)
                 .environment(model.settings)
+                .environment(model.lockStore)
                 .environment(support)
                 .environment(ai)
                 .environment(gitHosts)
@@ -104,28 +105,6 @@ struct IchorApp: App {
     }
 }
 
-/// Renews every sign-in as the app comes to the front, at most every five minutes: the first
-/// screen finds a fresh token instead of paying the refresh, and a session the identity provider
-/// ended shows its banner at once (same rules as Android).
-@MainActor
-enum ForegroundSignInRenewal {
-    private static let interval: TimeInterval = 5 * 60
-    private static var last: Date?
-
-    static func run(model: AppModel) {
-        let now = Date()
-        if let last, now.timeIntervalSince(last) < interval { return }
-        last = now
-        Task.detached(priority: .utility) {
-            guard let renewals = await TalosClient.renewStoredSignIns() else { return }
-            // What was loaded with the ended session goes: the screens reload and show the banner.
-            if renewals.contains(where: \.needsUser) {
-                await MainActor.run { model.reloadKubernetes() }
-            }
-        }
-    }
-}
-
 extension ThemeMode {
     var colorScheme: ColorScheme? {
         switch self {
@@ -138,13 +117,14 @@ extension ThemeMode {
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(SettingsStore.self) private var settings
     @Environment(\.scenePhase) private var scenePhase
     @State private var everUnlocked = false
 
     var body: some View {
         ZStack {
-            if everUnlocked || !model.lock.locked {
+            if everUnlocked || !lockStore.lock.locked {
                 content
                     // Under the cover below: VoiceOver must not read the old names either.
                     .accessibilityHidden(settings.maskTransition)
@@ -153,9 +133,9 @@ struct RootView: View {
             if settings.maskTransition {
                 MaskTransitionCover()
             }
-            if model.lock.locked {
+            if lockStore.lock.locked {
                 LockView()
-            } else if model.lock.enabled && scenePhase != .active {
+            } else if lockStore.lock.enabled && scenePhase != .active {
                 // Keeps cluster data out of the app-switcher snapshot.
                 PrivacyCover()
             }
@@ -173,16 +153,16 @@ struct RootView: View {
         .task { await UITestLaunch.shared.prepare(model) }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .background: model.didEnterBackground()
-            case .active: model.willEnterForeground()
+            case .background: lockStore.didEnterBackground()
+            case .active: lockStore.willEnterForeground()
             default: break
             }
         }
-        .onChange(of: model.lock.locked) { _, locked in
+        .onChange(of: lockStore.lock.locked) { _, locked in
             if !locked { everUnlocked = true }
         }
         // Lock off at launch: keep the content (and its navigation) mounted if it relocks later.
-        .onAppear { if !model.lock.locked { everUnlocked = true } }
+        .onAppear { if !lockStore.lock.locked { everUnlocked = true } }
     }
 
     @ViewBuilder
@@ -196,7 +176,7 @@ struct RootView: View {
             // A backup sent to a new phone lands here: restored without asking.
             NavigationStack { ImportView() }
                 .restoresReceivedBackup()
-        } else if !model.lock.enabled && AppLockState.required(for: model.summary?.contexts ?? []) {
+        } else if !lockStore.lock.enabled && AppLockState.required(for: model.summary?.contexts ?? []) {
             // Right after the first import, or on updating from an optional lock.
             LockOnboardingView()
         } else {
@@ -400,6 +380,7 @@ extension Route {
 
 struct MainNavigation: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(SettingsStore.self) private var settings
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var path: [Route] = []
@@ -448,7 +429,7 @@ struct MainNavigation: View {
                 if pending != nil { openOperation() }
             }
             // Mounted under the lock screen once unlocked: a link waits for the next unlock.
-            .onChange(of: model.lock.locked) { _, locked in
+            .onChange(of: lockStore.lock.locked) { _, locked in
                 if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
                 if !locked, NotificationRouter.shared.pendingSearch { openSearch() }
                 if !locked, NotificationRouter.shared.pendingFleet { openFleet() }
@@ -633,7 +614,7 @@ struct MainNavigation: View {
     /// From a run's Live Activity: the screen that shows the run, once unlocked; the app as it
     /// was for a run with no screen of its own (an image pull or scan) or one already cleared.
     private func openOperation() {
-        guard !model.lock.locked, let kind = NotificationRouter.shared.pendingOperation else { return }
+        guard !lockStore.lock.locked, let kind = NotificationRouter.shared.pendingOperation else { return }
         NotificationRouter.shared.pendingOperation = nil
         guard let route = operationRoute(kind), path.last != route else { return }
         path.append(route)
@@ -683,14 +664,14 @@ struct MainNavigation: View {
     /// From the "Search clusters" quick action: the search over the cluster on screen's home,
     /// once unlocked.
     private func openSearch() {
-        guard !model.lock.locked, NotificationRouter.shared.pendingSearch else { return }
+        guard !lockStore.lock.locked, NotificationRouter.shared.pendingSearch else { return }
         NotificationRouter.shared.pendingSearch = false
         path = [.search]
     }
 
     /// From the fleet widget: the fleet screen over the cluster on screen's home, once unlocked.
     private func openFleet() {
-        guard !model.lock.locked, NotificationRouter.shared.pendingFleet else { return }
+        guard !lockStore.lock.locked, NotificationRouter.shared.pendingFleet else { return }
         NotificationRouter.shared.pendingFleet = false
         path = [.fleet]
     }
@@ -698,7 +679,7 @@ struct MainNavigation: View {
     /// From a share link: like a quick action, the overview of the cluster it names (the
     /// context on screen when it is one of that cluster), then the screen it names over it.
     private func openShareLink() {
-        guard !model.lock.locked, let url = NotificationRouter.shared.pendingShareLink else { return }
+        guard !lockStore.lock.locked, let url = NotificationRouter.shared.pendingShareLink else { return }
         NotificationRouter.shared.pendingShareLink = nil
         // An alert's Reboot, Sync…: its screen asks for it (none for a plain tap or link).
         let action = NotificationRouter.shared.pendingAlertAction
@@ -768,7 +749,9 @@ struct MainNavigation: View {
     /// From a config file opened with Ichor: the import screen, which previews it (and takes
     /// the text from NotificationRouter itself, also when it is already on screen).
     private func openImport() {
-        guard !model.lock.locked, NotificationRouter.shared.pendingImportText != nil, path.last != .importConfig else {
+        guard !lockStore.lock.locked, NotificationRouter.shared.pendingImportText != nil,
+            path.last != .importConfig
+        else {
             return
         }
         path.append(.importConfig)

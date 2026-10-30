@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 /// (os:admin), or the stored one of a cluster added from a kubeconfig.
 struct KubeconfigSection: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var document: YAMLDocument?
     @State private var exporting = false
     @State private var busy = false
@@ -70,7 +71,7 @@ struct KubeconfigSection: View {
 
     /// Root on the nodes: with the app lock on, turning it on asks for Face ID first.
     private func setNodeDebug(_ on: Bool) async {
-        if on, model.lock.enabled,
+        if on, lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Node debug shell"))
         {
             message = failure
@@ -81,7 +82,7 @@ struct KubeconfigSection: View {
 
     private func export() async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Export kubeconfig"))
         {
             message = failure

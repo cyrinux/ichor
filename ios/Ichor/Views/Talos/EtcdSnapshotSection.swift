@@ -136,6 +136,7 @@ struct EtcdSnapshotSection: View {
     let job: EtcdSnapshotJob
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var selected: String?
     @State private var confirming = false
 
@@ -237,6 +238,6 @@ struct EtcdSnapshotSection: View {
         job.start(
             client: client, node: target.node, hostname: hostnames[target.memberId] ?? target.node,
             context: model.activeContext, expected: target.dbSize, encryption: encryption,
-            lockEnabled: model.lock.enabled)
+            lockEnabled: lockStore.lock.enabled)
     }
 }

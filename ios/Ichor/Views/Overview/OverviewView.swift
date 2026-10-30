@@ -6,6 +6,7 @@ struct OverviewView: View {
     @Binding var path: [Route]
 
     @Environment(AppModel.self) var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(SettingsStore.self) var settings
     @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
@@ -448,7 +449,7 @@ struct OverviewView: View {
     /// the screenshot mode's switching cover over it.
     private var tourActive: Bool {
         DemoTourSteps.runs(demo: model.activeSummary?.demo == true, kube: model.activeIsKube)
-            && visible && scenePhase == .active && !settings.maskTransition && !model.lock.locked
+            && visible && scenePhase == .active && !settings.maskTransition && !lockStore.lock.locked
     }
 
     /// The coach marks whose anchor is on screen; nil until the overview is loaded.

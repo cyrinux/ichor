@@ -21,6 +21,7 @@ struct IssueConfigView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var mode: Mode
     @State private var validity = ConfigValidity.default
     @State private var roles = defaultIssuedRoles
@@ -181,7 +182,7 @@ struct IssueConfigView: View {
         let reason =
             mode == .renew
             ? String(localized: "Renew the talosconfig certificate") : String(localized: "Create a talosconfig")
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: reason) {
+        if lockStore.lock.enabled, let failure = await Authenticator.authenticate(reason: reason) {
             show(failure, failed: true)
             return
         }
@@ -229,7 +230,7 @@ private struct IssuedConfigSection: View {
         self.onDone = onDone
     }
 
-    @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var revealed = true
     @State private var captured = UIScreen.main.isCaptured
@@ -336,7 +337,7 @@ private struct IssuedConfigSection: View {
     }
 
     private func reveal() async {
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Show the talosconfig QR code"))
         {
             message = failure

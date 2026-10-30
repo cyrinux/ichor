@@ -9,6 +9,7 @@ struct JoinApplySection: View {
     let onOpenNode: (NodeRef) -> Void
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var warnings: [String] = []
     @State private var confirming = false
     @State private var authError: String?
@@ -155,7 +156,7 @@ struct JoinApplySection: View {
     private func join(_ request: JoinRequest) async {
         guard let client = model.client else { return }
         authError = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Join \(request.hostname)?"))
         {
             authError = failure

@@ -14,6 +14,7 @@ struct KubeNodeDebugView: View {
     let node: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @AppStorage("debug.nodeImage") private var image = "busybox:1.37"
     @State private var shell = DebugShell()
     @State private var error: String?
@@ -71,7 +72,7 @@ struct KubeNodeDebugView: View {
     /// Root on the node: with the app lock on, a fresh Face ID first, like a Talos shell.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Root shell on \(node)"))
         {
             error = failure

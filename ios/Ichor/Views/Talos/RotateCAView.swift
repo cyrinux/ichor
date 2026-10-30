@@ -7,6 +7,7 @@ import IchorCore
 /// talosconfig gives the other devices a config of the new CA.
 struct RotateCAView: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var state: LoadState<CARotationPlan> = .loading
     @State private var confirming = false
     @State private var stopping = false
@@ -207,7 +208,7 @@ struct RotateCAView: View {
     private func start() async {
         guard let client = model.client else { return }
         startError = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Rotate the cluster CA"))
         {
             startError = failure
