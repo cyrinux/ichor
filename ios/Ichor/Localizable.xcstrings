@@ -1,6 +1,233 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Revision %lld of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Revision %1$lld of %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Révision %1$lld de %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Revisión %1$lld de %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ревізія %1$lld для %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Revision %1$lld von %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Revisione %1$lld di %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 的修订版本 %1$lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ のリビジョン %1$lld" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Revisão %1$lld de %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ревизия %1$lld для %2$@" } }
+      }
+    },
+    "%@, back to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, back to %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, revient à %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, vuelve a %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, повертається до %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, zurück zu %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, torna a %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@，回到 %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ から %2$@ に戻す" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, volta para %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, возврат к %2$@" } }
+      }
+    },
+    "Pod template changes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modifications du modèle de pod" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambios en la plantilla del pod" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зміни шаблону пода" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Änderungen am Pod-Template" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modifiche al template del pod" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Pod 模板的变更" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Pod テンプレートの変更" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alterações no template do pod" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Изменения шаблона пода" } }
+      }
+    },
+    "Same pod template as the current revision." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Même modèle de pod que la révision actuelle." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La misma plantilla de pod que la revisión actual." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Той самий шаблон пода, що й у поточній ревізії." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dasselbe Pod-Template wie die aktuelle Revision." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Stesso template del pod della revisione attuale." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "与当前修订版本的 Pod 模板相同。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "現在のリビジョンと同じ Pod テンプレートです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O mesmo template de pod da revisão atual." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тот же шаблон пода, что и в текущей ревизии." } }
+      }
+    },
+    "Roll back to revision %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Revenir à la révision %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Revertir a la revisión %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відкотити до ревізії %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf Revision %lld zurückrollen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ripristina alla revisione %lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "回滚到修订版本 %lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "リビジョン %lld にロールバック" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reverter para a revisão %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Откатить к ревизии %lld" } }
+      }
+    },
+    "Pods update when deleted (OnDelete): a rollback changes the template, then delete the pods to apply it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les pods se mettent à jour quand on les supprime (OnDelete) : le retour en arrière change le modèle, supprimez ensuite les pods pour l’appliquer." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los pods se actualizan al eliminarlos (OnDelete): la reversión cambia la plantilla; después elimina los pods para aplicarla." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Поди оновлюються після видалення (OnDelete): відкат змінює шаблон, потім видаліть поди, щоб застосувати його." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pods werden beim Löschen aktualisiert (OnDelete): Das Zurückrollen ändert das Template, lösche danach die Pods, um es anzuwenden." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "I pod si aggiornano quando li elimini (OnDelete): il ripristino cambia il template, poi elimina i pod per applicarlo." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Pod 在被删除时才会更新（OnDelete）：回滚会更改模板，然后删除 Pod 以应用它。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Pod は削除されたときに更新されます（OnDelete）。ロールバックでテンプレートが変わるので、適用するには Pod を削除してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Os pods são atualizados quando excluídos (OnDelete): a reversão altera o template; depois exclua os pods para aplicá-lo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Поды обновляются при удалении (OnDelete): откат меняет шаблон, затем удалите поды, чтобы применить его." } }
+      }
+    },
+    "The rollout is paused: resume it before rolling back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le déploiement est en pause : reprenez-le avant de revenir en arrière." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El despliegue está en pausa: reanúdalo antes de revertir." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Розгортання призупинено: відновіть його перед відкатом." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Rollout ist pausiert: Setze ihn fort, bevor du zurückrollst." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il rollout è in pausa: riprendilo prima di ripristinare." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "发布已暂停：请先恢复，再回滚。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロールアウトは一時停止中です。ロールバックする前に再開してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O rollout está pausado: retome-o antes de reverter." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Развёртывание приостановлено: возобновите его перед откатом." } }
+      }
+    },
+    "%@ rolled back: its pods update when deleted (OnDelete)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ ramené en arrière : ses pods se mettent à jour quand on les supprime (OnDelete)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ revertido: sus pods se actualizan al eliminarlos (OnDelete)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ відкочено: його поди оновлюються після видалення (OnDelete)." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ zurückgerollt: Seine Pods werden beim Löschen aktualisiert (OnDelete)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ ripristinato: i suoi pod si aggiornano quando li elimini (OnDelete)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已回滚 %@：它的 Pod 在被删除时才会更新（OnDelete）。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ をロールバックしました。Pod は削除されたときに更新されます（OnDelete）。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ revertido: os pods dele são atualizados quando excluídos (OnDelete)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ откачен: его поды обновляются при удалении (OnDelete)." } }
+      }
+    },
+    "Added: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouté : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadido: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додано: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hinzugefügt: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiunto: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新增：%@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追加：%@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionado: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавлено: %@" } }
+      }
+    },
+    "Removed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimé : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminado: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалено: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernt: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimosso: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除：%@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除：%@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Removido: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалено: %@" } }
+      }
+    },
+    "Pause rollout" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre le déploiement en pause" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pausar despliegue" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Призупинити розгортання" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollout pausieren" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Metti in pausa il rollout" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂停发布" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロールアウトを一時停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pausar rollout" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Приостановить развёртывание" } }
+      }
+    },
+    "Resume rollout" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Reprendre le déploiement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reanudar despliegue" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відновити розгортання" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollout fortsetzen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riprendi il rollout" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "恢复发布" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロールアウトを再開" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Retomar rollout" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Возобновить развёртывание" } }
+      }
+    },
+    "Rollout paused: template changes wait until it resumes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Déploiement en pause : les changements du modèle attendent sa reprise" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Despliegue en pausa: los cambios de la plantilla esperan a que se reanude" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Розгортання призупинено: зміни шаблону чекають на відновлення" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollout pausiert: Template-Änderungen warten, bis er fortgesetzt wird" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rollout in pausa: le modifiche al template attendono la ripresa" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "发布已暂停：模板变更会等到恢复后再生效" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロールアウト一時停止中：テンプレートの変更は再開まで待機します" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Rollout pausado: as alterações do template aguardam a retomada" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Развёртывание приостановлено: изменения шаблона ждут возобновления" } }
+      }
+    },
+    "Rollout of %@ paused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Déploiement de %@ en pause" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Despliegue de %@ en pausa" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Розгортання %@ призупинено" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollout von %@ pausiert" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rollout di %@ in pausa" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已暂停 %@ 的发布" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のロールアウトを一時停止しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Rollout de %@ pausado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Развёртывание %@ приостановлено" } }
+      }
+    },
+    "Rollout of %@ resumed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Déploiement de %@ repris" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Despliegue de %@ reanudado" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Розгортання %@ відновлено" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollout von %@ fortgesetzt" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rollout di %@ ripreso" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已恢复 %@ 的发布" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のロールアウトを再開しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Rollout de %@ retomado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Развёртывание %@ возобновлено" } }
+      }
+    },
+    "Could not pause or resume the rollout of %@: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not pause or resume the rollout of %1$@: %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible de mettre en pause ou de reprendre le déploiement de %1$@ : %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo pausar ni reanudar el despliegue de %1$@: %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вдалося призупинити чи відновити розгортання %1$@: %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollout von %1$@ konnte nicht pausiert oder fortgesetzt werden: %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile mettere in pausa o riprendere il rollout di %1$@: %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法暂停或恢复 %1$@ 的发布：%2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ のロールアウトを一時停止または再開できませんでした：%2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não foi possível pausar ou retomar o rollout de %1$@: %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось приостановить или возобновить развёртывание %1$@: %2$@" } }
+      }
+    },
     "Copy name" : {
       "extractionState" : "manual",
       "localizations" : {

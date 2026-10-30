@@ -260,28 +260,11 @@ func templateImages(template json.RawMessage) []string {
 	return images
 }
 
-// KubeRollbackDeployment rolls a Deployment back to revision, like `kubectl rollout undo
-// deployment/NAME --to-revision=N` (os:admin): its pod template becomes that ReplicaSet's
-// (without the pod-template-hash label), which starts a rolling update to it (it then
-// shows as the newest revision). A paused Deployment, and the current revision, are
-// refused. kubeServer: see KubePods.
-func KubeRollbackDeployment(configYAML, contextName, kubeServer, namespace, name string, revision int) (err error) {
-	defer maskErr(&err)
-
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "rollback-deployment", Namespace: namespace, Object: "Deployment/" + name, Params: fmt.Sprintf("revision=%d", revision)})
-
-	if err := validateKubeName("Deployment", namespace, name); err != nil {
-		return err
-	}
-
-	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		return rollbackDeployment(ctx, k, namespace, name, revision)
-	})
-}
-
+// rollbackDeployment rolls a Deployment back to revision, like `kubectl rollout undo
+// deployment/NAME --to-revision=N` (KubeRollbackWorkload): its pod template becomes that
+// ReplicaSet's (without the pod-template-hash label), which starts a rolling update to it (it
+// then shows as the newest revision). A paused Deployment, and the current revision, are
+// refused.
 func rollbackDeployment(ctx context.Context, k *kubeClient, namespace, name string, revision int) error {
 	path := appsPath(workloadKinds[0], namespace, name)
 
