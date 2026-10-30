@@ -52,6 +52,8 @@ final class AlertActionsTests: XCTestCase {
                 let kind = prefix == "am" ? "alertmanager" : prefix
                 let actions = alertActions(key: key, problem: true, canWake: wake)
                 XCTAssertTrue(alertActionSets(kind: kind).contains(actions), "\(key) \(actions)")
+                let repeating = withAcknowledge(actions)
+                XCTAssertTrue(alertActionSets(kind: kind).contains(repeating), "\(key) \(repeating)")
             }
         }
     }

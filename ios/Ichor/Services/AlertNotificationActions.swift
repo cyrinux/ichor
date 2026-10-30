@@ -43,6 +43,43 @@ enum AlertSnoozeStore {
     }
 }
 
+/// The acknowledged alerts (see AlertAcks), in the App Group defaults: written by a notification's
+/// Acknowledge action, read by the background check, which stops their repeats. One ends when its
+/// alert stops firing; they are not backed up.
+enum AlertAckStore {
+    private static let key = "monitor.acks"
+
+    static func load() -> AlertAcks {
+        guard let data = SharedStore.defaults.data(forKey: key),
+            let acks = try? JSONDecoder().decode(AlertAcks.self, from: data)
+        else { return AlertAcks() }
+        return acks
+    }
+
+    private static func save(_ acks: AlertAcks) {
+        if acks.at.isEmpty {
+            SharedStore.defaults.removeObject(forKey: key)
+        } else if let data = try? JSONEncoder().encode(acks) {
+            SharedStore.defaults.set(data, forKey: key)
+        }
+    }
+
+    /// Acknowledges `alertKey` of `cluster` (its fingerprint).
+    static func acknowledge(cluster: String, alertKey: String, now: Date = Date()) {
+        save(load().acknowledging(cluster: cluster, key: alertKey, now: now))
+    }
+
+    /// Only the acknowledgements of `clusters` (fingerprints) whose alert still fires (`firing`
+    /// by fingerprint, for the clusters read this run; the others keep theirs).
+    static func keep(clusters: [String], firing: [String: Set<String>] = [:]) -> AlertAcks {
+        let stored = load()
+        var kept = stored.keeping(clusters: clusters)
+        for (cluster, keys) in firing { kept = kept.keepingFiring(cluster: cluster, firing: keys) }
+        if kept != stored { save(kept) }
+        return kept
+    }
+}
+
 /// The actions of the alert notifications (CYR-36). Snooze and Wake run in the background;
 /// Reboot, Sync, Reconcile and Silence open the app (after Face ID or the passcode) on the
 /// alert's screen, which asks for the usual confirmation: nothing changes on the cluster from
@@ -69,6 +106,11 @@ enum AlertNotificationActions {
             case .wake:
                 return [
                     UNNotificationAction(identifier: action.rawValue, title: String(localized: "Wake"), options: [])
+                ]
+            case .acknowledge:
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Acknowledge"), options: [])
                 ]
             case .reboot:
                 return [

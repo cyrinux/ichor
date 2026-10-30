@@ -391,15 +391,17 @@ extension BackgroundMonitor {
     /// `cluster` names the cluster (the subtitle), `id` keeps the same alert of two clusters apart;
     /// `link` (userInfo "link") is the share link the tap opens; `info` what its actions need.
     // Internal, not private: postAll (BackgroundMonitor+Rules.swift) posts through it.
+    /// `timeSensitive`: a repeat (Focus may let it through, with the entitlement).
     static func post(
         _ alert: Alert, localized: (title: String, text: String), cluster: String, id: String, link: URL?,
-        actions: [AlertAction], info: [String: String], hideDetails: Bool
+        actions: [AlertAction], info: [String: String], hideDetails: Bool, timeSensitive: Bool = false
     ) async {
         let content = UNMutableNotificationContent()
         content.title = localized.title
         content.subtitle = cluster
         content.body = localized.text
         content.sound = alert.problem ? .default : nil
+        if timeSensitive { content.interruptionLevel = .timeSensitive }
         content.categoryIdentifier = category(alertKey: alert.key, actions: actions, hideDetails: hideDetails)
         var userInfo = info
         if let link { userInfo["link"] = link.absoluteString }

@@ -4,15 +4,23 @@ import Foundation
 /// Wake run in the background and change nothing on the cluster; the others only open the app on
 /// the alert's screen, which asks for the usual confirmation before anything is sent.
 public enum AlertAction: String, CaseIterable, Hashable, Sendable {
-    case wake, reboot, sync, reconcile, silence, snooze
+    case wake, reboot, sync, reconcile, silence, acknowledge, snooze
 
     /// Changes the cluster: never run from the notification, only confirmed in the app.
     public var changesCluster: Bool {
         switch self {
         case .reboot, .sync, .reconcile, .silence: true
-        case .wake, .snooze: false
+        case .wake, .acknowledge, .snooze: false
         }
     }
+}
+
+/// `actions` with Acknowledge before Snooze: an alert its rule repeats (only one Snooze offers).
+public func withAcknowledge(_ actions: [AlertAction]) -> [AlertAction] {
+    guard let snooze = actions.firstIndex(of: .snooze), !actions.contains(.acknowledge) else { return actions }
+    var out = actions
+    out.insert(.acknowledge, at: snooze)
+    return out
 }
 
 /// The actions of an alert's notification: none for a "resolved" or "ready again" one; Wake
@@ -70,9 +78,14 @@ public func alertCategory(kind: String, actions: [AlertAction], hideDetails: Boo
     return hideDetails ? "\(id).private" : id
 }
 
-/// Every action set an alert of `kind` can get from `alertActions` (none included), one
-/// notification category each.
+/// Every action set an alert of `kind` can get from `alertActions` (none included), each also
+/// with Acknowledge (see withAcknowledge): one notification category each.
 public func alertActionSets(kind: String) -> [[AlertAction]] {
+    let sets = baseActionSets(kind: kind)
+    return sets + sets.filter { $0.contains(.snooze) }.map(withAcknowledge)
+}
+
+private func baseActionSets(kind: String) -> [[AlertAction]] {
     switch kind {
     case "node": [[], [.reboot, .snooze], [.wake, .reboot, .snooze]]
     case "gitops": [[], [.sync, .snooze], [.reconcile, .snooze], [.snooze]]

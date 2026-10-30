@@ -248,6 +248,8 @@ enum BackgroundMonitor {
         let runs = unreachableRuns
         var outcomes: [ClusterAlerts] = []
         var history: [HistoryInput] = []
+        // The clusters read this run where a node answered: their firing alerts may repeat.
+        var answered: Set<String> = []
         for job in jobs {
             guard let result = reads[job.key] else { continue }
             var alerts: [Alert] = []
@@ -261,8 +263,10 @@ enum BackgroundMonitor {
                 history.append(HistoryInput(key: job.key, current: nil, evaluated: nil, extras: HistoryExtras()))
             case .read(let current, let extras):
                 let evaluated = evaluate(previous: job.previous, current: current, now: now)
-                snapshots[job.key] = evaluated.next
-                latest = evaluated.next
+                let next = withAlertTimes(previous: job.previous, next: evaluated.next, now: now)
+                snapshots[job.key] = next
+                latest = next
+                if !current.unreachableAsAWhole { answered.insert(job.key) }
                 alerts = evaluated.alerts
                 reachable = !current.unreachableAsAWhole
                 history.append(HistoryInput(key: job.key, current: current, evaluated: evaluated.next, extras: extras))
@@ -299,7 +303,16 @@ enum BackgroundMonitor {
         if let signIns {
             posts += pendingSignIns(signIns, contexts: contexts, labels: labels, snoozes: snoozes, now: now)
         }
-        await postAll(posts, now: now)
+        posts += await pendingRepeats(
+            jobs.filter { answered.contains($0.key) }, changed: outcomes, snapshots: snapshots,
+            clusters: summary.contexts.map(\.fingerprint), labels: labels, snoozes: snoozes, now: now)
+        let notified = await postAll(posts, now: now)
+        guard !notified.isEmpty else { return }
+        for (key, alertKeys) in notified {
+            guard let snapshot = snapshots[key] else { continue }
+            snapshots[key] = withNotified(snapshot, keys: alertKeys, now: now)
+        }
+        SharedStore.save(snapshots)
     }
 
     /// One record per cluster read (or not answering) in each one's sealed ring. A track not read

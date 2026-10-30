@@ -55,19 +55,27 @@ public struct QuietHours: Codable, Equatable, Hashable, Sendable {
     }
 }
 
-/// One rule; nil takes the default's. `minSeverity`: all, warning or critical.
+/// The repeats the settings offer, in minutes, 0 off; the real cadence is the check's.
+public let alertRepeatChoices = [0, 5, 15, 30, 60]
+
+/// One rule; nil takes the default's. `minSeverity`: all, warning or critical. `repeatMinutes`:
+/// how often a still-firing critical alert is posted again until acknowledged, 0 off.
 public struct AlertRule: Codable, Equatable, Hashable, Sendable {
     public var quietHours: QuietHours?
     public var minSeverity: String?
     public var digest: Bool?
+    public var repeatMinutes: Int?
 
-    public init(quietHours: QuietHours? = nil, minSeverity: String? = nil, digest: Bool? = nil) {
+    public init(
+        quietHours: QuietHours? = nil, minSeverity: String? = nil, digest: Bool? = nil, repeatMinutes: Int? = nil
+    ) {
         self.quietHours = quietHours
         self.minSeverity = minSeverity
         self.digest = digest
+        self.repeatMinutes = repeatMinutes
     }
 
-    public var isEmpty: Bool { quietHours == nil && minSeverity == nil && digest == nil }
+    public var isEmpty: Bool { quietHours == nil && minSeverity == nil && digest == nil && repeatMinutes == nil }
 
     /// With a window without a zone in `zone`.
     public func withZone(_ zone: String) -> AlertRule {
@@ -152,6 +160,8 @@ public struct AlertRules: Codable, Equatable, Hashable, Sendable {
 }
 
 /// One alert a check is about to post, as Go reads it; `cluster` is the context fingerprint.
+/// `ongoing`: it did not change, it still fires since it was posted at `lastNotifiedMillis`
+/// (first seen at `firstSeenMillis`); Go only says whether to post it again.
 public struct AlertInput: Codable, Equatable, Sendable {
     public let cluster: String
     public let key: String
@@ -159,9 +169,14 @@ public struct AlertInput: Codable, Equatable, Sendable {
     public let severity: String
     public let problem: Bool
     public let snoozed: Bool
+    public var ongoing: Bool
+    public var firstSeenMillis: Int64
+    public var lastNotifiedMillis: Int64
+    public var acknowledged: Bool
 
     public init(
-        cluster: String, key: String, kind: String, severity: String = "", problem: Bool, snoozed: Bool = false
+        cluster: String, key: String, kind: String, severity: String = "", problem: Bool, snoozed: Bool = false,
+        ongoing: Bool = false, firstSeenMillis: Int64 = 0, lastNotifiedMillis: Int64 = 0, acknowledged: Bool = false
     ) {
         self.cluster = cluster
         self.key = key
@@ -169,35 +184,45 @@ public struct AlertInput: Codable, Equatable, Sendable {
         self.severity = severity
         self.problem = problem
         self.snoozed = snoozed
+        self.ongoing = ongoing
+        self.firstSeenMillis = firstSeenMillis
+        self.lastNotifiedMillis = lastNotifiedMillis
+        self.acknowledged = acknowledged
     }
 }
 
 public let alertActionNotify = "notify"
 public let alertActionMute = "mute"
 public let alertActionDigest = "digest"
+public let alertActionRepeat = "repeat"
 
 public let alertReasonSnoozed = "snoozed"
 public let alertReasonSeverity = "severity"
 public let alertReasonQuiet = "quiet"
 public let alertReasonDigest = "digest"
 
-/// What to do with one alert; `until` (unix ms) the end of the quiet window that muted it, else 0.
+/// What to do with one alert; `until` (unix ms) the end of the quiet window that muted it, else
+/// 0. `repeats`: posted, it will be posted again while it fires, until acknowledged.
 public struct AlertDecision: Decodable, Equatable, Sendable {
     public let cluster: String
     public let key: String
     public let action: String
     public let reason: String
     public let until: Int64
+    public let repeats: Bool
 
-    public init(cluster: String, key: String, action: String, reason: String = "", until: Int64 = 0) {
+    public init(
+        cluster: String, key: String, action: String, reason: String = "", until: Int64 = 0, repeats: Bool = false
+    ) {
         self.cluster = cluster
         self.key = key
         self.action = action
         self.reason = reason
         self.until = until
+        self.repeats = repeats
     }
 
-    private enum CodingKeys: String, CodingKey { case cluster, key, action, reason, until }
+    private enum CodingKeys: String, CodingKey { case cluster, key, action, reason, until, repeats }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -206,6 +231,7 @@ public struct AlertDecision: Decodable, Equatable, Sendable {
         action = try c.decode(String.self, forKey: .action)
         reason = try c.field(.reason, "")
         until = try c.field(.until, 0)
+        repeats = try c.field(.repeats, false)
     }
 }
 

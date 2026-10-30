@@ -66,6 +66,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
     /// not, never unreachable), there is no etcd, and `certNotAfter` is the kubeconfig's credentials.
     public var kube: Bool
+    /// When each problem alert this snapshot still holds (see firingAlerts) was first seen, and
+    /// when it was last posted (unix ms, by alert key): what a repeat counts from (withAlertTimes).
+    public var firstSeen: [String: Int64]
+    public var lastNotified: [String: Int64]
 
     public init(
         context: String, takenAt: Date, nodes: [String: NodeState], etcdAlarms: [String] = [],
@@ -83,7 +87,8 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         sensorWatched: Bool = false, sensorChecked: Bool = false, sensorIssues: [String: String] = [:],
         sensorPending: [String] = [],
         pluginWatched: Bool = false, pluginChecked: Bool = false, pluginIssues: [String: String] = [:],
-        pluginPending: [String] = [], kube: Bool = false
+        pluginPending: [String] = [], kube: Bool = false,
+        firstSeen: [String: Int64] = [:], lastNotified: [String: Int64] = [:]
     ) {
         self.context = context
         self.takenAt = takenAt
@@ -123,9 +128,12 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.pluginIssues = pluginIssues
         self.pluginPending = pluginPending
         self.kube = kube
+        self.firstSeen = firstSeen
+        self.lastNotified = lastNotified
     }
 
-    /// Snapshots saved by older versions lack the data-service, GitOps, checkup, Alertmanager, storage, plugin and kube fields.
+    /// Snapshots saved by older versions lack the data-service, GitOps, checkup, Alertmanager,
+    /// storage, plugin, kube and alert-time fields.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
@@ -166,6 +174,8 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         pluginIssues = try c.field(.pluginIssues, [:])
         pluginPending = try c.field(.pluginPending, [])
         kube = try c.field(.kube, false)
+        firstSeen = try c.field(.firstSeen, [:])
+        lastNotified = try c.field(.lastNotified, [:])
     }
 
     var dataTrack: IssueTrack {

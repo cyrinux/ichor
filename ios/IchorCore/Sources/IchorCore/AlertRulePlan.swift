@@ -65,16 +65,21 @@ public enum AlertRuleOutcome: Equatable, Sendable {
     case mute(reason: String, until: Int64)
     /// Counted in its cluster's digest notification.
     case digest
+    /// An ongoing alert posted again: its repeat is due.
+    case `repeat`
 }
 
 /// One outcome per input in order, and the digests to post (a cluster with digested alerts).
+/// `repeats`: per input, whether a posted one will repeat (it gets Acknowledge).
 public struct AlertRulePlan: Equatable, Sendable {
     public let outcomes: [AlertRuleOutcome]
     public let digests: [AlertDigest]
+    public let repeats: [Bool]
 
-    public init(outcomes: [AlertRuleOutcome], digests: [AlertDigest] = []) {
+    public init(outcomes: [AlertRuleOutcome], digests: [AlertDigest] = [], repeats: [Bool]? = nil) {
         self.outcomes = outcomes
         self.digests = digests
+        self.repeats = repeats ?? outcomes.map { _ in false }
     }
 }
 
@@ -82,7 +87,8 @@ public struct AlertRulePlan: Equatable, Sendable {
 /// applied, or there are none), as Android's alertPlan: without decisions every alert not
 /// snoozed is posted, so a rules error never drops an alert; so is one Go gave no matching
 /// decision for, and one sent to a digest Go did not count. A snoozed one is dropped either
-/// way; one muted by the quiet hours or the minimum severity is kept for the history.
+/// way; one muted by the quiet hours or the minimum severity is kept for the history. An ongoing
+/// one (see AlertInput) is posted again only on Go's "repeat": never as a fallback.
 public func alertRulePlan(inputs: [AlertInput], decisions: AlertDecisions?) -> AlertRulePlan {
     let digests = decisions?.digests ?? []
     let counted = Dictionary(digests.map { ($0.cluster, $0) }, uniquingKeysWith: { first, _ in first })
@@ -90,9 +96,10 @@ public func alertRulePlan(inputs: [AlertInput], decisions: AlertDecisions?) -> A
     let outcomes = inputs.enumerated().map { index, input -> AlertRuleOutcome in
         let all = decisions?.decisions ?? []
         guard index < all.count, all[index].cluster == input.cluster, all[index].key == input.key else {
-            return input.snoozed ? .drop : .notify
+            return input.snoozed || input.ongoing ? .drop : .notify
         }
         let decision = all[index]
+        if input.ongoing { return decision.action == alertActionRepeat ? .repeat : .drop }
         switch decision.action {
         case alertActionMute:
             let recorded = decision.reason == alertReasonQuiet || decision.reason == alertReasonSeverity
@@ -106,7 +113,12 @@ public func alertRulePlan(inputs: [AlertInput], decisions: AlertDecisions?) -> A
             return .notify
         }
     }
-    return AlertRulePlan(outcomes: outcomes, digests: digestOrder.compactMap { counted[$0] })
+    let all = decisions?.decisions ?? []
+    let repeats = inputs.indices.map { index in
+        index < all.count && all[index].cluster == inputs[index].cluster && all[index].key == inputs[index].key
+            && all[index].repeats
+    }
+    return AlertRulePlan(outcomes: outcomes, digests: digestOrder.compactMap { counted[$0] }, repeats: repeats)
 }
 
 /// The notification key of a history alert span (the ring keeps the snapshot's key and its
