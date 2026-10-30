@@ -43,7 +43,8 @@ type kubeLoadBalancing struct {
 
 // lbPool is an address pool. Assigned and Available come from the pool's status when
 // CountsKnown, else from the Services whose address falls in it. AdvertisedBy: "l2:<name>",
-// "bgp:<name>" (MetalLB only). Services: "namespace/name" of those it gave an address to.
+// "bgp:<name>" (Cilium: its L2 policies only). Services: "namespace/name" of those it gave an
+// address to.
 type lbPool struct {
 	Name         string   `json:"name"`
 	Controller   string   `json:"controller"`
@@ -60,10 +61,14 @@ type lbPool struct {
 	Level        string   `json:"level"`
 }
 
-// lbAdvertisement is a MetalLB L2Advertisement or BGPAdvertisement. Pools: the pools it
-// names, empty when it covers every one (AllPools).
+// lbAdvertisement is a MetalLB L2Advertisement or BGPAdvertisement, or a
+// CiliumL2AnnouncementPolicy (Controller "cilium"). Pools: the pools it names (Cilium: those
+// of the Services it announces), empty when it covers every one (AllPools). Inactive: why a
+// Cilium policy announces nothing (l2Disabled, noLoadBalancerIPs, noService).
 type lbAdvertisement struct {
 	Name              string   `json:"name"`
+	Controller        string   `json:"controller"`
+	Inactive          string   `json:"inactive,omitempty"`
 	Kind              string   `json:"kind"` // l2 or bgp
 	Pools             []string `json:"pools"`
 	AllPools          bool     `json:"allPools"`
@@ -106,7 +111,8 @@ type lbConfigError struct {
 }
 
 // lbService is a LoadBalancer Service: its addresses, the pool they came from, who announces
-// them (MetalLB's ServiceL2Status / ServiceBGPStatus) and, while it waits, why (Cause).
+// them (MetalLB's ServiceL2Status / ServiceBGPStatus, the holder of Cilium's L2 lease) and,
+// while it waits, why (Cause).
 type lbService struct {
 	Namespace   string   `json:"namespace"`
 	Name        string   `json:"name"`
@@ -157,7 +163,7 @@ func buildLoadBalancing(in lbInputs, now time.Time) kubeLoadBalancing {
 	out := kubeLoadBalancing{
 		Controllers:    in.controllers(),
 		Pools:          lbPoolRows(in, waiting),
-		Advertisements: lbAdvertisementRows(in.metallb),
+		Advertisements: append(lbAdvertisementRows(in.metallb), lbCiliumAdvertisementRows(in)...),
 		BGPPeers:       lbPeerRows(in.metallb, in.sessions),
 		ConfigErrors:   lbConfigErrors(in.metallb),
 		Services:       services,

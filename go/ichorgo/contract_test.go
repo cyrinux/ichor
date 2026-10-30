@@ -50,6 +50,11 @@ var contractFixtures = []struct {
 	}},
 	{"update-proposal-plan", contractUpdatePlan},
 	{"diag-entries", contractDiagEntries},
+	{"fleet-summary", func() any {
+		now := contractNow.UnixMilli()
+
+		return summarizeFleet(demoFleetEntries(now), now)
+	}},
 }
 
 // contractDiagEntries is DiagEntries' shape, newest first: a failed call with its error, a core

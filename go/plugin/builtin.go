@@ -21,6 +21,8 @@ func Builtins() []*Compiled { return builtins() }
 var builtins = sync.OnceValue(func() []*Compiled {
 	out, err := loadDir(builtinFS, "builtin")
 	if err != nil {
+		// The one panic kept (scripts/check-panics.py): an embedded file that does not compile
+		// is a build error, and `go test ./plugin` loads every built-in on each PR.
 		panic("plugin: built-in plugins: " + err.Error())
 	}
 

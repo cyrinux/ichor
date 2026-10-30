@@ -17,6 +17,7 @@ type lbInputs struct {
 	namespaces map[string]labelSet
 	metallb    *metallbState
 	cilium     []ciliumPoolObject
+	ciliumL2   *ciliumL2State // nil without Cilium
 	kubeVip    *kubeVipState
 	pods       []lbPod
 	podsErr    error
@@ -47,8 +48,8 @@ func readLBInputs(ctx context.Context, k *kubeClient, groups map[string]string, 
 	in := lbInputs{groups: groups, services: services, pods: pods}
 
 	var (
-		podsErr, ciliumErr error
-		wg                 sync.WaitGroup
+		podsErr, ciliumErr, l2Err error
+		wg                        sync.WaitGroup
 	)
 
 	if _, ok := groups[groupMetalLB]; ok {
@@ -57,6 +58,7 @@ func readLBInputs(ctx context.Context, k *kubeClient, groups map[string]string, 
 
 	if _, ok := groups[groupCilium]; ok {
 		wg.Go(func() { in.cilium, ciliumErr = readCiliumPools(ctx, k) })
+		wg.Go(func() { in.ciliumL2, l2Err = readCiliumL2(ctx, k) })
 	}
 
 	if pods == nil {
@@ -80,6 +82,8 @@ func readLBInputs(ctx context.Context, k *kubeClient, groups map[string]string, 
 	switch {
 	case ciliumErr != nil:
 		in.readErr = ciliumErr
+	case l2Err != nil:
+		in.readErr = l2Err
 	case in.metallb != nil && in.metallb.partial:
 		in.readErr = errLBPartial
 	}

@@ -26,7 +26,7 @@ func demoLoadBalancing() kubeLoadBalancing {
 		},
 		Advertisements: []lbAdvertisement{
 			{
-				Name: "default", Kind: lbAdvertL2, Pools: []string{"default-pool"}, Interfaces: []string{"eth0"},
+				Name: "default", Controller: lbControllerMetalLB, Kind: lbAdvertL2, Pools: []string{"default-pool"}, Interfaces: []string{"eth0"},
 				Peers: []string{}, Communities: []string{},
 			},
 		},

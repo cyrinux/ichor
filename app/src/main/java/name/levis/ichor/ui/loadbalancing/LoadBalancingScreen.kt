@@ -93,7 +93,7 @@ private fun LoadBalancingList(lb: KubeLoadBalancing, onService: (namespace: Stri
         items(lb.pending, key = { "waiting-" + it.key }) { WaitingCard(it, pad) { onService(it.namespace, it.name) } }
         section(R.string.lb_pools, lb.pools.isNotEmpty()) { items(lb.pools, key = { "pool-" + it.controller + it.name }) { PoolRow(it, pad) } }
         section(R.string.lb_advertisements, lb.advertisements.isNotEmpty()) {
-            items(lb.advertisements, key = { "adv-" + it.kind + it.name }) { AdvertisementRow(it, pad) }
+            items(lb.advertisements, key = { "adv-" + it.controller + it.kind + it.name }) { AdvertisementRow(it, pad) }
         }
         section(R.string.lb_bgp_peers, lb.bgpPeers.isNotEmpty()) { items(lb.bgpPeers, key = { "peer-" + it.name }) { PeerRow(it, pad) } }
         lb.kubeVip?.let { vip -> section(R.string.lb_kubevip, true) { item { KubeVipRows(vip, pad) } } }

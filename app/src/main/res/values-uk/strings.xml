@@ -190,7 +190,7 @@
     <string name="overview_support_later">Не зараз</string>
     <string name="overview_support_sponsor">Підтримати</string>
     <string name="overview_swipe_live">Наживо</string>
-    <string name="overview_swipe_actions">Дії</string>
+    <string name="row_actions">Дії</string>
     <string name="overview_action_live_graphs">Графіки наживо</string>
     <string name="overview_action_services_logs">Сервіси та журнали</string>
     <string name="overview_action_kernel_log">Журнал ядра</string>
@@ -5287,6 +5287,9 @@
     <string name="lb_adv_all_pools">Усі пули</string>
     <string name="lb_adv_pools">Пули: %1$s</string>
     <string name="lb_adv_via">Через %1$s</string>
+    <string name="lb_adv_l2_disabled">Нічого не анонсує: L2-анонси вимкнено в cilium-config (enable-l2-announcements).</string>
+    <string name="lb_adv_no_lb_ips">Не анонсує адрес LoadBalancer: loadBalancerIPs не задано.</string>
+    <string name="lb_adv_no_service">Жоден Service LoadBalancer їй не відповідає.</string>
     <string name="lb_peer_asn">AS %1$s, локальна AS %2$s</string>
     <string name="lb_peer_sessions_unknown">Стан сесій невідомий: не вдалося прочитати метрики speaker’ів.</string>
     <string name="lb_peer_no_session">Жоден speaker не повідомляє про сесію з цим піром.</string>
@@ -5302,6 +5305,7 @@
     <string name="checkup_lbPending_cause">Немає адреси вже %1$s: %2$s</string>
     <string name="checkup_lbPoolUnadvertised">Не оголошено</string>
     <string name="checkup_lbPoolUnadvertised_fix">MetalLB роздає адреси цього пулу, але ніщо їх не оголошує: додайте L2Advertisement або BGPAdvertisement, що його вибирає.</string>
+    <string name="checkup_lbCiliumPoolUnannounced_fix">Cilium видає адреси цього пулу, але жодна CiliumL2AnnouncementPolicy не анонсує його Service, а BGP вимкнено: додайте політику з loadBalancerIPs, яка їх вибирає.</string>
     <string name="checkup_lbConfigError">MetalLB відхилив свою конфігурацію</string>
     <string name="checkup_lbConfigError_fix">Виправте те, що вказано в повідомленні (пули, що перекриваються, хибний пір…): доти MetalLB тримає останню справну конфігурацію.</string>
     <string name="checkup_lbBGPPeerDown">BGP-сесію з %1$s розірвано</string>

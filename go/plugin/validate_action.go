@@ -55,7 +55,9 @@ func (v *validator) actionRequest(path string, a Action, onOK bool) {
 			}
 		}
 
-		if onOK && a.RBAC.Resource != "" && slices.Contains(tagEnum(Action{}, "Verb"), a.Verb) {
+		// A tag error is already reported by the verb's own enum check.
+		verbs, _ := tagEnum(Action{}, "Verb")
+		if onOK && a.RBAC.Resource != "" && slices.Contains(verbs, a.Verb) {
 			v.rbacMatches(path+".rbac", a, v.p.Resources[a.On])
 		}
 	}
@@ -198,7 +200,9 @@ func jsonPointer(s string) bool {
 
 // paramDefault: a default has the parameter's type (and is among an enum's values).
 func (v *validator) paramDefault(path string, p Param) {
-	known := slices.Contains(tagEnum(Param{}, "Type"), p.Type)
+	// A tag error is already reported by the type's own enum check.
+	types, _ := tagEnum(Param{}, "Type")
+	known := slices.Contains(types, p.Type)
 	if p.Default == nil || !known || (p.Type == "enum" && len(p.Values) == 0) {
 		return
 	}

@@ -102,14 +102,27 @@ internal fun AdvertisementRow(ad: LbAdvertisement, modifier: Modifier) {
     Column(modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Mono(ad.name, Modifier.weight(1f))
-            Text(if (ad.kind == "bgp") "BGP" else "L2", style = MaterialTheme.typography.labelMedium)
+            val kind = if (ad.kind == "bgp") "BGP" else "L2"
+            Text(if (ad.controller == "cilium") "Cilium $kind" else kind, style = MaterialTheme.typography.labelMedium)
         }
-        MutedText(
-            if (ad.allPools) stringResource(R.string.lb_adv_all_pools) else stringResource(R.string.lb_adv_pools, ad.pools.joinToString(", ")),
-        )
+        when {
+            ad.allPools -> MutedText(stringResource(R.string.lb_adv_all_pools))
+            ad.pools.isNotEmpty() -> MutedText(stringResource(R.string.lb_adv_pools, ad.pools.joinToString(", ")))
+        }
         val via = ad.interfaces.ifEmpty { ad.peers }
         if (via.isNotEmpty()) MutedText(stringResource(R.string.lb_adv_via, via.joinToString(", ")))
+        inactiveText(ad.inactive)?.let {
+            Text(stringResource(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        }
     }
+}
+
+/** Why a Cilium L2 policy announces nothing, null when it works. */
+private fun inactiveText(inactive: String): Int? = when (inactive) {
+    "l2Disabled" -> R.string.lb_adv_l2_disabled
+    "noLoadBalancerIPs" -> R.string.lb_adv_no_lb_ips
+    "noService" -> R.string.lb_adv_no_service
+    else -> null
 }
 
 @Composable

@@ -160,7 +160,7 @@
     <string name="overview_support_later">Agora não</string>
     <string name="overview_support_sponsor">Patrocinar</string>
     <string name="overview_swipe_live">Ao vivo</string>
-    <string name="overview_swipe_actions">Ações</string>
+    <string name="row_actions">Ações</string>
     <string name="overview_action_live_graphs">Gráficos ao vivo</string>
     <string name="overview_action_services_logs">Serviços e logs</string>
     <string name="overview_action_kernel_log">Log do kernel</string>
@@ -5047,6 +5047,9 @@
     <string name="lb_adv_all_pools">Todos os pools</string>
     <string name="lb_adv_pools">Pools: %1$s</string>
     <string name="lb_adv_via">Via %1$s</string>
+    <string name="lb_adv_l2_disabled">Não anuncia nada: os anúncios L2 estão desativados no cilium-config (enable-l2-announcements).</string>
+    <string name="lb_adv_no_lb_ips">Não anuncia nenhum endereço LoadBalancer: loadBalancerIPs não está definido.</string>
+    <string name="lb_adv_no_service">Nenhum Service LoadBalancer corresponde a ela.</string>
     <string name="lb_peer_asn">AS %1$s, AS local %2$s</string>
     <string name="lb_peer_sessions_unknown">Estado da sessão desconhecido: não foi possível ler as métricas dos speakers.</string>
     <string name="lb_peer_no_session">Nenhum speaker informa sessão com este peer.</string>
@@ -5062,6 +5065,7 @@
     <string name="checkup_lbPending_cause">Sem endereço há %1$s: %2$s</string>
     <string name="checkup_lbPoolUnadvertised">Não anunciado</string>
     <string name="checkup_lbPoolUnadvertised_fix">O MetalLB distribui os endereços deste pool, mas nada os anuncia: adicione um L2Advertisement ou um BGPAdvertisement que o selecione.</string>
+    <string name="checkup_lbCiliumPoolUnannounced_fix">O Cilium distribui os endereços deste pool, mas nenhuma CiliumL2AnnouncementPolicy anuncia seus Services, e o BGP está desativado: adicione uma política com loadBalancerIPs que os selecione.</string>
     <string name="checkup_lbConfigError">O MetalLB recusou a configuração</string>
     <string name="checkup_lbConfigError_fix">Corrija o que a mensagem indica (pools sobrepostos, um peer inválido…): até lá, o MetalLB mantém a última configuração válida.</string>
     <string name="checkup_lbBGPPeerDown">Sessão BGP inativa com %1$s</string>

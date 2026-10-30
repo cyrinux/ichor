@@ -13,6 +13,9 @@ const (
 	findLBPoolConflict  = "lbPoolConflict"  // a Cilium pool overlapping another (Message)
 	// findLBPoolUnadvertised is a MetalLB pool no L2Advertisement or BGPAdvertisement covers.
 	findLBPoolUnadvertised = "lbPoolUnadvertised"
+	// findLBCiliumPoolUnannounced is a Cilium pool whose Services no
+	// CiliumL2AnnouncementPolicy announces, on a cluster using L2 announcements without BGP.
+	findLBCiliumPoolUnannounced = "lbCiliumPoolUnannounced"
 	// findLBConfigError is a MetalLB component that refused its configuration (Name: the
 	// component, Node: a speaker's node, Message: MetalLB's summary).
 	findLBConfigError = "lbConfigError"
@@ -63,12 +66,14 @@ type lbServiceObject struct {
 	} `json:"spec"`
 	Status struct {
 		LoadBalancer struct {
-			Ingress []struct {
-				IP       string `json:"ip"`
-				Hostname string `json:"hostname"`
-			} `json:"ingress"`
+			Ingress []lbIngress `json:"ingress"`
 		} `json:"loadBalancer"`
 	} `json:"status"`
+}
+
+type lbIngress struct {
+	IP       string `json:"ip"`
+	Hostname string `json:"hostname"`
 }
 
 type conditionedObject struct {
@@ -79,7 +84,8 @@ type conditionedObject struct {
 }
 
 // checkupLoadBalancers finds the Services of type LoadBalancer nothing gave an address to,
-// and why; the pools that ran out; with MetalLB, the pools nothing advertises, a refused
+// and why; the pools that ran out; with Cilium, the pools no L2 policy announces; with
+// MetalLB, the pools nothing advertises, a refused
 // configuration and the BGP sessions down. Absent when the cluster has none of it.
 func checkupLoadBalancers(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
 	var pods []lbPod
@@ -93,6 +99,10 @@ func checkupLoadBalancers(ctx context.Context, k *kubeClient, in checkupInput) c
 	}
 
 	objects := len(lb.cilium)
+	if lb.ciliumL2 != nil {
+		objects += len(lb.ciliumL2.policies)
+	}
+
 	if lb.metallb != nil {
 		objects += len(lb.metallb.pools) + len(lb.metallb.peers)
 	}
@@ -103,7 +113,7 @@ func checkupLoadBalancers(ctx context.Context, k *kubeClient, in checkupInput) c
 
 	findings := lbFindings(lb, in.now)
 	waiting := len(findings) > 0
-	findings = append(findings, poolFindings(lb.cilium, waiting)...)
+	findings = append(findings, poolFindings(lb, waiting)...)
 	findings = append(findings, metallbFindings(lb, waiting)...)
 
 	return newSection(checkLoadBalancers, len(lb.services)+objects, findings, lb.readErr)
@@ -139,12 +149,16 @@ func lbFindings(in lbInputs, now time.Time) []checkupFinding {
 // poolFindings reads the conditions Cilium keeps on a pool: cilium.io/IPsAvailable and
 // cilium.io/IPsTotal carry their number as the message. An empty pool is critical once a
 // Service waits for an address.
-func poolFindings(pools []ciliumPoolObject, waiting bool) []checkupFinding {
+func poolFindings(in lbInputs, waiting bool) []checkupFinding {
 	findings := []checkupFinding{}
 
-	for _, p := range pools {
+	for _, p := range in.cilium {
 		if c := kubeConditions(p.Status.Conditions).get("cilium.io/PoolConflict"); c.Status == "True" {
 			findings = append(findings, checkupFinding{Kind: findLBPoolConflict, Severity: sevWarning, Name: p.Metadata.Name, Message: c.Message})
+		}
+
+		if in.ciliumL2.unannounced(p, in.services) {
+			findings = append(findings, checkupFinding{Kind: findLBCiliumPoolUnannounced, Severity: sevWarning, Name: p.Metadata.Name})
 		}
 
 		total, available, ok := p.counts()

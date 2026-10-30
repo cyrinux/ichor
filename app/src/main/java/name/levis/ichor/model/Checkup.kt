@@ -69,6 +69,8 @@ object CheckupKind {
     const val LB_POOL_CONFLICT = "lbPoolConflict"
     /** A MetalLB pool no L2Advertisement or BGPAdvertisement covers. */
     const val LB_POOL_UNADVERTISED = "lbPoolUnadvertised"
+    /** A Cilium pool whose Services no CiliumL2AnnouncementPolicy announces, BGP being off. */
+    const val LB_CILIUM_POOL_UNANNOUNCED = "lbCiliumPoolUnannounced"
     /** A MetalLB component that refused its configuration (message: MetalLB's summary). */
     const val LB_CONFIG_ERROR = "lbConfigError"
     /** A BGP session a speaker reports down (name: the peer, node: the speaker's, extra: its address). */
