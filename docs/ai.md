@@ -86,3 +86,15 @@ SRC='{"mode":"proxy","namespace":"monitoring","service":"prometheus-operated","p
 go run ./cmd/probe prom-metrics "$SRC"
 ANTHROPIC_API_KEY=... go run ./cmd/probe prom-chat "$SRC" anthropic "memory by namespace, top ten"
 ```
+
+## Evaluating a model or a prompt change
+
+`go/ichorgo/testdata/ai_eval/` holds invented reports (an etcd NOSPACE alarm, a crash loop, a
+healthy cluster, a report that tries to give the model orders…), each with the words a good answer
+must hold and the ones it must not. `just ai-eval anthropic <model>` sends them to the model with
+your API key, prints one row per case and a total, and fails when the mean score is under 0.8.
+`just probe diag-eval openai <model> etcd-nospace` runs one case; `ICHOR_AI_BASE_URL` points it at
+any OpenAI-compatible server. A case's score is the share of its required words found, 0 if it holds
+a forbidden one or runs past its word limit: a rough number to compare two runs, not a judgement of
+the answer. Only the set's reports are sent, nothing from a cluster. The phone's model runs only in
+the apps, so `device` says so and skips.

@@ -12,6 +12,7 @@ const noOutput = "\x00"
 type env struct {
 	cmd, cfg, context, kubeServer, ageRecipient, configPath, home, maskWords, nodes string
 	mask, stream                                                                    bool
+	minScore                                                                        float64
 }
 
 // command is one subcommand of the probe: its name, its arguments as the usage shows them
@@ -26,7 +27,7 @@ type command struct {
 
 // commands is every subcommand, by area.
 func commands() []command {
-	return slices.Concat(nodeCommands, configCommands, kubeCommands, dataCommands, etcdCommands, omniCommands, historyCommands, diagCommands, pluginCommands, pluginI18nCommands, runbookCommands, searchCommands, fleetCommands, alertRulesCommands)
+	return slices.Concat(nodeCommands, configCommands, kubeCommands, dataCommands, etcdCommands, omniCommands, historyCommands, diagCommands, pluginCommands, pluginI18nCommands, runbookCommands, searchCommands, fleetCommands, alertRulesCommands, evalCommands)
 }
 
 func lookup(name string) (command, bool) {

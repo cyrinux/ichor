@@ -101,6 +101,7 @@ func main() {
 	dataDir := flag.String("data-dir", "", "keep what the app keeps across launches (audit log, scan reports) in this directory")
 	timing := flag.Bool("timing", false, "print the startup trace (config parse, session, first node, all nodes) to stderr")
 	stream := flag.Bool("stream", false, "overview: print each node as it answers, then the complete overview")
+	minScore := flag.Float64("min", 0, "diag-eval: fail when the mean score is under this")
 	nodes := flag.String("nodes", "", "clusterstats: sample only these nodes (comma-separated; default: every node)")
 	// Flags may also follow the command: `probe overview -timing -context lab`.
 	_ = flag.CommandLine.Parse(hoistFlags(flag.CommandLine, os.Args[1:])) //nolint:errcheck // ExitOnError
@@ -140,7 +141,7 @@ func main() {
 
 	out, err := c.run(env{
 		cmd: c.name, cfg: cfg, context: *contextName, kubeServer: *kubeServer, ageRecipient: *ageRecipient,
-		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords, stream: *stream, nodes: *nodes,
+		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords, stream: *stream, nodes: *nodes, minScore: *minScore,
 	})
 	if err != nil {
 		fail(err)

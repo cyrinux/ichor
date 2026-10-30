@@ -33,6 +33,8 @@ an issue first so we can agree on the approach before you spend time on it.
   baseline (`git diff --stat '*/lint-baseline.xml'` shows nothing). To refresh one on purpose
   (an AGP bump that renames checks, a category emptied), delete it, run the check twice (the
   first run writes it and stops) and review the diff in the PR.
+- Run `just ai-eval <provider> <model>` when touching a `*_prompt.go` (needs an API key, so not
+  in CI); `go test ./ichorgo -run AIEval` keeps every case inside the phone model's window.
 - No source file over 800 lines (`just length-check`); split it by domain instead.
 - No `panic(` in Go outside tests (`scripts/check-panics.py`): return an error. `onPanic` is
   the last net, not the first; the few exceptions (init-time embedded files, re-panics) are
