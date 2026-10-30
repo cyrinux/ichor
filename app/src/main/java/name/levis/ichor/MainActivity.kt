@@ -257,6 +257,8 @@ private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit)
     val everUnlocked by app.appLock.everUnlocked.collectAsStateWithLifecycle()
     val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    // A panic app had the config deleted while this activity was alive.
+    LaunchedEffect(Unit) { app.appLock.configDeleted.collect { onWiped() } }
 
     Box {
         if (everUnlocked) Root(app, targets)
