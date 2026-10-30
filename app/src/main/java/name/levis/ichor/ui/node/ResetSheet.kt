@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -30,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.NodeResetPlan
@@ -122,11 +122,7 @@ fun ResetConfirmDialog(
                 CircularProgressIndicator(Modifier.padding(end = 8.dp))
                 Text(stringResource(R.string.reset_plan_loading), style = MaterialTheme.typography.bodyMedium)
             }
-            is UiState.Failed -> Text(
-                s.message.resolve(LocalContext.current),
-                color = LocalStatusColors.current.bad,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            is UiState.Failed -> LoadFailureRow(s.message, vm::loadPlan)
             is UiState.Loaded -> ResetPlanContent(s.data, request) { chosen = it }
         }
     }

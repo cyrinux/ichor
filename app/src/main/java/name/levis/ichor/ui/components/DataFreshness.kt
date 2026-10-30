@@ -17,6 +17,7 @@ import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatTime
 
 /**
@@ -49,9 +50,10 @@ fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: 
             stringResource(R.string.common_showing_data_from, time, ago)
         else -> stringResource(R.string.common_updated_ago, time, ago)
     }
-    // A failed refresh stands out: what is on screen may no longer be true.
+    // A failed refresh stands out in the warning tint (as on iOS): what is on screen may no longer
+    // be true, but the read failed, not the cluster. Text stays onSurface (the StatusPill rule).
     val (background, content) = if (error != null) {
-        MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        LocalStatusColors.current.warn.copy(alpha = 0.15f) to MaterialTheme.colorScheme.onSurface
     } else {
         MaterialTheme.colorScheme.surfaceContainer to MaterialTheme.colorScheme.onSurfaceVariant
     }

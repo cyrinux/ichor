@@ -28,7 +28,7 @@ import name.levis.ichor.model.KubeSpanDiagPeer
 import name.levis.ichor.model.SiderolinkDiag
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
@@ -47,7 +47,7 @@ class KubeSpanDiagViewModel(private val talos: TalosRepository) : LoadingViewMod
 /** The peer as [node] sees it, with why its link is down. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>, node: String, publicKey: String, onDismiss: () -> Unit) {
+fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>, onRetry: () -> Unit, node: String, publicKey: String, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
@@ -56,7 +56,7 @@ fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>
             Text("$nodeName → $peerName", style = MaterialTheme.typography.titleMedium)
             when (diag) {
                 UiState.Loading -> MutedText(stringResource(R.string.kubespan_diag_loading))
-                is UiState.Failed -> Text(diag.message.asString(), color = LocalStatusColors.current.bad)
+                is UiState.Failed -> LoadFailureRow(diag.message, onRetry)
                 is UiState.Loaded -> {
                     val all = diag.data
                     val ofNode = all.nodes.firstOrNull { it.node == node }

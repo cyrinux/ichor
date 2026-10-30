@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.health
 
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.data.MaskScoped
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
@@ -256,5 +257,6 @@ private fun HealthHeader(state: HealthState, onRerun: () -> Unit) {
         }
         if (!state.running) Button(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
     }
-    state.error?.let { Text(it, color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
+    // Rerun, right above, is the retry.
+    state.error?.let { LoadFailureRow(it, onRetry = null) }
 }

@@ -31,6 +31,7 @@
     <string name="common_updated_ago">Updated %1$s · %2$s</string>
     <string name="common_refreshing_showing">Refreshing… (showing data from %1$s)</string>
     <string name="common_refresh_failed">Couldn\'t refresh: %1$s</string>
+    <string name="common_load_failed">Couldn\'t load: %1$s</string>
     <string name="common_showing_data_from">Showing data from %1$s (%2$s)</string>
     <string name="common_status_ready">Ready</string>
     <string name="common_status_not_ready">Not ready</string>
@@ -1157,7 +1158,6 @@
     <string name="node_pressure_io">Disk I/O</string>
     <string name="node_pressure_most">Most affected: %1$s</string>
     <string name="node_pressure_details">Details</string>
-    <string name="node_pressure_unavailable">Pressure unavailable: %1$s</string>
     <plurals name="node_cgroups_oom">
         <item quantity="one">%1$s: OOM-killed %2$d time since boot</item>
         <item quantity="other">%1$s: OOM-killed %2$d times since boot</item>
@@ -1480,7 +1480,6 @@
     <string name="upgrade_target_version">Target version</string>
     <string name="upgrade_target_hint">e.g. v1.14.2</string>
     <string name="upgrade_bad_version">Not a Talos version (vX.Y.Z)</string>
-    <string name="upgrade_releases_failed">Could not list Talos releases: %1$s</string>
     <string name="upgrade_prerelease">%1$s (pre-release)</string>
     <string name="upgrade_image">Installer image</string>
     <string name="upgrade_same_version">%1$s is already installed.</string>
@@ -2015,7 +2014,6 @@
     <string name="apps_detail_workloads">Workloads</string>
     <string name="apps_detail_workloads_loading">Finding its workloads…</string>
     <string name="apps_detail_workloads_none">No Deployment, StatefulSet or DaemonSet runs it.</string>
-    <string name="apps_detail_workloads_failed">Could not list its workloads: %1$s</string>
     <string name="apps_detail_routes">Web access</string>
     <string name="apps_detail_routes_loading">Finding its addresses…</string>
     <string name="apps_detail_routes_failed">Could not find its addresses: %1$s</string>
@@ -2852,7 +2850,6 @@
     <string name="argo_net_problem_service">Service %1$s has no ready pods</string>
     <string name="argo_net_problem_backend">%1$s %2$s has no healthy backend</string>
     <string name="argo_net_empty">No Service: this app takes no traffic</string>
-    <string name="argo_net_failed">Could not draw the network: %1$s</string>
     <string name="argo_net_legend_ok">Serving</string>
     <string name="argo_net_legend_warning">Degraded</string>
     <string name="argo_net_legend_critical">Broken</string>
@@ -4443,7 +4440,6 @@
     <string name="mono_text_smaller">Smaller text</string>
     <!-- Alertmanager -->
     <string name="alerts_title">Alerts</string>
-    <string name="alerts_unreadable">Could not read the alerts: %1$s</string>
     <string name="alerts_loading">Reading the alerts…</string>
     <string name="alerts_none_firing">Nothing is firing.</string>
     <string name="alerts_severity_critical">Critical</string>
@@ -4647,7 +4643,6 @@
     <string name="imagescan_saved_open_failed">Could not open the report: %1$s</string>
     <string name="imagescan_saved_system">System images · %1$s</string>
     <string name="imagescan_system_loading">Reading the node\'s system images…</string>
-    <string name="imagescan_system_unavailable">System images need the os:admin role: %1$s</string>
     <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with %1$s. It runs as a Job in the %2$s namespace, which deletes itself afterwards.</string>
     <string name="imagescan_system_scan">Scan system images</string>
     <string name="imagescan_object_refs_note">Scanned by the image references in this workload\'s spec: the findings are for those tags, not necessarily what runs right now.</string>
@@ -5649,7 +5644,6 @@
     <string name="plugins_remove">Remove</string>
     <string name="plugins_remove_title">Remove %1$s?</string>
     <string name="plugins_remove_text">Its file is deleted from this phone and its tab disappears.</string>
-    <string name="plugins_load_failed">Plugins: %1$s</string>
     <string name="plugins_explainer">An imported plugin reads only the resources it declares, with your own Kubernetes access, and talks to nothing but the Kubernetes API.</string>
     <string name="plugins_source_paste">Paste</string>
     <string name="plugins_source_file">File</string>
@@ -5697,7 +5691,6 @@
     <string name="repo_update_bot_present">A bot is configured: %1$s</string>
     <string name="repo_update_bot_none">No update bot in this repository.</string>
     <string name="repo_update_bot_propose">Propose a configuration…</string>
-    <string name="repo_update_bot_failed">Could not read the repository: %1$s</string>
     <string name="repo_update_bot_sheet_title">Add a dependency-update bot configuration</string>
     <string name="repo_update_bot_sheet_body">The app wrote %1$s for the files it found. Read it, then open a pull request: nothing changes until you merge it.</string>
     <string name="repo_update_bot_continue">Continue to the pull request</string>

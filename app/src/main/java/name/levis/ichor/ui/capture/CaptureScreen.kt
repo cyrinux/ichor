@@ -134,7 +134,7 @@ fun CaptureScreen(
         // The packets use the whole width (read sideways too); the setup form stays a readable column.
         Column(Modifier.padding(padding).then(if (s == null) Modifier.readableWidth() else Modifier).fillMaxSize()) {
             if (s == null) {
-                CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start, peers = peers)
+                CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start, peers = peers, onRetryLinks = linksVm::refresh)
             } else {
                 if (!s.running) {
                     FinishedActions(

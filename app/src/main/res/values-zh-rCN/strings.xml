@@ -26,6 +26,7 @@
     <string name="common_updated_ago">更新于 %1$s · %2$s</string>
     <string name="common_refreshing_showing">正在刷新…（显示 %1$s 的数据）</string>
     <string name="common_refresh_failed">无法刷新：%1$s</string>
+    <string name="common_load_failed">无法加载：%1$s</string>
     <string name="common_showing_data_from">显示 %1$s 的数据（%2$s）</string>
     <string name="common_status_ready">就绪</string>
     <string name="common_status_not_ready">未就绪</string>
@@ -1114,7 +1115,6 @@
     <string name="node_pressure_io">磁盘 I/O</string>
     <string name="node_pressure_most">受影响最大：%1$s</string>
     <string name="node_pressure_details">详情</string>
-    <string name="node_pressure_unavailable">压力数据不可用：%1$s</string>
     <plurals name="node_cgroups_oom">
         <item quantity="other">%1$s：自启动以来被 OOM 终止 %2$d 次</item>
     </plurals>
@@ -1426,7 +1426,6 @@
     <string name="upgrade_target_version">目标版本</string>
     <string name="upgrade_target_hint">例如 v1.14.2</string>
     <string name="upgrade_bad_version">不是有效的 Talos 版本（vX.Y.Z）</string>
-    <string name="upgrade_releases_failed">无法列出 Talos 版本：%1$s</string>
     <string name="upgrade_prerelease">%1$s（预发布）</string>
     <string name="upgrade_image">安装镜像</string>
     <string name="upgrade_same_version">%1$s 已安装。</string>
@@ -1951,7 +1950,6 @@
     <string name="apps_detail_workloads">工作负载</string>
     <string name="apps_detail_workloads_loading">正在查找其工作负载…</string>
     <string name="apps_detail_workloads_none">没有运行它的 Deployment、StatefulSet 或 DaemonSet。</string>
-    <string name="apps_detail_workloads_failed">无法列出其工作负载：%1$s</string>
     <string name="apps_detail_routes">Web 访问</string>
     <string name="apps_detail_routes_loading">正在查找其地址…</string>
     <string name="apps_detail_routes_failed">无法找到其地址：%1$s</string>
@@ -2760,7 +2758,6 @@
     <string name="argo_net_problem_service">Service %1$s 没有就绪的 Pod</string>
     <string name="argo_net_problem_backend">%1$s %2$s 没有健康的后端</string>
     <string name="argo_net_empty">没有 Service：此应用不接收流量</string>
-    <string name="argo_net_failed">无法绘制网络：%1$s</string>
     <string name="argo_net_legend_ok">正常服务</string>
     <string name="argo_net_legend_warning">降级</string>
     <string name="argo_net_legend_critical">故障</string>
@@ -4329,7 +4326,6 @@
     <string name="mono_text_smaller">减小文字</string>
     <!-- Alertmanager -->
     <string name="alerts_title">告警</string>
-    <string name="alerts_unreadable">无法读取告警：%1$s</string>
     <string name="alerts_loading">正在读取告警…</string>
     <string name="alerts_none_firing">没有触发中的告警。</string>
     <string name="alerts_severity_critical">严重</string>
@@ -4526,7 +4522,6 @@
     <string name="imagescan_saved_open_failed">无法打开报告：%1$s</string>
     <string name="imagescan_saved_system">系统镜像 · %1$s</string>
     <string name="imagescan_system_loading">正在读取节点的系统镜像…</string>
-    <string name="imagescan_system_unavailable">系统镜像需要 os:admin 角色：%1$s</string>
     <string name="imagescan_system_hint">使用 %1$s 按摘要（digest）检查 Talos 在此节点上运行的镜像（kubelet、etcd、控制平面）是否存在已知漏洞。扫描以 Job 形式在 %2$s 命名空间中运行，完成后自行删除。</string>
     <string name="imagescan_system_scan">扫描系统镜像</string>
     <string name="imagescan_object_refs_note">按此工作负载 spec 中的镜像引用扫描：结果针对这些标签，不一定是当前实际运行的内容。</string>
@@ -5511,7 +5506,6 @@
     <string name="plugins_remove">移除</string>
     <string name="plugins_remove_title">移除 %1$s？</string>
     <string name="plugins_remove_text">其文件将从此手机删除，对应的标签页也会消失。</string>
-    <string name="plugins_load_failed">插件：%1$s</string>
     <string name="plugins_explainer">导入的插件只会使用你自己的 Kubernetes 访问权限读取其声明的资源，且只与 Kubernetes API 通信。</string>
     <string name="plugins_source_paste">粘贴</string>
     <string name="plugins_source_file">文件</string>
@@ -5559,7 +5553,6 @@
     <string name="repo_update_bot_present">已配置机器人：%1$s</string>
     <string name="repo_update_bot_none">此仓库中没有更新机器人。</string>
     <string name="repo_update_bot_propose">提议一份配置…</string>
-    <string name="repo_update_bot_failed">无法读取仓库：%1$s</string>
     <string name="repo_update_bot_sheet_title">添加依赖更新机器人配置</string>
     <string name="repo_update_bot_sheet_body">应用已根据找到的文件写好 %1$s。请先阅读，再打开拉取请求：在你合并之前不会有任何更改。</string>
     <string name="repo_update_bot_continue">继续创建拉取请求</string>

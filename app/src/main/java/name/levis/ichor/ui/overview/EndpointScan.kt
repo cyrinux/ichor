@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.setClusterEndpoints
 import name.levis.ichor.addFoundEndpoints
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -144,7 +145,7 @@ fun EndpointScanDialog(
                         Networks(s.networks)
                     }
                     is EndpointScanState.Done -> ScanResult(s, labelOf)
-                    is EndpointScanState.Failed -> Text(s.message, color = MaterialTheme.colorScheme.error)
+                    is EndpointScanState.Failed -> LoadFailureRow(s.message, onRetry = { start() })
                 }
             }
         },

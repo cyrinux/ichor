@@ -13,17 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.TalosApp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.apps.AppIconTile
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionCard
 
@@ -40,6 +39,7 @@ internal fun <T> GitOpsCardFrame(
     appCount: (T) -> Int,
     attention: (T) -> List<ServiceHealth>,
     onOpen: () -> Unit,
+    onRetry: (() -> Unit)?,
     body: @Composable (T) -> Unit,
 ) {
     val data = (state as? UiState.Loaded)?.data
@@ -54,11 +54,7 @@ internal fun <T> GitOpsCardFrame(
             UiState.Loading -> Box(
                 Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh),
             )
-            is UiState.Failed -> MutedText(
-                stringResource(R.string.data_services_unreadable, state.message.asString()),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            is UiState.Failed -> LoadFailureRow(state.message, onRetry, compact = true)
             is UiState.Loaded -> {
                 body(state.data)
                 UpdatesCount()

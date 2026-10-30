@@ -18,8 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
@@ -33,7 +33,6 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.alerts.severityColor
 import name.levis.ichor.ui.alerts.severityLabel
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -88,7 +87,7 @@ val UiState<AlertsOverview?>.alertmanagerFound: Boolean
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AlertsCard(state: UiState<AlertsOverview?>, onOpen: () -> Unit) {
+fun AlertsCard(state: UiState<AlertsOverview?>, onOpen: () -> Unit, onRetry: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -104,11 +103,7 @@ fun AlertsCard(state: UiState<AlertsOverview?>, onOpen: () -> Unit) {
                 )
             }
             when {
-                state is UiState.Failed -> MutedText(
-                    stringResource(R.string.alerts_unreadable, state.message.asString()),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                state is UiState.Failed -> LoadFailureRow(state.message, onRetry, compact = true)
                 counts == null -> MutedText(stringResource(R.string.alerts_loading))
                 counts.firing == 0 -> MutedText(stringResource(R.string.alerts_none_firing))
                 else -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

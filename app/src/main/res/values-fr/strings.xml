@@ -29,6 +29,7 @@
     <string name="common_updated_ago">Mis à jour %1$s · %2$s</string>
     <string name="common_refreshing_showing">Actualisation… (données de %1$s affichées)</string>
     <string name="common_refresh_failed">Actualisation impossible : %1$s</string>
+    <string name="common_load_failed">Chargement impossible : %1$s</string>
     <string name="common_showing_data_from">Données de %1$s affichées (%2$s)</string>
     <string name="common_status_ready">Prêt</string>
     <string name="common_status_not_ready">Non prêt</string>
@@ -1157,7 +1158,6 @@
     <string name="node_pressure_io">E/S disque</string>
     <string name="node_pressure_most">Le plus touché&#160;: %1$s</string>
     <string name="node_pressure_details">Détails</string>
-    <string name="node_pressure_unavailable">Pression indisponible&#160;: %1$s</string>
     <plurals name="node_cgroups_oom">
         <item quantity="one">%1$s&#160;: tué %2$d fois par manque de mémoire depuis le démarrage</item>
         <item quantity="other">%1$s&#160;: tué %2$d fois par manque de mémoire depuis le démarrage</item>
@@ -1481,7 +1481,6 @@
     <string name="upgrade_target_version">Version cible</string>
     <string name="upgrade_target_hint">ex. v1.14.2</string>
     <string name="upgrade_bad_version">Pas une version de Talos (vX.Y.Z)</string>
-    <string name="upgrade_releases_failed">Impossible de lister les versions de Talos&#160;: %1$s</string>
     <string name="upgrade_prerelease">%1$s (préversion)</string>
     <string name="upgrade_image">Image d\'installation</string>
     <string name="upgrade_same_version">%1$s est déjà installée.</string>
@@ -2016,7 +2015,6 @@
     <string name="apps_detail_workloads">Charges de travail</string>
     <string name="apps_detail_workloads_loading">Recherche de ses charges de travail…</string>
     <string name="apps_detail_workloads_none">Aucun Deployment, StatefulSet ou DaemonSet ne l\'exécute.</string>
-    <string name="apps_detail_workloads_failed">Impossible de lister ses charges de travail : %1$s</string>
     <string name="apps_detail_routes">Accès web</string>
     <string name="apps_detail_routes_loading">Recherche de ses adresses…</string>
     <string name="apps_detail_routes_failed">Impossible de trouver ses adresses : %1$s</string>
@@ -2851,7 +2849,6 @@
     <string name="argo_net_problem_service">Le service %1$s n’a aucun pod prêt</string>
     <string name="argo_net_problem_backend">%1$s %2$s n’a aucun backend sain</string>
     <string name="argo_net_empty">Aucun service : cette app ne reçoit pas de trafic</string>
-    <string name="argo_net_failed">Impossible de dessiner le réseau : %1$s</string>
     <string name="argo_net_legend_ok">Sert</string>
     <string name="argo_net_legend_warning">Dégradé</string>
     <string name="argo_net_legend_critical">Cassé</string>
@@ -4440,7 +4437,6 @@
     <string name="mono_text_smaller">Texte plus petit</string>
     <!-- Alertmanager -->
     <string name="alerts_title">Alertes</string>
-    <string name="alerts_unreadable">Impossible de lire les alertes : %1$s</string>
     <string name="alerts_loading">Lecture des alertes…</string>
     <string name="alerts_none_firing">Aucune alerte ne se déclenche.</string>
     <string name="alerts_severity_critical">Critique</string>
@@ -4644,7 +4640,6 @@
     <string name="imagescan_saved_open_failed">Impossible d\'ouvrir le rapport : %1$s</string>
     <string name="imagescan_saved_system">Images système · %1$s</string>
     <string name="imagescan_system_loading">Lecture des images système du nœud…</string>
-    <string name="imagescan_system_unavailable">Les images système nécessitent le rôle os:admin : %1$s</string>
     <string name="imagescan_system_hint">Recherche les vulnérabilités connues des images que Talos exécute sur ce nœud (kubelet, etcd, le plan de contrôle), par digest, avec %1$s. L\'analyse tourne comme Job dans le namespace %2$s, qui se supprime ensuite.</string>
     <string name="imagescan_system_scan">Analyser les images système</string>
     <string name="imagescan_object_refs_note">Analyse par les références d\'image de la spec de cette charge : les résultats portent sur ces tags, pas forcément sur ce qui tourne en ce moment.</string>
@@ -5644,7 +5639,6 @@
     <string name="plugins_remove">Supprimer</string>
     <string name="plugins_remove_title">Supprimer %1$s ?</string>
     <string name="plugins_remove_text">Son fichier est supprimé de ce téléphone et son onglet disparaît.</string>
-    <string name="plugins_load_failed">Plugins : %1$s</string>
     <string name="plugins_explainer">Un plugin importé ne lit que les ressources qu\'il déclare, avec votre propre accès Kubernetes, et ne contacte rien d\'autre que l\'API Kubernetes.</string>
     <string name="plugins_source_paste">Coller</string>
     <string name="plugins_source_file">Fichier</string>
@@ -5692,7 +5686,6 @@
     <string name="repo_update_bot_present">Un bot est configuré : %1$s</string>
     <string name="repo_update_bot_none">Aucun bot de mise à jour dans ce dépôt.</string>
     <string name="repo_update_bot_propose">Proposer une configuration…</string>
-    <string name="repo_update_bot_failed">Impossible de lire le dépôt : %1$s</string>
     <string name="repo_update_bot_sheet_title">Ajouter une configuration de bot de mise à jour des dépendances</string>
     <string name="repo_update_bot_sheet_body">L\'app a rédigé %1$s pour les fichiers trouvés. Relisez-le, puis ouvrez une pull request : rien ne change tant que vous ne la fusionnez pas.</string>
     <string name="repo_update_bot_continue">Continuer vers la pull request</string>

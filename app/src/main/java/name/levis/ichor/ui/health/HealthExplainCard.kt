@@ -26,12 +26,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.diagnosis.aiTarget
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.copyToClipboard
-import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * The health check helper, under a failed run when AI is enabled: explains the failure in
@@ -100,9 +100,8 @@ private fun ExplainAnswer(explain: ExplainState) {
             Text(explain.text, style = MaterialTheme.typography.bodyMedium)
         }
     }
-    explain.error?.let {
-        Text(stringResource(R.string.common_stream_failed, it), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium)
-    }
+    // The Explain button above asks again.
+    explain.error?.let { LoadFailureRow(it, onRetry = null) }
     if (explain.text.isNotEmpty() && !explain.running) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             MutedText(stringResource(R.string.ai_disclaimer), Modifier.weight(1f))

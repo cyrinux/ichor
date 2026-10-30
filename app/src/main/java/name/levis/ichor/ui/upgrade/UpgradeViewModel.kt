@@ -49,6 +49,12 @@ class UpgradeTargetViewModel(private val upgrades: UpgradeManager) : ViewModel()
     private var imageJob: Job? = null
 
     init {
+        loadReleases()
+    }
+
+    /** Reads the Talos releases for the suggestions; again on Retry after a failed read. */
+    fun loadReleases() {
+        _releases.value = UiState.Loading
         viewModelScope.launch {
             _releases.value = uiStateOf { upgrades.releases() }
         }
