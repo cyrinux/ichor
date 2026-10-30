@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.upgrade
 
+import name.levis.ichor.ui.components.LoadFailureRow
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import name.levis.ichor.ui.components.ClusterScreenTitle
@@ -379,7 +380,7 @@ private fun UpgradeSetup(
             textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
             modifier = Modifier.fillMaxWidth(),
         )
-        ReleaseChips(releases, plan.currentVersion, version) { version = it }
+        ReleaseChips(releases, plan.currentVersion, version, targetVm::loadReleases) { version = it }
 
         if (image.isNotEmpty()) {
             Text(stringResource(R.string.upgrade_image), style = MaterialTheme.typography.labelMedium)
@@ -428,10 +429,16 @@ private fun UpgradeSetup(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ReleaseChips(releases: UiState<List<TalosRelease>>, currentVersion: String, selected: String, onPick: (String) -> Unit) {
+private fun ReleaseChips(
+    releases: UiState<List<TalosRelease>>,
+    currentVersion: String,
+    selected: String,
+    onRetry: () -> Unit,
+    onPick: (String) -> Unit,
+) {
     when (releases) {
         UiState.Loading -> Unit
-        is UiState.Failed -> MutedText(stringResource(R.string.upgrade_releases_failed, releases.message.asString()))
+        is UiState.Failed -> LoadFailureRow(releases.message, onRetry, compact = true)
         is UiState.Loaded -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             releaseSuggestions(releases.data).filter { it.version != currentVersion }.take(MAX_RELEASE_CHIPS).forEach { r ->
                 FilterChip(

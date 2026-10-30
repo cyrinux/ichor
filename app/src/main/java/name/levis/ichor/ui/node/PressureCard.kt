@@ -26,7 +26,7 @@ import name.levis.ichor.model.PressureLevel
 import name.levis.ichor.model.pressureLevel
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.SectionLoaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -43,7 +43,7 @@ class PressureViewModel(private val talos: TalosRepository, private val node: St
  * limit. The per-cgroup detail lives in the Cgroups tab ([onDetails]).
  */
 @Composable
-fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit) {
+fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit, onRetry: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -51,15 +51,12 @@ fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit) {
                 TextButton(onClick = onDetails) { Text(stringResource(R.string.node_pressure_details)) }
             }
             MutedText(stringResource(R.string.node_pressure_caption))
-            when (state) {
-                UiState.Loading -> Text("…", style = MaterialTheme.typography.bodyMedium)
-                is UiState.Failed -> Text(
-                    stringResource(R.string.node_pressure_unavailable, state.message.asString()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = LocalStatusColors.current.bad,
-                )
-                is UiState.Loaded -> PressureContent(state.data)
-            }
+            SectionLoaded(
+                state,
+                onRetry,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                loading = { Text("…", style = MaterialTheme.typography.bodyMedium) },
+            ) { PressureContent(it) }
         }
     }
 }

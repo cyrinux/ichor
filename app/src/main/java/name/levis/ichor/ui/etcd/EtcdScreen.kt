@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.etcd
 
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.share.ShareLinkButton
@@ -278,6 +279,7 @@ fun EtcdScreen(
                 ) {
                     EtcdContent(
                         etcd = s.data,
+                        onRefresh = vm::refresh,
                         knownHostnames = remember { vm.knownHostnames() },
                         defrag = defrag,
                         canDefrag = canDefrag,
@@ -428,6 +430,7 @@ data class DefragRequest(val targets: List<EtcdNodeStatus>, val hostnames: Map<S
 @Composable
 private fun EtcdContent(
     etcd: EtcdOverview,
+    onRefresh: () -> Unit,
     knownHostnames: Map<String, String>,
     defrag: DefragState,
     canDefrag: Boolean,
@@ -477,7 +480,7 @@ private fun EtcdContent(
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            etcd.error?.let { item { Text(it, color = colors.bad) } }
+            etcd.error?.let { item { LoadFailureRow(it, onRefresh) } }
             if (showDefrag) {
                 item {
                     DefragPanel(

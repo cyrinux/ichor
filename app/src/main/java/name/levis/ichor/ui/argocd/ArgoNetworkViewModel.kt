@@ -48,6 +48,12 @@ class ArgoNetworkViewModel(private val gitOps: GitOpsRepository, private val kub
         fetch(app)
     }
 
+    /** Reads [app]'s graph again (Retry after a failed read), unless a read is under way. */
+    fun retry(app: ArgoApp) {
+        if (job?.isActive == true) return
+        fetch(app)
+    }
+
     private fun fetch(app: ArgoApp) {
         job = viewModelScope.launch {
             _state.value = try {

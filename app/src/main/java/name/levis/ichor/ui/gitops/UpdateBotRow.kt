@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ClusterRepo
@@ -80,10 +81,7 @@ fun UpdateBotRow(app: TalosApp, repo: ClusterRepo) {
                 CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                 MutedText(stringResource(R.string.repo_update_bot_checking))
             }
-            is BotCheck.Failed -> {
-                Text(stringResource(R.string.repo_update_bot_failed, c.message), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.common_retry)) }
-            }
+            is BotCheck.Failed -> LoadFailureRow(c.message, onRetry = { attempt++ })
             is BotCheck.Loaded -> when {
                 c.config.configured -> Text(
                     stringResource(R.string.repo_update_bot_present, c.config.present.joinToString(", ") { it.path }),

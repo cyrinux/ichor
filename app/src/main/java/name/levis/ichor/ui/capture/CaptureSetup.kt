@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.capture
 
 import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.ui.components.SMOKE_CAPTURE_START
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +40,6 @@ import name.levis.ichor.model.captureInterfaces
 import name.levis.ichor.model.isUp
 import name.levis.ichor.model.problem
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.ToggleRow
@@ -122,6 +122,8 @@ fun CaptureSetup(
     onStart: () -> Unit,
     /** The other nodes a second capture can run on (null: not offered). */
     peers: UiState<List<NodeOverview>>? = null,
+    /** Reads the interfaces again after a failed read (null: no Retry). */
+    onRetryLinks: (() -> Unit)? = null,
 ) {
     val colors = LocalStatusColors.current
     var showVirtual by rememberSaveable { mutableStateOf(false) }
@@ -133,7 +135,7 @@ fun CaptureSetup(
         SectionTitle(stringResource(R.string.capture_interface))
         when (links) {
             UiState.Loading -> Text(stringResource(R.string.capture_loading_interfaces), style = MaterialTheme.typography.bodySmall)
-            is UiState.Failed -> Text(links.message.asString(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
+            is UiState.Failed -> LoadFailureRow(links.message, onRetryLinks, compact = true)
             is UiState.Loaded -> {
                 val shown = captureInterfaces(links.data, showVirtual)
                 val hidden = links.data.count { it.virtual }

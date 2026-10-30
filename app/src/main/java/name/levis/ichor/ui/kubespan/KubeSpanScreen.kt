@@ -138,6 +138,7 @@ fun KubeSpanScreen(
             nodeName = vm.hostnames()[node.node] ?: node.node,
             peerName = peer.label.ifBlank { peer.publicKey.take(12) },
             diag = diag,
+            onRetry = diagVm::refresh,
             node = node.node,
             publicKey = peer.publicKey,
             onDismiss = { opened = null },

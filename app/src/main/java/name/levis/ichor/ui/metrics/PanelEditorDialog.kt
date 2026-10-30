@@ -17,7 +17,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -35,6 +34,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.PromResult
@@ -110,7 +110,8 @@ fun PanelEditorDialog(
                 if (running) LinearProgressIndicator(Modifier.fillMaxWidth())
                 preview?.fold(
                     onSuccess = { PromChart(panel, it) },
-                    onFailure = { Text(it.userMessage(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) },
+                    // Run, right above, is the retry.
+                    onFailure = { LoadFailureRow(it.userMessage(), onRetry = null, compact = true) },
                 )
             }
         },

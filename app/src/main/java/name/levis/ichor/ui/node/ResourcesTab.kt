@@ -88,7 +88,7 @@ internal fun ResourcesTab(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                ResourcesContent(node, s.data, clockState, pressure = onPressureDetails?.let { pressureState to it })
+                ResourcesContent(node, s.data, clockState, pressure = onPressureDetails?.let { pressureState to it }, onPressureRetry = pressure::refresh)
             }
             DataFreshness(s, edgeToEdge = false)
         }
@@ -96,7 +96,13 @@ internal fun ResourcesTab(
 }
 
 @Composable
-private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<NodeTime>, pressure: Pair<UiState<CgroupReport>, () -> Unit>?) {
+private fun ResourcesContent(
+    node: String,
+    r: NodeResources,
+    clock: UiState<NodeTime>,
+    pressure: Pair<UiState<CgroupReport>, () -> Unit>?,
+    onPressureRetry: () -> Unit,
+) {
     val uptime = if (r.bootTime > 0) localizedDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
     val cpu = if (r.cpuModel.isBlank()) {
         pluralStringResource(R.plurals.node_cpu_threads, r.cpuCount, r.cpuCount)
@@ -128,7 +134,7 @@ private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<Node
             }
         }
         // Right after memory: pressure says whether CPU, memory or disk actually hold tasks back.
-        pressure?.let { (state, onDetails) -> item { PressureCard(state, onDetails) } }
+        pressure?.let { (state, onDetails) -> item { PressureCard(state, onDetails, onPressureRetry) } }
         if (r.mounts.isNotEmpty()) {
             item {
                 Card(Modifier.fillMaxWidth()) {

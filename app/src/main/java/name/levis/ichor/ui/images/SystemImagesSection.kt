@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.data.ImageScanRepository
 import name.levis.ichor.data.ImageScanSession
@@ -33,14 +34,12 @@ import name.levis.ichor.model.shortDigest
 import name.levis.ichor.model.systemImagesScanId
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.imagescan.IMAGESCAN_NAMESPACE
 import name.levis.ichor.ui.imagescan.ScanProgressLines
 import name.levis.ichor.ui.imagescan.ScanSummary
 import name.levis.ichor.ui.imagescan.coreErrorText
-import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * The images Talos runs on [node] outside of any app (kubelet, etcd, the control plane…), and
@@ -75,6 +74,8 @@ data class SystemImagesUi(
     val scanner: ImageScanner,
     val canScan: Boolean,
     val onScan: (List<SystemImage>) -> Unit,
+    /** Reads the system images again after a failed read. */
+    val onRetry: () -> Unit,
     val onStop: () -> Unit,
     val onOpen: (ImageScanReport, String) -> Unit,
 )
@@ -86,7 +87,7 @@ fun SystemImagesSection(ui: SystemImagesUi) {
         SectionTitle(stringResource(R.string.imagescan_system_title))
         when (val state = ui.state) {
             UiState.Loading -> MutedText(stringResource(R.string.imagescan_system_loading))
-            is UiState.Failed -> MutedText(stringResource(R.string.imagescan_system_unavailable, state.message.asString()))
+            is UiState.Failed -> LoadFailureRow(state.message, ui.onRetry, compact = true)
             is UiState.Loaded -> {
                 state.data.forEach { SystemImageRow(it) }
                 if (ui.canScan && state.data.isNotEmpty()) ScanControls(ui, state.data)
@@ -102,7 +103,8 @@ private fun ScanControls(ui: SystemImagesUi, images: List<SystemImage>) {
         ScanProgressLines(session, ui.onStop)
         return
     }
-    session?.error?.let { Text(stringResource(R.string.imagescan_failed, coreErrorText(it)), color = LocalStatusColors.current.bad) }
+    // The scan button below runs it again.
+    session?.error?.let { LoadFailureRow(coreErrorText(it), onRetry = null) }
     val report = session?.usableReport
     if (report != null) {
         ScanSummary(report)

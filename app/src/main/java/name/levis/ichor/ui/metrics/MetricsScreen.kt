@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
@@ -215,7 +216,8 @@ private fun PanelList(state: MetricsState, vm: MetricsViewModel, onEdit: (PromPa
     ) {
         item { MutedText(stringResource(R.string.metrics_source_line, state.config.source!!.label)) }
         item { RangeRow(state.range, vm::setRange) }
-        state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
+        // The config failed to read or save: no single read to run again, so no Retry.
+        state.error?.let { item { LoadFailureRow(it, onRetry = null) } }
         if (state.results.values.any { isPromRefused(it.error) }) item { RefusedCard(onEdit = onSource) }
         if (state.config.panels.isEmpty()) item { MutedText(stringResource(R.string.metrics_no_panels)) }
         val panels = state.config.panels
@@ -228,6 +230,7 @@ private fun PanelList(state: MetricsState, vm: MetricsViewModel, onEdit: (PromPa
                 onEdit = { onEdit(panel) },
                 onMove = { vm.movePanel(panel.id, it) },
                 onDelete = { vm.deletePanel(panel.id) },
+                onRetry = { vm.refreshPanel(panel) },
             )
         }
     }
@@ -287,6 +290,7 @@ private fun PanelCard(
     onEdit: () -> Unit,
     onMove: (Int) -> Unit,
     onDelete: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     Card(Modifier.fillMaxWidth()) {
@@ -305,7 +309,7 @@ private fun PanelCard(
             }
             Column(Modifier.padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (result.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-                result.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                result.error?.let { LoadFailureRow(it, onRetry, compact = true) }
                 result.result?.let { res -> PromChart(panel, res) }
             }
         }

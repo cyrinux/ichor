@@ -35,6 +35,7 @@
     <string name="common_updated_ago">Обновлено %1$s · %2$s</string>
     <string name="common_refreshing_showing">Обновление… (показаны данные от %1$s)</string>
     <string name="common_refresh_failed">Не удалось обновить: %1$s</string>
+    <string name="common_load_failed">Не удалось загрузить: %1$s</string>
     <string name="common_showing_data_from">Показаны данные от %1$s (%2$s)</string>
     <string name="common_status_ready">Готов</string>
     <string name="common_status_not_ready">Не готов</string>
@@ -1228,7 +1229,6 @@
     <string name="node_pressure_io">Дисковый ввод-вывод</string>
     <string name="node_pressure_most">Больше всего затронуто: %1$s</string>
     <string name="node_pressure_details">Подробности</string>
-    <string name="node_pressure_unavailable">Давление недоступно: %1$s</string>
     <plurals name="node_cgroups_oom">
         <item quantity="one">%1$s: завершён по OOM %2$d раз с момента загрузки</item>
         <item quantity="few">%1$s: завершён по OOM %2$d раза с момента загрузки</item>
@@ -1573,7 +1573,6 @@
     <string name="upgrade_target_version">Целевая версия</string>
     <string name="upgrade_target_hint">например v1.14.2</string>
     <string name="upgrade_bad_version">Это не версия Talos (vX.Y.Z)</string>
-    <string name="upgrade_releases_failed">Не удалось получить список релизов Talos: %1$s</string>
     <string name="upgrade_prerelease">%1$s (предварительный выпуск)</string>
     <string name="upgrade_image">Образ установщика</string>
     <string name="upgrade_same_version">%1$s уже установлена.</string>
@@ -2125,7 +2124,6 @@
     <string name="apps_detail_workloads">Рабочие нагрузки</string>
     <string name="apps_detail_workloads_loading">Поиск рабочих нагрузок…</string>
     <string name="apps_detail_workloads_none">Его не запускает ни один Deployment, StatefulSet или DaemonSet.</string>
-    <string name="apps_detail_workloads_failed">Не удалось получить список рабочих нагрузок: %1$s</string>
     <string name="apps_detail_routes">Веб-доступ</string>
     <string name="apps_detail_routes_loading">Поиск адресов…</string>
     <string name="apps_detail_routes_failed">Не удалось найти адреса: %1$s</string>
@@ -3015,7 +3013,6 @@
     <string name="argo_net_problem_service">У Service %1$s нет готовых подов</string>
     <string name="argo_net_problem_backend">У %1$s %2$s нет исправного бэкенда</string>
     <string name="argo_net_empty">Нет Service: это приложение не принимает трафик</string>
-    <string name="argo_net_failed">Не удалось построить схему сети: %1$s</string>
     <string name="argo_net_legend_ok">Обслуживает</string>
     <string name="argo_net_legend_warning">Деградирован</string>
     <string name="argo_net_legend_critical">Не работает</string>
@@ -4647,7 +4644,6 @@
     <string name="mono_text_smaller">Мельче</string>
     <!-- Alertmanager -->
     <string name="alerts_title">Оповещения</string>
-    <string name="alerts_unreadable">Не удалось прочитать оповещения: %1$s</string>
     <string name="alerts_loading">Чтение оповещений…</string>
     <string name="alerts_none_firing">Активных оповещений нет.</string>
     <string name="alerts_severity_critical">Критично</string>
@@ -4865,7 +4861,6 @@
     <string name="imagescan_saved_open_failed">Не удалось открыть отчёт: %1$s</string>
     <string name="imagescan_saved_system">Системные образы · %1$s</string>
     <string name="imagescan_system_loading">Чтение системных образов узла…</string>
-    <string name="imagescan_system_unavailable">Для системных образов нужна роль os:admin: %1$s</string>
     <string name="imagescan_system_hint">Проверяет образы, которые Talos запускает на этом узле (kubelet, etcd, control plane), по digest на известные уязвимости с помощью %1$s. Сканирование выполняется как Job в пространстве имён %2$s и затем удаляется.</string>
     <string name="imagescan_system_scan">Сканировать системные образы</string>
     <string name="imagescan_object_refs_note">Сканирование по ссылкам на образы в spec этой рабочей нагрузки: результаты относятся к этим тегам, а не обязательно к тому, что запущено сейчас.</string>
@@ -5877,7 +5872,6 @@
     <string name="plugins_remove">Удалить</string>
     <string name="plugins_remove_title">Удалить %1$s?</string>
     <string name="plugins_remove_text">Его файл будет удалён с этого телефона, а его вкладка исчезнет.</string>
-    <string name="plugins_load_failed">Плагины: %1$s</string>
     <string name="plugins_explainer">Импортированный плагин читает только объявленные им ресурсы, с вашим собственным доступом к Kubernetes, и не обращается ни к чему, кроме API Kubernetes.</string>
     <string name="plugins_source_paste">Вставить</string>
     <string name="plugins_source_file">Файл</string>
@@ -5925,7 +5919,6 @@
     <string name="repo_update_bot_present">Бот настроен: %1$s</string>
     <string name="repo_update_bot_none">В этом репозитории нет бота обновлений.</string>
     <string name="repo_update_bot_propose">Предложить конфигурацию…</string>
-    <string name="repo_update_bot_failed">Не удалось прочитать репозиторий: %1$s</string>
     <string name="repo_update_bot_sheet_title">Добавить конфигурацию бота обновления зависимостей</string>
     <string name="repo_update_bot_sheet_body">Приложение составило %1$s по найденным файлам. Проверьте его и откройте pull request: ничего не изменится, пока вы его не сольёте.</string>
     <string name="repo_update_bot_continue">Перейти к pull request</string>

@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.model.PluginCatalogItem
@@ -89,7 +90,7 @@ fun PluginsSection(plugins: PluginRepository) {
 
     SectionTitle(stringResource(R.string.plugins_title))
     MutedText(stringResource(R.string.plugins_desc))
-    error?.let { Text(stringResource(R.string.plugins_load_failed, it), color = MaterialTheme.colorScheme.error) }
+    error?.let { LoadFailureRow(it, onRetry = { reload++ }) }
 
     Text(stringResource(R.string.plugins_imported), style = MaterialTheme.typography.titleSmall)
     Card(Modifier.fillMaxWidth()) {

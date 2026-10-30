@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.ui.components.SectionLoaded
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
@@ -40,8 +41,6 @@ import name.levis.ichor.model.ArgoNetProblem
 import name.levis.ichor.model.ArgoNetWording
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.NodeOverview
-import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
@@ -70,13 +69,15 @@ fun ArgoNetworkSection(
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionTitle(stringResource(R.string.argo_net_title))
-        when (val s = state) {
-            UiState.Loading -> NetworkSkeleton()
-            is UiState.Failed -> MutedText(stringResource(R.string.argo_net_failed, s.message.asString()))
-            is UiState.Loaded -> {
-                val network = remember(s.data, downNodes) { s.data.withDownNodes(downNodes) }
-                NetworkBody(app, network, talosNodes, onNode, vm)
-            }
+        // A failed reload keeps the graph on screen, the row under it.
+        SectionLoaded(
+            state,
+            onRetry = { vm.retry(app) },
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            loading = { NetworkSkeleton() },
+        ) { data ->
+            val network = remember(data, downNodes) { data.withDownNodes(downNodes) }
+            NetworkBody(app, network, talosNodes, onNode, vm)
         }
     }
 }

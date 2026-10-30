@@ -57,8 +57,8 @@ private const val MAX_FAILING = 2
  * own entry when it has one; the bundled logo stands in otherwise (kubeconfig contexts have no inventory).
  */
 @Composable
-fun FluxCard(state: UiState<FluxStatus>, fluxTile: InventoryApp?, onOpen: () -> Unit) =
-    GitOpsCardFrame(fluxTile ?: FLUX_TILE, R.string.flux_title, state, { it.apps.size }, { s -> s.failingApps.map { ServiceHealth.CRITICAL } }, onOpen) { Body(it) }
+fun FluxCard(state: UiState<FluxStatus>, fluxTile: InventoryApp?, onOpen: () -> Unit, onRetry: (() -> Unit)? = null) =
+    GitOpsCardFrame(fluxTile ?: FLUX_TILE, R.string.flux_title, state, { it.apps.size }, { s -> s.failingApps.map { ServiceHealth.CRITICAL } }, onOpen, onRetry) { Body(it) }
 
 @Composable
 private fun Body(status: FluxStatus) {
