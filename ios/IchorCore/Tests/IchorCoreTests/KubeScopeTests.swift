@@ -117,14 +117,9 @@ final class KubeScopeTests: XCTestCase {
 
     func testWorkloadKindsAreMergedIntoOnePage() throws {
         // Deployments: two pages; StatefulSets: one; DaemonSets: one.
-        final class Asked: @unchecked Sendable {
-            let lock = NSLock()
-            var calls: [String] = []
-            func add(_ call: String) { lock.lock(); calls.append(call); lock.unlock() }
-        }
-        let asked = Asked()
+        let asked = Locked<[String]>([])
         let fetch: @Sendable (String, String) async throws -> KubePage<KubeWorkload> = { kind, token in
-            asked.add("\(kind)=\(token)")
+            asked.withLock { $0.append("\(kind)=\(token)") }
             if kind == "Deployment" && token.isEmpty {
                 return KubePage(
                     items: [KubeWorkload(kind: kind, namespace: "a", name: "web")], continueToken: "d1", remaining: 1,
@@ -143,8 +138,8 @@ final class KubeScopeTests: XCTestCase {
         let second = try runBlocking { try await fetchWorkloadPage(first.continueToken, fetch: fetch) }
         XCTAssertTrue(second.complete)
         XCTAssertEqual(second.items.map(\.name), ["api"])
-        XCTAssertEqual(Set(asked.calls), ["Deployment=", "StatefulSet=", "DaemonSet=", "Deployment=d1"])
-        XCTAssertEqual(asked.calls.count, 4)
+        XCTAssertEqual(Set(asked.get()), ["Deployment=", "StatefulSet=", "DaemonSet=", "Deployment=d1"])
+        XCTAssertEqual(asked.get().count, 4)
     }
 
     func testWorkloadTokens() {

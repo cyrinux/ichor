@@ -131,54 +131,40 @@ public enum StartupTrace {
 }
 
 /// The trace's mutable state, behind a lock: Go calls it from its own threads.
-private final class TraceState: @unchecked Sendable {
-    private let lock = NSLock()
-    private var on = false
-    private var ringSink: StartupTrace.RingSink?
-    private var previous = 0
-    private var marked: Set<String> = []
+private final class TraceState: Sendable {
+    private struct State {
+        var on = false
+        var ringSink: StartupTrace.RingSink?
+        var previous = 0
+        var marked: Set<String> = []
+    }
+
+    private let state = Locked(State())
     private let processStart = TraceState.processStartTime() ?? Date().timeIntervalSince1970
 
     var enabled: Bool {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return on
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            on = newValue
-        }
+        get { state.withLock { $0.on } }
+        set { state.withLock { $0.on = newValue } }
     }
 
     var sink: StartupTrace.RingSink? {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return ringSink
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            ringSink = newValue
-        }
+        get { state.withLock { $0.ringSink } }
+        set { state.withLock { $0.ringSink = newValue } }
     }
 
     /// Milliseconds since the process started and since the previous tick.
     func tick() -> (Int, Int) {
-        lock.lock()
-        defer { lock.unlock() }
-        let now = Int((Date().timeIntervalSince1970 - processStart) * 1000)
-        let delta = now - previous
-        previous = now
-        return (now, delta)
+        // The clock is read under the lock, so two ticks never see their times out of order.
+        state.withLock { [processStart] s in
+            let now = Int((Date().timeIntervalSince1970 - processStart) * 1000)
+            let delta = now - s.previous
+            s.previous = now
+            return (now, delta)
+        }
     }
 
     func firstTime(_ key: String) -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return marked.insert(key).inserted
+        state.withLock { $0.marked.insert(key).inserted }
     }
 
     /// When the kernel started this process (wall clock), so the first step counts the launch.

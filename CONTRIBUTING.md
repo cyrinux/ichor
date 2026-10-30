@@ -42,6 +42,10 @@ an issue first so we can agree on the approach before you spend time on it.
   on a Mac (it uses the selected Xcode's swift-format) and commit the result. Keep a pure reformat
   in its own commit. A rule is turned off in the config only for a stated reason in the pull
   request; a newer Xcode on the runner may need a one-time reformat.
+- `ios/IchorCore` builds in Swift 6 language mode with complete concurrency checking, on macOS
+  (`Package.swift`) and on Linux (`just ios-test-linux` passes the same flags). Shared mutable
+  state goes behind `Locked` (`Sources/IchorCore/Locked.swift`), the package's one
+  `@unchecked Sendable`; a new `@unchecked Sendable` needs a comment saying why it is safe.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app
   (GPL, AGPL, LGPL for statically linked code); ask in the issue first if unsure.
