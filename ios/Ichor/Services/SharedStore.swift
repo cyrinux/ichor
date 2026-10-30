@@ -43,10 +43,22 @@ enum SharedStore {
         if keptReach.count != reach.count { BackgroundMonitor.saveReachability(keptReach) }
     }
 
-    /// Forgets every snapshot (a config replaced, the screenshot mode toggled): the next run is a baseline.
+    /// Forgets every snapshot (a config replaced, the screenshot mode toggled): the next run is a
+    /// baseline. The fleet glance goes too: its names may be the other mode's.
     static func clear() {
+        saveFleet(nil)
         save([:])
         BackgroundMonitor.saveReachability([:])
+    }
+
+    /// Keeps the fleet glance for the fleet widget and the watch (nil: forgets it). The widgets
+    /// reload with the next save, which follows each run.
+    static func saveFleet(_ glance: FleetGlance?) {
+        if let glance, !glance.rows.isEmpty, let data = try? JSONEncoder().encode(glance) {
+            defaults.set(data, forKey: SharedFleet.key)
+        } else {
+            defaults.removeObject(forKey: SharedFleet.key)
+        }
     }
 
     /// The clusters the widget can pick, named as on screen, and the active one (its default).
@@ -66,6 +78,8 @@ enum SharedStore {
         } else {
             defaults.removeObject(forKey: SharedSnapshot.activeKey)
         }
+        // A cluster renamed since the last check: the fleet widget names it as on screen too.
+        if let fleet = SharedFleet.load(from: defaults) { saveFleet(fleet.renamed(clusters)) }
         WidgetCenter.shared.reloadAllTimelines()
         // The active cluster changed, or a cluster was added, renamed or masked.
         WatchLink.shared.send()

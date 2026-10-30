@@ -69,29 +69,7 @@ struct FleetRowView: View {
         }
     }
 
-    /// "Alert: KubePodCrashLooping · shop/checkout"; in screenshot mode the track only, but for
-    /// the subjects that name no user object.
-    private func findingText(_ finding: FleetFinding) -> String {
-        let track = trackLabel(finding)
-        guard finding.subjectShown(masked: masked) else { return track }
-        return String(format: String(localized: "%@: %@"), track, finding.subject)
-    }
-
-    private func trackLabel(_ finding: FleetFinding) -> String {
-        switch finding.track {
-        case "nodes": String(localized: "Nodes")
-        case "reach": String(localized: "Connection")
-        case "etcd": "etcd"
-        case "alertmanager": String(localized: "Alert")
-        case "checkup": String(localized: "Cluster checkup")
-        case "data": String(localized: "Data services")
-        case "gitops": finding.detail == "argocd" ? "Argo CD" : finding.detail == "flux" ? "Flux" : "GitOps"
-        case "storage": String(localized: "Storage")
-        case "sensor": String(localized: "Temperature")
-        case "plugin": String(localized: "Plugins")
-        default: String(localized: "Finding")
-        }
-    }
+    private func findingText(_ finding: FleetFinding) -> String { finding.text(masked: masked) }
 
     /// "Checked 12 minutes ago"; a row not checked lately says when it last was, or that it never was.
     private var checkedText: String {

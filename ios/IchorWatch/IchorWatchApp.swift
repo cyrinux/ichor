@@ -24,6 +24,9 @@ struct ClusterListView: View {
             Group {
                 if let payload, !payload.clusters.isEmpty {
                     List {
+                        if let fleet = payload.fleet, fleet.total > 1 {
+                            Section { FleetCountRow(fleet: fleet) }
+                        }
                         ForEach(payload.clusters) { cluster in
                             NavigationLink(value: cluster.id) { ClusterRow(cluster: cluster) }
                         }
@@ -78,6 +81,24 @@ struct ClusterRow: View {
             }
         } else {
             Text("No check yet").lineLimit(1)
+        }
+    }
+}
+
+/// The whole fleet above the clusters: "2 of 6 need attention" in the worst tone's colour.
+struct FleetCountRow: View {
+    let fleet: FleetTally
+
+    var body: some View {
+        TimelineView(.everyMinute) { context in
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Circle()
+                    .fill(WatchStyle.color(fleet.tone(at: context.date)))
+                    .frame(width: 8, height: 8)
+                    .accessibilityHidden(true)
+                WatchStyle.fleet(fleet).font(.headline).lineLimit(2)
+            }
+            .accessibilityElement(children: .combine)
         }
     }
 }

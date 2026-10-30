@@ -116,7 +116,6 @@ struct WatchComplicationView: View {
     }
 }
 
-@main
 struct IchorWatchComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "IchorWatchComplication", provider: WatchProvider()) { entry in

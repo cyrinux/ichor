@@ -168,6 +168,7 @@ private extension OperationButton {
 struct IchorWidgets: WidgetBundle {
     var body: some Widget {
         TalosWidget()
+        FleetWidget()
         OperationActivityWidget()
         // Control Center buttons: iOS 18 only, the app still runs on iOS 17.
         if #available(iOS 18.0, *) {

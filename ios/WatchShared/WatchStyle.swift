@@ -70,4 +70,22 @@ enum WatchStyle {
     static func ready(_ cluster: WatchCluster) -> Text {
         Text("\(cluster.readyCount)/\(cluster.nodes.count) ready")
     }
+
+    /// A fleet tone's colour; grey when not checked lately.
+    static func color(_ tone: FleetTone) -> Color {
+        switch tone {
+        case .bad: return problem
+        case .warn: return warning
+        case .unknown: return unknown
+        case .ok: return ok
+        }
+    }
+
+    /// "2 of 6 need attention", "All 6 fine", or how many were not checked lately (a stale
+    /// tally keeps its counts, its colour turns grey).
+    static func fleet(_ fleet: FleetTally) -> Text {
+        if fleet.needAttention > 0 { return Text("\(fleet.needAttention) of \(fleet.total) need attention") }
+        if fleet.unknown > 0 { return Text("Not checked: \(fleet.unknown)") }
+        return Text("All \(fleet.total) fine")
+    }
 }

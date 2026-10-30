@@ -113,11 +113,15 @@ public struct WatchPayload: Codable, Equatable, Sendable {
     /// The screenshot mode was on: the names are the masked ones.
     public var masked: Bool
     public var clusters: [WatchCluster]
+    /// The whole fleet's tally (nil from an older phone app, or before the first ranked check);
+    /// an older watch app skips it.
+    public var fleet: FleetTally?
 
-    public init(sentAt: Date, masked: Bool, clusters: [WatchCluster]) {
+    public init(sentAt: Date, masked: Bool, clusters: [WatchCluster], fleet: FleetTally? = nil) {
         self.sentAt = sentAt
         self.masked = masked
         self.clusters = clusters
+        self.fleet = fleet
     }
 
     /// The cluster the complication shows: the one open on the phone, else the first.
@@ -171,7 +175,7 @@ public func watchRows(from snapshot: ClusterSnapshot) -> [WatchNode] {
 /// bytes of JSON (see trimmedWatchPayload).
 public func watchPayload(
     clusters: [WidgetCluster], snapshots: [String: ClusterSnapshot], active: String?,
-    masked: Bool, sentAt: Date, limit: Int = watchPayloadLimit
+    masked: Bool, sentAt: Date, fleet: FleetTally? = nil, limit: Int = watchPayloadLimit
 ) -> WatchPayload {
     let rows = clusters.enumerated().map { index, cluster -> WatchCluster in
         let snapshot = snapshots[cluster.id]
@@ -180,7 +184,8 @@ public func watchPayload(
             takenAt: snapshot?.takenAt, nodes: snapshot.map(watchRows) ?? [],
             etcdChecked: snapshot?.etcdChecked ?? false, etcdAlarms: snapshot?.etcdAlarms.count ?? 0)
     }
-    return trimmedWatchPayload(WatchPayload(sentAt: sentAt, masked: masked, clusters: rows), limit: limit)
+    return trimmedWatchPayload(
+        WatchPayload(sentAt: sentAt, masked: masked, clusters: rows, fleet: fleet), limit: limit)
 }
 
 /// `payload` within `limit` bytes of JSON, giving up the least useful first: reasons cut to 40
