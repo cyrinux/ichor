@@ -16,7 +16,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -292,7 +292,7 @@ private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotT
 fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit, onDismiss: () -> Unit, notice: VersionNotice? = null) {
     val colors = LocalStatusColors.current
     val context = LocalContext.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.etcd_snapshot_title), style = MaterialTheme.typography.titleSmall)
             when (state) {

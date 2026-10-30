@@ -17,7 +17,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,7 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -124,7 +124,7 @@ fun MetricsScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.metrics_title)) },
@@ -254,7 +254,7 @@ private fun NoSource(state: MetricsState, modifier: Modifier, onSetUp: () -> Uni
 /** The backend answered 401 or 403: offers to change the tenant (X-Scope-OrgID) or the credentials. */
 @Composable
 private fun RefusedCard(onEdit: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.metrics_refused), color = MaterialTheme.colorScheme.error)
             Button(onClick = onEdit) { Text(stringResource(R.string.metrics_change_credentials)) }
@@ -289,7 +289,7 @@ private fun PanelCard(
     onDelete: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(panel.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))

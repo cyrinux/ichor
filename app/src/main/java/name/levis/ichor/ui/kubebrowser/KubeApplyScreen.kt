@@ -21,7 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -141,7 +141,7 @@ fun KubeApplyScreen(onBack: () -> Unit, vm: KubeApplyViewModel = viewModel(facto
     val scope = rememberCoroutineScope()
     val expanded = remember { mutableStateMapOf<String, Boolean>() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.kb_apply_title)) }, navigationIcon = { BackButton(onBack) }) },
     ) { padding ->
         LazyColumn(Modifier.pageContent(padding).fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

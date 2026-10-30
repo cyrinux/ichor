@@ -10,7 +10,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -32,7 +32,7 @@ import name.levis.ichor.ui.components.pageContent
 @Composable
 fun SettingsScreen(configs: ConfigRepository, onBack: () -> Unit, onOpen: (SettingsPage) -> Unit) {
     val config by configs.config.collectAsStateWithLifecycle()
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },

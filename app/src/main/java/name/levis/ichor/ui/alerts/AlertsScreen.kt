@@ -13,7 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -115,7 +115,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     val silenceDenial = rememberProxyDenial(source, "create")
     val expireDenial = rememberProxyDenial(source, "delete")
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.alerts_title)) },

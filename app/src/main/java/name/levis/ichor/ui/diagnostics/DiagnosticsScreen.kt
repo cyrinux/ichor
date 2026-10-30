@@ -17,12 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -90,7 +90,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
     }
     val entries = (state as? UiState.Loaded)?.data?.entries.orEmpty()
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
@@ -167,7 +167,7 @@ private fun DiagnosticsList(view: DiagnosticsView, modifier: Modifier) {
 @Composable
 private fun ExitCard(exit: ExitRecord) {
     var showTrace by rememberSaveable(exit.at) { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(reasonLabel(exit.reason), style = MaterialTheme.typography.titleSmall)
             MutedText(formatDateTime(exit.at))

@@ -21,7 +21,7 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import name.levis.ichor.ui.design.IchorOutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -143,7 +143,7 @@ private fun PeerChip(peer: NetPeer, policy: NetPolicy) {
 @Composable
 fun RuleCard(rule: NetRule, ingress: Boolean, policy: NetPolicy) {
     val colors = LocalStatusColors.current
-    OutlinedCard(Modifier.fillMaxWidth()) {
+    IchorOutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {

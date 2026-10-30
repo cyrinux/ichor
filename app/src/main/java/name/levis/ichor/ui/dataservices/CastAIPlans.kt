@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -89,7 +89,7 @@ private fun StuckBanner(stuck: CastAIStuckNode, modifier: Modifier = Modifier) {
 private fun PlansSummary(status: CastAIStatus) {
     val colors = LocalStatusColors.current
     val s = remember(status) { status.planSummary(System.currentTimeMillis()) }
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+    IchorCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(stringResource(R.string.castai_plans_last_day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

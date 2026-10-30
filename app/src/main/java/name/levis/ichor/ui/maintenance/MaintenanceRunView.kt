@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -45,13 +45,13 @@ fun MaintenanceRunView(run: MaintenanceRunState, onStop: () -> Unit, onClose: ()
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 steps.forEach { TimelineRow(stringResource(it.phase.label), it.status, it.at, it.message) }
             }
         }
         if (run.pods.isNotEmpty()) {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     val gone = run.pods.count { it.state == DrainPod.STATE_GONE }
                     SectionTitle(stringResource(R.string.maintenance_pods_progress, gone, run.pods.size))

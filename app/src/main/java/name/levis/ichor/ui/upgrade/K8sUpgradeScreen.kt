@@ -14,12 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -160,7 +160,7 @@ fun K8sUpgradeScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
@@ -248,7 +248,7 @@ private fun PlanView(
                 StepGroup(stringResource(R.string.k8s_upgrade_kubelets), p.kubeletSteps)
                 if (p.deprecatedApis.isNotEmpty()) {
                     SectionTitle(stringResource(R.string.k8s_upgrade_deprecated))
-                    Card(Modifier.fillMaxWidth()) {
+                    IchorCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             p.deprecatedApis.forEach { d ->
                                 val critical = d.severity == "critical"
@@ -261,7 +261,7 @@ private fun PlanView(
                         }
                     }
                 }
-                Card(Modifier.fillMaxWidth()) {
+                IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         SectionTitle(stringResource(R.string.upgrade_checks))
                         p.blockers.forEach { Text("✕ $it", color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
@@ -321,7 +321,7 @@ private fun StepGroup(title: String, steps: List<K8sPlanStep>) {
     if (steps.isEmpty()) return
     val colors = LocalStatusColors.current
     SectionTitle(title)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             steps.groupBy { it.node }.values.forEach { nodeSteps ->
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {

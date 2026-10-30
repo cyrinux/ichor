@@ -19,7 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -28,7 +28,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -209,7 +209,7 @@ fun UpgradeScreen(
     }
 
     val showForce = (plan as? UiState.Loaded)?.data?.etcdBlocked ?: false
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
@@ -354,7 +354,7 @@ private fun UpgradeSetup(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InfoRow(stringResource(R.string.upgrade_current_version), plan.currentVersion.ifEmpty { "—" })
                 if (plan.controlPlane) InfoRow(stringResource(R.string.upgrade_role), stringResource(R.string.upgrade_control_plane))
@@ -450,7 +450,7 @@ private fun ReleaseChips(releases: UiState<List<TalosRelease>>, currentVersion: 
 private fun PlanChecks(plan: UpgradePlan, versionRisk: String) {
     val colors = LocalStatusColors.current
     val risks = upgradeRisks(plan, versionRisk)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(stringResource(R.string.upgrade_checks))
             plan.etcd?.takeIf { it.thisNodeMember }?.let { e ->

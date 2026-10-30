@@ -20,7 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -28,7 +28,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -161,7 +161,7 @@ fun PortForwardScreen(
     LaunchedEffect(declared) { if (typed.isEmpty()) declared.firstOrNull()?.let { typed = it.port.toString() } }
     val port = typed.trim().toIntOrNull()?.takeIf { it in 1..65535 }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = {
@@ -229,7 +229,7 @@ private fun ForwardStatus(f: ForwardState) {
     }
     if (f.running && address != null) {
         val url = forwardUrl(address)
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 MutedText(stringResource(R.string.kb_forward_ready, f.port))
                 Row(verticalAlignment = Alignment.CenterVertically) {

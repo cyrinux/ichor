@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -90,7 +90,7 @@ val UiState<AlertsOverview?>.alertmanagerFound: Boolean
 @Composable
 fun AlertsCard(state: UiState<AlertsOverview?>, onOpen: () -> Unit) {
     val colors = LocalStatusColors.current
-    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             val counts = ((state as? UiState.Loaded)?.data)?.alerts?.counts
             Row(verticalAlignment = Alignment.CenterVertically) {

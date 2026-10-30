@@ -22,7 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -101,7 +101,7 @@ fun ActivityScreen(
     val entries = (state as? UiState.Loaded)?.data.orEmpty()
     val shareTitle = stringResource(R.string.activity_share)
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = {

@@ -23,9 +23,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import name.levis.ichor.ui.design.IchorOutlinedCard
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Surface
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
@@ -101,7 +101,7 @@ fun FlowsScreen(
         if (ready) lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { vm.stream(filter) }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = {
@@ -147,7 +147,7 @@ fun FlowsScreen(
 @Composable
 private fun HubbleOff(status: CiliumStatus, modifier: Modifier) {
     Box(modifier.fillMaxSize().padding(16.dp)) {
-        OutlinedCard(Modifier.fillMaxWidth()) {
+        IchorOutlinedCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     stringResource(if (status.calico) R.string.flows_whisker_off_title else R.string.flows_hubble_off_title),

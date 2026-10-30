@@ -12,12 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -132,7 +132,7 @@ fun ReplaceControlPlaneScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = { TopAppBar(title = { ClusterScreenTitle(stringResource(R.string.cp_replace_title)) }, navigationIcon = { BackButton(onBack) }) },
     ) { padding ->
@@ -266,7 +266,7 @@ private fun ReplaceSteps(
 
 @Composable
 private fun MemberHeader(plan: CpReplacePlan, hostname: String) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(plan.member.hostname.ifBlank { hostname.ifBlank { plan.member.id } }, style = MaterialTheme.typography.titleMedium)
             if (plan.member.node.isNotBlank()) {
@@ -322,7 +322,7 @@ private fun StepCard(
         CpStepState.PENDING -> R.string.cp_replace_state_pending to colors.muted
     }
     val detail = plan.step(step).detail
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("$number. " + stringResource(title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))

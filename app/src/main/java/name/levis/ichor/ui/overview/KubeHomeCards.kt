@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -59,7 +59,7 @@ import name.levis.ichor.util.daysUntil
 internal fun KubeCredentialsBanner(cluster: ContextSummary) {
     if (cluster.certNotAfter <= 0 || daysUntil(cluster.certNotAfter) > CERT_WARN_DAYS) return
     val color = if (daysUntil(cluster.certNotAfter) < 0) LocalStatusColors.current.bad else LocalStatusColors.current.warn
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text("${stringResource(R.string.import_kube_expires)}: ${certExpiry(cluster.certNotAfter)}", style = MaterialTheme.typography.bodyMedium, color = color)
             MutedText(stringResource(R.string.kube_home_renew))
@@ -70,7 +70,7 @@ internal fun KubeCredentialsBanner(cluster: ContextSummary) {
 /** The API server did not answer, or refused the credentials: why, and try again. */
 @Composable
 internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.overview_unreachable_title), style = MaterialTheme.typography.titleMedium)
             Text(message.asString(), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad)
@@ -107,7 +107,7 @@ internal fun KubeNodesCard(
     val dense = isDenseCluster(total)
     val listed = !overview.forbidden && total > 0
     val nodes = remember(overview) { overview.nodes.byStatus().flatMap { it.nodes } }
-    Card(Modifier.fillMaxWidth().animateContentSize()) {
+    IchorCard(Modifier.fillMaxWidth().animateContentSize()) {
         SectionHeader(
             stringResource(R.string.overview_stat_nodes),
             when {

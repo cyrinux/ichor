@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -88,7 +88,7 @@ fun SupportSection(
 @Composable
 private fun DiagnosticsSetting(app: TalosApp, onDiagnostics: () -> Unit) {
     val persist by app.uiPreferences.diagPersist.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.settings_diagnostics_title), style = MaterialTheme.typography.titleMedium)
             MutedText(stringResource(R.string.settings_diagnostics_summary))
@@ -111,7 +111,7 @@ private fun DiagnosticsSetting(app: TalosApp, onDiagnostics: () -> Unit) {
 @Composable
 private fun StartupTraceSetting(app: TalosApp) {
     val enabled by app.uiPreferences.startupTrace.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_startup_trace), style = MaterialTheme.typography.titleMedium)

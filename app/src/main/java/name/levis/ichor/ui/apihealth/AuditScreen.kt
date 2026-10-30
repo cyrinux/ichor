@@ -17,7 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -80,7 +80,7 @@ fun AuditScreen(
         vm.refresh(reset = true)
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.audit_title)) },

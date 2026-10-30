@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -43,7 +43,7 @@ fun PanicSection(appLock: AppLock) {
     // For a result, so the panic app can tell who disconnects (getCallingActivity).
     val tellTrigger = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.panic_section_title), style = MaterialTheme.typography.titleMedium)
             val connected = trigger

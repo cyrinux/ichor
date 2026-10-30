@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -259,7 +259,7 @@ private val EtcdFixMember.stateLabel: Int
 fun EtcdFixPanel(state: EtcdFixState, onCancel: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     val failed = state.error != null
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.etcd_fix_title), style = MaterialTheme.typography.titleSmall)
             etcdFixTimeline(state.events, state.finished, failed).forEach { (phase, status) ->

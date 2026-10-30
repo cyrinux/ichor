@@ -20,10 +20,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -254,7 +254,7 @@ fun EtcdScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(
@@ -573,7 +573,7 @@ private fun EtcdContent(
 @Composable
 private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: EtcdLag?, actions: MemberActions?, onDefrag: (() -> Unit)?) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -639,7 +639,7 @@ private fun entries(count: Long): String =
 
 @Composable
 private fun MemberCard(member: EtcdMember, actions: MemberActions?) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(member.hostname, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -662,7 +662,7 @@ private fun DefragPanel(
 ) {
     val colors = LocalStatusColors.current
     val reclaimable = order.sumOf { it.reclaimable }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (defrag) {
                 is DefragState.Running -> {

@@ -24,7 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import name.levis.ichor.ui.userMessage
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -60,7 +60,7 @@ fun AboutSection(
     var donating by rememberSaveable { mutableStateOf<Donation?>(null) }
     donating?.let { DonateDialog(it) { donating = null } }
     SectionTitle(stringResource(R.string.about_section))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             Text(
                 stringResource(R.string.about_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),

@@ -14,7 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -101,7 +101,7 @@ fun BootMediaScreen(
     val media by vm.media.collectAsStateWithLifecycle()
     val arch by vm.arch.collectAsStateWithLifecycle()
     val secureBoot by vm.secureBoot.collectAsStateWithLifecycle()
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.boot_media_title)) },

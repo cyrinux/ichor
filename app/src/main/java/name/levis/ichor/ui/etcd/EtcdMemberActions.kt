@@ -10,7 +10,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -188,19 +188,19 @@ fun MemberActionPanel(state: MemberActionState, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     when (state) {
         MemberActionState.Idle, is MemberActionState.Planning, is MemberActionState.Planned -> Unit
-        is MemberActionState.Running -> Card(Modifier.fillMaxWidth()) {
+        is MemberActionState.Running -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(state.label.asString(), style = MaterialTheme.typography.titleSmall)
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
         }
-        is MemberActionState.Done -> Card(Modifier.fillMaxWidth()) {
+        is MemberActionState.Done -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 if (state.changed) Text(state.message.asString(), color = colors.ok) else InfoNotice(state.message.asString())
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
             }
         }
-        is MemberActionState.Failed -> Card(Modifier.fillMaxWidth()) {
+        is MemberActionState.Failed -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InlineError(state.message.asString())
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }

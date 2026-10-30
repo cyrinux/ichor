@@ -13,13 +13,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -84,7 +84,7 @@ fun FundingScreen(
     result?.let { PurchaseResultDialog(it, app.featureStore::dismiss) }
     val buy: (String) -> Unit = { id -> context.findFragmentActivity()?.let { app.featureStore.buy(it, id) } }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.funding_title)) },
@@ -153,7 +153,7 @@ private fun FeatureCard(
 ) {
     val colors = LocalStatusColors.current
     val lang = locale.language
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(feature.title.localized(lang), style = MaterialTheme.typography.titleMedium)
             when (feature.status) {

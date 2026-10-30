@@ -11,7 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -90,7 +90,7 @@ fun ClusterUpgradePlanView(
                     )
                 }
                 SectionTitle(stringResource(R.string.cluster_upgrade_order, p.done, p.nodes.size))
-                Card(Modifier.fillMaxWidth()) {
+                IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(vertical = 8.dp)) { p.nodes.forEachIndexed { i, n -> PlanNodeRow(i + 1, n) } }
                 }
                 Checks(p.allBlockers(), warnings, understood) { understood = it }
@@ -149,7 +149,7 @@ private fun PlanNodeRow(position: Int, node: ClusterUpgradeNode) {
 @Composable
 private fun Checks(blockers: List<String>, warnings: List<String>, understood: Boolean, onUnderstood: (Boolean) -> Unit) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(stringResource(R.string.upgrade_checks))
             blockers.forEach { Text("✕ $it", color = colors.bad, style = MaterialTheme.typography.bodyMedium) }

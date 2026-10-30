@@ -11,7 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -100,7 +100,7 @@ fun ConfigYamlEditor(draft: String, error: ConfigSyntaxError?, onChange: (String
 @Composable
 fun SyntaxErrorCard(error: ConfigSyntaxError, modifier: Modifier = Modifier) {
     val bad = LocalStatusColors.current.bad
-    Card(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = modifier.fillMaxWidth()) {
         Text(
             if (error.line > 0) stringResource(R.string.machine_config_syntax_error, error.line, error.message) else error.message,
             color = bad,

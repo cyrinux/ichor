@@ -16,7 +16,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -59,7 +59,7 @@ fun RunbookRunScreen(onBack: () -> Unit, onActivity: (cluster: String) -> Unit) 
     // The confirmation of the step waiting now opens by itself; closed, a button opens it again.
     var confirming by remember(run?.waiting?.index) { mutableStateOf(true) }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { ClusterScreenTitle(run?.plan?.name ?: stringResource(R.string.runbooks_title)) },

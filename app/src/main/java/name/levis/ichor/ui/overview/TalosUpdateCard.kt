@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,6 +72,6 @@ fun TalosUpdateCard(offer: TalosUpdateOffer, canUpgrade: Boolean, onRollout: () 
             }
         }
     }
-    if (canUpgrade) Card(onClick = onRollout, modifier = Modifier.fillMaxWidth()) { content() }
-    else Card(Modifier.fillMaxWidth()) { content() }
+    if (canUpgrade) IchorCard(onClick = onRollout, modifier = Modifier.fillMaxWidth()) { content() }
+    else IchorCard(Modifier.fillMaxWidth()) { content() }
 }

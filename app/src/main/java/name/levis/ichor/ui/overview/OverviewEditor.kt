@@ -17,7 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -299,7 +299,7 @@ private fun <C> ShownCardRow(
     modifier: Modifier,
     lifted: Boolean,
 ) where C : Enum<C>, C : HomeCard {
-    Card(
+    IchorCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = if (lifted) 8.dp else 0.dp),
     ) {
@@ -318,7 +318,7 @@ private fun <C> ShownCardRow(
 
 @Composable
 private fun <C> HiddenCardRow(card: C, look: CardLook<C>, onShow: () -> Unit, modifier: Modifier) where C : Enum<C>, C : HomeCard {
-    Card(modifier = modifier.fillMaxWidth()) {
+    IchorCard(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 16.dp, end = 4.dp)) {
             CardName(card, look, Modifier.weight(1f).alpha(0.6f))
             TooltipIconButton(Icons.Outlined.Add, stringResource(R.string.overview_edit_show), onClick = onShow)

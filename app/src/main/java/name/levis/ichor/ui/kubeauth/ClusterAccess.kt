@@ -12,7 +12,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -50,7 +50,7 @@ import name.levis.ichor.util.formatDateTime
  */
 @Composable
 fun SignInBanner(method: String, needed: SignInNeeded?, onSignIn: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.kube_signin_needed), style = MaterialTheme.typography.titleMedium, color = LocalStatusColors.current.warn)
             Text(stringResource(R.string.kube_signin_needed_body, signInMethodText(method.ifEmpty { needed?.method.orEmpty() })), style = MaterialTheme.typography.bodyMedium)

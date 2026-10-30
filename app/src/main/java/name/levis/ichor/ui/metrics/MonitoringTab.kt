@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import name.levis.ichor.ui.design.IchorOutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -91,7 +91,7 @@ private fun PoolCard(pool: PromTargetPool, now: Long, onLink: (PromLink) -> Unit
     val colors = LocalStatusColors.current
     val open = stringResource(R.string.common_open)
     val monitor = pool.monitorRef
-    OutlinedCard(Modifier.fillMaxWidth()) {
+    IchorOutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 4.dp)) {
             Row(
                 Modifier.fillMaxWidth()

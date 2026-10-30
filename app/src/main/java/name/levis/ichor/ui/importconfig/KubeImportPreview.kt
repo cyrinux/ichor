@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -112,7 +112,7 @@ private fun KubeContextRow(
     val ctx = row.context
     // EKS and GKE name contexts by ARN or gke_project_location_name: show the cluster's name.
     val cloud = parseCloudContext(ctx.name)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = row.included, onCheckedChange = onInclude, enabled = row.importable)

@@ -19,7 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,7 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -130,7 +130,7 @@ fun IssueConfigScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
@@ -202,7 +202,7 @@ private fun IssueFormContent(
 
     SectionTitle(stringResource(R.string.issue_roles))
     if (form.mode == IssueMode.RENEW && currentRoles.isNotEmpty()) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InfoRow(stringResource(R.string.common_label_roles), currentRoles.joinToString())
                 InfoRow(stringResource(R.string.issue_current_cert), certExpiry(summary.certNotAfter))
@@ -251,7 +251,7 @@ private fun IssueFormContent(
 
 @Composable
 private fun ModeOption(selected: Boolean, title: String, description: String, onClick: () -> Unit) {
-    Card(Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onClick)) {
+    IchorCard(Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onClick)) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
             RadioButton(selected = selected, onClick = null)
             Column(Modifier.padding(start = 12.dp)) {
@@ -314,7 +314,7 @@ private fun IssueConfirmDialog(request: IssueRequest, onConfirm: () -> Unit, onD
 @Composable
 private fun RenewedContent(state: IssueState.Renewed, onDone: () -> Unit) {
     val ok = LocalStatusColors.current.ok
-    Card(colors = CardDefaults.cardColors(containerColor = ok.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = ok.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.issue_renewed_title), style = MaterialTheme.typography.titleMedium, color = ok)
             Text(
@@ -348,7 +348,7 @@ private fun IssuedContent(state: IssueState.Issued, onDone: () -> Unit) {
         }
     }
 
-    Card(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
         Text(
             stringResource(R.string.issue_result_warning, state.request.context, state.request.roles.joinToString(), formatDate(state.expiresAt)),
             color = bad,

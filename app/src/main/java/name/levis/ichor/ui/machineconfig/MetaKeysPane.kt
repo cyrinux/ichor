@@ -19,7 +19,7 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -223,7 +223,7 @@ private fun MetaKeyListView(list: MetaKeyList, enabled: Boolean, onAdd: () -> Un
 @Composable
 private fun MetaBanner() {
     val bad = LocalStatusColors.current.bad
-    Card(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.meta_banner), color = bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
     }
 }
@@ -231,7 +231,7 @@ private fun MetaBanner() {
 @Composable
 private fun MetaKeyCard(key: MetaKey, enabled: Boolean, onEdit: (MetaKey) -> Unit, onDelete: (MetaKey) -> Unit) {
     val context = LocalContext.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, top = 8.dp, bottom = 12.dp, end = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,7 +57,7 @@ fun DriftChangeCard(change: DriftChange, hostname: String, onFix: (DriftFix) -> 
     var expanded by rememberSaveable(change.node, change.key) { mutableStateOf(!collapsible) }
     val reference = stringResource(R.string.insights_reference, change.referenceName.ifEmpty { change.reference })
     val count = if (rows.isEmpty()) null else pluralStringResource(R.plurals.insights_differences, rows.size, rows.size)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionHeader(
                 hostname,

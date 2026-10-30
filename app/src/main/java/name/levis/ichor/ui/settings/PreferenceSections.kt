@@ -14,7 +14,7 @@ import name.levis.ichor.i18n.AppLocale
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
@@ -70,7 +70,7 @@ fun AppearanceSection(prefs: UiPreferences) {
 @Composable
 private fun AddToHomeSetting(prefs: UiPreferences) {
     val enabled by prefs.addToHome.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_add_to_home), style = MaterialTheme.typography.titleMedium)
@@ -85,7 +85,7 @@ private fun AddToHomeSetting(prefs: UiPreferences) {
 @Composable
 private fun LiveClusterStatsSetting(prefs: UiPreferences) {
     val enabled by prefs.liveClusterStats.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_live_cluster_stats), style = MaterialTheme.typography.titleMedium)
@@ -105,7 +105,7 @@ private fun LanguageSetting(prefs: UiPreferences) {
     val systemLabel = stringResource(R.string.settings_language_system)
     fun labelOf(tag: String) = AppLocale.languages.firstOrNull { it.tag == tag }?.nativeName ?: systemLabel
 
-    Card(Modifier.fillMaxWidth().clickable(role = Role.Button) { picking = true }) {
+    IchorCard(Modifier.fillMaxWidth().clickable(role = Role.Button) { picking = true }) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleMedium)
             MutedText(labelOf(current))
@@ -180,7 +180,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
     }
 
     SectionTitle(stringResource(R.string.settings_section_security))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_app_lock), style = MaterialTheme.typography.titleMedium)

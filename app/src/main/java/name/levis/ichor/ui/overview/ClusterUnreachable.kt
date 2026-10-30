@@ -23,7 +23,7 @@ import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -142,7 +142,7 @@ fun ClusterUnreachableBox(
 fun LastKnownBanner(outage: ClusterOutage, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val (icon, tint, body) = outageLook(outage.cause)
-    Card(modifier.fillMaxWidth()) {
+    IchorCard(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))

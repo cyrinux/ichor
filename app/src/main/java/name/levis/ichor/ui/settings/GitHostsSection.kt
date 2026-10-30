@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,7 +54,7 @@ fun GitHostsSection(app: TalosApp) {
 
     SectionTitle(stringResource(R.string.git_hosts_title))
     MutedText(stringResource(R.string.git_hosts_desc))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             if (hosts.isEmpty()) {
                 MutedText(stringResource(R.string.git_hosts_empty), Modifier.padding(horizontal = 16.dp, vertical = 8.dp))

@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -58,7 +58,7 @@ fun K8sUpgradeRunView(run: K8sUpgradeRunState, onCancel: () -> Unit, onUpgradeNo
 
         if (run.events.isNotEmpty()) {
             SectionTitle(stringResource(R.string.k8s_upgrade_steps))
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     // One row per node and phase, as reported: the last one is the current step.
                     val rows = run.events.distinctBy { Triple(it.phase, it.node, it.component) }

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -59,7 +59,7 @@ internal fun NetPerfHistoryList(history: List<NetPerfReport>, onOpen: (NetPerfRe
         Text(stringResource(R.string.netperf_history_note, NETPERF_HISTORY_LIMIT), style = MaterialTheme.typography.bodySmall, color = muted)
     }
     history.forEach { report ->
-        Card(onClick = { onOpen(report) }, modifier = gutter.fillMaxWidth()) {
+        IchorCard(onClick = { onOpen(report) }, modifier = gutter.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     stringResource(R.string.netperf_summary, report.client, report.server, report.seconds),

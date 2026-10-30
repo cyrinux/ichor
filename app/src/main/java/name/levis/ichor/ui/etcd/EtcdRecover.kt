@@ -15,7 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -361,7 +361,7 @@ fun EtcdRecoverPanel(state: EtcdRecoverState, onCancel: () -> Unit, onDismiss: (
     val colors = LocalStatusColors.current
     val failed = state.error != null
     val encrypted = state.picked?.info?.encrypted == true
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.etcd_recover_title), style = MaterialTheme.typography.titleSmall)
             if (state.loading) Text(stringResource(R.string.etcd_recover_reading), style = MaterialTheme.typography.bodyMedium)

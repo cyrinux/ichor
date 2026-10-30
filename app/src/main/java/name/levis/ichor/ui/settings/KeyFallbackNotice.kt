@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -52,7 +52,7 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     if (!fellBack || (protection != KeyProtection.TEE && !moving)) return
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.security_key_fell_back), style = MaterialTheme.typography.bodyMedium)
             if (moving) {

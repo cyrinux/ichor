@@ -14,7 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -204,7 +204,7 @@ private fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConf
 
 @Composable
 private fun PreviewCard(preview: JoinConfigPreview) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.join_config_valid, preview.hostname, formatBytes(preview.size.toLong())), style = MaterialTheme.typography.titleSmall)
             preview.warnings.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }

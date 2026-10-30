@@ -16,7 +16,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -69,7 +69,7 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(run.image, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 steps.forEach { TimelineRow(stringResource(it.phase.label), it.status, it.at, it.message) }
             }

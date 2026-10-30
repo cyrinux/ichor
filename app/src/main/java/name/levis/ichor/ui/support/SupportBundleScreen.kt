@@ -11,12 +11,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -99,7 +99,7 @@ fun SupportBundleScreen(
     // Collecting takes minutes: do not let the display sleep (which would suspend the app).
     if (state.run is SupportRun.Running) KeepScreenOn()
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
@@ -163,7 +163,7 @@ fun SupportBundleScreen(
 @Composable
 private fun RunCard(state: SupportBundleState, vm: SupportBundleViewModel) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (val run = state.run) {
                 is SupportRun.Running -> {
@@ -243,7 +243,7 @@ private fun NodeProgress(label: String, node: String, progress: BundleProgress) 
 @Composable
 private fun BundleRow(file: SupportBundleFile, onSave: () -> Unit, onShare: () -> Unit, onDelete: () -> Unit) {
     val date = remember(file.modified) { formatDateTime(file.modified) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)) {
             Text(file.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
             MutedText("${formatBytes(file.size)} · $date")

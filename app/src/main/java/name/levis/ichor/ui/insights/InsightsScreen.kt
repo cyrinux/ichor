@@ -7,7 +7,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -75,7 +75,7 @@ fun InsightsScreen(
     }
     if (state.recording) KeepScreenOn()
     fun time(at: Long) = formatDateTime(at, DateFormat.SHORT, DateFormat.MEDIUM)
-    Scaffold(topBar = {
+    IchorScaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.insights_title)) }, navigationIcon = {
             BackButton(onBack)
         })

@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -78,7 +78,7 @@ class NodeDiscoveryViewModel(private val lifecycle: NodeLifecycleRepository) : V
 /** Tells how many cluster members the talosconfig misses; tap to pick which to add. */
 @Composable
 fun DiscoveredNodesBanner(count: Int, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 pluralStringResource(R.plurals.overview_discovered_nodes, count, count),

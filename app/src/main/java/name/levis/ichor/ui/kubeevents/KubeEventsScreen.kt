@@ -14,7 +14,7 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -107,7 +107,7 @@ fun KubeEventsScreen(
     val listed = remember(rows) { rows.map { it.regarding.namespace }.filter { it.isNotEmpty() }.distinct().sorted() }
     val shareTitle = stringResource(R.string.kube_events_share)
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = {

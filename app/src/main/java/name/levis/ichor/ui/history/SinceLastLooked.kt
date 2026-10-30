@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,7 +60,7 @@ fun SinceLastLookedCard(fingerprint: String) {
     }
     val shown = since ?: return
     val lines = sinceLines(shown) { key, from, to -> app.alertMutes.during(fingerprint, key, from, to) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.history_since_title), style = MaterialTheme.typography.titleSmall)
             lines.take(SINCE_MAX_LINES).forEach { line ->

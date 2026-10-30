@@ -16,7 +16,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -96,7 +96,7 @@ private fun ServiceRow(
 ) {
     val colors = LocalStatusColors.current
     var menuOpen by remember { mutableStateOf(false) }
-    Card(
+    IchorCard(
         Modifier.fillMaxWidth().combinedClickable(
             onClick = onClick,
             onLongClick = if (actions.isEmpty()) null else ({ menuOpen = true }),

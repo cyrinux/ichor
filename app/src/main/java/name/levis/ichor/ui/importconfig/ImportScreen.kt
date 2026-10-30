@@ -19,7 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
@@ -28,7 +28,7 @@ import name.levis.ichor.TalosApp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -115,7 +115,7 @@ fun ImportScreen(
 
     if (showHelp) AddClusterHelpDialog(onDismiss = { showHelp = false })
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.import_title)) },
@@ -204,7 +204,7 @@ private fun PreviewCard(
     ) {
         Text(stringResource(R.string.import_valid), style = MaterialTheme.typography.titleLarge)
         summary.contexts.forEachIndexed { index, ctx ->
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     val name = if (ctx.name == summary.current) stringResource(R.string.import_context_current, ctx.name) else ctx.name
                     Text(name, style = MaterialTheme.typography.titleMedium)

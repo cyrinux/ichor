@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,7 +43,7 @@ private const val GARAGE_OPERATOR_V1 = "v1beta1"
 @Composable
 internal fun OperatorCard(status: GarageStatus, onObject: (KubeObjectRef) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             status.operator?.let { op ->
                 Row(verticalAlignment = Alignment.CenterVertically) {

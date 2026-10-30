@@ -5,7 +5,7 @@ import name.levis.ichor.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +27,7 @@ fun RoleNotice(feature: Feature, cluster: ContextSummary, modifier: Modifier = M
 /** A Talos screen reached on a cluster added from a kubeconfig (a link, a notification). */
 @Composable
 fun TalosOnlyNotice(modifier: Modifier = Modifier) {
-    Card(modifier.fillMaxWidth()) {
+    IchorCard(modifier.fillMaxWidth()) {
         MutedText(stringResource(R.string.common_talos_only), modifier = Modifier.padding(16.dp))
     }
 }
@@ -35,7 +35,7 @@ fun TalosOnlyNotice(modifier: Modifier = Modifier) {
 /** Explains why a feature is unavailable with the imported talosconfig's roles. */
 @Composable
 fun RoleNotice(feature: Feature, roles: List<String>, modifier: Modifier = Modifier) {
-    Card(modifier.fillMaxWidth()) {
+    IchorCard(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.common_role_notice_title, stringResource(feature.label), feature.minimumRole), style = MaterialTheme.typography.titleSmall)
             MutedText(

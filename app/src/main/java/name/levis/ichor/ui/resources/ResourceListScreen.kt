@@ -13,7 +13,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -77,7 +77,7 @@ fun ResourceListScreen(
     var query by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = {

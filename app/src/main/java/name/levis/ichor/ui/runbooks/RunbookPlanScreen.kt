@@ -11,7 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -64,7 +64,7 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(title = { Text(loaded?.second?.name ?: stringResource(R.string.runbooks_title)) }, navigationIcon = { BackButton(onBack) })
         },

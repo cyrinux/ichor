@@ -7,7 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -166,7 +166,7 @@ fun AppsScreen(
     val fluxOffered = canRestart && inventory?.hasFlux == true
     val fluxState by fluxVm.state.collectAsStateWithLifecycle()
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(

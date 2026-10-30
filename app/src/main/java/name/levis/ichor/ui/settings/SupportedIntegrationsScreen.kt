@@ -13,11 +13,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -99,7 +99,7 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.supported_integrations_title)) },
@@ -114,7 +114,7 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
         ) {
             item {
                 SectionTitle(stringResource(R.string.supported_integrations_platform))
-                Card(Modifier.fillMaxWidth().clickable { openUrl(context, TALOS_URL) }) {
+                IchorCard(Modifier.fillMaxWidth().clickable { openUrl(context, TALOS_URL) }) {
                     Row(
                         Modifier.padding(12.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -145,7 +145,7 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
 private fun SupportedIntegrationRow(item: SupportedIntegration, checked: Boolean) {
     val context = LocalContext.current
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth().clickable(enabled = item.website.isNotEmpty()) { openUrl(context, item.website) }) {
+    IchorCard(Modifier.fillMaxWidth().clickable(enabled = item.website.isNotEmpty()) { openUrl(context, item.website) }) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AppIconTile(item.asApp, size = 40.dp)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

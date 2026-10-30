@@ -13,12 +13,12 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -64,7 +64,7 @@ fun IntegrationsScreen(onBack: () -> Unit) {
 
     LaunchedEffect(config?.activeContext, generation) { vm.load(config?.activeContext to generation) }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.integrations_title)) },
@@ -125,7 +125,7 @@ private fun FamilyCard(
     onSearch: () -> Unit,
     onRequest: () -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 12.dp)) {
             Text(family.id, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 16.dp))
             family.groups.forEach { group -> GroupRow(group, group.name in picked) { onToggle(group.name) } }

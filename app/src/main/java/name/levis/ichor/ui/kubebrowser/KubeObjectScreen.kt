@@ -18,7 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -231,7 +231,7 @@ fun KubeObjectScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             if (customizing) TopAppBar(
@@ -277,7 +277,7 @@ fun KubeObjectScreen(
     ) { padding ->
         if (customizing) {
             ActionBarEditor(bar, kubeObjectActionLook, app.uiPreferences::setKubeObjectBar, Modifier.padding(padding))
-            return@Scaffold
+            return@IchorScaffold
         }
         // Asked while editing: an update the credentials cannot run cannot be saved.
         val saveDenial = if (current != null) rememberKubeCanDenial("update", ref.group, ref.resource, ref.namespace, ref.name) else null

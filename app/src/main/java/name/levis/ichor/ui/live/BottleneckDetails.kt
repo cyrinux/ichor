@@ -2,7 +2,7 @@ package name.levis.ichor.ui.live
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +16,7 @@ import java.util.Locale
 
 @Composable
 fun BottleneckDetails(detail: Bottlenecks) {
-    Card {
+    IchorCard {
         Column(Modifier.padding(16.dp)) { BottleneckContent(detail) }
     }
 }

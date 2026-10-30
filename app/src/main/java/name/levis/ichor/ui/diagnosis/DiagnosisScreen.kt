@@ -13,13 +13,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -86,7 +86,7 @@ fun DiagnosisScreen(
     val ready = report is UiState.Loaded
     val askable = target.askable
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.ai_title)) },
@@ -140,7 +140,7 @@ fun DiagnosisScreen(
 @Composable
 private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (report) {
                 UiState.Loading -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -179,7 +179,7 @@ private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
 private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> Unit) {
     if (!answer.asking && answer.text.isEmpty() && answer.error == null) return
     val context = LocalContext.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.ai_answer_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))

@@ -20,7 +20,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -225,7 +225,7 @@ internal fun DiffView(lines: List<ConfigDiffLine>, modifier: Modifier = Modifier
 
 @Composable
 private fun Notice(text: String, color: Color) {
-    Card(colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
         Text(text, color = color, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
     }
 }

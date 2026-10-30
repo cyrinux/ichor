@@ -13,7 +13,7 @@ import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -79,7 +79,7 @@ fun ClusterSummaryCard(
     modifier: Modifier = Modifier,
 ) {
     val troubles = troubles(summary)
-    Card(modifier = modifier.fillMaxWidth()) {
+    IchorCard(modifier = modifier.fillMaxWidth()) {
         // A fixed box, so the name does not shift once the logo has loaded.
         SummaryIdentityBand(name, leading = context?.let { { BundledLogo(clusterLogo(it), Modifier.padding(end = 8.dp).size(24.dp)) } })
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)) {

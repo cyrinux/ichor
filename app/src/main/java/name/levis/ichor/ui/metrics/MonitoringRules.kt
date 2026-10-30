@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import name.levis.ichor.ui.design.IchorOutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -76,7 +76,7 @@ private fun rulesSummary(r: PromRules): String = with(r.counts) {
 private fun GroupCard(group: PromRuleGroup, now: Long, onLink: (PromLink) -> Unit) {
     val colors = LocalStatusColors.current
     var open by rememberSaveable(group.file, group.name) { mutableStateOf(group.inTrouble) }
-    OutlinedCard(Modifier.fillMaxWidth()) {
+    IchorOutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().expandable(open) { open = !open }.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(group.name, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -155,7 +155,7 @@ private fun ServerCard(server: PromOperatorServer, alertmanager: Boolean, onLink
     val colors = LocalStatusColors.current
     val ref = server.objectRef(alertmanager)
     val kindLabel = if (alertmanager) R.string.monitoring_alertmanager else R.string.monitoring_prometheus
-    OutlinedCard(onClick = { onLink(PromLink.Object(ref)) }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedCard(onClick = { onLink(PromLink.Object(ref)) }, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) {

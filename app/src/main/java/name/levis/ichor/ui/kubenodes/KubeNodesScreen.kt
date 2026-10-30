@@ -12,7 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -82,7 +82,7 @@ fun KubeNodesScreen(
     val snackbar = remember { SnackbarHostState() }
     KubeNodeActionSheets(sheetFor, snackbar, onClose = { sheetFor = null }, onDrain = onDrain, onDebug = onDebug, onCordoned = vm::refresh, onMeta = onMeta)
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
         topBar = {

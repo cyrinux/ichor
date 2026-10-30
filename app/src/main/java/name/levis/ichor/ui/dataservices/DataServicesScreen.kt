@@ -18,7 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -156,7 +156,7 @@ fun DataServicesScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(initial?.takeIf { solo }?.title ?: stringResource(R.string.data_services_title)) },

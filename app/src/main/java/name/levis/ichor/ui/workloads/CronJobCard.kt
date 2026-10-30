@@ -28,7 +28,7 @@ import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -80,7 +80,7 @@ internal fun CronJobCard(
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     // The home's card shape and colour, like SectionCard.
-    Card(onClick = onToggle, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onToggle, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             CronJobHeader(cronJob, showNamespace)
             if (cronJob.description.isNotBlank()) {

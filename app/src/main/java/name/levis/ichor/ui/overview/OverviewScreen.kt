@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -192,7 +192,7 @@ private fun TalosOverview(
     val touring = tourPending && config?.activeSummary?.isDemo == true && state is UiState.Loaded &&
         !customizing && !clusterMenu && !showClusters && !maskSwitching
     DemoTourHost(active = touring, onFinish = { app.uiPreferences.setTourPending(false) }) {
-        Scaffold(
+        IchorScaffold(
             bottomBar = { DataFreshness(state) },
             snackbarHost = { SnackbarHost(snackbar) },
             // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.

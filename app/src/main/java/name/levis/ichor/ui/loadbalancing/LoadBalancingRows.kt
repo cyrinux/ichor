@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,7 +43,7 @@ fun lbCauseText(cause: LbCause): Int = when (cause) {
 
 @Composable
 internal fun WaitingCard(svc: LbService, modifier: Modifier, onClick: () -> Unit) {
-    Card(modifier.fillMaxWidth().clickable(onClick = onClick)) {
+    IchorCard(modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.lb_waiting, svc.key), style = MaterialTheme.typography.titleSmall, color = svc.level.color())
             Text(stringResource(lbCauseText(LbCause.of(svc.cause))), style = MaterialTheme.typography.bodyMedium)
@@ -55,7 +55,7 @@ internal fun WaitingCard(svc: LbService, modifier: Modifier, onClick: () -> Unit
 
 @Composable
 internal fun ConfigErrorCard(e: LbConfigError, modifier: Modifier) {
-    Card(modifier.fillMaxWidth()) {
+    IchorCard(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val who = if (e.node.isNotEmpty()) "${e.component} · ${e.node}" else e.component
             Text(stringResource(R.string.lb_config_error, who), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.error)

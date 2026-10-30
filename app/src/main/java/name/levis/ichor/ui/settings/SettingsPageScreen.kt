@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -96,7 +96,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsPageScaffold(page: SettingsPage, snackbar: SnackbarHostState, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Scaffold(
+    IchorScaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(page.title)) },

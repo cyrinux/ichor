@@ -18,7 +18,7 @@ import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -170,7 +170,7 @@ private fun <A : Enum<A>> LazyItemScope.BarRow(
     val lifted = drag.dragged == action
     val moveUp = stringResource(R.string.overview_edit_move_up)
     val moveDown = stringResource(R.string.overview_edit_move_down)
-    Card(
+    IchorCard(
         elevation = CardDefaults.cardElevation(defaultElevation = if (lifted) 8.dp else 0.dp),
         modifier = Modifier
             .fillMaxWidth()

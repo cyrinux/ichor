@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -59,8 +59,8 @@ internal fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Uni
             MutedText(stringResource(if (canRenew) R.string.overview_cert_renew else R.string.overview_cert_ask_admin))
         }
     }
-    if (canRenew) Card(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { content() }
-    else Card(Modifier.fillMaxWidth()) { content() }
+    if (canRenew) IchorCard(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { content() }
+    else IchorCard(Modifier.fillMaxWidth()) { content() }
 }
 
 /**
@@ -86,7 +86,7 @@ internal fun UpdateBanner(onClick: () -> Unit) {
     val updates = (LocalContext.current.applicationContext as TalosApp).updateManager
     val state by updates.state.collectAsStateWithLifecycle()
     val available = state as? UpdateState.Available ?: return
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Text(
             stringResource(R.string.overview_update_banner, available.info.version),
             style = MaterialTheme.typography.bodyMedium,
@@ -115,8 +115,8 @@ internal fun StoreUpdateBanner() {
             modifier = Modifier.padding(16.dp),
         )
     }
-    if (onClick != null) Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) { content() }
-    else Card(Modifier.fillMaxWidth()) { content() }
+    if (onClick != null) IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) { content() }
+    else IchorCard(Modifier.fillMaxWidth()) { content() }
 }
 
 /**
@@ -129,7 +129,7 @@ internal fun SupportCard(onFunding: () -> Unit) {
     val prompt = (context.applicationContext as TalosApp).supportPrompt
     val visible by prompt.visible.collectAsStateWithLifecycle()
     if (!visible) return
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.overview_support_title), style = MaterialTheme.typography.titleSmall)
             MutedText(stringResource(R.string.overview_support_body))

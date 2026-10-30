@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -92,7 +92,7 @@ fun PluginsSection(plugins: PluginRepository) {
     error?.let { Text(stringResource(R.string.plugins_load_failed, it), color = MaterialTheme.colorScheme.error) }
 
     Text(stringResource(R.string.plugins_imported), style = MaterialTheme.typography.titleSmall)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             if (imported.isEmpty()) {
                 MutedText(stringResource(R.string.plugins_empty), Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
@@ -114,7 +114,7 @@ fun PluginsSection(plugins: PluginRepository) {
     TextButton(onClick = { uriHandler.openUri(PLUGIN_DOCS_URL) }) { Text(stringResource(R.string.plugins_docs)) }
 
     Text(stringResource(R.string.plugins_builtin), style = MaterialTheme.typography.titleSmall)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             builtins.forEachIndexed { index, item ->
                 if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
