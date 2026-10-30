@@ -71,7 +71,7 @@ final class PromChatSession: @unchecked Sendable {
     }
 }
 
-private final class PromChatBridge: NSObject, IchorgoPromChatListenerProtocol, @unchecked Sendable {
+private final class PromChatBridge: NSObject, IchorgoPromChatListenerProtocol, Sendable {
     private let answer: @Sendable (String) -> Void
     private let done: @Sendable (PanelSuggestion?, String?) -> Void
 

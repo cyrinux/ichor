@@ -33,7 +33,7 @@ extension TalosClient {
 
 /// Bridges the Go listener (called from Go goroutines) to the stream: each JSON decoded, one
 /// that does not decode dropped.
-private final class KubeEventsBridge: NSObject, IchorgoKubeEventsListenerProtocol, @unchecked Sendable {
+private final class KubeEventsBridge: NSObject, IchorgoKubeEventsListenerProtocol, Sendable {
     private let batch: @Sendable (LiveKubeEventsBatch) -> Void
     private let status: @Sendable (LiveKubeEventsStatus) -> Void
     private let done: @Sendable (String?) -> Void

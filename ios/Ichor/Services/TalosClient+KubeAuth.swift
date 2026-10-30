@@ -183,7 +183,7 @@ extension TalosClient {
     }
 }
 
-private final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, @unchecked Sendable {
+private final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, Sendable {
     private let prompt: @Sendable (KubeSignInPrompt) -> Void
     private let done: @Sendable (String?) -> Void
 

@@ -241,7 +241,7 @@ private final class PairCaptureBridge: NSObject, IchorgoPairCaptureListenerProto
     }
 }
 
-private final class UpgradeBridge: NSObject, IchorgoUpgradeListenerProtocol, @unchecked Sendable {
+private final class UpgradeBridge: NSObject, IchorgoUpgradeListenerProtocol, Sendable {
     private let progress: @Sendable (UpgradeProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 

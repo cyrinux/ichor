@@ -135,7 +135,7 @@ extension TalosClient {
     }
 }
 
-private final class ArgoSyncBridge: NSObject, IchorgoArgoSyncListenerProtocol, @unchecked Sendable {
+private final class ArgoSyncBridge: NSObject, IchorgoArgoSyncListenerProtocol, Sendable {
     private let progress: @Sendable (ArgoSyncProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 
@@ -155,7 +155,7 @@ private final class ArgoSyncBridge: NSObject, IchorgoArgoSyncListenerProtocol, @
     }
 }
 
-private final class FluxReconcileBridge: NSObject, IchorgoFluxReconcileListenerProtocol, @unchecked Sendable {
+private final class FluxReconcileBridge: NSObject, IchorgoFluxReconcileListenerProtocol, Sendable {
     private let progress: @Sendable (FluxReconcileProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 
@@ -177,7 +177,7 @@ private final class FluxReconcileBridge: NSObject, IchorgoFluxReconcileListenerP
     }
 }
 
-private final class HelmRollbackBridge: NSObject, IchorgoHelmRollbackListenerProtocol, @unchecked Sendable {
+private final class HelmRollbackBridge: NSObject, IchorgoHelmRollbackListenerProtocol, Sendable {
     private let progress: @Sendable (HelmRollbackFollowProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 

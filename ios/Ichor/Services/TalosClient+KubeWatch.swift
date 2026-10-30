@@ -138,7 +138,7 @@ extension TalosClient {
     }
 }
 
-private final class KubeWatchBridge: NSObject, IchorgoKubeWatchListenerProtocol, @unchecked Sendable {
+private final class KubeWatchBridge: NSObject, IchorgoKubeWatchListenerProtocol, Sendable {
     private let event: @Sendable (String, String) -> Void
     private let done: @Sendable (String?) -> Void
 
@@ -156,7 +156,7 @@ private final class KubeWatchBridge: NSObject, IchorgoKubeWatchListenerProtocol,
     }
 }
 
-private final class KubeLiveBridge: NSObject, IchorgoKubeLiveListenerProtocol, @unchecked Sendable {
+private final class KubeLiveBridge: NSObject, IchorgoKubeLiveListenerProtocol, Sendable {
     private let update: @Sendable (String) -> Void
     private let done: @Sendable (String?) -> Void
 

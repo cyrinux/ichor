@@ -328,7 +328,7 @@ extension TalosClient {
     }
 }
 
-private final class PortForwardBridge: NSObject, IchorgoPortForwardListenerProtocol, @unchecked Sendable {
+private final class PortForwardBridge: NSObject, IchorgoPortForwardListenerProtocol, Sendable {
     private let event: @Sendable (PortForwardEvent) -> Void
     private let done: @Sendable (String?) -> Void
 

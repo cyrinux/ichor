@@ -132,7 +132,7 @@ extension TalosClient {
     }
 }
 
-private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, @unchecked Sendable {
+private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, Sendable {
     private let sink: JSONSink<ConfigApplyProgress>
 
     init(progress: @escaping @Sendable (ConfigApplyProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {
@@ -144,7 +144,7 @@ private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProto
     func onDone(_ errMessage: String?) { sink.finish(errMessage) }
 }
 
-private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol, @unchecked Sendable {
+private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol, Sendable {
     private let progress: @Sendable (ConfigTryProgress) -> Void
     private let done: @Sendable (ConfigTryOutcome) -> Void
 

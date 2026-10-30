@@ -51,7 +51,7 @@ extension TalosClient {
     }
 }
 
-private final class NetPerfBridge: NSObject, IchorgoNetPerfListenerProtocol, @unchecked Sendable {
+private final class NetPerfBridge: NSObject, IchorgoNetPerfListenerProtocol, Sendable {
     private let progress: @Sendable (NetPerfProgress) -> Void
     private let done: @Sendable (NetPerfReport, String?) -> Void
 

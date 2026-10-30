@@ -36,7 +36,7 @@ extension TalosClient {
     }
 }
 
-private final class EtcdRecoverBridge: NSObject, IchorgoEtcdRecoverListenerProtocol, @unchecked Sendable {
+private final class EtcdRecoverBridge: NSObject, IchorgoEtcdRecoverListenerProtocol, Sendable {
     private let sink: JSONSink<EtcdRecoverProgress>
 
     init(progress: @escaping @Sendable (EtcdRecoverProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

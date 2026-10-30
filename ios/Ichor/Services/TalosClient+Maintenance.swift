@@ -96,7 +96,7 @@ extension TalosClient {
     }
 }
 
-private final class MaintenanceBridge: NSObject, IchorgoMaintenanceListenerProtocol, @unchecked Sendable {
+private final class MaintenanceBridge: NSObject, IchorgoMaintenanceListenerProtocol, Sendable {
     private let sink: JSONSink<MaintenanceProgress>
 
     init(progress: @escaping @Sendable (MaintenanceProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

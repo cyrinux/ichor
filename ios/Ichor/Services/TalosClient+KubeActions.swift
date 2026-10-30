@@ -119,7 +119,7 @@ enum PodSweepEvent: Sendable {
 }
 
 /// Receives Go's sweep callbacks (on Go's threads) and hands them over decoded.
-private final class PodSweepBridge: NSObject, IchorgoKubeSanitizeListenerProtocol, @unchecked Sendable {
+private final class PodSweepBridge: NSObject, IchorgoKubeSanitizeListenerProtocol, Sendable {
     private let progress: @Sendable (PodSweepProgress) -> Void
     private let done: @Sendable (KubeSanitizeResult, String?) -> Void
 

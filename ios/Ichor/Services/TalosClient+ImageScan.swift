@@ -75,7 +75,7 @@ extension TalosClient {
     }
 }
 
-private final class ImageScanBridge: NSObject, IchorgoImageScanListenerProtocol, @unchecked Sendable {
+private final class ImageScanBridge: NSObject, IchorgoImageScanListenerProtocol, Sendable {
     private let progress: @Sendable (ImageScanProgress) -> Void
     private let done: @Sendable (ImageScanReport?, String, String?) -> Void
 

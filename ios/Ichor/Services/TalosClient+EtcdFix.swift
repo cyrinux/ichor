@@ -36,7 +36,7 @@ extension TalosClient {
     }
 }
 
-private final class EtcdFixBridge: NSObject, IchorgoEtcdFixListenerProtocol, @unchecked Sendable {
+private final class EtcdFixBridge: NSObject, IchorgoEtcdFixListenerProtocol, Sendable {
     private let sink: JSONSink<EtcdFixProgress>
 
     init(progress: @escaping @Sendable (EtcdFixProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

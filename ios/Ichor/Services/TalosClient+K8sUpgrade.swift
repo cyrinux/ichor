@@ -57,7 +57,7 @@ extension TalosClient {
     }
 }
 
-private final class K8sUpgradeBridge: NSObject, IchorgoK8sUpgradeListenerProtocol, @unchecked Sendable {
+private final class K8sUpgradeBridge: NSObject, IchorgoK8sUpgradeListenerProtocol, Sendable {
     private let sink: JSONSink<K8sUpgradeProgress>
 
     init(progress: @escaping @Sendable (K8sUpgradeProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

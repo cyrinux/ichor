@@ -62,7 +62,7 @@ extension TalosClient {
     }
 }
 
-private final class ClusterUpgradeBridge: NSObject, IchorgoClusterUpgradeListenerProtocol, @unchecked Sendable {
+private final class ClusterUpgradeBridge: NSObject, IchorgoClusterUpgradeListenerProtocol, Sendable {
     private let sink: JSONSink<ClusterUpgradeProgress>
 
     init(progress: @escaping @Sendable (ClusterUpgradeProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

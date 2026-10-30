@@ -59,7 +59,7 @@ extension TalosClient {
 }
 
 /// Receives Go's rotation callbacks (on Go's threads) and hands them over decoded.
-private final class CARotationBridge: NSObject, IchorgoTalosCARotationListenerProtocol, @unchecked Sendable {
+private final class CARotationBridge: NSObject, IchorgoTalosCARotationListenerProtocol, Sendable {
     private let progress: @Sendable (CARotationProgress) -> Void
     private let talosconfig: @Sendable (String, Bool) -> Void
     private let done: @Sendable (String?) -> Void

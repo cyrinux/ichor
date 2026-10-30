@@ -57,7 +57,7 @@ extension TalosClient {
     }
 }
 
-private final class JoinBridge: NSObject, IchorgoJoinListenerProtocol, @unchecked Sendable {
+private final class JoinBridge: NSObject, IchorgoJoinListenerProtocol, Sendable {
     private let progress: @Sendable (JoinProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 

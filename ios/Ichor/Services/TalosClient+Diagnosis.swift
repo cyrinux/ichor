@@ -86,7 +86,7 @@ extension TalosClient {
     }
 }
 
-private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, @unchecked Sendable {
+private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, Sendable {
     private let answer: @Sendable (String) -> Void
     private let done: @Sendable (String?) -> Void
 
