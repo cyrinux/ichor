@@ -211,11 +211,13 @@ private fun post(app: TalosApp, cluster: ClusterAlerts, repeating: Set<Pair<Stri
     val hide = app.appLock.enabled.value
     val label = clusterLabel(app, context)
     val canReboot = context.allows(Feature.POWER)
+    val canPage by lazy { app.onCallStore.read(fingerprint).isSet }
     cluster.alerts.forEach { alert ->
         val actions = alert.actions(
             canWake = canWake(app, fingerprint, alert),
             canReboot = canReboot,
             canAcknowledge = (fingerprint to alert.key) in repeating,
+            canAcknowledgePage = alert.kind == AlertKind.AM_FIRING && canPage,
         )
         postAlert(
             app,

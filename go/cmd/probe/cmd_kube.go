@@ -36,6 +36,9 @@ var kubeCommands = []command{
 		return ichorgo.KubeRenewSignIns("", e.cfg)
 	}},
 	{name: "discover", args: "PROVIDER SECRETS_JSON", noConfig: true, run: probeDiscover},
+	{name: "oncall-incidents", args: "ONCALL_JSON_FILE [AM_ALERTS_JSON_FILE]", run: probeOnCallIncidents},
+	{name: "oncall-test", args: "ONCALL_JSON_FILE", noConfig: true, run: probeOnCallTest},
+	{name: "oncall-act", args: "ONCALL_JSON_FILE INCIDENT_ID acknowledge|resolve", run: probeOnCallAct},
 	{name: "workloads", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeWorkloads(e.cfg, e.context, e.kubeServer)
 
@@ -700,4 +703,51 @@ func runRolloutPause(e env) (out string, err error) {
 	}
 
 	return out, err
+}
+
+// probeOnCallIncidents lists the open incidents of the on-call settings in ONCALL_JSON_FILE
+// ({"kind":"pagerduty","token":…,"from":…,"serviceIds":[…],"region":"us"}), matched to the alerts of
+// AM_ALERTS_JSON_FILE ([{fingerprint,labels}]) when given.
+func probeOnCallIncidents(e env) (string, error) {
+	if flag.NArg() < 2 {
+		return "", errors.New("usage: oncall-incidents ONCALL_JSON_FILE [AM_ALERTS_JSON_FILE]")
+	}
+
+	settings, err := os.ReadFile(argPath(flag.Arg(1)))
+	if err != nil {
+		return "", err
+	}
+
+	var alerts []byte
+	if arg := flag.Arg(2); arg != "" {
+		if alerts, err = os.ReadFile(argPath(arg)); err != nil {
+			return "", err
+		}
+	}
+
+	return ichorgo.OnCallIncidents(e.cfg, e.context, string(settings), string(alerts))
+}
+
+// probeOnCallTest checks the token of the on-call settings in ONCALL_JSON_FILE.
+func probeOnCallTest(env) (string, error) {
+	settings, err := os.ReadFile(argPath(flag.Arg(1)))
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.OnCallTest(string(settings))
+}
+
+// probeOnCallAct acknowledges or resolves an incident with the settings in ONCALL_JSON_FILE.
+func probeOnCallAct(e env) (string, error) {
+	if flag.NArg() < 4 {
+		return "", errors.New("usage: oncall-act ONCALL_JSON_FILE INCIDENT_ID acknowledge|resolve")
+	}
+
+	settings, err := os.ReadFile(argPath(flag.Arg(1)))
+	if err != nil {
+		return "", err
+	}
+
+	return "done", ichorgo.OnCallAct(e.cfg, e.context, string(settings), flag.Arg(2), flag.Arg(3))
 }

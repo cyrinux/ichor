@@ -21,6 +21,7 @@ extension BackgroundMonitor {
                 let link = alertLink(alert, snapshot: outcome.snapshot, cluster: context.clusterID)
                 let text = localized(alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
                 let wake = await canWake(alert, cluster: fingerprint)
+                let page = alert.problem && alert.key.hasPrefix("am:") && OnCallStore.read(fingerprint).isSet
                 let severity = alertRuleSeverity(
                     alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
                 out.append(
@@ -32,7 +33,8 @@ extension BackgroundMonitor {
                             problem: alert.problem,
                             snoozed: snoozes.isSnoozed(cluster: fingerprint, key: alert.key, now: now)),
                         localized: text, link: link,
-                        actions: alertActions(key: alert.key, problem: alert.problem, canWake: wake),
+                        actions: alertActions(
+                            key: alert.key, problem: alert.problem, canWake: wake, canAcknowledgePage: page),
                         info: actionInfo(alert, snapshot: outcome.snapshot, cluster: fingerprint)))
             }
         }

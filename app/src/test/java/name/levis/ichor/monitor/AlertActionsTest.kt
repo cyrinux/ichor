@@ -32,6 +32,14 @@ class AlertActionsTest {
         )
         assertEquals(listOf(AlertAction.SILENCE, AlertAction.ACKNOWLEDGE, AlertAction.SNOOZE), firing.actions(canWake = false, canReboot = false, canAcknowledge = true))
         assertNull(down.actionRequest(AlertAction.ACKNOWLEDGE))
+        // The integration's button takes Acknowledge's place, for Alertmanager alerts only.
+        assertEquals(
+            listOf(AlertAction.SILENCE, AlertAction.ACKNOWLEDGE_PAGE, AlertAction.SNOOZE),
+            firing.actions(canWake = false, canReboot = false, canAcknowledge = true, canAcknowledgePage = true),
+        )
+        assertEquals(listOf(AlertAction.SNOOZE), down.actions(canWake = false, canReboot = false, canAcknowledgePage = true))
+        assertNull(firing.actionRequest(AlertAction.ACKNOWLEDGE_PAGE))
+        assertFalse(AlertAction.ACKNOWLEDGE_PAGE.inApp)
         assertFalse(AlertAction.ACKNOWLEDGE.inApp)
     }
 

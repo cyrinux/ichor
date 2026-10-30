@@ -112,6 +112,13 @@ enum AlertNotificationActions {
                     UNNotificationAction(
                         identifier: action.rawValue, title: String(localized: "Acknowledge"), options: [])
                 ]
+            case .acknowledgePage:
+                // Runs in the background once the device is unlocked: it changes the incident for everyone.
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Acknowledge page"),
+                        options: [.authenticationRequired])
+                ]
             case .reboot:
                 return [
                     UNNotificationAction(

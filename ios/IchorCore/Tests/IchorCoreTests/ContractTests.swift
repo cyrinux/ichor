@@ -36,6 +36,9 @@ final class ContractTests: XCTestCase {
         "argocd": ContractTests.row(ArgoStatus.self),
         "flux": ContractTests.row(FluxStatus.self),
         "alerts": ContractTests.row(AMAlerts.self),
+        "oncall-incidents": ContractTests.row(OnCallIncidents.self) {
+            XCTAssertEqual($0.incident(of: "a1c3e5f7a9b1c3d5")?.id, "PDEMO01")
+        },
         "checkup": ContractTests.row(CheckupReport.self),
         "inventory": ContractTests.row(ClusterInventory.self),
         "kubespan": ContractTests.row(KubeSpanOverview.self),

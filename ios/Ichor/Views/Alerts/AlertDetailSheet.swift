@@ -3,7 +3,7 @@ import IchorCore
 
 /// One Alertmanager alert: what it says (summary, description), since when, its state and
 /// receivers, its labels and other annotations; its runbook and the query behind it; the pod,
-/// namespace or node it is about; and a silence for it.
+/// namespace or node it is about; a silence for it; and the incident behind it in the pager.
 struct AlertDetailSheet: View {
     let alert: AMAlert
     /// The Talos node the alert is about, when its labels name one of the cluster's.
@@ -19,6 +19,11 @@ struct AlertDetailSheet: View {
     /// Silence 1 h on the alert's notification: the silence form opens at once, set to 1 h with
     /// this comment (both can be changed, nothing is sent before "Silence").
     let silenceComment: String?
+    /// The incident behind the alert, and how sure that match is; nil when none.
+    let incident: OnCallIncident?
+    let confidence: OnCallConfidence
+    /// Runs a verb on the incident and reloads; nil when done, else why not.
+    let actOnIncident: (OnCallIncident, OnCallVerb) async -> String?
 
     @Environment(\.dismiss) private var dismiss
     @State private var silencing: Bool
@@ -26,7 +31,9 @@ struct AlertDetailSheet: View {
     init(
         alert: AMAlert, node: NodeOverview?, canOpenKube: Bool,
         silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
-        open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil
+        open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil,
+        incident: OnCallIncident? = nil, confidence: OnCallConfidence = .alertname,
+        actOnIncident: @escaping (OnCallIncident, OnCallVerb) async -> String? = { _, _ in nil }
     ) {
         self.alert = alert
         self.node = node
@@ -35,6 +42,9 @@ struct AlertDetailSheet: View {
         self.open = open
         self.silenced = silenced
         self.silenceComment = silenceComment
+        self.incident = incident
+        self.confidence = confidence
+        self.actOnIncident = actOnIncident
         _silencing = State(initialValue: silenceComment != nil)
     }
 
@@ -42,6 +52,11 @@ struct AlertDetailSheet: View {
         NavigationStack {
             List {
                 summarySection
+                if let incident {
+                    OnCallIncidentSection(incident: incident, confidence: confidence) { verb in
+                        await actOnIncident(incident, verb)
+                    }
+                }
                 linksSection
                 Section {
                     NavigationLink {

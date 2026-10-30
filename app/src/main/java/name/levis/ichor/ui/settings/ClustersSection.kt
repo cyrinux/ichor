@@ -12,18 +12,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.KeyProtection
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.notice
 import name.levis.ichor.ui.backup.BackupSection
 import name.levis.ichor.ui.backup.backupViewModel
@@ -47,6 +50,7 @@ fun ClustersSection(configs: ConfigRepository, onReimport: () -> Unit, onIssueCo
     val keyProtection by produceState<KeyProtection?>(null, config) { value = withContext(Dispatchers.IO) { configs.keyProtection() } }
     val scope = rememberCoroutineScope()
     var confirmDelete by remember { mutableStateOf(false) }
+    var onCallOpen by remember { mutableStateOf(false) }
     val backupVm = backupViewModel()
     val backup = rememberBackupAction(backupVm)
 
@@ -67,6 +71,12 @@ fun ClustersSection(configs: ConfigRepository, onReimport: () -> Unit, onIssueCo
         InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))
     }
     OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_import_new)) }
+    // The demo has its sample incidents without settings.
+    config?.activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }?.let { fingerprint ->
+        MutedText(stringResource(R.string.oncall_row_desc))
+        OutlinedButton(onClick = { onCallOpen = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.oncall_title)) }
+        if (onCallOpen) OnCallSheet(LocalContext.current.applicationContext as TalosApp, fingerprint) { onCallOpen = false }
+    }
     BackupSection(hasConfig = config != null, vm = backupVm)
     OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.settings_delete_config))

@@ -110,7 +110,7 @@ fun BackupStatus(state: BackupState) {
         BackupState.Sealing -> stringResource(R.string.backup_sealing)
         is BackupState.Saved -> stringResource(if (state.recipientsOnly) R.string.backup_saved_age_keys else R.string.backup_saved)
         is BackupState.Restored -> stringResource(R.string.backup_restored)
-        is BackupState.RestoreDone -> restoredText(state.plugins)
+        is BackupState.RestoreDone -> restoredText(state.plugins, state.onCallTokenNeeded)
         is BackupState.Failed -> state.message.asString()
         else -> return
     }
@@ -121,13 +121,14 @@ fun BackupStatus(state: BackupState) {
     )
 }
 
-/** "Restored", with how many imported plugins came back and which were left out, and why. */
+/** "Restored", with how many imported plugins came back and which were left out, and why; and an on-call token to set again. */
 @Composable
-private fun restoredText(plugins: PluginRestoreResult?): String {
+private fun restoredText(plugins: PluginRestoreResult?, onCallTokenNeeded: Boolean): String {
     val lines = listOfNotNull(
         stringResource(R.string.backup_restored),
         plugins?.restored?.size?.takeIf { it > 0 }?.let { stringResource(R.string.backup_plugins_restored, it) },
         plugins?.takeIf { it.errors.isNotEmpty() }?.let { stringResource(R.string.backup_plugins_skipped, it.skippedText) },
+        stringResource(R.string.oncall_restore_note).takeIf { onCallTokenNeeded },
     )
     return lines.joinToString("\n")
 }

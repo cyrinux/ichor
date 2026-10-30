@@ -161,11 +161,13 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     public var repository: ClusterRepo?
     /// "Record actions in the cluster" (a Kubernetes Event per change); nil: off.
     public var auditEvents: Bool?
+    /// An on-call integration is set up for it: only that, its token never leaves the device.
+    public var oncallSet: Bool?
 
     public init(
         name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
         wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil,
-        repository: ClusterRepo? = nil, auditEvents: Bool? = nil
+        repository: ClusterRepo? = nil, auditEvents: Bool? = nil, oncallSet: Bool? = nil
     ) {
         self.name = name
         self.color = color
@@ -175,6 +177,7 @@ public struct BackupCluster: Codable, Equatable, Sendable {
         self.kubeAccess = kubeAccess
         self.repository = repository
         self.auditEvents = auditEvents
+        self.oncallSet = oncallSet
     }
 }
 
@@ -272,7 +275,7 @@ public func backupClusters(
     fingerprints: [String], names: [String: String], colors: [String: Int],
     kubeServers: [String: String], vpnOnly: Set<String> = [],
     wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:],
-    repos: [String: ClusterRepo] = [:], auditEvents: Set<String> = []
+    repos: [String: ClusterRepo] = [:], auditEvents: Set<String> = [], oncallSet: Set<String> = []
 ) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
@@ -285,9 +288,18 @@ public func backupClusters(
             name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
             vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
             kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 },
-            repository: repos[fp], auditEvents: auditEvents.contains(fp) ? true : nil)
+            repository: repos[fp], auditEvents: auditEvents.contains(fp) ? true : nil,
+            oncallSet: oncallSet.contains(fp) ? true : nil)
     }
     return out
+}
+
+/// Whether a restored cluster had an on-call integration this device has no token for: the
+/// backup never carries it, so the restore says to set it again.
+public func onCallTokenNeeded(
+    _ clusters: [String: BackupCluster]?, fingerprints: [String], isSet: (String) -> Bool
+) -> Bool {
+    fingerprints.contains { clusters?[$0]?.oncallSet == true && !isSet($0) }
 }
 
 /// The per-cluster settings to restore, narrowed to `fingerprints` (the restored config's) and checked.

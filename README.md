@@ -38,8 +38,8 @@ tour** shows it again.
 - **Any Kubernetes cluster:** workloads with rollout history and undo for Deployments,
   StatefulSets and DaemonSets (the pod template diff first) and a Deployment's pause, pods, logs and shells, a browser of every object with
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling,
-  policies, virtual machines, capacity, live events and Alertmanager, with RBAC checked before
-  you tap. Clusters come from a kubeconfig or a cloud account: EKS, GKE, AKS, DigitalOcean,
+  policies, virtual machines, capacity, live events and Alertmanager (acknowledge or resolve the
+  PagerDuty incident from the alert), with RBAC checked before you tap. Clusters come from a kubeconfig or a cloud account: EKS, GKE, AKS, DigitalOcean,
   Rancher, Omni, OIDC. The `?` on the add screen says what each way in needs: a cloud
   account, a kubeconfig or a Talos identity for the phone.
 - **GitOps:** Argo CD and Flux apps with the diff a sync would apply, Argo Rollouts, the files
