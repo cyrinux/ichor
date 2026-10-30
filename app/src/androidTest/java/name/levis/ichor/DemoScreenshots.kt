@@ -1,5 +1,6 @@
 package name.levis.ichor
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.ParcelFileDescriptor
@@ -8,6 +9,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onRoot
@@ -22,11 +24,19 @@ import androidx.test.platform.app.InstrumentationRegistry
 import name.levis.ichor.ui.components.SMOKE_CAPTURE_START
 import name.levis.ichor.ui.components.SMOKE_CLUSTER_TITLE
 import name.levis.ichor.ui.components.SMOKE_CLUSTER_UPGRADE
+import name.levis.ichor.ui.components.SMOKE_KUBE_HOME
 import name.levis.ichor.ui.components.SMOKE_NODE
 import name.levis.ichor.ui.components.SMOKE_NODE_SCREEN
 import name.levis.ichor.ui.components.SMOKE_TOUR_SKIP
 import name.levis.ichor.ui.components.smokeMenuTag
+import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.KubeFocus
+import name.levis.ichor.ui.nav.Routes
+import name.levis.ichor.ui.nav.TestRoute
+import name.levis.ichor.ui.node.CGROUPS_TAB
 import name.levis.ichor.ui.node.NodeMenuEntry
+import name.levis.ichor.ui.settings.SettingsPage
+import name.levis.ichor.ui.workloads.NETPERF_TAB
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,11 +81,38 @@ class DemoScreenshots {
         }
     }
 
+    /** The screens of the website's feature cards, each opened directly from the demo. */
+    @Test
+    fun captureTheFeatures() {
+        shell("mkdir -p $DIR")
+        FEATURE_SHOTS.forEach { (name, route) ->
+            openDemo().use {
+                TestRoute.route.value = route
+                capture("feature-$name", FEATURE_SETTLE)
+            }
+        }
+        // The recorder is the Insights screen's second tab.
+        openDemo().use {
+            TestRoute.route.value = Routes.INSIGHTS
+            val recorder = hasText(ApplicationProvider.getApplicationContext<Context>().getString(R.string.insights_tab_recorder))
+            waitFor(recorder)
+            compose.onNode(recorder).performClick()
+            capture("feature-recorder", FEATURE_SETTLE)
+        }
+        open("ichor://demo/kube").use {
+            waitFor(hasTestTag(SMOKE_KUBE_HOME))
+            capture("feature-kube-home", FEATURE_SETTLE)
+        }
+    }
+
     /** The Talos demo's overview, past the tour a fresh install shows once. */
-    private fun openDemo(): ActivityScenario<MainActivity> {
-        val scenario = ActivityScenario.launch<MainActivity>(
-            Intent(Intent.ACTION_VIEW, Uri.parse("ichor://demo")).setClass(ApplicationProvider.getApplicationContext(), MainActivity::class.java),
+    private fun open(link: String): ActivityScenario<MainActivity> =
+        ActivityScenario.launch(
+            Intent(Intent.ACTION_VIEW, Uri.parse(link)).setClass(ApplicationProvider.getApplicationContext(), MainActivity::class.java),
         )
+
+    private fun openDemo(): ActivityScenario<MainActivity> {
+        val scenario = open("ichor://demo")
         val skip = hasTestTag(SMOKE_TOUR_SKIP)
         // The tour shows on the first open only; then the overview's list, its nodes maybe
         // below the fold (a lazy list composes only what shows).
@@ -154,6 +191,29 @@ class DemoScreenshots {
         /** The releases (from the network), then the plan of the newest. */
         const val UPGRADE_SETTLE = 8_000L
         const val SETTLE_STEP = 500L
+        const val FEATURE_SETTLE = 5_000L
+
+        /** Names match scripts/ci-screenshots.sh and docs/screenshots/feature-NAME.webp. */
+        val FEATURE_SHOTS = listOf(
+            "plugins" to Routes.settingsPage(SettingsPage.PLUGINS),
+            "gitops" to Routes.gitOpsSource("argocd", "Application", "argocd", "grafana", 0),
+            "capacity" to Routes.KUBE_CAPACITY,
+            "runbooks" to Routes.RUNBOOKS,
+            "activity" to Routes.activity(),
+            "argocd-diff" to Routes.argoDiff("argocd", "grafana"),
+            "argocd" to Routes.ARGO_CD,
+            "metrics" to Routes.metrics(),
+            "data-services" to Routes.dataServices(),
+            "castai" to Routes.dataServices(DataServiceKind.CASTAI),
+            "cgroups" to "node/tabs?addr=192.0.2.10&host=demo-cp-1&tab=$CGROUPS_TAB",
+            "apps" to Routes.apps(),
+            "workloads" to Routes.workloads(KubeFocus(0)),
+            "pods" to Routes.workloads(KubeFocus(1)),
+            "cronjobs" to Routes.workloads(KubeFocus(2)),
+            "netperf" to Routes.workloads(KubeFocus(NETPERF_TAB)),
+            "drift" to Routes.INSIGHTS,
+            "import" to Routes.IMPORT,
+        )
 
         /** The website's gallery order after the overview; names match docs/screenshots/. */
         val NODE_SHOTS = listOf(

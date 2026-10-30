@@ -15,6 +15,9 @@ STORE="$ROOT/fastlane/metadata/android/en-US/images/phoneScreenshots"
 DEVICE_DIR=/data/local/tmp/ichor-screenshots
 # DemoScreenshots.NODE_SHOTS, after the overview.
 SHOTS=(overview node-services logs events graphs capture upgrade)
+# DemoScreenshots.FEATURE_SHOTS and its own: the website's feature cards, not for the store.
+FEATURES=(plugins gitops capacity runbooks activity argocd-diff argocd metrics data-services castai cgroups apps
+  workloads pods cronjobs netperf drift import recorder kube-home)
 
 abi="$(adb shell getprop ro.product.cpu.abi | tr -d '\r')"
 app="$(find "$APK_DIR/debug" -name "*-${abi}-*.apk" -o -name "*-universal-*.apk" | head -1)"
@@ -59,4 +62,12 @@ for i in "${!SHOTS[@]}"; do
   "$ROOT/scripts/screenshot.sh" "$name-light" "$raw/light/$name.png" >/dev/null
   rm "$STORE/$name-light.png"
   echo "$name"
+done
+
+for feature in "${FEATURES[@]}"; do
+  name="feature-$feature"
+  [[ -f "$raw/dark/$name.png" && -f "$raw/light/$name.png" ]] || { echo "no screenshot $name.png from the test" >&2; exit 1; }
+  "$ROOT/scripts/screenshot.sh" "$name" "$raw/dark/$name.png" >/dev/null
+  "$ROOT/scripts/screenshot.sh" "$name-light" "$raw/light/$name.png" >/dev/null
+  rm "$STORE/$name.png" "$STORE/$name-light.png"
 done

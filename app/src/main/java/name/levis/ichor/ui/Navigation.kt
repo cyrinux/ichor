@@ -20,6 +20,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import name.levis.ichor.BuildConfig
+import name.levis.ichor.ui.nav.TestRoute
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
@@ -129,6 +131,17 @@ fun Navigation(
         }
         // Last: clearing the link restarts this effect, which would cancel a node lookup.
         onLinkOpened()
+    }
+
+    if (BuildConfig.DEBUG) {
+        LaunchedEffect(nav) {
+            TestRoute.route.collect { route ->
+                if (route != null) {
+                    TestRoute.route.value = null
+                    nav.navigate(route)
+                }
+            }
+        }
     }
 
     // A search result: opened the way its share link would be.
