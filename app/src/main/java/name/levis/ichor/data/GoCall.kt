@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
@@ -11,7 +12,9 @@ import name.levis.ichorgo.Ichorgo
  * [GitOpsRepository] and [DataServicesRepository]: which credentials a call runs with, and the
  * results they keep. Every Go call blocks, so they run on IO. With a [pinned] context, every
  * call goes to that cluster whichever is on screen (the background monitor's reads). Every call
- * first waits for [idle]: none runs while screenshot mode switches (see [MaskSwitcher]).
+ * first waits for [idle]: none runs while screenshot mode switches (see [MaskSwitcher]). A
+ * Kubernetes call whose Google token ran out is renewed by [googleRenewer] and runs once more
+ * (the core asks for the token before it sends anything, so nothing runs twice).
  */
 class GoCall(
     val configs: ConfigRepository,
@@ -19,6 +22,7 @@ class GoCall(
     offline: OfflineCache? = null,
     private val pinned: String? = null,
     private val idle: suspend () -> Unit = {},
+    private val googleRenewer: GoogleTokenRenewer? = null,
 ) {
     val results = ResultCache(
         offline,
@@ -53,7 +57,15 @@ class GoCall(
     suspend fun <T> kube(block: (config: String, context: String, kubeServer: String) -> T): T {
         idle()
         val target = kubeTarget()
-        return withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
+        googleRenewer?.renewIfDue(target.context)
+        return try {
+            withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (googleRenewer?.renewIfNeeded(target.context, e) != true) throw e
+            withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
+        }
     }
 
     /** Where a Kubernetes call goes now (see [kube]); for the streams started outside a call. */

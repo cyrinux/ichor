@@ -34,7 +34,10 @@ fun monitorKeyOf(context: ContextSummary): String = context.fingerprint.ifBlank 
 /** The repositories of one cluster's check, every call to [context] whichever cluster is on screen. */
 private class PinnedReads(app: TalosApp, context: String) {
     // Nothing kept offline: what a background check reads is not what a screen shows.
-    private val go = GoCall(app.configRepository, app.kubeServers, offline = null, pinned = context, idle = app.maskSwitcher::awaitIdle)
+    private val go = GoCall(
+        app.configRepository, app.kubeServers, offline = null, pinned = context,
+        idle = app.maskSwitcher::awaitIdle, googleRenewer = app.googleTokenRenewer,
+    )
     val talos = TalosRepository(go)
     val etcd = EtcdRepository(go)
     val kube = KubeRepository(go)

@@ -61,6 +61,7 @@ import name.levis.ichor.data.GitHostStore
 import name.levis.ichor.model.BackupLockMode
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.GoCall
+import name.levis.ichor.data.GoogleTokenRenewer
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.SupportBundleRepository
 import name.levis.ichor.data.SupportPrompt
@@ -178,9 +179,11 @@ class TalosApp : Application() {
         configRepository.reseal()
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { kubeAuthStore.reseal() }
     }
-    val kubeAuthRepository by lazy { KubeAuthRepository(configRepository) }
+    val kubeAuthRepository: KubeAuthRepository by lazy { KubeAuthRepository(configRepository, onSignInChanged = { googleTokenRenewer.forget(it) }) }
     /** The Go core's credentials and the results cache, shared by the repositories below. */
-    private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache, idle = maskSwitcher::awaitIdle) }
+    private val goCall by lazy {
+        GoCall(configRepository, kubeServers, offlineCache, idle = maskSwitcher::awaitIdle, googleRenewer = googleTokenRenewer)
+    }
     val talosRepository by lazy { TalosRepository(goCall) }
     val etcdRepository by lazy { EtcdRepository(goCall) }
     val machineConfigRepository by lazy { MachineConfigRepository(goCall) }
@@ -405,6 +408,14 @@ class TalosApp : Application() {
     val fundingHistory by lazy { FundingHistory(getSharedPreferences(FundingHistory.FILE, Context.MODE_PRIVATE)) }
     val featureStore by lazy { createFeatureStore(this, fundingHistory) }
     val googleNativeSignIn by lazy { createGoogleNativeSignIn() }
+
+    /** Renews the Play build's Google tokens without asking, for every Kubernetes call (see [GoCall.kube]). */
+    val googleTokenRenewer: GoogleTokenRenewer by lazy {
+        GoogleTokenRenewer(
+            authorize = { googleNativeSignIn.authorize(this, silent = true) },
+            store = { context, secrets -> kubeAuthRepository.setCredentials(context, secrets) },
+        )
+    }
     val roadmapRepository by lazy { RoadmapRepository(getSharedPreferences(RoadmapRepository.FILE, Context.MODE_PRIVATE)) }
     val changelogRepository by lazy { ChangelogRepository(this, getSharedPreferences(ChangelogRepository.PREFS, Context.MODE_PRIVATE)) }
     val updateManager by lazy {
@@ -722,6 +733,7 @@ class TalosApp : Application() {
         if (now - last < SIGN_IN_RENEW_INTERVAL_MS || !lastSignInRenewal.compareAndSet(last, now)) return
         owner.lifecycleScope.launch(Dispatchers.IO) {
             val renewals = runCatching { kubeAuthRepository.renewAll() }.getOrNull().orEmpty()
+            googleTokenRenewer.renewExpired(renewals)
             // What was loaded with the ended session goes: the screens reload and show the banner.
             if (renewals.any { it.needsUser }) talosRepository.invalidate()
         }
