@@ -154,7 +154,7 @@ final class SettingsStore {
         ClusterLiveStore.shared.forget()
         SearchRecents.clear()
         RecentTargetStore.shared.clear()
-        model?.forgetFeatures()
+        model?.nodes.forget()
     }
 
     private func storePrivacyMask(_ enabled: Bool, words: String) {

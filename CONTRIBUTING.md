@@ -51,7 +51,8 @@ an issue first so we can agree on the approach before you spend time on it.
   `@unchecked Sendable`; a new `@unchecked Sendable` needs a comment saying why it is safe.
 - On iOS, preferences live in `SettingsStore` (`ios/Ichor/App/SettingsStore.swift`, in the
   environment next to the model), the app lock and its security keys in `LockStore`
-  (`ios/Ichor/App/LockStore.swift`, likewise); cluster state lives in `AppModel`, which is being
+  (`ios/Ichor/App/LockStore.swift`, likewise), the nodes' features and reachability in `NodesStore`
+  (`ios/Ichor/App/NodesStore.swift`, likewise); cluster state lives in `AppModel`, which is being
   split further.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app

@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct EtcdView: View {
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @Environment(LockStore.self) private var lockStore
     @State private var state: LoadState<EtcdOverview> = .loading
     @State private var confirm: [EtcdNodeStatus] = []
@@ -110,7 +111,7 @@ struct EtcdView: View {
                     }
                     if model.allows(.etcdMemberActions) {
                         EtcdMemberActionsSection(
-                            etcd: etcd, support: model.clusterSupport(.etcdMemberActions),
+                            etcd: etcd, support: nodes.clusterSupport(.etcdMemberActions),
                             busy: memberBusy, message: memberMessage,
                             onForfeit: { forfeit = $0 }, onRemove: { removing = $0 })
                     }
@@ -303,7 +304,7 @@ struct EtcdView: View {
         state = state.refreshed(with: await .from { try await model.fetch(.etcd, with: client) })
         // Which Talos versions the members run decides whether the member actions exist.
         if model.allows(.etcdMemberActions), case .loaded(let etcd, _, _) = state {
-            for status in etcd.statuses where status.error == nil { await model.loadFeatures(node: status.node) }
+            for status in etcd.statuses where status.error == nil { await nodes.loadFeatures(node: status.node) }
         }
     }
 

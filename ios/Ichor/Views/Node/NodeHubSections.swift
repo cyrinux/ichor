@@ -37,7 +37,7 @@ extension FeatureSupport {
     }
 }
 
-extension AppModel {
+extension NodesStore {
     /// What a hub `entry` of `node` can do: "Node unreachable" for a Talos row of a node known
     /// not to answer (its Talos version is moot then), else the version's `feature` support.
     func hubSupport(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil, node: String) -> FeatureSupport {
@@ -89,6 +89,7 @@ struct NodeStatusSection: View {
     @Binding var open: NodeHubScreen?
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
 
     var body: some View {
         Section("Status") {
@@ -124,7 +125,7 @@ struct NodeStatusSection: View {
     }
 
     private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
-        model.hubSupport(entry, feature, node: ref.address)
+        nodes.hubSupport(entry, feature, node: ref.address)
     }
 }
 
@@ -135,6 +136,7 @@ struct NodeInspectSection: View {
     @Binding var open: NodeHubScreen?
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
 
     var body: some View {
         Section("Inspect") {
@@ -179,7 +181,7 @@ struct NodeInspectSection: View {
     }
 
     private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
-        model.hubSupport(entry, feature, node: node)
+        nodes.hubSupport(entry, feature, node: node)
     }
 }
 
@@ -189,6 +191,7 @@ struct NodeTroubleshootSection: View {
     @Binding var open: NodeHubScreen?
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
 
     var body: some View {
         // A section the role leaves empty would still show its title.
@@ -220,7 +223,7 @@ struct NodeTroubleshootSection: View {
     }
 
     private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
-        model.hubSupport(entry, feature, node: node)
+        nodes.hubSupport(entry, feature, node: node)
     }
 }
 
@@ -235,6 +238,7 @@ struct NodeOperateSection: View {
     @Binding var showingCordon: Bool
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
 
     var body: some View {
         if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) || model.allows(.reset) {
@@ -281,7 +285,7 @@ struct NodeOperateSection: View {
                     }
                 }
                 // Down: the phone can still power it on over the LAN, once its MAC is known.
-                if model.reachability(of: node).isDown, let fingerprint = model.wakeOnLanFingerprint {
+                if nodes.reachability(of: node).isDown, let fingerprint = model.wakeOnLanFingerprint {
                     let targets = WakeOnLanStore.shared.wakeTargets(fingerprint: fingerprint, node: node)
                     if !targets.isEmpty {
                         NodeHubButton(title: String(localized: "Wake (Wake-on-LAN)"), systemImage: "power.circle") {
@@ -295,7 +299,7 @@ struct NodeOperateSection: View {
     }
 
     private func support(_ entry: NodeHubEntry, _ feature: NodeFeature? = nil) -> FeatureSupport {
-        model.hubSupport(entry, feature, node: node)
+        nodes.hubSupport(entry, feature, node: node)
     }
 }
 
@@ -305,6 +309,7 @@ struct NodePowerSection: View {
     @Binding var powerAction: PowerAction?
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
 
     var body: some View {
         if model.allows(.power) {
@@ -312,7 +317,7 @@ struct NodePowerSection: View {
                 ForEach(PowerAction.allCases) { action in
                     NodeHubButton(
                         title: action.localizedTitle, systemImage: "power",
-                        support: model.hubSupport(.power, node: node), role: .destructive
+                        support: nodes.hubSupport(.power, node: node), role: .destructive
                     ) {
                         powerAction = action
                     }

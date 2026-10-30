@@ -5,6 +5,7 @@ import IchorCore
 /// bug reports.
 struct SupportSection: View {
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @AppStorage(StartupTrace.defaultsKey) private var startupTrace = false
     @AppStorage(DiagnosticsFiles.persistKey) private var diagPersist = false
     /// The bug forms in the in-app browser (SafariView says why not a Link).
@@ -23,7 +24,7 @@ struct SupportSection: View {
                 .foregroundStyle(.orange)
             }
             if model.allows(.supportBundle) {
-                let support = model.clusterSupport(.supportBundle)
+                let support = nodes.clusterSupport(.supportBundle)
                 NavigationLink(value: Route.supportBundle) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Create a support bundle…")

@@ -7,6 +7,7 @@ struct NodeDetailView: View {
     let ref: NodeRef
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @Environment(LockStore.self) private var lockStore
     @Environment(\.dismiss) private var dismiss
     @State private var powerAction: PowerAction?
@@ -47,7 +48,7 @@ struct NodeDetailView: View {
         .navigationTitle(ref.hostname)
         .navigationBarTitleDisplayMode(.inline)
         // What this node's Talos version can do: gates the rows once known.
-        .task { await model.loadFeatures(node: ref.address) }
+        .task { await nodes.loadFeatures(node: ref.address) }
         // Masked like the screen in screenshot mode: reloaded when it changes.
         .task(id: "\(period.rawValue)#\(model.dataGeneration)") {
             history = await HistoryStore.query(
@@ -108,7 +109,7 @@ struct NodeDetailView: View {
     /// Address (long press or swipe to copy), role, cordon, Unreachable with why and when it
     /// last answered for a node known not to answer, and the uptime strip.
     private var header: some View {
-        let reachability = model.reachability(of: ref.address)
+        let reachability = nodes.reachability(of: ref.address)
         return Section {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {

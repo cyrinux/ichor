@@ -11,6 +11,8 @@ final class AppModel {
     let settings: SettingsStore
     /// Views read it from the environment, next to this model.
     let lockStore: LockStore
+    /// The nodes' features and reachability; views read them from the environment, likewise.
+    let nodes: NodesStore
 
     // Internal, not private: AppModel+Clusters.swift uses it.
     enum Keys {
@@ -49,7 +51,7 @@ final class AppModel {
 
     var activeContext = "" {
         didSet {
-            if activeContext != oldValue { forgetFeatures() }
+            if activeContext != oldValue { nodes.forget() }
             UserDefaults.standard.set(activeContext, forKey: Keys.context)
             if let index = summary?.contexts.firstIndex(where: { $0.name == activeContext }) {
                 UserDefaults.standard.set(index, forKey: Keys.contextIndex)
@@ -111,19 +113,6 @@ final class AppModel {
     // Internal, not private(set): AppModel+Clusters.swift and SettingsStore.swift set it.
     var dataGeneration = 0
 
-    /// What each node's Talos version can do (Go NodeFeatures), by node address; loaded once
-    /// per node and Talos version, see loadFeatures.
-    private(set) var nodeFeatures: [String: NodeFeatures] = [:]
-
-    /// The nodes found throttled when their Hardware screen last read their sensors (by
-    /// address): the overview never reads sensors itself, so a row says nothing until then.
-    private(set) var throttledNodes: Set<String> = []
-
-    /// Whether each node of the last overview answered (by address), and the nodes whose
-    /// features call just failed to dial them (gone down since): see reachability(of:).
-    private(set) var nodeReachability: [String: NodeReachability] = [:]
-    private(set) var unreachableNow: [String: NodeReachability] = [:]
-
     /// Public IPs Talos does not know, found by a curl pod per node (PublicIPStore), by cluster
     /// fingerprint, and the clusters being probed: here, not in a view, since a probe takes
     /// minutes and outlives the screen that started it.
@@ -131,11 +120,11 @@ final class AppModel {
     var publicIPReports: [String: PublicIPReport] = PublicIPStore.read() ?? [:]
     // Internal, not private(set): AppModel+PublicIPs.swift sets it.
     var detectingPublicIPs: Set<String> = []
-    @ObservationIgnored private var featuresGeneration = 0
 
-    init(settings: SettingsStore, lock: LockStore) {
+    init(settings: SettingsStore, lock: LockStore, nodes: NodesStore) {
         self.settings = settings
         lockStore = lock
+        self.nodes = nodes
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
@@ -147,6 +136,7 @@ final class AppModel {
         proposals = ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
         settings.model = self
         lockStore.model = self
+        nodes.model = self
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
         // The background monitor saved the proposals' states (merged, closed).
         NotificationCenter.default.addObserver(forName: .proposalsChanged, object: nil, queue: .main) { [weak self] _ in
@@ -297,94 +287,6 @@ final class AppModel {
     /// Privileged actions are only shown when the imported config's role allows them.
     func allows(_ feature: Feature) -> Bool {
         activeSummary?.allows(feature, kubeLinked: kubeLink(for: activeSummary) != nil) ?? false
-    }
-
-    /// Whether node's Talos version has `feature`; supported while its features are unknown.
-    func support(_ feature: NodeFeature, node: String) -> FeatureSupport {
-        featureSupport(nodeFeatures[node], feature)
-    }
-
-    /// Support of a cluster-wide feature across the nodes whose features are known.
-    func clusterSupport(_ feature: NodeFeature) -> FeatureSupport {
-        IchorCore.clusterSupport(Array(nodeFeatures.values), feature)
-    }
-
-    /// Loads node's features unless they are cached for `version` (the node's Talos version
-    /// when the caller knows it: an upgraded node is asked again). Failures are silent: an
-    /// unknown node counts as supporting everything and answers for itself.
-    func loadFeatures(node: String, version: String = "") async {
-        if let cached = nodeFeatures[node],
-            version.isEmpty || cached.version.isEmpty
-                || compareTalosVersions(cached.version, version) == 0
-        {
-            return
-        }
-        guard let client else { return }
-        let generation = featuresGeneration
-        do {
-            let loaded = try await client.features(node: node)
-            guard generation == featuresGeneration else { return }
-            nodeFeatures[node] = loaded
-            unreachableNow[node] = nil
-        } catch {
-            // The only live word the hub has on a node that went down after the last overview.
-            guard generation == featuresGeneration else { return }
-            unreachableNow[node] = NodeReachability.from(failure: error.localizedDescription)
-        }
-    }
-
-    /// Whether node answers: the last overview's word (in memory, else the last known one),
-    /// overruled by its features call failing to dial it. Nil while unknown: nothing is dimmed.
-    func reachability(of node: String) -> NodeReachability? {
-        let known =
-            nodeReachability[node]
-            ?? lastKnown(.overview, as: ClusterOverview.self)?.value.reachability(of: node)
-        return NodeReachability.merge(known: known, live: unreachableNow[node])
-    }
-
-    /// Records what node's sensors said, for its row in the node lists.
-    func setThrottled(node: String, _ throttled: Bool) {
-        if throttled { throttledNodes.insert(node) } else { throttledNodes.remove(node) }
-    }
-
-    /// Drops node's cached features and asks again: its Talos version just changed (upgrade).
-    func reloadFeatures(node: String) async {
-        nodeFeatures[node] = nil
-        await loadFeatures(node: node)
-    }
-
-    /// The features of every reachable node of an overview, in parallel.
-    /// Also records their MACs for Wake-on-LAN (recordNodeMacs), alongside.
-    func loadFeatures(of nodes: [NodeOverview]) async {
-        Task { await recordNodeMacs(of: nodes) }
-        for node in nodes {
-            nodeReachability[node.node] = NodeReachability(
-                reachable: node.reachable, errorKind: node.errorKind, error: node.error, lastSeen: node.lastSeen)
-        }
-        await withTaskGroup(of: Void.self) { group in
-            for node in nodes where node.reachable {
-                group.addTask { await self.loadFeatures(node: node.node, version: node.version) }
-            }
-        }
-    }
-
-    /// Other context, other config or other (masked) node names: the cache no longer applies.
-    // Internal, not private: AppModel+Clusters.swift uses it.
-    func forgetFeatures() {
-        featuresGeneration += 1
-        nodeFeatures = [:]
-        throttledNodes = []
-        nodeReachability = [:]
-        unreachableNow = [:]
-    }
-
-    /// Discovered members set aside with "Not now", per context, until the app restarts.
-    @ObservationIgnored private var dismissedByContext: [String: Set<String>] = [:]
-
-    func dismissedNodes(of context: String) -> Set<String> { dismissedByContext[context] ?? [] }
-
-    func dismissNodes(_ nodes: [DiscoveredNode], of context: String) {
-        dismissedByContext[context, default: []].formUnion(nodes.map(\.address))
     }
 
 }

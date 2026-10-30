@@ -14,6 +14,7 @@ struct HardwareView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @State private var state: LoadState<NodeHardware> = .loading
     /// Loaded beside the hardware: a failure only shows in its own section.
     @State private var sensors: LoadState<NodeSensors> = .loading
@@ -88,7 +89,7 @@ struct HardwareView: View {
         async let loadedSensors = LoadState<NodeSensors>.from { try await client.sensors(node: node) }
         state = state.refreshed(with: await .from { try await model.fetch(.hardware(node: node), with: client) })
         sensors = sensors.refreshed(with: await loadedSensors)
-        if case .loaded(let s, _, nil) = sensors { model.setThrottled(node: node, s.throttled) }
+        if case .loaded(let s, _, nil) = sensors { nodes.setThrottled(node: node, s.throttled) }
     }
 
     private func systemSection(_ hw: NodeHardware) -> some View {

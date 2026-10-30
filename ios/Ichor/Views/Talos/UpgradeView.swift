@@ -16,6 +16,7 @@ struct UpgradeView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @Environment(LockStore.self) private var lockStore
     @State private var plan: LoadState<UpgradePlan> = .loading
     @State private var releases: [TalosRelease] = []
@@ -58,7 +59,7 @@ struct UpgradeView: View {
         // The node runs another Talos version now: what it can do is asked again.
         .onChange(of: job.outcome) { _, outcome in
             if case .succeeded? = outcome, let target = job.target {
-                Task { await model.reloadFeatures(node: target.node) }
+                Task { await nodes.reloadFeatures(node: target.node) }
             }
         }
         .task(id: [version, loadedPlan?.currentImage ?? ""]) { await computeImage() }

@@ -117,7 +117,7 @@ extension TalosClient {
         }
     }
 
-    /// What node's Talos version can do (os:reader), see AppModel.loadFeatures for the cache.
+    /// What node's Talos version can do (os:reader), see NodesStore.loadFeatures for the cache.
     func features(node: String) async throws -> NodeFeatures {
         try await Self.json { [config, context] in IchorgoNodeFeatures(config, context, node, $0) }
     }

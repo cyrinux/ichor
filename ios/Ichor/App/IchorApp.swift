@@ -7,7 +7,7 @@ import UserNotifications
 @main
 struct IchorApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var model = AppModel(settings: SettingsStore(), lock: LockStore())
+    @State private var model = AppModel(settings: SettingsStore(), lock: LockStore(), nodes: NodesStore())
     @State private var support = SupportPrompt()
     @State private var ai = AISettings()
     @State private var gitHosts = GitHostStore()
@@ -59,6 +59,7 @@ struct IchorApp: App {
                 .environment(model)
                 .environment(model.settings)
                 .environment(model.lockStore)
+                .environment(model.nodes)
                 .environment(support)
                 .environment(ai)
                 .environment(gitHosts)
