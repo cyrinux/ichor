@@ -1,4 +1,4 @@
-package ichorgo
+package helm
 
 import (
 	"bytes"
@@ -11,34 +11,36 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // Helm release Secrets: read, decode, encode and write a revision as Helm's storage does.
 
-// readHelmStored reads a revision's Secret into a generic payload and the typed fields.
-func readHelmStored(ctx context.Context, k *kubeClient, ref helmSecretRef) (helmStored, error) {
+// readStored reads a revision's Secret into a generic payload and the typed fields.
+func readStored(ctx context.Context, k kube.Client, ref SecretRef) (stored, error) {
 	var secret struct {
 		Data map[string]string `json:"data"`
 	}
 
-	if err := k.get(ctx, scopedPath("/api/v1", ref.namespace, "secrets")+"/"+url.PathEscape(ref.secret), &secret); err != nil {
-		return helmStored{}, err
+	if err := k.Get(ctx, kube.ScopedPath("/api/v1", ref.Namespace, "secrets")+"/"+url.PathEscape(ref.Secret), &secret); err != nil {
+		return stored{}, err
 	}
 
-	payload, rel, err := decodeHelmPayload(secret.Data["release"])
+	payload, rel, err := decodePayload(secret.Data["release"])
 
-	return helmStored{ref: ref, payload: payload, rel: rel}, err
+	return stored{ref: ref, payload: payload, rel: rel}, err
 }
 
-func decodeHelmPayload(data string) (map[string]any, helmRelease, error) {
-	raw, err := helmReleaseJSON(data)
+func decodePayload(data string) (map[string]any, Release, error) {
+	raw, err := releaseJSON(data)
 	if err != nil {
-		return nil, helmRelease{}, err
+		return nil, Release{}, err
 	}
 
-	var rel helmRelease
+	var rel Release
 	if err := json.Unmarshal(raw, &rel); err != nil {
-		return nil, helmRelease{}, fmt.Errorf("decode Helm release: %w", err)
+		return nil, Release{}, fmt.Errorf("decode Helm release: %w", err)
 	}
 
 	dec := json.NewDecoder(bytes.NewReader(raw))
@@ -46,14 +48,14 @@ func decodeHelmPayload(data string) (map[string]any, helmRelease, error) {
 
 	var payload map[string]any
 	if err := dec.Decode(&payload); err != nil {
-		return nil, helmRelease{}, fmt.Errorf("decode Helm release: %w", err)
+		return nil, Release{}, fmt.Errorf("decode Helm release: %w", err)
 	}
 
 	return payload, rel, nil
 }
 
-// encodeHelmPayload is Helm's encoding: JSON, gzip, base64; the Secret adds its own base64.
-func encodeHelmPayload(payload map[string]any) ([]byte, error) {
+// encodePayload is Helm's encoding: JSON, gzip, base64; the Secret adds its own base64.
+func encodePayload(payload map[string]any) ([]byte, error) {
 	raw, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -73,10 +75,10 @@ func encodeHelmPayload(payload map[string]any) ([]byte, error) {
 	return base64.StdEncoding.AppendEncode(nil, buf.Bytes()), nil
 }
 
-// createHelmRevision records revision next: the target's chart, values, manifest and hooks,
+// createRevision records revision next: the target's chart, values, manifest and hooks,
 // pending-rollback, first deployed when the current one was. A Secret already there means
 // another operation got in first: the rollback stops.
-func createHelmRevision(ctx context.Context, k *kubeClient, rb *helmRollback, next int, description string, now time.Time) error {
+func createRevision(ctx context.Context, k Env, rb *rollback, next int, description string, now time.Time) error {
 	payload := map[string]any{}
 	for key, v := range rb.target.payload {
 		payload[key] = v
@@ -95,12 +97,12 @@ func createHelmRevision(ctx context.Context, k *kubeClient, rb *helmRollback, ne
 
 	info["last_deployed"] = now.Format(time.RFC3339Nano)
 	info["deleted"] = ""
-	info["status"] = helmStatusPendingRollback
+	info["status"] = StatusPendingRollback
 	info["description"] = description
 	payload["info"] = info
 	payload["version"] = next
 
-	data, err := encodeHelmPayload(payload)
+	data, err := encodePayload(payload)
 	if err != nil {
 		return err
 	}
@@ -117,7 +119,7 @@ func createHelmRevision(ctx context.Context, k *kubeClient, rb *helmRollback, ne
 	}
 
 	for key, value := range map[string]string{
-		"name": rb.plan.Name, "owner": "helm", "status": helmStatusPendingRollback,
+		"name": rb.plan.Name, "owner": "helm", "status": StatusPendingRollback,
 		"version": strconv.Itoa(next), "createdAt": strconv.FormatInt(now.Unix(), 10),
 	} {
 		labels[key] = value
@@ -126,33 +128,33 @@ func createHelmRevision(ctx context.Context, k *kubeClient, rb *helmRollback, ne
 	secret := map[string]any{
 		"apiVersion": "v1", "kind": "Secret", "type": "helm.sh/release.v1",
 		"metadata": map[string]any{
-			"name": helmSecretName(rb.plan.Name, next), "namespace": rb.plan.Namespace, "labels": labels,
+			"name": secretName(rb.plan.Name, next), "namespace": rb.plan.Namespace, "labels": labels,
 		},
 		"data": map[string][]byte{"release": data},
 	}
 
-	err = k.post(ctx, scopedPath("/api/v1", rb.plan.Namespace, "secrets"), secret, nil)
-	if kubeCode(err) == http.StatusConflict {
+	err = k.Post(ctx, kube.ScopedPath("/api/v1", rb.plan.Namespace, "secrets"), secret, nil)
+	if kube.Code(err) == http.StatusConflict {
 		return fmt.Errorf("revision %d already exists: another operation ran meanwhile", next)
 	}
 
 	return err
 }
 
-// setHelmStatus rewrites a revision's status (and description when given) in its payload and
+// setStatus rewrites a revision's status (and description when given) in its payload and
 // labels, as Helm's storage does.
-func setHelmStatus(ctx context.Context, k *kubeClient, namespace, secretName, status, description string, now time.Time) error {
-	path := scopedPath("/api/v1", namespace, "secrets") + "/" + url.PathEscape(secretName)
+func setStatus(ctx context.Context, k Env, namespace, secretName, status, description string, now time.Time) error {
+	path := kube.ScopedPath("/api/v1", namespace, "secrets") + "/" + url.PathEscape(secretName)
 
 	var secret map[string]any
-	if err := k.get(ctx, path, &secret); err != nil {
+	if err := k.Get(ctx, path, &secret); err != nil {
 		return fmt.Errorf("%s: %w", secretName, err)
 	}
 
 	data, _ := secret["data"].(map[string]any)
 	encoded, _ := data["release"].(string)
 
-	payload, _, err := decodeHelmPayload(encoded)
+	payload, _, err := decodePayload(encoded)
 	if err != nil {
 		return fmt.Errorf("%s: %w", secretName, err)
 	}
@@ -168,7 +170,7 @@ func setHelmStatus(ctx context.Context, k *kubeClient, namespace, secretName, st
 		info["description"] = description
 	}
 
-	release, err := encodeHelmPayload(payload)
+	release, err := encodePayload(payload)
 	if err != nil {
 		return err
 	}
@@ -193,7 +195,7 @@ func setHelmStatus(ctx context.Context, k *kubeClient, namespace, secretName, st
 		return err
 	}
 
-	if err := k.do(ctx, http.MethodPut, path, "application/json", body, nil); err != nil {
+	if err := k.Do(ctx, http.MethodPut, path, "application/json", body, nil); err != nil {
 		return fmt.Errorf("%s: %w", secretName, err)
 	}
 

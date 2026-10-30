@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cyrinux/ichor/go/internal/upstream"
+	"github.com/cyrinux/ichor/go/kube/helm"
 )
 
 type updatePodSpec struct {
@@ -206,29 +207,29 @@ func collectCharts(ctx context.Context, k *kubeClient, g updateGitOps, opts upda
 		}
 	}
 
-	refs, err := helmSecretRefs(ctx, k, "", "")
+	refs, err := helm.SecretRefs(ctx, k.api(), "", "")
 	if err != nil {
 		r.skip("Helm releases", err)
 
 		return out
 	}
 
-	for _, ref := range latestRevisions(refs) {
-		if fluxReleases[ref.namespace+"/"+ref.name] || !opts.wants(ref.namespace) {
+	for _, ref := range helm.LatestRevisions(refs) {
+		if fluxReleases[ref.Namespace+"/"+ref.Name] || !opts.wants(ref.Namespace) {
 			continue
 		}
 
-		rel, err := readHelmRelease(ctx, k, ref)
+		rel, err := helm.ReadRelease(ctx, k.api(), ref)
 		if err != nil {
-			r.Skipped = append(r.Skipped, updateSkipped{What: "Helm release " + ref.namespace + "/" + ref.name, Reason: friendlyError(err)})
+			r.Skipped = append(r.Skipped, updateSkipped{What: "Helm release " + ref.Namespace + "/" + ref.Name, Reason: friendlyError(err)})
 
 			continue
 		}
 
-		s := summarizeRelease(rel, ref)
+		s := helm.Summarize(rel, ref)
 		out = append(out, &updateChart{
 			Name: s.Chart, Version: s.ChartVersion,
-			Owner: &updateOwner{Tool: "helm", Kind: "Release", Namespace: ref.namespace, Name: ref.name},
+			Owner: &updateOwner{Tool: "helm", Kind: "Release", Namespace: ref.Namespace, Name: ref.Name},
 		})
 	}
 

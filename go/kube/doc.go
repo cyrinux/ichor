@@ -9,4 +9,7 @@
 // What does not: parsing a kubeconfig or a talosconfig, signing in, the demo inventory, the
 // privacy mask and the audit log. Those stay in the gomobile facade (go/ichorgo), which wraps
 // every entry point here in a thin unexported function.
+//
+// The logic of a Kubernetes domain goes below this package, in go/kube/<domain>: go/kube/helm
+// is the worked example, go/kube/kubetest the fake API server their tests answer from.
 package kube
