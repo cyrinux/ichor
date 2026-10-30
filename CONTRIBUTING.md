@@ -49,6 +49,12 @@ an issue first so we can agree on the approach before you spend time on it.
   (`Package.swift`) and on Linux (`just ios-test-linux` passes the same flags). Shared mutable
   state goes behind `Locked` (`Sources/IchorCore/Locked.swift`), the package's one
   `@unchecked Sendable`; a new `@unchecked Sendable` needs a comment saying why it is safe.
+- The iOS app, widget, share and watch targets build with complete concurrency checking
+  (`SWIFT_STRICT_CONCURRENCY: complete` in `ios/project.yml`), with no concurrency warning in
+  the macOS CI log. `Locked` is public for them; a gomobile object crosses threads in a
+  `GoObject`. `Task.detached` is not used (`offMainActor`, or `TalosClient.run` for a Go call that
+  waits). A new `@unchecked Sendable`, `nonisolated(unsafe)` or `@preconcurrency` import needs a
+  comment saying why it is safe.
 - On iOS, preferences live in `SettingsStore` (`ios/Ichor/App/SettingsStore.swift`, in the
   environment next to the model), the app lock and its security keys in `LockStore`
   (`ios/Ichor/App/LockStore.swift`, likewise), the nodes' features and reachability in `NodesStore`
