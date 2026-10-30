@@ -167,6 +167,8 @@
     <string name="overview_support_sponsor">Soutenir</string>
     <string name="overview_swipe_live">Direct</string>
     <string name="row_actions">Actions</string>
+    <string name="row_logs">Journaux</string>
+    <string name="row_scale">Mettre à l\'échelle…</string>
     <string name="overview_action_live_graphs">Graphiques en direct</string>
     <string name="overview_action_services_logs">Services et journaux</string>
     <string name="overview_action_kernel_log">Journal du noyau</string>

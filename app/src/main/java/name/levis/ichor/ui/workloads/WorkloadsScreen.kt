@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.workloads
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -228,10 +227,18 @@ fun WorkloadsTab(
     }
 }
 
+/** A workload: tap for its sheet, swipe right to restart, long press for Restart, Scale…, Pin and Share. */
 @Composable
 private fun WorkloadRow(workload: KubeWorkload, restarting: Boolean, onRestart: () -> Unit, onOpen: () -> Unit, autoscaled: Boolean = false, autoscalerStateOk: Boolean = true) {
+    WorkloadQuickActions(workload, restarting, onRestart = onRestart, onOpen = onOpen) {
+        WorkloadRowContent(workload, restarting, onRestart, autoscaled, autoscalerStateOk)
+    }
+}
+
+@Composable
+private fun WorkloadRowContent(workload: KubeWorkload, restarting: Boolean, onRestart: () -> Unit, autoscaled: Boolean, autoscalerStateOk: Boolean) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(
                 workload.name,

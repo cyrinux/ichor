@@ -20,6 +20,7 @@ import name.levis.ichor.data.pinScope
 import name.levis.ichor.model.Pin
 import name.levis.ichor.model.Pins
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.components.RowAction
 import name.levis.ichor.ui.components.TooltipIconButton
 
 /** The pins of the cluster on screen ([scope], see [pinScope]), and how to change them. */
@@ -48,10 +49,20 @@ fun rememberClusterPins(): ClusterPins? {
 /** A top-bar button pinning [target] (shown as [label]) to the overview's Pinned card, or unpinning it. */
 @Composable
 fun PinButton(target: ShareTarget, label: String) {
-    val pins = rememberClusterPins() ?: return
+    val action = rememberPinAction(target, label) ?: return
+    TooltipIconButton(action.icon, action.label, onClick = action.onClick)
+}
+
+/**
+ * Pin or Unpin [target] (shown as [label]) as a row action, for a long-press menu; the same
+ * store as [PinButton]. Null while no cluster is on screen (nothing to pin to).
+ */
+@Composable
+fun rememberPinAction(target: ShareTarget, label: String): RowAction? {
+    val pins = rememberClusterPins() ?: return null
     val context = LocalContext.current
     val pinned = pins.isPinned(target)
-    TooltipIconButton(
+    return RowAction(
         if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
         stringResource(if (pinned) R.string.pin_remove else R.string.pin_add),
         onClick = {
