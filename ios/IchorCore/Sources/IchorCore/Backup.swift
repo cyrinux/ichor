@@ -128,6 +128,9 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     /// The monitor's storage thresholds (% used).
     public var storageWarnPercent: Int?
     public var storageCriticalPercent: Int?
+    /// Quiet hours, minimum severity and digest; the cluster overrides by fingerprint, only of
+    /// the clusters in the backup. Older backups have none.
+    public var alertRules: AlertRules?
 
     public init(
         themeMode: String? = nil, privacyMask: Bool? = nil, privacyMaskWords: String? = nil, monitorAlerts: Bool? = nil,

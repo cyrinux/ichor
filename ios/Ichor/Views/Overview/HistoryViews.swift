@@ -8,6 +8,8 @@ import IchorCore
 @MainActor
 final class HistoryLook {
     private(set) var summary: HistorySinceSummary?
+    /// The alerts the rules kept quiet on the cluster, for the line that says why.
+    private(set) var mutes = AlertMuteStore.ClusterMutes(cluster: "", mutes: AlertMutes())
     private var cluster = ""
 
     /// Loads what happened on `cluster` since the last look, then marks the home looked at once
@@ -20,6 +22,7 @@ final class HistoryLook {
         if let since = HistoryLastLooked.since(stored: HistoryStore.lastLooked(cluster: cluster)) {
             let loaded = await HistoryStore.since(cluster: cluster, lastLooked: since)
             guard !Task.isCancelled, self.cluster == cluster else { return }
+            mutes = AlertMuteStore.of(cluster: cluster)
             summary = loaded.flatMap { $0.hasNews ? $0 : nil }
         }
         try? await Task.sleep(for: .seconds(HistoryLastLooked.dwellSeconds))
@@ -58,6 +61,10 @@ struct HistorySinceSection: View {
 
     private func entries(_ summary: HistorySinceSummary) -> [HistorySinceRow] {
         var out: [HistorySinceRow] = []
+        // Why the phone stayed silent: the alert rules kept it quiet.
+        func muted(_ key: String, from: Int64, to: Int64?) -> String {
+            look.mutes.during(key: key, from: from, to: to).map(mutedLabel) ?? ""
+        }
         for node in summary.nodesDown {
             let health: NodeHealth = node.state == "unreachable" ? .unreachable : .notReady
             let title =
@@ -66,7 +73,7 @@ struct HistorySinceSection: View {
             out.append(
                 HistorySinceRow(
                     id: "down \(node.node)", title: title, icon: "xmark.circle.fill", tint: health.color,
-                    at: node.downAt))
+                    at: node.downAt, muted: muted("node:\(node.node)", from: node.downAt, to: nil)))
         }
         for alert in summary.alertsOpen {
             let title =
@@ -76,21 +83,26 @@ struct HistorySinceSection: View {
             out.append(
                 HistorySinceRow(
                     id: "open \(alert.track) \(alert.key)", title: title, icon: "exclamationmark.triangle.fill",
-                    tint: tint, at: alert.openedAt))
+                    tint: tint, at: alert.openedAt,
+                    muted: muted(
+                        historyAlertKey(track: alert.track, key: alert.key), from: alert.openedAt, to: alert.closedAt)))
         }
         for node in summary.nodesRecovered {
             out.append(
                 HistorySinceRow(
                     id: "back \(node.node) \(node.downAt)",
                     title: String(localized: "\(node.label) was down and is back"),
-                    icon: "arrow.uturn.up.circle.fill", tint: .statusOK, at: node.upAt ?? node.downAt))
+                    icon: "arrow.uturn.up.circle.fill", tint: .statusOK, at: node.upAt ?? node.downAt,
+                    muted: muted("node:\(node.node)", from: node.downAt, to: node.upAt)))
         }
         for alert in summary.alertsResolved {
             out.append(
                 HistorySinceRow(
                     id: "resolved \(alert.track) \(alert.key) \(alert.openedAt)",
                     title: String(localized: "\(alert.label) resolved"),
-                    icon: "checkmark.circle.fill", tint: .statusOK, at: alert.closedAt ?? alert.openedAt))
+                    icon: "checkmark.circle.fill", tint: .statusOK, at: alert.closedAt ?? alert.openedAt,
+                    muted: muted(
+                        historyAlertKey(track: alert.track, key: alert.key), from: alert.openedAt, to: alert.closedAt)))
         }
         for upgrade in summary.upgrades {
             out.append(
@@ -100,6 +112,16 @@ struct HistorySinceSection: View {
                 ))
         }
         return out
+    }
+
+    /// "muted · quiet hours until 07:00" (in the phone's time format), or "muted · below the
+    /// cluster's minimum severity".
+    private func mutedLabel(_ mute: AlertMute) -> String {
+        guard mute.reason == alertReasonQuiet else {
+            return String(localized: "muted · below the cluster's minimum severity")
+        }
+        let until = Date(timeIntervalSince1970: Double(mute.until) / 1000).formatted(date: .omitted, time: .shortened)
+        return String(localized: "muted · quiet hours until \(until)")
     }
 }
 
@@ -112,6 +134,8 @@ private struct HistorySinceRow: View, Identifiable {
     let tint: Color
     /// Epoch ms.
     let at: Int64
+    /// Why no notification told it (the alert rules), "" when one did.
+    var muted = ""
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -120,6 +144,9 @@ private struct HistorySinceRow: View, Identifiable {
                     Text(verbatim: title)
                     if !detail.isEmpty {
                         Text(verbatim: detail).font(.caption.monospaced()).foregroundStyle(.secondary)
+                    }
+                    if !muted.isEmpty {
+                        Text(verbatim: muted).font(.caption).foregroundStyle(.secondary)
                     }
                 }
             } icon: {

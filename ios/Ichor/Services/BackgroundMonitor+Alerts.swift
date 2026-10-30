@@ -7,56 +7,62 @@ import WidgetKit
 
 // The alerts a check found: their text in the user's language, their actions and links, and posting them.
 extension BackgroundMonitor {
-    /// Posts each cluster's alerts, named after their cluster (the notification's subtitle).
+    /// Each cluster's alerts as notifications to post, named after their cluster (the
+    /// notification's subtitle); `snoozes` marks the ones snoozed (postAll drops them).
     // Internal, not private: check() in BackgroundMonitor.swift posts its outcomes.
-    static func post(_ outcomes: [ClusterAlerts], now: Date) async {
-        let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
-        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
-        let labels = ClusterLabels(names: names, masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled))
-        let snoozes = AlertSnoozeStore.current(now: now)
+    static func pending(_ outcomes: [ClusterAlerts], labels: ClusterLabels, snoozes: AlertSnoozes, now: Date) async
+        -> [PendingAlert]
+    {
+        var out: [PendingAlert] = []
         for outcome in outcomes {
             let context = outcome.job.context
             let fingerprint = context.fingerprint
-            // A snoozed alert posts nothing, neither the problem nor its end (its notification's Snooze).
-            for alert in snoozes.notSnoozed(outcome.alerts, cluster: fingerprint, now: now) {
+            for alert in outcome.alerts {
                 let link = alertLink(alert, snapshot: outcome.snapshot, cluster: context.clusterID)
                 let text = localized(alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
                 let wake = await canWake(alert, cluster: fingerprint)
-                await post(
-                    alert, localized: text, cluster: labels.of(context),
-                    id: alertNotificationID(cluster: outcome.job.key, alertKey: alert.key), link: link,
-                    actions: alertActions(key: alert.key, problem: alert.problem, canWake: wake),
-                    info: actionInfo(alert, snapshot: outcome.snapshot, cluster: fingerprint), hideDetails: hide)
+                let severity = alertRuleSeverity(
+                    alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
+                out.append(
+                    PendingAlert(
+                        context: context, clusterKey: outcome.job.key, label: labels.of(context), alert: alert,
+                        input: AlertInput(
+                            cluster: fingerprint, key: alert.key,
+                            kind: alertRuleKind(key: alert.key, kube: outcome.snapshot.kube), severity: severity,
+                            problem: alert.problem,
+                            snoozed: snoozes.isSnoozed(cluster: fingerprint, key: alert.key, now: now)),
+                        localized: text, link: link,
+                        actions: alertActions(key: alert.key, problem: alert.problem, canWake: wake),
+                        info: actionInfo(alert, snapshot: outcome.snapshot, cluster: fingerprint)))
             }
         }
+        return out
     }
 
-    /// Posts the merged and closed proposals (checkProposals) like the other gitops alerts: their
+    /// The merged and closed proposals (checkProposals), told like the other gitops alerts: their
     /// category, snooze and cluster subtitle; a tap opens the app or object they changed.
-    static func postProposals(_ found: [ProposalAlert], now: Date) async {
-        guard !found.isEmpty else { return }
-        let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
-        let masked = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
-        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
-        let labels = ClusterLabels(names: names, masked: masked)
-        let snoozes = AlertSnoozeStore.current(now: now)
-        for item in found {
+    static func pendingProposals(_ found: [ProposalAlert], labels: ClusterLabels, snoozes: AlertSnoozes, now: Date)
+        -> [PendingAlert]
+    {
+        found.map { item -> PendingAlert in
             let context = item.context
-            let text = localizedProposal(item.change, masked: masked)
+            let text = localizedProposal(item.change, masked: labels.masked)
             let alert = item.change.alert
-            guard !snoozes.notSnoozed([alert], cluster: context.fingerprint, now: now).isEmpty else { continue }
             var target = proposalTarget(item.change.record)
             target.cluster = context.clusterID
             let link = context.clusterID.isEmpty ? nil : TalosClient.shareLink(for: target)
-            await post(
-                alert, localized: text, cluster: labels.of(context),
-                id: alertNotificationID(cluster: monitorClusterKey(context), alertKey: alert.key), link: link,
+            return PendingAlert(
+                context: context, clusterKey: monitorClusterKey(context), label: labels.of(context), alert: alert,
+                input: AlertInput(
+                    cluster: context.fingerprint, key: alert.key, kind: alertRuleKind(key: alert.key),
+                    severity: alertSeverityInfo, problem: alert.problem,
+                    snoozed: snoozes.isSnoozed(cluster: context.fingerprint, key: alert.key, now: now)),
+                localized: text, link: link,
                 actions: alertActions(key: alert.key, problem: alert.problem, canWake: false),
                 info: [
                     AlertNotificationActions.clusterKey: context.fingerprint,
                     AlertNotificationActions.alertKey: alert.key,
-                ],
-                hideDetails: hide)
+                ])
         }
     }
 
@@ -65,36 +71,34 @@ extension BackgroundMonitor {
     /// "Sign in again" once per watched cluster (of `contexts`) whose identity provider ended the
     /// session, until it is signed in again (signInAlertPlan); a tap opens the cluster, where its
     /// sign-in banner is.
-    static func postSignIns(_ renewals: [SignInRenewal], contexts: [ContextSummary], now: Date) async {
+    static func pendingSignIns(
+        _ renewals: [SignInRenewal], contexts: [ContextSummary], labels: ClusterLabels, snoozes: AlertSnoozes, now: Date
+    ) -> [PendingAlert] {
         let notified = Set(UserDefaults.standard.stringArray(forKey: signInNotifiedKey) ?? [])
         let plan = signInAlertPlan(renewals: renewals, contexts: contexts, notified: notified)
         if plan.notified != notified {
             UserDefaults.standard.set(Array(plan.notified).sorted(), forKey: signInNotifiedKey)
         }
-        guard !plan.contexts.isEmpty else { return }
-        let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
-        let masked = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
-        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
-        let labels = ClusterLabels(names: names, masked: masked)
-        let snoozes = AlertSnoozeStore.current(now: now)
-        for context in plan.contexts {
+        return plan.contexts.map { context -> PendingAlert in
             let label = labels.of(context)
             let alert = signInAlert(
                 title: String(localized: "Sign in again"),
                 text: String(localized: "\(label) needs you to sign in again before its next check."))
-            guard !snoozes.notSnoozed([alert], cluster: context.fingerprint, now: now).isEmpty else { continue }
             var target = ShareTarget.screen(.cluster)
             target.cluster = context.clusterID
             let link = context.clusterID.isEmpty ? nil : TalosClient.shareLink(for: target)
-            await post(
-                alert, localized: (alert.title, alert.text), cluster: label,
-                id: alertNotificationID(cluster: monitorClusterKey(context), alertKey: alert.key), link: link,
+            return PendingAlert(
+                context: context, clusterKey: monitorClusterKey(context), label: label, alert: alert,
+                input: AlertInput(
+                    cluster: context.fingerprint, key: alert.key, kind: alertRuleKind(key: alert.key),
+                    severity: alertSeverityWarning, problem: alert.problem,
+                    snoozed: snoozes.isSnoozed(cluster: context.fingerprint, key: alert.key, now: now)),
+                localized: (alert.title, alert.text), link: link,
                 actions: alertActions(key: alert.key, problem: alert.problem, canWake: false),
                 info: [
                     AlertNotificationActions.clusterKey: context.fingerprint,
                     AlertNotificationActions.alertKey: alert.key,
-                ],
-                hideDetails: hide)
+                ])
         }
     }
 
@@ -386,7 +390,8 @@ extension BackgroundMonitor {
     /// With the app lock on, details are hidden on the lock screen (iOS shows "Notification").
     /// `cluster` names the cluster (the subtitle), `id` keeps the same alert of two clusters apart;
     /// `link` (userInfo "link") is the share link the tap opens; `info` what its actions need.
-    private static func post(
+    // Internal, not private: postAll (BackgroundMonitor+Rules.swift) posts through it.
+    static func post(
         _ alert: Alert, localized: (title: String, text: String), cluster: String, id: String, link: URL?,
         actions: [AlertAction], info: [String: String], hideDetails: Bool
     ) async {
