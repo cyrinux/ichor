@@ -66,7 +66,7 @@ it added 12.8 MB.
 | llama.cpp pin (b11550) and fetch | `native/llama-cpp.env`, `scripts/fetch-llama.sh` |
 | Android native build | `build.sh` (`build_llm_jni`), `app/src/main/cpp/` |
 | Android app code | `app/src/main/java/name/levis/ichor/localmodel/`, `ui/settings/LocalModelSection.kt`, `ui/diagnosis/AiTarget.kt` |
-| iOS app code | `ios/Ichor/Services/LocalModelHost.swift`, `LocalModels.swift`, `ios/Ichor/Views/LocalModelSection.swift` |
+| iOS app code | `ios/Ichor/Services/LocalModelHost.swift`, `LocalModels.swift`, `ios/Ichor/Views/Settings/LocalModelSection.swift` |
 | iOS engine build | `scripts/ios-build.sh` (llama.xcframework), `ios/project.yml` |
 | Model pinning | `scripts/local-models.py` (tests: `scripts/test_local_models.py`) |
 

@@ -38,13 +38,14 @@ final class MaskTransitionTests: XCTestCase {
     /// The Linux test harness runs synchronous tests only: wait for the main actor's work.
     private func run(failing: Bool) -> [String] {
         let done = expectation(description: "transition")
-        var order: [String] = []
+        let order = Locked<[String]>([])
         Task { @MainActor in
-            order = await MaskTransitionTests.record(failing: failing)
+            let recorded = await MaskTransitionTests.record(failing: failing)
+            order.set(recorded)
             done.fulfill()
         }
         wait(for: [done], timeout: 5)
-        return order
+        return order.get()
     }
 
     @MainActor
