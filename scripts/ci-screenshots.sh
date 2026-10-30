@@ -16,8 +16,8 @@ DEVICE_DIR=/data/local/tmp/ichor-screenshots
 # DemoScreenshots.NODE_SHOTS, after the overview.
 SHOTS=(overview node-services logs events graphs capture upgrade)
 # DemoScreenshots.FEATURE_SHOTS and its own: the website's feature cards, not for the store.
-FEATURES=(plugins gitops capacity runbooks activity argocd-diff argocd metrics data-services castai cgroups apps
-  workloads pods cronjobs netperf drift import recorder kube-home)
+FEATURES=(plugins gitops capacity argocd-diff argocd metrics data-services castai cgroups apps
+  workloads pods cronjobs netperf drift import kube-home)
 
 abi="$(adb shell getprop ro.product.cpu.abi | tr -d '\r')"
 app="$(find "$APK_DIR/debug" -name "*-${abi}-*.apk" -o -name "*-universal-*.apk" | head -1)"

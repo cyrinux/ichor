@@ -1,6 +1,5 @@
 package name.levis.ichor
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.ParcelFileDescriptor
@@ -9,7 +8,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onRoot
@@ -90,14 +88,6 @@ class DemoScreenshots {
                 scenario.onActivity { TestRoute.nav!!.navigate(route) }
                 capture("feature-$name", FEATURE_SETTLE)
             }
-        }
-        // The recorder is the Insights screen's second tab.
-        openDemo().use { scenario ->
-            scenario.onActivity { TestRoute.nav!!.navigate(Routes.INSIGHTS) }
-            val recorder = hasText(ApplicationProvider.getApplicationContext<Context>().getString(R.string.insights_tab_recorder))
-            waitFor(recorder)
-            compose.onNode(recorder).performClick()
-            capture("feature-recorder", FEATURE_SETTLE)
         }
         open("ichor://demo/kube").use {
             waitFor(hasTestTag(SMOKE_KUBE_HOME))
@@ -198,8 +188,6 @@ class DemoScreenshots {
             "plugins" to Routes.settingsPage(SettingsPage.PLUGINS),
             "gitops" to Routes.gitOpsSource("argocd", "Application", "argocd", "grafana", 0),
             "capacity" to Routes.KUBE_CAPACITY,
-            "runbooks" to Routes.RUNBOOKS,
-            "activity" to Routes.activity(),
             "argocd-diff" to Routes.argoDiff("argocd", "grafana"),
             "argocd" to Routes.ARGO_CD,
             "metrics" to Routes.metrics(),

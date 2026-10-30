@@ -202,42 +202,7 @@
             </div>
 
             <article class="insight">
-              <div
-                class="mock tall"
-                role="img"
-                aria-label="Add from a kubeconfig: six contexts found. prod-eu through aws eks get-token, IAM Identity Center; staging through kubelogin, Entra ID device code; dev through gke-gcloud-auth-plugin, service account key; blue through doctl, API token; rke-lab through rancher token, API key; home through oidc-login, browser sign-in."
-              >
-                <div class="title" data-i18n>Add from a kubeconfig · 6 contexts</div>
-                <div class="line" aria-hidden="true">
-                  <span>prod-eu</span><span>aws eks get-token</span>
-                  <span class="tag run">IAM Identity Center</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>staging</span><span>kubelogin · Entra ID</span>
-                  <span class="tag run" data-i18n>device code</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>dev</span><span>gke-gcloud-auth-plugin</span>
-                  <span class="tag run" data-i18n>service account</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>blue</span><span>doctl kubernetes</span>
-                  <span class="tag run">API token</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>rke-lab</span><span>rancher token</span>
-                  <span class="tag run">API key</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>home</span><span>oidc-login</span>
-                  <span class="tag run" data-i18n>browser</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>minikube</span><span>127.0.0.1:8443</span>
-                  <span class="tag off" data-i18n>unreachable</span>
-                </div>
-                <span class="runbtn" aria-hidden="true" data-i18n>Add 6 clusters</span>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-import-light.webp" /><img src="screenshots/feature-import.webp" width="540" height="1041" loading="lazy" alt="Signed in like your laptop, sealed like a key" /></picture>
               <h3>Signed in like your laptop, sealed like a key</h3>
               <p>
                 No <code>aws</code>, <code>gcloud</code> or <code>az</code>
@@ -302,29 +267,7 @@
 
           <div class="spotlight">
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Plugins: the External Secrets plugin lists db-credentials synced two minutes ago, api-keys with its SecretStore not ready, kube-green sleeping the default namespace at 20:00, and my-operator.yaml imported by QR code and enabled."
-              >
-                <div class="title" data-i18n>Plugins · External Secrets</div>
-                <div class="line" aria-hidden="true">
-                  <span>db-credentials</span><span data-i18n>synced 2 min ago</span>
-                  <span class="tag same" data-i18n>refresh</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>api-keys</span><span data-i18n>SecretStore not ready</span>
-                  <span class="tag bad" data-i18n>stale</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>kube-green</span><span data-i18n>sleeps default at 20:00</span>
-                  <span class="tag run" data-i18n>schedule</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>my-operator.yaml</span><span data-i18n>imported by QR</span>
-                  <span class="tag same" data-i18n>enabled</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-plugins-light.webp" /><img src="screenshots/feature-plugins.webp" width="540" height="1041" loading="lazy" alt="Any operator, as a plugin" /></picture>
               <h3>Any operator, as a plugin</h3>
               <p>
                 A plugin is one YAML file: the resources to read, what counts
@@ -339,29 +282,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Pull request from the phone: the grafana image goes from 12.2 to 12.3 in values.yaml, the kustomize build checks 14 objects with one changed, pull request 142 is open on GitHub for review, and the cluster now runs commit a1b2c3d."
-              >
-                <div class="title" data-i18n>Pull request · grafana 12.2 → 12.3</div>
-                <div class="line" aria-hidden="true">
-                  <span>values.yaml</span><span>+1 −1</span>
-                  <span class="tag diff">~</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>kustomize build</span><span data-i18n>14 objects · 1 changed</span>
-                  <span class="tag same">ok</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>PR #142</span><span data-i18n>open on GitHub</span>
-                  <span class="tag run" data-i18n>review</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>cluster</span><span data-i18n>runs a1b2c3d</span>
-                  <span class="tag same" data-i18n>merged</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-gitops-light.webp" /><img src="screenshots/feature-gitops.webp" width="540" height="1041" loading="lazy" alt="Edit in Git, from the phone" /></picture>
               <h3>Edit in Git, from the phone</h3>
               <p>
                 Browse the files an Argo CD or Flux app deploys, at the revision
@@ -376,31 +297,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Capacity of prod-eu: 38 percent of CPU and 12 percent of memory free; losing w-3 would leave four pods Pending and preempt two; immich uses 94 percent of its memory limit and risks an OOM kill."
-              >
-                <div class="title" data-i18n>Capacity · prod-eu</div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>CPU free</span
-                  ><span class="meter"><i style="width: 38%"></i></span
-                  ><span>38%</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>memory free</span
-                  ><span class="meter"><i class="hot" style="width: 12%"></i></span
-                  ><span>12%</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>lose w-3</span><span data-i18n>4 Pending · 2 preempted</span>
-                  <span class="tag bad">N+1</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>immich</span><span data-i18n>94% of memory limit</span>
-                  <span class="tag diff" data-i18n>OOM risk</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-capacity-light.webp" /><img src="screenshots/feature-capacity.webp" width="540" height="1041" loading="lazy" alt="Capacity, and what losing a node costs" /></picture>
               <h3>Capacity, and what losing a node costs</h3>
               <p>
                 Free CPU, memory and disk per cluster, every workload's OOM and
@@ -414,29 +311,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Kubernetes Observe screens: Alertmanager has two firing alerts and one silenced, KubePodCrashLooping; live events show FailedScheduling on loki-2; the api-gateway HPA scaled from 3 to 8; Kyverno reports one violation in audit mode."
-              >
-                <div class="title" data-i18n>Kubernetes · Observe</div>
-                <div class="line" aria-hidden="true">
-                  <span>Alertmanager</span><span data-i18n>2 firing · 1 silenced</span>
-                  <span class="tag bad">CrashLooping</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>events</span><span>FailedScheduling · loki-2</span>
-                  <span class="tag run" data-i18n>live</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>autoscaling</span><span>api-gateway 3 → 8</span>
-                  <span class="tag diff">HPA</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>policies</span><span data-i18n>1 violation · Kyverno</span>
-                  <span class="tag diff" data-i18n>audit</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-kube-home-light.webp" /><img src="screenshots/feature-kube-home.webp" width="540" height="1041" loading="lazy" alt="The whole Kubernetes home" /></picture>
               <h3>The whole Kubernetes home</h3>
               <p>
                 Workloads, Networking, Storage, Observe and Browse: Services and
@@ -452,29 +327,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Cluster upgrade from Talos 1.12.3 to 1.13.0: cp-1 is done, cp-2 is draining and rebooting, w-1 to w-3 are queued, and a new node w-4 sits in maintenance mode with its config sent."
-              >
-                <div class="title" data-i18n>Upgrade cluster · 1.12.3 → 1.13.0</div>
-                <div class="tl" aria-hidden="true">
-                  <time>cp-1</time><i class="dot" style="background: #5bd18b"></i>
-                  <span data-i18n>upgraded · back in 2 min</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>cp-2</time><i class="dot" style="background: #f2c14e"></i>
-                  <span data-i18n>drained · rebooting</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>w-1…3</time><i class="dot" style="background: #8fa3bf"></i>
-                  <span data-i18n>queued</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>w-4</time><i class="dot" style="background: #7cb7ff"></i>
-                  <span data-i18n>new · maintenance mode · config sent</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/upgrade-light.webp" /><img src="screenshots/upgrade.webp" width="540" height="1041" loading="lazy" alt="Day two on Talos, from the phone" /></picture>
               <h3>Day two on Talos, from the phone</h3>
               <p>
                 Upgrade every node one after the other, draining first when the
@@ -489,29 +342,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Runbook rotate loki: step one, an Argo CD sync of loki with prune, is done; step two, a rollout restart of loki, is running with two of three pods ready; step three, a reboot of w-2, waits for a confirmation; the run shows as a Live Activity on the Lock Screen with a Stop button."
-              >
-                <div class="title" data-i18n>Runbook · rotate loki</div>
-                <div class="tl" aria-hidden="true">
-                  <time>1</time><i class="dot" style="background: #5bd18b"></i>
-                  <span>argocd sync · loki · prune</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>2</time><i class="dot" style="background: #f2c14e"></i>
-                  <span data-i18n>rollout restart · loki · 2/3</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>3</time><i class="dot" style="background: #ff6b6b"></i>
-                  <span data-i18n>reboot · w-2 · confirm first</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>Live Activity</span><span data-i18n>Lock Screen · Dynamic Island</span>
-                  <span class="tag run" data-i18n>Stop</span>
-                </div>
-              </div>
+              
               <h3>Runbooks, and long runs that outlive the screen</h3>
               <p>
                 A runbook is an ordered list of the app's own actions, imported
@@ -611,29 +442,7 @@
 
           <div class="spotlight">
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Activity: today at 14:02 a rollout restart of grafana succeeded; at 13:40 an Argo CD sync of cilium with prune; at 09:12 a reboot of w-2; yesterday a Helm rollback of loki to revision 7."
-              >
-                <div class="title" data-i18n>Activity · this device</div>
-                <div class="tl" aria-hidden="true">
-                  <time>14:02</time><i class="dot" style="background: #5bd18b"></i>
-                  <span data-i18n>rollout restart · grafana</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>13:40</time><i class="dot" style="background: #5bd18b"></i>
-                  <span>argocd sync · cilium · prune</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>09:12</time><i class="dot" style="background: #f2c14e"></i>
-                  <span data-i18n>reboot · w-2</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time data-i18n>yesterday</time><i class="dot" style="background: #ff6b6b"></i>
-                  <span data-i18n>helm rollback · loki · failed</span>
-                </div>
-              </div>
+              
               <h3>An audit log of what the phone did</h3>
               <p>
                 Every cluster change made from the app, reboot, restart, sync,
@@ -645,29 +454,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Argo CD diff for cilium before sync: the cilium-config ConfigMap changes two keys, the cilium DaemonSet image goes from 1.17.4 to 1.18.0, a new CiliumNetworkPolicy is added, and the revision links to its commit."
-              >
-                <div class="title" data-i18n>cilium · what sync would change</div>
-                <div class="line" aria-hidden="true">
-                  <span>ConfigMap</span><span>cilium-config</span>
-                  <span class="tag diff" data-i18n>~ 2 keys</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>DaemonSet</span><span>image 1.17.4 → 1.18.0</span>
-                  <span class="tag diff">~</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>CNP</span><span>allow-dns</span>
-                  <span class="tag same" data-i18n>+ new</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>revision</span><span>a1b2c3d · bump cilium</span>
-                  <span class="tag run" data-i18n>GitHub ↗</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-argocd-diff-light.webp" /><img src="screenshots/feature-argocd-diff.webp" width="540" height="1041" loading="lazy" alt="Argo CD: see the diff, then sync" /></picture>
               <h3>Argo CD: see the diff, then sync</h3>
               <p>
                 Show diff renders what a sync would change, object by object,
@@ -680,21 +467,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Unlock Ichor: hold your security key to the phone. A YubiKey over NFC is accepted and the sealed configs open."
-              >
-                <div class="title" data-i18n>Unlock · security key</div>
-                <div class="key" aria-hidden="true">
-                  <div class="ring"><span></span></div>
-                  <p>Hold your key to the back of the phone</p>
-                  <div class="line">
-                    <span>YubiKey 5</span><span>NFC</span>
-                    <span class="tag same" data-i18n>accepted</span>
-                  </div>
-                </div>
-              </div>
+              
               <h3>Unlock with a security key</h3>
               <p>
                 A YubiKey or any FIDO2 key, over NFC or USB, can replace the PIN
@@ -706,23 +479,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Panel assistant on the metrics screen: asked for the p99 latency of the ingress by host, it writes a PromQL histogram_quantile query, checks it against the server and reports 3 series."
-              >
-                <div class="title" data-i18n>Metrics · panel assistant</div>
-                <div class="chat" aria-hidden="true">
-                  <p class="you">p99 latency of the ingress, by host</p>
-                  <pre>histogram_quantile(0.99,
-  sum by (host, le) (
-    rate(nginx_ingress_controller_request_duration_seconds_bucket[5m])))</pre>
-                  <div class="line">
-                    <span data-i18n>checked</span><span>3 series · 1.2 s</span>
-                    <span class="tag same" data-i18n>add panel</span>
-                  </div>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-metrics-light.webp" /><img src="screenshots/feature-metrics.webp" width="540" height="1041" loading="lazy" alt="A PromQL assistant on the Metrics screen" /></picture>
               <h3>A PromQL assistant on the Metrics screen</h3>
               <p>
                 Say what you want to see; the assistant writes the query, runs it
@@ -734,29 +491,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="CAST AI: api-gateway requests 2 CPU and uses 0.4, a 68 dollar per month saving; a consolidation plan would drain three nodes into two; one failed plan left 14 dollars of missed savings."
-              >
-                <div class="title" data-i18n>CAST AI · prod-eu</div>
-                <div class="line" aria-hidden="true">
-                  <span>api-gateway</span><span>cpu 2000m → 650m</span>
-                  <span class="tag same">−$68/mo</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>worker</span><span>mem 4 Gi → 1.5 Gi</span>
-                  <span class="tag same">−$23/mo</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>consolidate</span><span>3 nodes → 2</span>
-                  <span class="tag run" data-i18n>plan</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>missed</span><span data-i18n>plan failed, 1 node left</span>
-                  <span class="tag diff">$14/mo</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-castai-light.webp" /><img src="screenshots/feature-castai.webp" width="540" height="1041" loading="lazy" alt="CAST AI on both platforms" /></picture>
               <h3>CAST AI on both platforms</h3>
               <p>
                 Workload recommendations with the money they save, node
@@ -768,29 +503,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Object summary of the loki StatefulSet: conditions Available true and Progressing false, owned by the Argo CD application loki, three events in the last hour, the last one a FailedScheduling warning."
-              >
-                <div class="title" data-i18n>StatefulSet · loki · summary</div>
-                <div class="line" aria-hidden="true">
-                  <span>Available</span><span data-i18n>2 of 3 ready</span>
-                  <span class="tag diff">False</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>owner</span><span>Application loki</span>
-                  <span class="tag run">Argo CD</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>event</span><span>FailedScheduling · loki-2</span>
-                  <span class="tag bad">2 min</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>action</span><span data-i18n>rollout restart</span>
-                  <span class="tag off" data-i18n>no RBAC</span>
-                </div>
-              </div>
+              
               <h3>Any object, summarised, with what you may do</h3>
               <p>
                 Every object now has a summary tab, like the top of
@@ -849,29 +562,7 @@
 
           <div class="spotlight">
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Network test from w-1 to w-3: 9.4 Gbit/s pod to pod, 9.8 Gbit/s host to host, 0.21 ms median latency and a slow 1.9 ms p99."
-              >
-                <div class="title" data-i18n>Network test · w-1 → w-3</div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>pod → pod</span><span>9.4 Gbit/s</span
-                  ><span class="tag same">+3%</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>host → host</span><span>9.8 Gbit/s</span
-                  ><span class="tag same">+1%</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>latency p50</span><span>0.21 ms</span
-                  ><span class="tag same">ok</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span data-i18n>latency p99</span><span>1.9 ms</span
-                  ><span class="tag diff" data-i18n>slow</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-netperf-light.webp" /><img src="screenshots/feature-netperf.webp" width="540" height="1041" loading="lazy" alt="Network test" /></picture>
               <h3>Network test</h3>
               <p>
                 Pick two nodes, from a list or, on Android, right on the cluster
@@ -884,29 +575,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Data services: a Longhorn volume is degraded on w-2 and a Postgres backup is 26 hours old; Garage and Dragonfly are healthy."
-              >
-                <div class="title" data-i18n>Data services · 4 found</div>
-                <div class="line" aria-hidden="true">
-                  <span>Longhorn</span><span data-i18n>1 volume degraded</span
-                  ><span class="tag diff">w-2</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>Postgres</span><span data-i18n>backup 26 h ago</span
-                  ><span class="tag diff" data-i18n>stale</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>Garage</span><span data-i18n>3/3 nodes</span
-                  ><span class="tag same">ok</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>Dragonfly</span><span data-i18n>master + replica</span
-                  ><span class="tag same">ok</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-data-services-light.webp" /><img src="screenshots/feature-data-services.webp" width="540" height="1041" loading="lazy" alt="Data services" /></picture>
               <h3>Data services</h3>
               <p>
                 Ichor recognises Longhorn, CloudNativePG, Garage, Rook Ceph,
@@ -922,25 +591,7 @@
             </article>
 
             <article class="insight" id="argocd">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Argo CD: cilium is syncing wave 1 of 3, grafana's last sync failed, and 22 apps are synced and healthy."
-              >
-                <div class="title" data-i18n>GitOps · 24 apps</div>
-                <div class="line" aria-hidden="true">
-                  <span>cilium</span><span data-i18n>syncing, wave 1 · 5/9</span
-                  ><span class="tag diff">↻</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>grafana</span><span data-i18n>sync failed</span
-                  ><span class="tag diff">8.6.0</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>22 apps</span><span data-i18n>synced, healthy</span
-                  ><span class="tag same">ok</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-argocd-light.webp" /><img src="screenshots/feature-argocd.webp" width="540" height="1041" loading="lazy" alt="Argo CD" /></picture>
               <h3>Argo CD</h3>
               <p>
                 When Argo CD runs in the cluster, Ichor lists its applications
@@ -963,33 +614,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Node pressure on w-2: little CPU stall, high memory and disk stall, and one container at 94% of its memory limit."
-              >
-                <div class="title" data-i18n>w-2 · pressure, last 5 min</div>
-                <div class="bar" aria-hidden="true">
-                  <span>CPU</span
-                  ><span class="meter"><i style="width: 12%"></i></span
-                  ><span>6%</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>memory</span
-                  ><span class="meter"><i class="hot" style="width: 62%"></i></span
-                  ><span>31%</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>disk I/O</span
-                  ><span class="meter"><i class="hot" style="width: 80%"></i></span
-                  ><span>40%</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>near limit</span
-                  ><span class="meter"><i class="hot" style="width: 94%"></i></span
-                  ><span>94%</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-cgroups-light.webp" /><img src="screenshots/feature-cgroups.webp" width="540" height="1041" loading="lazy" alt="Node pressure and cgroups" /></picture>
               <h3>Node pressure and cgroups</h3>
               <p>
                 How long work on a node waits for CPU, memory or disk, charted
@@ -1061,41 +686,7 @@
 
           <div class="spotlight">
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="App inventory: a grid of apps such as Argo CD, Cilium, Grafana, Immich and Longhorn; Cilium and Uptime Kuma are flagged for a look."
-              >
-                <div class="title" data-i18n>Apps · 24 running · 87 containers</div>
-                <div class="apps" aria-hidden="true">
-                  <span class="app"
-                    ><b style="background: #f7a26b">AC</b>v3.1.8</span
-                  >
-                  <span class="app warn"
-                    ><b style="background: #8fc6f2">Ci</b
-                    ><span data-i18n>2 versions</span></span
-                  >
-                  <span class="app"
-                    ><b style="background: #f2c14e">Gr</b>12.2.0</span
-                  >
-                  <span class="app"
-                    ><b style="background: #9bdcb0">HA</b>2025.10</span
-                  >
-                  <span class="app"
-                    ><b style="background: #c9a7f2">Im</b>v2.0.1</span
-                  >
-                  <span class="app"
-                    ><b style="background: #7fd3d0">Lo</b>v1.9.1</span
-                  >
-                  <span class="app"
-                    ><b style="background: #f29fb8">Pa</b>2.18.4</span
-                  >
-                  <span class="app warn"
-                    ><b style="background: #b8c6f2">UK</b
-                    ><span>:latest</span></span
-                  >
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-apps-light.webp" /><img src="screenshots/feature-apps.webp" width="540" height="1041" loading="lazy" alt="App inventory" /></picture>
               <h3>App inventory</h3>
               <p>
                 Every container on every node, grouped into the apps you
@@ -1108,29 +699,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Kubernetes workloads: Grafana is ready, Immich is rolling out, Paperless has one of two pods ready; Paperless can be restarted."
-              >
-                <div class="title" data-i18n>Kubernetes · workloads</div>
-                <div class="line" aria-hidden="true">
-                  <span>paperless</span><span data-i18n>1/2 ready</span
-                  ><span class="tag diff" data-i18n>restart</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>immich</span><span data-i18n>rolling out</span
-                  ><span class="tag diff">2/3</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>grafana</span><span>deployment</span
-                  ><span class="tag same">1/1</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>cilium</span><span>daemonset</span
-                  ><span class="tag same">5/5</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-workloads-light.webp" /><img src="screenshots/feature-workloads.webp" width="540" height="1041" loading="lazy" alt="Workloads and rollout restart" /></picture>
               <h3>Workloads and rollout restart</h3>
               <p>
                 Deployments, StatefulSets and DaemonSets with their readiness
@@ -1145,33 +714,7 @@
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Kubernetes pods: one pod in CrashLoopBackOff with 14 restarts, one terminating, two running."
-              >
-                <div class="title" data-i18n>Kubernetes · pods</div>
-                <div class="tl" aria-hidden="true">
-                  <time>w-2</time
-                  ><i class="dot" style="background: #ff6b6b"></i
-                  ><span>scanner · CrashLoopBackOff ×14</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>w-1</time
-                  ><i class="dot" style="background: #f2c14e"></i
-                  ><span>sonarr-0 · Terminating</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>w-1</time
-                  ><i class="dot" style="background: #5bd18b"></i
-                  ><span>grafana-6d8b · Running</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>cp-1</time
-                  ><i class="dot" style="background: #5bd18b"></i
-                  ><span>coredns-7c9d · Running</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-pods-light.webp" /><img src="screenshots/feature-pods.webp" width="540" height="1041" loading="lazy" alt="Pods, unhealthy first" /></picture>
               <h3>Pods, unhealthy first</h3>
               <p>
                 Every pod with the status <code>kubectl get pods</code> shows
@@ -1183,30 +726,7 @@
             </article>
 
             <article class="insight wide" id="cronjobs">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Kubernetes CronJobs: the database backup succeeded and runs again in 4 hours, the weekly report failed, a snapshot cleanup is running, and a staging wipe runs on schedule only. A Run now button starts the backup."
-              >
-                <div class="title" data-i18n>Kubernetes · CronJobs</div>
-                <div class="line" aria-hidden="true">
-                  <span>db-backup</span><span data-i18n>next in 4 h</span
-                  ><span class="tag same" data-i18n>succeeded</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>report</span><span data-i18n>5 days ago</span
-                  ><span class="tag bad" data-i18n>failed</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>snapshots</span><span data-i18n>for 40 s</span
-                  ><span class="tag run" data-i18n>running</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>wipe-staging</span><span data-i18n>schedule only</span
-                  ><span class="tag off">🔒</span>
-                </div>
-                <span class="runbtn" aria-hidden="true" data-i18n>▶ Run now</span>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-cronjobs-light.webp" /><img src="screenshots/feature-cronjobs.webp" width="540" height="1041" loading="lazy" alt="CronJobs, run on demand" /></picture>
               <div>
                 <h3>CronJobs, run on demand</h3>
                 <p>
@@ -1291,29 +811,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
 
           <div class="spotlight">
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Drift view: DNS and MTU differ on one node, Talos version is the same everywhere."
-              >
-                <div class="title" data-i18n>Configuration drift · workers</div>
-                <div class="line" aria-hidden="true">
-                  <span>Talos</span><span>v1.12 ×4</span
-                  ><span class="tag same" data-i18n>same</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>DNS</span><span>w-3: 9.9.9.9</span
-                  ><span class="tag diff" data-i18n>drift</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>eth0 MTU</span><span>w-3: 1450</span
-                  ><span class="tag diff" data-i18n>drift</span>
-                </div>
-                <div class="line" aria-hidden="true">
-                  <span>Secure Boot</span><span data-i18n>on ×4</span
-                  ><span class="tag same" data-i18n>same</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-drift-light.webp" /><img src="screenshots/feature-drift.webp" width="540" height="1041" loading="lazy" alt="Configuration drift" /></picture>
               <h3>Configuration drift</h3>
               <p>
                 The one worker with a different MTU, the forgotten NTP server,
@@ -1326,33 +824,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Incident timeline: etcd turns unhealthy, cp-2 becomes not ready, then link errors appear on eth0."
-              >
-                <div class="title" data-i18n>Incident recorder · 03:12 → now</div>
-                <div class="tl" aria-hidden="true">
-                  <time>03:12:04</time
-                  ><i class="dot" style="background: #f2c14e"></i
-                  ><span data-i18n>etcd: not healthy</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>03:12:09</time
-                  ><i class="dot" style="background: #ff6b6b"></i
-                  ><span data-i18n>cp-2 not ready</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>03:12:14</time
-                  ><i class="dot" style="background: #ff6b6b"></i
-                  ><span data-i18n>eth0 rx errors +42</span>
-                </div>
-                <div class="tl" aria-hidden="true">
-                  <time>03:13:02</time
-                  ><i class="dot" style="background: #5bd18b"></i
-                  ><span data-i18n>cp-2 ready</span>
-                </div>
-              </div>
+              
               <h3>Incident recorder</h3>
               <p>
                 Hit record while it's happening and Ichor builds a timeline for
@@ -1364,33 +836,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
             </article>
 
             <article class="insight">
-              <div
-                class="mock"
-                role="img"
-                aria-label="Bottleneck metrics: I/O wait is high, steal time is low, disk sda is busy, eth0 shows drops."
-              >
-                <div class="title" data-i18n>Live · bottlenecks</div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>I/O wait</span
-                  ><span class="meter"><i class="hot" style="width: 68%"></i></span
-                  ><span>34%</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>steal</span
-                  ><span class="meter"><i style="width: 6%"></i></span
-                  ><span>1%</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>sda busy</span
-                  ><span class="meter"><i class="hot" style="width: 92%"></i></span
-                  ><span>92%</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span data-i18n>eth0 drops</span
-                  ><span class="meter"><i style="width: 12%"></i></span
-                  ><span>3/s</span>
-                </div>
-              </div>
+              <picture class="card-shot"><source media="(prefers-color-scheme: light)" srcset="screenshots/graphs-light.webp" /><img src="screenshots/graphs.webp" width="540" height="1041" loading="lazy" alt="Bottleneck metrics" /></picture>
               <h3>Bottleneck metrics</h3>
               <p>
                 High load, but is it the CPU, the disk, the network or a noisy
