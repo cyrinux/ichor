@@ -71,7 +71,7 @@ enum LogStyle {
             result.append(AttributedString(" "))
         }
         var message = AttributedString(entry.msg)
-        if level == .debug { message.setForeground(Color.secondary })
+        if level == .debug { message.setForeground(Color.secondary) }
         result.append(message)
         for field in entry.fields {
             var key = AttributedString(" \(field.k)=")
