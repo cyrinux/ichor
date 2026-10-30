@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.SMOKE_CLUSTER_TITLE
 import name.levis.ichor.selectCluster
 import name.levis.ichor.addClusterNodes
 import android.content.Context
@@ -333,7 +335,7 @@ internal fun OverviewTopBar(
         // Swipe the bar sideways for the previous/next cluster, tap the title for the menu.
         modifier = Modifier.clusterSwipe(config, app::selectCluster),
         title = {
-            Box(Modifier.tourAnchor(TourAnchor.Switcher)) {
+            Box(Modifier.tourAnchor(TourAnchor.Switcher).testTag(SMOKE_CLUSTER_TITLE)) {
                 ClusterTitle(config, clusterColors, clusterLabels, onOpen = { onClusterMenu(true) }) { ScreenshotModeIcon() }
                 config?.let { stored ->
                     ClusterMenu(

@@ -164,7 +164,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		return toJSON(plan)
 	case "NodeFeatures":
 		features := computeFeatures(n.Version)
-		for _, id := range []string{"packetCapture", "upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl", "reset"} {
+		for _, id := range []string{"upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl", "reset"} {
 			features.Features[id] = featureState{Reason: errDemoUnavailable.Error()}
 		}
 		return toJSON(features)

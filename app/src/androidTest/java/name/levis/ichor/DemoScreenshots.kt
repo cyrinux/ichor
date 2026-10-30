@@ -8,15 +8,20 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.printToString
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import name.levis.ichor.ui.components.SMOKE_CAPTURE_START
+import name.levis.ichor.ui.components.SMOKE_CLUSTER_TITLE
+import name.levis.ichor.ui.components.SMOKE_CLUSTER_UPGRADE
 import name.levis.ichor.ui.components.SMOKE_NODE
 import name.levis.ichor.ui.components.SMOKE_NODE_SCREEN
 import name.levis.ichor.ui.components.SMOKE_TOUR_SKIP
@@ -42,7 +47,6 @@ class DemoScreenshots {
     fun captureTheDemo() {
         shell("mkdir -p $DIR")
         openDemo().use {
-            scrollTo(hasTestTag(SMOKE_NODE))
             capture("overview")
         }
         NODE_SHOTS.forEach { (name, entry) ->
@@ -50,6 +54,20 @@ class DemoScreenshots {
                 openNodeEntry(entry)
                 capture(name, if (entry == NodeMenuEntry.TAB_LIVE) GRAPHS_SETTLE else SETTLE)
             }
+        }
+        openDemo().use {
+            openNodeEntry(NodeMenuEntry.CAPTURE)
+            val start = hasTestTag(SMOKE_CAPTURE_START) and isEnabled()
+            waitFor(start)
+            compose.onNode(start).performScrollTo().performClick()
+            capture("capture", CAPTURE_SETTLE)
+        }
+        openDemo().use {
+            waitFor(hasTestTag(SMOKE_CLUSTER_TITLE))
+            compose.onNode(hasTestTag(SMOKE_CLUSTER_TITLE)).performClick()
+            waitFor(hasTestTag(SMOKE_CLUSTER_UPGRADE))
+            compose.onNode(hasTestTag(SMOKE_CLUSTER_UPGRADE)).performClick()
+            capture("upgrade", UPGRADE_SETTLE)
         }
     }
 
@@ -81,9 +99,20 @@ class DemoScreenshots {
     /** Lets the screen load its demo data, then takes the raw screen as [name].png. */
     private fun capture(name: String, settle: Long = SETTLE) {
         compose.waitForIdle()
-        Thread.sleep(settle)
+        settle(settle)
         compose.waitForIdle()
         shell("screencap -p $DIR/$name.png")
+    }
+
+    /**
+     * Lets [millis] pass in real time and on the test's clock: the screens' polling delays run
+     * on that clock, the data they sample (the graphs' rates, a capture) on the real one.
+     */
+    private fun settle(millis: Long) {
+        repeat((millis / SETTLE_STEP).toInt()) {
+            Thread.sleep(SETTLE_STEP)
+            compose.mainClock.advanceTimeBy(SETTLE_STEP)
+        }
     }
 
     private fun exists(matcher: SemanticsMatcher) = compose.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()
@@ -116,8 +145,15 @@ class DemoScreenshots {
         const val TIMEOUT = 30_000L
         const val SETTLE = 2_500L
 
-        /** The live graphs need a few samples before they draw a line. */
-        const val GRAPHS_SETTLE = 10_000L
+        /** Most of the live graphs' three minutes, so that they draw more than a sliver. */
+        const val GRAPHS_SETTLE = 150_000L
+
+        /** A screenful of sample packets. */
+        const val CAPTURE_SETTLE = 8_000L
+
+        /** The releases (from the network), then the plan of the newest. */
+        const val UPGRADE_SETTLE = 8_000L
+        const val SETTLE_STEP = 500L
 
         /** The website's gallery order after the overview; names match docs/screenshots/. */
         val NODE_SHOTS = listOf(
@@ -125,8 +161,6 @@ class DemoScreenshots {
             "logs" to NodeMenuEntry.KERNEL_LOG,
             "events" to NodeMenuEntry.EVENTS,
             "graphs" to NodeMenuEntry.TAB_LIVE,
-            "capture" to NodeMenuEntry.CAPTURE,
-            "upgrade" to NodeMenuEntry.UPGRADE,
         )
     }
 }
