@@ -3,6 +3,8 @@ package name.levis.ichor.model
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import name.levis.ichor.data.TalosJson
 
 // Mirrors go/ichorgo/oncall*.go (times in unix ms, 0 when unset).
 
@@ -85,6 +87,11 @@ data class OnCallIdentity(val user: String = "", val account: String = "")
 /** What the matching reads of an alert. */
 @Serializable
 data class OnCallAlertInput(val fingerprint: String, val labels: Map<String, String>)
+
+private val GoJson = Json(TalosJson) { encodeDefaults = true }
+
+/** The settings for Go, every field included. Holds the token: never log it. */
+fun OnCallConfig.toGoJson(): String = GoJson.encodeToString(OnCallConfig.serializer(), this)
 
 /** Who acknowledged [this], whoever it is assigned to otherwise; "" when nobody is known. */
 val OnCallIncident.acknowledgerName: String get() = acknowledgedBy.ifEmpty { assignees.firstOrNull().orEmpty() }
