@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -20,6 +21,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import name.levis.ichor.BuildConfig
+import name.levis.ichor.ui.nav.TestRoute
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
@@ -129,6 +132,13 @@ fun Navigation(
         }
         // Last: clearing the link restarts this effect, which would cancel a node lookup.
         onLinkOpened()
+    }
+
+    if (BuildConfig.DEBUG) {
+        DisposableEffect(nav) {
+            TestRoute.nav = nav
+            onDispose { TestRoute.nav = null }
+        }
     }
 
     // A search result: opened the way its share link would be.
