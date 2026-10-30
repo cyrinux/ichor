@@ -21,7 +21,8 @@ var demoSites = []struct{ zone, public string }{
 
 // demoPeers is what demo node i reports about its KubeSpan peers: the node's own address
 // within its site, the site's public address across sites. The Falkenstein worker cannot
-// reach Amsterdam (its tunnel there is down) while Amsterdam still reports it up.
+// reach Amsterdam (its tunnel there is down) while Amsterdam still reports it up, and it never
+// connected to the Paris worker: Talos says unknown on both sides, the tunnel is dead all the same.
 func demoPeers(i int) []kubespanPeerInput {
 	nodes := demoNodes()
 	handshake := time.Now().Add(-10 * time.Second)
@@ -47,7 +48,12 @@ func demoPeers(i int) []kubespanPeerInput {
 			spec.State, spec.ReceiveBytes, spec.LastHandshakeTime = kubespan.PeerStateDown, 0, time.Now().Add(-9*time.Minute)
 		}
 
-		peers = append(peers, kubespanPeerInput{id: "demo-" + peer.Hostname, spec: spec})
+		if i == 3 && j == 4 || i == 4 && j == 3 {
+			spec.State, spec.ReceiveBytes, spec.TransmitBytes = kubespan.PeerStateUnknown, 0, 0
+			spec.LastHandshakeTime, spec.LastUsedEndpoint = time.Time{}, spec.Endpoint
+		}
+
+		peers = append(peers, kubespanPeerInput{id: "demo-" + peer.Hostname, created: time.Now().Add(-time.Hour), spec: spec})
 	}
 
 	return peers

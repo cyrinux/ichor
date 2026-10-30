@@ -374,6 +374,14 @@
     <string name="kubespan_peer_up">Up</string>
     <string name="kubespan_peer_down">Down</string>
     <string name="kubespan_peer_unknown">Unknown</string>
+    <string name="kubespan_banner_meaning">Pods on these nodes cannot reach each other over KubeSpan.</string>
+    <string name="kubespan_banner_check">What to check: the endpoint each side tried, firewalls on UDP 51820, the KubeSpan endpoint filters.</string>
+    <string name="kubespan_reason_never">never handshaked</string>
+    <string name="kubespan_reason_stale">no handshake for %1$s</string>
+    <string name="kubespan_reason_no_endpoint">no endpoint to try</string>
+    <string name="kubespan_peer_never">Never connected</string>
+    <string name="kubespan_legend_unknown">Unknown (still trying)</string>
+    <string name="kubespan_diag_no_handshake">Talos reports no handshake on this peer.</string>
     <string name="kubespan_handshake_ago">handshake %1$s ago</string>
     <string name="kubespan_diag_loading">Reading why the link is up or down…</string>
     <string name="kubespan_diag_unknown">This node did not report this peer.</string>

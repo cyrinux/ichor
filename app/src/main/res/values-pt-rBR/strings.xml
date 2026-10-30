@@ -372,6 +372,14 @@
     <string name="kubespan_peer_up">Ativo</string>
     <string name="kubespan_peer_down">Fora do ar</string>
     <string name="kubespan_peer_unknown">Desconhecido</string>
+    <string name="kubespan_banner_meaning">Os pods nesses nós não conseguem se comunicar via KubeSpan.</string>
+    <string name="kubespan_banner_check">O que verificar: o endpoint que cada lado tentou, os firewalls em UDP 51820, os filtros de endpoint do KubeSpan.</string>
+    <string name="kubespan_reason_never">nenhum handshake</string>
+    <string name="kubespan_reason_stale">sem handshake há %1$s</string>
+    <string name="kubespan_reason_no_endpoint">nenhum endpoint para tentar</string>
+    <string name="kubespan_peer_never">Nunca conectado</string>
+    <string name="kubespan_legend_unknown">Desconhecido (ainda tentando)</string>
+    <string name="kubespan_diag_no_handshake">O Talos não informa nenhum handshake com este par.</string>
     <string name="kubespan_handshake_ago">handshake há %1$s</string>
     <string name="kubespan_diag_loading">Verificando por que o link está ativo ou fora do ar…</string>
     <string name="kubespan_diag_unknown">Este nó não informou este peer.</string>

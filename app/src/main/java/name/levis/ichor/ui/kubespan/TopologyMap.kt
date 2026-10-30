@@ -5,6 +5,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -47,6 +50,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.TopologyLink
 import name.levis.ichor.model.isBroken
+import name.levis.ichor.model.isOneSided
 import name.levis.ichor.model.TopologyNode
 import name.levis.ichor.model.TopologySite
 import name.levis.ichor.model.brokenLinks
@@ -112,10 +116,10 @@ fun TopologyMap(
                         moveTo(a.x * px, a.y * px)
                         quadraticTo(c.x * px, c.y * px, b.x * px, b.y * px)
                     }
-                    val color = when (link.state) {
-                        "up" -> colors.ok
-                        "down" -> colors.bad
-                        "degraded" -> colors.warn
+                    val color = when {
+                        link.isOneSided -> colors.warn
+                        link.isBroken -> colors.bad
+                        link.state == "up" -> colors.ok
                         else -> colors.muted
                     }
                     if (link == selected) {
@@ -128,9 +132,13 @@ fun TopologyMap(
                         path, color.copy(alpha = if (link.isBroken) 1f else 0.55f),
                         style = Stroke(
                             width = (if (link.isBroken) 3.dp else 2.dp).toPx(),
-                            pathEffect = if (link.state == "up") null else PathEffect.dashPathEffect(floatArrayOf(10f * px, 6f * px)),
+                            pathEffect = if (link.state == "up" && !link.isBroken) null else PathEffect.dashPathEffect(floatArrayOf(10f * px, 6f * px)),
                         ),
                     )
+                    // A dot at the middle of the curve, (a + 2c + b) / 4: it reads among many links.
+                    if (link.isBroken) {
+                        drawCircle(color, 5.dp.toPx(), Offset((a.x + 2 * c.x + b.x) / 4 * px, (a.y + 2 * c.y + b.y) / 4 * px))
+                    }
                 }
             }
             layout.sites.forEach { box ->
@@ -265,10 +273,11 @@ private fun NodeChip(
                 // Down but seen before: since when, its zone is the site it sits on.
                 val lastSeen = node.lastSeen?.takeIf { node.error != null }
                     ?.let { stringResource(R.string.overview_node_last_seen, agoLabel(System.currentTimeMillis() - it)) }
+                val brokenLabel = broken.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.kubespan_links_down, it, it) }
                 Text(
-                    pickLabel ?: lastSeen ?: zone ?: stringResource(if (controlPlane) R.string.topology_role_controlplane else R.string.topology_role_worker),
+                    pickLabel ?: lastSeen ?: brokenLabel ?: zone ?: stringResource(if (controlPlane) R.string.topology_role_controlplane else R.string.topology_role_worker),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (pickLabel == null && lastSeen == null && brokenLabel != null) colors.bad else MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -278,13 +287,15 @@ private fun NodeChip(
 }
 
 /** What the line styles mean. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TopologyLegend(modifier: Modifier = Modifier) {
     val colors = LocalStatusColors.current
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         LegendItem(colors.ok, dashed = false, stringResource(R.string.kubespan_peer_up))
         LegendItem(colors.warn, dashed = true, stringResource(R.string.topology_link_degraded))
         LegendItem(colors.bad, dashed = true, stringResource(R.string.kubespan_peer_down))
+        LegendItem(colors.muted, dashed = true, stringResource(R.string.kubespan_legend_unknown))
     }
 }
 

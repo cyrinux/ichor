@@ -422,6 +422,14 @@
     <string name="kubespan_peer_up">Работает</string>
     <string name="kubespan_peer_down">Не работает</string>
     <string name="kubespan_peer_unknown">Неизвестно</string>
+    <string name="kubespan_banner_meaning">Поды на этих узлах не могут связаться друг с другом через KubeSpan.</string>
+    <string name="kubespan_banner_check">Что проверить: endpoint, который пробовала каждая сторона, файрволы на UDP 51820, фильтры endpoint в KubeSpan.</string>
+    <string name="kubespan_reason_never">ни одного handshake</string>
+    <string name="kubespan_reason_stale">нет handshake уже %1$s</string>
+    <string name="kubespan_reason_no_endpoint">нет endpoint для попытки</string>
+    <string name="kubespan_peer_never">Ни разу не подключался</string>
+    <string name="kubespan_legend_unknown">Неизвестно (ещё пробует)</string>
+    <string name="kubespan_diag_no_handshake">Talos не сообщает о handshake с этим пиром.</string>
     <string name="kubespan_handshake_ago">handshake %1$s назад</string>
     <string name="kubespan_diag_loading">Выясняем, почему связь работает или нет…</string>
     <string name="kubespan_diag_unknown">Этот узел не сообщил об этом пире.</string>

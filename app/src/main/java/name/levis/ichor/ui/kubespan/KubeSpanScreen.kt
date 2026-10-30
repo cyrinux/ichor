@@ -119,7 +119,8 @@ fun KubeSpanScreen(
                         val hostnames = vm.hostnames()
                         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             item { Summary(data.nodes) }
-                            items(data.nodes, key = { it.node }) { node ->
+                            // The nodes with a problem first.
+                            items(data.nodes.sortedWith(compareBy({ it.broken == 0 }, { hostnames[it.node] ?: it.node })), key = { it.node }) { node ->
                                 NodeCard(
                                     node,
                                     hostnames[node.node] ?: node.node,
@@ -149,10 +150,13 @@ private const val MAP_TAB = 0
 
 private const val PEERS_TAB = 1
 
+/** The reasons of a peer that no handshake ever reached. */
+private val NEVER_CONNECTED = setOf("noEndpoint", "neverHandshaked")
+
 @Composable
 private fun Summary(nodes: List<KubeSpanNode>) {
     val enabled = nodes.count { it.enabled }
-    val down = nodes.sumOf { it.down }
+    val down = nodes.sumOf { it.broken }
     val links = if (down > 0) {
         pluralStringResource(R.plurals.kubespan_links_down, down, down)
     } else {
@@ -178,7 +182,7 @@ private fun NodeCard(node: KubeSpanNode, hostname: String, siderolink: Siderolin
                 when {
                     node.error != null -> StatusPill(stringResource(R.string.common_status_unreachable), colors.bad)
                     !node.enabled -> StatusPill(stringResource(R.string.kubespan_status_off), colors.muted)
-                    node.down > 0 -> StatusPill(stringResource(R.string.kubespan_status_down_count, node.down), colors.bad)
+                    node.broken > 0 -> StatusPill(stringResource(R.string.kubespan_status_down_count, node.broken), colors.bad)
                     else -> StatusPill(stringResource(R.string.kubespan_status_up_count, node.up, node.peers.size), colors.ok)
                 }
             }
@@ -199,9 +203,10 @@ private fun PeerRow(peer: KubeSpanPeer, onClick: () -> Unit) {
     Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(peer.label.ifBlank { peer.publicKey.take(12) }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            when (peer.state) {
-                "up" -> StatusPill(stringResource(R.string.kubespan_peer_up), colors.ok)
-                "down" -> StatusPill(stringResource(R.string.kubespan_peer_down), colors.bad)
+            when {
+                peer.state == "up" -> StatusPill(stringResource(R.string.kubespan_peer_up), colors.ok)
+                peer.broken && peer.reason in NEVER_CONNECTED -> StatusPill(stringResource(R.string.kubespan_peer_never), colors.bad)
+                peer.broken -> StatusPill(stringResource(R.string.kubespan_peer_down), colors.bad)
                 else -> StatusPill(stringResource(R.string.kubespan_peer_unknown), colors.muted)
             }
         }

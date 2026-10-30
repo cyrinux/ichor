@@ -25,6 +25,7 @@ struct KubeSpanMapTab: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 summary
+                if topology.links.contains(where: \.isBroken) { brokenBanner }
                 if topology.nodes.isEmpty {
                     Text("Nothing to map: no cluster member or KubeSpan peer was found.")
                 } else {
@@ -93,6 +94,42 @@ struct KubeSpanMapTab: View {
         return Text(verbatim: parts.joined(separator: " · "))
             .font(.subheadline)
             .foregroundStyle(broken > 0 ? Color.statusBad : .secondary)
+    }
+
+    /// What is wrong with the mesh, in words: a broken link is easy to miss among many on the map.
+    private var brokenBanner: some View {
+        let broken = topology.links.indices.filter { topology.links[$0].isBroken }
+        // Dead tunnels before the ones a single end reports down; five rows, the title counts them all.
+        let shown = (broken.filter { !topology.links[$0].isOneSided } + broken.filter { topology.links[$0].isOneSided })
+            .prefix(5)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text("\(broken.count) peer links down")
+                .font(.headline)
+                .foregroundStyle(.statusBad)
+            ForEach(Array(shown), id: \.self) { index in
+                let shownLink = topology.links[index]
+                Button {
+                    link = index
+                } label: {
+                    Text(
+                        verbatim:
+                            "\(names[shownLink.a] ?? shownLink.a) ↔ \(names[shownLink.b] ?? shownLink.b) · \(linkLabel(shownLink))"
+                    )
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            Text("Pods on these nodes cannot reach each other over KubeSpan.")
+                .font(.subheadline)
+            Text("What to check: the endpoint each side tried, firewalls on UDP 51820, the KubeSpan endpoint filters.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.statusBad.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func tap(_ node: TopologyNode) {

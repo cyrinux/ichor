@@ -347,6 +347,14 @@
     <string name="kubespan_peer_up">连通</string>
     <string name="kubespan_peer_down">断开</string>
     <string name="kubespan_peer_unknown">未知</string>
+    <string name="kubespan_banner_meaning">这些节点上的 Pod 无法通过 KubeSpan 互相访问。</string>
+    <string name="kubespan_banner_check">检查项：双方尝试的端点、UDP 51820 上的防火墙、KubeSpan 端点过滤器。</string>
+    <string name="kubespan_reason_never">从未握手</string>
+    <string name="kubespan_reason_stale">已 %1$s 未握手</string>
+    <string name="kubespan_reason_no_endpoint">没有可尝试的端点</string>
+    <string name="kubespan_peer_never">从未连接</string>
+    <string name="kubespan_legend_unknown">未知（仍在尝试）</string>
+    <string name="kubespan_diag_no_handshake">Talos 未报告与此对等节点的握手。</string>
     <string name="kubespan_handshake_ago">%1$s前握手</string>
     <string name="kubespan_diag_loading">正在读取链路连通或断开的原因…</string>
     <string name="kubespan_diag_unknown">此节点未报告该对等节点。</string>

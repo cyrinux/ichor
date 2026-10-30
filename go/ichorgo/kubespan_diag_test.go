@@ -92,6 +92,41 @@ func TestKubeSpanDiagVerdicts(t *testing.T) {
 	}
 }
 
+func TestKubeSpanDiagUnknownPeers(t *testing.T) {
+	old, young := diagNow.Add(-time.Hour), diagNow.Add(-time.Minute)
+	specOf := func(id string, endpoints ...netip.AddrPort) kubespanSpecInput {
+		return kubespanSpecInput{id: id, spec: kubespan.PeerSpecSpec{Label: id, Endpoints: endpoints}}
+	}
+	statusOf := func(id string, created time.Time, used netip.AddrPort, handshake time.Time) kubespanPeerInput {
+		return kubespanPeerInput{id: id, created: created, spec: kubespan.PeerStatusSpec{
+			Label: id, State: kubespan.PeerStateUnknown, LastUsedEndpoint: used, LastHandshakeTime: handshake,
+		}}
+	}
+	endpoint := ep("203.0.113.2:51820")
+
+	d := buildKubeSpanDiag(kubespanDiagInput{
+		node: "203.0.113.1", hostname: "cp-1", now: diagNow,
+		specs: []kubespanSpecInput{specOf("young", endpoint), specOf("bare"), specOf("unused", endpoint), specOf("dead", endpoint)},
+		statuses: []kubespanPeerInput{
+			statusOf("young", young, netip.AddrPort{}, time.Time{}),
+			statusOf("bare", old, netip.AddrPort{}, time.Time{}),
+			statusOf("unused", old, netip.AddrPort{}, time.Time{}),
+			statusOf("dead", old, endpoint, diagNow.Add(-10*time.Minute)),
+		},
+	})
+
+	for label, want := range map[string][]string{
+		"young":  {verdictJustStarted},
+		"bare":   {verdictNoEndpoint, verdictStaleHandshake},
+		"unused": {verdictNoEndpoint, verdictStaleHandshake},
+		"dead":   {verdictStaleHandshake},
+	} {
+		if got := verdictKinds(peerByLabel(t, d, label)); !slices.Equal(got, want) {
+			t.Errorf("%s = %v, want %v", label, got, want)
+		}
+	}
+}
+
 func TestKubeSpanDiagNeverReturnsTheSharedSecret(t *testing.T) {
 	d := buildKubeSpanDiag(kubespanDiagInput{node: "n", now: diagNow, config: &kubespan.ConfigSpec{Enabled: true, SharedSecret: "must-not-leak"}})
 

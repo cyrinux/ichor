@@ -18,6 +18,9 @@ struct TopologyLinkSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                if link.isBroken {
+                    Section { Text(verbatim: linkLabel(link)).foregroundStyle(.statusBad) }
+                }
                 Section {
                     ForEach(Array(link.sides.enumerated()), id: \.offset) { _, side in
                         LinkSideRow(side: side, names: names)

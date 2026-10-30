@@ -422,6 +422,14 @@
     <string name="kubespan_peer_up">Працює</string>
     <string name="kubespan_peer_down">Не працює</string>
     <string name="kubespan_peer_unknown">Невідомо</string>
+    <string name="kubespan_banner_meaning">Поди на цих вузлах не можуть зв\'язатися між собою через KubeSpan.</string>
+    <string name="kubespan_banner_check">Що перевірити: endpoint, який пробувала кожна сторона, брандмауери на UDP 51820, фільтри endpoint у KubeSpan.</string>
+    <string name="kubespan_reason_never">жодного handshake</string>
+    <string name="kubespan_reason_stale">немає handshake вже %1$s</string>
+    <string name="kubespan_reason_no_endpoint">немає endpoint для спроби</string>
+    <string name="kubespan_peer_never">Ніколи не підключався</string>
+    <string name="kubespan_legend_unknown">Невідомо (ще пробує)</string>
+    <string name="kubespan_diag_no_handshake">Talos не повідомляє про handshake з цим піром.</string>
     <string name="kubespan_handshake_ago">рукостискання %1$s тому</string>
     <string name="kubespan_diag_loading">Зчитування стану з\'єднання…</string>
     <string name="kubespan_diag_unknown">Цей вузол не повідомив про цього учасника.</string>

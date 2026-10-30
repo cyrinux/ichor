@@ -6,14 +6,19 @@ public struct ClusterTopology: Decodable, Equatable, Sendable {
     public let nodes: [TopologyNode]
     public let links: [TopologyLink]
     public let sites: [TopologySite]
+    public let mesh: TopologyMesh
 
-    public init(nodes: [TopologyNode] = [], links: [TopologyLink] = [], sites: [TopologySite] = []) {
+    public init(
+        nodes: [TopologyNode] = [], links: [TopologyLink] = [], sites: [TopologySite] = [],
+        mesh: TopologyMesh = TopologyMesh()
+    ) {
         self.nodes = nodes
         self.links = links
         self.sites = sites
+        self.mesh = mesh
     }
 
-    private enum CodingKeys: String, CodingKey { case nodes, links, sites }
+    private enum CodingKeys: String, CodingKey { case nodes, links, sites, mesh }
 
     // Go encodes empty (nil) slices as null.
     public init(from decoder: Decoder) throws {
@@ -21,11 +26,39 @@ public struct ClusterTopology: Decodable, Equatable, Sendable {
         nodes = try c.field(.nodes, [])
         links = try c.field(.links, [])
         sites = try c.field(.sites, [])
+        mesh = try c.field(.mesh, TopologyMesh())
     }
 
-    /// Links the node is an end of that are down or degraded.
+    /// Links the node is an end of that are broken.
     public func brokenLinks(of nodeId: String) -> Int {
         links.filter { $0.isBroken && ($0.a == nodeId || $0.b == nodeId) }.count
+    }
+}
+
+/// The links summed up for the screens that do not draw them.
+public struct TopologyMesh: Decodable, Equatable, Sendable {
+    /// A node listed peers: false without KubeSpan, and then nothing is known.
+    public let checked: Bool
+    public let links: Int
+    public let broken: Int
+    /// "node-a ↔ node-b" of the broken links, worst first, five at most.
+    public let pairs: [String]
+
+    public init(checked: Bool = false, links: Int = 0, broken: Int = 0, pairs: [String] = []) {
+        self.checked = checked
+        self.links = links
+        self.broken = broken
+        self.pairs = pairs
+    }
+
+    private enum CodingKeys: String, CodingKey { case checked, links, broken, pairs }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        checked = try c.field(.checked, false)
+        links = try c.field(.links, 0)
+        broken = try c.field(.broken, 0)
+        pairs = try c.field(.pairs, [])
     }
 }
 
@@ -125,15 +158,27 @@ public struct TopologyLink: Decodable, Equatable, Sendable {
     /// "up", "down", "degraded" (one end reports it down) or "unknown".
     public let state: String
     public let sides: [TopologyLinkSide]
+    /// The core's verdict: an "unknown" tunnel can be dead. A map cached before it knew only the state.
+    public let broken: Bool
+    /// Why it is broken: noEndpoint, neverHandshaked, staleHandshake, down or oneSide.
+    public let reason: String
+    /// Epoch seconds of the broken side's last handshake, 0 for never.
+    public let since: Int64
 
-    public init(a: String, b: String, state: String = "unknown", sides: [TopologyLinkSide] = []) {
+    public init(
+        a: String, b: String, state: String = "unknown", sides: [TopologyLinkSide] = [],
+        broken: Bool? = nil, reason: String = "", since: Int64 = 0
+    ) {
         self.a = a
         self.b = b
         self.state = state
         self.sides = sides
+        self.broken = broken ?? (state == "down" || state == "degraded")
+        self.reason = reason
+        self.since = since
     }
 
-    private enum CodingKeys: String, CodingKey { case a, b, state, sides }
+    private enum CodingKeys: String, CodingKey { case a, b, state, sides, broken, reason, since }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -141,9 +186,14 @@ public struct TopologyLink: Decodable, Equatable, Sendable {
         b = try c.decode(String.self, forKey: .b)
         state = try c.field(.state, "unknown")
         sides = try c.field(.sides, [])
+        broken = try c.field(.broken, state == "down" || state == "degraded")
+        reason = try c.field(.reason, "")
+        since = try c.field(.since, 0)
     }
 
-    public var isBroken: Bool { state == "down" || state == "degraded" }
+    public var isBroken: Bool { broken }
+    /// Broken, while one end still reports it up: a warning, not a dead tunnel.
+    public var isOneSided: Bool { broken && (reason == "oneSide" || state == "degraded") }
 }
 
 public struct TopologyLinkSide: Decodable, Equatable, Sendable {
