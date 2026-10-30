@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -17,7 +17,7 @@ import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -135,7 +135,7 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
             Text(stringResource(R.string.netperf_host_desc), style = MaterialTheme.typography.bodySmall, color = muted)
         }
         InfoHint(stringResource(R.string.netperf_hint_paths_title), stringResource(R.string.netperf_hint_paths))
-        Switch(checked = setup.hostNetwork, onCheckedChange = { on -> onChange { it.copy(hostNetwork = on) } }, modifier = Modifier.padding(start = 12.dp))
+        IchorSwitch(checked = setup.hostNetwork, onCheckedChange = { on -> onChange { it.copy(hostNetwork = on) } }, modifier = Modifier.padding(start = 12.dp))
     }
     Row(gutter, verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.netperf_duration), style = MaterialTheme.typography.labelLarge)
@@ -204,7 +204,7 @@ private fun phaseText(session: NetPerfSession): String {
 
 @Composable
 private fun NetPerfConfirmDialog(setup: NetPerfSetup, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.netperf_confirm_title)) },
         text = {

@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,9 +73,9 @@ fun UpdateRowItem(
                 row.candidates.forEach { c ->
                     val label = @Composable { Text(stringResource(stepLabel(c.step), c.version), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     if (selectable) {
-                        FilterChip(selected = c.version == selectedVersion, onClick = { onPick(c.version) }, label = label)
+                        IchorFilterChip(selected = c.version == selectedVersion, onClick = { onPick(c.version) }, label = label)
                     } else {
-                        AssistChip(onClick = { onPick(c.version) }, enabled = row.editable && !resolving && !selecting, label = label)
+                        IchorAssistChip(onClick = { onPick(c.version) }, enabled = row.editable && !resolving && !selecting, label = label)
                     }
                 }
             }

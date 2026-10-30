@@ -22,7 +22,7 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -141,7 +141,7 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
     if (sets.size > 1) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             sets.forEachIndexed { index, set ->
-                FilterChip(selected = option == index, onClick = { option = index }, label = { Text(stringResource(fieldSetLabel(set))) }, enabled = !checking)
+                IchorFilterChip(selected = option == index, onClick = { option = index }, label = { Text(stringResource(fieldSetLabel(set))) }, enabled = !checking)
             }
         }
     }

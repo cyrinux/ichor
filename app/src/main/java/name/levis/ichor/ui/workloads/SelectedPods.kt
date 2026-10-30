@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -201,7 +201,7 @@ private fun PhaseChips(phase: PodPhaseFilter, onPick: (PodPhaseFilter) -> Unit) 
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         PodPhaseFilter.entries.forEach { p ->
-            FilterChip(selected = p == phase, onClick = { onPick(p) }, label = { Text(stringResource(p.label)) })
+            IchorFilterChip(selected = p == phase, onClick = { onPick(p) }, label = { Text(stringResource(p.label)) })
         }
     }
 }

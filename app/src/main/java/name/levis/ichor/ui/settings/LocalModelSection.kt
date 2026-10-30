@@ -14,7 +14,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -166,7 +166,7 @@ private fun DownloadState(app: TalosApp, model: LocalModelInfo, changes: Int) {
                     Text(stringResource(R.string.ai_local_allow_metered), style = MaterialTheme.typography.bodyMedium)
                     MutedText(stringResource(R.string.ai_local_allow_metered_desc))
                 }
-                Switch(checked = allowMetered, onCheckedChange = { allowMetered = it }, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = allowMetered, onCheckedChange = { allowMetered = it }, modifier = Modifier.padding(start = 12.dp))
             }
             IchorButton(
                 onClick = { ModelDownloads.start(context, store, model.id, allowMetered) },

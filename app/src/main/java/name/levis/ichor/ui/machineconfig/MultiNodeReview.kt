@@ -21,7 +21,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,7 +66,7 @@ fun MultiNodePickerDialog(
     onPreview: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.machine_config_multi_pick_title)) },
         text = {

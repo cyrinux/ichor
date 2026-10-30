@@ -21,7 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -85,7 +85,7 @@ private fun SwitchRow(title: String, description: String, checked: Boolean, onCh
             Text(title, style = MaterialTheme.typography.titleMedium)
             MutedText(description)
         }
-        Switch(checked = checked, onCheckedChange = onChange, modifier = Modifier.padding(start = 12.dp))
+        IchorSwitch(checked = checked, onCheckedChange = onChange, modifier = Modifier.padding(start = 12.dp))
     }
 }
 

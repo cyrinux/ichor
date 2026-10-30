@@ -13,12 +13,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -164,7 +164,7 @@ fun KubeGreenScheduleSheet(info: KubeGreenSleepInfo, onDismiss: () -> Unit, onSa
                     // Monday first, as the week reads; cron numbers Sunday 0.
                     listOf(1, 2, 3, 4, 5, 6, 0).forEach { d ->
                         val name = DayOfWeek.of(if (d == 0) 7 else d).getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                        FilterChip(selected = d in days, onClick = { days = if (d in days) days - d else days + d }, label = { Text(name) })
+                        IchorFilterChip(selected = d in days, onClick = { days = if (d in days) days - d else days + d }, label = { Text(name) })
                     }
                 }
                 if (!daysValid) ErrorLine(stringResource(R.string.kubegreen_pick_day))
@@ -178,7 +178,7 @@ fun KubeGreenScheduleSheet(info: KubeGreenSleepInfo, onDismiss: () -> Unit, onSa
 
             TimeField(stringResource(R.string.kubegreen_sleep_at), sleepAt, sleepValid) { sleepAt = it }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Switch(checked = noWakeUp, onCheckedChange = { noWakeUp = it })
+                IchorSwitch(checked = noWakeUp, onCheckedChange = { noWakeUp = it })
                 Text(stringResource(R.string.kubegreen_no_wake_up), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             }
             if (!noWakeUp) TimeField(stringResource(R.string.kubegreen_wake_up_at), wakeUpAt, wakeValid) { wakeUpAt = it }

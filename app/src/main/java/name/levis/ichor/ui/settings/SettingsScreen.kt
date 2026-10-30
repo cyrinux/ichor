@@ -9,7 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
@@ -48,7 +48,7 @@ fun SettingsScreen(configs: ConfigRepository, onBack: () -> Unit, onOpen: (Setti
 
 @Composable
 private fun SettingsPageRow(page: SettingsPage, onClick: () -> Unit) {
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(stringResource(page.title)) },
         supportingContent = { Text(stringResource(page.summary)) },
         // The title already names the row: the icons are decoration for TalkBack.

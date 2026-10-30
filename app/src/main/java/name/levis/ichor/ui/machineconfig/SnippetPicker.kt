@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -61,7 +61,7 @@ fun SnippetPickerDialog(
     }
     val complete = selected != null && selected.params.all { values[it.name].orEmpty().isNotBlank() || it.type == "bool" }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(selected?.let { stringResource(snippetLabel(it.id)) } ?: stringResource(R.string.machine_config_snippets)) },
         text = {
@@ -118,7 +118,7 @@ private fun ParamField(param: SnippetParam, value: String, onChange: (String) ->
     if (param.type == "bool") {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(snippetParam(param.name)), modifier = Modifier.weight(1f))
-            Switch(checked = value == "true", onCheckedChange = { onChange(it.toString()) })
+            IchorSwitch(checked = value == "true", onCheckedChange = { onChange(it.toString()) })
         }
         return
     }

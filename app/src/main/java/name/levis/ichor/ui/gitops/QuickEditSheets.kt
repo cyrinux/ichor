@@ -16,11 +16,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
@@ -87,7 +87,7 @@ fun QuickEditImageSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply: (
         if (choices.size > 1) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 choices.forEachIndexed { i, c ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = i == selected,
                         onClick = { if (!sheet.applying) selected = i },
                         label = { Text(c.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -140,7 +140,7 @@ fun QuickEditReplicasSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply
         if (choices.size > 1) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 choices.forEachIndexed { i, c ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = i == selected,
                         onClick = { if (!sheet.applying) selected = i },
                         label = { Text(c.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -170,7 +170,7 @@ fun QuickEditReplicasSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply
 /** A suggested tag: what it is ([label]) and the [tag] it sets. */
 @Composable
 private fun TagChip(label: String, tag: String, enabled: Boolean, onClick: () -> Unit) {
-    AssistChip(
+    IchorAssistChip(
         onClick = onClick,
         enabled = enabled,
         label = {

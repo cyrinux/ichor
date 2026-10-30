@@ -5,7 +5,7 @@ import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.model.KubeAction
 import androidx.compose.ui.semantics.Role
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.foundation.selection.toggleable
 import name.levis.ichor.ui.asString
 import androidx.compose.ui.res.stringResource
@@ -241,7 +241,7 @@ private fun PodSetupForm(pod: String, namespace: String, onStart: (String, Strin
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.pod_debug_toggle), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Switch(checked = debug, onCheckedChange = null, enabled = debugDenial == null)
+            IchorSwitch(checked = debug, onCheckedChange = null, enabled = debugDenial == null)
         }
         KubeDenialNote(debugDenial)
         if (debug) {

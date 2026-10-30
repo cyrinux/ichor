@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,7 +36,7 @@ internal fun LazyListScope.recentlyOpened(
     items(opened, key = { "opened-${it.key}" }) { recent ->
         val kind = kindLabel(recent.target.target)
         val detail = listOfNotNull(kind, recent.detail.ifEmpty { null }, clusterOf(recent.target.cluster)).joinToString(" · ")
-        ListItem(
+        IchorListItem(
             headlineContent = { Text(recent.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             supportingContent = { Text(detail, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             leadingContent = { Icon(kindIcon(recent.target.target), contentDescription = null) },

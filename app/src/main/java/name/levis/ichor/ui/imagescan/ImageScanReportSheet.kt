@@ -18,7 +18,7 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -129,19 +129,19 @@ private fun Header(report: ImageScanReport, onExport: (ImageScanFormat) -> Unit)
 @Composable
 private fun Filters(filter: VulnFilter, hasNew: Boolean, onChange: (VulnFilter) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
+        IchorFilterChip(
             selected = filter.newOnly,
             onClick = { onChange(filter.copy(newOnly = !filter.newOnly)) },
             enabled = hasNew,
             label = { Text(stringResource(R.string.imagescan_new_filter)) },
         )
-        FilterChip(
+        IchorFilterChip(
             selected = filter.fixableOnly,
             onClick = { onChange(filter.copy(fixableOnly = !filter.fixableOnly)) },
             label = { Text(stringResource(R.string.imagescan_fixable_only)) },
         )
         VulnSeverity.entries.forEach { severity ->
-            FilterChip(
+            IchorFilterChip(
                 selected = severity in filter.severities,
                 onClick = { onChange(filter.toggle(severity)) },
                 label = { Text(stringResource(severityLabel(severity))) },

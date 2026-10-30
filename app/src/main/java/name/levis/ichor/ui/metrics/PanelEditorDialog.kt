@@ -12,7 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -62,7 +62,7 @@ fun PanelEditorDialog(
     // A preview is about one query: another one (typed, picked or proposed) drops it.
     LaunchedEffect(panel.query) { preview = null }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (panel.id.isBlank()) R.string.metrics_add_panel else R.string.metrics_edit_panel)) },
         text = {

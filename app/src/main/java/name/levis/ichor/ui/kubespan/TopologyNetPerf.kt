@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -32,13 +32,13 @@ import name.levis.ichor.ui.workloads.NetPerfViewModel
 internal fun NetPerfPickBar(picking: Boolean, picked: Int, running: Boolean, onToggle: () -> Unit, onOpen: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         if (running) {
-            AssistChip(
+            IchorAssistChip(
                 onClick = onOpen,
                 label = { Text(stringResource(R.string.topology_test_running)) },
                 leadingIcon = { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp) },
             )
         } else {
-            FilterChip(
+            IchorFilterChip(
                 selected = picking,
                 onClick = onToggle,
                 label = { Text(stringResource(R.string.topology_test_pick)) },

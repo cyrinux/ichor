@@ -21,7 +21,7 @@ import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.QrCodeScanner
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.AssistChipDefaults
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.DropdownMenu
@@ -138,7 +138,7 @@ private fun Sources(
             Text(stringResource(R.string.kube_discover_entry), style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DiscoveryProvider.entries.forEach { provider ->
-                    AssistChip(
+                    IchorAssistChip(
                         onClick = { onDiscover(provider) },
                         label = { Text(stringResource(provider.label)) },
                         leadingIcon = { BundledLogo(discoveryLogo(provider.id), Modifier.size(AssistChipDefaults.IconSize)) },

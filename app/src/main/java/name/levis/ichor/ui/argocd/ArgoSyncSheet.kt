@@ -25,7 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -191,7 +191,7 @@ private fun Toggle(title: String, description: String, checked: Boolean, onChang
             Text(title, style = MaterialTheme.typography.bodyLarge)
             MutedText(description)
         }
-        Switch(checked = checked, onCheckedChange = onChange)
+        IchorSwitch(checked = checked, onCheckedChange = onChange)
     }
 }
 

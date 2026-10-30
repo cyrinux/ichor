@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -112,7 +112,7 @@ fun UptimeRow(
             )
             Text(percent, style = MaterialTheme.typography.labelMedium)
             listOf(HISTORY_SHORT_DAYS, HISTORY_LONG_DAYS).forEach { window ->
-                FilterChip(
+                IchorFilterChip(
                     selected = window == days,
                     onClick = { onDays(window) },
                     label = { Text(pluralStringResource(R.plurals.history_days_short, window, window)) },

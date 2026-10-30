@@ -9,7 +9,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -91,7 +91,7 @@ fun SnapshotEncryptionDialog(
         SnapshotMode.NONE -> true
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_snapshot_protect_title)) },
         text = {
@@ -180,7 +180,7 @@ private fun SnapshotRecipient.describe() = if (comment.isEmpty()) type else "$ty
 @Composable
 fun SnapshotRestoreDialog(commands: String, onDismiss: () -> Unit) {
     val context = LocalContext.current
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_snapshot_restore_title)) },
         text = {

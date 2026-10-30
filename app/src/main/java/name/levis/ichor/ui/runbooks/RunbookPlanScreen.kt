@@ -12,7 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
@@ -116,7 +116,7 @@ internal fun RunbookPlanSteps(plan: RunbookPlan, continueIds: Set<String>, onTog
                 if (onToggleContinue != null && !step.continueOnError) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(R.string.runbook_continue), modifier = Modifier.weight(1f))
-                        Switch(checked = step.id in continueIds, onCheckedChange = { onToggleContinue(step.id, it) })
+                        IchorSwitch(checked = step.id in continueIds, onCheckedChange = { onToggleContinue(step.id, it) })
                     }
                 }
             }

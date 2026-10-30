@@ -14,7 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.NetworkCheck
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -98,7 +98,7 @@ fun EndpointsDialog(
         }
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (!saving) onDismiss() },
         title = { Text(stringResource(R.string.endpoints_title, label), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {

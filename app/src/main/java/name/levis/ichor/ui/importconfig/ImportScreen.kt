@@ -29,7 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
@@ -286,7 +286,7 @@ internal fun NameConflict(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = choice.replace, onCheckedChange = onReplace)
+                IchorSwitch(checked = choice.replace, onCheckedChange = onReplace)
             }
         }
     }

@@ -18,7 +18,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -258,7 +258,7 @@ private fun MountsContent(mounts: List<Mount>) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f),
             )
-            Switch(checked = showAll, onCheckedChange = null)
+            IchorSwitch(checked = showAll, onCheckedChange = null)
         }
     }
 }

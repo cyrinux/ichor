@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
@@ -99,7 +99,7 @@ fun AddDiscoveredNodesDialog(
     onDismiss: () -> Unit,
 ) {
     var selected by remember(nodes) { mutableStateOf(nodes.map { it.address }.toSet()) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.discover_nodes_title)) },
         text = {

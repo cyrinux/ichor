@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -145,7 +145,7 @@ class DiffSourceViewModel(
 /** The manifests that declare an object, one row each ("Defined in path, line n"); a tap opens it. */
 @Composable
 fun SourceMatchChooser(matches: List<ManifestMatch>, onPick: (ManifestMatch) -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.AutoMirrored.Outlined.InsertDriveFile, contentDescription = null) },
         title = { Text(stringResource(R.string.gitops_find_choose)) },

@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -125,7 +125,7 @@ private fun namespaceLabel(namespace: ImagePullNamespace): Int = when (namespace
 fun ImagePullDialog(onPull: (String, ImagePullNamespace) -> Unit, onDismiss: () -> Unit) {
     var image by rememberSaveable { mutableStateOf("") }
     var namespace by rememberSaveable { mutableStateOf(ImagePullNamespace.CRI) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.image_pull_menu)) },
         text = {
@@ -140,7 +140,7 @@ fun ImagePullDialog(onPull: (String, ImagePullNamespace) -> Unit, onDismiss: () 
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ImagePullNamespace.entries.forEach { ns ->
-                        FilterChip(selected = namespace == ns, onClick = { namespace = ns }, label = { Text(stringResource(namespaceLabel(ns))) })
+                        IchorFilterChip(selected = namespace == ns, onClick = { namespace = ns }, label = { Text(stringResource(namespaceLabel(ns))) })
                     }
                 }
                 MutedText(stringResource(R.string.image_pull_namespace_hint))

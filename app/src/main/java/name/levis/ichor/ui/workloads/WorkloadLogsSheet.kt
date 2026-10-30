@@ -19,7 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -149,7 +149,7 @@ fun WorkloadLogsSheet(
             LogFilterBar(query.filter, { vm.load(workload, query.copy(filter = it)) })
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(WORKLOAD_LOG_TAILS, key = { "tail-$it" }) { tail ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = query.tail == tail,
                         onClick = { vm.load(workload, query.copy(tail = tail)) },
                         label = { Text(stringResource(R.string.workload_logs_tail, tail)) },

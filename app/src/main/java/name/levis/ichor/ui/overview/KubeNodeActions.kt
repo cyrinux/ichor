@@ -16,7 +16,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -226,7 +226,7 @@ internal fun KubeNodeActionRow(
 
 @Composable
 private fun KubeNodeActionChip(label: String, icon: ImageVector, denial: KubePermission?, onClick: () -> Unit) {
-    AssistChip(
+    IchorAssistChip(
         onClick = onClick,
         enabled = denial == null,
         label = { Text(label) },

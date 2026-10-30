@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -151,7 +151,7 @@ private fun NodeTimeRow(t: NodeTime, hostname: String) {
         )
     }
     if (showError) {
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { showError = false },
             title = { Text(hostname) },
             text = { Text(t.error.orEmpty(), style = MaterialTheme.typography.bodySmall) },

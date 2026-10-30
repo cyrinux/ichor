@@ -17,18 +17,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -118,15 +118,15 @@ fun ArgoFreezeSheet(
             Label(stringResource(R.string.argo_freeze_scope))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FreezeScope.entries.filter { it.availableFor(app) }.forEach { s ->
-                    FilterChip(selected = scope == s, onClick = { scope = s }, label = { Text(scopeLabel(s, app)) })
+                    IchorFilterChip(selected = scope == s, onClick = { scope = s }, label = { Text(scopeLabel(s, app)) })
                 }
             }
             Label(stringResource(R.string.argo_freeze_for))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FREEZE_DURATIONS.forEach { m ->
-                    FilterChip(selected = !untilMorning && minutes == m, onClick = { minutes = m; untilMorning = false }, label = { Text(durationLabel(m)) })
+                    IchorFilterChip(selected = !untilMorning && minutes == m, onClick = { minutes = m; untilMorning = false }, label = { Text(durationLabel(m)) })
                 }
-                FilterChip(
+                IchorFilterChip(
                     selected = untilMorning,
                     onClick = { untilMorning = true },
                     label = { Text(stringResource(R.string.argo_freeze_until, freezeClock(now + morning * 60_000L))) },
@@ -144,7 +144,7 @@ fun ArgoFreezeSheet(
                     Text(stringResource(R.string.argo_freeze_manual_sync), style = MaterialTheme.typography.bodyLarge)
                     MutedText(stringResource(R.string.argo_freeze_manual_sync_desc))
                 }
-                Switch(checked = manualSync, onCheckedChange = { manualSync = it })
+                IchorSwitch(checked = manualSync, onCheckedChange = { manualSync = it })
             }
             val names = targets.take(MAX_NAMED).joinToString(", ") { it.name } + if (targets.size > MAX_NAMED) ", …" else ""
             Text(
@@ -260,7 +260,7 @@ fun ArgoFreezeCard(app: ArgoApp, windows: List<ArgoWindow>, busy: Boolean, onFre
  */
 @Composable
 fun EndFreezeDialog(drifted: List<ArgoResource>, covers: Int, onEnd: () -> Unit, onEndAndSync: (() -> Unit)?, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.AcUnit, contentDescription = null) },
         title = { Text(stringResource(R.string.argo_unfreeze_title)) },
@@ -297,7 +297,7 @@ fun EndFreezeDialog(drifted: List<ArgoResource>, covers: Int, onEnd: () -> Unit,
 @Composable
 fun RemoveWindowDialog(project: ArgoProject, onRemove: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = colors.warn) },
         title = { Text(stringResource(R.string.argo_window_remove_title)) },

@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import name.levis.ichor.ui.design.IchorCard
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
@@ -72,9 +72,9 @@ fun CastAIWorkloads(status: CastAIStatus) {
         item { WorkloadsSummary(status) }
         item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(view == CastAIView.OVERVIEW, { view = CastAIView.OVERVIEW }, { Text(stringResource(R.string.castai_view_overview)) })
-                FilterChip(view == CastAIView.GROWS, { view = CastAIView.GROWS }, { Text(stringResource(R.string.castai_view_grows, growCount)) })
-                FilterChip(view == CastAIView.NAMESPACES, { view = CastAIView.NAMESPACES }, { Text(stringResource(R.string.castai_view_namespaces)) })
+                IchorFilterChip(view == CastAIView.OVERVIEW, { view = CastAIView.OVERVIEW }, { Text(stringResource(R.string.castai_view_overview)) })
+                IchorFilterChip(view == CastAIView.GROWS, { view = CastAIView.GROWS }, { Text(stringResource(R.string.castai_view_grows, growCount)) })
+                IchorFilterChip(view == CastAIView.NAMESPACES, { view = CastAIView.NAMESPACES }, { Text(stringResource(R.string.castai_view_namespaces)) })
             }
         }
         item {

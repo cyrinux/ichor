@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -262,7 +262,7 @@ fun rememberSnapshotFlow(vm: EtcdSnapshotViewModel, contextName: String, fingerp
 private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotTarget) -> Unit, onDismiss: () -> Unit) {
     // The first candidate is the default: a healthy follower when there is one.
     var selected by remember { mutableStateOf(members.first()) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_snapshot_pick_member)) },
         text = {

@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -179,7 +179,7 @@ internal fun <T> Filters(query: String, onQuery: (String) -> Unit, chips: List<P
         SearchField(query, onQuery, stringResource(R.string.data_services_search), Modifier.fillMaxWidth().padding(horizontal = 16.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(chips, key = { it.first.toString() }) { (value, label) ->
-                FilterChip(selected = selected == value, onClick = { onSelect(value) }, label = { Text(label) })
+                IchorFilterChip(selected = selected == value, onClick = { onSelect(value) }, label = { Text(label) })
             }
         }
     }

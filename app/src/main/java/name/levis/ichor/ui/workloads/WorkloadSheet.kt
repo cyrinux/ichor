@@ -21,7 +21,7 @@ import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -336,7 +336,7 @@ private fun PauseButton(workload: KubeWorkload, enabled: Boolean, onPause: (Bool
 private fun AutoscalerChip(autoscaler: WorkloadAutoscaler, onAutoscaling: (() -> Unit)?) {
     val colors = LocalStatusColors.current
     val label = stringResource(R.string.workloads_autoscaled_by, autoscaler.label())
-    AssistChip(
+    IchorAssistChip(
         onClick = { onAutoscaling?.invoke() },
         label = { Text(label, style = MaterialTheme.typography.labelMedium) },
         leadingIcon = {

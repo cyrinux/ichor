@@ -17,13 +17,13 @@ import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -31,7 +31,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import name.levis.ichor.ui.design.IchorOutlinedButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -430,7 +430,7 @@ private fun SkipDeadNodesDialog(state: GarageLayoutState, layout: GarageLayout, 
     ) {
         Text(stringResource(R.string.garage_layout_skip_text, down.joinToString(", ").ifEmpty { "—" }, layout.version), style = MaterialTheme.typography.bodyMedium)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Switch(checked = allowMissingData, onCheckedChange = { allowMissingData = it })
+            IchorSwitch(checked = allowMissingData, onCheckedChange = { allowMissingData = it })
             Text(stringResource(R.string.garage_layout_skip_allow), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         }
         if (allowMissingData) {
@@ -475,7 +475,7 @@ private fun RemoveConfirmDialog(node: GarageLayoutNode, onConfirm: () -> Unit, o
 private fun ZoneRedundancyDialog(layout: GarageLayout, onPick: (String) -> Unit, onDismiss: () -> Unit) {
     val current = layout.stagedZoneRedundancy.ifEmpty { layout.zoneRedundancy }
     var picked by remember { mutableStateOf(current) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.garage_layout_zone_redundancy)) },
         text = {
@@ -483,7 +483,7 @@ private fun ZoneRedundancyDialog(layout: GarageLayout, onPick: (String) -> Unit,
                 Text(stringResource(R.string.garage_layout_zone_redundancy_text), style = MaterialTheme.typography.bodyMedium)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     (listOf("maximum") + (1..3).map { it.toString() }).forEach { value ->
-                        FilterChip(selected = picked == value, onClick = { picked = value }, label = { Text(redundancyLabel(value)) })
+                        IchorFilterChip(selected = picked == value, onClick = { picked = value }, label = { Text(redundancyLabel(value)) })
                     }
                 }
             }

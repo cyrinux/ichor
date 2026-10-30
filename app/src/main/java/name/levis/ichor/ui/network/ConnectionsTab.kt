@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -72,12 +72,12 @@ fun ConnectionsTab(
             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 SearchField(query, { query = it }, stringResource(R.string.connections_search), Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    FilterChip(
+                    IchorFilterChip(
                         selected = filter == ConnectionFilter.LISTENING,
                         onClick = { filter = ConnectionFilter.LISTENING },
                         label = { Text(stringResource(R.string.connections_listening)) },
                     )
-                    FilterChip(
+                    IchorFilterChip(
                         selected = filter == ConnectionFilter.ALL,
                         onClick = { filter = ConnectionFilter.ALL },
                         label = { Text(stringResource(R.string.connections_all)) },

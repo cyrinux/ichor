@@ -15,7 +15,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -153,7 +153,7 @@ private fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPi
     Text(stringResource(R.string.join_config_template), style = MaterialTheme.typography.labelLarge)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         templates.forEach { node ->
-            FilterChip(
+            IchorFilterChip(
                 selected = node.node == selected,
                 onClick = { onPick(node) },
                 label = { Text("${node.hostname.ifBlank { node.node }} · ${roleLabel(joinRole(node.role))}") },
@@ -186,7 +186,7 @@ private fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConf
     if (disks.isNotEmpty()) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             disks.forEach { disk ->
-                FilterChip(selected = disk == form.disk, onClick = { vm.disk(disk) }, label = { Text(disk, fontFamily = FontFamily.Monospace) })
+                IchorFilterChip(selected = disk == form.disk, onClick = { vm.disk(disk) }, label = { Text(disk, fontFamily = FontFamily.Monospace) })
             }
         }
     }

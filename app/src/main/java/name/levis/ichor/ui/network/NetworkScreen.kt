@@ -14,7 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import name.levis.ichor.ui.design.IchorScaffold
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
@@ -127,7 +127,7 @@ private fun NetworkContent(network: NodeNetwork, showVirtual: Boolean, onShowVir
                     Text(stringResource(R.string.network_show_virtual), style = MaterialTheme.typography.titleSmall)
                     MutedText(pluralStringResource(R.plurals.network_virtual_hidden, hidden, hidden))
                 }
-                Switch(checked = showVirtual, onCheckedChange = onShowVirtual)
+                IchorSwitch(checked = showVirtual, onCheckedChange = onShowVirtual)
             }
         }
         item {

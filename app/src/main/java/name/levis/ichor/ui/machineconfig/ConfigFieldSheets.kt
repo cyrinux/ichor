@@ -17,12 +17,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -217,7 +217,7 @@ private fun typeLabel(type: String): Int = when (type) {
 private fun ChipRow(options: List<String>, selected: String, label: @Composable (String) -> String = { it }, onSelect: (String) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEach { option ->
-            FilterChip(selected = option == selected, onClick = { onSelect(option) }, label = { Text(label(option)) })
+            IchorFilterChip(selected = option == selected, onClick = { onSelect(option) }, label = { Text(label(option)) })
         }
     }
 }
@@ -232,7 +232,7 @@ private fun ConfigValueInput(type: String, allowed: List<String>, value: String,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.machine_config_value), Modifier.weight(1f))
-            Switch(checked = value == "true", onCheckedChange = null)
+            IchorSwitch(checked = value == "true", onCheckedChange = null)
         }
         else -> OutlinedTextField(
             value = value,

@@ -2,7 +2,7 @@ package name.levis.ichor.ui.runbooks
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,7 +38,7 @@ internal fun rememberRunbookScope(): String? {
 internal fun DestructiveBadge() {
     val label = stringResource(R.string.runbook_destructive)
     val description = stringResource(R.string.runbook_destructive_a11y)
-    AssistChip(
+    IchorAssistChip(
         onClick = {},
         label = { Text(label) },
         colors = AssistChipDefaults.assistChipColors(labelColor = LocalStatusColors.current.warn),

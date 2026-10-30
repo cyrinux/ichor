@@ -13,7 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
@@ -77,13 +77,13 @@ internal fun OmniCard(
         MutedText(stringResource(R.string.omni_add_body))
         if (prefilled) MutedText(stringResource(R.string.omni_prefilled))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
+            IchorFilterChip(
                 selected = !serviceAccount,
                 onClick = { serviceAccount = false },
                 label = { Text(stringResource(R.string.omni_mode_account)) },
                 enabled = !state.running,
             )
-            FilterChip(
+            IchorFilterChip(
                 selected = serviceAccount,
                 onClick = { serviceAccount = true },
                 label = { Text(stringResource(R.string.kube_signin_method_omni_sa)) },

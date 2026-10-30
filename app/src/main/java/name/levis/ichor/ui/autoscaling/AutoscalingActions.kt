@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
@@ -166,7 +166,7 @@ fun ScaledObjectPauseSection(row: ScaledObjectRow, busy: Boolean, onPause: (Int)
 @Composable
 private fun ScaledObjectPauseDialog(row: ScaledObjectRow, onPause: (Int) -> Unit, onDismiss: () -> Unit) {
     var count by rememberSaveable(row.key) { mutableIntStateOf((row.pausedReplicas ?: row.current).coerceIn(0, MAX_SCALE_REPLICAS)) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.autoscaling_pause_title, row.name)) },
         text = {

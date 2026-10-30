@@ -9,7 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -63,7 +63,7 @@ fun KubeObjectDeleteDialog(
     val enabled = typedOk && !delete.deleting && denial == null
     val colors = LocalStatusColors.current
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (!delete.deleting) onDismiss() },
         title = { Text(stringResource(R.string.kb_delete_title, ref.name)) },
         text = {

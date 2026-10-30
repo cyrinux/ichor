@@ -1,7 +1,7 @@
 package name.levis.ichor.ui.backup
 
 import android.net.Uri
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -61,7 +61,7 @@ fun IncomingBackup(
     BackupFlow(vm, onRestored = onRestored, replaceWarning = hasConfig)
     when (val s = state) {
         is BackupState.RestoreDone -> LaunchedEffect(s) { vm.reset() }
-        is BackupState.Failed -> AlertDialog(
+        is BackupState.Failed -> IchorAlertDialog(
             onDismissRequest = vm::reset,
             title = { Text(stringResource(R.string.backup_restore_title)) },
             text = { Text(s.message.asString()) },

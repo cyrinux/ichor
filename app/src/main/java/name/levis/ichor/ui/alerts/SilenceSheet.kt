@@ -16,7 +16,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.NotificationsOff
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -115,9 +115,9 @@ fun SilenceSheet(
             Label(stringResource(R.string.alerts_silence_for))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AM_SILENCE_PRESETS.forEach { m ->
-                    FilterChip(selected = !custom && minutes == m, onClick = { minutes = m; custom = false }, label = { Text(silenceDurationLabel(m)) })
+                    IchorFilterChip(selected = !custom && minutes == m, onClick = { minutes = m; custom = false }, label = { Text(silenceDurationLabel(m)) })
                 }
-                FilterChip(selected = custom, onClick = { custom = true }, label = { Text(stringResource(R.string.alerts_silence_custom)) })
+                IchorFilterChip(selected = custom, onClick = { custom = true }, label = { Text(stringResource(R.string.alerts_silence_custom)) })
             }
             if (custom) {
                 OutlinedTextField(

@@ -15,7 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Policy
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -145,7 +145,7 @@ private fun Policies(title: String, refs: List<PolicyRef>, onOpen: (PolicyRef) -
     SectionTitle(title)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         refs.forEach { ref ->
-            AssistChip(
+            IchorAssistChip(
                 onClick = { onOpen(ref) },
                 label = { Text(ref.label, fontFamily = FontFamily.Monospace) },
                 leadingIcon = { Icon(Icons.Outlined.Policy, contentDescription = ref.kind, modifier = Modifier.size(18.dp)) },

@@ -8,7 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +44,7 @@ fun InfoHint(title: String, text: String, modifier: Modifier = Modifier, link: S
     }
     if (open) {
         val uri = LocalUriHandler.current
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { open = false },
             title = { Text(title) },
             text = { Text(text, modifier = Modifier.verticalScroll(rememberScrollState())) },

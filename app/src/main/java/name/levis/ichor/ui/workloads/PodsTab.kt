@@ -26,7 +26,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.outlined.CleaningServices
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -169,7 +169,7 @@ internal fun PodActionDialogs(actions: PodActionState, deletions: PodDeletions) 
 private fun CleanUpChip(namespace: String?, onCleanUp: () -> Unit) {
     val denial = rememberKubeDenial(KubeAction.SANITIZE_PODS, namespace.orEmpty())
     Column(Modifier.padding(horizontal = 16.dp)) {
-        AssistChip(
+        IchorAssistChip(
             onClick = onCleanUp,
             enabled = denial == null,
             label = { Text(stringResource(R.string.sanitize_title)) },

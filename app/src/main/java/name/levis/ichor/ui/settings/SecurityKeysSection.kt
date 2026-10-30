@@ -12,14 +12,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Key
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -143,7 +143,7 @@ fun SecurityKeysRows(app: TalosApp, authThen: (title: String, action: () -> Unit
                     Text(stringResource(R.string.security_key_require), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.security_key_require_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = enrolment?.required == true,
                     onCheckedChange = { on ->
                         if (on) authThen(context.getString(R.string.security_key_require)) { flow = KeyFlow.Require }
@@ -223,7 +223,7 @@ private fun SecurityKeyFlowDialog(app: TalosApp, flow: KeyFlow, onDone: () -> Un
         }
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (done || error != null) onDone() },
         icon = { Icon(Icons.Outlined.Key, contentDescription = null, modifier = Modifier.size(32.dp)) },
         title = { Text(stringResource(if (flow == KeyFlow.Enrol) R.string.security_key_flow_enrol_title else R.string.security_key_flow_require_title), textAlign = TextAlign.Center) },

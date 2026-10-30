@@ -16,7 +16,7 @@ import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -182,7 +182,7 @@ private fun NodeDebugShellSetting(appLock: AppLock) {
                     Text(stringResource(R.string.settings_node_debug_shell), style = MaterialTheme.typography.titleMedium)
                     MutedText(stringResource(R.string.settings_node_debug_shell_desc))
                 }
-                Switch(checked = enabled, onCheckedChange = ::set, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = enabled, onCheckedChange = ::set, modifier = Modifier.padding(start = 12.dp))
             }
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
         }

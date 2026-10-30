@@ -15,7 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
@@ -160,7 +160,7 @@ fun NetToolsScreen(
             MutedText(stringResource(R.string.net_tools_intro))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 NetTool.entries.forEach { t ->
-                    FilterChip(selected = t == tool, onClick = { tool = t }, label = { Text(stringResource(t.label)) })
+                    IchorFilterChip(selected = t == tool, onClick = { tool = t }, label = { Text(stringResource(t.label)) })
                 }
             }
             OutlinedTextField(
@@ -183,7 +183,7 @@ fun NetToolsScreen(
                 NetTool.DNS -> {
                     SectionTitle(stringResource(R.string.net_tools_record))
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        NET_DNS_RECORDS.forEach { r -> FilterChip(selected = r == record, onClick = { record = r }, label = { Text(r) }) }
+                        NET_DNS_RECORDS.forEach { r -> IchorFilterChip(selected = r == record, onClick = { record = r }, label = { Text(r) }) }
                     }
                     OutlinedTextField(
                         value = server,
@@ -198,7 +198,7 @@ fun NetToolsScreen(
                 NetTool.PING -> {
                     SectionTitle(stringResource(R.string.net_tools_count))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PING_COUNTS.forEach { c -> FilterChip(selected = c == count, onClick = { count = c }, label = { Text("$c") }) }
+                        PING_COUNTS.forEach { c -> IchorFilterChip(selected = c == count, onClick = { count = c }, label = { Text("$c") }) }
                     }
                 }
                 else -> Unit

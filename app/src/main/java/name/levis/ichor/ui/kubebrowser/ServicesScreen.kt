@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -141,7 +141,7 @@ private fun ServiceRowItem(svc: ServiceRow, onClick: () -> Unit, onObject: (Kube
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 svc.routes.forEach { route ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        AssistChip(
+                        IchorAssistChip(
                             onClick = { runCatching { uriHandler.openUri(route.url) } },
                             label = { Text(route.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         )

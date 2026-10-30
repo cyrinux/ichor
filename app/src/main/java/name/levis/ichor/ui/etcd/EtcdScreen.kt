@@ -60,7 +60,7 @@ import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorOutlinedButton
@@ -699,7 +699,7 @@ private fun DefragPanel(
 @Composable
 private fun DefragConfirmDialog(request: DefragRequest, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val names = request.targets.map { request.hostnames[it.node] ?: it.node }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(

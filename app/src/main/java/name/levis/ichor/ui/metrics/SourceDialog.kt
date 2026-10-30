@@ -8,7 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +17,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -81,7 +81,7 @@ fun SourceDialog(
         }
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
@@ -199,7 +199,7 @@ private fun AuthFields(source: PromSource, onChange: (PromSource) -> Unit) {
     )
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.metrics_skip_verify), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        Switch(checked = source.insecureSkipVerify, onCheckedChange = { onChange(source.copy(insecureSkipVerify = it)) })
+        IchorSwitch(checked = source.insecureSkipVerify, onCheckedChange = { onChange(source.copy(insecureSkipVerify = it)) })
     }
 }
 

@@ -12,7 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -206,7 +206,7 @@ private fun PurchaseResultDialog(result: PurchaseResult, onDismiss: () -> Unit) 
         PurchaseResult.Pending -> stringResource(R.string.funding_title) to stringResource(R.string.funding_pending)
         is PurchaseResult.Failed -> stringResource(R.string.funding_title) to stringResource(R.string.funding_failed, result.message.asString())
     }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(body) },

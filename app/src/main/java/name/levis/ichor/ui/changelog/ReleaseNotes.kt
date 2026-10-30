@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
@@ -77,7 +77,7 @@ fun ReleaseNotesList(releases: List<ChangelogRelease>, modifier: Modifier = Modi
 /** "Updated to X": what changed since the build that ran before the update. */
 @Composable
 fun WhatsNewDialog(versionName: String, releases: List<ChangelogRelease>, onFullChangelog: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.changelog_updated_to, versionName)) },
         text = { ReleaseNotesList(releases, Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) },

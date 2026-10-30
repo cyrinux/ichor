@@ -38,7 +38,7 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.VpnLock
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -47,7 +47,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -455,7 +455,7 @@ private fun ClusterRow(
     onKubeServer: (() -> Unit)?,
 ) {
     val label = labels.of(context)
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Column {
@@ -657,7 +657,7 @@ private fun Swatch(color: Color, selected: Boolean) {
 @Composable
 private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: (String) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf(given) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.clusters_rename, given.ifEmpty { parseCloudContext(context.name)?.cluster ?: context.name })) },
         text = {
@@ -682,7 +682,7 @@ private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: 
 @Composable
 private fun ClusterColorDialog(name: String, color: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     var picked by remember { mutableIntStateOf(color) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.clusters_color, name)) },
         text = {

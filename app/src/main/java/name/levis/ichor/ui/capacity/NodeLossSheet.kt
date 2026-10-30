@@ -13,7 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -93,7 +93,7 @@ private fun PlanBody(
         MutedText(stringResource(R.string.capacity_loss_worst, state.worst))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             state.candidates.forEach { c ->
-                FilterChip(
+                IchorFilterChip(
                     selected = c.name in state.selected,
                     onClick = { onToggle(c.name) },
                     label = { Text(stringResource(R.string.capacity_loss_candidate, c.name, c.pending.toString())) },

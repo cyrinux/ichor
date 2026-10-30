@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -217,7 +217,7 @@ fun rememberEtcdFixFlow(vm: EtcdFixViewModel, contextName: String, fingerprint: 
 @Composable
 private fun EtcdFixConfirmDialog(order: List<String>, canSnapshot: Boolean, onConfirm: (snapshot: Boolean) -> Unit, onDismiss: () -> Unit) {
     var snapshot by remember { mutableStateOf(canSnapshot) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_fix_confirm_title)) },
         text = {

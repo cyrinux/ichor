@@ -9,7 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.SwapHoriz
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
@@ -211,7 +211,7 @@ fun MemberActionPanel(state: MemberActionState, onDismiss: () -> Unit) {
 
 @Composable
 fun PlanningDialog(member: EtcdMemberRef, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_remove_title, member.confirmToken)) },
         text = {

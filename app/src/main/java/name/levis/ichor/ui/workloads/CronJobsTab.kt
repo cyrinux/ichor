@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -263,7 +263,7 @@ private fun CronRunToasts(results: Flow<CronRunResult>) = ResultToasts(results) 
 @Composable
 private fun CronRunConfirmDialog(cronJob: KubeCronJob, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val warn = LocalStatusColors.current.warn
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cronjobs_run_title, cronJob.displayName)) },
         text = {

@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
@@ -17,7 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.TimePicker
@@ -86,7 +86,7 @@ fun RuleSwitch(title: String, hint: String?, checked: Boolean, enabled: Boolean,
             Text(title, style = MaterialTheme.typography.titleSmall)
             hint?.let { MutedText(it) }
         }
-        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled, modifier = Modifier.padding(start = 12.dp))
+        IchorSwitch(checked = checked, onCheckedChange = onChange, enabled = enabled, modifier = Modifier.padding(start = 12.dp))
     }
 }
 
@@ -148,7 +148,7 @@ private fun ClockDialog(title: String, value: String, onPick: (String) -> Unit, 
     val (hour, minute) = clockOf(value)
     val is24 = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val state = rememberTimePickerState(initialHour = hour, initialMinute = minute, is24Hour = is24)
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { TimePicker(state = state, modifier = Modifier.semantics { contentDescription = title }) },
@@ -169,7 +169,7 @@ private fun ZoneDialog(current: String, onPick: (String) -> Unit, onDismiss: () 
     val all = remember { ZoneId.getAvailableZoneIds().filter { '/' in it && !it.startsWith("Etc/") && !it.startsWith("SystemV/") }.sorted() }
     val shown = remember(query) { listOf("") + all.filter { it.contains(query.trim(), ignoreCase = true) } }
     val search = stringResource(R.string.alert_rules_zone_search)
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.alert_rules_zone_title)) },
         text = {

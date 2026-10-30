@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -94,12 +94,12 @@ fun ProcessesTab(
             SearchField(filter, { filter = it }, stringResource(R.string.node_processes_filter), Modifier.fillMaxWidth())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.node_processes_sort), style = MaterialTheme.typography.labelMedium)
-                FilterChip(
+                IchorFilterChip(
                     selected = sort == ProcessSort.CPU,
                     onClick = { sort = ProcessSort.CPU },
                     label = { Text(stringResource(R.string.node_processes_sort_cpu)) },
                 )
-                FilterChip(
+                IchorFilterChip(
                     selected = sort == ProcessSort.MEMORY,
                     onClick = { sort = ProcessSort.MEMORY },
                     label = { Text(stringResource(R.string.node_processes_sort_memory)) },

@@ -24,7 +24,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -434,7 +434,7 @@ private fun ReleaseChips(releases: UiState<List<TalosRelease>>, currentVersion: 
         is UiState.Failed -> MutedText(stringResource(R.string.upgrade_releases_failed, releases.message.asString()))
         is UiState.Loaded -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             releaseSuggestions(releases.data).filter { it.version != currentVersion }.take(MAX_RELEASE_CHIPS).forEach { r ->
-                FilterChip(
+                IchorFilterChip(
                     selected = selected.trim() == r.version,
                     onClick = { onPick(r.version) },
                     label = {

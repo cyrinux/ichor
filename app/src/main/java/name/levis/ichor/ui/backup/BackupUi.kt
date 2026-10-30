@@ -14,7 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -142,7 +142,7 @@ private fun UnlockDialog(
     onDismiss: () -> Unit,
 ) {
     var passphrase by remember { mutableStateOf("") }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (!working) onDismiss() },
         title = { Text(stringResource(R.string.backup_restore_title)) },
         text = {

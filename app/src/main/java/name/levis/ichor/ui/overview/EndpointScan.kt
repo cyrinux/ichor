@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -129,7 +129,7 @@ fun EndpointScanDialog(
         onDismiss()
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = close,
         title = { Text(stringResource(R.string.endpoint_scan_title)) },
         text = {

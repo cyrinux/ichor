@@ -25,7 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SearchBarDefaults
@@ -218,7 +218,7 @@ private fun RecentSearches(
         if (recent.isEmpty()) return@LazyColumn
         item { SectionTitle(stringResource(R.string.search_recent), Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         items(recent, key = { it }) { query ->
-            ListItem(
+            IchorListItem(
                 headlineContent = { Text(query, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 leadingContent = { Icon(Icons.Outlined.History, contentDescription = null) },
                 modifier = Modifier.combinedClickable(
@@ -265,7 +265,7 @@ private fun Results(
 private fun ResultRow(result: SearchResult, now: Long, onOpen: (ShareTarget) -> Unit) {
     val target = result.target
     val lastSeen = if (result.isStale(now)) stringResource(R.string.search_last_seen, timeAgo(result.at, now)) else null
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(result.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Column {

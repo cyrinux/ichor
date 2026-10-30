@@ -16,7 +16,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
@@ -234,7 +234,7 @@ fun LogsScreen(
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
-                    FilterChip(
+                    IchorFilterChip(
                         selected = follow,
                         enabled = canFollow || follow,
                         onClick = {

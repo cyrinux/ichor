@@ -36,7 +36,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
@@ -339,7 +339,7 @@ fun MachineConfigScreen(
                                 Text(stringResource(R.string.machine_config_reveal), style = MaterialTheme.typography.titleSmall)
                                 MutedText(stringResource(R.string.machine_config_reveal_desc))
                             }
-                            Switch(checked = revealed, onCheckedChange = ::toggleReveal)
+                            IchorSwitch(checked = revealed, onCheckedChange = ::toggleReveal)
                         }
                         if (revealed) RevealedBanner()
                     }

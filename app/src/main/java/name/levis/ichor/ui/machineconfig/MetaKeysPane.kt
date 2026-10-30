@@ -18,10 +18,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
@@ -273,7 +273,7 @@ private fun MetaEditDialog(current: MetaKey?, known: List<MetaKey>, onWrite: (In
     val key = parseMetaKey(keyText)
     val knownKey = known.firstOrNull { it.key == key }
     val writable = key != null && key != 0 && knownKey?.writable != false
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.meta_dialog_title)) },
         text = {
@@ -300,7 +300,7 @@ private fun MetaEditDialog(current: MetaKey?, known: List<MetaKey>, onWrite: (In
                 if (current == null) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         known.filter { it.writable }.forEach { k ->
-                            FilterChip(selected = k.key == key, onClick = { keyText = k.hex }, label = { Text("${k.hex} ${k.name}") })
+                            IchorFilterChip(selected = k.key == key, onClick = { keyText = k.hex }, label = { Text("${k.hex} ${k.name}") })
                         }
                     }
                 }

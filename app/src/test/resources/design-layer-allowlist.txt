@@ -1,0 +1,2 @@
+# Files under ui/, relative to it, that may import a wrapped Material primitive directly.
+# Empty: add a line only with a reason in a comment above it.

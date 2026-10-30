@@ -1,7 +1,7 @@
 package name.levis.ichor.ui.node
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -26,7 +26,7 @@ fun CordonDialog(hostname: String, cordoned: Boolean?, onConfirm: (on: Boolean) 
         )
         return
     }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cordon_unknown_title, hostname)) },
         text = { Text(stringResource(R.string.cordon_unknown_body, hostname)) },

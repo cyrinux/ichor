@@ -23,7 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -183,7 +183,7 @@ private fun Controls(
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(ArgoFilter.entries.filter { it != ArgoFilter.ALL }, key = { it.name }) { f ->
                 val count = counts[f] ?: 0
-                FilterChip(
+                IchorFilterChip(
                     selected = filter == f,
                     onClick = { onFilter(if (filter == f) ArgoFilter.ALL else f) },
                     enabled = count > 0 || filter == f,

@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
@@ -136,7 +136,7 @@ fun KubeEventsScreen(
         Column(Modifier.pageContent(padding).fillMaxSize()) {
             KubeFilters(control, listed, query, { query = it }, R.string.kube_events_search)
             Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
+                IchorFilterChip(
                     selected = warningsOnly,
                     onClick = { warningsOnly = !warningsOnly },
                     label = { Text(stringResource(R.string.kube_events_warnings_only)) },

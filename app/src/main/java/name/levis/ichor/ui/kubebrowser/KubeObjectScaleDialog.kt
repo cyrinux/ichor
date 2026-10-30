@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -65,7 +65,7 @@ fun KubeObjectScaleDialog(
     val enabled = loaded != null && target != loaded.replicas && !scale.applying && denial == null &&
         (!toZero || confirmationMatches(typed, ref.name))
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (!scale.applying) onDismiss() },
         title = { Text(stringResource(R.string.kb_scale_title, ref.name)) },
         text = {

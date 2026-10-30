@@ -12,7 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
@@ -143,7 +143,7 @@ private fun TargetCard(media: BootMedia, arch: String, secureBoot: Boolean, onAr
         Text(media.schematic, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             bootArchitectures.forEach { a ->
-                FilterChip(selected = a == arch, onClick = { onArch(a) }, label = { Text(a) })
+                IchorFilterChip(selected = a == arch, onClick = { onArch(a) }, label = { Text(a) })
             }
         }
         ToggleRow(stringResource(R.string.boot_media_secure_boot), secureBoot, onSecureBoot)

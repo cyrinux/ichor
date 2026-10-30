@@ -16,7 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
@@ -293,7 +293,7 @@ private fun VersionPicker(choice: K8sVersionChoice, version: String, onVersion: 
     if (choice.versions.isNotEmpty()) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             choice.versions.forEach { v ->
-                FilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
+                IchorFilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
             }
         }
     }

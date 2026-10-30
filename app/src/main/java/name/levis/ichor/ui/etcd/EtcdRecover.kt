@@ -14,10 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -285,7 +285,7 @@ private fun EtcdRecoverDialog(
     var skipHash by remember { mutableStateOf(false) }
     val ready = node != null && opener != SnapshotOpener.UNSUPPORTED && (opener == SnapshotOpener.NONE || secret.isNotBlank())
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_recover_title)) },
         text = {
@@ -319,7 +319,7 @@ private fun EtcdRecoverDialog(
                 Text(stringResource(R.string.etcd_recover_node), style = MaterialTheme.typography.labelMedium)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     nodes.forEach { n ->
-                        FilterChip(selected = node == n, onClick = { node = n }, label = { Text(hostnames[n] ?: n) })
+                        IchorFilterChip(selected = node == n, onClick = { node = n }, label = { Text(hostnames[n] ?: n) })
                     }
                 }
                 if (opener == SnapshotOpener.NONE) {

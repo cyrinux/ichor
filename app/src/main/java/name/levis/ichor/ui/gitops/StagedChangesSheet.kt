@@ -13,7 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.EditNote
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.AssistChipDefaults
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,7 +39,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 /** "Staged changes (2)": opens the Staged changes sheet. */
 @Composable
 fun StagedChip(count: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    AssistChip(
+    IchorAssistChip(
         onClick = onClick,
         label = { Text(stringResource(R.string.staged_chip, count.toString())) },
         leadingIcon = { Icon(Icons.Outlined.EditNote, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },

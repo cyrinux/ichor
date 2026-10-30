@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +40,7 @@ fun HpaBoundsDialog(row: HpaRow, onSave: (Int, Int) -> Unit, onDismiss: () -> Un
     // Against what the form started from: an HPA at min 0 (HPAScaleToZero) opens at 1, unsaved.
     val changed = min != row.min.coerceIn(1, MAX_SCALE_REPLICAS) || max != row.max.coerceIn(1, MAX_SCALE_REPLICAS)
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.autoscaling_bounds_title, row.name)) },
         text = {

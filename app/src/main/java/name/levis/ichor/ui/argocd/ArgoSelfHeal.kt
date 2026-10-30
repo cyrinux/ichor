@@ -3,7 +3,7 @@ package name.levis.ichor.ui.argocd
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AcUnit
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
@@ -59,7 +59,7 @@ fun ArgoRevertDialog(
     onAnyway: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.AcUnit, contentDescription = null) },
         title = { Text(title) },

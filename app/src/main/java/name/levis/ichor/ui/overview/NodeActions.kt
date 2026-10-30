@@ -20,7 +20,7 @@ import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -162,7 +162,7 @@ private fun Item(icon: ImageVector, label: String, danger: Boolean = false, disa
         danger -> LocalStatusColors.current.bad
         else -> MaterialTheme.colorScheme.onSurface
     }
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(label, color = color) },
         // [disabled]: why the action is unavailable (e.g. "Needs Talos v1.x or newer").
         supportingContent = disabled?.let { { Text(it) } },

@@ -20,7 +20,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -101,7 +101,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_background_alerts), style = MaterialTheme.typography.titleMedium)
                     MutedText(stringResource(R.string.monitor_background_alerts_desc, CERT_WARN_DAYS))
                 }
-                Switch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
             }
             // The sealed configs cannot be read in the background after Android closed the app.
             if (securityKeys?.required == true) InfoNotice(stringResource(R.string.monitor_security_key_note))
@@ -111,7 +111,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_data_services), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_data_services_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = dataWatched,
                     onCheckedChange = { store.setDataServicesWatched(it) },
                     enabled = enabled,
@@ -124,7 +124,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_imported_plugins), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_imported_plugins_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = importedPlugins,
                     onCheckedChange = { store.setImportedPluginAlerts(it) },
                     enabled = enabled,
@@ -137,7 +137,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_gitops), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_gitops_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = gitopsWatched,
                     onCheckedChange = { store.setGitopsWatched(it) },
                     enabled = enabled,
@@ -150,7 +150,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_checkup), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_checkup_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = checkupWatched,
                     onCheckedChange = { store.setCheckupWatched(it) },
                     enabled = enabled,
@@ -163,7 +163,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_alertmanager), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_alertmanager_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = alertmanagerWatched,
                     onCheckedChange = { store.setAlertmanagerWatched(it) },
                     enabled = enabled,
@@ -176,7 +176,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_storage), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_storage_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = storageWatched,
                     onCheckedChange = { store.setStorageWatched(it) },
                     enabled = enabled,
@@ -190,7 +190,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_storage_trend), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_storage_trend_desc, TREND_OPEN_DAYS.toInt()))
                 }
-                Switch(
+                IchorSwitch(
                     checked = storageTrend,
                     onCheckedChange = { store.setStorageTrendAlerts(it) },
                     enabled = enabled && storageWatched,
@@ -203,7 +203,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_sensors), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_sensors_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = sensorsWatched,
                     onCheckedChange = { store.setSensorsWatched(it) },
                     enabled = enabled,
@@ -217,7 +217,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_unreachable), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_unreachable_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = unreachable,
                     onCheckedChange = { store.setUnreachableAlerts(it) },
                     enabled = enabled,
@@ -283,7 +283,7 @@ private fun SensorThreshold(store: MonitorStore, enabled: Boolean) {
     val auto = threshold == SENSOR_THRESHOLD_AUTO
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.monitor_sensors_auto), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Switch(
+        IchorSwitch(
             checked = auto,
             onCheckedChange = { store.setSensorThreshold(if (it) SENSOR_THRESHOLD_AUTO else SENSOR_THRESHOLD_DEFAULT) },
             enabled = enabled,

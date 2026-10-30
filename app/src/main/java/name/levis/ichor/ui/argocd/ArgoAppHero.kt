@@ -19,13 +19,13 @@ import androidx.compose.material.icons.outlined.Difference
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -97,7 +97,7 @@ private fun Links(urls: List<String>) {
     val uri = LocalUriHandler.current
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         urls.forEach { url ->
-            AssistChip(
+            IchorAssistChip(
                 onClick = { runCatching { uri.openUri(url) } },
                 label = { Text(url.removePrefix("https://").removePrefix("http://").trimEnd('/'), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 leadingIcon = { Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = stringResource(R.string.argo_open_link), modifier = Modifier.size(18.dp)) },
@@ -123,7 +123,7 @@ private fun AutoSyncRow(app: ArgoApp, busy: Boolean, onAutoSync: (Boolean) -> Un
                 }
                 if (detail.isNotEmpty()) MutedText(detail)
             }
-            Switch(checked = app.autoSync.enabled, onCheckedChange = onAutoSync, enabled = app.canChangeSpec && !busy)
+            IchorSwitch(checked = app.autoSync.enabled, onCheckedChange = onAutoSync, enabled = app.canChangeSpec && !busy)
         }
     }
 }

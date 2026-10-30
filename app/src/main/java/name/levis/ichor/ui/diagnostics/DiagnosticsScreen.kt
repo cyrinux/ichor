@@ -16,7 +16,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -221,7 +221,7 @@ private fun reasonLabel(reason: String): String = reason.replace('_', ' ').repla
 @Composable
 private fun ExportDialog(export: DiagExport, onShare: (java.io.File) -> Unit, onSave: (java.io.File) -> Unit, onDismiss: () -> Unit) {
     val ready = export as? DiagExport.Ready
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.diagnostics_export)) },
         text = {

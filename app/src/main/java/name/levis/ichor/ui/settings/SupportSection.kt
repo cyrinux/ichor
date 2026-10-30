@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -98,7 +98,7 @@ private fun DiagnosticsSetting(app: TalosApp, onDiagnostics: () -> Unit) {
                     Text(stringResource(R.string.settings_diagnostics_persist), style = MaterialTheme.typography.bodyLarge)
                     MutedText(stringResource(R.string.settings_diagnostics_persist_summary))
                 }
-                Switch(checked = persist, onCheckedChange = app::setDiagPersist, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = persist, onCheckedChange = app::setDiagPersist, modifier = Modifier.padding(start = 12.dp))
             }
             IchorOutlinedButton(onClick = onDiagnostics, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_diagnostics_open))
@@ -117,7 +117,7 @@ private fun StartupTraceSetting(app: TalosApp) {
                 Text(stringResource(R.string.settings_startup_trace), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_startup_trace_summary))
             }
-            Switch(checked = enabled, onCheckedChange = app::setStartupTrace, modifier = Modifier.padding(start = 12.dp))
+            IchorSwitch(checked = enabled, onCheckedChange = app::setStartupTrace, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }

@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
@@ -180,7 +180,7 @@ fun SavedScansScreen(
 /** The app, when and with what it was scanned, its severities and what was new; [onForget] deletes it. */
 @Composable
 private fun SavedScanRow(scan: SavedScan, name: String, onForget: () -> Unit, onOpen: () -> Unit) {
-    ListItem(
+    IchorListItem(
         modifier = Modifier.clickable(onClick = onOpen),
         headlineContent = { Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {

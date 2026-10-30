@@ -13,7 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -58,7 +58,7 @@ internal fun NodePicker(
 private fun NodeChips(nodes: List<NetPerfNode>, selected: String, onSelect: (String) -> Unit) {
     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(nodes, key = { it.name }) { node ->
-            FilterChip(
+            IchorFilterChip(
                 selected = node.name == selected,
                 onClick = { onSelect(node.name) },
                 enabled = node.ready,

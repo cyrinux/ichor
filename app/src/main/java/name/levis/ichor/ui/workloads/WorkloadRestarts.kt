@@ -2,7 +2,7 @@ package name.levis.ichor.ui.workloads
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -111,7 +111,7 @@ fun RestartResultToasts(results: Flow<RestartResult>) = ResultToasts(results) { 
 
 @Composable
 fun RestartConfirmDialog(workload: KubeWorkload, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.workloads_restart_title, workload.kind, workload.name)) },
         text = {

@@ -7,14 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -133,7 +133,7 @@ fun PluginsSection(plugins: PluginRepository) {
         })
     }
     removing?.let { item ->
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { removing = null },
             title = { Text(stringResource(R.string.plugins_remove_title, item.name.ifEmpty { item.id })) },
             text = { Text(stringResource(R.string.plugins_remove_text)) },
@@ -169,7 +169,7 @@ private fun ImportedRow(item: PluginUserItem, onEnabled: (Boolean) -> Unit, onRe
                 )
             }
         }
-        Switch(
+        IchorSwitch(
             checked = item.enabled,
             onCheckedChange = onEnabled,
             enabled = item.usable,

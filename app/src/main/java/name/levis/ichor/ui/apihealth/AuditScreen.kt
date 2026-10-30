@@ -14,7 +14,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
@@ -104,7 +104,7 @@ private fun AuditIntro(minutes: Int, onMinutes: (Int) -> Unit, onRun: () -> Unit
         MutedText(stringResource(R.string.audit_intro))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             AUDIT_WINDOWS.forEach { m ->
-                FilterChip(selected = minutes == m, onClick = { onMinutes(m) }, label = { Text(stringResource(R.string.audit_window, m)) })
+                IchorFilterChip(selected = minutes == m, onClick = { onMinutes(m) }, label = { Text(stringResource(R.string.audit_window, m)) })
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {

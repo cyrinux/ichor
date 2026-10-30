@@ -11,7 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,7 +55,7 @@ fun PrivacySection(app: TalosApp) {
                 Text(stringResource(R.string.settings_screenshot_mode), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_screenshot_mode_desc))
             }
-            Switch(
+            IchorSwitch(
                 checked = mask.enabled,
                 onCheckedChange = { app.setPrivacyMask(mask.copy(enabled = it, extraWords = words)) },
                 enabled = !switching,
@@ -89,7 +89,7 @@ private fun RemoteAppIconsSetting(app: TalosApp) {
                 Text(stringResource(R.string.settings_remote_icons), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_remote_icons_desc))
             }
-            Switch(checked = enabled, onCheckedChange = app.uiPreferences::setRemoteAppIcons, modifier = Modifier.padding(start = 12.dp))
+            IchorSwitch(checked = enabled, onCheckedChange = app.uiPreferences::setRemoteAppIcons, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }
@@ -104,7 +104,7 @@ private fun OfflineCacheSetting(app: TalosApp) {
                 Text(stringResource(R.string.settings_offline_cache), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_offline_cache_desc))
             }
-            Switch(checked = enabled, onCheckedChange = app::setOfflineCache, modifier = Modifier.padding(start = 12.dp))
+            IchorSwitch(checked = enabled, onCheckedChange = app::setOfflineCache, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }

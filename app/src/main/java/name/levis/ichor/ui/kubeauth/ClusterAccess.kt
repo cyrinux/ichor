@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
@@ -108,7 +108,7 @@ fun SignInAccountDialog(cluster: ContextSummary, label: String, onSignIn: () -> 
     val info by produceState<Result<KubeSignInInfo?>?>(null, cluster.name) {
         value = runCatching { app.kubeAuthRepository.info(cluster.name) }
     }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.kube_signin_account_title, label)) },
         text = {
@@ -154,7 +154,7 @@ fun KubeAccessDialog(
     onPick: (String?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.kube_access_title, label)) },
         text = {

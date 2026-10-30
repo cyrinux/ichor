@@ -20,9 +20,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -233,7 +233,7 @@ fun PodLogSheet(
             run {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(containers, key = { "c-$it" }) { c ->
-                        FilterChip(
+                        IchorFilterChip(
                             selected = query.container == c,
                             onClick = { vm.load(query.copy(container = c)) },
                             label = { Text(c, fontFamily = FontFamily.Monospace) },
@@ -241,7 +241,7 @@ fun PodLogSheet(
                     }
                     if (!query.previous) {
                         item(key = "follow") {
-                            FilterChip(
+                            IchorFilterChip(
                                 selected = follow,
                                 enabled = follow || state is UiState.Loaded,
                                 onClick = {
@@ -254,7 +254,7 @@ fun PodLogSheet(
                     }
                     if (pod.restarts > 0) {
                         item(key = "previous") {
-                            FilterChip(
+                            IchorFilterChip(
                                 selected = query.previous,
                                 onClick = {
                                     follow = false
@@ -265,24 +265,24 @@ fun PodLogSheet(
                         }
                     }
                     item(key = "events") {
-                        FilterChip(selected = events, onClick = { events = !events }, label = { Text(stringResource(R.string.kube_events_title)) })
+                        IchorFilterChip(selected = events, onClick = { events = !events }, label = { Text(stringResource(R.string.kube_events_title)) })
                     }
                     if (links != null) {
                         item(key = "yaml") {
-                            AssistChip(onClick = {
+                            IchorAssistChip(onClick = {
                                 onDismiss()
                                 links.onObject(KubeObjectRef.pod(pod.namespace, pod.name))
                             }, label = { Text(stringResource(R.string.kb_tab_yaml)) })
                         }
                         item(key = "forward") {
-                            AssistChip(onClick = {
+                            IchorAssistChip(onClick = {
                                 onDismiss()
                                 links.onPortForward(pod.namespace, pod.name)
                             }, label = { Text(stringResource(R.string.kb_forward_title)) })
                         }
                         item(key = "shell") {
                             // In the container picked for the log; "" lets Kubernetes pick the only one.
-                            AssistChip(onClick = {
+                            IchorAssistChip(onClick = {
                                 onDismiss()
                                 links.onShell(pod.namespace, pod.name, query.container)
                             }, label = { Text(stringResource(R.string.pod_shell_title)) }, enabled = shellDenial == null)

@@ -14,7 +14,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -66,7 +66,7 @@ private val CLOUD_LINES = listOf(
 /** The three ways to add a cluster, most common first: a cloud account, a kubeconfig, a Talos identity. */
 @Composable
 fun AddClusterHelpDialog(onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         // The platform default leaves wide side margins; the role selector
         // and the commands need the room.

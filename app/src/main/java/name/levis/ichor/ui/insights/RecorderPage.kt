@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import name.levis.ichor.ui.design.IchorButton
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
@@ -57,7 +57,7 @@ fun LazyListScope.recorderPage(
             }
             IchorTextButton(onClick = onDelete, enabled = !state.recording && document != null) { Text(stringResource(R.string.common_delete)) }
             if (document != null) {
-                FilterChip(selected = metrics, onClick = { onMetrics(!metrics) }, label = { Text(stringResource(R.string.insights_show_metrics)) })
+                IchorFilterChip(selected = metrics, onClick = { onMetrics(!metrics) }, label = { Text(stringResource(R.string.insights_show_metrics)) })
             }
         }
     }

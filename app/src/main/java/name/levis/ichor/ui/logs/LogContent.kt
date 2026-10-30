@@ -18,7 +18,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -96,7 +96,7 @@ private fun LevelChips(selected: LogLevelFilter, counts: LogLevelCounts, onSelec
                 LogLevelFilter.WARNINGS -> R.string.logs_level_warnings
                 LogLevelFilter.ERRORS -> R.string.logs_level_errors
             }
-            FilterChip(
+            IchorFilterChip(
                 selected = filter == selected,
                 onClick = { onSelect(filter) },
                 label = { Text(stringResource(label, counts.of(filter))) },

@@ -29,7 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -260,7 +260,7 @@ fun ToggleRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, desc
                 MutedText(description)
             }
         }
-        Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
+        IchorSwitch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
     }
 }
 

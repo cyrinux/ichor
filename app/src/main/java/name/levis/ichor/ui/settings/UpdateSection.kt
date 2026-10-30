@@ -16,7 +16,7 @@ import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -79,7 +79,7 @@ private fun SelfUpdateSection(updates: UpdateManager) {
                     Text(stringResource(R.string.update_auto_check), style = MaterialTheme.typography.titleMedium)
                     MutedText(stringResource(R.string.update_auto_check_desc, BuildConfig.UPDATE_REPO))
                 }
-                Switch(checked = autoCheck, onCheckedChange = updates::setAutoCheck, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = autoCheck, onCheckedChange = updates::setAutoCheck, modifier = Modifier.padding(start = 12.dp))
             }
 
             when (val s = state) {

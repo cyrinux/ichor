@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,7 +36,7 @@ private const val KUBE_SERVER_MAX = 300
 internal fun KubeServerDialog(saved: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
     var input by remember { mutableStateOf(saved) }
     var error by remember { mutableStateOf<UiText?>(null) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.kube_server_title)) },
         text = {

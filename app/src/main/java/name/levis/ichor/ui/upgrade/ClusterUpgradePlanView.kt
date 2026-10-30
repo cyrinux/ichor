@@ -13,7 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -120,7 +120,7 @@ private fun VersionPicker(releases: UiState<List<TalosRelease>>, version: String
     val offered = ((releases as? UiState.Loaded)?.data.orEmpty().map { it.version } + version).filter { it.isNotEmpty() }.distinct().take(MAX_VERSIONS)
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         offered.forEach { v ->
-            FilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
+            IchorFilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
         }
     }
 }

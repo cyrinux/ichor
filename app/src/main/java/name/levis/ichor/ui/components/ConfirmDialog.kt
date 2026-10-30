@@ -1,6 +1,6 @@
 package name.levis.ichor.ui.components
 
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -23,7 +23,7 @@ fun ConfirmDialog(
     destructive: Boolean = false,
     confirmColor: Color = Color.Unspecified,
 ) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(text) },

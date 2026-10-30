@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -157,7 +157,7 @@ private fun JobRowItem(job: JobRow, onClick: () -> Unit, onOwner: (KubeObjectRef
                 Text(job.reason, style = MaterialTheme.typography.labelMedium, color = job.level.color())
             }
             job.ownerRef?.let { owner ->
-                AssistChip(onClick = { onOwner(owner) }, label = { Text(stringResource(R.string.kube_jobs_owner, job.owner)) })
+                IchorAssistChip(onClick = { onOwner(owner) }, label = { Text(stringResource(R.string.kube_jobs_owner, job.owner)) })
             }
         }
         TooltipIconButton(Icons.Outlined.Delete, stringResource(R.string.kb_delete), onClick = onDelete)

@@ -18,7 +18,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
@@ -170,13 +170,13 @@ private fun FilterBar(vm: FlowsViewModel, filter: HubbleFilter) {
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        FilterChip(
+        IchorFilterChip(
             selected = filter.dropsOnly,
             onClick = { vm.setFilter(filter.copy(dropsOnly = !filter.dropsOnly)) },
             label = { Text(stringResource(R.string.flows_drops_only)) },
         )
         Box {
-            FilterChip(
+            IchorFilterChip(
                 selected = filter.namespace != null,
                 onClick = {
                     vm.loadPolicies() // its namespaces join the list

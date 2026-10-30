@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
@@ -72,7 +72,7 @@ internal fun PodPullLine(pod: KubePod, links: PodPullLinks?) {
 @Composable
 private fun PullProblemDialog(pod: KubePod, pull: PullProblem, title: String, links: PodPullLinks?, onDismiss: () -> Unit) {
     val node = links?.let { pod.node.takeIf { n -> n.isNotEmpty() }?.let(it.talosNode) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.pod_pull_message_title)) },
         text = {

@@ -17,14 +17,14 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Warning
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
@@ -226,7 +226,7 @@ private fun IssueFormContent(
     SectionTitle(stringResource(R.string.issue_validity))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CertValidity.entries.forEach { v ->
-            FilterChip(selected = form.validity == v, onClick = { vm.setValidity(v) }, label = { Text(stringResource(v.label)) })
+            IchorFilterChip(selected = form.validity == v, onClick = { vm.setValidity(v) }, label = { Text(stringResource(v.label)) })
         }
     }
     MutedText(stringResource(R.string.issue_valid_until, formatDate(form.validity.expiresAt(System.currentTimeMillis()))))
@@ -288,7 +288,7 @@ private fun IssueConfirmDialog(request: IssueRequest, onConfirm: () -> Unit, onD
     val until = formatDate(request.validity.expiresAt(System.currentTimeMillis()))
     val roles = request.roles.joinToString()
     val renew = request.mode == IssueMode.RENEW
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.Warning, contentDescription = null, tint = LocalStatusColors.current.warn) },
         title = { Text(stringResource(if (renew) R.string.issue_confirm_renew_title else R.string.issue_confirm_share_title)) },

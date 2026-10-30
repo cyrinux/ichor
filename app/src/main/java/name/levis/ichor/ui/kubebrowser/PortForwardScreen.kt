@@ -22,7 +22,7 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -187,7 +187,7 @@ fun PortForwardScreen(
                 } else {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         p.data.forEach { c ->
-                            FilterChip(
+                            IchorFilterChip(
                                 selected = typed == c.port.toString(),
                                 onClick = { typed = c.port.toString() },
                                 label = { Text(if (c.name.isEmpty()) "${c.port}" else "${c.port} · ${c.name}", fontFamily = FontFamily.Monospace) },

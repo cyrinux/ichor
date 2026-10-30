@@ -14,7 +14,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorScaffold
@@ -202,7 +202,7 @@ private fun systemImagesUi(node: String, vm: SystemImagesViewModel, onOpen: (Ima
 
 @Composable
 private fun SortChip(value: ImageSort, current: ImageSort, label: Int, onSelect: (ImageSort) -> Unit) {
-    FilterChip(selected = current == value, onClick = { onSelect(value) }, label = { Text(stringResource(label)) })
+    IchorFilterChip(selected = current == value, onClick = { onSelect(value) }, label = { Text(stringResource(label)) })
 }
 
 @Composable

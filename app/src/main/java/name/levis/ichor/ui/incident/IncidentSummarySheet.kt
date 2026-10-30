@@ -19,7 +19,7 @@ import androidx.compose.material.icons.outlined.Share
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -94,7 +94,7 @@ fun IncidentSummarySheet(cluster: ContextSummary, onDismiss: () -> Unit) {
             Text(title, style = MaterialTheme.typography.titleLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IncidentWindow.entries.forEach { w ->
-                    FilterChip(selected = window == w, onClick = { window = w }, label = { Text(stringResource(w.label)) })
+                    IchorFilterChip(selected = window == w, onClick = { window = w }, label = { Text(stringResource(w.label)) })
                 }
             }
             ToggleRow(stringResource(R.string.incident_hide_names), hideNames, { hideNames = it })

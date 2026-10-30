@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -233,7 +233,7 @@ private val LonghornAction.menuLabel: Int
 @Composable
 fun ReplicaCountDialog(label: String, current: Int, choices: IntRange, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
     var count by remember { mutableIntStateOf(current.coerceIn(choices)) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.longhorn_replicas_title, label)) },
         text = {

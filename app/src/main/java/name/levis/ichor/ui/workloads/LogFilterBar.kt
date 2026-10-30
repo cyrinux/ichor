@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -64,7 +64,7 @@ fun LogFilterBar(filter: LogFilter, onChange: (LogFilter) -> Unit, modifier: Mod
         )
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(LOG_SINCE_CHOICES, key = { "since-$it" }) { minutes ->
-                FilterChip(
+                IchorFilterChip(
                     selected = filter.sinceMinutes == minutes,
                     onClick = { onChange(filter.copy(sinceMinutes = minutes)) },
                     label = { Text(sinceLabel(minutes)) },

@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -78,7 +78,7 @@ fun GitHostsSection(app: TalosApp) {
         )
     }
     removing?.let { host ->
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { removing = null },
             title = { Text(stringResource(R.string.git_host_remove_title, host.host)) },
             text = { Text(stringResource(R.string.git_host_remove_text)) },

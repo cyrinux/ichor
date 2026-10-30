@@ -3,7 +3,7 @@ package name.levis.ichor.ui.alerts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
@@ -69,7 +69,7 @@ fun OnCallIncidentSection(incident: OnCallIncident, confidence: String, busy: Bo
         }
     }
     if (confirmResolve) {
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { confirmResolve = false },
             title = { Text(stringResource(R.string.oncall_resolve_title)) },
             text = { Text(stringResource(R.string.oncall_resolve_body, incident.number.toString())) },

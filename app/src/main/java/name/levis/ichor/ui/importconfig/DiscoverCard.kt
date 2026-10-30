@@ -18,12 +18,12 @@ import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.runtime.LaunchedEffect
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.ImportTextRoute
@@ -126,7 +126,7 @@ internal fun DiscoverCard(
         finally { scanned = null }
     }
     if (scanning) {
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { scanning = false },
             confirmButton = {},
             dismissButton = { IchorOutlinedButton(onClick = { scanning = false }) { Text(stringResource(R.string.common_cancel)) } },
@@ -141,7 +141,7 @@ internal fun DiscoverCard(
         MutedText(stringResource(R.string.kube_discover_body))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             providers.forEach { p ->
-                FilterChip(
+                IchorFilterChip(
                     selected = provider == p,
                     onClick = { provider = p; values.clear(); scanError = false },
                     label = { Text(stringResource(p.label)) },
@@ -152,7 +152,7 @@ internal fun DiscoverCard(
         if (sets.size > 1) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 sets.forEachIndexed { index, set ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = option == index,
                         onClick = {
                             option = index
