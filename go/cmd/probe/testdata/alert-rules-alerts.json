@@ -1,0 +1,9 @@
+[
+  { "cluster": "a1b2c3d4e5f60718", "key": "node:10.0.0.11", "kind": "node", "severity": "", "problem": true, "snoozed": false },
+  { "cluster": "a1b2c3d4e5f60718", "key": "am:KubePodCrashLooping:shop/web-0", "kind": "am", "severity": "warning", "problem": true, "snoozed": false },
+  { "cluster": "a1b2c3d4e5f60718", "key": "am:Watchdog", "kind": "am", "severity": "info", "problem": true, "snoozed": false },
+  { "cluster": "0f1e2d3c4b5a6978", "key": "am:CPUThrottlingHigh:batch/report-1", "kind": "am", "severity": "info", "problem": true, "snoozed": false },
+  { "cluster": "0f1e2d3c4b5a6978", "key": "storage:10.0.1.21|EPHEMERAL", "kind": "storage", "severity": "critical", "problem": true, "snoozed": false },
+  { "cluster": "9988776655443322", "key": "gitops:argocd|apps/blog", "kind": "gitops", "severity": "warning", "problem": true, "snoozed": false },
+  { "cluster": "9988776655443322", "key": "etcd:NOSPACE", "kind": "etcd", "severity": "", "problem": true, "snoozed": true }
+]
