@@ -92,7 +92,9 @@ struct QuietHoursRows: View {
         }
         RuleToggle(
             title: String(localized: "Except critical"),
-            hint: String(localized: "A node down, an etcd alarm, an unreachable cluster and other critical alerts still notify"),
+            hint: String(
+                localized: "A node down, an etcd alarm, an unreachable cluster and other critical alerts still notify"
+            ),
             isOn: quiet.exceptCritical
         ) { on in
             var next = quiet

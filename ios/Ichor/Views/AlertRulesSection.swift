@@ -33,7 +33,9 @@ struct AlertRulesSection: View {
             }
             RuleToggle(
                 title: String(localized: "Digest"),
-                hint: String(localized: "One notification per cluster and check with its counts, instead of one per alert"),
+                hint: String(
+                    localized: "One notification per cluster and check with its counts, instead of one per alert"
+                ),
                 isOn: rule.digest == true
             ) { on in
                 update { $0.digest = on ? true : nil }

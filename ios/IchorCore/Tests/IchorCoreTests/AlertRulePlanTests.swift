@@ -97,7 +97,10 @@ final class AlertRulePlanTests: XCTestCase {
             digests: [digest])
         let plan = alertRulePlan(inputs: inputs, decisions: decisions)
         // The snoozed one is not recorded: the user silenced it themselves.
-        XCTAssertEqual(plan.outcomes, [.notify, .mute(reason: alertReasonQuiet, until: 7_000), .drop, .digest, .digest])
+        XCTAssertEqual(
+            plan.outcomes,
+            [.notify, .mute(reason: alertReasonQuiet, until: 7_000), .drop, .digest, .digest]
+        )
         XCTAssertEqual(plan.digests, [digest])
     }
 
