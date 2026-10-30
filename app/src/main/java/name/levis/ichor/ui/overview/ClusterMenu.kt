@@ -1,5 +1,9 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.SMOKE_CLUSTER_UPGRADE
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkMenuItem
 import name.levis.ichor.ui.share.AddToHomeMenuItem
@@ -116,7 +120,7 @@ fun ClusterMenu(
                         )
                         ClusterMenuItem.FLEET -> Entry(R.string.fleet_title, Icons.Outlined.ViewAgenda, onDismiss, onFleet)
                         ClusterMenuItem.MANAGE -> Entry(R.string.clusters_manage, Icons.Outlined.Layers, onDismiss, onManage)
-                        ClusterMenuItem.UPGRADE_CLUSTER -> Entry(R.string.cluster_upgrade_menu, Icons.Outlined.SystemUpdateAlt, onDismiss, onUpgradeCluster)
+                        ClusterMenuItem.UPGRADE_CLUSTER -> Box(Modifier.testTag(SMOKE_CLUSTER_UPGRADE)) { Entry(R.string.cluster_upgrade_menu, Icons.Outlined.SystemUpdateAlt, onDismiss, onUpgradeCluster) }
                         ClusterMenuItem.UPGRADE_KUBERNETES -> Entry(R.string.k8s_upgrade_menu, Icons.Outlined.Upgrade, onDismiss, onUpgradeKubernetes)
                         ClusterMenuItem.ADD_NODE -> Entry(R.string.join_node_menu, Icons.Outlined.AddCircleOutline, onDismiss, onAddNode)
                         ClusterMenuItem.UPDATES -> Entry(R.string.updates_menu, Icons.Outlined.Update, onDismiss, onUpdates)

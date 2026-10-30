@@ -127,6 +127,10 @@ func runCapture(
 		return captureResult{}, "", errors.New("pick an interface to capture on")
 	}
 
+	if isTalosDemoContext(configYAML, contextName) {
+		return runDemoCapture(ctx, node, destPath, opts, listener)
+	}
+
 	s, release, err := acquireNode(configYAML, contextName, node)
 	if err != nil {
 		return captureResult{}, "", err

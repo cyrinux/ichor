@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.capture
 
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.SMOKE_CAPTURE_START
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -224,7 +226,7 @@ fun CaptureSetup(
         if (problem != null && links is UiState.Loaded) {
             MutedText(stringResource(problem.message))
         }
-        Button(onClick = onStart, enabled = problem == null && !filterChecking, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = onStart, enabled = problem == null && !filterChecking, modifier = Modifier.fillMaxWidth().testTag(SMOKE_CAPTURE_START)) {
             Text(stringResource(R.string.capture_start))
         }
     }

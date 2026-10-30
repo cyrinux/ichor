@@ -20,6 +20,15 @@ const val SMOKE_LOG_LINES = "smoke-log-lines"
 /** The Kubernetes home of a cluster added from a kubeconfig. */
 const val SMOKE_KUBE_HOME = "smoke-kube-home"
 
+/** The title of the overview's bar: tapping it opens the cluster menu. */
+const val SMOKE_CLUSTER_TITLE = "smoke-cluster-title"
+
+/** The cluster menu's Upgrade cluster entry. */
+const val SMOKE_CLUSTER_UPGRADE = "smoke-cluster-upgrade"
+
+/** The packet capture setup's Start button. */
+const val SMOKE_CAPTURE_START = "smoke-capture-start"
+
 /** A node screen's menu entry. */
 fun smokeMenuTag(entry: NodeMenuEntry) = "smoke-node-menu-${entry.name}"
 
