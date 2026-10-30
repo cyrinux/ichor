@@ -590,7 +590,7 @@ struct TalosClient: Sendable {
 
 /// gomobile exposes the Go interface as an Objective-C protocol; since a class with the same
 /// name also exists, Swift imports the protocol as `…Protocol`.
-private final class HealthBridge: NSObject, IchorgoHealthListenerProtocol, @unchecked Sendable {
+private final class HealthBridge: NSObject, IchorgoHealthListenerProtocol, Sendable {
     private let progress: @Sendable (String, String) -> Void
     private let done: @Sendable (String?) -> Void
 
@@ -608,7 +608,7 @@ private final class HealthBridge: NSObject, IchorgoHealthListenerProtocol, @unch
     }
 }
 
-private final class SnapshotBridge: NSObject, IchorgoSnapshotListenerProtocol, @unchecked Sendable {
+private final class SnapshotBridge: NSObject, IchorgoSnapshotListenerProtocol, Sendable {
     private let progress: @Sendable (Int64) -> Void
     private let done: @Sendable (SnapshotEvent) -> Void
 
@@ -630,7 +630,7 @@ private final class SnapshotBridge: NSObject, IchorgoSnapshotListenerProtocol, @
     }
 }
 
-private final class EventsBridge: NSObject, IchorgoEventListenerProtocol, @unchecked Sendable {
+private final class EventsBridge: NSObject, IchorgoEventListenerProtocol, Sendable {
     private let sink: JSONSink<NodeEvent>
 
     init(event: @escaping @Sendable (NodeEvent) -> Void, done: @escaping @Sendable (String?) -> Void) {
@@ -642,7 +642,7 @@ private final class EventsBridge: NSObject, IchorgoEventListenerProtocol, @unche
     func onDone(_ errMessage: String?) { sink.finish(errMessage) }
 }
 
-final class LogBridge: NSObject, IchorgoLogListenerProtocol, @unchecked Sendable {
+final class LogBridge: NSObject, IchorgoLogListenerProtocol, Sendable {
     private let line: @Sendable (String) -> Void
     private let done: @Sendable (String?) -> Void
 

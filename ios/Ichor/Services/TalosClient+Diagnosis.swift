@@ -10,15 +10,15 @@ enum DiagnosisEvent: Sendable {
 
 /// A report about the cluster collected for the AI diagnosis. Go holds it in memory only,
 /// with what it needs to put the real names back in an answer written about placeholders.
-final class DiagnosisReport: @unchecked Sendable {
-    private let go: IchorgoDiagnosis
+final class DiagnosisReport: Sendable {
+    private let go: GoObject<IchorgoDiagnosis>
     /// The text that would be sent, to show to the user first.
     let text: String
     /// Names and addresses in `text` are placeholders.
     let anonymized: Bool
 
     fileprivate init(_ go: IchorgoDiagnosis) {
-        self.go = go
+        self.go = GoObject(go)
         text = go.report()
         anonymized = go.anonymized()
     }
@@ -26,7 +26,7 @@ final class DiagnosisReport: @unchecked Sendable {
     /// The whole question as one text (instructions, report, note), to hand to another app.
     /// `language` is the app's language code ("fr").
     func prompt(language: String, note: String) -> String {
-        go.prompt(language, note: note)
+        go.value.prompt(language, note: note)
     }
 
     /// Sends the report and the note to the model and streams its answer; cancelling the
@@ -43,7 +43,7 @@ final class DiagnosisReport: @unchecked Sendable {
                     continuation.finish()
                 }
             )
-            let run = go.ask(
+            let run = go.value.ask(
                 provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
                 language: language, note: note, listener: bridge)
             return BridgedRun(bridge) { run?.cancel() }
@@ -86,7 +86,7 @@ extension TalosClient {
     }
 }
 
-private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, @unchecked Sendable {
+private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, Sendable {
     private let answer: @Sendable (String) -> Void
     private let done: @Sendable (String?) -> Void
 

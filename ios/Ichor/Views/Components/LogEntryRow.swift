@@ -59,25 +59,25 @@ enum LogStyle {
         var result = AttributedString()
         if let tag = tag(level), let color = color(level) {
             var run = AttributedString(tag + " ")
-            run.foregroundColor = color
-            run.inlinePresentationIntent = .stronglyEmphasized
+            run.setForeground(color)
+            run.setStrong()
             result.append(run)
         }
         if !entry.source.isEmpty {
             var run = AttributedString(entry.source)
-            run.foregroundColor = Color.secondary
-            run.backgroundColor = Color.secondary.opacity(0.12)
+            run.setForeground(Color.secondary)
+            run.setBackground(Color.secondary.opacity(0.12))
             result.append(run)
             result.append(AttributedString(" "))
         }
         var message = AttributedString(entry.msg)
-        if level == .debug { message.foregroundColor = Color.secondary }
+        if level == .debug { message.setForeground(Color.secondary) }
         result.append(message)
         for field in entry.fields {
             var key = AttributedString(" \(field.k)=")
-            key.foregroundColor = field.isErrorKey ? Color.red : Color.secondary
+            key.setForeground(field.isErrorKey ? Color.red : Color.secondary)
             var value = AttributedString(field.v)
-            value.foregroundColor = field.isErrorKey ? Color.red : Color.teal
+            value.setForeground(field.isErrorKey ? Color.red : Color.teal)
             result.append(key)
             result.append(value)
         }
@@ -92,8 +92,24 @@ enum LogStyle {
             time += "–" + logTimeOfDay(group.lastTs)
         }
         var run = AttributedString(time + " ")
-        run.foregroundColor = Color.secondary
+        run.setForeground(Color.secondary)
         return run
+    }
+}
+
+// By attribute type rather than `run.foregroundColor = …`: that dynamic member forms a key path
+// capturing a non-Sendable KeyPath, an error in the Swift 6 language mode.
+extension AttributedString {
+    fileprivate mutating func setForeground(_ color: Color) {
+        self[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = color
+    }
+
+    fileprivate mutating func setBackground(_ color: Color) {
+        self[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] = color
+    }
+
+    fileprivate mutating func setStrong() {
+        self[AttributeScopes.FoundationAttributes.InlinePresentationIntentAttribute.self] = .stronglyEmphasized
     }
 }
 
@@ -132,8 +148,8 @@ struct LogEntryRow: View {
         var result = LogStyle.timePrefix(group)
         if group.count > 1 {
             var count = AttributedString("×\(group.count) ")
-            count.foregroundColor = Color.secondary
-            count.inlinePresentationIntent = .stronglyEmphasized
+            count.setForeground(Color.secondary)
+            count.setStrong()
             result.append(count)
         }
         result.append(text ?? LogStyle.text(group.entry))

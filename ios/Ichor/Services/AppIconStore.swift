@@ -17,9 +17,11 @@ enum AppIconSettings {
 /// Icons bundled with the app (appicons/<name>.webp, shared with Android), with their light
 /// "-night" variant for dark themes when there is one. iOS 17 decodes WebP itself.
 enum BundledAppIcons {
-    // NSCache is thread-safe; a miss (most icons have no -night variant) is remembered too.
-    private static let images = NSCache<NSString, UIImage>()
-    private static let missing = NSCache<NSString, NSNumber>()
+    // nonisolated(unsafe), and why it is sound: NSCache is documented thread-safe but not marked
+    // Sendable, and both are immutable references. A miss (most icons have no -night variant) is
+    // remembered too.
+    nonisolated(unsafe) private static let images = NSCache<NSString, UIImage>()
+    nonisolated(unsafe) private static let missing = NSCache<NSString, NSNumber>()
 
     static func image(_ name: String, dark: Bool) -> UIImage? {
         // Defense in depth: InventoryApp.iconSource already drops names that are not slugs.

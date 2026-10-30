@@ -249,7 +249,15 @@ extension Text {
 extension Binding {
     /// True while the optional holds a value; set to false (a dismissed alert or dialog), it clears it.
     func isPresent<Wrapped>() -> Binding<Bool> where Value == Wrapped? {
-        Binding<Bool>(get: { wrappedValue != nil }, set: { if !$0 { wrappedValue = nil } })
+        self[dynamicMember: \Wrapped?.holdsValue]
+    }
+}
+
+extension Optional {
+    /// True while it holds a value; set to false, it clears it (Binding.isPresent).
+    fileprivate var holdsValue: Bool {
+        get { self != nil }
+        set { if !newValue { self = nil } }
     }
 }
 

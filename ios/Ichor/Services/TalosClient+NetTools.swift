@@ -43,7 +43,7 @@ extension TalosClient {
     }
 }
 
-private final class NetToolBridge: NSObject, IchorgoNetToolListenerProtocol, @unchecked Sendable {
+private final class NetToolBridge: NSObject, IchorgoNetToolListenerProtocol, Sendable {
     private let line: @Sendable (String) -> Void
     private let done: @Sendable (NetToolEvent) -> Void
 

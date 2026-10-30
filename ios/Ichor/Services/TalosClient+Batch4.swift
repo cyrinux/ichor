@@ -39,11 +39,12 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartPacketCapture(
+        let started = IchorgoStartPacketCapture(
             config, context, node, options.interface, options.trimmedFilter,
             options.promiscuous, options.snapLen, options.duration.seconds,
             options.sizeLimit.bytes, destPath, bridge)
-        let flusher = Task.detached {
+        let run = started.map(GoObject.init)
+        let flusher = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
                 bridge.flush()
@@ -51,10 +52,10 @@ extension TalosClient {
         }
         continuation.onTermination = { _ in
             flusher.cancel()
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole capture
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 
     /// `packetCapture` on node and on `options.peer` at once, merged into destPath (one
@@ -71,11 +72,12 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartPacketCapturePair(
+        let started = IchorgoStartPacketCapturePair(
             config, context, "\(node),\(options.peer)", options.interfaces, options.trimmedFilter,
             options.promiscuous, options.snapLen, options.duration.seconds,
             options.sizeLimit.bytes, destPath, bridge)
-        let flusher = Task.detached {
+        let run = started.map(GoObject.init)
+        let flusher = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
                 bridge.flush()
@@ -83,10 +85,10 @@ extension TalosClient {
         }
         continuation.onTermination = { _ in
             flusher.cancel()
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole capture
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 
     /// Up to `limit` packet summaries of a capture file from `offset` (0-based).
@@ -124,13 +126,13 @@ extension TalosClient {
 
     /// The installer image for `version` keeping currentImage's registry and schematic.
     static func upgradeImage(currentImage: String, version: String) async -> String {
-        await Task.detached(priority: .userInitiated) { IchorgoUpgradeImage(currentImage, version) }.value
+        await offMainActor { IchorgoUpgradeImage(currentImage, version) }
     }
 
     /// The risk of going from one Talos version to another (skipped minor versions, downgrade)
     /// to acknowledge before upgrading, "" for none.
     static func versionRisk(from: String, to: String) async -> String {
-        await Task.detached(priority: .userInitiated) { IchorgoUpgradeVersionCheck(from, to) }.value
+        await offMainActor { IchorgoUpgradeVersionCheck(from, to) }
     }
 
     /// `talosctl upgrade` and following the node until it is back (os:admin). Cancelling the
@@ -153,12 +155,11 @@ extension TalosClient {
 }
 
 /// Decodes packets on the Go thread and hands them over in batches (see flush).
-private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, @unchecked Sendable {
+private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, Sendable {
     private let packets: @Sendable ([PacketSummary]) -> Void
     private let stats: @Sendable (Int64, Int64) -> Void
     private let done: @Sendable (CaptureEvent) -> Void
-    private let lock = NSLock()
-    private var pending: [PacketSummary] = []
+    private let pending = Locked<[PacketSummary]>([])
 
     init(
         packets: @escaping @Sendable ([PacketSummary]) -> Void, stats: @escaping @Sendable (Int64, Int64) -> Void,
@@ -171,20 +172,20 @@ private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, @un
 
     /// Yields under the lock, so a last batch never lands after onDone finished the stream.
     func flush() {
-        lock.lock()
-        defer { lock.unlock() }
-        guard !pending.isEmpty else { return }
-        packets(pending)
-        pending = []
+        pending.withLock { batch in
+            guard !batch.isEmpty else { return }
+            packets(batch)
+            batch = []
+        }
     }
 
     func onPacket(_ summaryJSON: String?) {
         guard let summaryJSON, let packet = try? TalosJSON.decode(PacketSummary.self, from: summaryJSON) else { return }
-        lock.lock()
-        pending.append(packet)
-        // A burst between flushes: the screen only shows the newest rows anyway.
-        if pending.count > liveCaptureRows { pending.removeFirst(pending.count - liveCaptureRows) }
-        lock.unlock()
+        pending.withLock { batch in
+            batch.append(packet)
+            // A burst between flushes: the screen only shows the newest rows anyway.
+            if batch.count > liveCaptureRows { batch.removeFirst(batch.count - liveCaptureRows) }
+        }
     }
 
     func onStats(_ packets: Int64, bytes: Int64) {
@@ -198,12 +199,11 @@ private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, @un
 }
 
 /// CaptureBridge for a two-node capture: the counters come as JSON with each node's.
-private final class PairCaptureBridge: NSObject, IchorgoPairCaptureListenerProtocol, @unchecked Sendable {
+private final class PairCaptureBridge: NSObject, IchorgoPairCaptureListenerProtocol, Sendable {
     private let packets: @Sendable ([PacketSummary]) -> Void
     private let stats: @Sendable (PairCaptureStats) -> Void
     private let done: @Sendable (CaptureEvent) -> Void
-    private let lock = NSLock()
-    private var pending: [PacketSummary] = []
+    private let pending = Locked<[PacketSummary]>([])
 
     init(
         packets: @escaping @Sendable ([PacketSummary]) -> Void, stats: @escaping @Sendable (PairCaptureStats) -> Void,
@@ -215,19 +215,19 @@ private final class PairCaptureBridge: NSObject, IchorgoPairCaptureListenerProto
     }
 
     func flush() {
-        lock.lock()
-        defer { lock.unlock() }
-        guard !pending.isEmpty else { return }
-        packets(pending)
-        pending = []
+        pending.withLock { batch in
+            guard !batch.isEmpty else { return }
+            packets(batch)
+            batch = []
+        }
     }
 
     func onPacket(_ summaryJSON: String?) {
         guard let summaryJSON, let packet = try? TalosJSON.decode(PacketSummary.self, from: summaryJSON) else { return }
-        lock.lock()
-        pending.append(packet)
-        if pending.count > liveCaptureRows { pending.removeFirst(pending.count - liveCaptureRows) }
-        lock.unlock()
+        pending.withLock { batch in
+            batch.append(packet)
+            if batch.count > liveCaptureRows { batch.removeFirst(batch.count - liveCaptureRows) }
+        }
     }
 
     func onStats(_ statsJSON: String?) {
@@ -241,7 +241,7 @@ private final class PairCaptureBridge: NSObject, IchorgoPairCaptureListenerProto
     }
 }
 
-private final class UpgradeBridge: NSObject, IchorgoUpgradeListenerProtocol, @unchecked Sendable {
+private final class UpgradeBridge: NSObject, IchorgoUpgradeListenerProtocol, Sendable {
     private let progress: @Sendable (UpgradeProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 

@@ -9,8 +9,13 @@ public enum LoadState<T> {
     case failed(String)
 }
 
+extension LoadState: Sendable where T: Sendable {}
+
 extension LoadState {
-    public static func from(_ operation: () async throws -> T) async -> LoadState<T> {
+    /// `operation` runs on the caller's actor (a screen's load touches its state as rows arrive).
+    public static func from(isolation: isolated (any Actor)? = #isolation, _ operation: () async throws -> T) async
+        -> LoadState<T>
+    {
         do { return .loaded(try await operation(), at: Date()) } catch { return .failed(error.localizedDescription) }
     }
 

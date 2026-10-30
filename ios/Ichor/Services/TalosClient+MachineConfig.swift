@@ -5,23 +5,23 @@ import IchorCore
 /// A machine config being tried on a node. `events` finishes after `done`. Cancelling (or
 /// dropping the consuming task) only stops following: the node reverts by itself at the end
 /// of the timeout.
-final class ConfigTryHandle: @unchecked Sendable {
+final class ConfigTryHandle: Sendable {
     let events: AsyncStream<ConfigTryEvent>
-    private let run: IchorgoConfigTryRun?
+    private let run: GoObject<IchorgoConfigTryRun>?
 
     fileprivate init(events: AsyncStream<ConfigTryEvent>, run: IchorgoConfigTryRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
     /// Makes the tried config permanent.
-    func keep() { run?.keep() }
+    func keep() { run?.value.keep() }
 
     /// Puts the previous config back now instead of waiting for the timeout.
-    func revert() { run?.revert() }
+    func revert() { run?.value.revert() }
 
     /// Stops following; the change is not kept.
-    func cancel() { run?.cancel() }
+    func cancel() { run?.value.cancel() }
 }
 
 /// Editing the machine config: schema, tree, field edits, preview and the try-mode apply (see
@@ -93,16 +93,16 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartConfigTry(config, context, node, base, draft, timeoutSeconds, bridge)
+        let run = IchorgoStartConfigTry(config, context, node, base, draft, timeoutSeconds, bridge).map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole try
         }
         if run == nil {
             continuation.yield(.done(.failed(String(localized: "The config could not be applied."))))
             continuation.finish()
         }
-        return ConfigTryHandle(events: stream, run: run)
+        return ConfigTryHandle(events: stream, run: run?.value)
     }
 }
 
@@ -132,7 +132,7 @@ extension TalosClient {
     }
 }
 
-private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, @unchecked Sendable {
+private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, Sendable {
     private let sink: JSONSink<ConfigApplyProgress>
 
     init(progress: @escaping @Sendable (ConfigApplyProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {
@@ -144,7 +144,7 @@ private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProto
     func onDone(_ errMessage: String?) { sink.finish(errMessage) }
 }
 
-private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol, @unchecked Sendable {
+private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol, Sendable {
     private let progress: @Sendable (ConfigTryProgress) -> Void
     private let done: @Sendable (ConfigTryOutcome) -> Void
 

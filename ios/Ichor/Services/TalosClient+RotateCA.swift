@@ -33,11 +33,11 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartTalosCARotation(config, context, bridge)
+        let run = IchorgoStartTalosCARotation(config, context, bridge).map(GoObject.init)
         continuation.onTermination = { _ in
             _ = bridge  // keep the listener alive for the whole run
         }
-        return (stream, { run?.proceed() }, { run?.cancel() })
+        return (stream, { run?.value.proceed() }, { run?.value.cancel() })
     }
 
     /// This device's fingerprint lineage for a backup, nil when no CA was rotated.
@@ -59,7 +59,7 @@ extension TalosClient {
 }
 
 /// Receives Go's rotation callbacks (on Go's threads) and hands them over decoded.
-private final class CARotationBridge: NSObject, IchorgoTalosCARotationListenerProtocol, @unchecked Sendable {
+private final class CARotationBridge: NSObject, IchorgoTalosCARotationListenerProtocol, Sendable {
     private let progress: @Sendable (CARotationProgress) -> Void
     private let talosconfig: @Sendable (String, Bool) -> Void
     private let done: @Sendable (String?) -> Void

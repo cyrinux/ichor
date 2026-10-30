@@ -39,12 +39,13 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartImageScan(kubeConfig, kubeContext, kubeAPIServer, encoded, options, bridge)
+        let started = IchorgoStartImageScan(kubeConfig, kubeContext, kubeAPIServer, encoded, options, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole scan
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 
     /// The reports the core keeps on the phone for `cluster` (a context name), newest first.
@@ -75,7 +76,7 @@ extension TalosClient {
     }
 }
 
-private final class ImageScanBridge: NSObject, IchorgoImageScanListenerProtocol, @unchecked Sendable {
+private final class ImageScanBridge: NSObject, IchorgoImageScanListenerProtocol, Sendable {
     private let progress: @Sendable (ImageScanProgress) -> Void
     private let done: @Sendable (ImageScanReport?, String, String?) -> Void
 

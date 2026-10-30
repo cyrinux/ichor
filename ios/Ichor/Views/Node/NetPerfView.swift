@@ -305,16 +305,21 @@ func netPerfTestLabel(_ test: String) -> String {
 
 /// What the (i) next to each part of the test explains.
 private enum NetPerfHint {
-    static let nodes: LocalizedStringKey =
+    static var nodes: LocalizedStringKey {
         "The server node runs netserver and waits. The client node runs netperf, which connects to it and sends: throughput is measured from the client to the server.\n\nSwap the two nodes to measure the other direction. Choosing the same node twice measures its own network stack, not a link."
-    static let paths: LocalizedStringKey =
+    }
+    static var paths: LocalizedStringKey {
         "Pod to pod goes through the CNI: virtual interfaces, overlay or encapsulation, eBPF, encryption such as WireGuard or KubeSpan. Host to host uses the nodes’ own addresses and skips all of it.\n\nPod to pod much slower than host to host: the gap is what the CNI costs. Both slow: look at the link itself (NIC, switch, MTU, distance between sites)."
-    static let duration: LocalizedStringKey =
+    }
+    static var duration: LocalizedStringKey {
         "How long each measurement lasts. Longer runs smooth out bursts and TCP’s ramp-up, but keep the link busy for longer.\n\nThe test makes 2 measurements one after the other, throughput then latency, and 4 with the host network."
-    static let throughput: LocalizedStringKey =
+    }
+    static var throughput: LocalizedStringKey {
         "netperf TCP_STREAM: one TCP connection sends as fast as it can for the whole duration, so this is the bandwidth a single flow gets.\n\nOn a healthy path it comes close to the link speed: about 940 Mbit/s on 1 GbE, 9.4 Gbit/s on 10 GbE. Encryption, a small MTU or a busy CPU lower it. Several flows together can reach more."
-    static let latency: LocalizedStringKey =
+    }
+    static var latency: LocalizedStringKey {
         "netperf TCP_RR: one byte goes to the server and back, again and again on one connection. Each value is a full round trip, both network stacks included.\n\np50 is the median: half of the round trips were faster. p90: 9 in 10 were faster. p99: only the slowest 1 in 100 took longer, where jitter and retransmits show. A p99 far above p50 means an uneven link.\n\nRound trips/s is how many completed each second, one after the other. On a LAN expect tens to a few hundred µs; between sites, milliseconds."
+    }
 }
 
 /// A section title with its (i).

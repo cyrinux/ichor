@@ -5,12 +5,11 @@ import IchorCore
 /// The sign-ins of the clusters added from a kubeconfig (refresh tokens, keys the user
 /// entered): Go's AuthStore, one JSON map (cluster fingerprint → state) sealed like the
 /// configs (SecureConfigStore.Item.kubeAuth). Go calls it from its own threads.
-final class KubeAuthStore: NSObject, IchorgoAuthStoreProtocol, @unchecked Sendable {
+final class KubeAuthStore: NSObject, IchorgoAuthStoreProtocol, Sendable {
     static let shared = KubeAuthStore()
 
-    private let lock = NSLock()
     /// The map as stored; nil until it could be read (none stored reads as empty).
-    private var cache: [String: String]?
+    private let cache = Locked<[String: String]?>(nil)
 
     /// Hands the store to Go; again after a restore or a clear, which also drops the tokens Go
     /// holds in memory. Go keeps a weak hold: `shared` keeps it alive.
@@ -20,60 +19,53 @@ final class KubeAuthStore: NSObject, IchorgoAuthStoreProtocol, @unchecked Sendab
 
     func load(_ key: String?) -> String {
         guard let key, !key.isEmpty else { return "" }
-        lock.lock()
-        defer { lock.unlock() }
-        return readLocked()?[key] ?? ""
+        return cache.withLock { Self.read(&$0)?[key] ?? "" }
     }
 
     func save(_ key: String?, state: String?) {
         guard let key, !key.isEmpty else { return }
-        lock.lock()
-        defer { lock.unlock() }
-        // Not readable (locked device): writing would drop the other clusters' states.
-        guard let current = readLocked() else { return }
-        writeLocked(KubeAuthMap.saving(current, key: key, state: state ?? ""))
+        cache.withLock { cache in
+            // Not readable (locked device): writing would drop the other clusters' states.
+            guard let current = Self.read(&cache) else { return }
+            Self.write(KubeAuthMap.saving(current, key: key, state: state ?? ""), to: &cache)
+        }
     }
 
     /// Every stored state, for a backup; nil when the store cannot be read.
     func all() -> [String: String]? {
-        lock.lock()
-        defer { lock.unlock() }
-        return readLocked()
+        cache.withLock { Self.read(&$0) }
     }
 
     /// Adds the states of a restored backup (`restored`: secrets, no session) for the clusters
     /// that have none here: a sign-in this device already holds is the same plus its session.
     /// Then Go forgets the tokens it held.
     func restore(_ restored: [String: String]) {
-        lock.lock()
-        if let current = readLocked() {
+        cache.withLock { cache in
+            guard let current = Self.read(&cache) else { return }
             let merged = current.merging(KubeAuthMap.keeping(restored, fingerprints: Array(restored.keys))) { mine, _ in
                 mine
             }
-            if merged != current { writeLocked(merged) }
+            if merged != current { Self.write(merged, to: &cache) }
         }
-        lock.unlock()
         Self.register()
     }
 
     /// Drops the states of the clusters no longer stored.
     func keep(fingerprints: [String]) {
-        lock.lock()
-        defer { lock.unlock() }
-        guard let current = readLocked() else { return }
-        let kept = KubeAuthMap.keeping(current, fingerprints: fingerprints)
-        if kept != current { writeLocked(kept) }
+        cache.withLock { cache in
+            guard let current = Self.read(&cache) else { return }
+            let kept = KubeAuthMap.keeping(current, fingerprints: fingerprints)
+            if kept != current { Self.write(kept, to: &cache) }
+        }
     }
 
     /// Everything was deleted (SecureConfigStore.delete()): forget the copy, and Go its tokens.
     func wipe() {
-        lock.lock()
-        cache = [:]
-        lock.unlock()
+        cache.set([:])
         Self.register()
     }
 
-    private func readLocked() -> [String: String]? {
+    private static func read(_ cache: inout [String: String]?) -> [String: String]? {
         if let cache { return cache }
         if let data = SecureConfigStore.load(.kubeAuth) {
             cache = KubeAuthMap.decode(data)
@@ -83,7 +75,7 @@ final class KubeAuthStore: NSObject, IchorgoAuthStoreProtocol, @unchecked Sendab
         return cache
     }
 
-    private func writeLocked(_ map: [String: String]) {
+    private static func write(_ map: [String: String], to cache: inout [String: String]?) {
         if map.isEmpty {
             SecureConfigStore.delete(.kubeAuth)
             cache = [:]

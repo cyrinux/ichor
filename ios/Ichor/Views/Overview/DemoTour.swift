@@ -158,11 +158,11 @@ extension View {
         if active {
             let generation = DemoTour.generation
             switch item {
-            case .switcher: popoverTip(SwitcherTip(generation: generation), action: DemoTour.perform)
-            case .nodes: popoverTip(NodesTip(generation: generation), action: DemoTour.perform)
-            case .degradedNode: popoverTip(DegradedNodeTip(generation: generation), action: DemoTour.perform)
-            case .actions: popoverTip(ActionsTip(generation: generation), action: DemoTour.perform)
-            case .settings: popoverTip(SettingsTip(generation: generation), action: DemoTour.perform)
+            case .switcher: popoverTip(SwitcherTip(generation: generation), action: { DemoTour.perform($0) })
+            case .nodes: popoverTip(NodesTip(generation: generation), action: { DemoTour.perform($0) })
+            case .degradedNode: popoverTip(DegradedNodeTip(generation: generation), action: { DemoTour.perform($0) })
+            case .actions: popoverTip(ActionsTip(generation: generation), action: { DemoTour.perform($0) })
+            case .settings: popoverTip(SettingsTip(generation: generation), action: { DemoTour.perform($0) })
             }
         } else {
             self
@@ -184,6 +184,6 @@ extension DemoTour {
 /// switch menu) belongs to the navigation bar, where no popover can anchor.
 struct DemoTourSwitcherTip: View {
     var body: some View {
-        TipView(SwitcherTip(generation: DemoTour.generation), action: DemoTour.perform)
+        TipView(SwitcherTip(generation: DemoTour.generation), action: { DemoTour.perform($0) })
     }
 }

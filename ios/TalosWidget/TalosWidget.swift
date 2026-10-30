@@ -18,8 +18,8 @@ struct Entry: TimelineEntry {
 /// The widget's settings: which cluster it shows; none chosen (existing widgets too), the one
 /// open in the app.
 struct ClusterWidgetIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Cluster"
-    static var description = IntentDescription("The cluster this widget shows. None chosen: the one open in the app.")
+    static let title: LocalizedStringResource = "Cluster"
+    static let description = IntentDescription("The cluster this widget shows. None chosen: the one open in the app.")
 
     @Parameter(title: "Cluster")
     var cluster: ClusterEntity?

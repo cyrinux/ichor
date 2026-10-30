@@ -53,15 +53,14 @@ final class VpnMonitor {
 }
 
 /// True for the first caller only (path updates come on one queue, but may repeat).
-private final class OnceFlag: @unchecked Sendable {
-    private let lock = NSLock()
-    private var claimed = false
+private final class OnceFlag: Sendable {
+    private let claimed = Locked(false)
 
     func claim() -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        if claimed { return false }
-        claimed = true
-        return true
+        claimed.withLock { claimed in
+            if claimed { return false }
+            claimed = true
+            return true
+        }
     }
 }

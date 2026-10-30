@@ -169,10 +169,13 @@ final class PagedList<T: Codable & Sendable> {
     /// Keeps a complete list as the last known state, encoded off the main actor.
     private func keep(_ items: [T], key: String, target: LastKnownTarget?, model: AppModel) {
         guard persist, let target else { return }
-        Task.detached(priority: .utility) {
-            guard let data = try? JSONEncoder().encode(items) else { return }
-            let json = String(decoding: data, as: UTF8.self)
-            await model.remember(key: key, json: json, at: Date(), for: target)
+        Task(priority: .utility) {
+            let json = await offMainActor { () -> String? in
+                guard let data = try? JSONEncoder().encode(items) else { return nil }
+                return String(decoding: data, as: UTF8.self)
+            }
+            guard let json else { return }
+            model.remember(key: key, json: json, at: Date(), for: target)
         }
     }
 }

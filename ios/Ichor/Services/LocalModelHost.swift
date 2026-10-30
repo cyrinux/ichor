@@ -6,6 +6,10 @@ import UIKit
 /// Metal). The model the user picked is loaded on the first question, kept a minute after the
 /// last one, and freed when the app goes to the background or iOS warns about memory. One
 /// question at a time (the Go core asks them so).
+///
+/// `@unchecked Sendable`, and why it is sound: the engine's C pointers are not Sendable and must
+/// stay usable for a whole generation, so a `Locked` value cannot hold them. Every field is read
+/// and written under `modelLock` or `stateLock`, as their comments say.
 final class LocalModelHost: NSObject, IchorgoLocalModelProtocol, @unchecked Sendable {
     static let shared = LocalModelHost()
 

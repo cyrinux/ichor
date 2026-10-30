@@ -44,7 +44,7 @@ extension TalosClient {
     }
 }
 
-private final class HubbleBridge: NSObject, IchorgoHubbleListenerProtocol, @unchecked Sendable {
+private final class HubbleBridge: NSObject, IchorgoHubbleListenerProtocol, Sendable {
     private let sink: JSONSink<HubbleSnapshot>
 
     init(update: @escaping @Sendable (HubbleSnapshot) -> Void, done: @escaping @Sendable (String?) -> Void) {

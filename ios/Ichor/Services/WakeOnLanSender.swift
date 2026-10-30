@@ -107,15 +107,14 @@ enum WakeOnLanSender {
 }
 
 /// Runs the first closure given only: a continuation resumes once.
-private final class ResumeOnce: @unchecked Sendable {
-    private let lock = NSLock()
-    private var done = false
+private final class ResumeOnce: Sendable {
+    private let done = Locked(false)
 
     func run(_ body: () -> Void) {
-        lock.lock()
-        let first = !done
-        done = true
-        lock.unlock()
+        let first = done.withLock { done in
+            defer { done = true }
+            return !done
+        }
         if first { body() }
     }
 }

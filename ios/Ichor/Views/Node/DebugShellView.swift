@@ -233,8 +233,8 @@ final class DebugShell {
     fileprivate func exited(_ code: Int, _ message: String) { state = .exited(code: code, message: message) }
 
     /// gomobile protocol (a class of the same name exists, hence "Protocol").
-    private final class Bridge: NSObject, IchorgoDebugListenerProtocol, @unchecked Sendable {
-        weak var owner: DebugShell?
+    private final class Bridge: NSObject, IchorgoDebugListenerProtocol, Sendable {
+        private weak let owner: DebugShell?
         init(owner: DebugShell) { self.owner = owner }
 
         func onStatus(_ message: String?) {
@@ -275,11 +275,11 @@ struct TerminalHost: UIViewRepresentable {
         init(shell: DebugShell) { self.shell = shell }
 
         func send(source: TerminalView, data: ArraySlice<UInt8>) {
-            MainActor.assumeIsolated { shell.write(data) }
+            MainActor.assumeIsolated { [shell] in shell.write(data) }
         }
 
         func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) {
-            MainActor.assumeIsolated { shell.resize(cols: newCols, rows: newRows) }
+            MainActor.assumeIsolated { [shell] in shell.resize(cols: newCols, rows: newRows) }
         }
 
         func setTerminalTitle(source: TerminalView, title: String) {}

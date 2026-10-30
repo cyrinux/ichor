@@ -87,16 +87,16 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = start(bridge)
+        let run = start(bridge).map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole run
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 }
 
-private final class MaintenanceBridge: NSObject, IchorgoMaintenanceListenerProtocol, @unchecked Sendable {
+private final class MaintenanceBridge: NSObject, IchorgoMaintenanceListenerProtocol, Sendable {
     private let sink: JSONSink<MaintenanceProgress>
 
     init(progress: @escaping @Sendable (MaintenanceProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

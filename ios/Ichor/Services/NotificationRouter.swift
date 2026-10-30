@@ -71,7 +71,7 @@ enum GitOpsDestination: Equatable {
 }
 
 /// Notification taps (the center keeps its delegate weakly, hence the shared instance).
-final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Sendable {
     static let shared = NotificationDelegate()
 
     /// A freeze reminder shows while the app is open too (it is the likely moment); the alerts

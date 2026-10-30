@@ -8,12 +8,11 @@ import IchorCore
 /// never synced or backed up. Only a cache: one that cannot be read or decoded is deleted and
 /// ignored, and the configs alone decide whether the app can read what is stored.
 /// Read from the launch and the background checks, written from the main actor, hence the lock.
-final class ConfigSummaryCache: @unchecked Sendable {
+final class ConfigSummaryCache: Sendable {
     static let shared = ConfigSummaryCache()
 
-    private let lock = NSLock()
     /// The record last read or written, so that showing the same configs again writes nothing.
-    private var last: ConfigSummaryRecord?
+    private let last = Locked<ConfigSummaryRecord?>(nil)
 
     /// The stored record, nil when there is none or it is unreadable (then deleted).
     func load() -> ConfigSummaryRecord? {
@@ -70,16 +69,12 @@ final class ConfigSummaryCache: @unchecked Sendable {
     }
 
     private func current() -> ConfigSummaryRecord? {
-        lock.lock()
-        defer { lock.unlock() }
-        return last
+        last.get()
     }
 
     @discardableResult
     private func remember(_ record: ConfigSummaryRecord?) -> ConfigSummaryRecord? {
-        lock.lock()
-        last = record
-        lock.unlock()
+        last.set(record)
         return record
     }
 }

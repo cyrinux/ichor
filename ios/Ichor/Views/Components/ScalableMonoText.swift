@@ -23,7 +23,7 @@ struct MonoTextScale {
 }
 
 private struct MonoTextScaleKey: EnvironmentKey {
-    static let defaultValue: MonoTextScale? = nil
+    static var defaultValue: MonoTextScale? { nil }
 }
 
 extension EnvironmentValues {

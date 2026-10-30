@@ -133,7 +133,7 @@ struct DiagnosticsView: View {
     }
 
     private func load() async {
-        records = await Task.detached { CrashDiagnostics.records() }.value
+        records = await offMainActor { CrashDiagnostics.records() }
         do {
             entries = try await TalosClient.diagEntries(limit: DiagnosticsFiles.previewEntries)
             loadError = nil

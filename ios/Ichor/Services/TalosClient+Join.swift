@@ -46,18 +46,19 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartNodeJoin(
+        let started = IchorgoStartNodeJoin(
             config, context, request.address, request.template, request.role, request.hostname,
             request.disk, request.staticAddress, "", request.replacing, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole run
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 }
 
-private final class JoinBridge: NSObject, IchorgoJoinListenerProtocol, @unchecked Sendable {
+private final class JoinBridge: NSObject, IchorgoJoinListenerProtocol, Sendable {
     private let progress: @Sendable (JoinProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 

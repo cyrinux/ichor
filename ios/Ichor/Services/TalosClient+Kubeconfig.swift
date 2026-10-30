@@ -25,7 +25,7 @@ extension TalosClient {
 
     /// Whether `yaml` is a kubeconfig (the import then takes the kubeconfig flow).
     static func isKubeconfig(_ yaml: String) async -> Bool {
-        await Task.detached(priority: .userInitiated) { IchorgoIsKubeconfig(yaml) }.value
+        await offMainActor { IchorgoIsKubeconfig(yaml) }
     }
 
     /// One row per context of `yaml` (an imported kubeconfig or the stored one), sorted by

@@ -12,11 +12,11 @@ enum ForegroundSignInRenewal {
         let now = Date()
         if let last, now.timeIntervalSince(last) < interval { return }
         last = now
-        Task.detached(priority: .utility) {
+        Task(priority: .utility) {
             guard let renewals = await TalosClient.renewStoredSignIns() else { return }
             // What was loaded with the ended session goes: the screens reload and show the banner.
             if renewals.contains(where: \.needsUser) {
-                await MainActor.run { model.reloadKubernetes() }
+                model.reloadKubernetes()
             }
         }
     }

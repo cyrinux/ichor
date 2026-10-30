@@ -123,7 +123,7 @@ extension TalosClient {
     }
 }
 
-private final class SupportBridge: NSObject, IchorgoSupportListenerProtocol, @unchecked Sendable {
+private final class SupportBridge: NSObject, IchorgoSupportListenerProtocol, Sendable {
     private let progress: @Sendable (SupportProgress) -> Void
     private let done: @Sendable (SupportBundleEvent) -> Void
 

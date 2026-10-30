@@ -45,7 +45,7 @@ extension TalosClient {
     }
 }
 
-private final class MultiConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, @unchecked Sendable {
+private final class MultiConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, Sendable {
     private let sink: JSONSink<MultiConfigProgress>
 
     init(progress: @escaping @Sendable (MultiConfigProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

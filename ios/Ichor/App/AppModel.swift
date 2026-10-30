@@ -72,7 +72,7 @@ final class AppModel {
         guard !context.isEmpty,
             let config = config(for: summary?.contexts.first(where: { $0.name == context }))
         else { return }
-        Task.detached { TalosClient.cancelCalls(config: config, context: context) }
+        Task { await offMainActor { TalosClient.cancelCalls(config: config, context: context) } }
     }
 
     /// Main color (0xRRGGBB) of each cluster, by context fingerprint (not its name, which the

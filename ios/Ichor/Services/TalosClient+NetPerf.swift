@@ -40,18 +40,19 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartNetPerf(
+        let started = IchorgoStartNetPerf(
             kubeConfig, kubeContext, kubeAPIServer, setup.server, setup.client,
             setup.hostNetwork, setup.seconds, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole test
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 }
 
-private final class NetPerfBridge: NSObject, IchorgoNetPerfListenerProtocol, @unchecked Sendable {
+private final class NetPerfBridge: NSObject, IchorgoNetPerfListenerProtocol, Sendable {
     private let progress: @Sendable (NetPerfProgress) -> Void
     private let done: @Sendable (NetPerfReport, String?) -> Void
 

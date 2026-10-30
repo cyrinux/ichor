@@ -138,12 +138,20 @@ enum BackgroundMonitor {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
             guard let task = task as? BGAppRefreshTask else { return }
             schedule()
+            let refresh = RefreshTask(task: task)
             let work = Task {
                 await check()
-                task.setTaskCompleted(success: true)
+                refresh.task.setTaskCompleted(success: true)
             }
             task.expirationHandler = { work.cancel() }
         }
+    }
+
+    /// `@unchecked Sendable`, and why it is sound: BGTask is not marked Sendable, but nothing here
+    /// changes it across threads: iOS hands it over once, and it is only completed, once, by the
+    /// task below (its expiration handler touches the Swift task, not this).
+    private struct RefreshTask: @unchecked Sendable {
+        let task: BGAppRefreshTask
     }
 
     static func schedule() {

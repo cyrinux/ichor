@@ -3,7 +3,7 @@ import Network
 
 /// Whether the device's network is expensive (cellular, a personal hotspot) or constrained
 /// (Low Data Mode): large Kubernetes lists then load fewer rows eagerly (eagerCap).
-final class MeteredNetwork: @unchecked Sendable {
+final class MeteredNetwork: Sendable {
     static let shared = MeteredNetwork()
 
     private let monitor = NWPathMonitor()

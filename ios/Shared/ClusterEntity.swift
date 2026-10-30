@@ -8,8 +8,8 @@ import IchorCore
 /// A cluster the widget and the shortcuts can name, from the list the app keeps in the App Group
 /// (WidgetCluster): named as on screen, so masked while screenshot mode is on.
 struct ClusterEntity: AppEntity {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Cluster"
-    static var defaultQuery = ClusterQuery()
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Cluster"
+    static let defaultQuery = ClusterQuery()
 
     /// Its monitor key (monitorClusterKey): what its snapshot is kept under.
     let id: String
@@ -35,10 +35,10 @@ struct ClusterQuery: EntityQuery {
 /// "Open cluster" (Shortcuts, Siri, Control Center): the cluster's overview, once Ichor is
 /// unlocked. It only navigates; the app opens the cluster's share link (ClusterScreenHandler).
 struct OpenClusterIntent: AppIntent {
-    static var title: LocalizedStringResource = "Open cluster"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Open cluster"
+    static let description = IntentDescription(
         "Opens a cluster's overview in Ichor. None chosen: the one open in the app.")
-    static var openAppWhenRun = true
+    static let openAppWhenRun = true
 
     @Parameter(title: "Cluster")
     var cluster: ClusterEntity?
@@ -55,10 +55,10 @@ struct OpenClusterIntent: AppIntent {
 /// "Run a checkup": opens the cluster checkup, which reads the cluster when it appears. Nothing
 /// is changed on the cluster.
 struct RunCheckupIntent: AppIntent {
-    static var title: LocalizedStringResource = "Run a checkup"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Run a checkup"
+    static let description = IntentDescription(
         "Opens the cluster checkup in Ichor. None chosen: the cluster open in the app.")
-    static var openAppWhenRun = true
+    static let openAppWhenRun = true
 
     @Parameter(title: "Cluster")
     var cluster: ClusterEntity?

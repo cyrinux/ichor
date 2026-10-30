@@ -28,7 +28,7 @@ extension TalosClient {
 
 /// Forwards the Go core's trace steps to the unified log (called on Go threads: no hop). Not to
 /// the diagnostics log: the core writes its own steps there.
-private final class GoTraceBridge: NSObject, IchorgoTraceListenerProtocol, @unchecked Sendable {
+private final class GoTraceBridge: NSObject, IchorgoTraceListenerProtocol, Sendable {
     static let shared = GoTraceBridge()
 
     func onTrace(_ json: String?) {

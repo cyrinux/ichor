@@ -7,6 +7,7 @@ enum NodeHubScreen: Hashable {
     case debugShell, netTools, capture
     case machineConfig, upgrade, maintenance, drain, nodeMeta
 
+    @MainActor
     @ViewBuilder
     func view(_ ref: NodeRef) -> some View {
         switch self {

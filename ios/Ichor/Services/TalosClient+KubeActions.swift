@@ -103,11 +103,12 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartKubeSanitize(kubeConfig, kubeContext, kubeAPIServer, namespace, names, bridge)
+        let started = IchorgoStartKubeSanitize(kubeConfig, kubeContext, kubeAPIServer, namespace, names, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
             _ = bridge  // keep the listener alive for the whole sweep
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 }
 
@@ -119,7 +120,7 @@ enum PodSweepEvent: Sendable {
 }
 
 /// Receives Go's sweep callbacks (on Go's threads) and hands them over decoded.
-private final class PodSweepBridge: NSObject, IchorgoKubeSanitizeListenerProtocol, @unchecked Sendable {
+private final class PodSweepBridge: NSObject, IchorgoKubeSanitizeListenerProtocol, Sendable {
     private let progress: @Sendable (PodSweepProgress) -> Void
     private let done: @Sendable (KubeSanitizeResult, String?) -> Void
 

@@ -40,7 +40,7 @@ extension TalosClient {
 }
 
 /// The Go overview listener (gomobile calls it on Go threads, one call at a time).
-private final class OverviewBridge: NSObject, IchorgoOverviewListenerProtocol, @unchecked Sendable {
+private final class OverviewBridge: NSObject, IchorgoOverviewListenerProtocol, Sendable {
     private let node: @Sendable (NodeOverview) -> Void
     private let done: @Sendable (ClusterOverview?, String?) -> Void
 

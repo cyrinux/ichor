@@ -1,4 +1,6 @@
-import CoreSpotlight
+// @preconcurrency, and why it is sound: CoreSpotlight marks nothing Sendable. `replace` hands the
+// items over and never touches them again, and CSSearchableIndex is safe from any thread.
+@preconcurrency import CoreSpotlight
 import Foundation
 import IchorCore
 import UniformTypeIdentifiers
