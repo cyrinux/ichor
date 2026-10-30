@@ -163,9 +163,11 @@ public struct RunbookTarget: Decodable, Equatable, Hashable, Sendable {
 
     public var isNode: Bool { !node.isEmpty }
 
-    /// "node 10.5.0.2", "Deployment demo-shop/ingest-api", "demo-shop/store-compaction".
+    /// "node 10.5.0.2", "Deployment demo-shop/ingest-api", "demo-shop/store-compaction", or
+    /// "Cluster" for a whole-cluster check.
     public var label: String {
         if isNode { return node }
+        if namespace.isEmpty && name.isEmpty { return kind }
         let object = "\(namespace)/\(name)"
         return kind.isEmpty ? object : "\(kind) \(object)"
     }
@@ -181,14 +183,19 @@ public struct RunbookPlanStep: Decodable, Equatable, Hashable, Identifiable, Sen
     public let role: String
     public let allowed: Bool
     public let denied: String
+    /// What a wait or assert step checks ("wait up to 5 min for ingest-api to be available"),
+    /// empty for the other actions.
+    public let detail: String
+    /// How long a wait step may wait; 0 for the other actions.
+    public let timeoutSeconds: Int
 
     private enum CodingKeys: String, CodingKey {
-        case id, action, target, destructive, continueOnError, role, allowed, denied
+        case id, action, target, destructive, continueOnError, role, allowed, denied, detail, timeoutSeconds
     }
 
     public init(
         id: String, action: String, target: RunbookTarget, destructive: Bool = false, continueOnError: Bool = false,
-        role: String = "", allowed: Bool = true, denied: String = ""
+        role: String = "", allowed: Bool = true, denied: String = "", detail: String = "", timeoutSeconds: Int = 0
     ) {
         self.id = id
         self.action = action
@@ -198,6 +205,8 @@ public struct RunbookPlanStep: Decodable, Equatable, Hashable, Identifiable, Sen
         self.role = role
         self.allowed = allowed
         self.denied = denied
+        self.detail = detail
+        self.timeoutSeconds = timeoutSeconds
     }
 
     public init(from decoder: Decoder) throws {
@@ -210,6 +219,8 @@ public struct RunbookPlanStep: Decodable, Equatable, Hashable, Identifiable, Sen
         role = try c.field(.role, "")
         allowed = try c.field(.allowed, true)
         denied = try c.field(.denied, "")
+        detail = try c.field(.detail, "")
+        timeoutSeconds = try c.field(.timeoutSeconds, 0)
     }
 
     /// How its run is confirmed: a node step by typing the node, a Kubernetes one plainly;
@@ -369,4 +380,16 @@ public struct RunbookProgress: Equatable, Sendable {
 /// The ids chosen to go past, as StartRunbook takes them.
 public func runbookContinueIDs(_ ids: Set<String>) -> String {
     ids.sorted().joined(separator: ",")
+}
+
+/// The whole seconds a wait step has waited since `startedAt` (unix ms) at `now`, within
+/// 0...timeoutSeconds. Same as Android's waitedSeconds.
+public func runbookWaitedSeconds(startedAt: Int64, now: Int64, timeoutSeconds: Int) -> Int {
+    Int(min(max((now - startedAt) / 1000, 0), Int64(max(timeoutSeconds, 0))))
+}
+
+/// Seconds as "m:ss".
+public func runbookClock(_ seconds: Int) -> String {
+    let rest = seconds % 60
+    return "\(seconds / 60):\(rest < 10 ? "0" : "")\(rest)"
 }

@@ -170,7 +170,8 @@ final class WebSignInSession: NSObject, ASWebAuthenticationPresentationContextPr
     /// closed. False when the sheet could not be shown.
     @MainActor
     func start(url: URL, callbackScheme: String, ended: @escaping @MainActor (URL?) -> Void) -> Bool {
-        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { callback, _ in
+        // @Sendable: the system picks the queue, so it must not inherit the main actor.
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { @Sendable callback, _ in
             Task { @MainActor in ended(callback) }
         }
         session.presentationContextProvider = self

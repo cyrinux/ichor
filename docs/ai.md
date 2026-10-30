@@ -15,19 +15,29 @@ and never contacts a model provider.
   the storage, database and backup operators that are not fine (Longhorn, Garage,
   CloudNativePG, Velero, cert-manager…), with the nodes involved. It never contains the
   talosconfig, a machine configuration or a kubeconfig.
-- **Anonymized by default:** the nodes' names, IP addresses and domain are replaced with
-  placeholders (`cp-1`, `10.0.0.7`, `homelab.lan`) before the report leaves the phone, and the
-  real ones are put back in the answer on the phone. The mask only knows the cluster's own
-  names: the rest of the log lines (pod names, other host names such as a registry or an API
-  endpoint) is sent as it is, so read the report first if your logs are sensitive.
+- **Anonymized by default:** the nodes' names, IP addresses and domain, the Kubernetes
+  namespaces and the names of pods, containers, GitOps apps and data service objects are
+  replaced with placeholders (`cp-1`, `10.0.0.7`, `homelab.lan`, `ns-1`, `pod-3`) before the
+  report leaves the phone, and the real ones are put back in the answer on the phone.
+  `kube-system`, `default`, `kube-public`, `flux-system` and `argocd` stay, as do the static pods
+  Kubernetes names itself (`kube-apiserver-`, `kube-controller-manager-`, `kube-scheduler-`, the
+  node masked) and the container names of pods in those namespaces. The mask only knows the
+  names the report's data states and those the kubelet logs as `pod="…"`: the rest of the log
+  lines (other host names such as a registry or an API endpoint, a name in free text) is sent as
+  it is, so read the report first if your logs are sensitive.
+- **Secrets stripped, in every mode:** what looks like one (`Authorization` and `Bearer` values,
+  `token=`, `password=`, `apikey=`, AWS and GitHub keys, JWTs, PEM blocks, long hex or base64
+  runs other than image digests and container ids) becomes `[redacted]`, even when the names go
+  as they are, and the report's last line counts them.
 - **Providers:** Anthropic (Claude, default `claude-opus-5-5`) or OpenAI (default
   `gpt-6-astra`), with your own API key; any model can be typed or picked from the provider's
   list. The key is stored encrypted (Android Keystore, iOS Keychain) and is only sent over
   HTTPS, to the provider or to the server URL you set for it.
 - **Your own server:** set *Server URL* to a gateway or a local model speaking the Anthropic
   Messages API (`https://host`) or the OpenAI Chat Completions API (`http://host:11434/v1`).
-  A server that needs no key may use plain HTTP; the report then crosses your network in
-  clear, so keep that to a network you trust.
+  Plain HTTP is refused unless the server needs no key and is on your own network: a loopback,
+  link-local or private address (RFC 1918, IPv6 ULA) or a name ending in `.local`, `.internal` or
+  `.lan`. The report then crosses that network in clear.
 - **This phone:** the third provider runs a model on the phone itself, with
   [llama.cpp](https://github.com/ggml-org/llama.cpp): no key, no server, and nothing leaves the
   phone. Pick a model in Settings → AI diagnosis → This phone and tap *Download*; the size is

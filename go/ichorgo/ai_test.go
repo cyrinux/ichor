@@ -174,8 +174,8 @@ func TestNewAIRequest(t *testing.T) {
 		t.Fatalf("defaults: %+v, %v", req, err)
 	}
 
-	if req, err = newAIRequest("openai", "", "llama3", "http://192.0.2.9:11434/v1"); err != nil ||
-		req.model != "llama3" || req.baseURL != "http://192.0.2.9:11434/v1" {
+	if req, err = newAIRequest("openai", "", "llama3", "http://192.168.7.9:11434/v1"); err != nil ||
+		req.model != "llama3" || req.baseURL != "http://192.168.7.9:11434/v1" {
 		t.Fatalf("local server without a key: %+v, %v", req, err)
 	}
 
@@ -189,6 +189,66 @@ func TestNewAIRequest(t *testing.T) {
 		if _, err := newAIRequest(tc.provider, tc.key, "", tc.baseURL); err == nil || !strings.Contains(err.Error(), tc.want) {
 			t.Errorf("newAIRequest(%q, key=%q, url=%q) = %v, want %q", tc.provider, tc.key, tc.baseURL, err, tc.want)
 		}
+	}
+}
+
+func TestAIBaseURLOverPlainHTTP(t *testing.T) {
+	const refused = "a report only travels over https; plain http is for a server on your own network"
+
+	for _, tc := range []struct {
+		url string
+		ok  bool
+	}{
+		{"http://10.0.0.5:11434", true},
+		{"http://172.16.4.2/v1", true},
+		{"http://192.168.1.20:8080/v1", true},
+		{"http://127.0.0.1:11434/v1", true},
+		{"http://localhost:11434", true},
+		{"http://[::1]:8080", true},
+		{"http://[fd12:3456::9]:8080", true},
+		{"http://[fe80::1%25eth0]:8080", true},
+		{"http://169.254.10.1", true},
+		{"http://[::ffff:10.0.0.5]:8080", true},
+		{"http://ollama.lan", true},
+		{"http://OLLAMA.LAN:11434", true},
+		{"http://gpu.local", true},
+		{"http://models.corp.internal/v1", true},
+		{"http://ollama.lan.", true},
+		{"https://ai.example.net", true},
+		{"https://203.0.113.9/v1", true},
+
+		{"http://ai.example.net", false},
+		{"http://203.0.113.9:11434", false},
+		{"http://[2001:db8::1]:8080", false},
+		{"http://[::ffff:203.0.113.9]", false},
+		{"http://ollama", false},
+		{"http://lan", false},
+		{"http://ollama.lan.example.net", false},
+		{"http://notlan", false},
+		{"http://172.32.0.1", false},
+	} {
+		_, err := newAIRequest("openai", "", "", tc.url)
+
+		switch {
+		case tc.ok && err != nil:
+			t.Errorf("%s refused: %v", tc.url, err)
+		case !tc.ok && (err == nil || err.Error() != refused):
+			t.Errorf("%s: got %v, want the refusal", tc.url, err)
+		}
+	}
+
+	// The key's own rule comes first and still holds on the local network.
+	if _, err := newAIRequest("openai", testAPIKey, "", "http://10.0.0.5:11434"); err == nil || !strings.Contains(err.Error(), "only sent over https") {
+		t.Errorf("key over http: %v", err)
+	}
+
+	if _, err := AIModels("openai", "", "http://ai.example.net"); err == nil || !strings.Contains(err.Error(), refused) {
+		t.Errorf("AIModels: %v", err)
+	}
+
+	// Nothing leaves the phone with its own model: the rule does not apply.
+	if _, err := newAIRequest(aiDevice, "", "some-model", "http://ai.example.net"); err != nil {
+		t.Errorf("device: %v", err)
 	}
 }
 

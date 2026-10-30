@@ -137,11 +137,12 @@ func runbookParamValues(params []runbookParam, given map[string]string, draft bo
 }
 
 // draftParamValue stands for a value not given yet: its own placeholder, shown as written,
-// except where only a number or a bool decodes.
+// except where only a number or a bool decodes. The number passes every parameter's range
+// (replicas, a wait's timeoutSeconds, intervalSeconds and minReplicas).
 func draftParamValue(p runbookParam) string {
 	switch p.Kind {
 	case paramKindInt:
-		return "0"
+		return "30"
 	case paramKindBool:
 		return "false"
 	}

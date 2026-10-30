@@ -232,21 +232,42 @@ func addOmniJoin(ctx context.Context, s *session, media *bootMedia) {
 }
 
 // omniJoinKernelArgs is `omnictl jointoken kernel-args`: the default join token, then
-// GetMachineJoinConfig with it, its kernel_args joined by spaces. See Omni's
+// GetMachineJoinConfig with it, its kernel_args joined by spaces.
+func omniJoinKernelArgs(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner) (string, error) {
+	join, err := omniJoinConfig(ctx, cfgCtx, signer)
+	if err != nil {
+		return "", err
+	}
+
+	if join.kernelArgs == "" {
+		return "", errors.New("omni returned no join argument")
+	}
+
+	return join.kernelArgs, nil
+}
+
+// omniJoin is GetMachineJoinConfig's answer: the kernel arguments (joined by spaces) and the
+// config document (SideroLinkConfig and its siblings) a cloud machine reads as user data. Both
+// carry the join token: credentials, never logged.
+type omniJoin struct {
+	kernelArgs, config string
+}
+
+// omniJoinConfig reads the default join token, then GetMachineJoinConfig with it. See Omni's
 // client/api/omni/management/management.proto: GetMachineJoinConfigRequest {bool
 // use_grpc_tunnel = 1; string join_token = 2; map machine_labels = 3}, Response {repeated
-// string kernel_args = 1; string config = 2} (config, a credential too, is not read).
-func omniJoinKernelArgs(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner) (string, error) {
+// string kernel_args = 1; string config = 2}.
+func omniJoinConfig(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner) (omniJoin, error) {
 	cc, err := omniDial(cfgCtx, &omniSigning{method: omniMethodName(cfgCtx), signer: signer})
 	if err != nil {
-		return "", fmt.Errorf("connect to Omni: %w", err)
+		return omniJoin{}, fmt.Errorf("connect to Omni: %w", err)
 	}
 
 	defer cc.Close() //nolint:errcheck
 
 	token, err := omniDefaultJoinToken(ctx, cc)
 	if err != nil {
-		return "", omniJoinError(err)
+		return omniJoin{}, omniJoinError(err)
 	}
 
 	var req []byte
@@ -255,12 +276,12 @@ func omniJoinKernelArgs(ctx context.Context, cfgCtx *clientconfig.Context, signe
 
 	resp, err := omniInvoke(ctx, cc, omniJoinConfigMethod, req)
 	if err != nil {
-		return "", omniJoinError(err)
+		return omniJoin{}, omniJoinError(err)
 	}
 
 	values, err := protoFields(resp, 1)
 	if err != nil {
-		return "", fmt.Errorf("read Omni's join config: %w", err)
+		return omniJoin{}, fmt.Errorf("read Omni's join config: %w", err)
 	}
 
 	args := make([]string, 0, len(values))
@@ -268,11 +289,12 @@ func omniJoinKernelArgs(ctx context.Context, cfgCtx *clientconfig.Context, signe
 		args = append(args, string(v))
 	}
 
-	if len(args) == 0 {
-		return "", errors.New("omni returned no join argument")
+	config, err := protoField(resp, 2)
+	if err != nil {
+		return omniJoin{}, fmt.Errorf("read Omni's join config: %w", err)
 	}
 
-	return strings.Join(args, " "), nil
+	return omniJoin{kernelArgs: strings.Join(args, " "), config: string(config)}, nil
 }
 
 // omniDefaultJoinToken reads the ID of the instance's default join token from its state.

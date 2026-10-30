@@ -80,6 +80,18 @@ func bootMediaLinks(t bootTarget) bootLinks {
 	}
 }
 
+// cloudImageURL is the Image Factory disk image of t for a cloud platform (hcloud, openstack:
+// raw.xz; scaleway: raw.zst), to make the server or its snapshot from. Secure Boot is not
+// part of it: these platforms boot the plain image.
+func cloudImageURL(t bootTarget, platform string) string {
+	ext := ".raw.xz"
+	if platform == cloudPlatformScaleway {
+		ext = ".raw.zst"
+	}
+
+	return factoryImageURL + "/image/" + t.schematic + "/" + t.version + "/" + platform + "-" + t.arch + ext
+}
+
 // booterCommand is the command that serves the PXE boot of t from a Linux machine of the new
 // node's network, with runtime docker or podman. With kernelArgs (Omni's join arguments)
 // booter makes its own schematic with them, so the schematic is not passed: the two flags

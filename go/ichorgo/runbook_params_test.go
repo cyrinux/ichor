@@ -245,3 +245,39 @@ func TestRunbookDemoPlansWithValuesAndRefusesTheRun(t *testing.T) {
 		t.Errorf("demo run: %q", msg)
 	}
 }
+
+// A parameter in a wait step: the file loads before its values are known, then they reach it.
+func TestRunbookValuesReachAWaitStep(t *testing.T) {
+	src := `schemaVersion: ichor.dev/runbook/v1alpha1
+name: Wait for it
+params:
+  - {name: ns, kind: namespace}
+  - {name: seconds, kind: int}
+  - {name: every, kind: int}
+  - {name: least, kind: int}
+steps:
+  - id: wait
+    action: wait
+    target: {namespace: "${ns}", name: api}
+    params: {until: podsRunning, timeoutSeconds: "${seconds}", intervalSeconds: "${every}", minReplicas: "${least}"}
+`
+
+	if _, err := loadRunbook(src); err != nil {
+		t.Fatalf("draft: %v", err)
+	}
+
+	rb, err := loadRunbookWith(src, map[string]string{"ns": "demo-shop", "seconds": "90", "every": "10", "least": "2"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := rb.Steps[0].Params
+	if rb.Steps[0].Target.Namespace != "demo-shop" || *p.TimeoutSeconds != 90 || *p.IntervalSeconds != 10 || *p.MinReplicas != 2 {
+		t.Errorf("step = %+v %+v", rb.Steps[0].Target, p)
+	}
+
+	if _, err := loadRunbookWith(src, map[string]string{"ns": "a", "seconds": "0", "every": "10", "least": "2"}); err == nil ||
+		!strings.Contains(err.Error(), "step wait: params.timeoutSeconds") {
+		t.Errorf("a value is checked like the file: %v", err)
+	}
+}

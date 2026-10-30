@@ -40,4 +40,39 @@ final class BootMediaTests: XCTestCase {
         XCTAssertTrue(media.warnings.isEmpty)
         XCTAssertEqual(media.omni?.values.last?.text, "siderolink.api=https://omni.example.com?jointoken=sample")
     }
+
+    func testTalosCloudUserDataDecode() throws {
+        let image = "https://factory.talos.dev/image/\(schematic)/v1.14.0"
+        let data = try TalosJSON.decode(
+            CloudUserData.self,
+            from: """
+                {"kind":"talos","userData":"version: v1alpha1\\nmachine:\\n  type: worker\\n","size":40000,"limit":32768,
+                 "redactedPreview":"version: v1alpha1\\nmachine:\\n  token: ******\\n","role":"worker","hostname":"worker-9",
+                 "templateNode":"192.0.2.20","talosVersion":"v1.14.0","schematic":"\(schematic)",
+                 "images":[{"platform":"hcloud","arch":"amd64","url":"\(image)/hcloud-amd64.raw.xz"},
+                           {"platform":"openstack","arch":"amd64","url":"\(image)/openstack-amd64.raw.xz"},
+                           {"platform":"scaleway","arch":"amd64","url":"\(image)/scaleway-amd64.raw.zst"}],
+                 "warnings":["40000 bytes is larger than the 32 KiB most clouds accept as user data"]}
+                """)
+        XCTAssertFalse(data.isOmni)
+        XCTAssertTrue(data.overLimit)
+        XCTAssertTrue(data.userData.hasPrefix("version: v1alpha1"))
+        XCTAssertEqual(data.imageValues.map(\.label), ["Hetzner", "OpenStack", "Scaleway"])
+        XCTAssertTrue(data.imageValues[2].text.hasSuffix("scaleway-amd64.raw.zst"))
+        XCTAssertEqual(data.warnings.count, 1)
+    }
+
+    func testOmniCloudUserDataWithNullsDecode() throws {
+        let data = try TalosJSON.decode(
+            CloudUserData.self,
+            from: """
+                {"kind":"omni","userData":"apiVersion: v1alpha1\\nkind: SideroLinkConfig\\n","size":43,"limit":32768,
+                 "redactedPreview":"apiVersion: v1alpha1\\nkind: SideroLinkConfig\\n","role":"","hostname":"",
+                 "templateNode":"","talosVersion":"","schematic":"","images":null,"warnings":null}
+                """)
+        XCTAssertTrue(data.isOmni)
+        XCTAssertFalse(data.overLimit)
+        XCTAssertTrue(data.images.isEmpty)
+        XCTAssertTrue(data.warnings.isEmpty)
+    }
 }

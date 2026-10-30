@@ -16,8 +16,9 @@ node step), follows the run in the notification (Android) or a Live Activity (iO
 be stopped. A step the cluster's permissions refuse keeps Run off until you let the run go
 past it ("continue on error").
 
-Runbooks cannot do anything the app cannot already do: there are no conditions, loops or
-new actions. The Go API is `RunbookSummary`, `RunbookPlanWith` and `StartRunbookWith`
+Runbooks cannot do anything the app cannot already do: there are no loops or branches, and
+the only checks are the `wait` and `assert` steps below, which read and never change anything.
+The Go API is `RunbookSummary`, `RunbookPlanWith` and `StartRunbookWith`
 (`go/ichorgo/runbook.go`, `runbook_params.go`, `runbook_run.go`); from a computer, `just probe runbook-plan FILE
 -context CTX` prints the plan and `just probe runbook-run FILE -yes -context CTX` runs it
 (`-yes` is required when a step is destructive, and confirms each such step).
@@ -81,6 +82,8 @@ file: `just probe runbook-plan FILE ns=demo-shop -context CTX`.
 | `etcdSnapshot` | node | | no | os:operator, os:etcd:backup or os:admin |
 | `nodeReboot` | node | `mode`: `default`, `powercycle` or `force` | yes | os:operator or os:admin |
 | `nodeMaintenance` | node | `action`: `reboot` (default), `shutdown` or `none`; `includeBare`; `acknowledge` | yes | os:admin |
+| `wait` | as `until` says (below) | `until` (required); `timeoutSeconds` (default 300, at most 1800); `intervalSeconds` (default 5, at least 2); `minReplicas` | no | as `until` says |
+| `assert` | as `until` says (below) | `until` (required); `minReplicas` | no | as `until` says |
 
 - The role is the Talos client role of a talosconfig cluster; on a kubeconfig cluster the
   Kubernetes actions are checked against its RBAC only, and the node actions are refused.
@@ -91,6 +94,30 @@ file: `just probe runbook-plan FILE ns=demo-shop -context CTX`.
   `snapshots/`; the step's message gives the path. The file holds every Secret in clear.
 - `nodeMaintenance` cordons and drains the node first, as the Maintenance screen does; its
   `acknowledge` confirms the warnings that screen asks about (it never overrides a blocker).
+
+### Wait and assert
+
+`wait` checks a condition every `intervalSeconds` until it holds, and fails the step when
+`timeoutSeconds` pass first ("timed out after 5 min: 2/3 available"); while it waits, the
+step shows the value it last saw. A read that fails meanwhile (the API server away while a
+node reboots) is shown and the wait goes on; a condition that can no longer hold (the
+workload does not exist, the rollout exceeded its progress deadline) fails it at once.
+`assert` checks once and fails the step when the condition is false. Either way a failed
+step stops the run unless it has `continueOnError`. Both only read: they ask for no
+confirmation, and Stop ends a wait.
+
+| `until` | Target | Holds when | Reads (RBAC) | Role |
+|---|---|---|---|---|
+| `available` | kind `Deployment` (default), `StatefulSet` or `DaemonSet` | `status.availableReplicas` ≥ `spec.replicas` (a DaemonSet: `numberAvailable` ≥ `desiredNumberScheduled`), once the controller has seen the latest spec | `get` the workload | os:admin |
+| `rolloutDone` | same | the rollout is done, as `kubectl rollout status` ends | `get` the workload, `list pods` | os:admin |
+| `podsRunning` | same | at least `minReplicas` pods of the workload are Running (default: the replicas it wants) | `get` the workload, `list pods` | os:admin |
+| `nodeReady` | `node`: the Kubernetes node's name or one of its addresses | the node's `Ready` condition is `True` | `list nodes` | os:admin |
+| `nodeSchedulable` | same | Ready and not cordoned | `list nodes` | os:admin |
+| `etcdHealthy` | `kind: Cluster` (the default) | every control-plane node's etcd member answers with no error, and no alarm is raised | Talos API | os:reader, os:operator or os:admin |
+
+The Kubernetes checks go through the kubeconfig Talos issues on a talosconfig cluster (hence
+os:admin) and run on kubeconfig clusters too; `etcdHealthy` needs the talosconfig. The plan
+says what each check waits for ("wait up to 5 min for ingest-api to be available").
 
 ## Examples
 
@@ -125,4 +152,26 @@ name: Reboot worker 1
 steps:
   - {id: snapshot, action: etcdSnapshot, target: {node: 10.5.0.2}}
   - {id: reboot, action: nodeMaintenance, target: {node: 10.5.0.5}, params: {action: reboot}}
+```
+
+Restart, then wait for the rollout and check the API is back:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Restart, then wait
+steps:
+  - {id: restart, action: rolloutRestart, target: {namespace: demo-shop, name: ingest-api}}
+  - {id: rolled-out, action: wait, target: {namespace: demo-shop, name: ingest-api}, params: {until: rolloutDone, timeoutSeconds: 300}}
+  - {id: available, action: assert, target: {namespace: demo-shop, name: ingest-api}, params: {until: available}}
+```
+
+Drain and reboot a worker, wait until it is back and schedulable, then check etcd:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Reboot worker 1 and wait
+steps:
+  - {id: reboot, action: nodeMaintenance, target: {node: 10.5.0.5}, params: {action: reboot}}
+  - {id: back, action: wait, target: {node: 10.5.0.5}, params: {until: nodeSchedulable, timeoutSeconds: 900}}
+  - {id: etcd, action: assert, target: {kind: Cluster}, params: {until: etcdHealthy}}
 ```

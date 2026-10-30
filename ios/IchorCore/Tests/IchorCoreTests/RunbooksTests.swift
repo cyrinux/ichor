@@ -31,6 +31,31 @@ final class RunbooksTests: XCTestCase {
         XCTAssertEqual(runbookContinueIDs(["scale-down", "compact"]), "compact,scale-down")
     }
 
+    func testWaitStepDetailTimeoutAndClock() throws {
+        let plan = try TalosJSON.decode(
+            RunbookPlan.self,
+            from: #"""
+                {"name":"Restart, then wait","steps":[
+                 {"id":"rolled-out","action":"wait","target":{"kind":"Deployment","namespace":"demo-shop","name":"ingest-api","node":""},"destructive":false,"continueOnError":false,"role":"os:admin","allowed":true,"denied":"","detail":"wait up to 5 min for the rollout of ingest-api to finish","timeoutSeconds":300},
+                 {"id":"etcd","action":"assert","target":{"kind":"Cluster","namespace":"","name":"","node":""},"destructive":false,"continueOnError":false,"role":"os:reader","allowed":true,"denied":"","detail":"check that every etcd member is healthy","timeoutSeconds":0},
+                 {"id":"restart","action":"rolloutRestart","target":{"kind":"Deployment","namespace":"demo-shop","name":"ingest-api"},"destructive":true}
+                ],"errors":[]}
+                """#)
+        XCTAssertEqual(plan.steps[0].timeoutSeconds, 300)
+        XCTAssertEqual(plan.steps[0].detail, "wait up to 5 min for the rollout of ingest-api to finish")
+        XCTAssertNil(plan.steps[0].confirmation)
+        XCTAssertEqual(plan.steps[1].target.label, "Cluster")
+        XCTAssertEqual(plan.steps[2].detail, "")
+        XCTAssertEqual(plan.steps[2].timeoutSeconds, 0)
+
+        XCTAssertEqual(runbookWaitedSeconds(startedAt: 10_000, now: 9_000, timeoutSeconds: 300), 0)
+        XCTAssertEqual(runbookWaitedSeconds(startedAt: 10_000, now: 52_900, timeoutSeconds: 300), 42)
+        XCTAssertEqual(runbookWaitedSeconds(startedAt: 0, now: 3_600_000, timeoutSeconds: 300), 300)
+        XCTAssertEqual(runbookClock(7), "0:07")
+        XCTAssertEqual(runbookClock(300), "5:00")
+        XCTAssertEqual(runbookClock(1800), "30:00")
+    }
+
     func testPlanWithErrorsOrNoStepsCannotRun() throws {
         let broken = try TalosJSON.decode(
             RunbookPlan.self, from: #"{"name":"x","steps":[{"id":"a","action":"scale"}],"errors":["boom"]}"#)
