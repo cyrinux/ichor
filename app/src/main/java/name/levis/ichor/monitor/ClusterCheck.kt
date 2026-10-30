@@ -1,5 +1,6 @@
 package name.levis.ichor.monitor
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,6 +16,7 @@ import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.isCallsCancelled
 import name.levis.ichor.data.sourceFor
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
@@ -60,6 +62,30 @@ suspend fun <T : Any> readWithin(timeoutMs: Long = CLUSTER_CHECK_TIMEOUT_MS, rea
     }
 }
 
+/** A check's first read, null when it failed; a read the cluster switch cut goes on up (see [readClusterOrSkip]). */
+private suspend fun <T : Any> firstRead(read: suspend () -> T): T? = try {
+    read()
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    if (e.isCallsCancelled()) throw e
+    null
+}
+
+/**
+ * [readCluster] as what the run learnt of [context]: a check the switch away from this cluster
+ * cut says nothing of it, so it is skipped rather than counted as unreachable.
+ */
+suspend fun readClusterOrSkip(app: TalosApp, context: ContextSummary, prev: ClusterSnapshot?, now: Long): ClusterRead = try {
+    val reading = readCluster(app, context, prev, now)
+    ClusterRead(context, reading?.snapshot, detail = reading?.detail)
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    if (!e.isCallsCancelled()) throw e
+    ClusterRead(context, snapshot = null, skipped = true)
+}
+
 /** A check's fresh [snapshot], and what it read that only the history ring keeps. */
 data class ClusterReading(val snapshot: ClusterSnapshot, val detail: HistoryDetail)
 
@@ -72,8 +98,8 @@ data class ClusterReading(val snapshot: ClusterSnapshot, val detail: HistoryDeta
 suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSnapshot?, now: Long): ClusterReading? {
     val reads = PinnedReads(app, context.name)
     val kube = context.isKube
-    val overview = if (kube) null else runCatching { reads.talos.overview() }.getOrNull()
-    val kubeNodes = if (kube) runCatching { reads.kube.kubeNodes() }.getOrNull() else null
+    val overview = if (kube) null else firstRead { reads.talos.overview() }
+    val kubeNodes = if (kube) firstRead { reads.kube.kubeNodes() } else null
     if (overview == null && kubeNodes == null) return null
     val store = app.monitorStore
     // A kubeconfig cluster's node disks (one kubelet read per node) run alongside the other

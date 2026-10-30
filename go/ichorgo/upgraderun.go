@@ -87,6 +87,7 @@ func StartUpgrade(configYAML, contextName, kubeServer, node, image string, stage
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		opts := upgradeOptions{image: strings.TrimSpace(image), stage: stage, force: force, acknowledged: acknowledged}
 

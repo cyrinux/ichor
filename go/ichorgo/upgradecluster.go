@@ -319,6 +319,7 @@ func StartClusterUpgrade(configYAML, contextName, kubeServer, version string, dr
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		var upgraded []string
 

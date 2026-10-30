@@ -83,7 +83,7 @@ func NodeReset(configYAML, contextName, node, wipe string, graceful, reboot bool
 		return err
 	}
 
-	_, err = withSession(configYAML, contextName, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
+	_, err = withSessionFrom(context.Background(), configYAML, contextName, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return struct{}{}, err
 		}

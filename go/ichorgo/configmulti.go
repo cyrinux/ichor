@@ -127,6 +127,7 @@ func StartConfigApplyMulti(configYAML, contextName, nodesCSV, editsJSON, mode st
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		mode = strings.ToLower(strings.TrimSpace(mode))
 

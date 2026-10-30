@@ -71,6 +71,7 @@ func StartPacketCapturePair(
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", 0, 0, msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		opts := captureOptions{
 			filter:      filter,

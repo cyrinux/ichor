@@ -63,8 +63,18 @@ final class AppModel {
             if activeContext != oldValue {
                 publishWidgetClusters()
                 updateSpotlight()
+                cancelCalls(of: oldValue)
             }
         }
+    }
+
+    /// Ends the reads still under way on the cluster just left: they would keep threads and the
+    /// network busy for up to 20 s. Off the main actor, though the Go call returns at once.
+    private func cancelCalls(of context: String) {
+        guard !context.isEmpty,
+            let config = config(for: summary?.contexts.first(where: { $0.name == context }))
+        else { return }
+        Task.detached { TalosClient.cancelCalls(config: config, context: context) }
     }
 
     /// Main color (0xRRGGBB) of each cluster, by context fingerprint (not its name, which the

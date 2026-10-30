@@ -87,6 +87,7 @@ func StartKubeDrain(configYAML, contextName, kubeServer, kubeNode string, includ
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		err := recordedRun(configYAML, contextName, func() auditAction {
 			return auditAction{Action: "drain", Node: kubeNode, Params: fmt.Sprintf("include-bare=%t", includeBare)}

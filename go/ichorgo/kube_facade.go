@@ -173,8 +173,19 @@ func (k *kubeClient) close() { k.http.CloseIdleConnections() }
 // client: the next one fetches a fresh kubeconfig and looks for a reachable address again
 // (the phone may have changed networks). A client just opened and probed is kept on a
 // timeout: the address answered a moment ago, the call itself was slow.
+//
+// A read, ended by CancelCalls (see callscope.go): a mutation goes through kubeMutate instead.
 func withKube[T any](target kubeTarget, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
-	k, fresh, err := kubeClients.get(target)
+	parent := callParent(target.config, target.context)
+	out, err := withKubeFrom(parent, target, fn)
+
+	return scopedResult(parent, out, err)
+}
+
+// withKubeFrom is withKube under parent, which is also what a cold open stops waiting for: the
+// open itself goes on for the next call, with its own bounds.
+func withKubeFrom[T any](parent context.Context, target kubeTarget, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
+	k, fresh, err := kubeClientUnder(parent, target)
 	if err != nil {
 		var zero T
 
@@ -182,10 +193,45 @@ func withKube[T any](target kubeTarget, fn func(context.Context, *kubeClient) (T
 	}
 
 	// Started after opening: a cold open (kubeconfig fetch and probe) must not eat the budget.
-	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
+	ctx, cancel := context.WithTimeout(parent, callTimeout)
 	defer cancel()
 
 	return callKube(ctx, target, k, fresh, fn)
+}
+
+// kubeClientUnder is kubeClients.get, given up on when parent ends. A probe of an address that
+// does not answer is the slowest part of a read on a cluster just left.
+func kubeClientUnder(parent context.Context, target kubeTarget) (*kubeClient, bool, error) {
+	if parent.Done() == nil {
+		return kubeClients.get(target)
+	}
+
+	type opened struct {
+		client *kubeClient
+		fresh  bool
+		err    error
+	}
+
+	answer := make(chan opened, 1)
+
+	go func() {
+		// On its own goroutine, out of reach of the exported function's maskErr.
+		defer func() {
+			if r := recover(); r != nil {
+				answer <- opened{err: panicError(r)}
+			}
+		}()
+
+		k, fresh, err := kubeClients.get(target)
+		answer <- opened{k, fresh, err}
+	}()
+
+	select {
+	case got := <-answer:
+		return got.client, got.fresh, got.err
+	case <-parent.Done():
+		return nil, false, parent.Err()
+	}
 }
 
 // withKubeContext is withKube bounded by ctx instead of callTimeout, for the calls that run
@@ -264,13 +310,14 @@ func kubeDo(ctx context.Context, target kubeTarget, fn func(context.Context, *ku
 }
 
 // kubeMutate runs the action fn, refused in the demo inventory. target.context is the
-// unmasked context name.
+// unmasked context name. Never under the cluster's call scope: leaving the cluster does not
+// cut what the person tapped.
 func kubeMutate(target kubeTarget, fn func(context.Context, *kubeClient) error) error {
 	if isDemoContext(target.config, target.context) {
 		return errDemoUnavailable
 	}
 
-	_, err := withKube(target, noResult(fn))
+	_, err := withKubeFrom(context.Background(), target, noResult(fn))
 
 	return kubeMutationError(err)
 }
@@ -299,7 +346,8 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 		omni      *kubeClient
 	)
 
-	kubeconfig, err := withSession(target.config, target.context, callTimeout, func(ctx context.Context, s *session) (string, error) {
+	// Not under the call scope: the client this opens serves mutations and later reads too.
+	kubeconfig, err := withSessionFrom(context.Background(), target.config, target.context, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		// Through Omni: its kube proxy, with an Omni sign-in (no Talos admin kubeconfig).
 		if s.signing != nil {
 			k, err := omniKubeClient(ctx, s)

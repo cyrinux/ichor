@@ -5,7 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import name.levis.ichor.data.CallsCancelledException
 
 /**
  * Fetches forever, [intervalMillis] apart: [onSample] gets each answer, [onError] each
@@ -24,9 +27,23 @@ suspend fun <T> pollEvery(
     }
 }
 
+/**
+ * [block], started again when the cluster switch cuts one of its reads: the loop outlives the
+ * read (its screen may stay, now on the new cluster), which a plain cancellation would end for good.
+ */
+internal suspend fun surviveClusterSwitch(block: suspend () -> Unit) {
+    while (true) {
+        try {
+            return block()
+        } catch (_: CallsCancelledException) {
+            currentCoroutineContext().ensureActive()
+        }
+    }
+}
+
 /** Runs [block] while the screen is visible: leaving the tab or backgrounding the app stops it. */
 @Composable
 fun PollWhileStarted(block: suspend () -> Unit) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(lifecycle) { lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { block() } }
+    LaunchedEffect(lifecycle) { lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { surviveClusterSwitch(block) } }
 }

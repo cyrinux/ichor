@@ -126,6 +126,7 @@ func StartArgoSyncFollow(configYAML, contextName, kubeServer, namespace, name st
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		var (
 			result string

@@ -7,6 +7,28 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.model.ReadProgress
 import name.levis.ichorgo.Ichorgo
 
+/** What the core answers a read cut because the app left its cluster (errCallsCancelled in callscope.go). */
+private const val CALLS_CANCELLED = "cancelled: the app left this cluster"
+
+/** Whether this is the core ending a read of the cluster the app left: no error to show, no cluster down. */
+fun Throwable.isCallsCancelled(): Boolean = message?.contains(CALLS_CANCELLED) == true
+
+/** A read cut by the cluster switch: its coroutine ends quietly, with no error state or snackbar. */
+class CallsCancelledException : CancellationException(CALLS_CANCELLED)
+
+/**
+ * [block] with a read cut by the cluster switch turned into [CallsCancelledException]. Not for a
+ * pinned call (the background monitor), which counts it as skipped and must not end its whole run.
+ */
+internal inline fun <T> quietWhenLeft(pinned: String?, block: () -> T): T = try {
+    block()
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    if (pinned == null && e.isCallsCancelled()) throw CallsCancelledException()
+    throw e
+}
+
 /**
  * The JSON boundary to the Go core shared by [TalosRepository], [KubeRepository],
  * [GitOpsRepository] and [DataServicesRepository]: which credentials a call runs with, and the
@@ -47,7 +69,7 @@ class GoCall(
     suspend fun <T> talos(block: (config: String, context: String) -> T): T {
         idle()
         val stored = stored()
-        return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
+        return quietWhenLeft(pinned) { withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) } }
     }
 
     /**
@@ -58,13 +80,15 @@ class GoCall(
         idle()
         val target = kubeTarget()
         googleRenewer?.renewIfDue(target.context)
-        return try {
-            withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            if (googleRenewer?.renewIfNeeded(target.context, e) != true) throw e
-            withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
+        return quietWhenLeft(pinned) {
+            try {
+                withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (googleRenewer?.renewIfNeeded(target.context, e) != true) throw e
+                withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
+            }
         }
     }
 
@@ -76,7 +100,7 @@ class GoCall(
         idle()
         val stored = stored()
         val server = kubeServers.serverFor(stored)
-        return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, server) }
+        return quietWhenLeft(pinned) { withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, server) } }
     }
 }
 

@@ -52,6 +52,7 @@ func StartKubeSignIn(storedYAML, contextName string, listener SignInListener) *S
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(storedYAML, contextName)()
 
 		err := runSignIn(ctx, storedYAML, contextName, listener, run.callbacks)
 		if errors.Is(err, context.Canceled) {

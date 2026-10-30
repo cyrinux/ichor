@@ -64,6 +64,7 @@ func StartKubeSanitize(configYAML, contextName, kubeServer, namespace, names str
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		res, err := sweepPods(ctx, kubeSweep{configYAML, contextName, kubeServer, namespace, names}, emit)
 		clearPartial(&err)

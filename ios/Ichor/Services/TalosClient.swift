@@ -139,6 +139,17 @@ struct TalosClient: Sendable {
         IchorgoSetPrivacyMask(enabled, extraWords)
     }
 
+    /// Ends the reads still under way on the cluster just left (followed runs and actions go
+    /// on). Returns at once, and is never an error.
+    static func cancelCalls(config: String, context: String) {
+        var error: NSError?
+        _ = IchorgoCancelCalls(config, context, &error)
+    }
+
+    /// What Go answers a read cut because the app left its cluster (errCallsCancelled in
+    /// callscope.go): no error to show, no cluster down.
+    private static let callsCancelledMessage = "cancelled: the app left this cluster"
+
     /// Where Go remembers node names, so a node that is down still shows its hostname.
     /// Device-only: excluded from backup, encrypted with `dataKey()`. Call before any other Go call.
     /// When it fails (no folder, no key from the Keychain), nothing is saved across launches
@@ -565,7 +576,9 @@ struct TalosClient: Sendable {
                 let span = StartupTrace.begin(name)
                 let result = call(&error)
                 StartupTrace.end(span)
-                if let error {
+                if let error, error.localizedDescription.contains(TalosClient.callsCancelledMessage) {
+                    continuation.resume(throwing: CancellationError())
+                } else if let error {
                     continuation.resume(throwing: TalosError(message: error.localizedDescription))
                 } else {
                     continuation.resume(returning: result)
