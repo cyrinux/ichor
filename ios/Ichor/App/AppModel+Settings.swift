@@ -132,7 +132,7 @@ extension AppModel {
     func updateSpotlight() {
         SpotlightIndex.update(
             summary: summary, active: activeContext, labels: labels,
-            enabled: settings.keepLastKnown && !lock.enabled && !settings.privacyMask)
+            enabled: settings.keepLastKnown && !lockStore.lock.enabled && !settings.privacyMask)
     }
 
     /// The VPN came up: a VPN-only cluster on screen reloads.

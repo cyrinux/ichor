@@ -5,6 +5,7 @@ import SwiftUI
 /// ways forward are enabling the lock or deleting the stored config.
 struct LockOnboardingView: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @State private var available = Authenticator.isAvailable
@@ -56,7 +57,7 @@ struct LockOnboardingView: View {
         .task(id: done) {
             guard done else { return }
             try? await Task.sleep(for: .seconds(1.1))
-            model.setLockEnabled(true)
+            lockStore.setLockEnabled(true)
         }
         // Back from the Settings app with a passcode set up.
         .onChange(of: scenePhase) { _, phase in

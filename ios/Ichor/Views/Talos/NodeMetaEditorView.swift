@@ -10,6 +10,7 @@ struct NodeMetaEditorView: View {
     let hostname: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var meta: LoadState<KubeNodeMeta> = .loading
     @State private var draft: NodeMetaDraft?
     @State private var showProtected = false
@@ -183,7 +184,7 @@ struct NodeMetaEditorView: View {
             reviewed.plan.hasTaintChanges
             ? String(localized: "Change the taints of \(hostname)")
             : String(localized: "Change the labels of \(hostname)?")
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: reason) {
+        if lockStore.lock.enabled, let failure = await Authenticator.authenticate(reason: reason) {
             return failure
         }
         do {

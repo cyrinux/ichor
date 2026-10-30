@@ -7,6 +7,7 @@ struct NodeTabsView: View {
     let ref: NodeRef
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var tab: Tab
     @State private var services: LoadState<[ServiceInfo]> = .loading
     @State private var resources: LoadState<NodeResources> = .loading
@@ -240,7 +241,7 @@ extension NodeTabsView {
     private func perform(_ request: ServiceRequest) async {
         serviceRequest = nil
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: confirmationTitle(request)) {
+        if lockStore.lock.enabled, let failure = await Authenticator.authenticate(reason: confirmationTitle(request)) {
             resultMessage = failure
             return
         }

@@ -13,6 +13,7 @@ struct KubeConfigDataView: View {
     let name: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var state: LoadState<KubeConfigData> = .loading
     /// The one Secret key whose value is shown.
     @State private var revealed: ConfigDataKey?
@@ -213,7 +214,7 @@ struct KubeConfigDataView: View {
             revealed = nil
             return
         }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Show \(key.key) of \(name)"))
         {
             message = failure

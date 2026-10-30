@@ -8,6 +8,7 @@ struct MetaKeysView: View {
     let hostname: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var state: LoadState<MetaKeyList> = .loading
     @State private var editing: MetaEditTarget?
     @State private var pending: MetaChange?
@@ -134,7 +135,7 @@ struct MetaKeysView: View {
 
     private func apply(_ change: MetaChange) async {
         guard let client = model.client, !busy else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Change META on \(hostname)"))
         {
             message = failure

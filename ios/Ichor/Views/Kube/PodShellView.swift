@@ -12,6 +12,7 @@ struct PodShellView: View {
     let container: String
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @AppStorage("debug.podCommand") private var command = ""
     @AppStorage("debug.podImage") private var debugImage = "busybox:1.37"
     @State private var debug = false
@@ -85,7 +86,7 @@ struct PodShellView: View {
     /// A shell can read the container's secrets: with the app lock on, it asks like the node's.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Shell in \(pod)"))
         {
             error = failure

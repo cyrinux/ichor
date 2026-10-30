@@ -16,6 +16,7 @@ struct UpgradeView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var plan: LoadState<UpgradePlan> = .loading
     @State private var releases: [TalosRelease] = []
     @State private var releasesError: String?
@@ -405,7 +406,7 @@ struct UpgradeView: View {
     /// App lock first (like reboot), then the typed hostname.
     private func requestStart() async {
         message = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: String(localized: "Upgrade \(hostname)"))
         {
             message = failure
@@ -417,7 +418,7 @@ struct UpgradeView: View {
     /// The same two steps as an upgrade: the node reboots at once, into another Talos.
     private func requestRollback() async {
         message = nil
-        if model.lock.enabled,
+        if lockStore.lock.enabled,
             let failure = await Authenticator.authenticate(reason: CheckupText.rollbackTitle(hostname))
         {
             message = failure

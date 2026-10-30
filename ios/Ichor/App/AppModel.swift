@@ -2,13 +2,15 @@ import Foundation
 import Observation
 import IchorCore
 
-/// App-wide state: the imported config, the active context and the lock. The preferences are
+/// App-wide state: the imported config and the active context. The preferences are
 /// SettingsStore's.
 @Observable
 @MainActor
 final class AppModel {
     /// The preferences; views read them from the environment, next to this model.
     let settings: SettingsStore
+    /// Views read it from the environment, next to this model.
+    let lockStore: LockStore
 
     // Internal, not private: AppModel+Clusters.swift uses it.
     enum Keys {
@@ -16,7 +18,6 @@ final class AppModel {
         /// Position of the active context in the config: unlike the name, it survives the
         /// screenshot mode (Go masks context names but keeps their order).
         static let contextIndex = "activeContextIndex"
-        static let lock = "appLockEnabled"
         static let clusterColors = "clusterColors"
         static let clusterNames = "clusterNames"
         static let kubeServers = "kubeServers"
@@ -45,13 +46,6 @@ final class AppModel {
     var unreadable: [StoredConfigKind] = []
     // Internal, not private(set): AppModel+Clusters.swift sets it.
     var loaded = false
-    // Internal, not private(set): AppModel+SignIn.swift sets it.
-    var lock: AppLockState
-    /// The enrolled security keys (SecurityKeyStore), nil when none; see IchorCore/SecurityKeys.swift.
-    // Internal, not private(set): AppModel+SignIn.swift sets it.
-    var securityKeys: SecurityKeyEnrolment? = SecurityKeyStore.current
-    /// Whether a tap of a security key is needed to read the stored configs (Face ID alone is refused).
-    var requiresKey: Bool { securityKeys?.required == true }
 
     var activeContext = "" {
         didSet {
@@ -139,9 +133,9 @@ final class AppModel {
     var detectingPublicIPs: Set<String> = []
     @ObservationIgnored private var featuresGeneration = 0
 
-    init(settings: SettingsStore) {
+    init(settings: SettingsStore, lock: LockStore) {
         self.settings = settings
-        lock = AppLockState(enabled: UserDefaults.standard.bool(forKey: Keys.lock))
+        lockStore = lock
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
@@ -152,6 +146,7 @@ final class AppModel {
         clusterRepos = ClusterRepoStore.decode(UserDefaults.standard.data(forKey: ClusterRepoStore.key))
         proposals = ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
         settings.model = self
+        lockStore.model = self
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
         // The background monitor saved the proposals' states (merged, closed).
         NotificationCenter.default.addObserver(forName: .proposalsChanged, object: nil, queue: .main) { [weak self] _ in

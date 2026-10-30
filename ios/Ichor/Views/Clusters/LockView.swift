@@ -6,17 +6,18 @@ import SwiftUI
 /// every key leaves wiping as the only way out too.
 struct LockView: View {
     @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
     @State private var error: String?
     @State private var confirmLost = false
 
-    private var available: Bool { Authenticator.isAvailable || model.securityKeys != nil }
+    private var available: Bool { Authenticator.isAvailable || lockStore.securityKeys != nil }
 
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "lock.fill").font(.system(size: 44)).accessibilityHidden(true)
             if available {
                 Text("Ichor is locked").font(.headline).accessibilityAddTraits(.isHeader)
-                if let keys = model.securityKeys {
+                if let keys = lockStore.securityKeys {
                     Text(
                         keys.required
                             ? String(localized: "Tap your security key to open Ichor.")
@@ -26,7 +27,7 @@ struct LockView: View {
                 }
                 if let error { Text(error).foregroundStyle(.statusBad).multilineTextAlignment(.center) }
                 Button("Unlock") { Task { await unlock() } }.buttonStyle(.borderedProminent)
-                if model.requiresKey {
+                if lockStore.requiresKey {
                     Button("I lost my security keys") { confirmLost = true }.font(.footnote)
                 }
             } else {
@@ -34,7 +35,7 @@ struct LockView: View {
                     .multilineTextAlignment(.center)
                 Button("Delete stored talosconfig", role: .destructive) {
                     model.clear()
-                    model.setLockEnabled(false)
+                    lockStore.setLockEnabled(false)
                 }
             }
         }
@@ -45,7 +46,7 @@ struct LockView: View {
         .confirmationDialog("Lost your security keys?", isPresented: $confirmLost, titleVisibility: .visible) {
             Button("Delete stored talosconfig", role: .destructive) {
                 model.clear()
-                model.setLockEnabled(false)
+                lockStore.setLockEnabled(false)
             }
         } message: {
             Text(
@@ -59,7 +60,7 @@ struct LockView: View {
             error = message
             announce(message)
         } else {
-            model.unlock()
+            lockStore.unlock()
         }
     }
 }
