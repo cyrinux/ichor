@@ -103,11 +103,12 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartKubeSanitize(kubeConfig, kubeContext, kubeAPIServer, namespace, names, bridge)
+        let started = IchorgoStartKubeSanitize(kubeConfig, kubeContext, kubeAPIServer, namespace, names, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
             _ = bridge  // keep the listener alive for the whole sweep
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 }
 

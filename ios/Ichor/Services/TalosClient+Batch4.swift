@@ -42,7 +42,7 @@ extension TalosClient {
         let run = IchorgoStartPacketCapture(
             config, context, node, options.interface, options.trimmedFilter,
             options.promiscuous, options.snapLen, options.duration.seconds,
-            options.sizeLimit.bytes, destPath, bridge)
+            options.sizeLimit.bytes, destPath, bridge).map(GoObject.init)
         let flusher = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
@@ -51,10 +51,10 @@ extension TalosClient {
         }
         continuation.onTermination = { _ in
             flusher.cancel()
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole capture
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 
     /// `packetCapture` on node and on `options.peer` at once, merged into destPath (one
@@ -74,7 +74,7 @@ extension TalosClient {
         let run = IchorgoStartPacketCapturePair(
             config, context, "\(node),\(options.peer)", options.interfaces, options.trimmedFilter,
             options.promiscuous, options.snapLen, options.duration.seconds,
-            options.sizeLimit.bytes, destPath, bridge)
+            options.sizeLimit.bytes, destPath, bridge).map(GoObject.init)
         let flusher = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
@@ -83,10 +83,10 @@ extension TalosClient {
         }
         continuation.onTermination = { _ in
             flusher.cancel()
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole capture
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 
     /// Up to `limit` packet summaries of a capture file from `offset` (0-based).

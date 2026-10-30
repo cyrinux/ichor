@@ -174,12 +174,12 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = start(bridge)
+        let run = start(bridge).map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole sign-in
         }
-        return (stream, { run?.complete($0) }, { run?.cancel() })
+        return (stream, { run?.value.complete($0) }, { run?.value.cancel() })
     }
 }
 

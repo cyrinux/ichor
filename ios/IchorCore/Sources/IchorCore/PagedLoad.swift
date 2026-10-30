@@ -110,7 +110,9 @@ public struct PagedLoad<T> {
     }
 
     /// The next page, for a load that stopped at its cap; `self` once done.
-    public func loadingMore(_ fetch: (String) async throws -> KubePage<T>) async throws -> PagedLoad<T> {
+    public func loadingMore(
+        isolation: isolated (any Actor)? = #isolation, _ fetch: (String) async throws -> KubePage<T>
+    ) async throws -> PagedLoad<T> {
         hasMore ? appending(try await fetch(continueToken)) : self
     }
 }
@@ -123,6 +125,7 @@ extension PagedLoad: Equatable where T: Equatable {}
 /// server expires the list mid-way it starts again from the first page, silently, up to
 /// `maxRestarts` times (L12). Other errors, and cancellation, propagate.
 public func loadPages<T>(
+    isolation: isolated (any Actor)? = #isolation,
     cap: Int,
     maxRestarts: Int = 3,
     fetch: (String) async throws -> KubePage<T>,
@@ -131,7 +134,7 @@ public func loadPages<T>(
     var restarts = 0
     while true {
         do {
-            return try await loadOnce(cap: cap, fetch: fetch, onProgress: onProgress)
+            return try await loadOnce(isolation: isolation, cap: cap, fetch: fetch, onProgress: onProgress)
         } catch {
             if error is CancellationError || !isKubeListExpired(error) || restarts >= maxRestarts { throw error }
             restarts += 1
@@ -140,6 +143,7 @@ public func loadPages<T>(
 }
 
 private func loadOnce<T>(
+    isolation: isolated (any Actor)?,
     cap: Int, fetch: (String) async throws -> KubePage<T>,
     onProgress: (PagedLoad<T>) async -> Void
 ) async throws -> PagedLoad<T> {

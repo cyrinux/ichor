@@ -7,9 +7,9 @@ import Foundation
 /// either the ichor://open? or the https form) and opens it once unlocked (openShareLink), so
 /// the app lock is never bypassed.
 struct OpenScreenIntent: AppIntent {
-    static var title: LocalizedStringResource = "Open in Ichor"
-    static var description = IntentDescription("Opens the screen a share link leads to, once Ichor is unlocked.")
-    static var openAppWhenRun = true
+    static let title: LocalizedStringResource = "Open in Ichor"
+    static let description = IntentDescription("Opens the screen a share link leads to, once Ichor is unlocked.")
+    static let openAppWhenRun = true
 
     @Parameter(title: "Link")
     var link: URL

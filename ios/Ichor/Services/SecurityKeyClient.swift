@@ -63,7 +63,7 @@ enum SecurityKeyClient {
     /// Runs `body` with the key reached over `transport`, then closes the connection. Over NFC the
     /// system sheet shows `message` and the key must stay on the phone until `body` returns.
     static func withConnection<T: Sendable>(
-        _ transport: SecurityKeyTransport, message: String,
+        isolation: isolated (any Actor)? = #isolation, _ transport: SecurityKeyTransport, message: String,
         body: (SmartCardConnection) async throws -> T
     ) async throws -> T {
         let connection: SmartCardConnection

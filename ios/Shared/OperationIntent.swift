@@ -5,10 +5,10 @@ import IchorCore
 /// compiled into the app and the widget extension; as a LiveActivityIntent it is performed in the
 /// app's process, where the runs are (OperationActivities sets the handler at launch).
 struct OperationIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Act on a run"
-    static var isDiscoverable = false
+    static let title: LocalizedStringResource = "Act on a run"
+    static let isDiscoverable = false
     // Never from a locked device: Pause, Revert… change the cluster.
-    static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
     @Parameter(title: "Run")
     var kind: String

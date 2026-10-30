@@ -49,16 +49,17 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartClusterUpgrade(config, context, kubeServer, version, drain, acknowledged, bridge)
+        let started = IchorgoStartClusterUpgrade(config, context, kubeServer, version, drain, acknowledged, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole roll
         }
         if run == nil {
             continuation.yield(.done(error: String(localized: "The cluster upgrade could not start.")))
             continuation.finish()
         }
-        return ClusterUpgradeHandle(events: stream, run: run)
+        return ClusterUpgradeHandle(events: stream, run: run?.value)
     }
 }
 

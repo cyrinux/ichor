@@ -41,7 +41,7 @@ private enum ArgoNetMetrics {
 
 /// Each box's frame, by id, for the curves drawn behind them.
 private struct ArgoNetAnchors: PreferenceKey {
-    static var defaultValue: [String: Anchor<CGRect>] = [:]
+    static var defaultValue: [String: Anchor<CGRect>] { [:] }
 
     static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
         value.merge(nextValue()) { $1 }

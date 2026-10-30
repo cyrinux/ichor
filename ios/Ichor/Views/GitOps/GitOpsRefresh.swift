@@ -47,7 +47,7 @@ extension View {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(2))
                 if Task.isCancelled { return }
-                if await !paused(), await shouldPoll() { await load() }
+                if !paused(), shouldPoll() { await load() }
             }
         }
     }

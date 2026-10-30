@@ -93,16 +93,16 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartConfigTry(config, context, node, base, draft, timeoutSeconds, bridge)
+        let run = IchorgoStartConfigTry(config, context, node, base, draft, timeoutSeconds, bridge).map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole try
         }
         if run == nil {
             continuation.yield(.done(.failed(String(localized: "The config could not be applied."))))
             continuation.finish()
         }
-        return ConfigTryHandle(events: stream, run: run)
+        return ConfigTryHandle(events: stream, run: run?.value)
     }
 }
 

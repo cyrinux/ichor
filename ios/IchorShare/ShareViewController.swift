@@ -50,6 +50,7 @@ enum ShareInbox {
         UTType.yaml.identifier, UTType.data.identifier,
     ]
 
+    @MainActor
     static func save(_ provider: NSItemProvider?) async -> ShareOutcome {
         guard let provider, let type = types.first(where: { provider.hasItemConformingToTypeIdentifier($0) }) else {
             return .unsupported
@@ -59,7 +60,7 @@ enum ShareInbox {
         let inbox = group.appendingPathComponent(IncomingFile.inboxFolder, isDirectory: true)
         return await withCheckedContinuation { continuation in
             // The file only exists until the handler returns: copied there.
-            _ = provider.loadFileRepresentation(forTypeIdentifier: type) { url, _ in
+            _ = provider.loadFileRepresentation(forTypeIdentifier: type) { @Sendable url, _ in
                 continuation.resume(returning: copy(url, to: inbox))
             }
         }

@@ -175,7 +175,7 @@ final class PagedList<T: Codable & Sendable> {
                 return String(decoding: data, as: UTF8.self)
             }
             guard let json else { return }
-            await model.remember(key: key, json: json, at: Date(), for: target)
+            model.remember(key: key, json: json, at: Date(), for: target)
         }
     }
 }

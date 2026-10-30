@@ -22,7 +22,8 @@ enum OperationActivities {
         started = true
         OperationButtonHandler.perform = { kind, button in act(kind, button) }
         for activity in Activity<OperationAttributes>.activities {
-            Task { await activity.end(nil, dismissalPolicy: .immediate) }
+            let handle = ActivityHandle(activity: activity)
+            Task { await handle.end(nil, dismissalPolicy: .immediate) }
         }
         // The app lock turned on or off (a setting, not observable): mask or unmask at once.
         NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) {
@@ -62,7 +63,7 @@ enum OperationActivities {
             let activity = all.first { $0.activityState == .active }
             guard let content = contents[kind] else {
                 shown[kind] = nil
-                for gone in all { Task { await gone.end(nil, dismissalPolicy: .immediate) } }
+                end(all, nil)
                 continue
             }
             if let last = shown[kind], !changed(last, content) { continue }
@@ -70,21 +71,33 @@ enum OperationActivities {
             let update = ActivityContent(state: content, staleDate: nil)
             if content.phase.ended {
                 if let activity {
-                    Task { await activity.end(update, dismissalPolicy: .after(.now + 15 * 60)) }
+                    let handle = ActivityHandle(activity: activity)
+                    Task { await handle.end(update, dismissalPolicy: .after(.now + 15 * 60)) }
                 } else if screenshotMode {
                     // A result card already ended still shows the names it ended with, and an
                     // ended activity takes no update: it goes now (screenshot mode turned on).
-                    for gone in all { Task { await gone.end(update, dismissalPolicy: .immediate) } }
+                    end(all, update)
                 }
             } else if let activity {
-                Task { await activity.update(update) }
+                let handle = ActivityHandle(activity: activity)
+                Task { await handle.update(update) }
             } else if ActivityAuthorizationInfo().areActivitiesEnabled {
                 // The last run's result gives way to the new run.
-                for gone in all { Task { await gone.end(nil, dismissalPolicy: .immediate) } }
+                end(all, nil)
                 // Refused when the user turned them off meanwhile or too many run: the jobs'
                 // notifications are the fallback, as before.
                 _ = try? Activity.request(attributes: OperationAttributes(kind: kind), content: update)
             }
+        }
+    }
+
+    /// Ends every one of `activities` now, showing `content` if any.
+    private static func end(
+        _ activities: [Activity<OperationAttributes>], _ content: ActivityContent<OperationContent>?
+    ) {
+        for activity in activities {
+            let handle = ActivityHandle(activity: activity)
+            Task { await handle.end(content, dismissalPolicy: .immediate) }
         }
     }
 
@@ -343,5 +356,20 @@ enum OperationActivities {
         return OperationContent(
             title: title, step: step, done: count?.done, total: count?.total,
             buttons: OperationButton.offered(for: .imageScan, stopping: state.stopping))
+    }
+}
+
+/// `@unchecked Sendable`, and why it is sound: ActivityKit does not mark Activity Sendable, but it
+/// is only a handle on what the system keeps: this file holds no state in it, and only asks the
+/// system to update or end it, which ActivityKit's async methods do from any task.
+private struct ActivityHandle: @unchecked Sendable {
+    let activity: Activity<OperationAttributes>
+
+    func end(_ content: ActivityContent<OperationContent>?, dismissalPolicy: ActivityUIDismissalPolicy) async {
+        await activity.end(content, dismissalPolicy: dismissalPolicy)
+    }
+
+    func update(_ content: ActivityContent<OperationContent>) async {
+        await activity.update(content)
     }
 }

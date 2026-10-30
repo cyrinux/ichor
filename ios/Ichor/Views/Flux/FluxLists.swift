@@ -90,6 +90,7 @@ struct FluxAppsList: View {
 }
 
 /// Suspend (or Resume for a suspended object), for swipes and menus.
+@MainActor
 func fluxSuspendButton(suspended: Bool, act: @escaping (FluxAction) -> Void) -> some View {
     let action: FluxAction = suspended ? .resume : .suspend
     return Button {

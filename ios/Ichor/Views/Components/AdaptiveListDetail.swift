@@ -35,7 +35,7 @@ struct ListDetailPicker {
 }
 
 private struct ListDetailPickerKey: EnvironmentKey {
-    static let defaultValue: ListDetailPicker? = nil
+    static var defaultValue: ListDetailPicker? { nil }
 }
 
 extension EnvironmentValues {

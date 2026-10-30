@@ -275,11 +275,11 @@ struct TerminalHost: UIViewRepresentable {
         init(shell: DebugShell) { self.shell = shell }
 
         func send(source: TerminalView, data: ArraySlice<UInt8>) {
-            MainActor.assumeIsolated { shell.write(data) }
+            MainActor.assumeIsolated { [shell] in shell.write(data) }
         }
 
         func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) {
-            MainActor.assumeIsolated { shell.resize(cols: newCols, rows: newRows) }
+            MainActor.assumeIsolated { [shell] in shell.resize(cols: newCols, rows: newRows) }
         }
 
         func setTerminalTitle(source: TerminalView, title: String) {}

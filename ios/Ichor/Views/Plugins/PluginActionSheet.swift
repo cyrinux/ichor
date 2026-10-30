@@ -21,7 +21,7 @@ struct PluginActionOutcome {
 }
 
 private struct PluginActionContextKey: EnvironmentKey {
-    static let defaultValue: PluginActionContext? = nil
+    static var defaultValue: PluginActionContext? { nil }
 }
 
 extension EnvironmentValues {

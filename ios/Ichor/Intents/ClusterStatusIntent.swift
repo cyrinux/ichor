@@ -6,8 +6,8 @@ import SwiftUI
 /// the snapshot the widget shows. No network and no credentials, so it answers without unlocking
 /// the app; the names are the widget's (masked in screenshot mode).
 struct ClusterStatusIntent: AppIntent {
-    static var title: LocalizedStringResource = "Cluster status"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Cluster status"
+    static let description = IntentDescription(
         "Says what Ichor's last background check saw on a cluster. None chosen: the one open in the app.")
 
     @Parameter(title: "Cluster")

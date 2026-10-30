@@ -48,12 +48,12 @@ extension TalosClient {
         )
         let run = IchorgoStartNodeJoin(
             config, context, request.address, request.template, request.role, request.hostname,
-            request.disk, request.staticAddress, "", request.replacing, bridge)
+            request.disk, request.staticAddress, "", request.replacing, bridge).map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
+            run?.value.cancel()
             _ = bridge  // keep the listener alive for the whole run
         }
-        return (stream, { run?.cancel() })
+        return (stream, { run?.value.cancel() })
     }
 }
 

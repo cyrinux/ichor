@@ -182,6 +182,7 @@ struct NetPerfLatencyRange: View {
 }
 
 private enum NetPerfTrendHint {
-    static let text: LocalizedStringKey =
+    static var text: LocalizedStringKey {
         "The saved tests between the client and server chosen above, oldest on the left. Points are evenly spaced, whatever the time between tests.\n\nTap a point to see that test in both charts. A drop in throughput or a jump in latency after a change (CNI, MTU, encryption, a new switch) shows what it cost."
+    }
 }

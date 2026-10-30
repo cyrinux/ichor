@@ -33,11 +33,11 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartTalosCARotation(config, context, bridge)
+        let run = IchorgoStartTalosCARotation(config, context, bridge).map(GoObject.init)
         continuation.onTermination = { _ in
             _ = bridge  // keep the listener alive for the whole run
         }
-        return (stream, { run?.proceed() }, { run?.cancel() })
+        return (stream, { run?.value.proceed() }, { run?.value.cancel() })
     }
 
     /// This device's fingerprint lineage for a backup, nil when no CA was rotated.
