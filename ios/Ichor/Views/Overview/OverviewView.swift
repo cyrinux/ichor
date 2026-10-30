@@ -6,6 +6,7 @@ struct OverviewView: View {
     @Binding var path: [Route]
 
     @Environment(AppModel.self) var model
+    @Environment(NodesStore.self) private var nodes
     @Environment(LockStore.self) private var lockStore
     @Environment(SettingsStore.self) var settings
     @Environment(AISettings.self) private var ai
@@ -179,8 +180,8 @@ struct OverviewView: View {
                 DiscoveredNodesSheet(nodes: discovered) { nodes in
                     try await model.addNodes(nodes.map(\.address))
                 } notNow: {
-                    model.dismissNodes(discovered, of: context)
-                    discovered = discovered.filter { !model.dismissedNodes(of: context).contains($0.address) }
+                    nodes.dismissNodes(discovered, of: context)
+                    discovered = discovered.filter { !nodes.dismissedNodes(of: context).contains($0.address) }
                 }
             }
             // After an update (and the unlock: the overview is not shown before): what changed
@@ -540,7 +541,7 @@ struct OverviewView: View {
     /// features count as supported). Same as Android's OverviewActions.
     private func clusterWide(_ feature: NodeFeature) -> Bool {
         guard case .loaded(let overview, _, _) = state else { return true }
-        let known = overview.nodes.filter(\.reachable).compactMap { model.nodeFeatures[$0.node] }
+        let known = overview.nodes.filter(\.reachable).compactMap { nodes.nodeFeatures[$0.node] }
         return clusterSupport(known, feature).supported
     }
 
@@ -663,7 +664,7 @@ struct OverviewView: View {
             await checkTalosUpdate(overview, id: id)
             guard id == loadID else { return }
             // What each node's Talos version can do, cached per version: gates menus and screens.
-            await model.loadFeatures(of: overview.nodes)
+            await nodes.loadFeatures(of: overview.nodes)
             // Discovery asks the nodes too: pointless while none answers.
             if overview.outage == nil { await discover(with: client, id: id) }
         }
@@ -780,6 +781,6 @@ struct OverviewView: View {
     private func discover(with client: TalosClient, id: String) async {
         let discovery = try? await client.discoverNodes()
         guard id == loadID else { return }
-        discovered = discovery?.offer(dismissed: model.dismissedNodes(of: model.activeContext)) ?? []
+        discovered = discovery?.offer(dismissed: nodes.dismissedNodes(of: model.activeContext)) ?? []
     }
 }

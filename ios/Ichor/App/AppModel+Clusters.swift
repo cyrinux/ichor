@@ -314,7 +314,7 @@ extension AppModel {
         publicIPReports = [:]
         SharedStore.clear()  // the widget stops showing the old clusters
         HistoryStore.wipe()
-        forgetFeatures()
+        nodes.forget()
         yaml = nil
         kubeYAML = nil
         talosSummary = nil
@@ -358,7 +358,7 @@ extension AppModel {
         ConfigSummaryCache.shared.store(
             talos: newTalos, talosSummary: newTalosSummary, kube: newKube, kubeSummary: newKubeSummary,
             generation: generation)
-        forgetFeatures()
+        nodes.forget()
         yaml = newTalos
         kubeYAML = newKube
         talosSummary = newTalosSummary

@@ -11,12 +11,13 @@ struct NodeListRow: View {
     @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
 
     var body: some View {
         let ref = node.ref
         let row = NodeOverviewRow(
             node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs), sharedVersion: sharedVersion,
-            throttled: node.reachable && model.throttledNodes.contains(node.node))
+            throttled: node.reachable && nodes.throttledNodes.contains(node.node))
         Group {
             // Beside the Nodes list on an iPad, pushed everywhere else. A node that does not answer
             // opens too: its hub keeps what works through Kubernetes and dims the rest.

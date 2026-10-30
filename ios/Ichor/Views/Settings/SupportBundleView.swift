@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 /// kept on the phone, then share it, save it to Files or delete it.
 struct SupportBundleView: View {
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodesStore
     @Environment(LockStore.self) private var lockStore
     @State private var nodes: LoadState<[NodeOverview]> = .loading
     @State private var selected: Set<String> = []
@@ -18,8 +19,8 @@ struct SupportBundleView: View {
         Group {
             if !model.allows(.supportBundle) {
                 List { RoleNotice(feature: .supportBundle, roles: model.activeSummary?.roles ?? []) }
-            } else if let notice = model.clusterSupport(.supportBundle).notice {
-                VersionNoticeView(notice: notice, detail: model.clusterSupport(.supportBundle).reason)
+            } else if let notice = nodesStore.clusterSupport(.supportBundle).notice {
+                VersionNoticeView(notice: notice, detail: nodesStore.clusterSupport(.supportBundle).reason)
             } else {
                 LoadStateView(state: nodes, retry: loadNodes) { list in content(list) }
             }
@@ -185,7 +186,7 @@ struct SupportBundleView: View {
         nodes = await .from { try await client.overview().nodes }
         if case .loaded(let list, _, _) = nodes {
             if selected.isEmpty { selected = Set(list.filter(\.reachable).map(\.node)) }
-            await model.loadFeatures(of: list)
+            await nodesStore.loadFeatures(of: list)
         }
     }
 

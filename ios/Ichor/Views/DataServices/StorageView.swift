@@ -15,6 +15,7 @@ struct StorageView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @State private var mounts: LoadState<NodeMounts> = .loading
     @State private var volumes: LoadState<NodeVolumes> = .loading
     @State private var disks: LoadState<NodeDisks> = .loading
@@ -31,7 +32,7 @@ struct StorageView: View {
 
     var body: some View {
         List {
-            DiskLayoutSection(state: disks, support: model.support(.disks, node: node))
+            DiskLayoutSection(state: disks, support: nodes.support(.disks, node: node))
             Section("Mounts") {
                 SectionStateView(state: mounts) { loaded in
                     let shown = listedMounts(loaded.mounts, showAll: showAllMounts)
@@ -46,7 +47,7 @@ struct StorageView: View {
                 }
             }
             Section("Volumes") {
-                if let notice = model.support(.volumes, node: node).localizedNotice {
+                if let notice = nodes.support(.volumes, node: node).localizedNotice {
                     VersionNoticeRow(text: notice)
                 } else {
                     SectionStateView(state: volumes) { loaded in
@@ -65,17 +66,17 @@ struct StorageView: View {
                     }
                 }
             }
-            DiskUsageSection(path: usagePath, state: usage, support: model.support(.diskUsage, node: node)) { target in
+            DiskUsageSection(path: usagePath, state: usage, support: nodes.support(.diskUsage, node: node)) { target in
                 // A new path restarts the usage task below; nil (Cancel) stops waiting for it.
                 usage = .loading
                 usagePath = target
             }
-            DiskHealthSection(state: health, support: model.support(.diskHealth, node: node))
+            DiskHealthSection(state: health, support: nodes.support(.diskHealth, node: node))
         }
         .refreshable {
             // Also what the node's Talos version can do: Volumes and Disk health are asked
             // again even when they were not available before (the node may have been upgraded).
-            await model.reloadFeatures(node: node)
+            await nodes.reloadFeatures(node: node)
             await loadDisks()
             await loadMounts()
             await loadVolumes()
@@ -120,32 +121,32 @@ struct StorageView: View {
     /// What the node's Talos version lacks is not asked for (the section shows the notice).
     private func loadVolumes() async {
         guard let client = model.client else { return }
-        await model.loadFeatures(node: node)
-        guard model.support(.volumes, node: node).supported else { return }
+        await nodes.loadFeatures(node: node)
+        guard nodes.support(.volumes, node: node).supported else { return }
         let result: LoadState<NodeVolumes> = await .from { try await client.volumes(node: node) }
         if !Task.isCancelled { volumes = volumes.refreshed(with: result) }
     }
 
     private func loadDisks() async {
         guard let client = model.client else { return }
-        await model.loadFeatures(node: node)
-        guard model.support(.disks, node: node).supported else { return }
+        await nodes.loadFeatures(node: node)
+        guard nodes.support(.disks, node: node).supported else { return }
         let result: LoadState<NodeDisks> = await .from { try await client.disks(node: node) }
         if !Task.isCancelled { disks = disks.refreshed(with: result) }
     }
 
     private func loadUsage() async {
         guard let client = model.client else { return }
-        await model.loadFeatures(node: node)
-        guard let wanted = usagePath, model.support(.diskUsage, node: node).supported else { return }
+        await nodes.loadFeatures(node: node)
+        guard let wanted = usagePath, nodes.support(.diskUsage, node: node).supported else { return }
         let result: LoadState<DiskUsage> = await .from { try await client.diskUsage(node: node, path: wanted) }
         if wanted == usagePath, !Task.isCancelled { usage = result }  // a newer path wins
     }
 
     private func loadHealth() async {
         guard let client = model.client else { return }
-        await model.loadFeatures(node: node)
-        guard model.support(.diskHealth, node: node).supported else { return }
+        await nodes.loadFeatures(node: node)
+        guard nodes.support(.diskHealth, node: node).supported else { return }
         let result: LoadState<NodeDiskHealth> = await .from { try await client.diskHealth(node: node) }
         if !Task.isCancelled { health = health.refreshed(with: result) }
     }

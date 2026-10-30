@@ -7,6 +7,7 @@ struct NodeTabsView: View {
     let ref: NodeRef
 
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @Environment(LockStore.self) private var lockStore
     @State private var tab: Tab
     @State private var services: LoadState<[ServiceInfo]> = .loading
@@ -71,7 +72,7 @@ struct NodeTabsView: View {
         .navigationTitle(ref.hostname)
         .navigationBarTitleDisplayMode(.inline)
         // What this node's Talos version can do: gates the tabs once known.
-        .task { await model.loadFeatures(node: ref.address) }
+        .task { await nodes.loadFeatures(node: ref.address) }
         // Masked like the screen in screenshot mode: reloaded when it changes.
         .task(id: "\(period.rawValue)#\(model.dataGeneration)") {
             history = await HistoryStore.query(
@@ -190,7 +191,7 @@ struct NodeTabsView: View {
     }
 
     private func support(_ feature: NodeFeature) -> FeatureSupport {
-        model.support(feature, node: ref.address)
+        nodes.support(feature, node: ref.address)
     }
 }
 
