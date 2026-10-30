@@ -53,6 +53,13 @@ CronJob swipes right to Run now and left to Suspend or Resume; a node swipes lef
 Uncordon) and Drain…. Each opens the same confirmation as its button, and VoiceOver lists the
 swipe actions in its actions rotor.
 
+On Android, swipe a pod, workload or CronJob row for its first action; long-press for the rest.
+A pod swipes right to its logs and left to Delete, and long-presses to Logs, Live flows (with
+Hubble), Pin, Share and Delete; a workload swipes right to Restart and long-presses to Restart,
+Scale…, Pin and Share; a CronJob swipes right to Run now and left to Suspend or Resume. Each
+opens the same confirmation as its button, an action the account may not take is dimmed with
+the reason in the menu, and TalkBack lists every action on the row.
+
 When kube-green has the namespace asleep, a workload sheet says so on the row (with its wake-up
 time) and warns before scaling a workload or resuming a CronJob, since kube-green restores the
 replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster

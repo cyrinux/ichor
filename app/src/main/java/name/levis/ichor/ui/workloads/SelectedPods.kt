@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -137,11 +139,15 @@ class SelectedPodsViewModel(
     }
 }
 
-/** The pods of [selection] with a phase filter, their logs and a delete action (os:admin). */
+/**
+ * The pods of [selection] with a phase filter, their logs and a delete action (os:admin).
+ * [rowBackground]: the colour the list is drawn on (a screen, a sheet), under each row's swipe.
+ */
 @Composable
 fun SelectedPodsList(
     selection: PodSelection,
     modifier: Modifier = Modifier,
+    rowBackground: Color = MaterialTheme.colorScheme.background,
     vm: SelectedPodsViewModel = viewModel(
         key = selection.key(PodPhaseFilter.ALL),
         factory = factory { SelectedPodsViewModel(app.talosRepository, app.kubeRepository, { isMeteredNetwork(app) }, selection) },
@@ -182,6 +188,7 @@ fun SelectedPodsList(
                                     onDelete = { actions.confirm = pod },
                                     onLogs = { actions.logs = pod },
                                     showNode = selection.showsNode,
+                                    background = rowBackground,
                                 )
                                 HorizontalDivider()
                             }
@@ -228,7 +235,7 @@ fun WorkloadPodsSheet(selection: PodSelection.OfWorkload, onDismiss: () -> Unit)
                 )
                 MutedText("${selection.kind}  ·  ${selection.namespace}")
             }
-            SelectedPodsList(selection, Modifier.weight(1f))
+            SelectedPodsList(selection, Modifier.weight(1f), rowBackground = BottomSheetDefaults.ContainerColor)
         }
     }
 }

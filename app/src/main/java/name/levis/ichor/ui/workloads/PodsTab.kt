@@ -28,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -275,9 +276,9 @@ fun PodsTab(
 /**
  * A pod: name, namespace and node (when asked), status, readiness, restarts, why its image
  * cannot be pulled (with [pullLinks] to act on it), CPU and memory in use ([usage], from
- * metrics-server); logs, flows and delete actions.
+ * metrics-server); logs, flows and delete actions, as buttons and as swipes and a long-press
+ * menu ([PodQuickActions]). [background]: the colour of what the row is drawn on.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PodRow(
     pod: KubePod,
@@ -289,6 +290,25 @@ internal fun PodRow(
     showNode: Boolean = true,
     usage: KubeTopPod? = null,
     pullLinks: PodPullLinks? = null,
+    background: Color = CardDefaults.cardColors().containerColor,
+) {
+    PodQuickActions(pod, deleting, onLogs = onLogs, onDelete = onDelete, onFlows = onFlows, background = background) {
+        PodRowContent(pod, showNamespace, deleting, onDelete, onLogs, onFlows, showNode, usage, pullLinks)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PodRowContent(
+    pod: KubePod,
+    showNamespace: Boolean,
+    deleting: Boolean,
+    onDelete: () -> Unit,
+    onLogs: () -> Unit,
+    onFlows: (() -> Unit)?,
+    showNode: Boolean,
+    usage: KubeTopPod?,
+    pullLinks: PodPullLinks?,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
