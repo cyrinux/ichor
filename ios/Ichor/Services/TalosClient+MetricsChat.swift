@@ -37,11 +37,11 @@ extension TalosClient {
 }
 
 /// A conversation Go holds in memory: the turns so far, the source and its metric names.
-final class PromChatSession: @unchecked Sendable {
-    private let go: IchorgoPromChat
+final class PromChatSession: Sendable {
+    private let go: GoObject<IchorgoPromChat>
 
     fileprivate init(_ go: IchorgoPromChat) {
-        self.go = go
+        self.go = GoObject(go)
     }
 
     /// Sends `message` with the conversation so far and streams the answer; cancelling the
@@ -58,7 +58,7 @@ final class PromChatSession: @unchecked Sendable {
                     continuation.finish()
                 }
             )
-            let run = go.ask(
+            let run = go.value.ask(
                 provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
                 language: language, message: message, listener: bridge)
             return BridgedRun(bridge) { run?.cancel() }
@@ -67,7 +67,7 @@ final class PromChatSession: @unchecked Sendable {
 
     /// Forgets the conversation; the source and its metric names stay.
     func reset() {
-        go.reset()
+        go.value.reset()
     }
 }
 

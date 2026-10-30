@@ -9,23 +9,23 @@ enum ClusterUpgradeEvent: Sendable {
 }
 
 /// A started roll: its events, and what the run screen can ask of it.
-final class ClusterUpgradeHandle: @unchecked Sendable {
+final class ClusterUpgradeHandle: Sendable {
     let events: AsyncStream<ClusterUpgradeEvent>
-    private let run: IchorgoClusterUpgradeRun?
+    private let run: GoObject<IchorgoClusterUpgradeRun>?
 
     fileprivate init(events: AsyncStream<ClusterUpgradeEvent>, run: IchorgoClusterUpgradeRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
     /// Stops before the next node (a node being upgraded finishes).
-    func pause() { run?.pause() }
+    func pause() { run?.value.pause() }
 
     /// Goes on after a pause, retries a failed gate, or skips the rest of the settle time.
-    func resume() { run?.resume() }
+    func resume() { run?.value.resume() }
 
     /// Ends the roll before its next node; the nodes upgraded stay upgraded.
-    func abort() { run?.abort() }
+    func abort() { run?.value.abort() }
 }
 
 /// The rolling cluster upgrade (see TalosClient for the conventions).

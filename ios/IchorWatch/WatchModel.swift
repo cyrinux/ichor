@@ -7,6 +7,10 @@ import WidgetKit
 /// The watch end of WatchLink (CYR-339): receives the phone's WatchPayload, keeps the last one in
 /// the watch's own App Group defaults for the complication, and reloads it. Read-only: the watch
 /// never reaches a cluster and holds no config.
+///
+/// `@unchecked Sendable`, and why it is sound: `payload` is written on the main queue only (and in
+/// `init`), `refreshTasks` under `lock`, `pendingObservation` only from `activate()` at launch.
+/// WCSession calls its delegate on a queue of its own, so the class cannot be `@MainActor`.
 final class WatchModel: NSObject, ObservableObject, WCSessionDelegate, @unchecked Sendable {
     static let shared = WatchModel()
 

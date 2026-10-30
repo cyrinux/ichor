@@ -233,7 +233,7 @@ struct CaptureView: View {
         }
         try? await Task.sleep(nanoseconds: 400_000_000)
         guard !Task.isCancelled else { return }
-        let error = await Task.detached { TalosClient.validateCaptureFilter(filter) }.value
+        let error = await offMainActor { TalosClient.validateCaptureFilter(filter) }
         guard !Task.isCancelled else { return }
         validatedFilter = filter
         filterError = error

@@ -68,7 +68,7 @@ extension TalosClient {
     }
 }
 
-private final class RunbookBridge: NSObject, IchorgoRunbookListenerProtocol, @unchecked Sendable {
+private final class RunbookBridge: NSObject, IchorgoRunbookListenerProtocol, Sendable {
     private let continuation: AsyncStream<RunbookEvent>.Continuation
 
     init(_ continuation: AsyncStream<RunbookEvent>.Continuation) {

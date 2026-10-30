@@ -65,12 +65,12 @@ final class LogFollower {
         let firstID = nextID
         nextID += batch.count
         pending = []
-        let (items, texts) = await Task.detached(priority: .userInitiated) {
+        let (items, texts) = await offMainActor {
             let items = batch.enumerated().map {
                 LogItem(id: firstID + $0.offset, entry: TalosClient.parseLogLine($0.element))
             }
             return (items, LogStyle.texts(items))
-        }.value
+        }
         document = document.appending(items, texts: texts, cap: Self.maxLines)
     }
 }
@@ -168,7 +168,7 @@ struct LogsView: View {
             } else {
                 tail = try await client.logs(node: node, service: service)
             }
-            return await Task.detached(priority: .userInitiated) { LogDocument(tail) }.value
+            return await offMainActor { LogDocument(tail) }
         }
     }
 }

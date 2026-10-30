@@ -47,11 +47,11 @@ final class SearchStore {
         let active = model.activeContext
         let extra = activeEntries(model: model)
         let demo = contexts.contains(where: \.demo) ? TalosClient.demoSearchEntries() : []
-        entries = await Task.detached(priority: .userInitiated) {
+        entries = await offMainActor {
             searchEntries(
                 contexts: contexts, activeContext: active, read: { LastKnownStore.read(fingerprint: $0, key: $1) },
                 active: extra) + demo
-        }.value
+        }
         nodes = searchOverviewNodes(entries, context: active)
         nothingKnown = entries.isEmpty
         building = false

@@ -34,20 +34,15 @@ enum SecurityKeyError: LocalizedError {
 }
 
 /// Set when the SDK asked for the key's PIN during a ceremony run without one.
-private final class PinAsked: @unchecked Sendable {
-    private let lock = NSLock()
-    private var flag = false
+private final class PinAsked: Sendable {
+    private let flag = Locked(false)
 
     func set() {
-        lock.lock()
-        flag = true
-        lock.unlock()
+        flag.set(true)
     }
 
     var value: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return flag
+        flag.get()
     }
 }
 

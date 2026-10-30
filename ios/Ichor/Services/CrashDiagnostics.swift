@@ -54,7 +54,7 @@ enum CrashDiagnostics {
 
 #if os(iOS)
     /// MetricKit's subscriber: diagnostic payloads only (metric payloads are ignored).
-    private final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber, @unchecked Sendable {
+    private final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber, Sendable {
         static let shared = MetricKitSubscriber()
 
         func didReceive(_ payloads: [MXDiagnosticPayload]) {

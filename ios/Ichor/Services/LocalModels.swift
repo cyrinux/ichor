@@ -159,12 +159,16 @@ final class ModelDownloads {
 /// request narrows it: no expensive network (cellular, hotspot) unless the user allowed it
 /// for this download, never a constrained one (Low Data Mode). A background task waits for
 /// a network that qualifies, and goes on by itself when one comes back.
+///
+/// `@unchecked Sendable`, and why it is sound: `session` is assigned once in `init`, before
+/// `shared` is visible to anyone (it needs `self` as its delegate, so it cannot be a `let`), and
+/// URLSession is thread-safe. Everything else is static or on the main actor.
 final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
     static let shared = ModelDownloadSession()
     static let identifier = "name.levis.ichor.models"
 
     /// Set by the app delegate when iOS relaunches the app for the session's events.
-    nonisolated(unsafe) static var backgroundCompletion: (() -> Void)?
+    @MainActor static var backgroundCompletion: (() -> Void)?
 
     private var session: URLSession!
 
@@ -286,7 +290,7 @@ final class ModelDownloadSession: NSObject, URLSessionDownloadDelegate, @uncheck
     }
 
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             Self.backgroundCompletion?()
             Self.backgroundCompletion = nil
         }

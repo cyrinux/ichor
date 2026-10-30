@@ -9,16 +9,16 @@ enum K8sUpgradeEvent: Sendable {
 }
 
 /// A started Kubernetes upgrade: its events, and Cancel (after the node being changed).
-final class K8sUpgradeHandle: @unchecked Sendable {
+final class K8sUpgradeHandle: Sendable {
     let events: AsyncStream<K8sUpgradeEvent>
-    private let run: IchorgoK8sUpgradeRun?
+    private let run: GoObject<IchorgoK8sUpgradeRun>?
 
     fileprivate init(events: AsyncStream<K8sUpgradeEvent>, run: IchorgoK8sUpgradeRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
-    func cancel() { run?.cancel() }
+    func cancel() { run?.value.cancel() }
 }
 
 /// The Kubernetes upgrade (see TalosClient for the conventions).

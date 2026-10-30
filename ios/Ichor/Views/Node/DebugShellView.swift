@@ -233,8 +233,8 @@ final class DebugShell {
     fileprivate func exited(_ code: Int, _ message: String) { state = .exited(code: code, message: message) }
 
     /// gomobile protocol (a class of the same name exists, hence "Protocol").
-    private final class Bridge: NSObject, IchorgoDebugListenerProtocol, @unchecked Sendable {
-        weak var owner: DebugShell?
+    private final class Bridge: NSObject, IchorgoDebugListenerProtocol, Sendable {
+        private weak let owner: DebugShell?
         init(owner: DebugShell) { self.owner = owner }
 
         func onStatus(_ message: String?) {

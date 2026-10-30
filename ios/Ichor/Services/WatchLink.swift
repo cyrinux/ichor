@@ -6,12 +6,11 @@ import WatchConnectivity
 /// and their last checks, as one WatchPayload in the application context (only the latest is
 /// kept). Nothing else crosses: no config, token, endpoint or node address. Under the screenshot
 /// mode the names are already the masked ones (the widget's list and the monitor's reads are).
-final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
+final class WatchLink: NSObject, WCSessionDelegate, Sendable {
     static let shared = WatchLink()
 
-    private let lock = NSLock()
     /// A send asked before the session was activated, made once it is.
-    private var pending = false
+    private let pending = Locked(false)
 
     /// Activates the session at launch (also a background launch); harmless without a watch.
     func activate() {
@@ -51,17 +50,14 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     }
 
     private func setPending(_ value: Bool) {
-        lock.lock()
-        pending = value
-        lock.unlock()
+        pending.set(value)
     }
 
     private func takePending() -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        let was = pending
-        pending = false
-        return was
+        pending.withLock { pending in
+            defer { pending = false }
+            return pending
+        }
     }
 
     // MARK: - WCSessionDelegate

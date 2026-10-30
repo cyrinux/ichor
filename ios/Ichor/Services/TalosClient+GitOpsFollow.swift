@@ -21,48 +21,48 @@ enum HelmRollbackFollowEvent: Sendable {
 }
 
 /// A followed rollback wait: its events and Cancel (stop following; the rollback stays done).
-final class HelmRollbackFollowHandle: @unchecked Sendable {
+final class HelmRollbackFollowHandle: Sendable {
     let events: AsyncStream<HelmRollbackFollowEvent>
-    private let run: IchorgoHelmRollbackRun?
+    private let run: GoObject<IchorgoHelmRollbackRun>?
 
     fileprivate init(events: AsyncStream<HelmRollbackFollowEvent>, run: IchorgoHelmRollbackRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
-    func cancel() { run?.cancel() }
+    func cancel() { run?.value.cancel() }
 }
 
 /// A followed Argo CD sync: its events, Cancel (stop following; the sync goes on) and
 /// Terminate (stop the sync itself; a network call, so off the main actor).
-final class ArgoSyncHandle: @unchecked Sendable {
+final class ArgoSyncHandle: Sendable {
     let events: AsyncStream<ArgoSyncEvent>
-    private let run: IchorgoArgoSyncRun?
+    private let run: GoObject<IchorgoArgoSyncRun>?
 
     fileprivate init(events: AsyncStream<ArgoSyncEvent>, run: IchorgoArgoSyncRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
-    func cancel() { run?.cancel() }
+    func cancel() { run?.value.cancel() }
 
     func terminate() async throws {
         guard let run else { return }
-        try await Task.detached { try run.terminate() }.value
+        try await offMainActor { try run.value.terminate() }
     }
 }
 
 /// A followed Flux reconcile: its events and Cancel (stop following; the reconcile goes on).
-final class FluxReconcileHandle: @unchecked Sendable {
+final class FluxReconcileHandle: Sendable {
     let events: AsyncStream<FluxReconcileEvent>
-    private let run: IchorgoFluxReconcileRun?
+    private let run: GoObject<IchorgoFluxReconcileRun>?
 
     fileprivate init(events: AsyncStream<FluxReconcileEvent>, run: IchorgoFluxReconcileRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
-    func cancel() { run?.cancel() }
+    func cancel() { run?.value.cancel() }
 }
 
 /// Following a sync or a reconcile the phone just started (os:admin, reads only), until it
