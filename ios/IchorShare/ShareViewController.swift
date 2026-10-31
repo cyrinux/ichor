@@ -32,7 +32,7 @@ final class ShareViewController: UIViewController {
 
 /// How sending the file ended.
 enum ShareOutcome: Equatable {
-    case saved, tooLarge, unsupported, failed
+    case saved, tooLarge, unsupported, notProtected, failed
 }
 
 @MainActor
@@ -75,10 +75,10 @@ enum ShareInbox {
             return .unsupported
         }
         do {
-            try FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true)
-            try FileManager.default.copyItem(
-                at: url, to: inbox.appendingPathComponent(IncomingFile.inboxName(for: name)))
+            try IncomingFile.stage(url, in: inbox)
             return .saved
+        } catch IncomingFileError.notProtected {
+            return .notProtected
         } catch {
             return .failed
         }
@@ -104,6 +104,8 @@ struct ShareView: View {
                     Label(
                         "Ichor takes Talos and Kubernetes configs and Ichor backups.",
                         systemImage: "exclamationmark.triangle")
+                case .notProtected:
+                    Label("The file could not be protected, so it was not saved.", systemImage: "lock.slash")
                 case .failed:
                     Label("The file could not be saved.", systemImage: "exclamationmark.triangle")
                 }

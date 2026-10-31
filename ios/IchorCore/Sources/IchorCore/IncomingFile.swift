@@ -6,6 +6,11 @@ public enum IncomingFileKind: Equatable, Sendable {
     case config, backup, unsupported
 }
 
+public enum IncomingFileError: Error, Equatable {
+    /// The inbox or the copy did not take the protection class, so nothing was kept.
+    case notProtected
+}
+
 /// Files the share extension ("Send to Ichor") leaves in the App Group for the app to take
 /// on its next activation: `incoming/<uuid>.<ext>`, kept a day at most.
 public enum IncomingFile {
@@ -19,6 +24,13 @@ public enum IncomingFile {
     /// A file older than this was never taken (the app not opened since): dropped, it may hold
     /// credentials.
     public static let maxAge: TimeInterval = 24 * 60 * 60
+
+    /// A waiting file holds credentials: readable only while the device is unlocked, like the
+    /// Keychain items it becomes.
+    static let protection = FileProtectionType.complete
+
+    /// Marks a copy still being staged; `inboxName` never starts with it.
+    private static let unfinishedPrefix = "."
 
     /// How many bytes `classify` needs from the start of a file.
     public static let headLength = 64
@@ -53,8 +65,41 @@ public enum IncomingFile {
         return safe ? "\(id.uuidString).\(ext)" : id.uuidString
     }
 
-    /// The inbox's files to take, oldest first, and the stale ones (older than `maxAge`) to
-    /// delete unread.
+    /// Copies a sent file into the inbox, unreadable while the device is locked whatever class
+    /// its source had. The copy keeps a dot name until its class reads back right, so the app
+    /// never takes a weaker one; on any failure it is deleted.
+    @discardableResult
+    public static func stage(_ source: URL, in inbox: URL, fileManager: FileManager = .default) throws -> URL {
+        try fileManager.createDirectory(at: inbox, withIntermediateDirectories: true)
+        try protect(inbox, fileManager: fileManager)
+        let name = inboxName(for: source.lastPathComponent)
+        let unfinished = inbox.appendingPathComponent(unfinishedPrefix + name)
+        let staged = inbox.appendingPathComponent(name)
+        defer { try? fileManager.removeItem(at: unfinished) }
+        try fileManager.copyItem(at: source, to: unfinished)
+        try protect(unfinished, fileManager: fileManager)
+        try fileManager.moveItem(at: unfinished, to: staged)
+        return staged
+    }
+
+    /// Sets `protection` and reads it back: a copy can keep its source's class, so the setter
+    /// alone proves nothing. The simulator has no data protection to ask.
+    private static func protect(_ url: URL, fileManager: FileManager) throws {
+        #if !targetEnvironment(simulator)
+            do {
+                try fileManager.setAttributes([.protectionKey: protection], ofItemAtPath: url.path)
+                let attributes = try fileManager.attributesOfItem(atPath: url.path)
+                guard (attributes[.protectionKey] as? FileProtectionType)?.rawValue == protection.rawValue else {
+                    throw IncomingFileError.notProtected
+                }
+            } catch {
+                throw IncomingFileError.notProtected
+            }
+        #endif
+    }
+
+    /// The inbox's files to take, oldest first, and the ones to delete unread: older than
+    /// `maxAge`, or a copy `stage` never finished.
     public static func pending(in folder: URL, now: Date = Date(), fileManager: FileManager = .default) -> (
         take: [URL], stale: [URL]
     ) {
@@ -68,8 +113,11 @@ public enum IncomingFile {
             }
             return (url, values.contentModificationDate ?? .distantPast)
         }
-        let stale = files.filter { now.timeIntervalSince($0.1) > maxAge }.map(\.0)
-        let take = files.filter { now.timeIntervalSince($0.1) <= maxAge }.sorted { $0.1 < $1.1 }.map(\.0)
+        let isStale = { (file: (URL, Date)) in
+            file.0.lastPathComponent.hasPrefix(unfinishedPrefix) || now.timeIntervalSince(file.1) > maxAge
+        }
+        let stale = files.filter(isStale).map(\.0)
+        let take = files.filter { !isStale($0) }.sorted { $0.1 < $1.1 }.map(\.0)
         return (take, stale)
     }
 

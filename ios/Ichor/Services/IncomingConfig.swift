@@ -1,5 +1,6 @@
 import Foundation
 import IchorCore
+import UIKit
 
 /// A talosconfig, kubeconfig or backup opened with Ichor ("Open with", AirDrop; the YAML and
 /// .kubeconfig document types in project.yml) or sent to it from the share sheet (the IchorShare
@@ -41,6 +42,9 @@ enum IncomingConfig {
         let inbox = group.appendingPathComponent(IncomingFile.inboxFolder, isDirectory: true)
         let pending = IncomingFile.pending(in: inbox)
         for url in pending.stale { try? FileManager.default.removeItem(at: url) }
+        // Locked, the files cannot be read (IncomingFile.protection): left for the next activation
+        // rather than deleted unread.
+        guard UIApplication.shared.isProtectedDataAvailable else { return }
         for url in pending.take {
             receive(url)
             try? FileManager.default.removeItem(at: url)
