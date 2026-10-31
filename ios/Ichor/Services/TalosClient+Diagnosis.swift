@@ -5,6 +5,10 @@ import IchorCore
 enum DiagnosisEvent: Sendable {
     /// The whole answer so far, not only what is new.
     case answer(String)
+    /// The model asks for more, in the placeholders it used.
+    case tool(name: String, argsJSON: String)
+    /// What went back: `result` is the exact text sent. An empty name: the server takes no tools.
+    case toolDone(name: String, bytes: Int, result: String, error: String?)
     case done(error: String?)
 }
 
@@ -32,12 +36,13 @@ final class DiagnosisReport: Sendable {
     /// Sends the report and the note to the model and streams its answer; cancelling the
     /// consuming task stops waiting for it. An empty model means the provider's default, an
     /// empty baseURL its own API.
-    func ask(provider: String, settings: AIProviderSettings, language: String, note: String) -> AsyncStream<
-        DiagnosisEvent
-    > {
+    func ask(
+        provider: String, settings: AIProviderSettings, language: String, note: String, allowTools: Bool
+    ) -> AsyncStream<DiagnosisEvent> {
         TalosClient.bridged { continuation in
             let bridge = DiagnosisBridge(
                 answer: { continuation.yield(.answer($0)) },
+                event: { continuation.yield($0) },
                 done: {
                     continuation.yield(.done(error: $0))
                     continuation.finish()
@@ -45,7 +50,7 @@ final class DiagnosisReport: Sendable {
             )
             let run = go.value.ask(
                 provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
-                language: language, note: note, listener: bridge)
+                language: language, note: note, allowTools: allowTools, listener: bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
@@ -88,15 +93,29 @@ extension TalosClient {
 
 private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, Sendable {
     private let answer: @Sendable (String) -> Void
+    private let event: @Sendable (DiagnosisEvent) -> Void
     private let done: @Sendable (String?) -> Void
 
-    init(answer: @escaping @Sendable (String) -> Void, done: @escaping @Sendable (String?) -> Void) {
+    init(
+        answer: @escaping @Sendable (String) -> Void,
+        event: @escaping @Sendable (DiagnosisEvent) -> Void,
+        done: @escaping @Sendable (String?) -> Void
+    ) {
         self.answer = answer
+        self.event = event
         self.done = done
     }
 
     func onAnswer(_ text: String?) {
         answer(text ?? "")
+    }
+
+    func onTool(_ name: String?, argsJSON: String?) {
+        event(.tool(name: name ?? "", argsJSON: argsJSON ?? "{}"))
+    }
+
+    func onToolDone(_ name: String?, bytes: Int, result: String?, errMessage: String?) {
+        event(.toolDone(name: name ?? "", bytes: bytes, result: result ?? "", error: errMessage.nonEmpty))
     }
 
     func onDone(_ errMessage: String?) {

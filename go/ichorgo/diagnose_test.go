@@ -303,18 +303,27 @@ func TestAnonymizedReportAndReveal(t *testing.T) {
 }
 
 type answerRecorder struct {
-	answers []string
-	done    chan string
+	answers   []string
+	tools     []recordedTool
+	toolsDone []recordedToolDone
+	done      chan string
 }
 
 func (l *answerRecorder) OnAnswer(text string)     { l.answers = append(l.answers, text) }
 func (l *answerRecorder) OnDone(errMessage string) { l.done <- errMessage }
+func (l *answerRecorder) OnTool(name, argsJSON string) {
+	l.tools = append(l.tools, recordedTool{name: name, args: argsJSON})
+}
+
+func (l *answerRecorder) OnToolDone(name string, bytes int, result, errMessage string) {
+	l.toolsDone = append(l.toolsDone, recordedToolDone{name, bytes, result, errMessage})
+}
 
 func askAndWait(t *testing.T, d *Diagnosis, provider, key, baseURL, note string) (*answerRecorder, string) {
 	t.Helper()
 
 	l := &answerRecorder{done: make(chan string, 1)}
-	d.Ask(provider, key, "", baseURL, "en", note, l)
+	d.Ask(provider, key, "", baseURL, "en", note, false, l)
 
 	select {
 	case errMessage := <-l.done:
@@ -403,7 +412,7 @@ func TestAskCancelled(t *testing.T) {
 	defer close(release)
 
 	l := &answerRecorder{done: make(chan string, 1)}
-	run := (&Diagnosis{report: "r"}).Ask("openai", testAPIKey, "", srv.URL, "en", "", l)
+	run := (&Diagnosis{report: "r"}).Ask("openai", testAPIKey, "", srv.URL, "en", "", false, l)
 	run.Cancel()
 
 	select {

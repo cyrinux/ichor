@@ -75,6 +75,22 @@ and never contacts a model provider.
     of the Android app, which then does not offer this provider.
 - **Without an API key:** *Share with an assistant app* hands the same question and report to
   the Claude, ChatGPT or Gemini app (or any app taking text) through the system share sheet.
+- **What the model can ask for:** with Anthropic, OpenAI or your own server (never the model on
+  the phone), the model may ask for a little more than the report: `pod_logs` (200 lines at most),
+  `object_events` and `object_yaml` (Pod, Service, PersistentVolumeClaim, Deployment, StatefulSet,
+  DaemonSet, ReplicaSet, Job, CronJob, Ingress, HorizontalPodAutoscaler), and on Talos `service_logs`
+  (100 lines at most, a service the report lists on a node of the report). These are reads with your
+  own credentials: what they may not read is refused, and the model is told. It gets three requests
+  per question, each result cut at 16 KiB, then it has to answer. It can only name what it was shown
+  (the report, your note, an earlier result): no Secret, no ConfigMap, no write of any kind, no
+  metrics. Each request shows with the answer, in the placeholders the model used, with the exact
+  text sent back behind *Show*. Results go through the same secret stripping as the report, in every
+  mode, and in anonymized mode through its mask and the sweep, on all of the text: a single plain word
+  in a log line can still pass, as in the report. In `object_yaml`, every string value is treated as
+  a name, the values of environment variables and what follows a flag named like a secret are
+  hidden. The health check helper never asks. *Let the model ask for more* in Settings → AI diagnosis
+  turns it off, and is not kept in a backup. A server that refuses the `tools` parameter is asked
+  again without it, and the answer says so.
 - **Check the answer:** a model can be wrong. Read a command before running it, especially one
   that resets a node or changes etcd membership.
 - **Health check helper:** when the cluster health check fails, the health page shows *Explain
@@ -95,7 +111,8 @@ From a workstation, the same code runs against a real cluster:
 ```sh
 cd go
 go run ./cmd/probe diagnose-report        # the anonymized report; nothing is sent
-# These two send the report with the real names (not anonymized) and print the answer:
+# These two send the report with the real names (not anonymized) and print the answer, and on
+# stderr each thing the model asks for:
 ANTHROPIC_API_KEY=... go run ./cmd/probe diagnose anthropic
 OPENAI_API_KEY=... go run ./cmd/probe diagnose openai gpt-6-astra
 # The health check helper: runs the health check, then prints what would be sent (anonymized,

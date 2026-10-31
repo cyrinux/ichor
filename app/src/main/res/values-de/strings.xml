@@ -1815,6 +1815,16 @@
     <string name="ai_model_none">Kein Modell gefunden</string>
     <string name="ai_base_url">Server-URL (optional)</string>
     <string name="ai_base_url_hint">Nur für ein Gateway oder ein lokales Modell. Leer lassen, um die API des Anbieters zu nutzen.</string>
+    <string name="ai_tool_looked_at">Angesehen</string>
+    <string name="ai_tool_logs">Logs von %1$s</string>
+    <string name="ai_tool_events">Ereignisse von %1$s %2$s</string>
+    <string name="ai_tool_yaml">YAML von %1$s %2$s</string>
+    <string name="ai_tool_service_logs">%1$s-Logs auf %2$s</string>
+    <string name="ai_tool_other">eine Anfrage nach %1$s</string>
+    <string name="ai_tool_refused">Nicht gelesen: %1$s</string>
+    <string name="ai_tool_unsupported">Dieser Server nimmt keine Anfragen nach weiteren Daten an: Das Modell hat nur anhand des Berichts geantwortet.</string>
+    <string name="ai_tool_allow">Das Modell mehr anfragen lassen</string>
+    <string name="ai_tool_allow_desc">Das Modell darf pro Frage dreimal die Logs eines Pods, die Ereignisse oder das YAML eines Objekts oder die Logs eines Talos-Dienstes lesen. Jede Anfrage wird mit der Antwort angezeigt, und das Gelesene wird wie der Bericht maskiert.</string>
     <string name="ai_anonymize">Namen und Adressen verbergen</string>
     <string name="ai_anonymize_desc">Namen, IP-Adressen und Domain der Knoten werden vor dem Senden des Berichts durch Platzhalter ersetzt. Der Rest der Logs, etwa Pod-Namen und andere Hostnamen, wird unverändert gesendet.</string>
     <string name="ai_collecting">Clusterzustand wird gelesen…</string>

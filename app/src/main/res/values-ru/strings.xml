@@ -1929,6 +1929,16 @@
     <string name="ai_model_none">Модели не найдены</string>
     <string name="ai_base_url">URL сервера (необязательно)</string>
     <string name="ai_base_url_hint">Только для шлюза или локальной модели. Оставьте пустым, чтобы использовать API самого провайдера.</string>
+    <string name="ai_tool_looked_at">Просмотрено</string>
+    <string name="ai_tool_logs">журналы %1$s</string>
+    <string name="ai_tool_events">события %1$s %2$s</string>
+    <string name="ai_tool_yaml">YAML %1$s %2$s</string>
+    <string name="ai_tool_service_logs">журналы %1$s на %2$s</string>
+    <string name="ai_tool_other">запрос %1$s</string>
+    <string name="ai_tool_refused">Не прочитано: %1$s</string>
+    <string name="ai_tool_unsupported">Этот сервер не принимает запросы дополнительных данных: модель ответила только по отчёту.</string>
+    <string name="ai_tool_allow">Разрешить модели запрашивать больше</string>
+    <string name="ai_tool_allow_desc">Модель может читать журналы пода, события или YAML объекта либо журналы службы Talos, три раза на вопрос. Каждый запрос показывается вместе с ответом, а прочитанное маскируется как отчёт.</string>
     <string name="ai_anonymize">Скрывать имена и адреса</string>
     <string name="ai_anonymize_desc">Имена узлов, IP-адреса и домен заменяются заглушками перед отправкой отчёта. Остальное содержимое журналов, например имена подов и другие имена хостов, отправляется как есть.</string>
     <string name="ai_collecting">Чтение состояния кластера…</string>

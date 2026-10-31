@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -224,6 +225,18 @@ func (n *diagnosisNames) learn(name, kind string) {
 	}
 
 	n.reals[name] = fake
+}
+
+// clone is a copy that learns on its own; nil stays nil.
+func (n *diagnosisNames) clone() *diagnosisNames {
+	if n == nil {
+		return nil
+	}
+
+	return &diagnosisNames{
+		reals: maps.Clone(n.reals), counts: maps.Clone(n.counts), avoid: n.avoid,
+		skip: slices.Clone(n.skip), keep: slices.Clone(n.keep),
+	}
 }
 
 // mask replaces the learned names in text.

@@ -1927,6 +1927,16 @@
     <string name="ai_model_none">Моделей не знайдено</string>
     <string name="ai_base_url">URL сервера (необов’язково)</string>
     <string name="ai_base_url_hint">Лише для шлюзу або локальної моделі. Залиште порожнім, щоб використовувати API постачальника.</string>
+    <string name="ai_tool_looked_at">Переглянуто</string>
+    <string name="ai_tool_logs">журнали %1$s</string>
+    <string name="ai_tool_events">події %1$s %2$s</string>
+    <string name="ai_tool_yaml">YAML %1$s %2$s</string>
+    <string name="ai_tool_service_logs">журнали %1$s на %2$s</string>
+    <string name="ai_tool_other">запит %1$s</string>
+    <string name="ai_tool_refused">Не прочитано: %1$s</string>
+    <string name="ai_tool_unsupported">Цей сервер не приймає запитів додаткових даних: модель відповіла лише за звітом.</string>
+    <string name="ai_tool_allow">Дозволити моделі запитувати більше</string>
+    <string name="ai_tool_allow_desc">Модель може читати журнали пода, події чи YAML об’єкта або журнали служби Talos, тричі на запитання. Кожен запит показується разом із відповіддю, а прочитане маскується як звіт.</string>
     <string name="ai_anonymize">Приховувати імена й адреси</string>
     <string name="ai_anonymize_desc">Імена, IP-адреси й домен вузлів замінюються умовними перед надсиланням звіту. Решта журналів, як-от імена подів та інші імена хостів, надсилається як є.</string>
     <string name="ai_collecting">Зчитування стану кластера…</string>

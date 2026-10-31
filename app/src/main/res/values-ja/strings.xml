@@ -1761,6 +1761,16 @@
     <string name="ai_model_none">モデルが見つかりません</string>
     <string name="ai_base_url">サーバー URL（オプション）</string>
     <string name="ai_base_url_hint">ゲートウェイまたはローカルモデルの場合のみ。プロバイダー独自の API を使う場合は空欄のままにしてください。</string>
+    <string name="ai_tool_looked_at">確認した内容</string>
+    <string name="ai_tool_logs">%1$s のログ</string>
+    <string name="ai_tool_events">%1$s %2$s のイベント</string>
+    <string name="ai_tool_yaml">%1$s %2$s の YAML</string>
+    <string name="ai_tool_service_logs">%2$s の %1$s のログ</string>
+    <string name="ai_tool_other">%1$s の要求</string>
+    <string name="ai_tool_refused">読み取らず: %1$s</string>
+    <string name="ai_tool_unsupported">このサーバーは追加データの要求を受け付けません。モデルはレポートのみに基づいて回答しました。</string>
+    <string name="ai_tool_allow">モデルに追加の要求を許可</string>
+    <string name="ai_tool_allow_desc">モデルは質問ごとに 3 回まで、Pod のログ、オブジェクトのイベントや YAML、Talos サービスのログを読み取れます。各要求は回答とともに表示され、読み取った内容はレポートと同様にマスクされます。</string>
     <string name="ai_anonymize">名前とアドレスを隠す</string>
     <string name="ai_anonymize_desc">レポートの送信前に、ノードの名前、IP アドレス、ドメインはプレースホルダーに置き換えられます。Pod 名や他のホスト名など、ログのその他の部分はそのまま送信されます。</string>
     <string name="ai_collecting">クラスターの状態を読み取り中…</string>

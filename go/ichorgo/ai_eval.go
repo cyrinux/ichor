@@ -207,8 +207,10 @@ type aiEvalAnswer struct {
 	done chan string
 }
 
-func (a *aiEvalAnswer) OnAnswer(text string)     { a.text = text }
-func (a *aiEvalAnswer) OnDone(errMessage string) { a.done <- errMessage }
+func (a *aiEvalAnswer) OnAnswer(text string)                    { a.text = text }
+func (a *aiEvalAnswer) OnTool(_, _ string)                      {}
+func (a *aiEvalAnswer) OnToolDone(_ string, _ int, _, _ string) {}
+func (a *aiEvalAnswer) OnDone(errMessage string)                { a.done <- errMessage }
 
 // AIEvalRun sends one case to a model through the same path as a diagnosis and grades the
 // answer: {id, pass, score, missing, forbidden, words, seconds, answer}. provider, apiKey,
@@ -230,7 +232,7 @@ func AIEvalRun(provider, apiKey, model, baseURL, caseID string) (out string, err
 	answer := &aiEvalAnswer{done: make(chan string, 1)}
 	start := time.Now()
 
-	c.diagnosis().Ask(provider, apiKey, model, baseURL, c.language(), c.Note, answer)
+	c.diagnosis().Ask(provider, apiKey, model, baseURL, c.language(), c.Note, false, answer)
 
 	if msg := <-answer.done; msg != "" {
 		return "", errors.New(msg)

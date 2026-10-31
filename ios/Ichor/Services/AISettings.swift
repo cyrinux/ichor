@@ -22,10 +22,17 @@ final class AISettings {
         didSet { UserDefaults.standard.set(anonymize, forKey: AIKeys.anonymize) }
     }
 
+    /// A provider on the network may ask for a pod's logs, an object's events or YAML. Not in a
+    /// backup: a file does not decide what the model may read on this device.
+    var allowTools: Bool {
+        didSet { UserDefaults.standard.set(allowTools, forKey: AIKeys.allowTools) }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         enabled = defaults.bool(forKey: AIKeys.enabled)
         anonymize = aiAnonymize(stored: defaults.object(forKey: AIKeys.anonymize) as? Bool)
+        allowTools = aiAllowTools(stored: defaults.object(forKey: AIKeys.allowTools) as? Bool)
         savedProvider = defaults.string(forKey: AIKeys.provider)
     }
 

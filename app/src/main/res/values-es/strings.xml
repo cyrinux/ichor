@@ -1822,6 +1822,16 @@
     <string name="ai_model_none">No se encontró ningún modelo</string>
     <string name="ai_base_url">URL del servidor (opcional)</string>
     <string name="ai_base_url_hint">Solo para una pasarela o un modelo local. Déjalo vacío para usar la API del proveedor.</string>
+    <string name="ai_tool_looked_at">Consultado</string>
+    <string name="ai_tool_logs">registros de %1$s</string>
+    <string name="ai_tool_events">eventos de %1$s %2$s</string>
+    <string name="ai_tool_yaml">YAML de %1$s %2$s</string>
+    <string name="ai_tool_service_logs">registros de %1$s en %2$s</string>
+    <string name="ai_tool_other">una petición de %1$s</string>
+    <string name="ai_tool_refused">No leído: %1$s</string>
+    <string name="ai_tool_unsupported">Este servidor no acepta peticiones de más datos: el modelo ha respondido solo con el informe.</string>
+    <string name="ai_tool_allow">Dejar que el modelo pida más</string>
+    <string name="ai_tool_allow_desc">El modelo puede leer los registros de un pod, los eventos o el YAML de un objeto, o los registros de un servicio de Talos, tres veces por pregunta. Cada petición se muestra con la respuesta y lo que lee se oculta como el informe.</string>
     <string name="ai_anonymize">Ocultar nombres y direcciones</string>
     <string name="ai_anonymize_desc">Los nombres, las direcciones IP y el dominio de los nodos se sustituyen por nombres genéricos antes de enviar el informe. El resto de los registros, como los nombres de pods y otros nombres de host, se envía tal cual.</string>
     <string name="ai_collecting">Leyendo el estado del clúster…</string>

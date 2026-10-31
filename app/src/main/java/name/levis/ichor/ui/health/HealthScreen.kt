@@ -166,6 +166,8 @@ class HealthViewModel(
                     _explain.update { s ->
                         when (event) {
                             is AnswerEvent.Text -> s.copy(text = event.text)
+                            // This report takes no tools: Go never asks for any here.
+                            is AnswerEvent.Tool, is AnswerEvent.ToolDone -> s
                             is AnswerEvent.Done -> s.copy(asking = false, error = event.error)
                         }
                     }

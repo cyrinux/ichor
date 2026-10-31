@@ -27,6 +27,8 @@ data class AiSettings(
     val baseUrls: Map<String, String> = emptyMap(),
     /** Replace node names, addresses and domains with placeholders in what is sent. */
     val anonymize: Boolean = true,
+    /** A provider on the network may ask for a pod's logs, an object's events or YAML. */
+    val allowTools: Boolean = true,
 ) {
     /** Empty: the provider's default model. */
     val model: String get() = models[provider].orEmpty()
@@ -73,6 +75,7 @@ class AiPreferences(
             putBoolean(KEY_ENABLED, settings.enabled)
             putString(KEY_PROVIDER, settings.provider)
             putBoolean(KEY_ANONYMIZE, settings.anonymize)
+            putBoolean(KEY_ALLOW_TOOLS, settings.allowTools)
             providerIds.forEach { id ->
                 putString(KEY_MODEL + id, settings.models[id].orEmpty())
                 putString(KEY_BASE_URL + id, settings.baseUrls[id].orEmpty())
@@ -106,6 +109,7 @@ class AiPreferences(
         models = providerIds.associateWith { prefs.getString(KEY_MODEL + it, "").orEmpty() }.filterValues { it.isNotEmpty() },
         baseUrls = providerIds.associateWith { prefs.getString(KEY_BASE_URL + it, "").orEmpty() }.filterValues { it.isNotEmpty() },
         anonymize = prefs.getBoolean(KEY_ANONYMIZE, true),
+        allowTools = prefs.getBoolean(KEY_ALLOW_TOOLS, true),
     )
 
     companion object {
@@ -113,6 +117,7 @@ class AiPreferences(
         private const val KEY_ENABLED = "enabled"
         private const val KEY_PROVIDER = "provider"
         private const val KEY_ANONYMIZE = "anonymize"
+        private const val KEY_ALLOW_TOOLS = "allow_tools"
         private const val KEY_MODEL = "model_"
         private const val KEY_BASE_URL = "base_url_"
     }

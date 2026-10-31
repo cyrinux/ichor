@@ -100,6 +100,8 @@ fun restoredAi(ai: BackupAi?, providers: List<String>, current: AiSettings, secr
         models = it.models.filter { (p, m) -> p in providers && m.isNotBlank() }.mapValues { (_, m) -> m.trim() },
         baseUrls = current.baseUrls.filterKeys { p -> p !in keyed } + urls,
         anonymize = it.anonymize || keyed.isEmpty(),
+        // Not in a backup: a file does not decide what the model may read on this device.
+        allowTools = current.allowTools,
     )
 }
 

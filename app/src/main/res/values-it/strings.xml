@@ -1822,6 +1822,16 @@
     <string name="ai_model_none">Nessun modello trovato</string>
     <string name="ai_base_url">URL del server (facoltativo)</string>
     <string name="ai_base_url_hint">Solo per un gateway o un modello locale. Lascia vuoto per usare l’API del fornitore.</string>
+    <string name="ai_tool_looked_at">Consultato</string>
+    <string name="ai_tool_logs">log di %1$s</string>
+    <string name="ai_tool_events">eventi di %1$s %2$s</string>
+    <string name="ai_tool_yaml">YAML di %1$s %2$s</string>
+    <string name="ai_tool_service_logs">log di %1$s su %2$s</string>
+    <string name="ai_tool_other">una richiesta di %1$s</string>
+    <string name="ai_tool_refused">Non letto: %1$s</string>
+    <string name="ai_tool_unsupported">Questo server non accetta richieste di altri dati: il modello ha risposto solo in base al rapporto.</string>
+    <string name="ai_tool_allow">Lascia che il modello chieda di più</string>
+    <string name="ai_tool_allow_desc">Il modello può leggere i log di un pod, gli eventi o lo YAML di un oggetto, o i log di un servizio Talos, tre volte per domanda. Ogni richiesta è mostrata con la risposta e ciò che legge è mascherato come il rapporto.</string>
     <string name="ai_anonymize">Nascondi nomi e indirizzi</string>
     <string name="ai_anonymize_desc">Nomi, indirizzi IP e dominio dei nodi vengono sostituiti con segnaposto prima dell’invio del rapporto. Il resto dei log, come i nomi dei pod e altri nomi host, viene inviato così com’è.</string>
     <string name="ai_collecting">Lettura dello stato del cluster…</string>
