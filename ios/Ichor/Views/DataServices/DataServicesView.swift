@@ -65,7 +65,9 @@ struct DataServicesView: View {
                 let tab = Self.tab(in: tabs, selected: selected)
                 SwipeTabPager(tabs: tabs, selection: Binding(get: { tab }, set: { selected = $0.id })) { shown in
                     switch shown {
-                    case .native(let kind): nativeList(kind, services)
+                    // One anchor for the hub and for the screen opened on one system (castai).
+                    case .native(let kind):
+                        nativeList(kind, services).accessibilityIdentifier(SmokeID.screen("data-services"))
                     case .plugin(let id, _):
                         PluginList(pluginID: id, reload: pluginReload).id(id)
                     }

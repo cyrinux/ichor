@@ -153,6 +153,7 @@ struct ArgoCDView: View {
                         ArgoAppSetsList(status: status, query: query, downNodes: downNodes, refresh: load)
                     }
                 }
+                .accessibilityIdentifier(SmokeID.screen("argocd"))
                 .safeAreaInset(edge: .top) { topBar(status) }
                 .toolbar { toolbar(status) }
             }

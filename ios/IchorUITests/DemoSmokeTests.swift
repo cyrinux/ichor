@@ -17,10 +17,6 @@ final class DemoSmokeTests: XCTestCase {
         static let kubeHome = "smoke-kube-home"
     }
 
-    /// A cold simulator: the first screen of a fresh install can take a while, longer with four
-    /// tests on one simulator (the Kubernetes home once showed just after a 30 s wait).
-    private let timeout: TimeInterval = 60
-
     override func setUp() {
         continueAfterFailure = false
     }
@@ -65,58 +61,5 @@ final class DemoSmokeTests: XCTestCase {
     func testTheKubernetesDemoOpensItsHome() {
         let app = launch("demo-kube")
         waitFor(ID.kubeHome, in: app)
-    }
-
-    @MainActor
-    private func launch(_ demo: String, arguments: [String] = []) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchEnvironment["ICHOR_UI_TEST"] = demo
-        app.launchArguments += arguments
-        app.launch()
-        return app
-    }
-
-    @MainActor
-    private func element(_ id: String, in app: XCUIApplication) -> XCUIElement {
-        app.descendants(matching: .any)[id].firstMatch
-    }
-
-    /// Waits for `id`; on a timeout the failure carries the screen's element tree.
-    @MainActor
-    @discardableResult
-    private func waitFor(_ id: String, in app: XCUIApplication) -> XCUIElement {
-        let found = element(id, in: app)
-        if !found.waitForExistence(timeout: timeout) {
-            XCTFail("\(id) not found; on screen:\n\(app.debugDescription)")
-        }
-        return found
-    }
-
-    /// Taps `id` until `target` shows, at most three times: a tap that lands while the screen is
-    /// rebuilding opens nothing. Fails with the screen's element tree when `target` never shows.
-    @MainActor
-    private func tap(_ id: String, until target: String, in app: XCUIApplication) {
-        let button = waitFor(id, in: app)
-        let shown = element(target, in: app)
-        for _ in 0..<3 {
-            if button.isHittable { button.tap() }
-            if shown.waitForExistence(timeout: timeout / 3) { return }
-        }
-        XCTFail("\(target) not shown after tapping \(id); on screen:\n\(app.debugDescription)")
-    }
-
-    /// Waits for the first screen to settle, then swipes up until `id` is on screen: a List
-    /// only holds the rows that show.
-    @MainActor
-    private func scrollTo(_ id: String, in app: XCUIApplication) -> XCUIElement {
-        let found = element(id, in: app)
-        if found.waitForExistence(timeout: timeout), found.isHittable { return found }
-        for _ in 0..<8 where !(found.exists && found.isHittable) {
-            app.swipeUp()
-        }
-        if !(found.exists && found.isHittable) {
-            XCTFail("\(id) not reachable; on screen:\n\(app.debugDescription)")
-        }
-        return found
     }
 }

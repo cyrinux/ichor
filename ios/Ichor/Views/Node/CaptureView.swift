@@ -111,6 +111,7 @@ struct CaptureView: View {
             Section {
                 Button("Start capture") { Task { await start() } }
                     .disabled(problem != nil)
+                    .accessibilityIdentifier(SmokeID.captureStart)
             } footer: {
                 Text(
                     "The capture is saved on this phone. It can contain sensitive traffic (tokens, internal names): share it with care."

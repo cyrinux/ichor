@@ -76,7 +76,7 @@ struct ImportView: View {
             if let signIn {
                 SignInProgressCard(progress: signIn)
             } else {
-                content
+                content.accessibilityIdentifier(SmokeID.screen("import"))
             }
         }
         .navigationTitle("Add a cluster")

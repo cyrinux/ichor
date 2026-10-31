@@ -31,6 +31,7 @@ struct NetPerfView: View {
             }
             .refreshable { await load() }
             .themedBackground()
+            .accessibilityIdentifier(SmokeID.screen("netperf"))
         }
         .task {
             if let cluster = model.activeSummary?.fingerprint {

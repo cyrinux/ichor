@@ -132,6 +132,7 @@ struct NodeTabsView: View {
                 List(list) { svc in serviceRow(svc) }
                     .refreshable { await loadServices() }
                     .themedBackground()
+                    .accessibilityIdentifier(SmokeID.nodeServices)
             }
             .task { if case .loading = services { await loadServices() } }
         case .resources:

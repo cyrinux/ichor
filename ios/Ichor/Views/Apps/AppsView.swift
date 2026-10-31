@@ -68,6 +68,7 @@ struct AppsView: View {
             .refreshable { await load() }
             .background(Color(.systemGroupedBackground))
             .themedBackground()
+            .accessibilityIdentifier(SmokeID.screen("apps"))
         }
         .searchable(text: $query, prompt: Text("Name, namespace or image"))
         .navigationTitle("Apps")

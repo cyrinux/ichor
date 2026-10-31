@@ -87,6 +87,7 @@ struct PodsList: View {
                 topRefreshes += 1
             }
             .themedBackground()
+            .accessibilityIdentifier(SmokeID.screen("pods"))
             .task(id: "\(selected ?? "")#\(topRefreshes)") {
                 let usage = try? await model.client?.topPods(namespace: selected)
                 top = usage?.available == true ? usage?.byKey ?? [:] : [:]

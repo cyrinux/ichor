@@ -43,6 +43,7 @@ private struct InsightsContent: View {
                         if let error = session.error { Text(verbatim: error).foregroundStyle(.statusBad) }
                         if shown == 0 { drift } else { recorder }
                     }
+                    .smokeID(shown == 0 ? SmokeID.screen("drift") : nil)
                 }
             }
         }
