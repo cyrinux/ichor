@@ -64,6 +64,8 @@ var shareTargets = map[string]shareFields{
 	"storage": {node: true},
 	// A node's Hardware screen (its sensors, the temperature alert's).
 	"hardware": {node: true},
+	// The KubeSpan map (a tunnel alert's).
+	"kubespan": {},
 }
 
 var (

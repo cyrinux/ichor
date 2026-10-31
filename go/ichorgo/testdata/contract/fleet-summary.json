@@ -31,6 +31,36 @@
     },
     {
       "checkedAt": 1767323045000,
+      "context": "edge",
+      "critical": 1,
+      "etcdAlarms": 0,
+      "key": "demo-edge",
+      "kube": false,
+      "name": "edge",
+      "nodes": 2,
+      "notReady": 0,
+      "ready": 2,
+      "stale": false,
+      "tags": [
+        "prod"
+      ],
+      "tone": "bad",
+      "topFinding": {
+        "detail": "neverHandshaked",
+        "severity": "critical",
+        "subject": "edge-1 ↔ edge-2",
+        "track": "kubespan"
+      },
+      "tracksChecked": [
+        "etcd",
+        "kubespan",
+        "storage"
+      ],
+      "unreachable": 0,
+      "warnings": 0
+    },
+    {
+      "checkedAt": 1767323045000,
       "context": "staging",
       "critical": 0,
       "etcdAlarms": 0,
@@ -57,40 +87,19 @@
       ],
       "unreachable": 0,
       "warnings": 1
-    },
-    {
-      "checkedAt": 1767323045000,
-      "context": "lab",
-      "critical": 0,
-      "etcdAlarms": 0,
-      "key": "demo-lab",
-      "kube": false,
-      "name": "lab",
-      "nodes": 1,
-      "notReady": 0,
-      "ready": 1,
-      "stale": true,
-      "tags": [],
-      "tone": "unknown",
-      "topFinding": null,
-      "tracksChecked": [
-        "etcd"
-      ],
-      "unreachable": 0,
-      "warnings": 0
     }
   ],
   "counts": {
-    "bad": 1,
-    "ok": 2,
+    "bad": 2,
+    "ok": 1,
     "unknown": 1,
     "warn": 1
   },
   "groups": [
     {
       "counts": {
-        "bad": 1,
-        "ok": 1,
+        "bad": 2,
+        "ok": 0,
         "unknown": 0,
         "warn": 0
       },

@@ -589,6 +589,8 @@
     <string name="monitor_widget_hint">Il widget della schermata Home usa gli stessi controlli; se lo aggiungi, restano attivi anche con gli avvisi disattivati.</string>
     <string name="monitor_channel_nodes">Avvisi dei nodi</string>
     <string name="monitor_channel_nodes_desc">Un nodo si ferma, non risponde più o torna pronto</string>
+    <string name="monitor_channel_mesh">Tunnel KubeSpan</string>
+    <string name="monitor_channel_mesh_desc">Un tunnel tra due nodi cade o torna attivo</string>
     <string name="monitor_channel_cluster">Avvisi del cluster</string>
     <string name="monitor_channel_cluster_desc">Allarmi etcd, problemi rilevati dal controllo del cluster, avvisi di Alertmanager e cluster non raggiungibili</string>
     <string name="monitor_channel_data">Avvisi dei servizi dati</string>
@@ -868,6 +870,10 @@
     <plurals name="widget_unreachable">
         <item quantity="one">%1$d irraggiungibile</item>
         <item quantity="other">%1$d irraggiungibili</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="one">%1$d tunnel caduto</item>
+        <item quantity="other">%1$d tunnel caduti</item>
     </plurals>
     <string name="widget_all_ready">tutti pronti</string>
     <string name="widget_etcd_no_alarms">etcd: nessun allarme</string>
@@ -4536,6 +4542,10 @@
     <string name="monitor_storage_trend_desc">Notifica quando la crescita di un volume nell\'ultima settimana lo renderebbe critico entro %1$d giorni, e una volta quando non è più così. Usa la cronologia dei controlli; richiede l\'archiviazione dei nodi.</string>
     <string name="monitor_sensors">Temperature dei nodi</string>
     <string name="monitor_sensors_desc">Avvisa quando un nodo si scalda o i suoi core vengono limitati (cluster Talos; legge i sensori di ogni nodo a ogni controllo).</string>
+    <string name="monitor_kubespan">Tunnel KubeSpan</string>
+    <string name="monitor_kubespan_desc">Avvisa quando un tunnel tra due nodi è caduto (cluster Talos; legge i peer di ogni nodo a ogni controllo).</string>
+    <string name="monitor_kubespan_down">Tunnel %1$s caduto</string>
+    <string name="monitor_kubespan_up">Tunnel %1$s di nuovo attivo</string>
     <string name="monitor_sensors_auto">Il limite di ogni sensore (critico − 5 °C, altrimenti il suo massimo)</string>
     <string name="monitor_sensors_threshold">Avvisa a %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s si scalda (%2$s °C)</string>

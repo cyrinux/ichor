@@ -42,6 +42,8 @@ data class FleetEntry(
     val storageIssues: Map<String, String> = emptyMap(),
     val sensorChecked: Boolean = false,
     val sensorIssues: Map<String, String> = emptyMap(),
+    val kubespanChecked: Boolean = false,
+    val kubespanIssues: Map<String, String> = emptyMap(),
     val pluginChecked: Boolean = false,
     val pluginIssues: Map<String, String> = emptyMap(),
 )
@@ -109,6 +111,8 @@ private fun entryOf(
         storageIssues = s.storageIssues,
         sensorChecked = s.sensorChecked,
         sensorIssues = s.sensorIssues,
+        kubespanChecked = s.kubespanChecked,
+        kubespanIssues = s.kubespanIssues,
         pluginChecked = s.pluginChecked,
         pluginIssues = s.pluginIssues,
     )

@@ -87,6 +87,7 @@ enum Glance {
         switch item {
         case .notReady(let n): return Text("\(n) not ready")
         case .unreachable(let n): return Text("\(n) unreachable")
+        case .tunnelsDown(let n): return Text("\(n) tunnels down")
         case .allReady: return Text("all ready")
         case .etcdNoAlarms: return Text("etcd: no alarms")
         case .etcdAlarms(let n): return Text("etcd: \(n) alarms")

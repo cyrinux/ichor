@@ -10,6 +10,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         /// The data services screen, on the tab `kind` names (a catalog id); the cluster checkup;
         /// the Alertmanager alerts; a node's Storage or Hardware screen (`addr`, `host`).
         case data, checkup, alerts, storage, hardware
+        /// The KubeSpan screen, which opens on its map.
+        case kubespan
     }
 
     public var cluster: String
@@ -174,6 +176,7 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             guard !address.isEmpty else { return nil }
             let kept = snapshot.sensorIssues[subject].map { SensorIssue(value: $0).hostname } ?? ""
             return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
+        case "kubespan": return .screen(.kubespan)
         case "unreachable": return .screen(.cluster)
         case "plugin":
             // "plugin:<id>:<finding>:…": the plugin's screen.

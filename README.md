@@ -33,7 +33,8 @@ tour** shows it again.
 - **Talos nodes:** status, services, resources, logs, events, etcd, live graphs, machine config
   with try mode, hardware, storage, KubeSpan (a red banner when a tunnel is down), packet capture and a debug shell. Reboot, shut down
   or wake a node, upgrade Talos node by node or the whole cluster, upgrade Kubernetes, add,
-  replace, reset or wipe a node, recover etcd, rotate the Talos CA. Alerts when a node goes down, with quiet hours, a per-cluster
+  replace, reset or wipe a node, recover etcd, rotate the Talos CA. Alerts when a node goes down or a KubeSpan tunnel between two
+  nodes is down (on by default on Talos clusters), with quiet hours, a per-cluster
   minimum severity, a digest, and critical alerts that repeat until acknowledged.
 - **Any Kubernetes cluster:** workloads with rollout history and undo for Deployments,
   StatefulSets and DaemonSets (the pod template diff first) and a Deployment's pause, pods, logs and shells, a browser of every object with

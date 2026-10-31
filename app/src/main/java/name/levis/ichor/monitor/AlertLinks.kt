@@ -12,6 +12,7 @@ import name.levis.ichor.model.alertSystem
  */
 enum class AlertChannel(val id: String, val importance: Int, val title: Int, val description: Int) {
     NODES("alerts-nodes", NotificationManager.IMPORTANCE_HIGH, R.string.monitor_channel_nodes, R.string.monitor_channel_nodes_desc),
+    MESH("alerts-mesh", NotificationManager.IMPORTANCE_HIGH, R.string.monitor_channel_mesh, R.string.monitor_channel_mesh_desc),
     CLUSTER("alerts-cluster", NotificationManager.IMPORTANCE_DEFAULT, R.string.monitor_channel_cluster, R.string.monitor_channel_cluster_desc),
     DATA("alerts-data", NotificationManager.IMPORTANCE_DEFAULT, R.string.monitor_channel_data, R.string.monitor_channel_data_desc),
     GITOPS("alerts-gitops", NotificationManager.IMPORTANCE_DEFAULT, R.string.monitor_channel_gitops, R.string.monitor_channel_gitops_desc),
@@ -23,6 +24,7 @@ val Alert.channel: AlertChannel
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE, AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK,
         AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK, AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK,
         -> AlertChannel.NODES
+        AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> AlertChannel.MESH
         AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED,
         AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE,
         -> AlertChannel.CLUSTER
@@ -77,6 +79,7 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
     }
     // "sensor:node|hot" or "sensor:node|throttled": that node's Hardware screen.
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> ShareTarget.hardware(key.substringAfter(':').substringBefore('|'), subject)
+    AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> ShareTarget.screen(ShareTarget.KUBESPAN)
 }
 
 /** Argo CD: "namespace/name"; Flux: "Kind namespace/name" (see [Alert.subject]). */

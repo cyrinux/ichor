@@ -49,6 +49,7 @@ public func alertRuleSeverity(_ alert: Alert, snapshot: ClusterSnapshot?, previo
         guard let value = kept({ $0.storageTrends }, volume) else { return alertSeverityWarning }
         return StorageTrendIssue(value: value).critical ? alertSeverityCritical : alertSeverityWarning
     case "sensor": return kept({ $0.sensorIssues }, subject).map { level(SensorIssue(value: $0).severity) } ?? ""
+    case "kubespan": return alertSeverityCritical
     case "plugin": return kept({ $0.pluginIssues }, alert.key).map { PluginIssue(value: $0).severity } ?? ""
     default: return ""
     }

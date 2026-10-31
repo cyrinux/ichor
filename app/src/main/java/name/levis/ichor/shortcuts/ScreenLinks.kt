@@ -65,5 +65,6 @@ fun screenGlyph(target: String, label: String): String = when (target) {
     ShareTarget.ETCD -> "E"
     ShareTarget.HEALTH -> "H"
     ShareTarget.ALERTS -> "!"
+    ShareTarget.KUBESPAN -> "K"
     else -> shortcutInitial(label)
 }

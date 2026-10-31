@@ -13,6 +13,7 @@ struct MonitoringSection: View {
     @State private var storageThresholds = BackgroundMonitor.storageThresholds
     @State private var storageTrendWatched = BackgroundMonitor.storageTrendWatched
     @State private var sensorsWatched = BackgroundMonitor.sensorsWatched
+    @State private var kubespanWatched = BackgroundMonitor.kubespanWatched
     @State private var sensorThreshold = BackgroundMonitor.sensorThreshold
     @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
     @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
@@ -155,6 +156,25 @@ struct MonitoringSection: View {
                 }
                 .disabled(!enabled)
             }
+            // On by default: every node's KubeSpan peers are read at every check.
+            Toggle(
+                isOn: Binding(
+                    get: { kubespanWatched },
+                    set: { on in
+                        BackgroundMonitor.kubespanWatched = on
+                        kubespanWatched = on
+                    })
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("KubeSpan tunnels")
+                    Text(
+                        "Alert when a tunnel between two nodes is down (Talos clusters; reads every node's peers at each check)."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
             // Opt-in too: one Talos call per check reads every node's hottest sensor.
             Toggle(
                 isOn: Binding(

@@ -42,6 +42,13 @@ var contractFixtures = []struct {
 	{"inventory", func() any { return demoInventory(contractNow.UnixMilli()) }},
 	{"kubespan", func() any { return demoKubeSpan() }},
 	{"topology", func() any { return demoTopology() }},
+	// Written out: the demo's since is its clock's, inside a string the fixture cannot freeze.
+	{"kubespan-mesh", func() any {
+		return kubespanMeshHealth{
+			Context: "demo", Checked: true, Partial: false, Links: 3, Broken: 1,
+			Issues: map[string]string{"node-a|node-b": "critical|neverHandshaked|0|node-a|node-b"},
+		}
+	}},
 	{"cluster-updates", func() any {
 		u := demoClusterUpdates(contractNow)
 		sortUpdates(&u)

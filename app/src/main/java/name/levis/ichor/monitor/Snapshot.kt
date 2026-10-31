@@ -89,6 +89,14 @@ data class ClusterSnapshot(
     val sensorIssues: Map<String, String> = emptyMap(),
     /** Sensor warnings (throttling) seen once and not notified yet. */
     val sensorPending: List<String> = emptyList(),
+    /** Watching the KubeSpan tunnels was on for this check (on by default, Talos clusters only). */
+    val kubespanWatched: Boolean = false,
+    /** The mesh could be read this time (and the cluster runs KubeSpan). */
+    val kubespanChecked: Boolean = false,
+    /** Broken tunnels ("idA|idB" → see [KubeSpanDetail]), kept like [dataIssues]. */
+    val kubespanIssues: Map<String, String> = emptyMap(),
+    /** Always empty: every tunnel down is critical. Kept so the track reads like the others. */
+    val kubespanPending: List<String> = emptyList(),
     /** Watching the CRD plugins' findings was on for this check (with the data services, opt-in). */
     val pluginWatched: Boolean = false,
     /** Their findings could be read this time. */
@@ -149,7 +157,13 @@ fun snapshotOf(
     /** Node temperatures watched ([sensorIssues] null when watched but unreadable, see [sensorIssuesOf]). */
     sensorWatched: Boolean = false,
     sensorIssues: Map<String, String>? = null,
+    /** KubeSpan tunnels watched ([kubespanIssues] null when watched but unreadable, see [kubespanIssuesOf]). */
+    kubespanWatched: Boolean = false,
+    kubespanIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    kubespanWatched = kubespanWatched,
+    kubespanChecked = kubespanWatched && kubespanIssues != null,
+    kubespanIssues = kubespanIssues?.takeIf { kubespanWatched }.orEmpty(),
     pluginWatched = pluginWatched,
     pluginChecked = pluginWatched && pluginIssues != null,
     pluginIssues = pluginIssues?.takeIf { pluginWatched }.orEmpty(),

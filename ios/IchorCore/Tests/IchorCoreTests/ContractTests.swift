@@ -43,6 +43,7 @@ final class ContractTests: XCTestCase {
         "inventory": ContractTests.row(ClusterInventory.self),
         "kubespan": ContractTests.row(KubeSpanOverview.self),
         "topology": ContractTests.row(ClusterTopology.self),
+        "kubespan-mesh": ContractTests.row(KubeSpanMeshHealth.self) { XCTAssertEqual($0.issues.count, $0.broken) },
         "cluster-updates": ContractTests.row(ClusterUpdates.self) { XCTAssertFalse(updateSections($0).images.isEmpty) },
         "update-proposal-plan": ContractTests.row(UpdateProposalPlan.self) {
             XCTAssertEqual($0.files.first?.changes.count, 2)

@@ -128,6 +128,10 @@
         "10.0.2.11": {
           "hostname": "edge-1",
           "health": "READY"
+        },
+        "10.0.2.12": {
+          "hostname": "edge-2",
+          "health": "READY"
         }
       },
       "etcdChecked": true,
@@ -145,7 +149,11 @@
       "sensorChecked": false,
       "sensorIssues": null,
       "pluginChecked": false,
-      "pluginIssues": null
+      "pluginIssues": null,
+      "kubespanChecked": true,
+      "kubespanIssues": {
+        "edge-1|edge-2": "critical|neverHandshaked|0|edge-1|edge-2"
+      }
     },
     {
       "key": "demo-dev",

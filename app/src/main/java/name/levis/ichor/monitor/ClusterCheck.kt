@@ -225,6 +225,17 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
+    // And for the KubeSpan tunnels: Go judges them from every node's peers, the app only keeps the
+    // verdict. A cluster added from a kubeconfig has no mesh.
+    val watchKubespan = store.kubespanWatched.value && !kube
+    val kubespanIssues = if (watchKubespan) {
+        runCatching { reads.talos.kubespanMeshHealth() }.getOrNull()?.let {
+            kubespanIssuesOf(it, known = knownKubespanIssues(prev, name))
+        }
+    } else {
+        null
+    }
+
     return if (kubeNodes != null) {
         val snapshot = kubeSnapshotOf(
             kubeNodes, name, context.certNotAfter, now, fingerprint, watchData, dataServices,
@@ -254,6 +265,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             storageIssues = storageIssues,
             sensorWatched = watchSensors,
             sensorIssues = sensorIssues,
+            kubespanWatched = watchKubespan,
+            kubespanIssues = kubespanIssues,
             pluginWatched = watchPlugins,
             pluginIssues = pluginIssues,
         )

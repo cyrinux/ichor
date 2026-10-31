@@ -636,6 +636,8 @@
     <string name="monitor_widget_hint">Виджет главного экрана использует те же проверки; если он добавлен, они продолжают работать даже при выключенных оповещениях.</string>
     <string name="monitor_channel_nodes">Оповещения об узлах</string>
     <string name="monitor_channel_nodes_desc">Узел перестал работать, не отвечает или снова готов</string>
+    <string name="monitor_channel_mesh">Туннели KubeSpan</string>
+    <string name="monitor_channel_mesh_desc">Туннель между двумя узлами упал или восстановился</string>
     <string name="monitor_channel_cluster">Оповещения о кластере</string>
     <string name="monitor_channel_cluster_desc">Сигналы etcd, результаты проверки кластера, оповещения Alertmanager и недоступные кластеры</string>
     <string name="monitor_channel_data">Оповещения о сервисах данных</string>
@@ -929,6 +931,12 @@
         <item quantity="few">%1$d недоступны</item>
         <item quantity="many">%1$d недоступны</item>
         <item quantity="other">%1$d недоступны</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="one">%1$d туннель не работает</item>
+        <item quantity="few">%1$d туннеля не работают</item>
+        <item quantity="many">%1$d туннелей не работают</item>
+        <item quantity="other">%1$d туннеля не работают</item>
     </plurals>
     <string name="widget_all_ready">все готовы</string>
     <string name="widget_etcd_no_alarms">etcd: нет сигналов</string>
@@ -4746,6 +4754,10 @@
     <string name="monitor_storage_trend_desc">Уведомляет, когда рост тома за последнюю неделю сделает его критичным в течение %1$d дн., и когда это больше не так. Использует историю проверок; требует включённого хранилища узлов.</string>
     <string name="monitor_sensors">Температура узлов</string>
     <string name="monitor_sensors_desc">Оповещать, когда узел перегревается или его ядра троттлятся (кластеры Talos; датчики каждого узла читаются при каждой проверке).</string>
+    <string name="monitor_kubespan">Туннели KubeSpan</string>
+    <string name="monitor_kubespan_desc">Оповещать, когда туннель между двумя узлами не работает (кластеры Talos; при каждой проверке читает пиры всех узлов).</string>
+    <string name="monitor_kubespan_down">Туннель %1$s не работает</string>
+    <string name="monitor_kubespan_up">Туннель %1$s снова работает</string>
     <string name="monitor_sensors_auto">Собственный предел каждого датчика (критический − 5 °C, иначе его максимум)</string>
     <string name="monitor_sensors_threshold">Оповещать при %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s перегревается (%2$s °C)</string>

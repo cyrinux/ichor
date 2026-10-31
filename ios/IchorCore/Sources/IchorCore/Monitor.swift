@@ -56,6 +56,13 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// sensorIssuesOf), kept like dataIssues.
     public var sensorIssues: [String: String]
     public var sensorPending: [String]
+    /// Watching the KubeSpan tunnels was on for this check (on by default, Talos clusters only), and
+    /// the mesh could be read.
+    public var kubespanWatched: Bool
+    public var kubespanChecked: Bool
+    /// Broken tunnels ("<idA>|<idB>" → KubeSpanIssue value, see kubespanIssuesOf), kept like dataIssues.
+    public var kubespanIssues: [String: String]
+    public var kubespanPending: [String]
     /// Watching the plugins' findings was on for this check (with the data services, opt-in), and
     /// they could be read.
     public var pluginWatched: Bool
@@ -86,6 +93,8 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         storageTrends: [String: String] = [:],
         sensorWatched: Bool = false, sensorChecked: Bool = false, sensorIssues: [String: String] = [:],
         sensorPending: [String] = [],
+        kubespanWatched: Bool = false, kubespanChecked: Bool = false, kubespanIssues: [String: String] = [:],
+        kubespanPending: [String] = [],
         pluginWatched: Bool = false, pluginChecked: Bool = false, pluginIssues: [String: String] = [:],
         pluginPending: [String] = [], kube: Bool = false,
         firstSeen: [String: Int64] = [:], lastNotified: [String: Int64] = [:]
@@ -123,6 +132,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.sensorChecked = sensorChecked
         self.sensorIssues = sensorIssues
         self.sensorPending = sensorPending
+        self.kubespanWatched = kubespanWatched
+        self.kubespanChecked = kubespanChecked
+        self.kubespanIssues = kubespanIssues
+        self.kubespanPending = kubespanPending
         self.pluginWatched = pluginWatched
         self.pluginChecked = pluginChecked
         self.pluginIssues = pluginIssues
@@ -169,6 +182,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         sensorChecked = try c.field(.sensorChecked, false)
         sensorIssues = try c.field(.sensorIssues, [:])
         sensorPending = try c.field(.sensorPending, [])
+        kubespanWatched = try c.field(.kubespanWatched, false)
+        kubespanChecked = try c.field(.kubespanChecked, false)
+        kubespanIssues = try c.field(.kubespanIssues, [:])
+        kubespanPending = try c.field(.kubespanPending, [])
         pluginWatched = try c.field(.pluginWatched, false)
         pluginChecked = try c.field(.pluginChecked, false)
         pluginIssues = try c.field(.pluginIssues, [:])
@@ -211,6 +228,18 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         get { IssueTrack(watched: amWatched, checked: amChecked, issues: amIssues, pending: amPending) }
         set {
             (amWatched, amChecked, amIssues, amPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
+    }
+
+    var kubespanTrack: IssueTrack {
+        get {
+            IssueTrack(
+                watched: kubespanWatched, checked: kubespanChecked, issues: kubespanIssues, pending: kubespanPending)
+        }
+        set {
+            (kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending) = (
                 newValue.watched, newValue.checked, newValue.issues, newValue.pending
             )
         }
@@ -274,6 +303,7 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// storageWatched: watching node storage was on; storageIssues (see storageIssuesOf): nil when unreadable;
 /// storageWarn: the warning threshold they were read with.
 /// sensorWatched: watching node temperatures was on; sensorIssues (see sensorIssuesOf): nil when unreadable.
+/// kubespanWatched: watching the KubeSpan tunnels was on; kubespanIssues (see kubespanIssuesOf): nil when unreadable.
 /// pluginWatched: watching the plugins' findings was on; pluginIssues (see pluginIssuesWithGaps): nil when unreadable.
 public func snapshotOf(
     _ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
@@ -284,6 +314,7 @@ public func snapshotOf(
     storageWatched: Bool = false, storageIssues: [String: String]? = nil,
     storageWarn: Int = storageWarnDefault,
     sensorWatched: Bool = false, sensorIssues: [String: String]? = nil,
+    kubespanWatched: Bool = false, kubespanIssues: [String: String]? = nil,
     pluginWatched: Bool = false, pluginIssues: [String: String]? = nil
 ) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
@@ -318,6 +349,9 @@ public func snapshotOf(
         sensorWatched: sensorWatched,
         sensorChecked: sensorWatched && sensorIssues != nil,
         sensorIssues: sensorWatched ? sensorIssues ?? [:] : [:],
+        kubespanWatched: kubespanWatched,
+        kubespanChecked: kubespanWatched && kubespanIssues != nil,
+        kubespanIssues: kubespanWatched ? kubespanIssues ?? [:] : [:],
         pluginWatched: pluginWatched,
         pluginChecked: pluginWatched && pluginIssues != nil,
         pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:]
@@ -600,6 +634,8 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.storageTrack = evaluateStorage(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.sensorTrack = evaluateSensors(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.kubespanTrack = evaluateKubespan(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.pluginTrack = evaluatePlugins(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)

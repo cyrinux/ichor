@@ -325,7 +325,7 @@ Part of the [Ichor documentation](../README.md#documentation).
   data services, activity, search, settings) beside the screen open in the detail column.
   On an iPhone the app stays in portrait, except logs, shells, charts, YAML, diffs and the
   KubeSpan map, which rotate to landscape.
-- **Background:** alerts, a home-screen widget and a fleet screen with every cluster's last check, worst first. Alerts are off until you turn them on: after the first real cluster is added, the home offers them once and asks for the notification permission there. The findings of the plugins the cluster runs
+- **Background:** alerts, a home-screen widget and a fleet screen with every cluster's last check, worst first. Alerts are off until you turn them on: after the first real cluster is added, the home offers them once and asks for the notification permission there. A KubeSpan tunnel down between two nodes alerts once, and once when it is back (on by default on Talos clusters; the widget and Siri count it). The findings of the plugins the cluster runs
   (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify
   like the data services' problems, in the app's language, and clear when they go away
   ([docs/plugins.md](plugins.md#findings)). Alert rules (Settings → Monitoring → Rules on Android, Settings → Alerts → Rules on iOS) set

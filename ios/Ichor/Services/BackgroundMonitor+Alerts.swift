@@ -237,6 +237,11 @@ extension BackgroundMonitor {
                 return (alert.title, alert.text)
             }
             return localizedSensor(alert, issue: SensorIssue(value: value))
+        case "kubespan":
+            guard let value = snapshot.kubespanIssues[subject] ?? previous?.kubespanIssues[subject] else {
+                return (alert.title, alert.text)
+            }
+            return localizedKubespan(alert, issue: KubeSpanIssue(value: value))
         case "unreachable":
             // The cluster is named in the subtitle.
             guard alert.problem else {
@@ -311,6 +316,25 @@ extension BackgroundMonitor {
             String(localized: "\(host) runs hot (\(celsiusText(issue.celsius)) °C)"),
             String(localized: "\(issue.label), alert at \(celsiusText(issue.limit)) °C")
         )
+    }
+
+    /// A tunnel down, in the map banner's words, or back; worded as on Android.
+    private static func localizedKubespan(_ alert: Alert, issue: KubeSpanIssue) -> (title: String, text: String) {
+        let subject = issue.subject
+        guard alert.problem else {
+            return (String(localized: "Tunnel \(subject) is back"), String(localized: "KubeSpan tunnels"))
+        }
+        let age = localizedDuration(Int64(Date().timeIntervalSince1970) - issue.since)
+        let reason =
+            switch issue.reason {
+            case "noEndpoint": String(localized: "no endpoint to try")
+            case "neverHandshaked": String(localized: "never handshaked")
+            case "staleHandshake": String(localized: "no handshake for \(age)")
+            case "oneSide": String(localized: "One end down")
+            default: String(localized: "Down")
+            }
+        let meaning = String(localized: "Pods on these nodes cannot reach each other over KubeSpan.")
+        return (String(localized: "Tunnel \(subject) is down"), "\(reason) · \(meaning)")
     }
 
     private static func localizedStorage(_ alert: Alert, issue: StorageIssue, warn: Int) -> (

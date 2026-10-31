@@ -19,16 +19,17 @@ const (
 
 // The tracks a finding can come from.
 const (
-	fleetTrackNodes   = "nodes"
-	fleetTrackEtcd    = "etcd"
-	fleetTrackReach   = "reach"
-	fleetTrackAm      = "alertmanager"
-	fleetTrackCheckup = "checkup"
-	fleetTrackData    = "data"
-	fleetTrackGitOps  = "gitops"
-	fleetTrackStorage = "storage"
-	fleetTrackSensor  = "sensor"
-	fleetTrackPlugin  = "plugin"
+	fleetTrackNodes    = "nodes"
+	fleetTrackEtcd     = "etcd"
+	fleetTrackReach    = "reach"
+	fleetTrackAm       = "alertmanager"
+	fleetTrackKubespan = "kubespan"
+	fleetTrackCheckup  = "checkup"
+	fleetTrackData     = "data"
+	fleetTrackGitOps   = "gitops"
+	fleetTrackStorage  = "storage"
+	fleetTrackSensor   = "sensor"
+	fleetTrackPlugin   = "plugin"
 )
 
 // fleetTrack is one opt-in issue track of a snapshot.
@@ -43,6 +44,7 @@ type fleetTrack struct {
 func fleetTracksOf(e fleetEntry) []fleetTrack {
 	return []fleetTrack{
 		{fleetTrackAm, e.AmChecked, e.AmIssues, fleetAmSubject},
+		{fleetTrackKubespan, e.KubespanChecked, e.KubespanIssues, fleetKubespanSubject},
 		{fleetTrackCheckup, e.CheckupChecked, e.CheckupIssues, fleetCheckupSubject},
 		{fleetTrackData, e.DataChecked, e.DataIssues, fleetDataSubject},
 		{fleetTrackGitOps, e.GitopsChecked, e.GitopsIssues, fleetGitOpsSubject},
@@ -196,6 +198,17 @@ func fleetAmSubject(key, value string) (string, string) {
 	alertname, where, _ := strings.Cut(rest, "|")
 
 	return fleetJoin(" · ", alertname, where), ""
+}
+
+// fleetKubespanSubject: "host-a ↔ host-b" from "severity|reason|since|host-a|host-b", the reason as
+// the detail; a value too short to carry the hosts falls back to the key's two node ids.
+func fleetKubespanSubject(key, value string) (string, string) {
+	parts := strings.Split(value, "|")
+	if len(parts) >= 5 {
+		return fleetJoin(" ↔ ", parts[3], parts[4]), parts[1]
+	}
+
+	return strings.ReplaceAll(key, "|", " ↔ "), ""
 }
 
 // fleetCheckupSubject: "kind subject" from "section|kind|subject".

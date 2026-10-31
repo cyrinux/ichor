@@ -589,6 +589,8 @@
     <string name="monitor_widget_hint">Le widget de l\'écran d\'accueil utilise les mêmes vérifications&#160;; l\'ajouter les maintient actives même avec les alertes désactivées.</string>
     <string name="monitor_channel_nodes">Alertes des nœuds</string>
     <string name="monitor_channel_nodes_desc">Un nœud tombe, ne répond plus ou est de nouveau prêt</string>
+    <string name="monitor_channel_mesh">Tunnels KubeSpan</string>
+    <string name="monitor_channel_mesh_desc">Un tunnel entre deux nœuds tombe ou revient</string>
     <string name="monitor_channel_cluster">Alertes du cluster</string>
     <string name="monitor_channel_cluster_desc">Alarmes etcd, constats du bilan du cluster, alertes d\'Alertmanager et clusters injoignables</string>
     <string name="monitor_channel_data">Alertes des services de données</string>
@@ -868,6 +870,10 @@
     <plurals name="widget_unreachable">
         <item quantity="one">%1$d injoignable</item>
         <item quantity="other">%1$d injoignables</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="one">%1$d tunnel coupé</item>
+        <item quantity="other">%1$d tunnels coupés</item>
     </plurals>
     <string name="widget_all_ready">tous prêts</string>
     <string name="widget_etcd_no_alarms">etcd&#160;: aucune alarme</string>
@@ -4536,6 +4542,10 @@
     <string name="monitor_storage_trend_desc">Notifie quand la croissance d\'un volume sur la dernière semaine le rendrait critique d\'ici %1$d jours, puis une fois que ce n\'est plus le cas. Utilise l\'historique des vérifications ; nécessite le stockage des nœuds.</string>
     <string name="monitor_sensors">Températures des nœuds</string>
     <string name="monitor_sensors_desc">Alerte quand un nœud chauffe ou que ses cœurs sont bridés (clusters Talos ; lit les capteurs de chaque nœud à chaque vérification).</string>
+    <string name="monitor_kubespan">Tunnels KubeSpan</string>
+    <string name="monitor_kubespan_desc">Alerte quand un tunnel entre deux nœuds est coupé (clusters Talos ; lit les pairs de chaque nœud à chaque contrôle).</string>
+    <string name="monitor_kubespan_down">Tunnel %1$s coupé</string>
+    <string name="monitor_kubespan_up">Tunnel %1$s rétabli</string>
     <string name="monitor_sensors_auto">La limite de chaque capteur (critique − 5 °C, sinon son maximum)</string>
     <string name="monitor_sensors_threshold">Alerter à %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s chauffe (%2$s °C)</string>

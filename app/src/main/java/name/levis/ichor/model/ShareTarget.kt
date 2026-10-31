@@ -37,6 +37,7 @@ data class ShareTarget(
         const val ALERTS = "alerts"
         const val STORAGE = "storage"
         const val HARDWARE = "hardware"
+        const val KUBESPAN = "kubespan"
 
         /** The node screen's tabs, by their index there. */
         val NODE_TABS = listOf("services", "resources", "live", "processes", "pods", "cgroups", "kube-pods")

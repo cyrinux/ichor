@@ -582,6 +582,8 @@
     <string name="monitor_widget_hint">Das Startbildschirm-Widget nutzt dieselben Prüfungen. Ist es hinzugefügt, laufen sie auch bei deaktivierten Warnungen weiter.</string>
     <string name="monitor_channel_nodes">Knoten-Warnungen</string>
     <string name="monitor_channel_nodes_desc">Ein Knoten fällt aus, antwortet nicht mehr oder ist wieder bereit</string>
+    <string name="monitor_channel_mesh">KubeSpan-Tunnel</string>
+    <string name="monitor_channel_mesh_desc">Ein Tunnel zwischen zwei Nodes fällt aus oder ist wieder da</string>
     <string name="monitor_channel_cluster">Cluster-Warnungen</string>
     <string name="monitor_channel_cluster_desc">etcd-Alarme, Befunde des Cluster-Checks, Alarme von Alertmanager und nicht erreichbare Cluster</string>
     <string name="monitor_channel_data">Warnungen zu Datendiensten</string>
@@ -861,6 +863,10 @@
     <plurals name="widget_unreachable">
         <item quantity="one">%1$d nicht erreichbar</item>
         <item quantity="other">%1$d nicht erreichbar</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="one">%1$d Tunnel ausgefallen</item>
+        <item quantity="other">%1$d Tunnel ausgefallen</item>
     </plurals>
     <string name="widget_all_ready">alle bereit</string>
     <string name="widget_etcd_no_alarms">etcd: keine Alarme</string>
@@ -4528,6 +4534,10 @@
     <string name="monitor_storage_trend_desc">Benachrichtigt, wenn ein Volume bei seinem Wachstum der letzten Woche innerhalb von %1$d Tagen kritisch würde, und einmal, wenn das nicht mehr so ist. Nutzt den Verlauf der Prüfungen; braucht den Speicher der Knoten.</string>
     <string name="monitor_sensors">Node-Temperaturen</string>
     <string name="monitor_sensors_desc">Warnt, wenn ein Node heiß läuft oder seine Kerne gedrosselt werden (Talos-Cluster; liest bei jeder Prüfung die Sensoren jedes Nodes).</string>
+    <string name="monitor_kubespan">KubeSpan-Tunnel</string>
+    <string name="monitor_kubespan_desc">Warnt, wenn ein Tunnel zwischen zwei Nodes ausgefallen ist (Talos-Cluster; liest bei jeder Prüfung die Peers aller Nodes).</string>
+    <string name="monitor_kubespan_down">Tunnel %1$s ist ausgefallen</string>
+    <string name="monitor_kubespan_up">Tunnel %1$s ist wieder da</string>
     <string name="monitor_sensors_auto">Eigene Grenze jedes Sensors (kritisch − 5 °C, sonst sein Maximum)</string>
     <string name="monitor_sensors_threshold">Warnen ab %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s läuft heiß (%2$s °C)</string>

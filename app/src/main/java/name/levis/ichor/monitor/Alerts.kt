@@ -17,6 +17,8 @@ enum class AlertKind {
     STORAGE_TREND, STORAGE_TREND_OK,
     /** A node running hot or throttled ([Alert.detail]: a [SensorDetail]), or no longer. */
     SENSOR_PROBLEM, SENSOR_OK,
+    /** A KubeSpan tunnel between two nodes down ([Alert.detail]: a [KubeSpanDetail]), or back. */
+    KUBESPAN_DOWN, KUBESPAN_UP,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
     /** A CRD plugin's finding ([Alert.key] its key, [Alert.detail]: a [PluginIssue]), or no longer. */
@@ -95,6 +97,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val am = if (blind) prev.amTrack else evaluateTrack(prev?.amTrack, cur.amTrack, comparable, ::amSeverity, ::amAlert, alerts)
     val storage = if (blind) prev.storageTrack else evaluateTrack(prev?.storageTrack, cur.storageTrack, comparable, ::storageSeverity, ::storageAlert, alerts)
     val sensor = if (blind) prev.sensorTrack else evaluateTrack(prev?.sensorTrack, cur.sensorTrack, comparable, ::sensorSeverity, ::sensorAlert, alerts)
+    val kubespan = if (blind) prev.kubespanTrack else evaluateTrack(prev?.kubespanTrack, cur.kubespanTrack, comparable, ::kubespanSeverity, ::kubespanAlert, alerts)
     val plugin = if (blind) prev.pluginTrack else evaluateTrack(prev?.pluginTrack, cur.pluginTrack, comparable, ::pluginSeverity, ::pluginAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
@@ -126,6 +129,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             sensorChecked = sensor.checked,
             sensorIssues = sensor.issues,
             sensorPending = sensor.pending,
+            kubespanWatched = kubespan.watched,
+            kubespanChecked = kubespan.checked,
+            kubespanIssues = kubespan.issues,
+            kubespanPending = kubespan.pending,
             pluginWatched = plugin.watched,
             pluginChecked = plugin.checked,
             pluginIssues = plugin.issues,
@@ -145,6 +152,7 @@ private val ClusterSnapshot.checkupTrack: Track get() = Track(checkupWatched, ch
 private val ClusterSnapshot.amTrack: Track get() = Track(amWatched, amChecked, amIssues, amPending)
 private val ClusterSnapshot.storageTrack: Track get() = Track(storageWatched, storageChecked, storageIssues, storagePending)
 private val ClusterSnapshot.sensorTrack: Track get() = Track(sensorWatched, sensorChecked, sensorIssues, sensorPending)
+private val ClusterSnapshot.kubespanTrack: Track get() = Track(kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending)
 private val ClusterSnapshot.pluginTrack: Track get() = Track(pluginWatched, pluginChecked, pluginIssues, pluginPending)
 
 /**
@@ -239,6 +247,15 @@ private fun sensorAlert(key: String, value: String, problem: Boolean): Alert = A
     detail = value,
 )
 
+/** [key] "idA|idB", [value] a [KubeSpanDetail]: both hostnames are the subject. */
+private fun kubespanAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "kubespan:$key",
+    kind = if (problem) AlertKind.KUBESPAN_DOWN else AlertKind.KUBESPAN_UP,
+    problem = problem,
+    subject = KubeSpanDetail.parse(value).let { "${it.hostA} ↔ ${it.hostB}" },
+    detail = value,
+)
+
 /** [key] the finding's ("plugin:…", already an alert key), [value] a [PluginIssue]: its title is the subject. */
 private fun pluginAlert(key: String, value: String, problem: Boolean): Alert = Alert(
     key = key,
@@ -292,5 +309,6 @@ fun firingAlerts(snapshot: ClusterSnapshot): List<Alert> {
         track(snapshot.amIssues, ::amAlert) +
         track(snapshot.storageIssues, ::storageAlert) +
         track(snapshot.sensorIssues, ::sensorAlert) +
+        track(snapshot.kubespanIssues, ::kubespanAlert) +
         track(snapshot.pluginIssues, ::pluginAlert)
 }

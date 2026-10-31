@@ -582,6 +582,8 @@
     <string name="monitor_widget_hint">O widget da tela inicial usa as mesmas verificações; adicioná-lo as mantém em execução mesmo com os alertas desativados.</string>
     <string name="monitor_channel_nodes">Alertas de nós</string>
     <string name="monitor_channel_nodes_desc">Um nó cai, para de responder ou fica pronto novamente</string>
+    <string name="monitor_channel_mesh">Túneis KubeSpan</string>
+    <string name="monitor_channel_mesh_desc">Um túnel entre dois nós cai ou volta</string>
     <string name="monitor_channel_cluster">Alertas do cluster</string>
     <string name="monitor_channel_cluster_desc">Alarmes do etcd, achados da verificação do cluster, alertas do Alertmanager e clusters inacessíveis</string>
     <string name="monitor_channel_data">Alertas de serviços de dados</string>
@@ -863,6 +865,10 @@
     <plurals name="widget_unreachable">
         <item quantity="one">%1$d inacessível</item>
         <item quantity="other">%1$d inacessíveis</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="one">%1$d túnel fora do ar</item>
+        <item quantity="other">%1$d túneis fora do ar</item>
     </plurals>
     <string name="widget_all_ready">todos prontos</string>
     <string name="widget_etcd_no_alarms">etcd: nenhum alarme</string>
@@ -4532,6 +4538,10 @@
     <string name="monitor_storage_trend_desc">Notifica quando o crescimento de um volume na última semana o tornaria crítico em até %1$d dias, e uma vez quando isso deixa de acontecer. Usa o histórico das verificações; requer o armazenamento dos nós ativado.</string>
     <string name="monitor_sensors">Temperaturas dos nós</string>
     <string name="monitor_sensors_desc">Alerta quando um nó esquenta demais ou seus núcleos sofrem throttling (clusters Talos; lê os sensores de cada nó a cada verificação).</string>
+    <string name="monitor_kubespan">Túneis KubeSpan</string>
+    <string name="monitor_kubespan_desc">Avisa quando um túnel entre dois nós está fora do ar (clusters Talos; lê os pares de cada nó a cada verificação).</string>
+    <string name="monitor_kubespan_down">Túnel %1$s fora do ar</string>
+    <string name="monitor_kubespan_up">Túnel %1$s de volta</string>
     <string name="monitor_sensors_auto">O limite próprio de cada sensor (crítico − 5 °C, senão o máximo)</string>
     <string name="monitor_sensors_threshold">Alertar em %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s está quente (%2$s °C)</string>
