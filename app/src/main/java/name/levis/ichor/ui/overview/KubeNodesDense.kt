@@ -30,7 +30,7 @@ import name.levis.ichor.model.status
  * the node's actions ([onNode]): there is no node screen without Talos.
  */
 @Composable
-internal fun DenseKubeNodes(nodes: List<KubeNodeInfo>, onNode: (KubeNodeInfo) -> Unit, onAllNodes: (NodeFilter?) -> Unit) {
+internal fun DenseKubeNodes(nodes: List<KubeNodeInfo>, onNode: (KubeNodeInfo) -> Unit, onAllNodes: (NodeFilter?) -> Unit, rowActions: KubeNodeRowActions) {
     val counts = remember(nodes) { nodes.kubeHealthCounts() }
     val groups = remember(nodes) { nodes.byStatus() }
     val problems = remember(nodes) { nodes.kubeProblemNodes() }
@@ -44,7 +44,7 @@ internal fun DenseKubeNodes(nodes: List<KubeNodeInfo>, onNode: (KubeNodeInfo) ->
     KubeNodeDots(groups.flatMap { it.nodes }, onNode)
     problems.shown.forEach { node ->
         HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-        KubeNodeRow(node, onClick = { onNode(node) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+        KubeNodeRow(node, onClick = { onNode(node) }, rowActions, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
     }
     if (problems.more > 0) {
         HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)

@@ -227,7 +227,7 @@ private fun AppDetail(
 }
 
 /** The Kustomization that applies [this] from Git, "namespace/name"; empty for none. */
-private val FluxApp.ownerKey: String get() = owner?.let { "${it.namespace}/${it.name}" }.orEmpty()
+internal val FluxApp.ownerKey: String get() = owner?.let { "${it.namespace}/${it.name}" }.orEmpty()
 
 /** The node screen's Pods tab. */
 private const val PODS_TAB = 4

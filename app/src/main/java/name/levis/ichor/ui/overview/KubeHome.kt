@@ -213,6 +213,7 @@ fun KubeHomeScreen(
     var clusterMenu by remember { mutableStateOf(false) }
     var signingIn by remember { mutableStateOf(false) }
     var nodeMenu by remember { mutableStateOf<KubeNodeInfo?>(null) }
+    var nodeCordon by remember { mutableStateOf<KubeNodeInfo?>(null) }
     val snackbar = remember { SnackbarHostState() }
     // Long-press a card to arrange them: order, hide, show again; the app bar's actions too.
     val layout by app.uiPreferences.kubeHomeLayout.collectAsStateWithLifecycle()
@@ -382,6 +383,7 @@ fun KubeHomeScreen(
                     apps = if (apps is UiState.Loading) apps else appsShown,
                     pins = pins,
                     onNode = { nodeMenu = it },
+                    nodeRowActions = KubeNodeRowActions(onCordon = { nodeCordon = it }, onDrain = nav.onDrain, onMeta = nav.onNodeMeta, onDebug = nav.onNodeDebug),
                     nodesExpanded = nodesExpanded,
                     onToggleNodes = { app.uiPreferences.setNodesExpanded(!nodesExpanded) },
                     nav = nav,
@@ -391,7 +393,7 @@ fun KubeHomeScreen(
             }
         }
     }
-    KubeNodeActionSheets(nodeMenu, snackbar, onClose = { nodeMenu = null }, onDrain = nav.onDrain, onDebug = nav.onNodeDebug, onCordoned = vm::refresh, onMeta = nav.onNodeMeta)
+    KubeNodeActionSheets(nodeMenu, nodeCordon, { nodeCordon = it }, snackbar, onClose = { nodeMenu = null }, onDrain = nav.onDrain, onDebug = nav.onNodeDebug, onCordoned = vm::refresh, onMeta = nav.onNodeMeta)
 }
 
 @Composable
@@ -419,6 +421,7 @@ private fun KubeHomeList(
     apps: UiState<Inventory>?,
     pins: ClusterPins?,
     onNode: (KubeNodeInfo) -> Unit,
+    nodeRowActions: KubeNodeRowActions,
     nodesExpanded: Boolean,
     onToggleNodes: () -> Unit,
     nav: KubeHomeNavigation,
@@ -475,7 +478,7 @@ private fun KubeHomeList(
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeSummaryCard(name ?: cluster.name, cluster, nodes, top, onCheckup = nav.onCheckup, onCapacity = nav.onCapacity) }
                 }
                 KubeHomeCard.NODES -> if (nodes != null) item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, top, nodesExpanded, onToggleNodes, onNode, nav.onAllNodes) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, top, nodesExpanded, onToggleNodes, onNode, nav.onAllNodes, nodeRowActions) }
                 }
                 KubeHomeCard.TOOLS -> item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins.homeTiles, dataServices = toolServices) }

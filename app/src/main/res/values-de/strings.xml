@@ -164,6 +164,7 @@
     <string name="row_actions">Aktionen</string>
     <string name="row_logs">Logs</string>
     <string name="row_scale">Skalieren…</string>
+    <string name="row_silence_ellipsis">Stummschalten…</string>
     <string name="overview_action_live_graphs">Live-Diagramme</string>
     <string name="overview_action_services_logs">Dienste und Logs</string>
     <string name="overview_action_kernel_log">Kernel-Log</string>

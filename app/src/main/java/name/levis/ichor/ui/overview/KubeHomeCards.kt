@@ -3,7 +3,9 @@ package name.levis.ichor.ui.overview
 import name.levis.ichor.model.KubeTopNodes
 import name.levis.ichor.ui.components.NodeUsage
 import name.levis.ichor.model.KubeTopNode
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.CardDefaults
 import androidx.compose.animation.animateContentSize
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
@@ -102,6 +104,8 @@ internal fun KubeNodesCard(
     onToggle: () -> Unit,
     onNode: (KubeNodeInfo) -> Unit,
     onAllNodes: (NodeFilter?) -> Unit,
+    /** What a full row's swipe and long press lead to. */
+    rowActions: KubeNodeRowActions,
 ) {
     val total = overview.nodes.size
     val dense = isDenseCluster(total)
@@ -127,14 +131,14 @@ internal fun KubeNodesCard(
         when {
             overview.forbidden -> MutedText(stringResource(R.string.kube_home_nodes_forbidden), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
             overview.nodes.isEmpty() -> MutedText(stringResource(R.string.kube_home_no_nodes), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
-            dense -> DenseKubeNodes(overview.nodes, onNode, onAllNodes)
+            dense -> DenseKubeNodes(overview.nodes, onNode, onAllNodes, rowActions)
             !expanded -> KubeNodesCompact(nodes, onNode)
             else -> {
                 // No bars without metrics-server.
                 val usage = remember(top) { top?.byName.orEmpty() }
                 nodes.forEachIndexed { i, node ->
                     if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    KubeNodeRow(node, onClick = { onNode(node) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), usage = usage[node.name])
+                    KubeNodeRow(node, onClick = { onNode(node) }, rowActions, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), usage = usage[node.name])
                 }
             }
         }
@@ -144,13 +148,20 @@ internal fun KubeNodesCard(
 
 /**
  * A node's row: name and status, then its details, provenance, CPU and memory in use ([usage],
- * from metrics-server, when there is one) and problem pills; a tap is [onClick].
+ * from metrics-server, when there is one) and problem pills; a tap is [onClick], a swipe left or
+ * a long press [actions]' (see KubeNodeQuickActions).
  */
+@Composable
+internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, actions: KubeNodeRowActions, modifier: Modifier = Modifier, usage: KubeTopNode? = null) {
+    KubeNodeQuickActions(node, actions, onClick) { KubeNodeRowContent(node, modifier, usage) }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, modifier: Modifier = Modifier, usage: KubeTopNode? = null) {
+private fun KubeNodeRowContent(node: KubeNodeInfo, modifier: Modifier, usage: KubeTopNode?) {
     val colors = LocalStatusColors.current
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).then(modifier), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    // Opaque, so the swipe's colour shows only beside the row.
+    Column(Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).then(modifier), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(node.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (node.ready) {

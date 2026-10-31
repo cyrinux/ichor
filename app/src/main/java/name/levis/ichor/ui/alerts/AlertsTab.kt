@@ -1,6 +1,6 @@
 package name.levis.ichor.ui.alerts
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import name.levis.ichor.ui.design.IchorCard
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -58,6 +59,7 @@ fun AlertsTab(
     onFilter: (AmFilter) -> Unit,
     onAlert: (AmAlert) -> Unit,
     onRefresh: () -> Unit,
+    rowCallbacks: AlertRowCallbacks,
     onCall: OnCallIncidents? = null,
     onCallError: String? = null,
 ) {
@@ -79,7 +81,7 @@ fun AlertsTab(
                         val empty = if (state.data.total == 0) R.string.alerts_none else R.string.alerts_none_match
                         item { MutedText(stringResource(empty), Modifier.padding(vertical = 16.dp)) }
                     }
-                    items(groups, key = { it.alertname }) { group -> GroupCard(group, onCall, onAlert) }
+                    items(groups, key = { it.alertname }) { group -> GroupCard(group, onCall, rowCallbacks, onAlert) }
                 }
             }
         }
@@ -110,7 +112,7 @@ private fun FilterBar(filter: AmFilter, onFilter: (AmFilter) -> Unit) {
 
 /** An alertname: its severity, how many fire of how many, then each alert. */
 @Composable
-private fun GroupCard(group: AmGroup, onCall: OnCallIncidents?, onAlert: (AmAlert) -> Unit) {
+private fun GroupCard(group: AmGroup, onCall: OnCallIncidents?, rowCallbacks: AlertRowCallbacks, onAlert: (AmAlert) -> Unit) {
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -130,17 +132,22 @@ private fun GroupCard(group: AmGroup, onCall: OnCallIncidents?, onAlert: (AmAler
             }
             group.alerts.forEachIndexed { i, alert ->
                 if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                AlertRow(alert, onCall?.incidentOf(alert.fingerprint), onClick = { onAlert(alert) })
+                val incident = onCall?.incidentOf(alert.fingerprint)
+                AlertQuickActions(alert, incident, rowCallbacks, onClick = { onAlert(alert) }) {
+                    AlertRow(alert, incident)
+                }
             }
         }
     }
 }
 
+/** Tap, long press and the TalkBack actions belong to the AlertQuickActions around it. */
 @Composable
-private fun AlertRow(alert: AmAlert, incident: OnCallIncident?, onClick: () -> Unit) {
+private fun AlertRow(alert: AmAlert, incident: OnCallIncident?) {
     val muted = LocalStatusColors.current.muted
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
+        // Opaque, so the swipe's colour shows only beside the row.
+        Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
