@@ -43,6 +43,8 @@ class KubeLinks(
     val onPortForward: (namespace: String, pod: String) -> Unit,
     /** A terminal in [container] of the pod ("" for its only one), `kubectl exec -it`. */
     val onShell: (namespace: String, pod: String, container: String) -> Unit,
+    /** Log search, running [query] over the last 24 hours. */
+    val onLogSearch: (query: String) -> Unit = {},
 )
 
 val LocalKubeLinks = compositionLocalOf<KubeLinks?> { null }

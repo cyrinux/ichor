@@ -6149,4 +6149,27 @@
     <string name="oncall_page_ack_failed">Conferma non riuscita: %1$s</string>
     <string name="oncall_page_no_incident">Nessun incidente aperto per questo avviso</string>
     <string name="oncall_restore_note">Imposta di nuovo il token di reperibilità: i backup non lo contengono mai.</string>
+    <string name="log_search_title">Ricerca nei log</string>
+    <string name="log_search_source">Backend dei log</string>
+    <string name="log_search_none_found">Nessun backend dei log trovato</string>
+    <string name="log_search_none_found_hint">Imposta l\'URL e il token del tuo Loki o VictoriaLogs, oppure installane uno nel cluster.</string>
+    <string name="log_search_searching">Ricerca di un backend dei log…</string>
+    <string name="log_search_reachable">Il backend dei log risponde.</string>
+    <string name="log_search_source_line">Da %1$s</string>
+    <string name="log_search_query">Query</string>
+    <string name="log_search_run">Cerca</string>
+    <string name="log_search_labels">Etichette</string>
+    <string name="log_search_pick_label">Scegli un\'etichetta</string>
+    <string name="log_search_pick_value">Valori di %1$s</string>
+    <string name="log_search_no_values">Niente nell\'ultimo giorno</string>
+    <string name="log_search_save">Salva questa query</string>
+    <string name="log_search_unsave">Dimentica questa query</string>
+    <string name="log_search_range_hours">%1$d h</string>
+    <string name="log_search_range_days">%1$d g</string>
+    <string name="log_search_range_custom">Personalizzato</string>
+    <string name="log_search_custom_hours">Ore indietro, fino a %1$d</string>
+    <string name="log_search_count">%1$d righe</string>
+    <string name="log_search_idle">Scrivi una query o scegli un\'etichetta</string>
+    <string name="log_search_open_loki">Apri in Loki</string>
+    <string name="log_search_open_victorialogs">Apri in VictoriaLogs</string>
 </resources>

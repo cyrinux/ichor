@@ -45,6 +45,10 @@ internal object Routes {
 
     /** [silence]: the fingerprint of an alert whose silence form opens (1 h, from its notification). */
     fun alerts(silence: String = "") = "alerts?silence=${Uri.encode(silence)}"
+    const val LOG_SEARCH = "log-search?query={query}"
+
+    /** Log search, searching [query] at once when set. */
+    fun logSearch(query: String = "") = "log-search?query=${Uri.encode(query)}"
 
     /** [attention]: open on the "needs attention" chip. */
     fun apps(attention: Boolean = false) = "apps?attention=$attention"

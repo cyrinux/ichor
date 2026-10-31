@@ -6140,4 +6140,27 @@
     <string name="oncall_page_ack_failed">Bestätigen fehlgeschlagen: %1$s</string>
     <string name="oncall_page_no_incident">Kein offener Vorfall für diesen Alarm</string>
     <string name="oncall_restore_note">Bereitschafts-Token erneut festlegen: Sicherungen enthalten es nie.</string>
+    <string name="log_search_title">Protokollsuche</string>
+    <string name="log_search_source">Log-Backend</string>
+    <string name="log_search_none_found">Kein Log-Backend gefunden</string>
+    <string name="log_search_none_found_hint">Lege URL und Token deines Loki oder VictoriaLogs fest oder installiere eines im Cluster.</string>
+    <string name="log_search_searching">Log-Backend wird gesucht…</string>
+    <string name="log_search_reachable">Das Log-Backend antwortet.</string>
+    <string name="log_search_source_line">Von %1$s</string>
+    <string name="log_search_query">Abfrage</string>
+    <string name="log_search_run">Suchen</string>
+    <string name="log_search_labels">Labels</string>
+    <string name="log_search_pick_label">Label auswählen</string>
+    <string name="log_search_pick_value">Werte von %1$s</string>
+    <string name="log_search_no_values">Nichts in den letzten 24 Stunden</string>
+    <string name="log_search_save">Diese Abfrage speichern</string>
+    <string name="log_search_unsave">Diese Abfrage vergessen</string>
+    <string name="log_search_range_hours">%1$d Std.</string>
+    <string name="log_search_range_days">%1$d T.</string>
+    <string name="log_search_range_custom">Benutzerdefiniert</string>
+    <string name="log_search_custom_hours">Stunden zurück, bis %1$d</string>
+    <string name="log_search_count">%1$d Zeilen</string>
+    <string name="log_search_idle">Abfrage eingeben oder Label auswählen</string>
+    <string name="log_search_open_loki">In Loki öffnen</string>
+    <string name="log_search_open_victorialogs">In VictoriaLogs öffnen</string>
 </resources>

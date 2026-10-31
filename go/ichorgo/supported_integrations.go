@@ -76,6 +76,8 @@ var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
+	{ID: "loki", Name: "Loki", Website: "https://grafana.com/oss/loki/", ServiceKind: logsKindLoki},
+	{ID: "victorialogs", Name: "VictoriaLogs", Website: "https://docs.victoriametrics.com/victorialogs/", ServiceKind: logsKindVictoriaLogs},
 	// KubeVirt VMs, the CDI DataVolumes that fill their disks, Harvester (which runs both) and
 	// the group KubeVirt's start, stop, restart, migrate, pause and unpause live under.
 	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester, groupKubeVirtSub}},
@@ -301,17 +303,23 @@ func runningApps(ctx context.Context, k *kubeClient) (map[string]detection, erro
 	return out, nil
 }
 
-// queryServices maps the kinds of metrics query APIs (promMatch) to the likeliest Service;
-// empty when the Services cannot be listed.
+// queryServices maps the kinds of metrics query APIs (promMatch) and log backends (logsMatch)
+// to the likeliest Service; empty when the Services cannot be listed.
 func queryServices(ctx context.Context, k *kubeClient) map[string]detection {
-	out := map[string]detection{}
+	var list kubeList[promService]
 
-	d, err := discoverProm(ctx, k)
-	if err != nil {
-		return out
+	if err := getList(ctx, k, "/api/v1/services", &list); err != nil {
+		return map[string]detection{}
 	}
 
-	for _, src := range d.Sources {
+	return servicesByKind(slices.Concat(promCandidates(list.Items), rankSources(list.Items, logsMatch)))
+}
+
+// servicesByKind keeps the first source of each kind.
+func servicesByKind(sources []promSource) map[string]detection {
+	out := map[string]detection{}
+
+	for _, src := range sources {
 		if _, seen := out[src.Kind]; !seen {
 			out[src.Kind] = detection{via: detectedByServices, namespace: src.Namespace}
 		}
@@ -386,12 +394,12 @@ func demoSupportedIntegrations() supportedIntegrations {
 		api[s.ID] = true
 	}
 
-	services := map[string]detection{}
-	for _, src := range demoPromDiscovery().Sources {
-		if _, seen := services[src.Kind]; !seen {
-			services[src.Kind] = detection{via: detectedByServices, namespace: src.Namespace}
-		}
+	sources := demoPromDiscovery().Sources
+	for _, c := range demoLogsDiscovery().Candidates {
+		sources = append(sources, c.Source)
 	}
+
+	services := servicesByKind(sources)
 
 	return supportedIntegrations{Checked: true, Items: integrationList(integrationSpecs(), func(s integrationSpec) detection {
 		switch {

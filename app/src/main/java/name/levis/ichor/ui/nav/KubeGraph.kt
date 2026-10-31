@@ -72,6 +72,12 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             silenceFingerprint = entry.arguments?.getString("silence").orEmpty(),
         )
     }
+    composable(Routes.LOG_SEARCH, arguments = listOf(navArgument("query") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        name.levis.ichor.ui.logsearch.LogSearchScreen(
+            onBack = { nav.popBackStack() },
+            initialQuery = entry.arguments?.getString("query").orEmpty(),
+        )
+    }
     composable(
         Routes.KUBE_NODES,
         arguments = listOf("filter", "query").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },

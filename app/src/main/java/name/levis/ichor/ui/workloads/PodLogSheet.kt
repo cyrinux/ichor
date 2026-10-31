@@ -56,6 +56,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.ui.logsearch.openInLogsBackendLabel
+import name.levis.ichor.ui.logsearch.rememberLogsBackend
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
@@ -181,6 +184,8 @@ fun PodLogSheet(
 ) {
     val context = LocalContext.current
     val links = LocalKubeLinks.current
+    val appContext = context.applicationContext as TalosApp
+    val logsBackend = rememberLogsBackend()
     val state by vm.state.collectAsStateWithLifecycle()
     val followState by followVm.state.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
@@ -279,6 +284,14 @@ fun PodLogSheet(
                                 onDismiss()
                                 links.onPortForward(pod.namespace, pod.name)
                             }, label = { Text(stringResource(R.string.kb_forward_title)) })
+                        }
+                        logsBackend?.let { backend ->
+                            item(key = "log-backend") {
+                                IchorAssistChip(onClick = {
+                                    onDismiss()
+                                    links.onLogSearch(appContext.logsBackendRepository.podQuery(backend.kind, pod.namespace, pod.name))
+                                }, label = { Text(openInLogsBackendLabel(backend)) })
+                            }
                         }
                         item(key = "shell") {
                             // In the container picked for the log; "" lets Kubernetes pick the only one.

@@ -6406,4 +6406,27 @@
     <string name="oncall_page_ack_failed">Не вдалося підтвердити: %1$s</string>
     <string name="oncall_page_no_incident">Немає відкритого інциденту для цього сповіщення</string>
     <string name="oncall_restore_note">Задайте токен чергування знову: до резервних копій він не потрапляє.</string>
+    <string name="log_search_title">Пошук у логах</string>
+    <string name="log_search_source">Сховище логів</string>
+    <string name="log_search_none_found">Сховище логів не знайдено</string>
+    <string name="log_search_none_found_hint">Вкажіть URL і токен вашого Loki або VictoriaLogs чи встановіть його в кластері.</string>
+    <string name="log_search_searching">Пошук сховища логів…</string>
+    <string name="log_search_reachable">Сховище логів відповідає.</string>
+    <string name="log_search_source_line">Із %1$s</string>
+    <string name="log_search_query">Запит</string>
+    <string name="log_search_run">Шукати</string>
+    <string name="log_search_labels">Мітки</string>
+    <string name="log_search_pick_label">Виберіть мітку</string>
+    <string name="log_search_pick_value">Значення %1$s</string>
+    <string name="log_search_no_values">Нічого за останню добу</string>
+    <string name="log_search_save">Зберегти запит</string>
+    <string name="log_search_unsave">Забути запит</string>
+    <string name="log_search_range_hours">%1$d год</string>
+    <string name="log_search_range_days">%1$d дн</string>
+    <string name="log_search_range_custom">Інший</string>
+    <string name="log_search_custom_hours">Годин тому, до %1$d</string>
+    <string name="log_search_count">Рядків: %1$d</string>
+    <string name="log_search_idle">Введіть запит або виберіть мітку</string>
+    <string name="log_search_open_loki">Відкрити в Loki</string>
+    <string name="log_search_open_victorialogs">Відкрити у VictoriaLogs</string>
 </resources>

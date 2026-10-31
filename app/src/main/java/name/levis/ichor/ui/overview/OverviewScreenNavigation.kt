@@ -44,6 +44,8 @@ class OverviewScreenNavigation(
     val onCheckup: () -> Unit,
     /** The Capacity screen (from the Kubernetes home). */
     val onCapacity: () -> Unit,
+    /** The search in the cluster's log backend (from the Kubernetes home). */
+    val onLogSearch: () -> Unit,
     val onApiHealth: () -> Unit,
     val onNetworkPolicies: () -> Unit,
     /** Kyverno's admission policies (from the Kubernetes home). */
@@ -96,6 +98,7 @@ class OverviewScreenNavigation(
         onAlerts = onAlerts,
         onCheckup = onCheckup,
         onCapacity = onCapacity,
+        onLogSearch = onLogSearch,
         onApiHealth = onApiHealth,
         onNetworkPolicies = onNetworkPolicies,
         onPolicies = onPolicies,

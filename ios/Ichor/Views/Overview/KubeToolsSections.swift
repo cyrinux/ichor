@@ -117,6 +117,9 @@ struct KubeToolsSections: View {
             NavigationLink(value: Route.metrics) {
                 toolLabel(KubeHomeAction.metrics)
             }
+            NavigationLink(value: Route.logSearch()) {
+                toolLabel(Text("Log search"), systemImage: "text.magnifyingglass")
+            }
             NavigationLink {
                 CheckupView()
             } label: {
