@@ -10,9 +10,7 @@ import SwiftUI
 /// (a chart), the page does not swipe.
 ///
 /// `topBar` is what sits above the pages, usually the picker. It goes here rather than in a
-/// `.safeAreaInset(edge: .top)` on the pager: the pages are sized against the horizontal scroll
-/// view, so a list inside one does not inherit such an inset and opens with its first row under
-/// the bar.
+/// `.safeAreaInset(edge: .top)` on the pager, whose pages lie under such an inset.
 struct SwipeTabPager<Tab: Hashable, Page: View, TopBar: View>: View {
     let tabs: [Tab]
     @Binding var selection: Tab
@@ -43,8 +41,9 @@ struct SwipeTabPager<Tab: Hashable, Page: View, TopBar: View>: View {
     }
 
     private var pages: some View {
-        // Each page is as tall as the space left by the bars: a container-relative height also
-        // covers the search bar, whose footer would then sit behind it.
+        // Each page is as tall as the space left by the bars. A container-relative height also
+        // covers the safe areas, and the taller page then starts under the bar above it and ends
+        // behind the search bar.
         GeometryReader { visible in
             pager(height: visible.size.height)
         }
@@ -57,8 +56,6 @@ struct SwipeTabPager<Tab: Hashable, Page: View, TopBar: View>: View {
                     page(tab)
                         // scrollDisabled is inherited: a fixed tab's own lists still scroll.
                         .scrollDisabled(false)
-                        // Opens at the top, and stays there while the rows settle.
-                        .defaultScrollAnchor(.topLeading)
                         .environment(\.swipeTabIsCurrent, tab == selection)
                         .containerRelativeFrame(.horizontal)
                         .frame(height: height)
