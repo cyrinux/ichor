@@ -7,29 +7,20 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // Health of one data-service item (a Longhorn volume, a Postgres cluster), worst first.
 const (
-	healthCritical = "critical"
-	healthWarning  = "warning"
-	healthOK       = "ok"
-	healthIdle     = "idle" // not in use: a detached volume
+	healthCritical = kube.HealthCritical
+	healthWarning  = kube.HealthWarning
+	healthOK       = kube.HealthOK
+	healthIdle     = kube.HealthIdle // not in use: a detached volume
 )
 
 // healthRank orders health values for sorting, worst first.
-func healthRank(h string) int {
-	switch h {
-	case healthCritical:
-		return 0
-	case healthWarning:
-		return 1
-	case healthOK:
-		return 2
-	default:
-		return 3
-	}
-}
+func healthRank(h string) int { return kube.HealthRank(h) }
 
 // byHealthThenKey orders items worst health first, then by the stable key f returns
 // (namespace/name, usually), for slices.SortFunc.
@@ -104,25 +95,7 @@ const (
 
 // readAPIGroups lists the API groups the server serves, with their preferred versions.
 func readAPIGroups(ctx context.Context, k *kubeClient) (map[string]string, error) {
-	var list struct {
-		Groups []struct {
-			Name             string `json:"name"`
-			PreferredVersion struct {
-				Version string `json:"version"`
-			} `json:"preferredVersion"`
-		} `json:"groups"`
-	}
-
-	if err := k.get(ctx, "/apis", &list); err != nil {
-		return nil, err
-	}
-
-	groups := map[string]string{}
-	for _, g := range list.Groups {
-		groups[g.Name] = g.PreferredVersion.Version
-	}
-
-	return groups, nil
+	return kube.APIGroups(ctx, k.api())
 }
 
 // dsPod holds the fields of a pod the data-service readers use.
@@ -228,15 +201,4 @@ func sectionError(errs ...error) string {
 }
 
 // unixMilli parses an RFC 3339 time into unix ms, 0 when empty or invalid.
-func unixMilli(s string) int64 {
-	if s == "" {
-		return 0
-	}
-
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		return 0
-	}
-
-	return t.UnixMilli()
-}
+func unixMilli(s string) int64 { return kube.UnixMilli(s) }

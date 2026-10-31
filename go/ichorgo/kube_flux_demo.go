@@ -141,7 +141,7 @@ func demoFlux(now time.Time) fluxStatus {
 		hist(2, "21.2.5", "8.0.2", "deployed", 40*24*time.Hour))
 	redis.Suspended, redis.Revision = true, "21.2.5"
 
-	out := mapFlux(nil, nil, nil)
+	out := fluxStatus{Installed: true}
 	out.Version = "v2.7.0"
 	out.Apps = []fluxApp{appsKs, nginx, infraKs, configsKs, prom, rootKs, podinfo, redis}
 	out.Sources = []fluxSource{

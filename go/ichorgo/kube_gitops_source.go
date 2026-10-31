@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/cyrinux/ichor/go/gitforge"
+	"github.com/cyrinux/ichor/go/kube/flux"
 )
 
 // Where an Argo CD or Flux app's files are: the repository, the revision the cluster runs,
@@ -279,7 +280,7 @@ func fluxHelmReleaseSource(ctx context.Context, k *kubeClient, groups map[string
 		return g, nil
 	}
 
-	return gitopsSource{}, errFluxNoSource
+	return gitopsSource{}, flux.ErrNoSource
 }
 
 // fluxGitOpsSource reads the Flux source ref: its URL, the ref it follows and the revision

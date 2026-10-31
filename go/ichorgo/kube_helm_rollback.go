@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/cyrinux/ichor/go/kube/helm"
 )
@@ -19,9 +18,6 @@ func helmEnv(k *kubeClient) helm.Env {
 		Client: k.api(),
 		Error:  kubeError,
 		Fatal:  followFatal,
-		Suspend: func(ctx context.Context, namespace, name string, now time.Time) error {
-			return fluxAction(ctx, k, "HelmRelease", namespace, name, fluxActionSuspend, now)
-		},
 		Rollout: func(ctx context.Context, kind, namespace, name string) (helm.RolloutState, error) {
 			wk, err := findWorkloadKind(kind)
 			if err != nil {

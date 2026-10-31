@@ -277,6 +277,28 @@ func TestHelmRollbackBlockers(t *testing.T) {
 	}
 }
 
+// A release Flux manages is suspended first, through go/kube/flux: a refusal stops the rollback
+// before anything is recorded.
+func TestRollbackSuspendsTheFluxOwnerFirst(t *testing.T) {
+	const hr = "/apis/helm.toolkit.fluxcd.io/v2/namespaces/web/helmreleases/site"
+
+	f := kubetest.New(t, map[string]string{
+		"GET /apis": `{"groups":[{"name":"helm.toolkit.fluxcd.io","preferredVersion":{"version":"v2"}}]}`,
+		"GET " + hr: `{"metadata":{"name":"site","namespace":"web","resourceVersion":"7"},"spec":{}}`,
+	})
+	f.AnswerWith("PATCH "+hr, http.StatusForbidden, `{"kind":"Status","code":403,"reason":"Forbidden","message":"no"}`)
+
+	_, err := runRollback(context.Background(), Env{Client: f.KubeClient(t)}, &rollback{plan: Plan{FluxOwner: "web/site"}}, time.Now())
+	if err == nil || !strings.Contains(err.Error(), "suspend the HelmRelease web/site first") {
+		t.Fatalf("got %v", err)
+	}
+
+	got := f.Recorded()
+	if last := got[len(got)-1]; last.Method != http.MethodPatch || last.Path != hr || !strings.Contains(last.Body, `"suspend":true`) {
+		t.Fatalf("last request %+v", last)
+	}
+}
+
 func TestHelmFluxOwner(t *testing.T) {
 	objs, err := parseManifest("kind: Deployment\nmetadata:\n  name: a\n  labels:\n    helm.toolkit.fluxcd.io/name: podinfo\n    helm.toolkit.fluxcd.io/namespace: flux-system\n")
 	if err != nil {

@@ -8,8 +8,8 @@
 // What does not: the demo data, the privacy mask, the audit log, opening a client for a
 // cluster, the listeners the apps implement. Those stay in the gomobile facade (go/ichorgo),
 // whose exported functions come down to: demo check, funnel, a call here, mask and audit,
-// JSON. What Helm needs of another domain still in the facade (Flux's suspend, a workload's
-// rollout state, the sign-in error) comes through Env.
+// JSON. What Helm needs of another domain still in the facade (a workload's rollout state,
+// the sign-in error) comes through Env; Flux's suspend is a direct call to go/kube/flux.
 //
 // The rule for the next domains out of the facade (go/kube/<domain>): one domain per pull
 // request, the pure logic moves, the demo, mask and audit stay; the exported facade signatures

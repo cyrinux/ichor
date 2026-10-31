@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cyrinux/ichor/go/kube/flux"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 )
 
@@ -258,7 +259,7 @@ func validShareKind(target, kind string) bool {
 		return len(kind) <= 63 && dns1123Label.MatchString(kind)
 	}
 
-	_, ok := fluxKinds[kind]
+	ok := flux.HasKind(kind)
 
 	return ok && kind != "HelmChart"
 }
