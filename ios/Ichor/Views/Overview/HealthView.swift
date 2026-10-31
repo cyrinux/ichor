@@ -74,7 +74,11 @@ struct HealthView: View {
                 if mesh.broken > 0, finished, error == nil {
                     Text("Server checks do not cover KubeSpan.").font(.footnote).foregroundStyle(.secondary)
                 }
-                NavigationLink { KubeSpanView() } label: { Text("Open map") }
+                NavigationLink {
+                    KubeSpanView()
+                } label: {
+                    Text("Open map")
+                }
             } header: {
                 Text(verbatim: "KubeSpan")
             }
