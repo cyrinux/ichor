@@ -6090,4 +6090,31 @@
     <string name="hetzner_snapshot_notification_title">正在制作 Talos 快照</string>
     <string name="hetzner_snapshot_notification_done">Talos 快照已制作</string>
     <string name="hetzner_snapshot_notification_failed">Talos 快照失败</string>
+    <string name="omni_allocate_title">在 Omni 中分配</string>
+    <string name="omni_allocate_intro">已在 Omni 中注册、尚未属于任何集群的机器。选择一台机器及其加入的机器集。</string>
+    <string name="omni_allocate_machines">机器</string>
+    <string name="omni_allocate_none">没有等待中的机器：使用 Omni 的加入配置启动一台，它就会显示在这里。</string>
+    <string name="omni_allocate_maintenance">维护</string>
+    <string name="omni_allocate_offline">离线</string>
+    <string name="omni_allocate_sets">机器集</string>
+    <string name="omni_allocate_set_none">将机器绑定到此机器集。</string>
+    <string name="omni_allocate_set_static">机器类 %1$s：数量加一，由该类选择一台匹配的机器。</string>
+    <string name="omni_allocate_set_unlimited">机器类 %1$s 会选取所有匹配的机器：无需写入即可选取这台机器。</string>
+    <string name="omni_allocate_needs">该类要求：%1$s</string>
+    <string name="omni_allocate_action">分配</string>
+    <string name="omni_allocate_confirm_title">分配 %1$s？</string>
+    <string name="omni_allocate_confirm_worker">%1$s 加入机器集 %2$s。</string>
+    <string name="omni_allocate_confirm_controlplane">%1$s 通过 %2$s 加入控制平面：etcd 仲裁成员将增加一个。</string>
+    <string name="omni_phase_allocated">分配</string>
+    <string name="omni_phase_booting">启动</string>
+    <string name="omni_allocate_done">%1$s 已在集群中运行</string>
+    <string name="omni_allocate_stop_hint">分配会保留：停止只是不再跟踪。</string>
+    <string name="omni_allocate_stop_body">%1$s 保持已分配状态，Omni 会继续处理。</string>
+    <string name="omni_labels_title">新机器的标签</string>
+    <string name="omni_labels_intro">签入加入令牌：机器在 Omni 中显示时带有这些标签，机器类可据此选择它。</string>
+    <string name="omni_labels_extra">更多标签（key=value，以逗号分隔）</string>
+    <string name="omni_labels_classes">此集群的机器类要求：%1$s</string>
+    <string name="omni_labels_apply">应用标签</string>
+    <string name="omni_role_worker">工作节点</string>
+    <string name="omni_role_controlplane">控制平面</string>
 </resources>

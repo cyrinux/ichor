@@ -320,6 +320,10 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     fun hetznerSnapshot(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startHetznerSnapshot(yaml, context, tokenJson, specJson, listener) }
 
+    /** Puts a machine of Omni in the cluster and follows it (StartOmniAllocate). [stop] only stops following. */
+    fun omniAllocate(machineId: String, machineSetId: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startOmniAllocate(yaml, context, machineId, machineSetId, listener) }
+
     private fun hetznerRun(stop: Flow<Any>, start: (String, String, JoinListener) -> JoinRun): Flow<JoinEvent> = callbackFlow {
         val stored = configs.forCall()
         val listener = object : JoinListener {

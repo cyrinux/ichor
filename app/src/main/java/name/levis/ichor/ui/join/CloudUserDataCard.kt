@@ -67,6 +67,7 @@ class CloudUserDataViewModel(private val lifecycle: NodeLifecycleRepository) : V
     private val _data = MutableStateFlow<UiState<CloudUserData>?>(null)
     val data: StateFlow<UiState<CloudUserData>?> = _data.asStateFlow()
     private var loading: Job? = null
+    private var omniLabels: String? = null
 
     /** The form the shown text was made for: another one makes it stale. */
     var madeFor: JoinConfigForm? = null
@@ -76,15 +77,24 @@ class CloudUserDataViewModel(private val lifecycle: NodeLifecycleRepository) : V
     var confirmed = false
         private set
 
-    /** Omni's join config ([form] is not used there), or the new member's config of [form]. */
+    /** The new member's config of [form]; not for Omni, see [generateOmni]. */
     fun generate(form: JoinConfigForm) {
+        madeFor = form
+        made { lifecycle.nodeCloudUserData(form.template, form.role, form.hostname, form.disk) }
+    }
+
+    /** Omni's join config, with [labelsJson] signed into its token; kept when coming back to the screen. */
+    fun generateOmni(labelsJson: String) {
+        if (labelsJson == omniLabels && _data.value is UiState.Loaded) return
+        omniLabels = labelsJson
+        made { lifecycle.nodeCloudUserDataOmni("", labelsJson) }
+    }
+
+    private fun made(read: suspend () -> CloudUserData) {
         loading?.cancel()
         confirmed = false
-        madeFor = form
         _data.value = UiState.Loading
-        loading = viewModelScope.launch {
-            _data.value = uiStateOf { lifecycle.nodeCloudUserData(form.template, form.role, form.hostname, form.disk) }
-        }
+        loading = viewModelScope.launch { _data.value = uiStateOf { read() } }
     }
 
     fun confirm() {
@@ -101,6 +111,8 @@ class CloudUserDataViewModel(private val lifecycle: NodeLifecycleRepository) : V
 @Composable
 fun CloudUserDataCard(
     omni: Boolean,
+    omniLabelsJson: String = "",
+    onAllocate: (() -> Unit)? = null,
     vm: CloudUserDataViewModel = viewModel(key = "cloud-user-data", factory = factory { CloudUserDataViewModel(app.nodeLifecycleRepository) }),
     configVm: JoinConfigViewModel = viewModel(key = "cloud-user-data-form", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
 ) {
@@ -110,7 +122,7 @@ fun CloudUserDataCard(
     val made by vm.data.collectAsStateWithLifecycle()
     val form by configVm.form.collectAsStateWithLifecycle()
     val members by configVm.members.collectAsStateWithLifecycle()
-    LaunchedEffect(omni) { if (omni && vm.data.value == null) vm.generate(JoinConfigForm()) }
+    LaunchedEffect(omni, omniLabelsJson) { if (omni) vm.generateOmni(omniLabelsJson) }
     // On plain Talos the shown text is the one of the form as it is now, else none.
     val data = made.takeIf { omni || vm.madeFor == form }
 
@@ -136,7 +148,7 @@ fun CloudUserDataCard(
         when (val state = data) {
             null -> Unit
             UiState.Loading -> LoadingBox()
-            is UiState.Failed -> ErrorBox(state.message, { vm.generate(form) })
+            is UiState.Failed -> ErrorBox(state.message, { if (omni) vm.generateOmni(omniLabelsJson) else vm.generate(form) })
             is UiState.Loaded -> UserDataBody(state.data, vm)
         }
     }
@@ -148,7 +160,7 @@ fun CloudUserDataCard(
         )
     }
     // Once the text is made, the app can also create the server with it.
-    if (data is UiState.Loaded) HetznerCreateCard(form.takeUnless { omni }, demo)
+    if (data is UiState.Loaded) HetznerCreateCard(form.takeUnless { omni }, demo, onAllocate)
 }
 
 /** The size, the warnings, the preview (secrets hidden) and Copy / Share of the full text. */

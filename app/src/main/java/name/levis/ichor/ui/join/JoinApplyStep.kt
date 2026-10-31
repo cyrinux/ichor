@@ -146,11 +146,12 @@ private fun SummaryRow(@StringRes label: Int, value: String) {
 
 /** The followed join: phase timeline, then the result and "Open node" where a screen can open it. */
 @Composable
-internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() -> Unit)?, onClose: () -> Unit) {
+internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() -> Unit)?, onClose: () -> Unit, onAllocate: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     var confirmStop by remember { mutableStateOf(false) }
     val steps = remember(run.events, run.finished, run.error) { joinTimeline(run.events, run.finished, run.error != null, run.request.phases) }
     val cloud = run.request.hetzner != null
+    val allocating = run.request.omniAllocate != null
     if (run.running) KeepScreenOn()
 
     IchorCard(Modifier.fillMaxWidth()) {
@@ -160,7 +161,15 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
     }
     when {
         run.running -> {
-            MutedText(stringResource(if (cloud) R.string.hetzner_stop_hint else R.string.join_run_stop_hint))
+            MutedText(
+                stringResource(
+                    when {
+                        allocating -> R.string.omni_allocate_stop_hint
+                        cloud -> R.string.hetzner_stop_hint
+                        else -> R.string.join_run_stop_hint
+                    },
+                ),
+            )
             IchorOutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop))
             }
@@ -171,11 +180,23 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
         }
         else -> {
             Text(
-                if (run.request.omni) stringResource(R.string.hetzner_run_done_omni, run.hostname) else stringResource(R.string.join_run_done, run.hostname, run.address),
+                when {
+                    allocating -> stringResource(R.string.omni_allocate_done, run.hostname)
+                    run.request.omni -> stringResource(R.string.hetzner_run_done_omni, run.hostname)
+                    else -> stringResource(R.string.join_run_done, run.hostname, run.address)
+                },
                 color = colors.ok,
                 style = MaterialTheme.typography.titleMedium,
             )
-            if (onOpenNode == null) {
+            if (onAllocate != null && cloud && run.request.omni) {
+                IchorButton(
+                    onClick = {
+                        onClose()
+                        onAllocate()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.omni_allocate_title)) }
+            } else if (onOpenNode == null) {
                 IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
             } else {
                 IchorButton(
@@ -192,7 +213,14 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
     if (confirmStop) {
         ConfirmDialog(
             title = stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop),
-            text = stringResource(if (cloud) R.string.hetzner_stop_body else R.string.join_run_stop_body, run.hostname),
+            text = stringResource(
+                when {
+                    allocating -> R.string.omni_allocate_stop_body
+                    cloud -> R.string.hetzner_stop_body
+                    else -> R.string.join_run_stop_body
+                },
+                run.hostname,
+            ),
             confirm = stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop),
             onConfirm = {
                 confirmStop = false
@@ -217,6 +245,8 @@ internal val JoinPhase.label: Int
         JoinPhase.STARTING -> R.string.hetzner_phase_starting
         JoinPhase.OMNI -> R.string.hetzner_phase_omni
         JoinPhase.APPLYING -> R.string.join_phase_applying
+        JoinPhase.ALLOCATED -> R.string.omni_phase_allocated
+        JoinPhase.OMNI_BOOTING -> R.string.omni_phase_booting
         JoinPhase.INSTALLING -> R.string.join_phase_installing
         JoinPhase.REBOOTING -> R.string.join_phase_rebooting
         JoinPhase.BOOTED -> R.string.join_phase_booted

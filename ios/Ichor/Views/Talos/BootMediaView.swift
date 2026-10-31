@@ -13,6 +13,10 @@ struct BootMediaView: View {
     @State private var arch = ""
     @State private var secureBoot = false
     @State private var request = 0
+    /// On Omni, the labels to sign into the join token.
+    @State private var omniLabels = omniLabelsJSON(role: "worker", extra: "")
+
+    private var omni: Bool { model.activeSummary?.omni == true }
 
     var body: some View {
         List {
@@ -22,6 +26,7 @@ struct BootMediaView: View {
                 )
                 .font(.footnote).foregroundStyle(.secondary)
             }
+            if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
             switch media {
             case .loading:
                 Section { ProgressView().frame(maxWidth: .infinity) }
@@ -35,22 +40,28 @@ struct BootMediaView: View {
                 mediaSections(value)
             }
             // A server at a cloud provider boots its own image and reads the config as user data.
-            CloudUserDataCard(omni: model.activeSummary?.omni == true)
+            CloudUserDataCard(omni: omni, omniLabels: omniLabels, path: $path)
             // Add a node takes a machine in maintenance mode; Omni adds its machines itself.
             if let context = model.activeSummary, !context.omni {
                 Section {
                     Button("The machine is up: add it") { addNode() }
                 }
-            } else if model.activeSummary?.omni == true {
+            } else if omni {
                 Section {
                     Text("Omni adds the machine once it boots with these arguments").note()
+                }
+            }
+            // The demo shows its samples there too, and refuses to allocate.
+            if omni || model.activeSummary?.demo == true {
+                Section {
+                    Button("Allocate in Omni") { path.append(.omniAllocate) }
                 }
             }
         }
         .navigationTitle("Boot a new machine")
         .clusterScreenTitle(Text("Boot a new machine"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await load() }
+        .task(id: omniLabels) { await load() }
     }
 
     @ViewBuilder
@@ -139,7 +150,11 @@ struct BootMediaView: View {
         let current = request
         media = .loading
         let loaded = await LoadState.from {
-            try await client.nodeBootMedia(template: "", arch: arch, secureBoot: secureBoot)
+            if omni {
+                try await client.nodeBootMediaOmni(arch: arch, secureBoot: secureBoot, labelsJSON: omniLabels)
+            } else {
+                try await client.nodeBootMedia(template: "", arch: arch, secureBoot: secureBoot)
+            }
         }
         guard current == request else { return }
         media = loaded

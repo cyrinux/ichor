@@ -66,7 +66,8 @@ final class JoinJob {
         // For the reminder posted when the app leaves the screen.
         Task { _ = await BackgroundMonitor.requestPermission() }
         let run =
-            request.snapshot.map { client.startHetznerSnapshot($0, token: hetznerToken) }
+            request.omniAllocate.map { client.startOmniAllocate($0) }
+            ?? request.snapshot.map { client.startHetznerSnapshot($0, token: hetznerToken) }
             ?? request.hetzner.map { client.startHetznerCreate($0, token: hetznerToken) }
             ?? client.startNodeJoin(request)
         stop = run.stop

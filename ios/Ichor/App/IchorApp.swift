@@ -231,6 +231,8 @@ enum Route: Hashable {
     case joinNode
     /// Step 0 of Add a node (and all of it on Omni): the booter command, ISO and iPXE links that start a new node.
     case bootMedia
+    /// "Allocate in Omni": a machine no cluster has, into a machine set of this one.
+    case omniAllocate
     /// Node hub opened on its cordon / uncordon confirmation (from a row's menu).
     case nodeCordon(NodeRef)
     /// Node tabs opened on a tab (a hub row, a share link that names a tab).
@@ -497,6 +499,7 @@ struct MainNavigation: View {
             // Omni joins the machine itself: Add a node is only its boot media there.
             if model.activeSummary?.omni == true { BootMediaView(path: $path) } else { JoinNodeView(path: $path) }
         case .bootMedia: BootMediaView(path: $path)
+        case .omniAllocate: OmniAllocateView()
         case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
         case .nodeTab(let ref, let tab):
             NodeTabsView(ref: ref, initialTab: tab).recordsOpened(
@@ -645,6 +648,7 @@ struct MainNavigation: View {
         case .k8sUpgrade:
             return K8sUpgradeJob.shared.version == nil ? nil : Route.k8sUpgrade
         case .join:
+            if JoinJob.shared.request?.omniAllocate != nil { return Route.omniAllocate }
             return JoinJob.shared.request == nil ? nil : Route.joinNode
         case .argoSync:
             guard let run = GitOpsOperationJob.shared.argo else { return nil }

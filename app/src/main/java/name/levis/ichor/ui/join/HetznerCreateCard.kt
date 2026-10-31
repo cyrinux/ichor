@@ -153,6 +153,7 @@ class HetznerCreateViewModel(private val lifecycle: NodeLifecycleRepository, pri
 fun HetznerCreateCard(
     form: JoinConfigForm?,
     demo: Boolean,
+    onAllocate: (() -> Unit)? = null,
     vm: HetznerCreateViewModel = viewModel(key = "hetzner-create", factory = factory { HetznerCreateViewModel(app.nodeLifecycleRepository, app.cloudProviderStore) }),
 ) {
     val context = LocalContext.current
@@ -170,7 +171,7 @@ fun HetznerCreateCard(
     SectionCard(stringResource(R.string.hetzner_title)) {
         val current = run
         if (current?.request?.hetzner != null) {
-            JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss)
+            JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss, onAllocate = onAllocate)
         } else {
             MutedText(stringResource(if (form == null) R.string.hetzner_intro_omni else R.string.hetzner_intro))
             if (demo) {

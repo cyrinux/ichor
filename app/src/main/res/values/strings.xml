@@ -6236,4 +6236,31 @@
     <string name="hetzner_snapshot_notification_title">Making a Talos snapshot</string>
     <string name="hetzner_snapshot_notification_done">Talos snapshot made</string>
     <string name="hetzner_snapshot_notification_failed">The Talos snapshot failed</string>
+    <string name="omni_allocate_title">Allocate in Omni</string>
+    <string name="omni_allocate_intro">Machines that registered in Omni and belong to no cluster yet. Pick one, and the machine set it joins.</string>
+    <string name="omni_allocate_machines">Machines</string>
+    <string name="omni_allocate_none">No machine is waiting: boot one with Omni\'s join config and it shows up here.</string>
+    <string name="omni_allocate_maintenance">maintenance</string>
+    <string name="omni_allocate_offline">offline</string>
+    <string name="omni_allocate_sets">Machine set</string>
+    <string name="omni_allocate_set_none">Binds the machine to this set.</string>
+    <string name="omni_allocate_set_static">Machine class %1$s: its count goes up by one, and the class picks a matching machine.</string>
+    <string name="omni_allocate_set_unlimited">Machine class %1$s takes every matching machine: it picks this one up with no write.</string>
+    <string name="omni_allocate_needs">The class asks for: %1$s</string>
+    <string name="omni_allocate_action">Allocate</string>
+    <string name="omni_allocate_confirm_title">Allocate %1$s?</string>
+    <string name="omni_allocate_confirm_worker">%1$s joins machine set %2$s.</string>
+    <string name="omni_allocate_confirm_controlplane">%1$s joins the control plane through %2$s: the etcd quorum then counts one more member.</string>
+    <string name="omni_phase_allocated">Allocate</string>
+    <string name="omni_phase_booting">Boot</string>
+    <string name="omni_allocate_done">%1$s runs in the cluster</string>
+    <string name="omni_allocate_stop_hint">The allocation stays: stopping only stops following it.</string>
+    <string name="omni_allocate_stop_body">%1$s stays allocated, and Omni goes on with it.</string>
+    <string name="omni_labels_title">The new machine\'s labels</string>
+    <string name="omni_labels_intro">Signed into the join token: the machine appears in Omni with them, and a machine class can pick it by them.</string>
+    <string name="omni_labels_extra">More labels (key=value, separated by commas)</string>
+    <string name="omni_labels_classes">This cluster\'s machine classes ask for: %1$s</string>
+    <string name="omni_labels_apply">Apply the labels</string>
+    <string name="omni_role_worker">Worker</string>
+    <string name="omni_role_controlplane">Control plane</string>
 </resources>

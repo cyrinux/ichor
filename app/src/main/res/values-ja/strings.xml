@@ -6090,4 +6090,31 @@
     <string name="hetzner_snapshot_notification_title">Talos スナップショットを作成中</string>
     <string name="hetzner_snapshot_notification_done">Talos スナップショットを作成しました</string>
     <string name="hetzner_snapshot_notification_failed">Talos スナップショットに失敗しました</string>
+    <string name="omni_allocate_title">Omni で割り当て</string>
+    <string name="omni_allocate_intro">Omni に登録され、まだどのクラスタにも属していないマシンです。1 台と、参加先のマシンセットを選びます。</string>
+    <string name="omni_allocate_machines">マシン</string>
+    <string name="omni_allocate_none">待機中のマシンはありません。Omni の参加設定で起動すると、ここに表示されます。</string>
+    <string name="omni_allocate_maintenance">メンテナンス</string>
+    <string name="omni_allocate_offline">オフライン</string>
+    <string name="omni_allocate_sets">マシンセット</string>
+    <string name="omni_allocate_set_none">マシンをこのセットに割り当てます。</string>
+    <string name="omni_allocate_set_static">マシンクラス %1$s: 台数が 1 増え、クラスが条件に合うマシンを選びます。</string>
+    <string name="omni_allocate_set_unlimited">マシンクラス %1$s は条件に合うマシンをすべて取得します。書き込みなしでこのマシンを取得します。</string>
+    <string name="omni_allocate_needs">クラスの条件: %1$s</string>
+    <string name="omni_allocate_action">割り当て</string>
+    <string name="omni_allocate_confirm_title">%1$s を割り当てますか?</string>
+    <string name="omni_allocate_confirm_worker">%1$s はマシンセット %2$s に参加します。</string>
+    <string name="omni_allocate_confirm_controlplane">%1$s は %2$s を通じてコントロールプレーンに参加します。etcd クォーラムのメンバーが 1 つ増えます。</string>
+    <string name="omni_phase_allocated">割り当て</string>
+    <string name="omni_phase_booting">起動</string>
+    <string name="omni_allocate_done">%1$s はクラスタで稼働中です</string>
+    <string name="omni_allocate_stop_hint">割り当ては残ります。停止しても追跡が止まるだけです。</string>
+    <string name="omni_allocate_stop_body">%1$s は割り当てられたままで、Omni が処理を続けます。</string>
+    <string name="omni_labels_title">新しいマシンのラベル</string>
+    <string name="omni_labels_intro">参加トークンに署名されます。マシンはこのラベル付きで Omni に表示され、マシンクラスはこれで選択できます。</string>
+    <string name="omni_labels_extra">追加のラベル (key=value、カンマ区切り)</string>
+    <string name="omni_labels_classes">このクラスタのマシンクラスの条件: %1$s</string>
+    <string name="omni_labels_apply">ラベルを適用</string>
+    <string name="omni_role_worker">ワーカー</string>
+    <string name="omni_role_controlplane">コントロールプレーン</string>
 </resources>

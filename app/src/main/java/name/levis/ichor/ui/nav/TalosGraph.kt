@@ -20,6 +20,7 @@ import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.address
 import name.levis.ichor.model.containerLogSubtitle
 import name.levis.ichor.model.containerLogTitle
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.sensitive
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.capture.CaptureScreen
@@ -45,6 +46,7 @@ import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
 import name.levis.ichor.ui.upgrade.K8sUpgradeScreen
 import name.levis.ichor.ui.join.BootMediaScreen
 import name.levis.ichor.ui.join.JoinNodeScreen
+import name.levis.ichor.ui.join.OmniAllocateScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
@@ -238,7 +240,11 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     composable(Routes.JOIN_NODE) {
         // Omni joins the machine itself: Add a node is only its boot media there.
         if (app.configRepository.config.value?.activeSummary?.omni == true) {
-            BootMediaScreen(onBack = { nav.popBackStack() }, onAddNode = null)
+            BootMediaScreen(
+                onBack = { nav.popBackStack() },
+                onAddNode = null,
+                onAllocate = { nav.navigate(Routes.OMNI_ALLOCATE) { launchSingleTop = true } },
+            )
         } else {
             JoinNodeScreen(
                 onBack = { nav.popBackStack() },
@@ -252,8 +258,15 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     }
     composable(Routes.BOOT_MEDIA) {
         // Add a node takes a machine in maintenance mode; Omni adds its machines itself.
-        val omni = app.configRepository.config.value?.activeSummary?.omni == true
+        val active = app.configRepository.config.value?.activeSummary
+        val omni = active?.omni == true
         BootMediaScreen(
+            // The demo shows its samples there too, and refuses to allocate.
+            onAllocate = if (omni || active?.isDemo == true) {
+                { nav.navigate(Routes.OMNI_ALLOCATE) { launchSingleTop = true } }
+            } else {
+                null
+            },
             onBack = { nav.popBackStack() },
             onAddNode = if (omni) null else {
                 {
@@ -263,6 +276,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             },
         )
     }
+    composable(Routes.OMNI_ALLOCATE) { OmniAllocateScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.ROTATE_CA) {
         RotateCAScreen(

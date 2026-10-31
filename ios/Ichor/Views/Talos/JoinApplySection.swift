@@ -187,6 +187,8 @@ extension JoinPhase {
         case .creating: String(localized: "Create the server")
         case .starting: String(localized: "Start the server")
         case .omni: String(localized: "Appear in Omni")
+        case .allocated: String(localized: "Allocate")
+        case .booting: String(localized: "Boot")
         case .applying: String(localized: "Send the config")
         case .installing: String(localized: "Install")
         case .rebooting: String(localized: "Reboot")

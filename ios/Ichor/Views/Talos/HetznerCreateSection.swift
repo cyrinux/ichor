@@ -11,6 +11,7 @@ struct HetznerCreateSection: View {
     let role: String
     let hostname: String
     let disk: String
+    @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
     @Environment(LockStore.self) private var lockStore
@@ -206,6 +207,10 @@ struct HetznerCreateSection: View {
                 Button("Close") { job.clear() }
             case .appearedInOmni?:
                 Text("\(job.request?.hostname ?? "") appeared in Omni: allocate it there")
+                Button("Allocate in Omni") {
+                    job.clear()
+                    path.append(.omniAllocate)
+                }
                 Button("Close") { job.clear() }
             case .snapshotMade?:
                 // Not this section's run: a snapshot run has its own (HetznerSnapshotRunSections).

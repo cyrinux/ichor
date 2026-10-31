@@ -6223,4 +6223,31 @@
     <string name="hetzner_snapshot_notification_title">Criando um snapshot Talos</string>
     <string name="hetzner_snapshot_notification_done">Snapshot Talos criado</string>
     <string name="hetzner_snapshot_notification_failed">O snapshot Talos falhou</string>
+    <string name="omni_allocate_title">Alocar no Omni</string>
+    <string name="omni_allocate_intro">Máquinas registradas no Omni que ainda não pertencem a nenhum cluster. Escolha uma e o conjunto de máquinas ao qual ela entra.</string>
+    <string name="omni_allocate_machines">Máquinas</string>
+    <string name="omni_allocate_none">Nenhuma máquina aguardando: inicie uma com a configuração de entrada do Omni e ela aparecerá aqui.</string>
+    <string name="omni_allocate_maintenance">manutenção</string>
+    <string name="omni_allocate_offline">offline</string>
+    <string name="omni_allocate_sets">Conjunto de máquinas</string>
+    <string name="omni_allocate_set_none">Vincula a máquina a este conjunto.</string>
+    <string name="omni_allocate_set_static">Classe de máquina %1$s: a contagem aumenta em um, e a classe escolhe uma máquina compatível.</string>
+    <string name="omni_allocate_set_unlimited">A classe de máquina %1$s pega todas as máquinas compatíveis: ela pega esta sem nenhuma gravação.</string>
+    <string name="omni_allocate_needs">A classe pede: %1$s</string>
+    <string name="omni_allocate_action">Alocar</string>
+    <string name="omni_allocate_confirm_title">Alocar %1$s?</string>
+    <string name="omni_allocate_confirm_worker">%1$s entra no conjunto de máquinas %2$s.</string>
+    <string name="omni_allocate_confirm_controlplane">%1$s entra no plano de controle por meio de %2$s: o quórum do etcd passa a contar um membro a mais.</string>
+    <string name="omni_phase_allocated">Alocar</string>
+    <string name="omni_phase_booting">Iniciar</string>
+    <string name="omni_allocate_done">%1$s está em execução no cluster</string>
+    <string name="omni_allocate_stop_hint">A alocação permanece: parar apenas deixa de acompanhá-la.</string>
+    <string name="omni_allocate_stop_body">%1$s continua alocada, e o Omni prossegue com ela.</string>
+    <string name="omni_labels_title">Rótulos da nova máquina</string>
+    <string name="omni_labels_intro">Assinados no token de entrada: a máquina aparece com eles no Omni, e uma classe de máquina pode escolhê-la por eles.</string>
+    <string name="omni_labels_extra">Mais rótulos (key=value, separados por vírgulas)</string>
+    <string name="omni_labels_classes">As classes de máquina deste cluster pedem: %1$s</string>
+    <string name="omni_labels_apply">Aplicar os rótulos</string>
+    <string name="omni_role_worker">Worker</string>
+    <string name="omni_role_controlplane">Plano de controle</string>
 </resources>

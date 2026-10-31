@@ -293,6 +293,15 @@ proxies the Talos API to its machines and signs every call with a PGP key, as `t
   like any other talosconfig. It has no certificate: the app asks for the sign-in on first use.
 - **Enter details** (the form): the instance URL, the cluster name in Omni and who signs in.
 
+A machine booted with Omni's join config or arguments (Add a node, then Boot a new machine) appears
+in Omni with no cluster. Pick its role and labels there first: they are signed into the join token.
+**Allocate in Omni** then lists these machines and the cluster's machine sets, and follows the
+chosen machine until it runs. What it does depends on the set. A set without a machine class gets
+the machine directly, as `omnictl cluster template sync` binds one. A set with a machine class
+takes machines by their labels: the app names any label the machine lacks, then raises a static
+count by one (the class may take another machine that matches) or, for an unlimited set, changes
+nothing and waits. The lists need Omni's Reader role and the allocation its Operator role.
+
 An account signs in by confirming a key in the browser, as `omnictl` does: the key lasts 4 hours,
 then the app asks again. A service account key is long-lived and is entered once. One sign-in
 serves every cluster of the same identity on the same instance; removing one cluster keeps the

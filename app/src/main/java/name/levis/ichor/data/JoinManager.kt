@@ -17,6 +17,7 @@ import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.JoinPhase
 import name.levis.ichor.model.JoinProgress
+import name.levis.ichor.model.OmniAllocateSpec
 import name.levis.ichor.ui.FollowedRun
 
 /** What the user confirmed for the new node: the maintenance [address] and step 2's choices. */
@@ -35,10 +36,13 @@ data class JoinRequest(
     val omni: Boolean = false,
     /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
     val snapshot: HetznerSnapshotSpec? = null,
+    /** A machine of Omni to put in the cluster ([hostname] and [role] are the machine's and the set's). */
+    val omniAllocate: OmniAllocateSpec? = null,
 ) {
     /** The steps of this run's timeline. */
     val phases: List<JoinPhase>
         get() = when {
+            omniAllocate != null -> JoinPhase.omniAllocateRun
             snapshot != null -> JoinPhase.snapshotRun
             hetzner == null -> JoinPhase.maintenanceRun
             omni -> JoinPhase.cloudOmniRun
@@ -96,7 +100,8 @@ class JoinManager(
         val stopped = MutableStateFlow(false).also { stopRequested = it }
         job = scope.launch {
             try {
-                val events = request.snapshot?.let { lifecycle.hetznerSnapshot(hetznerToken, it, stopped.filter { s -> s }) }
+                val events = request.omniAllocate?.let { lifecycle.omniAllocate(it, stopped.filter { s -> s }) }
+                    ?: request.snapshot?.let { lifecycle.hetznerSnapshot(hetznerToken, it, stopped.filter { s -> s }) }
                     ?: request.hetzner?.let { lifecycle.hetznerCreate(hetznerToken, it, stopped.filter { s -> s }) }
                     ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                 events

@@ -76,7 +76,27 @@ func NodeBootMedia(configYAML, contextName, templateNode, arch string, secureBoo
 
 	contextName, templateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(templateNode))
 
-	arch, err = normalizeBootArch(arch)
+	return nodeBootMedia(configYAML, contextName, templateNode, arch, secureBoot, nil)
+}
+
+// NodeBootMediaOmni is NodeBootMedia with labelsJSON ({"key":"value"}, "" for none) signed into
+// Omni's join token: the machine then appears in Omni with them, as if read from its META
+// partition, and a machine class can pick it by them. Omni's own prefix is refused.
+func NodeBootMediaOmni(configYAML, contextName, templateNode, arch string, secureBoot bool, labelsJSON string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, templateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(templateNode))
+
+	labels, err := parseOmniLabels(labelsJSON)
+	if err != nil {
+		return "", err
+	}
+
+	return nodeBootMedia(configYAML, contextName, templateNode, arch, secureBoot, labels)
+}
+
+func nodeBootMedia(configYAML, contextName, templateNode, arch string, secureBoot bool, labels map[string]string) (string, error) {
+	arch, err := normalizeBootArch(arch)
 	if err != nil {
 		return "", err
 	}
@@ -96,7 +116,7 @@ func NodeBootMedia(configYAML, contextName, templateNode, arch string, secureBoo
 			return media, err
 		}
 
-		addOmniJoin(ctx, s, &media)
+		addOmniJoin(ctx, s, &media, labels)
 
 		return media, nil
 	})
@@ -209,14 +229,14 @@ func defaultSchematicWarning(src bootSource) string {
 
 // addOmniJoin adds Omni's join kernel arguments to media, or a warning saying why not: the
 // plain Talos media stay useful without them.
-func addOmniJoin(ctx context.Context, s *session, media *bootMedia) {
+func addOmniJoin(ctx context.Context, s *session, media *bootMedia, labels map[string]string) {
 	if privacy.isEnabled() {
 		media.Warnings = append(media.Warnings, "turn privacy mode off to see Omni's join arguments: they carry the join token")
 
 		return
 	}
 
-	args, err := omniJoinKernelArgs(ctx, s.context, s.signing.current())
+	args, err := omniJoinKernelArgs(ctx, s.context, s.signing.current(), labels)
 	if err != nil {
 		media.Warnings = append(media.Warnings, "Omni's join arguments cannot be read: "+err.Error())
 
@@ -233,8 +253,8 @@ func addOmniJoin(ctx context.Context, s *session, media *bootMedia) {
 
 // omniJoinKernelArgs is `omnictl jointoken kernel-args`: the default join token, then
 // GetMachineJoinConfig with it, its kernel_args joined by spaces.
-func omniJoinKernelArgs(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner) (string, error) {
-	join, err := omniJoinConfig(ctx, cfgCtx, signer)
+func omniJoinKernelArgs(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner, labels map[string]string) (string, error) {
+	join, err := omniJoinConfig(ctx, cfgCtx, signer, labels)
 	if err != nil {
 		return "", err
 	}
@@ -257,7 +277,7 @@ type omniJoin struct {
 // client/api/omni/management/management.proto: GetMachineJoinConfigRequest {bool
 // use_grpc_tunnel = 1; string join_token = 2; map machine_labels = 3}, Response {repeated
 // string kernel_args = 1; string config = 2}.
-func omniJoinConfig(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner) (omniJoin, error) {
+func omniJoinConfig(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner, labels map[string]string) (omniJoin, error) {
 	cc, err := omniDial(cfgCtx, &omniSigning{method: omniMethodName(cfgCtx), signer: signer})
 	if err != nil {
 		return omniJoin{}, fmt.Errorf("connect to Omni: %w", err)
@@ -273,6 +293,7 @@ func omniJoinConfig(ctx context.Context, cfgCtx *clientconfig.Context, signer om
 	var req []byte
 	req = protowire.AppendTag(req, 2, protowire.BytesType)
 	req = protowire.AppendString(req, token)
+	req = appendOmniLabels(req, labels)
 
 	resp, err := omniInvoke(ctx, cc, omniJoinConfigMethod, req)
 	if err != nil {

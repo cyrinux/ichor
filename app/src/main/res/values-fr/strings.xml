@@ -6228,4 +6228,31 @@
     <string name="hetzner_snapshot_notification_title">Création d\'un instantané Talos</string>
     <string name="hetzner_snapshot_notification_done">Instantané Talos créé</string>
     <string name="hetzner_snapshot_notification_failed">L\'instantané Talos a échoué</string>
+    <string name="omni_allocate_title">Allouer dans Omni</string>
+    <string name="omni_allocate_intro">Machines enregistrées dans Omni et qui n\'appartiennent encore à aucun cluster. Choisissez-en une et le machine set qu\'elle rejoint.</string>
+    <string name="omni_allocate_machines">Machines</string>
+    <string name="omni_allocate_none">Aucune machine en attente : démarrez-en une avec la configuration d\'adhésion d\'Omni et elle apparaîtra ici.</string>
+    <string name="omni_allocate_maintenance">maintenance</string>
+    <string name="omni_allocate_offline">hors ligne</string>
+    <string name="omni_allocate_sets">Machine set</string>
+    <string name="omni_allocate_set_none">Lie la machine à ce set.</string>
+    <string name="omni_allocate_set_static">Classe de machine %1$s : son nombre augmente de un, et la classe choisit une machine correspondante.</string>
+    <string name="omni_allocate_set_unlimited">La classe de machine %1$s prend toutes les machines correspondantes : elle prend celle-ci sans aucune écriture.</string>
+    <string name="omni_allocate_needs">La classe demande : %1$s</string>
+    <string name="omni_allocate_action">Allouer</string>
+    <string name="omni_allocate_confirm_title">Allouer %1$s ?</string>
+    <string name="omni_allocate_confirm_worker">%1$s rejoint le machine set %2$s.</string>
+    <string name="omni_allocate_confirm_controlplane">%1$s rejoint le plan de contrôle via %2$s : le quorum etcd compte alors un membre de plus.</string>
+    <string name="omni_phase_allocated">Allouer</string>
+    <string name="omni_phase_booting">Démarrer</string>
+    <string name="omni_allocate_done">%1$s fonctionne dans le cluster</string>
+    <string name="omni_allocate_stop_hint">L\'allocation reste : arrêter met seulement fin au suivi.</string>
+    <string name="omni_allocate_stop_body">%1$s reste allouée et Omni continue avec elle.</string>
+    <string name="omni_labels_title">Labels de la nouvelle machine</string>
+    <string name="omni_labels_intro">Signés dans le jeton d\'adhésion : la machine apparaît avec eux dans Omni, et une classe de machine peut la choisir d\'après eux.</string>
+    <string name="omni_labels_extra">Autres labels (key=value, séparés par des virgules)</string>
+    <string name="omni_labels_classes">Les classes de machine de ce cluster demandent : %1$s</string>
+    <string name="omni_labels_apply">Appliquer les labels</string>
+    <string name="omni_role_worker">Worker</string>
+    <string name="omni_role_controlplane">Plan de contrôle</string>
 </resources>

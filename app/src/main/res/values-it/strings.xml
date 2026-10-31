@@ -6228,4 +6228,31 @@
     <string name="hetzner_snapshot_notification_title">Creazione di uno snapshot Talos</string>
     <string name="hetzner_snapshot_notification_done">Snapshot Talos creato</string>
     <string name="hetzner_snapshot_notification_failed">Lo snapshot Talos non è riuscito</string>
+    <string name="omni_allocate_title">Assegna in Omni</string>
+    <string name="omni_allocate_intro">Macchine registrate in Omni che non appartengono ancora a nessun cluster. Scegline una e il machine set a cui si unisce.</string>
+    <string name="omni_allocate_machines">Macchine</string>
+    <string name="omni_allocate_none">Nessuna macchina in attesa: avviane una con la configurazione di join di Omni e comparirà qui.</string>
+    <string name="omni_allocate_maintenance">manutenzione</string>
+    <string name="omni_allocate_offline">offline</string>
+    <string name="omni_allocate_sets">Machine set</string>
+    <string name="omni_allocate_set_none">Associa la macchina a questo set.</string>
+    <string name="omni_allocate_set_static">Classe di macchine %1$s: il conteggio aumenta di uno e la classe sceglie una macchina corrispondente.</string>
+    <string name="omni_allocate_set_unlimited">La classe di macchine %1$s prende ogni macchina corrispondente: prende questa senza alcuna scrittura.</string>
+    <string name="omni_allocate_needs">La classe richiede: %1$s</string>
+    <string name="omni_allocate_action">Assegna</string>
+    <string name="omni_allocate_confirm_title">Assegnare %1$s?</string>
+    <string name="omni_allocate_confirm_worker">%1$s si unisce al machine set %2$s.</string>
+    <string name="omni_allocate_confirm_controlplane">%1$s si unisce al control plane tramite %2$s: il quorum di etcd conterà un membro in più.</string>
+    <string name="omni_phase_allocated">Assegna</string>
+    <string name="omni_phase_booting">Avvio</string>
+    <string name="omni_allocate_done">%1$s è in esecuzione nel cluster</string>
+    <string name="omni_allocate_stop_hint">L\'assegnazione resta: fermando si smette solo di seguirla.</string>
+    <string name="omni_allocate_stop_body">%1$s resta assegnata e Omni prosegue.</string>
+    <string name="omni_labels_title">Etichette della nuova macchina</string>
+    <string name="omni_labels_intro">Firmate nel token di join: la macchina compare con esse in Omni e una classe di macchine può sceglierla in base a esse.</string>
+    <string name="omni_labels_extra">Altre etichette (key=value, separate da virgole)</string>
+    <string name="omni_labels_classes">Le classi di macchine di questo cluster richiedono: %1$s</string>
+    <string name="omni_labels_apply">Applica le etichette</string>
+    <string name="omni_role_worker">Worker</string>
+    <string name="omni_role_controlplane">Control plane</string>
 </resources>
