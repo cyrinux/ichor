@@ -5,7 +5,9 @@ iOS (ios/Ichor/**/*.swift):
 - a Button whose whole label is an SF Symbol needs .accessibilityLabel (or .help), else
   VoiceOver reads the symbol's name ("arrow.up");
 - a literal .system(size:) below 12 (in .font() or a Font constant) is too small and ignores
-  Dynamic Type: use a text style or a @ScaledMetric size.
+  Dynamic Type: use a text style or a @ScaledMetric size;
+- a Text of an error painted red on its line: a failed read is not a cluster state, use
+  LoadFailureRow (muted, with Retry).
 
 Android (app/src/main/java/**/*.kt):
 - a fixed .sp below 12 ignores the theme's typography: use MaterialTheme.typography;
@@ -35,6 +37,7 @@ ONE_LINE = re.compile(
     r"\bButton\s*(\([^{}]*\))?\s*\{\s*Image\(systemName:[^{}]*\}"
     r"|\blabel:\s*\{\s*Image\(systemName:[^{}]*\}\s*$"
 )
+RED_ERROR_TEXT = re.compile(r"\bText\([^)]*error[^)]*\).*\.foregroundStyle\(\.red\)", re.IGNORECASE)
 FIXED_SWIFT_FONT = re.compile(r"\.system\(size:\s*(\d+(?:\.\d+)?)\b(?!\s*\*)")
 SMALL_SP = re.compile(r"\b(\d+(?:\.\d+)?)\.sp\b")
 SP_EXEMPT = re.compile(r"(letterSpacing|minFontSize)\s*=\s*$")
@@ -79,6 +82,11 @@ def unlabeled_image_buttons(source: str) -> list[int]:
         if j < len(lines) and len(content) == 1 and IMAGE_ONLY.match(content[0]) and not _labelled(lines, j):
             found.append(i + 1)
     return found
+
+
+def red_error_texts(source: str) -> list[int]:
+    """1-based lines painting the text of an error red."""
+    return [i + 1 for i, line in enumerate(source.splitlines()) if RED_ERROR_TEXT.search(line)]
 
 
 def small_swift_fonts(source: str) -> list[int]:
@@ -159,6 +167,7 @@ def main() -> int:
         rel = path.relative_to(ROOT)
         problems += [f"{rel}:{n}: image-only Button without .accessibilityLabel" for n in unlabeled_image_buttons(text)]
         problems += [f"{rel}:{n}: .font(.system(size:)) below {MIN_SP}, use a text style" for n in small_swift_fonts(text)]
+        problems += [f"{rel}:{n}: an error in red text, use LoadFailureRow (muted, with Retry)" for n in red_error_texts(text)]
     for path in sorted(ANDROID_SOURCES.rglob("*.kt")):
         text = path.read_text()
         rel = path.relative_to(ROOT)

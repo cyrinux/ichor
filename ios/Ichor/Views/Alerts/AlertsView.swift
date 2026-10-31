@@ -239,7 +239,7 @@ struct AlertsView: View {
                         .secondary)
                 }
                 if let onCallError {
-                    Text("Could not read PagerDuty: \(onCallError)").font(.footnote).foregroundStyle(.secondary)
+                    LoadFailureRow(message: "PagerDuty: \(onCallError)", retry: { await reload() }, compact: true)
                 }
                 ForEach(groups) { group in
                     Section {

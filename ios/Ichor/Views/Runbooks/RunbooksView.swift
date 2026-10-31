@@ -25,7 +25,7 @@ struct RunbooksView: View {
         List {
             if let failure {
                 Section {
-                    Text(verbatim: failure).foregroundStyle(.red)
+                    LoadFailureRow(message: failure, retry: { await load() })
                 }
             }
             let items = store.list(for: fingerprint)

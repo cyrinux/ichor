@@ -76,7 +76,7 @@ struct ProposalsSection: View {
                 }
             }
             .buttonStyle(.plain)
-            if let error = view?.error { Text(verbatim: error).font(.caption).foregroundStyle(.secondary) }
+            if let error = view?.error { LoadFailureRow(message: error, retry: { await load() }, compact: true) }
             if stored != nil, record.stateAt > 0 {
                 Text(verbatim: storedLine(record)).font(.caption).foregroundStyle(.secondary)
             }

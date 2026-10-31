@@ -148,7 +148,7 @@ struct MetricsView: View {
                     ForEach(MetricsRange.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
-                if let saveError { Text(saveError).foregroundStyle(.red).font(.footnote) }
+                if let saveError { LoadFailureRow(message: saveError, compact: true, saying: false) }
                 if results.values.contains(where: { isPromRefused($0.error) }) {
                     // The backend answered 401 or 403: the tenant or the credentials need changing.
                     VStack(alignment: .leading, spacing: 8) {
@@ -165,7 +165,7 @@ struct MetricsView: View {
             }
             ForEach(Array(config.panels.enumerated()), id: \.element.id) { index, panel in
                 Section {
-                    PanelCard(panel: panel, result: results[panel.id] ?? PanelResult(loading: true))
+                    PanelCard(panel: panel, result: results[panel.id] ?? PanelResult(loading: true), retry: refresh)
                 } header: {
                     HStack {
                         Text(panel.title)
@@ -328,11 +328,12 @@ struct MetricsView: View {
 private struct PanelCard: View {
     let panel: PromPanel
     let result: PanelResult
+    let retry: () async -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if result.loading && result.result == nil { ProgressView().frame(maxWidth: .infinity) }
-            if let error = result.error { Text(error).font(.footnote).foregroundStyle(.red) }
+            if let error = result.error { LoadFailureRow(message: error, retry: retry, compact: true) }
             if let res = result.result { PromChartView(panel: panel, result: res) }
         }
     }
