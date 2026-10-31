@@ -51,6 +51,14 @@ struct OmniLabelsSection: View {
     }
 }
 
+extension JoinJob {
+    /// The screen following this run: an allocation has its own, the others are on Add a node.
+    var route: Route? {
+        guard let request else { return nil }
+        return request.omniAllocate == nil ? .joinNode : .omniAllocate
+    }
+}
+
 /// "Allocate in Omni": the machines no cluster has and the cluster's machine sets. The confirmation
 /// is plain for a worker and the typed host name for a control plane, which changes etcd's quorum;
 /// the followed run's timeline then replaces the form.
