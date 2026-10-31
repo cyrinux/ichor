@@ -4,7 +4,7 @@
 # checks every subject is there, and writes docs/screenshots/ios/NAME.webp (dark) and
 # NAME-light.webp, 540 px wide, quality 82, with cwebp (`brew install webp`). No crop: the
 # overridden status bar is part of the picture. The runner's iPhone gives 1206x2622, so the images
-# are 540x1174. On a Mac with Xcode 16 or newer:
+# are 540x1175. On a Mac with Xcode 16 or newer:
 #   scripts/ios-build.sh screenshots && scripts/ios-screenshots.sh
 set -euo pipefail
 
