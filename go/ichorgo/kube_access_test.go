@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/flux"
 )
 
 // fakeAccessAPI answers SelfSubjectAccessReviews with allowed(attributes), and
@@ -131,9 +133,9 @@ func TestActionAccessAsksEachKindsOwnResource(t *testing.T) {
 	}
 
 	// Every source kind Flux lists has its own check.
-	for _, sk := range fluxSourceKinds {
-		if _, ok := kubeActionChecks["fluxReconcile"+sk.kind]; !ok {
-			t.Errorf("no check for %s", sk.kind)
+	for _, sk := range flux.SourceKinds {
+		if _, ok := kubeActionChecks["fluxReconcile"+sk.Kind]; !ok {
+			t.Errorf("no check for %s", sk.Kind)
 		}
 	}
 }

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/cyrinux/ichor/go/kube"
+	"github.com/cyrinux/ichor/go/kube/flux"
 )
 
 // `helm rollback` without the Helm SDK. Like Helm, it records revision N+1 as
@@ -593,7 +594,7 @@ func runRollback(ctx context.Context, k Env, rb *rollback, now time.Time) (prune
 
 	if owner := rb.plan.FluxOwner; owner != "" {
 		ns, name, _ := strings.Cut(owner, "/")
-		if err := k.Suspend(ctx, ns, name, now); err != nil {
+		if err := flux.Suspend(ctx, k.Client, ns, name, now); err != nil {
 			return nil, fmt.Errorf("suspend the HelmRelease %s first: %w", owner, err)
 		}
 	}

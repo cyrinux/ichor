@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cyrinux/ichor/go/kube/flux"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -339,7 +340,7 @@ func diffFluxObject(ctx context.Context, k *kubeClient, index *kubeResourceIndex
 // diffFluxPruned is the inventory entry id that the build no longer has: deleted when it
 // still exists and may be pruned.
 func diffFluxPruned(ctx context.Context, k *kubeClient, index *kubeResourceIndex, id, version string, masker *kubeDiffMasker) (kubeDiffResource, bool) {
-	e, ok := parseFluxInventoryID(id)
+	e, ok := flux.ParseInventoryID(id)
 	if !ok || version == "" {
 		return kubeDiffResource{}, false
 	}
