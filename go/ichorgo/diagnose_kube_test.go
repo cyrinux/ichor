@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"maps"
 	"net/http"
 	"strings"
 	"testing"
@@ -246,7 +247,7 @@ func TestKubeDiagnosisDenied(t *testing.T) {
 
 // One kind refused: the others are shown, and the section says it is not whole.
 func TestKubeDiagnosisOneKindDenied(t *testing.T) {
-	f := newFakeKubeAPI(t, kubeDiagnosisAnswers)
+	f := newFakeKubeAPI(t, maps.Clone(kubeDiagnosisAnswers))
 	f.answerWith("GET /apis/apps/v1/daemonsets", http.StatusForbidden, `{"kind":"Status","code":403,"message":"forbidden"}`)
 
 	d, err := CollectDiagnosis(f.kubeconfigFor(f.URL), "admin@test", "", false)
@@ -344,6 +345,29 @@ func TestKubeDiagnosisDemo(t *testing.T) {
 		if strings.Contains(masked.Report(), private) {
 			t.Errorf("anonymized demo shows %q:\n%s", private, masked.Report())
 		}
+	}
+}
+
+// The Talos report's sections are read with os:admin only, and a refusal is a note.
+func TestCollectKubeTrouble(t *testing.T) {
+	f := newFakeKubeAPI(t, kubeDiagnosisAnswers)
+	target := kubeTarget{f.kubeconfigFor(f.URL), "admin@test", ""}
+
+	if got := collectKubeTrouble(t.Context(), target, []string{"os:reader"}); got != nil {
+		t.Fatalf("without os:admin: %+v", got)
+	}
+
+	got := collectKubeTrouble(t.Context(), target, []string{adminRole})
+	if got == nil || len(got.Workloads) != 1 || got.Workloads[0].Name != "invoices" || got.Workloads[0].ready != 1 || len(got.Pods) != 2 {
+		t.Fatalf("with os:admin: %+v", got)
+	}
+
+	denied := newFakeKubeAPI(t, map[string]string{})
+	denied.answerWith("GET /api/v1/pods", http.StatusForbidden, `{"kind":"Status","code":403,"message":"forbidden"}`)
+
+	got = collectKubeTrouble(t.Context(), kubeTarget{denied.kubeconfigFor(denied.URL), "admin@test", ""}, []string{adminRole})
+	if got == nil || got.PodsNote != "left out: the credentials may not list pods" {
+		t.Fatalf("denied: %+v", got)
 	}
 }
 
