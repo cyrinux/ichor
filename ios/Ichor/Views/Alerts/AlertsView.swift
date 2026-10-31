@@ -61,8 +61,9 @@ struct AlertsView: View {
                     case .alerts: alertsList
                     case .silences: silencesList
                     }
+                } topBar: {
+                    topBar
                 }
-                .safeAreaInset(edge: .top) { topBar }
             } else {
                 noSource
             }

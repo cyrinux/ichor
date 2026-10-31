@@ -68,8 +68,11 @@ struct LiveFlowsView: View {
         Group {
             if cilium.hubble {
                 // Each tab is the whole list (filter, status, its section); the stream is the screen's.
-                SwipeTabPager(tabs: [Tab.drops, .flows], selection: $tab) { flowList($0) }
-                    .safeAreaInset(edge: .top) { tabBar }
+                SwipeTabPager(tabs: [Tab.drops, .flows], selection: $tab) {
+                    flowList($0)
+                } topBar: {
+                    tabBar
+                }
             } else if cilium.isCalico {
                 ContentUnavailableView {
                     Label("Whisker is not installed", systemImage: "eye.slash")

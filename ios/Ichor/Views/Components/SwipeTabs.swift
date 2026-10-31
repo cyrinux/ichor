@@ -8,24 +8,48 @@ import SwiftUI
 /// end when it scrolls out. A row's swipe actions and the back-swipe from the edge keep
 /// priority (UIKit's own arbitration); on the tabs in `fixed`, whose content scrubs sideways
 /// (a chart), the page does not swipe.
-struct SwipeTabPager<Tab: Hashable, Page: View>: View {
+///
+/// `topBar` is what sits above the pages, usually the picker. It goes here rather than in a
+/// `.safeAreaInset(edge: .top)` on the pager, whose pages lie under such an inset.
+struct SwipeTabPager<Tab: Hashable, Page: View, TopBar: View>: View {
     let tabs: [Tab]
     @Binding var selection: Tab
     let fixed: Set<Tab>
     let page: (Tab) -> Page
+    let topBar: TopBar
 
     /// The page the scroll view shows; follows `selection` both ways.
     @State private var position: Tab?
 
-    init(tabs: [Tab], selection: Binding<Tab>, fixed: Set<Tab> = [], @ViewBuilder page: @escaping (Tab) -> Page) {
+    init(
+        tabs: [Tab], selection: Binding<Tab>, fixed: Set<Tab> = [], @ViewBuilder page: @escaping (Tab) -> Page,
+        @ViewBuilder topBar: () -> TopBar
+    ) {
         self.tabs = tabs
         _selection = selection
         self.fixed = fixed
         self.page = page
+        self.topBar = topBar()
         _position = State(initialValue: selection.wrappedValue)
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+            topBar
+            pages
+        }
+    }
+
+    private var pages: some View {
+        // Each page is as tall as the space left by the bars. A container-relative height also
+        // covers the safe areas, and the taller page then starts under the bar above it and ends
+        // behind the search bar.
+        GeometryReader { visible in
+            pager(height: visible.size.height)
+        }
+    }
+
+    private func pager(height: CGFloat) -> some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
                 ForEach(tabs, id: \.self) { tab in
@@ -33,7 +57,8 @@ struct SwipeTabPager<Tab: Hashable, Page: View>: View {
                         // scrollDisabled is inherited: a fixed tab's own lists still scroll.
                         .scrollDisabled(false)
                         .environment(\.swipeTabIsCurrent, tab == selection)
-                        .containerRelativeFrame([.horizontal, .vertical])
+                        .containerRelativeFrame(.horizontal)
+                        .frame(height: height)
                         .id(tab)
                 }
             }
@@ -60,6 +85,13 @@ struct SwipeTabPager<Tab: Hashable, Page: View>: View {
     private func swipeDistance(from old: Tab, to new: Tab) -> Int {
         guard let from = tabs.firstIndex(of: old), let to = tabs.firstIndex(of: new) else { return Int.max }
         return abs(to - from)
+    }
+}
+
+extension SwipeTabPager where TopBar == EmptyView {
+    /// For a screen with nothing above the pages, or that lays out its own bar above the pager.
+    init(tabs: [Tab], selection: Binding<Tab>, fixed: Set<Tab> = [], @ViewBuilder page: @escaping (Tab) -> Page) {
+        self.init(tabs: tabs, selection: selection, fixed: fixed, page: page) { EmptyView() }
     }
 }
 
