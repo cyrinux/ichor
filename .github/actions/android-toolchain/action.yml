@@ -60,7 +60,7 @@ runs:
     # GRADLE_USER_HOME: dependencies and the local build cache (org.gradle.caching in
     # gradle.properties). Each job writes its own entry on main (the artifacts themselves are
     # deduplicated across jobs by the action), read-only on pull requests and tags.
-    - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+    - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       with:
         cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
