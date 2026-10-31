@@ -238,7 +238,9 @@ jobs:
           git config user.name "$name"
           git config user.email "$email"
           git switch -c "$BRANCH"
-          git add "go/plugin/drafts/$ID.yaml"
+          # The catalog the apps browse lists every draft: ./build.sh check fails when it is stale.
+          ICHOR_PROBE_CWD="$GITHUB_WORKSPACE" "$RUNNER_TEMP/probe" plugin-index go/plugin/drafts
+          git add "go/plugin/drafts/$ID.yaml" plugins/index.json
           git commit -q -s -m "feat: $OPERATOR plugin draft from its CRD"
           # The token for this push only, never written to .git/config.
           auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"

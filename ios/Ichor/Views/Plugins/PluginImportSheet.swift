@@ -212,6 +212,53 @@ struct PluginImportSheet: View {
     }
 }
 
+/// The consent step alone, for a file already downloaded and checked (the catalog): `item` is what
+/// checkPlugin said of `yaml`. Only Enable stores it; Cancel leaves the stored plugins as they were.
+struct PluginConsentSheet: View {
+    let yaml: String
+    let item: PluginUserItem
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var busy = false
+    @State private var failure: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                ConsentSections(consent: item.consent)
+                if let failure {
+                    Section {
+                        Text(verbatim: failure).font(.system(.footnote, design: .monospaced)).foregroundStyle(.red)
+                    }
+                }
+            }
+            .navigationTitle(Text("Enable \(item.title)?"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }.disabled(busy)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Enable") { Task { await enable() } }.disabled(busy)
+                }
+            }
+        }
+        .interactiveDismissDisabled(busy)
+    }
+
+    private func enable() async {
+        busy = true
+        failure = nil
+        defer { busy = false }
+        do {
+            _ = try await TalosClient.importPlugin(yaml: yaml)
+            dismiss()
+        } catch {
+            failure = error.localizedDescription
+        }
+    }
+}
+
 /// The consent step: what the plugin reads (a Secret shown in clear in red) and can change.
 private struct ConsentSections: View {
     let consent: PluginConsent

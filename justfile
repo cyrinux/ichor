@@ -206,6 +206,11 @@ plugin-check dir="go/plugin/builtin":
     (( ${#files[@]} )) || { echo "no plugin file in {{ dir }}" >&2; exit 1; }
     cd go && go run ./cmd/probe plugin-validate "${files[@]}"
 
+# Write plugins/index.json, the catalog the apps browse, from the plugin drafts; `just plugin-index
+# -check` only fails when it is stale, as ./build.sh check and the release workflow do.
+plugin-index *flags:
+    cd go && ICHOR_PROBE_CWD={{ quote(invocation_directory()) }} go run ./cmd/probe plugin-index {{ flags }} go/plugin/drafts
+
 # Generate the release signing key. Back it up: an app signed with another key
 # cannot update the installed one.
 android-keystore-gen path=env_var_or_default("ICHOR_KEYSTORE", env_var("HOME") + "/ichor-release.jks") alias=env_var_or_default("ICHOR_KEY_ALIAS", "ichor"):

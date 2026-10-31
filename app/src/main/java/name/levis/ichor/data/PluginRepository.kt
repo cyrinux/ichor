@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.model.BackupPlugins
 import name.levis.ichor.model.PLUGIN_QR_URL
 import name.levis.ichor.model.PluginCatalog
+import name.levis.ichor.model.PluginIndex
 import name.levis.ichor.model.PluginQrPayload
 import name.levis.ichor.model.PluginRestoreResult
 import name.levis.ichor.model.PluginDetect
@@ -108,6 +109,19 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
 
     /** A plugin file at an https URL, at most 1 MiB (the core refuses http and more). */
     suspend fun download(url: String): String = withContext(Dispatchers.IO) { Ichorgo.pluginFetchURL(url) }
+
+    /** The plugin index at [url] ("" for the project's), kept an hour by the core (no cluster call). */
+    suspend fun index(url: String): PluginIndex = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(PluginIndex.serializer(), Ichorgo.pluginIndexFetch(url))
+    }
+
+    /**
+     * A plugin file an index lists; the core refuses it unless it has the digest [sha256].
+     * Nothing is stored: the file still goes through [check] and the consent step.
+     */
+    suspend fun downloadFromIndex(url: String, sha256: String): String = withContext(Dispatchers.IO) {
+        Ichorgo.pluginIndexDownload(url, sha256)
+    }
 
     /**
      * The plugin file a scanned code gives (its parts already joined): a link is downloaded as

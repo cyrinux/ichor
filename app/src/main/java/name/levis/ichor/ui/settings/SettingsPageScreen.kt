@@ -77,7 +77,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
             SettingsPage.ALERTS -> MonitoringSection(app)
             SettingsPage.AI -> AiSection(app)
             SettingsPage.GIT_HOSTS -> GitHostsSection(app)
-            SettingsPage.PLUGINS -> PluginsSection(app.pluginRepository)
+            SettingsPage.PLUGINS -> PluginsSection(app.pluginRepository, stores.uiPreferences)
             // The row is hidden without the feature; a stale back stack entry shows an empty page.
             SettingsPage.KUBERNETES ->
                 summary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(stores.talos, stores.appLock, it) }

@@ -5558,6 +5558,16 @@
     <string name="plugins_consent_note">あなた自身の Kubernetes アクセス権で読み取り、Kubernetes API 以外を呼び出すことはありません。設定 → プラグインでいつでも無効化または削除できます。</string>
     <string name="plugins_replaces">同じ id のインポート済みプラグインを置き換えます。</string>
     <string name="plugins_enable">有効にする</string>
+    <string name="plugin_index_browse">カタログを見る</string>
+    <string name="plugin_index_url">インデックスの URL</string>
+    <string name="plugin_index_url_hint">Ichor のカタログを使う場合は空のままにします。信頼できるインデックスのみを使用してください。</string>
+    <string name="plugin_index_note">カタログのプラグインはインデックスが公開したダイジェストと一致する必要があります。その後、有効にする前に読み取る内容と変更できる内容を確認できます。</string>
+    <string name="plugin_index_source">取得元: %1$s</string>
+    <string name="plugin_index_empty">このインデックスにはまだプラグインがありません。</string>
+    <string name="plugin_index_loading">カタログを読み込み中…</string>
+    <string name="plugin_index_installed">インストール済み</string>
+    <string name="plugin_index_import">インポート</string>
+    <string name="plugin_index_maintainer">メンテナー: %1$s</string>
     <string name="repo_title">リポジトリ</string>
     <string name="repo_none">このクラスターにはリポジトリが保存されていません。クラスター一覧のメニュー（クラスターのリポジトリ）から追加してください。</string>
     <string name="repo_propose_applies">マージされて適用されるまで、クラスターには何も変更されません。</string>

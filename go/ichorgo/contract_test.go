@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/plugin"
 )
 
 // The facade contract (CYR-440): golden JSON of the responses the apps read most, written from
@@ -71,6 +73,20 @@ var contractFixtures = []struct {
 		now := contractNow.UnixMilli()
 
 		return summarizeFleet(demoFleetEntries(now), now)
+	}},
+	{"plugin-index", func() any {
+		return pluginIndexAnswer{
+			URL: defaultPluginIndexURL, GeneratedAt: "2026-01-02T03:04:05Z",
+			Plugins: []pluginIndexItem{{
+				IndexEntry: plugin.IndexEntry{
+					ID: "demo-sleep", Name: "Demo Sleep", Description: "Sleep schedules", Version: plugin.SchemaVersion,
+					URL:    "https://raw.githubusercontent.com/cyrinux/ichor/main/go/plugin/drafts/demo-sleep.yaml",
+					SHA256: strings.Repeat("a", 64), Resources: []string{"sleepinfos.kube-green.com", "secrets"},
+					Icon: "kube-green", Website: "https://example.com", Maintainer: "cyrinux/ichor",
+				},
+				Installed: true,
+			}},
+		}
 	}},
 }
 

@@ -250,9 +250,20 @@ func PluginFetchURL(rawURL string) (out string, err error) {
 	// The answer is the user's own file: only the error is masked.
 	defer maskErr(&err)
 
-	u, err := pluginURL(rawURL)
+	data, err := fetchHTTPS(rawURL, plugin.MaxSize, "the file is larger than 1 MiB")
 	if err != nil {
 		return "", err
+	}
+
+	return string(data), nil
+}
+
+// fetchHTTPS downloads rawURL: https only (redirects too), within 20 s, at most limit bytes
+// (more is the error tooLarge).
+func fetchHTTPS(rawURL string, limit int, tooLarge string) ([]byte, error) {
+	u, err := pluginURL(rawURL)
+	if err != nil {
+		return nil, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), pluginFetchTime)
@@ -260,7 +271,7 @@ func PluginFetchURL(rawURL string) (out string, err error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	client := *pluginFetchClient()
@@ -269,27 +280,27 @@ func PluginFetchURL(rawURL string) (out string, err error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		if errors.Is(err, httpx.ErrInsecureRedirect) {
-			return "", errors.New("the URL redirects to plain http: only https:// URLs can be downloaded")
+			return nil, errors.New("the URL redirects to plain http: only https:// URLs can be downloaded")
 		}
 
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("the server answered %s", resp.Status)
+		return nil, fmt.Errorf("the server answered %s", resp.Status)
 	}
 
-	data, err := io.ReadAll(io.LimitReader(resp.Body, plugin.MaxSize+1))
+	data, err := io.ReadAll(io.LimitReader(resp.Body, int64(limit)+1))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if len(data) > plugin.MaxSize {
-		return "", errors.New("the file is larger than 1 MiB")
+	if len(data) > limit {
+		return nil, errors.New(tooLarge)
 	}
 
-	return string(data), nil
+	return data, nil
 }
 
 // pluginURL is a plugin file's URL as PluginFetchURL downloads it: https with a host.

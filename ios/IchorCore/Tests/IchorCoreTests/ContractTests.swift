@@ -54,6 +54,9 @@ final class ContractTests: XCTestCase {
         "fleet-summary": ContractTests.row(FleetSummary.self) {
             XCTAssertEqual($0.worst, .bad); XCTAssertEqual($0.clusters.first?.topFinding?.track, "nodes")
         },
+        "plugin-index": ContractTests.row(PluginIndex.self) {
+            XCTAssertEqual($0.plugins.first?.installed, true); XCTAssertEqual($0.plugins.first?.iconApp.icon, "kube-green")
+        },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh

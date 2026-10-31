@@ -30,6 +30,25 @@ jobs:
       contents: read
       actions: write
 
+  # The plugin catalog the apps browse (plugins/index.json) lists the plugin files of this tag.
+  plugin-index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go/go.mod
+          cache: false
+
+      - name: Check that plugins/index.json is not stale
+        working-directory: go
+        run: ICHOR_PROBE_CWD="$GITHUB_WORKSPACE" go run ./cmd/probe plugin-index -check go/plugin/drafts
+
   # Uploads the App Bundle (the `play` build from android.yml, not bundleRelease), its R8
   # mapping, the release notes and the store listing (texts, icon, feature graphic,
   # screenshots) from fastlane/metadata/android to Play's internal track, rolled out to

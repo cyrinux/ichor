@@ -100,6 +100,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _remoteAppIcons = MutableStateFlow(prefs.getBoolean(KEY_REMOTE_APP_ICONS, false))
     val remoteAppIcons: StateFlow<Boolean> = _remoteAppIcons.asStateFlow()
 
+    /** The plugin index Settings → Plugins browses; "": the project's. */
+    private val _pluginIndexUrl = MutableStateFlow(prefs.getString(KEY_PLUGIN_INDEX_URL, "").orEmpty())
+    val pluginIndexUrl: StateFlow<String> = _pluginIndexUrl.asStateFlow()
+
     /** The tags the fleet screen is filtered by ("" for the untagged clusters); none: every cluster. */
     private val _fleetTagFilter = MutableStateFlow(prefs.getStringSet(KEY_FLEET_TAG_FILTER, null).orEmpty().toSet())
     val fleetTagFilter: StateFlow<Set<String>> = _fleetTagFilter.asStateFlow()
@@ -246,6 +250,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _fleetTagFilter.value = tags
     }
 
+    fun setPluginIndexUrl(url: String) {
+        prefs.edit().putString(KEY_PLUGIN_INDEX_URL, url).apply()
+        _pluginIndexUrl.value = url
+    }
+
     fun setRemoteAppIcons(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_REMOTE_APP_ICONS, enabled).apply()
         _remoteAppIcons.value = enabled
@@ -385,6 +394,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
         private const val KEY_ADD_TO_HOME = "add_to_home"
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
+        private const val KEY_PLUGIN_INDEX_URL = "plugin_index_url"
         private const val KEY_FLEET_TAG_FILTER = "fleet_tag_filter"
         private const val KEY_AUDIT_EVENTS = "audit_events"
         private const val KEY_STARTUP_TRACE = "startup_trace"
