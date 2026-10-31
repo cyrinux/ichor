@@ -43,14 +43,25 @@ struct SwipeTabPager<Tab: Hashable, Page: View, TopBar: View>: View {
     }
 
     private var pages: some View {
+        // Each page is as tall as the space left by the bars: a container-relative height also
+        // covers the search bar, whose footer would then sit behind it.
+        GeometryReader { visible in
+            pager(height: visible.size.height)
+        }
+    }
+
+    private func pager(height: CGFloat) -> some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
                 ForEach(tabs, id: \.self) { tab in
                     page(tab)
                         // scrollDisabled is inherited: a fixed tab's own lists still scroll.
                         .scrollDisabled(false)
+                        // Opens at the top, and stays there while the rows settle.
+                        .defaultScrollAnchor(.topLeading)
                         .environment(\.swipeTabIsCurrent, tab == selection)
-                        .containerRelativeFrame([.horizontal, .vertical])
+                        .containerRelativeFrame(.horizontal)
+                        .frame(height: height)
                         .id(tab)
                 }
             }
