@@ -1,4 +1,4 @@
-package ichorgo
+package flux
 
 import (
 	"archive/tar"
@@ -45,32 +45,32 @@ func fluxSourceFS(t *testing.T, files map[string]string) filesys.FileSystem {
 	t.Helper()
 
 	fsys := filesys.MakeFsInMemory()
-	if err := untarFluxArtifact(fluxTarball(t, files), fsys, fluxSourceRoot); err != nil {
+	if err := UntarArtifact(fluxTarball(t, files), fsys.WriteFile, SourceRoot); err != nil {
 		t.Fatal(err)
 	}
 
 	return fsys
 }
 
-func builtByName(t *testing.T, built []fluxBuilt, kind, name string) fluxBuilt {
+func builtByName(t *testing.T, built []Built, kind, name string) Built {
 	t.Helper()
 
 	for _, b := range built {
-		meta, _ := b.obj["metadata"].(map[string]any)
-		if b.obj["kind"] == kind && meta["name"] == name {
+		meta, _ := b.Obj["metadata"].(map[string]any)
+		if b.Obj["kind"] == kind && meta["name"] == name {
 			return b
 		}
 	}
 
 	t.Fatalf("no %s %s in %d objects", kind, name, len(built))
 
-	return fluxBuilt{}
+	return Built{}
 }
 
-func spec(t *testing.T, js string) fluxKustomizeSpec {
+func spec(t *testing.T, js string) KustomizeSpec {
 	t.Helper()
 
-	var s fluxKustomizeSpec
+	var s KustomizeSpec
 	if err := json.Unmarshal([]byte(js), &s); err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestBuildFluxKustomizationGeneratesKustomization(t *testing.T) {
 		"apps/web/sub/svc.yaml":           "apiVersion: v1\nkind: Service\nmetadata: {name: web}\nspec: {ports: [{port: 80}]}\n",
 	})
 
-	built, err := buildFluxKustomization(fsys, spec(t, `{"path":"./apps/web","targetNamespace":"web"}`), "apps", "flux-system", nil)
+	built, err := BuildKustomization(fsys, spec(t, `{"path":"./apps/web","targetNamespace":"web"}`), "apps", "flux-system", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,16 +126,16 @@ func TestBuildFluxKustomizationGeneratesKustomization(t *testing.T) {
 	}
 
 	svc := builtByName(t, built, "Service", "web")
-	meta := svc.obj["metadata"].(map[string]any)
+	meta := svc.Obj["metadata"].(map[string]any)
 	labels := meta["labels"].(map[string]any)
 
-	if meta["namespace"] != "web" || labels[fluxOwnerName] != "apps" || labels[fluxOwnerNamespace] != "flux-system" {
+	if meta["namespace"] != "web" || labels[OwnerName] != "apps" || labels[OwnerNamespace] != "flux-system" {
 		t.Fatalf("service metadata %v", meta)
 	}
 
 	// Without postBuild nothing is substituted.
 	d := builtByName(t, built, "Deployment", "web")
-	if b, _ := json.Marshal(d.obj); !strings.Contains(string(b), "${DOMAIN}") {
+	if b, _ := json.Marshal(d.Obj); !strings.Contains(string(b), "${DOMAIN}") {
 		t.Fatalf("substituted without postBuild: %s", b)
 	}
 }
@@ -157,13 +157,13 @@ func TestBuildFluxKustomizationSettingsAndPostBuild(t *testing.T) {
 		"postBuild": {"substitute": {"DOMAIN": "example.org"}}
 	}`)
 
-	built, err := buildFluxKustomization(fsys, s, "apps", "flux-system", map[string]string{"DOMAIN": "example.org"})
+	built, err := BuildKustomization(fsys, s, "apps", "flux-system", map[string]string{"DOMAIN": "example.org"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	d := builtByName(t, built, "Deployment", "p-web")
-	b, _ := json.Marshal(d.obj)
+	b, _ := json.Marshal(d.Obj)
 
 	for _, want := range []string{`"namespace":"prod"`, `web:2.0.0"`, `"replicas":3`, `"value":"example.org"`, `"value":"info"`, `"team":"a"`, `"owner":"ops"`, `"tier":"front"`} {
 		if !strings.Contains(string(b), want) {
@@ -172,8 +172,8 @@ func TestBuildFluxKustomizationSettingsAndPostBuild(t *testing.T) {
 	}
 
 	cm := builtByName(t, built, "ConfigMap", "p-raw")
-	if cm.obj["data"].(map[string]any)["template"] != "${KEEP_ME}" {
-		t.Fatalf("substituted despite the opt-out: %v", cm.obj["data"])
+	if cm.Obj["data"].(map[string]any)["template"] != "${KEEP_ME}" {
+		t.Fatalf("substituted despite the opt-out: %v", cm.Obj["data"])
 	}
 }
 
@@ -182,16 +182,16 @@ func TestBuildFluxKustomizationEncryptedAndErrors(t *testing.T) {
 		"s/secret.yaml": "apiVersion: v1\nkind: Secret\nmetadata:\n  name: creds\ndata:\n  password: ENC[AES256_GCM,data:x]\nsops:\n  version: 3.9.0\n",
 	})
 
-	built, err := buildFluxKustomization(fsys, spec(t, `{"path":"s"}`), "apps", "flux-system", nil)
+	built, err := BuildKustomization(fsys, spec(t, `{"path":"s"}`), "apps", "flux-system", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(built) != 1 || !built[0].encrypted || built[0].obj["data"] != nil || built[0].obj["sops"] != nil {
+	if len(built) != 1 || !built[0].Encrypted || built[0].Obj["data"] != nil || built[0].Obj["sops"] != nil {
 		t.Fatalf("got %+v", built)
 	}
 
-	if _, err := buildFluxKustomization(fsys, spec(t, `{"path":"missing"}`), "apps", "flux-system", nil); err == nil || !strings.Contains(err.Error(), "not in the source") {
+	if _, err := BuildKustomization(fsys, spec(t, `{"path":"missing"}`), "apps", "flux-system", nil); err == nil || !strings.Contains(err.Error(), "not in the source") {
 		t.Fatalf("missing path: %v", err)
 	}
 }
@@ -199,32 +199,32 @@ func TestBuildFluxKustomizationEncryptedAndErrors(t *testing.T) {
 func TestUntarFluxArtifactKeepsPathsInside(t *testing.T) {
 	fsys := filesys.MakeFsInMemory()
 
-	err := untarFluxArtifact(fluxTarball(t, map[string]string{"../../etc/evil.yaml": "x", "ok/a.yaml": "y"}), fsys, fluxSourceRoot)
+	err := UntarArtifact(fluxTarball(t, map[string]string{"../../etc/evil.yaml": "x", "ok/a.yaml": "y"}), fsys.WriteFile, SourceRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !fsys.Exists(fluxSourceRoot+"/etc/evil.yaml") || !fsys.Exists(fluxSourceRoot+"/ok/a.yaml") || fsys.Exists("/etc/evil.yaml") {
+	if !fsys.Exists(SourceRoot+"/etc/evil.yaml") || !fsys.Exists(SourceRoot+"/ok/a.yaml") || fsys.Exists("/etc/evil.yaml") {
 		t.Fatal("a path escaped the source root")
 	}
 
-	if err := untarFluxArtifact([]byte("not a tarball"), fsys, fluxSourceRoot); err == nil {
+	if err := UntarArtifact([]byte("not a tarball"), fsys.WriteFile, SourceRoot); err == nil {
 		t.Fatal("garbage accepted")
 	}
 }
 
 func TestParseFluxArtifactURL(t *testing.T) {
-	srv, err := parseFluxArtifactURL("http://source-controller.flux-system.svc.cluster.local./gitrepository/flux-system/podinfo/abc.tar.gz")
-	if err != nil || srv != (fluxArtifactServer{namespace: "flux-system", service: "source-controller", port: "80"}) {
+	srv, err := parseArtifactURL("http://source-controller.flux-system.svc.cluster.local./gitrepository/flux-system/podinfo/abc.tar.gz")
+	if err != nil || srv != (artifactServer{namespace: "flux-system", service: "source-controller", port: "80"}) {
 		t.Fatalf("got %+v %v", srv, err)
 	}
 
-	srv, err = parseFluxArtifactURL("http://source-controller-shard1.gitops.svc:9090/x")
-	if err != nil || srv != (fluxArtifactServer{namespace: "gitops", service: "source-controller-shard1", port: "9090"}) {
+	srv, err = parseArtifactURL("http://source-controller-shard1.gitops.svc:9090/x")
+	if err != nil || srv != (artifactServer{namespace: "gitops", service: "source-controller-shard1", port: "9090"}) {
 		t.Fatalf("got %+v %v", srv, err)
 	}
 
-	if _, err := parseFluxArtifactURL("http://localhost/x"); err == nil {
+	if _, err := parseArtifactURL("http://localhost/x"); err == nil {
 		t.Fatal("a host without a namespace was accepted")
 	}
 }
@@ -235,7 +235,7 @@ func TestFluxStoragePath(t *testing.T) {
 		"--log-level=info --storage-path=/var/x/": "/var/x",
 		"--storage-path /store":                   "/store",
 	} {
-		if got := fluxStoragePath(strings.Fields(args)); got != want {
+		if got := storagePath(strings.Fields(args)); got != want {
 			t.Errorf("%q: got %q, want %q", args, got, want)
 		}
 	}
@@ -244,7 +244,7 @@ func TestFluxStoragePath(t *testing.T) {
 func TestBuildFluxKustomizationEmptyPath(t *testing.T) {
 	fsys := fluxSourceFS(t, map[string]string{"empty/README.md": "nothing to apply"})
 
-	built, err := buildFluxKustomization(fsys, spec(t, `{"path":"empty"}`), "apps", "flux-system", nil)
+	built, err := BuildKustomization(fsys, spec(t, `{"path":"empty"}`), "apps", "flux-system", nil)
 	if err != nil || len(built) != 0 {
 		t.Fatalf("got %d objects, %v", len(built), err)
 	}
@@ -256,12 +256,12 @@ func TestBuildFluxKustomizationMergesImagesLikeFlux(t *testing.T) {
 		"app/deploy.yaml":        deployYAML,
 	})
 
-	built, err := buildFluxKustomization(fsys, spec(t, `{"path":"app","images":[{"name":"ghcr.io/example/web","newTag":"2.0.0"}]}`), "apps", "flux-system", nil)
+	built, err := BuildKustomization(fsys, spec(t, `{"path":"app","images":[{"name":"ghcr.io/example/web","newTag":"2.0.0"}]}`), "apps", "flux-system", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b, _ := json.Marshal(builtByName(t, built, "Deployment", "web").obj)
+	b, _ := json.Marshal(builtByName(t, built, "Deployment", "web").Obj)
 	if !strings.Contains(string(b), `"image":"registry.example.com/web:2.0.0"`) {
 		t.Fatalf("got %s", b)
 	}
@@ -270,12 +270,12 @@ func TestBuildFluxKustomizationMergesImagesLikeFlux(t *testing.T) {
 func TestBuildFluxKustomizationCommonMetadataOnObjectsOnly(t *testing.T) {
 	fsys := fluxSourceFS(t, map[string]string{"app/deploy.yaml": deployYAML})
 
-	built, err := buildFluxKustomization(fsys, spec(t, `{"path":"app","commonMetadata":{"labels":{"team":"${TEAM}"},"annotations":{"owner":"ops"}}}`), "apps", "flux-system", map[string]string{"TEAM": "x"})
+	built, err := BuildKustomization(fsys, spec(t, `{"path":"app","commonMetadata":{"labels":{"team":"${TEAM}"},"annotations":{"owner":"ops"}}}`), "apps", "flux-system", map[string]string{"TEAM": "x"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	d := builtByName(t, built, "Deployment", "web").obj
+	d := builtByName(t, built, "Deployment", "web").Obj
 	meta := d["metadata"].(map[string]any)
 	tmpl := d["spec"].(map[string]any)["template"].(map[string]any)["metadata"].(map[string]any)
 
@@ -292,17 +292,17 @@ func TestBuildFluxKustomizationCommonMetadataOnObjectsOnly(t *testing.T) {
 func TestBuildFluxKustomizationComponentsAndBadFiles(t *testing.T) {
 	fsys := fluxSourceFS(t, map[string]string{"app/deploy.yaml": deployYAML})
 
-	if _, err := buildFluxKustomization(fsys, spec(t, `{"path":"app","components":["https://example.com/c"]}`), "a", "b", nil); err == nil || !strings.Contains(err.Error(), "local and relative") {
+	if _, err := BuildKustomization(fsys, spec(t, `{"path":"app","components":["https://example.com/c"]}`), "a", "b", nil); err == nil || !strings.Contains(err.Error(), "local and relative") {
 		t.Fatalf("remote component: %v", err)
 	}
 
 	fsys = fluxSourceFS(t, map[string]string{"app/deploy.yaml": deployYAML})
-	if _, err := buildFluxKustomization(fsys, spec(t, `{"path":"app","components":["missing"],"ignoreMissingComponents":true}`), "a", "b", nil); err != nil {
+	if _, err := BuildKustomization(fsys, spec(t, `{"path":"app","components":["missing"],"ignoreMissingComponents":true}`), "a", "b", nil); err != nil {
 		t.Fatalf("missing component ignored: %v", err)
 	}
 
 	fsys = fluxSourceFS(t, map[string]string{"app/deploy.yaml": deployYAML, "app/notes.yaml": "just: text\n"})
-	if _, err := buildFluxKustomization(fsys, spec(t, `{"path":"app"}`), "a", "b", nil); err == nil || !strings.Contains(err.Error(), "notes.yaml") {
+	if _, err := BuildKustomization(fsys, spec(t, `{"path":"app"}`), "a", "b", nil); err == nil || !strings.Contains(err.Error(), "notes.yaml") {
 		t.Fatalf("not a manifest: %v", err)
 	}
 }
@@ -311,12 +311,12 @@ func TestBuildFluxKustomizationSubstituteStrategy(t *testing.T) {
 	level := func(js string) any {
 		fsys := fluxSourceFS(t, map[string]string{"app/deploy.yaml": deployYAML})
 
-		built, err := buildFluxKustomization(fsys, spec(t, js), "a", "b", map[string]string{})
+		built, err := BuildKustomization(fsys, spec(t, js), "a", "b", map[string]string{})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		c := builtByName(t, built, "Deployment", "web").obj["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["containers"].([]any)[0]
+		c := builtByName(t, built, "Deployment", "web").Obj["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["containers"].([]any)[0]
 
 		return c.(map[string]any)["env"].([]any)[1].(map[string]any)["value"]
 	}

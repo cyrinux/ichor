@@ -299,12 +299,12 @@ func applyObject(ctx context.Context, k *kubeClient, index *kubeResourceIndex, o
 	r := kubeDiffResource{Group: group, Version: version, Kind: kind, Namespace: ns, Name: name}
 
 	fail := func(err error) kubeDiffResource {
-		r.Change, r.Error = diffChangeError, masker.mask(applyError(err).Error())
+		r.Change, r.Error = diffChangeError, masker.Mask(applyError(err).Error())
 
 		return r
 	}
 
-	res, err := index.resource(ctx, apiVersion, kind)
+	res, err := index.Resource(ctx, apiVersion, kind)
 	if err != nil {
 		return fail(err)
 	}
@@ -324,7 +324,7 @@ func applyObject(ctx context.Context, k *kubeClient, index *kubeResourceIndex, o
 
 	r.Namespace = ns
 
-	path, err := index.path(ctx, apiVersion, kind, ns, name)
+	path, err := index.Path(ctx, apiVersion, kind, ns, name)
 	if err != nil {
 		return fail(err)
 	}

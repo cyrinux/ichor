@@ -2,7 +2,6 @@ package helm
 
 import (
 	"context"
-	"time"
 
 	"github.com/cyrinux/ichor/go/kube"
 )
@@ -16,8 +15,6 @@ type Env struct {
 	Error func(error) error
 	// Fatal tells that reading again cannot help; nil is kube.FollowFatal.
 	Fatal func(error) bool
-	// Suspend suspends the Flux HelmRelease namespace/name that manages a release.
-	Suspend func(ctx context.Context, namespace, name string, now time.Time) error
 	// Rollout reads the rollout of a workload, for the follow.
 	Rollout func(ctx context.Context, kind, namespace, name string) (RolloutState, error)
 }

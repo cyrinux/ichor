@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cyrinux/ichor/go/kube/flux"
+	"github.com/cyrinux/ichor/go/kube/kubediff"
 	"go.yaml.in/yaml/v4"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
@@ -373,24 +375,24 @@ func buildRepoDir(fsys filesys.FileSystem, dir string, spec *fluxKustomizeSpec) 
 			vars = s.PostBuild.Substitute
 		}
 
-		built, err := buildFluxKustomization(fsys, s, "", "", vars)
+		built, err := flux.BuildKustomization(fsys, s, "", "", vars)
 		if err != nil {
 			return nil, err
 		}
 
 		objs := make([]map[string]any, 0, len(built))
 		for _, b := range built {
-			if b.encrypted {
-				b.obj[editCheckEncrypted] = true
+			if b.Encrypted {
+				b.Obj[editCheckEncrypted] = true
 			}
 
 			// The owner labels name no Kustomization here: they would only add noise.
-			if labels, ok := yamlPath(b.obj, "metadata", "labels").(map[string]any); ok {
+			if labels, ok := yamlPath(b.Obj, "metadata", "labels").(map[string]any); ok {
 				delete(labels, fluxOwnerName)
 				delete(labels, fluxOwnerNamespace)
 			}
 
-			objs = append(objs, b.obj)
+			objs = append(objs, b.Obj)
 		}
 
 		return objs, nil
@@ -462,7 +464,7 @@ func remoteBase(files map[string][]byte, dir string, depth int) string {
 
 	//lint:ignore SA1019 bases is deprecated in kustomize, still read by it
 	for _, ref := range slices.Concat(kus.Resources, kus.Bases, kus.Components) {
-		if !isLocalRelativePath(ref) {
+		if !flux.IsLocalRelativePath(ref) {
 			return ref
 		}
 
@@ -632,8 +634,8 @@ func (res *gitOpsEditCheck) addObject(before, after map[string]any, masker *kube
 	}
 
 	r.Diff = unifiedDiff(from, to, "a/"+r.Kind+"/"+r.Name, "b/"+r.Kind+"/"+r.Name)
-	if len(r.Diff) > diffMaxBytes {
-		cut := strings.LastIndexByte(r.Diff[:diffMaxBytes], '\n')
+	if len(r.Diff) > kubediff.MaxBytes {
+		cut := strings.LastIndexByte(r.Diff[:kubediff.MaxBytes], '\n')
 		r.Diff, r.Truncated = r.Diff[:cut+1], true
 	}
 

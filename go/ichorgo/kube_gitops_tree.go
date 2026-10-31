@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/cyrinux/ichor/go/gitforge"
+	"github.com/cyrinux/ichor/go/kube/flux"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -138,7 +139,7 @@ func readFluxTreeFor(t kubeTarget, kind, namespace, name string) (*fluxTree, err
 		return demoFluxTree(), nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), fluxDiffTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), flux.DiffTimeout)
 	defer cancel()
 
 	return withKubeContext(ctx, t, func(ctx context.Context, k *kubeClient) (*fluxTree, error) {
@@ -175,7 +176,7 @@ func readFluxTree(ctx context.Context, k *kubeClient, cluster, kind, namespace, 
 
 	art := src.Status.Artifact
 	if art == nil {
-		return nil, errFluxNoArtifact
+		return nil, flux.ErrNoArtifact
 	}
 
 	key := cluster + "|" + kind + "|" + art.Path + "|" + art.Revision
@@ -183,7 +184,7 @@ func readFluxTree(ctx context.Context, k *kubeClient, cluster, kind, namespace, 
 		return t, nil
 	}
 
-	tgz, err := fetchFluxArtifact(ctx, k, art)
+	tgz, err := flux.FetchArtifact(ctx, fluxEnv(k), art)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +207,7 @@ func readFluxTree(ctx context.Context, k *kubeClient, cluster, kind, namespace, 
 // inside, bounded) into a map of the files.
 func unpackFluxTree(tgz []byte, revision string) (*fluxTree, error) {
 	fsys := filesys.MakeFsInMemory()
-	if err := untarFluxArtifact(tgz, fsys, fluxSourceRoot); err != nil {
+	if err := flux.UntarArtifact(tgz, fsys.WriteFile, fluxSourceRoot); err != nil {
 		return nil, err
 	}
 

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/flux"
 )
 
 const (
@@ -18,10 +20,10 @@ const (
 func fastFluxFollow(t *testing.T, timeout time.Duration) {
 	t.Helper()
 
-	interval, oldTimeout, step := fluxFollowInterval, fluxFollowTimeout, fluxDemoStep
-	fluxFollowInterval, fluxFollowTimeout, fluxDemoStep = 5*time.Millisecond, timeout, time.Millisecond
+	interval, oldTimeout, step := flux.FollowInterval, flux.FollowTimeout, fluxDemoStep
+	flux.FollowInterval, flux.FollowTimeout, fluxDemoStep = 5*time.Millisecond, timeout, time.Millisecond
 
-	t.Cleanup(func() { fluxFollowInterval, fluxFollowTimeout, fluxDemoStep = interval, oldTimeout, step })
+	t.Cleanup(func() { flux.FollowInterval, flux.FollowTimeout, fluxDemoStep = interval, oldTimeout, step })
 }
 
 // fluxFollowKustomization is the Kustomization with the reconcile request fluxRequest, the
@@ -81,7 +83,7 @@ func TestFluxReconcileFollowPhaseSequence(t *testing.T) {
 	rec := newFollowRecorder()
 	StartFluxReconcileFollow(cfg, "admin@test", "", "Kustomization", "flux-system", "shop", rec)
 
-	if done := rec.wait(t); done != [2]string{fluxFollowReady, ""} {
+	if done := rec.wait(t); done != [2]string{flux.FollowReady, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -103,7 +105,7 @@ func TestFluxReconcileFollowFailed(t *testing.T) {
 	rec := newFollowRecorder()
 	StartFluxReconcileFollow(cfg, "admin@test", "", "Kustomization", "flux-system", "shop", rec)
 
-	if done := rec.wait(t); done != [2]string{fluxFollowFailed, ""} {
+	if done := rec.wait(t); done != [2]string{flux.FollowFailed, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -123,7 +125,7 @@ func TestFluxReconcileFollowTimeout(t *testing.T) {
 	StartFluxReconcileFollow(cfg, "admin@test", "", "Kustomization", "flux-system", "shop", rec)
 
 	// Still running when the follow gives up: said so, not an error.
-	if done := rec.wait(t); done != [2]string{fluxFollowStill, ""} {
+	if done := rec.wait(t); done != [2]string{flux.FollowStill, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -155,33 +157,6 @@ func TestFluxReconcileFollowCancelAndInvalid(t *testing.T) {
 	}
 }
 
-func TestFluxReconcileFollowProgressOf(t *testing.T) {
-	parse := func(js string) fluxFollowObject {
-		var o fluxFollowObject
-		if err := json.Unmarshal([]byte(js), &o); err != nil {
-			t.Fatal(err)
-		}
-
-		return o
-	}
-
-	// No request annotation: handled once the controller observed the generation.
-	o := parse(`{"metadata":{"generation":4},"status":{"observedGeneration":3,"conditions":[{"type":"Ready","status":"True","message":"old"},{"type":"Reconciling","status":"True","message":"building"}]}}`)
-	if p := fluxReconcileProgressOf(o); p.Phase != fluxFollowReconciling || p.Message != "building" {
-		t.Fatalf("got %+v", p)
-	}
-
-	o.Status.ObservedGeneration = 4
-	if p := fluxReconcileProgressOf(o); p.Phase != fluxFollowReady {
-		t.Fatalf("got %+v", p)
-	}
-
-	o.Spec.Suspend = true
-	if p := fluxReconcileProgressOf(o); p.Phase != fluxFollowFailed || !strings.Contains(p.Message, "suspended") {
-		t.Fatalf("got %+v", p)
-	}
-}
-
 func TestFluxReconcileFollowDemo(t *testing.T) {
 	fastFluxFollow(t, time.Minute)
 	noKubeDial(t)
@@ -189,7 +164,7 @@ func TestFluxReconcileFollowDemo(t *testing.T) {
 	rec := newFollowRecorder()
 	StartFluxReconcileFollow(demoKubeconfigForTest(t), "", "", "Kustomization", "flux-system", "apps", rec)
 
-	if done := rec.wait(t); done != [2]string{fluxFollowReady, ""} {
+	if done := rec.wait(t); done != [2]string{flux.FollowReady, ""} {
 		t.Fatalf("done %q", done)
 	}
 

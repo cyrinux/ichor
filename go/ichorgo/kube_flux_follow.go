@@ -2,35 +2,19 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube"
+	"github.com/cyrinux/ichor/go/kube/flux"
 )
 
-// Following a Flux reconcile started from the phone. Flux has no operation object: the
-// reconcile request is the reconcile.fluxcd.io/requestedAt annotation, which the controller
-// copies to status.lastHandledReconcileAt once it handled it; the Ready condition then says
-// how it went. The object is read every few seconds until then, at most fluxFollowTimeout:
-// a reconcile still running by then is reported as such, not as a failure.
+// Following a Flux reconcile started from the phone: the logic is in go/kube/flux; here are the
+// listener the apps implement, the dedup of what they hear and the demo reconcile.
 
-// Phases of a followed reconcile (FluxReconcileListener.OnProgress), and the result of one
-// that outlived the follow.
-const (
-	fluxFollowReconciling = "reconciling"
-	fluxFollowReady       = "ready"
-	fluxFollowFailed      = "failed"
-	fluxFollowStill       = "still reconciling"
-)
-
-var (
-	// fluxFollowInterval is the pause between two reads of the followed object.
-	fluxFollowInterval = 3 * time.Second
-	// fluxFollowTimeout bounds a follow.
-	fluxFollowTimeout = 10 * time.Minute
-	// fluxDemoStep is the pause between two steps of the demo reconcile.
-	fluxDemoStep = 1500 * time.Millisecond
-)
+// fluxDemoStep is the pause between two steps of the demo reconcile.
+var fluxDemoStep = 1500 * time.Millisecond
 
 // FluxReconcileListener follows a Flux reconcile (implemented in Kotlin/Swift).
 type FluxReconcileListener interface {
@@ -51,27 +35,6 @@ type FluxReconcileRun struct {
 // Cancel stops following (the reconcile goes on); OnDone follows with empty arguments.
 func (r *FluxReconcileRun) Cancel() { r.cancel() }
 
-type fluxReconcileProgress struct {
-	Phase   string `json:"phase"`
-	Message string `json:"message"`
-	At      int64  `json:"at"`
-}
-
-// fluxFollowObject is what a follow reads of a Flux object of any kind.
-type fluxFollowObject struct {
-	Metadata struct {
-		fluxMeta
-		Generation int64 `json:"generation"`
-	} `json:"metadata"`
-	Spec struct {
-		Suspend bool `json:"suspend"`
-	} `json:"spec"`
-	Status struct {
-		fluxCommonStatus
-		ObservedGeneration int64 `json:"observedGeneration"`
-	} `json:"status"`
-}
-
 // StartFluxReconcileFollow follows the reconcile of the Flux object kind namespace/name the
 // phone just requested with KubeFluxAction (os:admin), reading it every 3 s until the
 // controller handled the request, for 10 minutes at most. Reads only. kind is
@@ -83,37 +46,14 @@ func StartFluxReconcileFollow(configYAML, contextName, kubeServer, kind, namespa
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	var last *fluxReconcileProgress
-
-	emit := func(p fluxReconcileProgress) {
-		if last != nil && last.Phase == p.Phase && last.Message == p.Message {
-			return
-		}
-
-		p.At = time.Now().UnixMilli()
-		last = &p
-		emitJSON(p, listener.OnProgress)
-	}
+	target := kubeTarget{configYAML, contextName, kubeServer}
 
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
 		defer holdCalls(configYAML, contextName)()
 
-		var (
-			result string
-			err    error
-		)
-
-		switch invalid := validateFluxFollow(kind, namespace, name); {
-		case invalid != nil:
-			err = invalid
-		case isDemoContext(configYAML, contextName):
-			result, err = runDemoFluxReconcile(ctx, emit)
-		default:
-			result, err = followFluxReconcile(ctx, kubeTarget{configYAML, contextName, kubeServer}, kind, namespace, name, emit)
-		}
+		result, err := runFluxFollow(ctx, target, kind, namespace, name, fluxFollowEmit(listener))
 
 		if ctx.Err() != nil {
 			listener.OnDone("", "")
@@ -127,100 +67,61 @@ func StartFluxReconcileFollow(configYAML, contextName, kubeServer, kind, namespa
 	return &FluxReconcileRun{cancel: cancel}
 }
 
+// fluxFollowEmit tells the listener of each change: the same phase and message are not repeated.
+func fluxFollowEmit(listener FluxReconcileListener) func(flux.Progress) {
+	var last *flux.Progress
+
+	return func(p flux.Progress) {
+		if last != nil && last.Phase == p.Phase && last.Message == p.Message {
+			return
+		}
+
+		p.At = time.Now().UnixMilli()
+		last = &p
+		emitJSON(p, listener.OnProgress)
+	}
+}
+
+// runFluxFollow follows the reconcile, or plays the demo's.
+func runFluxFollow(ctx context.Context, target kubeTarget, kind, namespace, name string, emit func(flux.Progress)) (string, error) {
+	if err := validateFluxFollow(kind, namespace, name); err != nil {
+		return "", err
+	}
+
+	if isDemoContext(target.config, target.context) {
+		return runDemoFluxReconcile(ctx, emit)
+	}
+
+	return flux.Follow(ctx, fluxFollowClient(target), followFatal, kind, namespace, name, emit)
+}
+
 func validateFluxFollow(kind, namespace, name string) error {
-	if _, ok := fluxKinds[kind]; !ok {
+	if !flux.HasKind(kind) {
 		return fmt.Errorf("unsupported Flux kind %q", kind)
 	}
 
 	return validateKubeName(strings.ToLower(kind), namespace, name)
 }
 
-// followFluxReconcile reads the object every fluxFollowInterval until the reconcile was
-// handled, or fluxFollowTimeout passed (fluxFollowStill, no error).
-func followFluxReconcile(ctx context.Context, target kubeTarget, kind, namespace, name string, emit func(fluxReconcileProgress)) (string, error) {
-	bounded, cancel := context.WithTimeout(ctx, fluxFollowTimeout)
-	defer cancel()
-
-	var result string
-
-	err := pollFollow(bounded, target, fluxFollowInterval, func(ctx context.Context, k *kubeClient) (bool, error) {
-		groups, err := readAPIGroups(ctx, k)
-		if err != nil {
-			return false, err
-		}
-
-		path, err := fluxPath(groups, kind, namespace, name)
-		if err != nil {
-			return false, err
-		}
-
-		var obj fluxFollowObject
-		if err := k.get(ctx, path, &obj); err != nil {
-			return false, err
-		}
-
-		p := fluxReconcileProgressOf(obj)
-		emit(p)
-
-		if p.Phase == fluxFollowReconciling {
-			return false, nil
-		}
-
-		result = p.Phase
-
-		return true, nil
-	})
-
-	if ctx.Err() == nil && errors.Is(bounded.Err(), context.DeadlineExceeded) {
-		return fluxFollowStill, nil
-	}
-
-	return result, err
-}
-
-// fluxReconcileProgressOf is where the reconcile of obj stands. The request is handled once
-// the controller echoed the requestedAt annotation back; without one (nothing to compare),
-// once the controller observed the object's generation. Ready Unknown is still running.
-func fluxReconcileProgressOf(obj fluxFollowObject) fluxReconcileProgress {
-	ready := obj.Status.Conditions.get("Ready")
-	msg := ready.Message
-
-	if obj.Spec.Suspend {
-		return fluxReconcileProgress{Phase: fluxFollowFailed, Message: "suspended: resume it first"}
-	}
-
-	req := obj.Metadata.Annotations[fluxRequestedAt]
-
-	handled := obj.Status.LastHandledReconcileAt == req
-	if req == "" {
-		handled = obj.Status.ObservedGeneration >= obj.Metadata.Generation
-	}
-
-	switch {
-	case !handled || ready.Status == "Unknown" || ready.Status == "":
-		if r := obj.Status.Conditions.get("Reconciling"); r.Status == "True" && r.Message != "" {
-			msg = r.Message
-		}
-
-		return fluxReconcileProgress{Phase: fluxFollowReconciling, Message: msg}
-	case ready.Status == "True":
-		return fluxReconcileProgress{Phase: fluxFollowReady, Message: msg}
-	default:
-		return fluxReconcileProgress{Phase: fluxFollowFailed, Message: msg}
+// fluxFollowClient gives flux.Follow target's client for each read: a call that shows the
+// client no longer works drops it.
+func fluxFollowClient(target kubeTarget) flux.With {
+	return func(ctx context.Context, fn func(context.Context, kube.Client) error) error {
+		return kubeDo(ctx, target, func(ctx context.Context, k *kubeClient) error { return fn(ctx, k.api()) })
 	}
 }
 
 // demoFluxReconcile is the demo's reconcile: a fetch, an apply, then Ready.
-func demoFluxReconcile() []fluxReconcileProgress {
-	return []fluxReconcileProgress{
-		{Phase: fluxFollowReconciling, Message: "fetching the latest revision"},
-		{Phase: fluxFollowReconciling, Message: "applying the manifests"},
-		{Phase: fluxFollowReady, Message: "Applied revision: main@sha1:3f2a9c1"},
+func demoFluxReconcile() []flux.Progress {
+	return []flux.Progress{
+		{Phase: flux.FollowReconciling, Message: "fetching the latest revision"},
+		{Phase: flux.FollowReconciling, Message: "applying the manifests"},
+		{Phase: flux.FollowReady, Message: "Applied revision: main@sha1:3f2a9c1"},
 	}
 }
 
 // runDemoFluxReconcile plays demoFluxReconcile, fluxDemoStep apart.
-func runDemoFluxReconcile(ctx context.Context, emit func(fluxReconcileProgress)) (string, error) {
+func runDemoFluxReconcile(ctx context.Context, emit func(flux.Progress)) (string, error) {
 	steps := demoFluxReconcile()
 
 	for i, p := range steps {

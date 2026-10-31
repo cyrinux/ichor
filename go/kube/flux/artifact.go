@@ -1,4 +1,4 @@
-package ichorgo
+package flux
 
 import (
 	"archive/tar"
@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // A source's artifact is the tarball source-controller built from Git, an OCI image or a
@@ -26,68 +26,72 @@ import (
 // server included once it runs on another node.
 
 const (
-	fluxArtifactMaxBytes    = 64 << 20  // the tarball
-	fluxArtifactMaxUnpacked = 128 << 20 // every file in it, kept in memory on the phone
-	fluxArtifactMaxFiles    = 20000
-	fluxArtifactExecTimeout = 30 * time.Second
-	fluxArtifactProxyWait   = 15 * time.Second
-	fluxStorageDefault      = "/data"
+	artifactMaxBytes = 64 << 20 // the tarball
+	// ArtifactMaxUnpacked bounds every file in it, kept in memory on the phone.
+	ArtifactMaxUnpacked = 128 << 20
+	// ArtifactMaxFiles bounds how many files it holds.
+	ArtifactMaxFiles    = 20000
+	artifactExecTimeout = 30 * time.Second
+	artifactProxyWait   = 15 * time.Second
+	storageDefault      = "/data"
 )
 
 var (
-	// fluxArtifactPathPattern is what a storage path looks like ("gitrepository/ns/name/rev.tar.gz"):
+	// artifactPathPattern is what a storage path looks like ("gitrepository/ns/name/rev.tar.gz"):
 	// nothing a shell or a path traversal could use.
-	fluxArtifactPathPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._@:/-]*$`)
-	errFluxNoArtifact       = errors.New("the source has no artifact yet: reconcile it first")
+	artifactPathPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._@:/-]*$`)
+	ErrNoArtifact       = errors.New("the source has no artifact yet: reconcile it first")
 )
 
-type fluxArtifact struct {
+// Artifact is a source's status.artifact.
+type Artifact struct {
 	Path     string `json:"path"`
 	URL      string `json:"url"`
 	Revision string `json:"revision"`
 }
 
-// fluxArtifactServer is the source-controller Service an artifact URL points at.
-type fluxArtifactServer struct {
+// artifactServer is the source-controller Service an artifact URL points at.
+type artifactServer struct {
 	namespace, service, port string
 }
 
-func parseFluxArtifactURL(raw string) (fluxArtifactServer, error) {
+func parseArtifactURL(raw string) (artifactServer, error) {
 	u, err := url.Parse(raw)
 	if err != nil || u.Hostname() == "" {
-		return fluxArtifactServer{}, fmt.Errorf("unexpected artifact URL %q", raw)
+		return artifactServer{}, fmt.Errorf("unexpected artifact URL %q", raw)
 	}
 
 	labels := strings.Split(strings.TrimSuffix(u.Hostname(), "."), ".")
 	if len(labels) < 2 {
-		return fluxArtifactServer{}, fmt.Errorf("unexpected artifact host %q", u.Hostname())
+		return artifactServer{}, fmt.Errorf("unexpected artifact host %q", u.Hostname())
 	}
 
-	return fluxArtifactServer{namespace: labels[1], service: labels[0], port: cmp.Or(u.Port(), "80")}, nil
+	return artifactServer{namespace: labels[1], service: labels[0], port: cmp.Or(u.Port(), "80")}, nil
 }
 
-// fetchFluxArtifact reads the tarball of art.
-func fetchFluxArtifact(ctx context.Context, k *kubeClient, art *fluxArtifact) ([]byte, error) {
+// FetchArtifact reads the tarball of art, by exec in the controller pod, else through the
+// API server's service proxy.
+func FetchArtifact(ctx context.Context, k Env, art *Artifact) ([]byte, error) {
 	if art == nil || art.Path == "" {
-		return nil, errFluxNoArtifact
+		return nil, ErrNoArtifact
 	}
 
 	p := strings.TrimPrefix(path.Clean("/"+art.Path), "/")
-	if !fluxArtifactPathPattern.MatchString(p) || strings.Contains(p, "..") {
+	if !artifactPathPattern.MatchString(p) || strings.Contains(p, "..") {
 		return nil, fmt.Errorf("unexpected artifact path %q", art.Path)
 	}
 
-	srv, err := parseFluxArtifactURL(art.URL)
+	srv, err := parseArtifactURL(art.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	data, execErr := fetchFluxArtifactExec(ctx, k, srv, p)
+	data, execErr := fetchArtifactExec(ctx, k, srv, p)
 	if execErr == nil {
 		return data, nil
 	}
 
-	data, proxyErr := fetchFluxArtifactProxy(ctx, k, srv, p)
+	data, proxyErr := fetchArtifactProxy(ctx, k, srv, p)
 	if proxyErr == nil {
 		return data, nil
 	}
@@ -95,7 +99,7 @@ func fetchFluxArtifact(ctx context.Context, k *kubeClient, art *fluxArtifact) ([
 	return nil, fmt.Errorf("could not read the source's artifact: in the source-controller pod: %w; through the API server: %w", execErr, proxyErr)
 }
 
-type fluxControllerPod struct {
+type controllerPod struct {
 	Metadata struct {
 		Name string `json:"name"`
 	} `json:"metadata"`
@@ -110,14 +114,18 @@ type fluxControllerPod struct {
 	} `json:"status"`
 }
 
-func fetchFluxArtifactExec(ctx context.Context, k *kubeClient, srv fluxArtifactServer, p string) ([]byte, error) {
+func fetchArtifactExec(ctx context.Context, k Env, srv artifactServer, p string) ([]byte, error) {
+	if k.Exec == nil {
+		return nil, errors.New("exec is not available")
+	}
+
 	var svc struct {
 		Spec struct {
 			Selector map[string]string `json:"selector"`
 		} `json:"spec"`
 	}
 
-	if err := k.get(ctx, "/api/v1/namespaces/"+url.PathEscape(srv.namespace)+"/services/"+url.PathEscape(srv.service), &svc); err != nil {
+	if err := k.Get(ctx, "/api/v1/namespaces/"+url.PathEscape(srv.namespace)+"/services/"+url.PathEscape(srv.service), &svc); err != nil {
 		return nil, err
 	}
 
@@ -130,8 +138,8 @@ func fetchFluxArtifactExec(ctx context.Context, k *kubeClient, srv fluxArtifactS
 		sel = append(sel, key+"="+v)
 	}
 
-	var pods kubeList[fluxControllerPod]
-	if err := getList(ctx, k, "/api/v1/namespaces/"+url.PathEscape(srv.namespace)+"/pods?labelSelector="+url.QueryEscape(strings.Join(sel, ",")), &pods); err != nil {
+	var pods kube.List[controllerPod]
+	if err := kube.GetList(ctx, k.Client, "/api/v1/namespaces/"+url.PathEscape(srv.namespace)+"/pods?labelSelector="+url.QueryEscape(strings.Join(sel, ",")), &pods); err != nil {
 		return nil, err
 	}
 
@@ -147,10 +155,9 @@ func fetchFluxArtifactExec(ctx context.Context, k *kubeClient, srv fluxArtifactS
 			}
 		}
 
-		file := path.Join(fluxStoragePath(c.Args), p)
-		limits := execLimits{fluxArtifactExecTimeout, fluxArtifactMaxBytes}
+		file := path.Join(storagePath(c.Args), p)
 
-		out, stderr, err := k.execWith(ctx, limits, srv.namespace, pod.Metadata.Name, c.Name, []string{"cat", file})
+		out, stderr, err := k.Exec(ctx, artifactExecTimeout, artifactMaxBytes, srv.namespace, pod.Metadata.Name, c.Name, []string{"cat", file})
 		if err != nil {
 			if len(stderr) > 0 {
 				return nil, fmt.Errorf("%w: %s", err, strings.TrimSpace(string(stderr)))
@@ -165,8 +172,8 @@ func fetchFluxArtifactExec(ctx context.Context, k *kubeClient, srv fluxArtifactS
 	return nil, errors.New("no source-controller pod is running")
 }
 
-// fluxStoragePath is the --storage-path the controller runs with.
-func fluxStoragePath(args []string) string {
+// storagePath is the --storage-path the controller runs with.
+func storagePath(args []string) string {
 	for i, a := range args {
 		if v, ok := strings.CutPrefix(a, "--storage-path="); ok {
 			return path.Clean(v)
@@ -177,11 +184,11 @@ func fluxStoragePath(args []string) string {
 		}
 	}
 
-	return fluxStorageDefault
+	return storageDefault
 }
 
-func fetchFluxArtifactProxy(ctx context.Context, k *kubeClient, srv fluxArtifactServer, p string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(ctx, fluxArtifactProxyWait)
+func fetchArtifactProxy(ctx context.Context, k Env, srv artifactServer, p string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, artifactProxyWait)
 	defer cancel()
 
 	segments := strings.Split(p, "/")
@@ -192,7 +199,7 @@ func fetchFluxArtifactProxy(ctx context.Context, k *kubeClient, srv fluxArtifact
 	proxy := fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%s/proxy/%s",
 		url.PathEscape(srv.namespace), url.PathEscape(srv.service), url.PathEscape(srv.port), strings.Join(segments, "/"))
 
-	status, _, body, err := k.getRaw(ctx, proxy, nil)
+	status, _, body, err := k.GetRaw(ctx, proxy, nil)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return nil, errors.New("no answer (a NetworkPolicy in the Flux namespace may block the API server)")
@@ -208,9 +215,9 @@ func fetchFluxArtifactProxy(ctx context.Context, k *kubeClient, srv fluxArtifact
 	return body, nil
 }
 
-// untarFluxArtifact unpacks a tarball under root in fs, regular files only, every path kept
-// below root.
-func untarFluxArtifact(data []byte, fs filesys.FileSystem, root string) error {
+// UntarArtifact unpacks a tarball under root through write, regular files only, every path
+// kept below root.
+func UntarArtifact(data []byte, write func(path string, content []byte) error, root string) error {
 	gz, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("read artifact: %w", err)
@@ -236,8 +243,8 @@ func untarFluxArtifact(data []byte, fs filesys.FileSystem, root string) error {
 		files++
 		total += h.Size
 
-		if files > fluxArtifactMaxFiles || total > fluxArtifactMaxUnpacked {
-			return fmt.Errorf("the artifact is larger than the app unpacks (%d files, %d MiB)", fluxArtifactMaxFiles, fluxArtifactMaxUnpacked>>20)
+		if files > ArtifactMaxFiles || total > ArtifactMaxUnpacked {
+			return fmt.Errorf("the artifact is larger than the app unpacks (%d files, %d MiB)", ArtifactMaxFiles, ArtifactMaxUnpacked>>20)
 		}
 
 		b, err := io.ReadAll(io.LimitReader(tr, h.Size))
@@ -245,7 +252,7 @@ func untarFluxArtifact(data []byte, fs filesys.FileSystem, root string) error {
 			return fmt.Errorf("read artifact: %w", err)
 		}
 
-		if err := fs.WriteFile(path.Join(root, path.Clean("/"+h.Name)), b); err != nil {
+		if err := write(path.Join(root, path.Clean("/"+h.Name)), b); err != nil {
 			return err
 		}
 	}

@@ -80,7 +80,9 @@ data, masking or audit, which stay in the facade (`go/ichorgo/kube_alias.go` hol
 wrappers). New Kubernetes domain logic goes in `go/kube/<domain>`, with `go/kube/helm` as the
 worked example: its tests answer from the fake API in `go/kube/kubetest` and do not import the
 facade, whose functions come down to demo check, funnel, a call to `helm`, mask and audit, JSON.
-One domain moves per pull request; see `go/kube/helm/doc.go`.
+`go/kube/flux` is the second example, on the object diff in `go/kube/kubediff`; Helm reaches Flux
+directly now (`flux.Suspend` before a rollback), so a domain that has moved needs no round trip
+through the facade. One domain moves per pull request; see `go/kube/helm/doc.go`.
 
 Every synchronous read funnel (`withKube`, `withSession`, `withNodeSession`) derives from the
 cluster's `callParent`, and the apps call `CancelCalls` when they switch cluster. Mutations

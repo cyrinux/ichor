@@ -2,6 +2,8 @@ package ichorgo
 
 import (
 	"strings"
+
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // Why a pod's image cannot be pulled, from the kubelet's waiting message: the kind of
@@ -20,12 +22,7 @@ const (
 	pullUnknown      = "unknown"
 )
 
-type pullProblem struct {
-	Kind     string   `json:"kind"`
-	Image    string   `json:"image"`
-	Registry string   `json:"registry"`
-	Secrets  []string `json:"secrets"`
-}
+type pullProblem = kube.PullProblem
 
 // pullPatterns are the stable parts of containerd's and the registries' messages, by kind,
 // in the order they are tried (lower case). A wrong platform ends in "not found" and a rate
