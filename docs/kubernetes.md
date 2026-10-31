@@ -311,7 +311,18 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     user data (Hetzner's limit); a larger config shows a warning. Scaleway needs the Talos guide's
     disk layout, and some of its instance types need `apply-config` instead. Scaleway Elastic Metal
     and Dedibox cannot install a custom image without KVM or rescue mode, so they are not
-    supported. The app calls no provider API: it never creates, bills or deletes a server.
+    supported.
+  - **At Hetzner Cloud, from the phone (Cloud host card → Create the server at Hetzner):** add a
+    project's Read & Write API token (Test tells a read-only one apart, which cannot be saved), then
+    pick a server type, a location and a Talos snapshot the project holds; the price before tax
+    shows before you type the host name to confirm. The app creates the server with the user data,
+    follows it until it runs, then follows the node until it joins, or until the machine appears in
+    Omni (allocate it there). A failed or stopped run deletes the server it created, except a
+    control plane that already answered: it may be an etcd member, so remove the member first, then
+    delete the server. Each run is in the activity log. The snapshot is made once from a computer
+    with [`hcloud-upload-image`](https://github.com/apricote/hcloud-upload-image). The token can
+    delete everything in its project and never expires: it stays sealed on the device and is not in
+    backups. Elsewhere the app calls no provider API.
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

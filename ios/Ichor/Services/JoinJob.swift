@@ -15,6 +15,8 @@ final class JoinJob {
     enum Outcome: Equatable {
         /// The joined node's address.
         case joined(String)
+        /// The server's machine appeared in Omni, which keeps its own list.
+        case appearedInOmni
         case failed(String)
     }
 
@@ -32,16 +34,21 @@ final class JoinJob {
     var isActive: Bool { task != nil }
 
     var timeline: [JoinStep] {
-        switch outcome {
-        case .joined?: joinTimeline(events, finished: true)
-        case .failed(let message)?: joinTimeline(events, failure: message)
-        case nil: joinTimeline(events)
+        let phases = request?.phases ?? JoinPhase.maintenanceRun
+        return switch outcome {
+        case .joined?, .appearedInOmni?: joinTimeline(events, finished: true, phases: phases)
+        case .failed(let message)?: joinTimeline(events, failure: message, phases: phases)
+        case nil: joinTimeline(events, phases: phases)
         }
     }
 
-    /// `register` adds the joined node's address to the stored talosconfig.
-    func start(client: TalosClient, request: JoinRequest, register: @escaping @MainActor (String) async throws -> Void)
-    {
+    /// `register` adds the joined node's address to the stored talosconfig. `hetznerToken` is the
+    /// project's for a request with a server to create: kept out of the request, which stays on
+    /// screen.
+    func start(
+        client: TalosClient, request: JoinRequest, hetznerToken: String = "",
+        register: @escaping @MainActor (String) async throws -> Void
+    ) {
         guard !isActive else { return }
         self.request = request
         events = []
@@ -54,7 +61,8 @@ final class JoinJob {
         }
         // For the reminder posted when the app leaves the screen.
         Task { _ = await BackgroundMonitor.requestPermission() }
-        let run = client.startNodeJoin(request)
+        let run =
+            request.hetzner.map { client.startHetznerCreate($0, token: hetznerToken) } ?? client.startNodeJoin(request)
         stop = run.stop
         task = Task {
             var result = Outcome.failed(String(localized: "The join ended without a result."))
@@ -62,7 +70,13 @@ final class JoinJob {
                 switch event {
                 case .progress(let progress): events.append(progress)
                 case .done(let address, let error):
-                    result = error.map { .failed($0) } ?? (address.isEmpty ? result : .joined(address))
+                    if let error {
+                        result = .failed(error)
+                    } else if !address.isEmpty {
+                        result = .joined(address)
+                    } else if request.omni {
+                        result = .appearedInOmni
+                    }
                 }
             }
             if case .joined(let address) = result {

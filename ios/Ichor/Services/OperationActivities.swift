@@ -328,6 +328,10 @@ enum OperationActivities {
             return OperationContent(
                 title: title, step: String(localized: "\(request.hostname) joined the cluster as \(address)"),
                 phase: .succeeded)
+        case .appearedInOmni?:
+            return OperationContent(
+                title: title, step: String(localized: "\(request.hostname) appeared in Omni: allocate it there"),
+                phase: .succeeded)
         case .failed(let message)?:
             return OperationContent(title: title, step: message, phase: .failed)
         case nil:

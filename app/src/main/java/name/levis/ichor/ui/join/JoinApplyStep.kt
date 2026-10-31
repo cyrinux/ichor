@@ -66,11 +66,28 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
     }
 }
 
+/** Runs an action on a host name behind the app lock, when it is on. */
+@Composable
+internal fun rememberAuthenticated(): (hostname: String, action: () -> Unit) -> Unit {
+    val context = LocalContext.current
+    val app = context.applicationContext as TalosApp
+    val scope = rememberCoroutineScope()
+    return { hostname, action ->
+        val activity = context.findFragmentActivity()
+        if (!app.appLock.enabled.value || activity == null) {
+            action()
+        } else {
+            scope.launch {
+                if (authenticate(activity, context.getString(R.string.join_apply_confirm_title, hostname)) is AuthResult.Success) action()
+            }
+        }
+    }
+}
+
 @Composable
 private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
-    val scope = rememberCoroutineScope()
     var warnings by remember(request.role) { mutableStateOf<List<String>>(emptyList()) }
     var confirm by remember { mutableStateOf(false) }
     var replacing by remember(request.hostname) { mutableStateOf(false) }
@@ -78,16 +95,7 @@ private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
         warnings = runCatching { app.nodeLifecycleRepository.nodeJoinWarnings(request.role) }.getOrDefault(emptyList())
     }
 
-    fun authenticated(action: () -> Unit) {
-        val activity = context.findFragmentActivity()
-        if (!app.appLock.enabled.value || activity == null) {
-            action()
-            return
-        }
-        scope.launch {
-            if (authenticate(activity, context.getString(R.string.join_apply_confirm_title, request.hostname)) is AuthResult.Success) action()
-        }
-    }
+    val authenticated = rememberAuthenticated()
 
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -117,7 +125,7 @@ private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
             confirmLabel = stringResource(R.string.join_apply_join),
             onConfirm = {
                 confirm = false
-                authenticated { onJoin(request.copy(replacing = replacing)) }
+                authenticated(request.hostname) { onJoin(request.copy(replacing = replacing)) }
             },
             onDismiss = { confirm = false },
             emphasized = true,
@@ -135,12 +143,13 @@ private fun SummaryRow(@StringRes label: Int, value: String) {
     }
 }
 
-/** The followed join: phase timeline, then the result and "Open node". */
+/** The followed join: phase timeline, then the result and "Open node" where a screen can open it. */
 @Composable
-private fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: () -> Unit, onClose: () -> Unit) {
+internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() -> Unit)?, onClose: () -> Unit) {
     val colors = LocalStatusColors.current
     var confirmStop by remember { mutableStateOf(false) }
-    val steps = remember(run.events, run.finished, run.error) { joinTimeline(run.events, run.finished, run.error != null) }
+    val steps = remember(run.events, run.finished, run.error) { joinTimeline(run.events, run.finished, run.error != null, run.request.phases) }
+    val cloud = run.request.hetzner != null
     if (run.running) KeepScreenOn()
 
     IchorCard(Modifier.fillMaxWidth()) {
@@ -150,9 +159,9 @@ private fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: () ->
     }
     when {
         run.running -> {
-            MutedText(stringResource(R.string.join_run_stop_hint))
+            MutedText(stringResource(if (cloud) R.string.hetzner_stop_hint else R.string.join_run_stop_hint))
             IchorOutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.join_run_stop))
+                Text(stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop))
             }
         }
         run.error != null -> {
@@ -160,22 +169,30 @@ private fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: () ->
             IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
         }
         else -> {
-            Text(stringResource(R.string.join_run_done, run.hostname, run.address), color = colors.ok, style = MaterialTheme.typography.titleMedium)
-            IchorButton(
-                onClick = {
-                    onClose()
-                    onOpenNode()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text(stringResource(R.string.join_run_open_node)) }
+            Text(
+                if (run.request.omni) stringResource(R.string.hetzner_run_done_omni, run.hostname) else stringResource(R.string.join_run_done, run.hostname, run.address),
+                color = colors.ok,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            if (onOpenNode == null) {
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+            } else {
+                IchorButton(
+                    onClick = {
+                        onClose()
+                        onOpenNode()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.join_run_open_node)) }
+            }
         }
     }
 
     if (confirmStop) {
         ConfirmDialog(
-            title = stringResource(R.string.join_run_stop),
-            text = stringResource(R.string.join_run_stop_body, run.hostname),
-            confirm = stringResource(R.string.join_run_stop),
+            title = stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop),
+            text = stringResource(if (cloud) R.string.hetzner_stop_body else R.string.join_run_stop_body, run.hostname),
+            confirm = stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop),
             onConfirm = {
                 confirmStop = false
                 onStop()
@@ -190,6 +207,9 @@ private fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: () ->
 @get:StringRes
 private val JoinPhase.label: Int
     get() = when (this) {
+        JoinPhase.CREATING -> R.string.hetzner_create
+        JoinPhase.STARTING -> R.string.hetzner_phase_starting
+        JoinPhase.OMNI -> R.string.hetzner_phase_omni
         JoinPhase.APPLYING -> R.string.join_phase_applying
         JoinPhase.INSTALLING -> R.string.join_phase_installing
         JoinPhase.REBOOTING -> R.string.join_phase_rebooting
