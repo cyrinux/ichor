@@ -1761,6 +1761,16 @@
     <string name="ai_model_none">未找到模型</string>
     <string name="ai_base_url">服务器 URL（可选）</string>
     <string name="ai_base_url_hint">仅用于网关或本地模型。留空则使用提供商自己的 API。</string>
+    <string name="ai_tool_looked_at">已查看</string>
+    <string name="ai_tool_logs">%1$s 的日志</string>
+    <string name="ai_tool_events">%1$s %2$s 的事件</string>
+    <string name="ai_tool_yaml">%1$s %2$s 的 YAML</string>
+    <string name="ai_tool_service_logs">%2$s 上 %1$s 的日志</string>
+    <string name="ai_tool_other">对 %1$s 的请求</string>
+    <string name="ai_tool_refused">未读取：%1$s</string>
+    <string name="ai_tool_unsupported">此服务器不接受更多数据的请求：模型仅根据报告作答。</string>
+    <string name="ai_tool_allow">允许模型请求更多内容</string>
+    <string name="ai_tool_allow_desc">每个问题中，模型最多可读取三次 Pod 日志、对象的事件或 YAML，或 Talos 服务日志。每个请求都会随回答显示，读取的内容会像报告一样被遮盖。</string>
     <string name="ai_anonymize">隐藏名称和地址</string>
     <string name="ai_anonymize_desc">发送报告前，节点的名称、IP 地址和域名会被替换为占位符。日志的其余部分（如 Pod 名称和其他主机名）按原样发送。</string>
     <string name="ai_collecting">正在读取集群状态…</string>

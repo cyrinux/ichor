@@ -73,6 +73,14 @@ fun AiSection(app: TalosApp) {
                     checked = settings.anonymize,
                     onChange = { prefs.update(settings.copy(anonymize = it)) },
                 )
+                if (settings.provider != AiSettings.DEVICE_PROVIDER) {
+                    SwitchRow(
+                        title = stringResource(R.string.ai_tool_allow),
+                        description = stringResource(R.string.ai_tool_allow_desc),
+                        checked = settings.allowTools,
+                        onChange = { prefs.update(settings.copy(allowTools = it)) },
+                    )
+                }
             }
         }
     }

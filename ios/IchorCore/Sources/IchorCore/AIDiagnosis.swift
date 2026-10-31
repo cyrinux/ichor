@@ -41,6 +41,7 @@ public enum AIKeys {
     public static let enabled = "aiDiagnosisEnabled"
     public static let provider = "aiProvider"
     public static let anonymize = "aiAnonymize"
+    public static let allowTools = "aiAllowTools"
 
     public static func model(_ provider: String) -> String { "aiModel.\(provider)" }
     public static func baseURL(_ provider: String) -> String { "aiBaseURL.\(provider)" }
@@ -76,6 +77,9 @@ public func selectedAIProvider(_ providers: [AIProvider], saved: String?) -> AIP
 
 /// Names and addresses are hidden unless the user turned that off.
 public func aiAnonymize(stored: Bool?) -> Bool { stored ?? true }
+
+/// A provider on the network may ask for more unless the user turned that off.
+public func aiAllowTools(stored: Bool?) -> Bool { stored ?? true }
 
 /// The note sent with the report when the diagnosis is opened from a failed health check.
 /// English whatever the app's language: it is read by the model, not by the user.

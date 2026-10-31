@@ -35,6 +35,15 @@ struct AISection: View {
                     )
                     .font(.caption).foregroundStyle(.secondary)
                 }
+                if !ai.onPhone {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Toggle("Let the model ask for more", isOn: $ai.allowTools)
+                        Text(
+                            "The model may read a pod’s logs, an object’s events or YAML, or a Talos service’s logs, three times per question. Each request shows with the answer, and what it reads is masked like the report."
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             }
         } header: {
             Text("AI diagnosis")

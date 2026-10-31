@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.ui.uiStateOf
 import name.levis.ichorgo.Diagnosis
 import name.levis.ichor.data.AiPreferences
+import name.levis.ichor.data.AiToolCall
+import name.levis.ichor.data.finished
 import name.levis.ichor.data.AnswerEvent
 import name.levis.ichor.data.DiagnosisRepository
 import name.levis.ichor.ui.UiState
@@ -25,6 +27,10 @@ data class AnswerState(
     val text: String = "",
     /** Why the answer stopped early; [text] may still hold the part received. */
     val error: String? = null,
+    /** What the model asked for, oldest first. */
+    val tools: List<AiToolCall> = emptyList(),
+    /** The server takes no tools: the answer comes from the report alone. */
+    val toolsUnsupported: Boolean = false,
 )
 
 class DiagnosisViewModel(
@@ -82,6 +88,9 @@ class DiagnosisViewModel(
                     _answer.update { s ->
                         when (event) {
                             is AnswerEvent.Text -> s.copy(text = event.text)
+                            is AnswerEvent.Tool -> s.copy(tools = s.tools + AiToolCall(event.tool, event.args))
+                            is AnswerEvent.ToolDone ->
+                                if (event.tool.isEmpty()) s.copy(toolsUnsupported = true) else s.copy(tools = s.tools.finished(event))
                             is AnswerEvent.Done -> s.copy(asking = false, error = event.error)
                         }
                     }

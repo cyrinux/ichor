@@ -1817,6 +1817,16 @@
     <string name="ai_model_none">Nenhum modelo encontrado</string>
     <string name="ai_base_url">URL do servidor (opcional)</string>
     <string name="ai_base_url_hint">Apenas para um gateway ou um modelo local. Deixe vazio para usar a API do próprio provedor.</string>
+    <string name="ai_tool_looked_at">Consultado</string>
+    <string name="ai_tool_logs">logs de %1$s</string>
+    <string name="ai_tool_events">eventos de %1$s %2$s</string>
+    <string name="ai_tool_yaml">YAML de %1$s %2$s</string>
+    <string name="ai_tool_service_logs">logs de %1$s em %2$s</string>
+    <string name="ai_tool_other">um pedido de %1$s</string>
+    <string name="ai_tool_refused">Não lido: %1$s</string>
+    <string name="ai_tool_unsupported">Este servidor não aceita pedidos de mais dados: o modelo respondeu apenas com o relatório.</string>
+    <string name="ai_tool_allow">Deixar o modelo pedir mais</string>
+    <string name="ai_tool_allow_desc">O modelo pode ler os logs de um pod, os eventos ou o YAML de um objeto, ou os logs de um serviço do Talos, três vezes por pergunta. Cada pedido aparece com a resposta, e o que ele lê é mascarado como o relatório.</string>
     <string name="ai_anonymize">Ocultar nomes e endereços</string>
     <string name="ai_anonymize_desc">Os nomes, endereços IP e domínio dos nós são substituídos por marcadores antes do envio do relatório. O restante dos logs, como nomes de pods e outros nomes de host, é enviado como está.</string>
     <string name="ai_collecting">Lendo o estado do cluster…</string>

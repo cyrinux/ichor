@@ -532,6 +532,7 @@ func collectKubeReport(configYAML, contextName, kubeServer string, anonymize boo
 
 	d.report = renderKubeDiagnosis(kube)
 	d.applyMask(configYAML, anonymize, diagnosisData{At: kube.At, Kube: &kube, KubeOnly: true})
+	d.tools = &diagnosisToolTarget{kube: kubeTarget{configYAML, contextName, kubeServer}}
 
 	return d, nil
 }

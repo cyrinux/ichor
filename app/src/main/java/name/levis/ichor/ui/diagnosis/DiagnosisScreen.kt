@@ -174,7 +174,7 @@ private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
 
 @Composable
 private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> Unit) {
-    if (!answer.asking && answer.text.isEmpty() && answer.error == null) return
+    if (!answer.asking && answer.text.isEmpty() && answer.error == null && answer.tools.isEmpty()) return
     val context = LocalContext.current
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -191,6 +191,7 @@ private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> 
                     Text(stringResource(R.string.ai_asking, providerName), style = MaterialTheme.typography.bodySmall)
                 }
             }
+            AiToolRows(answer.tools, answer.toolsUnsupported)
             if (answer.text.isNotEmpty()) {
                 SelectionContainer { Text(answer.text, style = MaterialTheme.typography.bodyMedium) }
             }

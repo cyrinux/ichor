@@ -42,12 +42,13 @@ final class HealthExplanation {
                 collecting = false
                 let events = report.ask(
                     provider: provider.id, settings: settings, language: appLanguage,
-                    note: healthFailureNote(failure))
+                    note: healthFailureNote(failure), allowTools: false)
                 for await event in events {
                     // Stopped or replaced: what was still queued belongs to the old answer.
                     guard !Task.isCancelled else { break }
                     switch event {
                     case .answer(let answer): text = answer
+                    case .tool, .toolDone: break
                     case .done(let failed): error = failed
                     }
                 }

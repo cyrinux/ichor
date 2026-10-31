@@ -151,6 +151,14 @@ func (l maskedDiagnosisListener) OnAnswer(text string) {
 	l.DiagnosisListener.OnAnswer(privacy.maskPlain(text))
 }
 
+func (l maskedDiagnosisListener) OnTool(name, argsJSON string) {
+	l.DiagnosisListener.OnTool(name, privacy.maskPlain(argsJSON))
+}
+
+func (l maskedDiagnosisListener) OnToolDone(name string, bytes int, result, errMessage string) {
+	l.DiagnosisListener.OnToolDone(name, bytes, privacy.maskPlain(result), privacy.maskPlain(errMessage))
+}
+
 func (l maskedDiagnosisListener) OnDone(errMessage string) {
 	l.DiagnosisListener.OnDone(privacy.maskPlain(errMessage))
 }

@@ -1,6 +1,149 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Looked at" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Angesehen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Consultado" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Consulté" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Consultato" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "確認した内容" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Consultado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Просмотрено" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Переглянуто" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已查看" } }
+      }
+    },
+    "logs of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Logs von %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "registros de %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "journaux de %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "log di %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のログ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "logs de %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "журналы %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "журнали %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 的日志" } }
+      }
+    },
+    "events of %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "events of %1$@ %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ereignisse von %1$@ %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "eventos de %1$@ %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "événements de %1$@ %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "eventi di %1$@ %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@ のイベント" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "eventos de %1$@ %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "события %1$@ %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "події %1$@ %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@ 的事件" } }
+      }
+    },
+    "YAML of %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "YAML of %1$@ %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "YAML von %1$@ %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "YAML de %1$@ %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "YAML de %1$@ %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "YAML di %1$@ %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@ の YAML" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "YAML de %1$@ %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "YAML %1$@ %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "YAML %1$@ %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@ 的 YAML" } }
+      }
+    },
+    "%@ logs on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ logs on %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@-Logs auf %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "registros de %1$@ en %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "journaux de %1$@ sur %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "log di %1$@ su %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ のログ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "logs de %1$@ em %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "журналы %1$@ на %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "журнали %1$@ на %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 上 %1$@ 的日志" } }
+      }
+    },
+    "a request for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "eine Anfrage nach %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "una petición de %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "une demande de %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "una richiesta di %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ の要求" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "um pedido de %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "запрос %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "запит %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对 %@ 的请求" } }
+      }
+    },
+    "Not read: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht gelesen: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No leído: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non lu : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non letto: %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "読み取らず: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não lido: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не прочитано: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не прочитано: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未读取：%@" } }
+      }
+    },
+    "This server does not take requests for more data: the model answered from the report alone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieser Server nimmt keine Anfragen nach weiteren Daten an: Das Modell hat nur anhand des Berichts geantwortet." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este servidor no acepta peticiones de más datos: el modelo ha respondido solo con el informe." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce serveur n’accepte pas les demandes de données supplémentaires : le modèle a répondu à partir du rapport seul." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo server non accetta richieste di altri dati: il modello ha risposto solo in base al rapporto." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このサーバーは追加データの要求を受け付けません。モデルはレポートのみに基づいて回答しました。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este servidor não aceita pedidos de mais dados: o modelo respondeu apenas com o relatório." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Этот сервер не принимает запросы дополнительных данных: модель ответила только по отчёту." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Цей сервер не приймає запитів додаткових даних: модель відповіла лише за звітом." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此服务器不接受更多数据的请求：模型仅根据报告作答。" } }
+      }
+    },
+    "Let the model ask for more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Modell mehr anfragen lassen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Dejar que el modelo pida más" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Laisser le modèle demander plus" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lascia che il modello chieda di più" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "モデルに追加の要求を許可" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Deixar o modelo pedir mais" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Разрешить модели запрашивать больше" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Дозволити моделі запитувати більше" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "允许模型请求更多内容" } }
+      }
+    },
+    "The model may read a pod’s logs, an object’s events or YAML, or a Talos service’s logs, three times per question. Each request shows with the answer, and what it reads is masked like the report." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Modell darf pro Frage dreimal die Logs eines Pods, die Ereignisse oder das YAML eines Objekts oder die Logs eines Talos-Dienstes lesen. Jede Anfrage wird mit der Antwort angezeigt, und das Gelesene wird wie der Bericht maskiert." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El modelo puede leer los registros de un pod, los eventos o el YAML de un objeto, o los registros de un servicio de Talos, tres veces por pregunta. Cada petición se muestra con la respuesta y lo que lee se oculta como el informe." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le modèle peut lire les journaux d’un pod, les événements ou le YAML d’un objet, ou les journaux d’un service Talos, trois fois par question. Chaque demande s’affiche avec la réponse, et ce qu’il lit est masqué comme le rapport." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il modello può leggere i log di un pod, gli eventi o lo YAML di un oggetto, o i log di un servizio Talos, tre volte per domanda. Ogni richiesta è mostrata con la risposta e ciò che legge è mascherato come il rapporto." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "モデルは質問ごとに 3 回まで、Pod のログ、オブジェクトのイベントや YAML、Talos サービスのログを読み取れます。各要求は回答とともに表示され、読み取った内容はレポートと同様にマスクされます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O modelo pode ler os logs de um pod, os eventos ou o YAML de um objeto, ou os logs de um serviço do Talos, três vezes por pergunta. Cada pedido aparece com a resposta, e o que ele lê é mascarado como o relatório." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Модель может читать журналы пода, события или YAML объекта либо журналы службы Talos, три раза на вопрос. Каждый запрос показывается вместе с ответом, а прочитанное маскируется как отчёт." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Модель може читати журнали пода, події чи YAML об’єкта або журнали служби Talos, тричі на запитання. Кожен запит показується разом із відповіддю, а прочитане маскується як звіт." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每个问题中，模型最多可读取三次 Pod 日志、对象的事件或 YAML，或 Talos 服务日志。每个请求都会随回答显示，读取的内容会像报告一样被遮盖。" } }
+      }
+    },
     "Log search" : {
       "extractionState" : "manual",
       "localizations" : {

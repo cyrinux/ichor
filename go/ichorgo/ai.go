@@ -78,6 +78,11 @@ type aiRequest struct {
 	// messages, when set, is the whole conversation sent instead of the single user turn
 	// (system stays apart); the last one is the user's.
 	messages []chatMessage
+	// tools are what the model may ask for, rounds what it already asked and got. With
+	// forceAnswer, the tools stay declared (the rounds refer to them) but it may not use them.
+	tools       []aiToolDef
+	rounds      []aiToolRound
+	forceAnswer bool
 }
 
 // turns is what the model gets after the system prompt.
@@ -230,14 +235,9 @@ func onLocalNetwork(host string) bool {
 
 // streamAnswer asks the model and calls emit with each piece of the answer as it arrives.
 func streamAnswer(ctx context.Context, req aiRequest, emit func(string)) error {
-	switch req.provider.ID {
-	case aiDevice:
-		return streamDevice(ctx, req, emit)
-	case aiAnthropic:
-		return streamAnthropic(ctx, req, emit)
-	default:
-		return streamOpenAI(ctx, req, emit)
-	}
+	_, err := streamTurn(ctx, req, emit)
+
+	return err
 }
 
 // aiError turns a failed call into a short message for the UI. status is the HTTP status
@@ -278,7 +278,7 @@ func aiError(ctx context.Context, provider aiProvider, status int, message strin
 		reason += ": " + clipUTF8(message, maxProviderMessage)
 	}
 
-	return fmt.Errorf("%s: %s", provider.Name, reason)
+	return aiStatusError{fmt.Errorf("%s: %s", provider.Name, reason), status, message}
 }
 
 // transportCause drops the method and URL net/http wraps around a failed request.

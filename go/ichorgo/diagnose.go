@@ -21,6 +21,13 @@ const (
 type DiagnosisListener interface {
 	// OnAnswer gets the whole answer so far, not only what is new.
 	OnAnswer(text string)
+	// OnTool is the model asking for more (see ai_tools.go): the tool's name, "unknown" for one
+	// that does not exist, and its arguments as JSON, with the placeholders the model used.
+	OnTool(name, argsJSON string)
+	// OnToolDone follows each OnTool: result is exactly the text sent to the model and bytes its
+	// size; errMessage says why nothing was read, and that too is what the model gets. An empty
+	// name, without a matching OnTool, tells once that the server takes no tools.
+	OnToolDone(name string, bytes int, result, errMessage string)
 	// OnDone is called exactly once; errMessage is empty on success and when cancelled.
 	OnDone(errMessage string)
 }
@@ -49,6 +56,8 @@ type Diagnosis struct {
 	names *diagnosisNames
 	// kind picks the instructions sent with the report; the zero value is the full diagnosis.
 	kind diagnosisKind
+	// tools is what the model may read more of; nil for a report that takes no tools.
+	tools *diagnosisToolTarget
 }
 
 // diagnosisKind tells which question a report answers.
@@ -91,6 +100,7 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 
 	d.report = renderDiagnosis(data)
 	d.applyMask(configYAML, anonymize, data)
+	d.tools = talosToolTarget(kubeTarget{configYAML, contextName, kubeServer}, data)
 
 	return d, nil
 }
@@ -170,8 +180,9 @@ func (d *Diagnosis) Prompt(language, note string) string {
 
 // Ask sends the report and the user's optional note to the model and streams its answer
 // to listener. provider is "anthropic", "openai" or "device"; an empty model means the
-// provider's default, an empty baseURL its own API.
-func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string, listener DiagnosisListener) *DiagnosisRun {
+// provider's default, an empty baseURL its own API. With allowTools, a provider on the network
+// may ask for a little more (see ai_tools.go).
+func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string, allowTools bool, listener DiagnosisListener) *DiagnosisRun {
 	listener = maskedDiagnosisListener{listener}
 
 	ctx, cancel := context.WithTimeout(context.Background(), aiAnswerTimeout)
@@ -180,16 +191,19 @@ func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string,
 		defer cancel()
 		defer onPanic(listener.OnDone)
 
-		listener.OnDone(strings.ToValidUTF8(d.ask(ctx, provider, apiKey, model, baseURL, language, note, listener), "�"))
+		listener.OnDone(strings.ToValidUTF8(d.ask(ctx, provider, apiKey, model, baseURL, language, note, allowTools, listener), "�"))
 	}()
 
 	return &DiagnosisRun{cancel: cancel}
 }
 
-func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, language, note string, listener DiagnosisListener) string {
+func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, language, note string, allowTools bool, listener DiagnosisListener) string {
 	if d.outOfDate() {
 		return reportOutOfDate
 	}
+
+	// Tool results teach the mask new names: this question's own, like its conversation.
+	d = d.forQuestion()
 
 	req, err := newAIRequest(provider, apiKey, model, baseURL)
 	if err != nil {
@@ -214,7 +228,7 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 		shown, shownAt = answer.Len(), time.Now()
 	}
 
-	err = streamAnswer(ctx, req, func(piece string) {
+	emit := func(piece string) {
 		if tooLong {
 			return
 		}
@@ -232,7 +246,14 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 		if time.Since(shownAt) >= answerUpdateEvery {
 			show()
 		}
-	})
+	}
+
+	if allowTools && d.tools != nil && req.provider.ID != aiDevice {
+		req.system += "\n\n" + toolInstructions
+		err = newToolRun(d, listener, req.user).converse(ctx, req, emit)
+	} else {
+		err = streamAnswer(ctx, req, emit)
+	}
 
 	if answer.Len() != shown {
 		show()
@@ -250,6 +271,14 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 	default:
 		return ""
 	}
+}
+
+// forQuestion is a copy of d for one question, with a mask of names it can add to.
+func (d *Diagnosis) forQuestion() *Diagnosis {
+	c := *d
+	c.names = d.names.clone()
+
+	return &c
 }
 
 // outOfDate tells that screenshot mode changed since the report was collected.

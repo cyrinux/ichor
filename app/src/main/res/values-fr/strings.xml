@@ -1822,6 +1822,16 @@
     <string name="ai_model_none">Aucun modèle trouvé</string>
     <string name="ai_base_url">URL du serveur (facultatif)</string>
     <string name="ai_base_url_hint">Uniquement pour une passerelle ou un modèle local. Laissez vide pour utiliser l’API du fournisseur.</string>
+    <string name="ai_tool_looked_at">Consulté</string>
+    <string name="ai_tool_logs">journaux de %1$s</string>
+    <string name="ai_tool_events">événements de %1$s %2$s</string>
+    <string name="ai_tool_yaml">YAML de %1$s %2$s</string>
+    <string name="ai_tool_service_logs">journaux de %1$s sur %2$s</string>
+    <string name="ai_tool_other">une demande de %1$s</string>
+    <string name="ai_tool_refused">Non lu : %1$s</string>
+    <string name="ai_tool_unsupported">Ce serveur n’accepte pas les demandes de données supplémentaires : le modèle a répondu à partir du rapport seul.</string>
+    <string name="ai_tool_allow">Laisser le modèle demander plus</string>
+    <string name="ai_tool_allow_desc">Le modèle peut lire les journaux d’un pod, les événements ou le YAML d’un objet, ou les journaux d’un service Talos, trois fois par question. Chaque demande s’affiche avec la réponse, et ce qu’il lit est masqué comme le rapport.</string>
     <string name="ai_anonymize">Masquer les noms et les adresses</string>
     <string name="ai_anonymize_desc">Les noms, adresses IP et domaine des nœuds sont remplacés par des noms génériques avant l’envoi du rapport. Le reste des journaux, comme les noms de pods et d’autres noms d’hôtes, est envoyé tel quel.</string>
     <string name="ai_collecting">Lecture de l’état du cluster…</string>

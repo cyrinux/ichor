@@ -191,6 +191,21 @@ func (p *answerPrinter) OnAnswer(text string) {
 
 func (p *answerPrinter) OnDone(errMessage string) { p.done <- errMessage }
 
+// OnTool prints what the model asks for, on stderr: stdout stays the answer.
+func (p *answerPrinter) OnTool(name, argsJSON string) {
+	fmt.Fprintf(os.Stderr, "[tool] %s %s\n", name, argsJSON)
+}
+
+func (p *answerPrinter) OnToolDone(name string, bytes int, _, errMessage string) {
+	if errMessage != "" {
+		fmt.Fprintf(os.Stderr, "[tool] %s refused: %s\n", name, errMessage)
+
+		return
+	}
+
+	fmt.Fprintf(os.Stderr, "[tool] %s sent %d bytes\n", name, bytes)
+}
+
 // aiKey reads the provider's API key from the environment, never from the command line.
 func aiKey(provider string) string {
 	if provider == "openai" {
@@ -210,7 +225,7 @@ func diagnose(cfg, contextName, provider, model string) error {
 	}
 
 	p := &answerPrinter{done: make(chan string, 1)}
-	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", p)
+	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", true, p)
 
 	if msg := <-p.done; msg != "" {
 		return fmt.Errorf("diagnosis failed: %s", msg)
@@ -252,7 +267,7 @@ func healthExplain(e env, provider, model string) error {
 	}
 
 	p := &answerPrinter{done: make(chan string, 1)}
-	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", p)
+	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", false, p)
 
 	if msg := <-p.done; msg != "" {
 		return fmt.Errorf("health explanation failed: %s", msg)

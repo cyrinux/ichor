@@ -19,6 +19,12 @@ import name.levis.ichorgo.Ichorgo
 sealed interface AnswerEvent {
     data class Text(val text: String) : AnswerEvent
 
+    /** The model asks for more: [args] are the placeholders it used. */
+    data class Tool(val tool: String, val args: AiToolArgs) : AnswerEvent
+
+    /** What went back for the request: [result] is the exact text sent. An empty [tool]: the server takes no tools. */
+    data class ToolDone(val tool: String, val bytes: Long, val result: String, val error: String?) : AnswerEvent
+
     /** [error] is null when the answer is complete or the user stopped it. */
     data class Done(val error: String?) : AnswerEvent
 }
@@ -79,9 +85,18 @@ class DiagnosisRepository(private val configs: ConfigRepository, private val kub
                 settings.baseUrl,
                 language,
                 note,
+                settings.allowTools,
                 object : DiagnosisListener {
                     override fun onAnswer(text: String) {
                         trySend(AnswerEvent.Text(text))
+                    }
+
+                    override fun onTool(name: String, argsJSON: String) {
+                        trySend(AnswerEvent.Tool(name, TalosJson.decodeFromString(AiToolArgs.serializer(), argsJSON)))
+                    }
+
+                    override fun onToolDone(name: String, bytes: Long, result: String, errMessage: String) {
+                        trySend(AnswerEvent.ToolDone(name, bytes, result, errMessage.ifEmpty { null }?.let(::goErrorText)))
                     }
 
                     override fun onDone(errMessage: String) {

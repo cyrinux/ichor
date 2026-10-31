@@ -291,7 +291,7 @@ func TestAskDeviceUsesSmallPromptAndMask(t *testing.T) {
 	useLocalModel(t, m)
 
 	l := &answerRecorder{done: make(chan string, 1)}
-	anonymizedDiagnosis().Ask("device", "", "file:mine.gguf", "", "fr", "talos-w-a flaps", l)
+	anonymizedDiagnosis().Ask("device", "", "file:mine.gguf", "", "fr", "talos-w-a flaps", false, l)
 
 	select {
 	case errMessage := <-l.done:

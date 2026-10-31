@@ -11,6 +11,8 @@ struct DiagnosisView: View {
     @State private var showReport = false
     @State private var answer = ""
     @State private var answerError: String?
+    @State private var toolCalls: [AIToolCall] = []
+    @State private var toolsUnsupported = false
     @State private var asking: Task<Void, Never>?
 
     /// `initialNote`: what the screen that opened this one already knows (a failed health check).
@@ -94,8 +96,9 @@ struct DiagnosisView: View {
                     "Sends the question and the report to an app you choose, such as Claude, ChatGPT or Gemini. No API key needed."
                 )
             }
-            if !answer.isEmpty || answerError != nil {
+            if !answer.isEmpty || answerError != nil || !toolCalls.isEmpty || toolsUnsupported {
                 Section {
+                    AIToolRows(calls: toolCalls, unsupported: toolsUnsupported)
                     if !answer.isEmpty {
                         Text(verbatim: answer).textSelection(.enabled)
                     }
@@ -126,20 +129,32 @@ struct DiagnosisView: View {
         asking?.cancel()
         answer = ""
         answerError = nil
+        toolCalls = []
+        toolsUnsupported = false
         state = .loading
         state = await .from { try await client.collectDiagnosis(anonymize: ai.anonymize) }
     }
 
     private func ask(_ report: DiagnosisReport, provider: AIProvider) {
-        let events = report.ask(provider: provider.id, settings: ai.current, language: appLanguage, note: note)
+        let events = report.ask(
+            provider: provider.id, settings: ai.current, language: appLanguage, note: note, allowTools: ai.allowTools)
         answer = ""
         answerError = nil
+        toolCalls = []
+        toolsUnsupported = false
         asking = Task { @MainActor in
             for await event in events {
                 // Cancelled (Stop, a new report): what was still queued belongs to the old answer.
                 guard !Task.isCancelled else { break }
                 switch event {
                 case .answer(let text): answer = text
+                case .tool(let name, let argsJSON): toolCalls = toolCalls.started(tool: name, argsJSON: argsJSON)
+                case .toolDone(let name, let bytes, let result, let error):
+                    if name.isEmpty {
+                        toolsUnsupported = true
+                    } else {
+                        toolCalls = toolCalls.finished(tool: name, bytes: bytes, result: result, error: error)
+                    }
                 case .done(let error): answerError = error
                 }
             }
