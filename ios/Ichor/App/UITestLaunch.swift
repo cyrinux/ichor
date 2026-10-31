@@ -24,6 +24,22 @@ enum SmokeID {
     static let kubeHome = "smoke-kube-home"
     /// Why the launch could not add the demo (UITestLaunch.failure), in the test's element tree.
     static let launchError = "smoke-launch-error"
+    /// The overview's list, once it has loaded (the nodes may be below the fold).
+    static let overview = "smoke-overview"
+    // The screens of the screenshot walk (IchorUITests/DemoScreenshotTests.swift), on what shows
+    // once each has loaded.
+    /// A node's services list.
+    static let nodeServices = "smoke-node-services"
+    /// A row of the events timeline.
+    static let events = "smoke-events"
+    /// The first chart of a node's Live tab.
+    static let graphs = "smoke-graphs"
+    /// The capture's start button (enabled once an interface is known).
+    static let captureStart = "smoke-capture-start"
+    /// A node row of the cluster upgrade plan.
+    static let upgradePlan = "smoke-upgrade-plan"
+    /// The list or first card of a feature screen, by its name in the walk.
+    static func screen(_ name: String) -> String { "smoke-screen-\(name)" }
 }
 
 extension View {
@@ -40,19 +56,23 @@ extension View {
 
 /// The UI test's launch (`ICHOR_UI_TEST` in XCUIApplication.launchEnvironment): "demo" adds the
 /// Talos demo cluster and shows it, "demo-kube" the Kubernetes one, through the same calls as
-/// the Add a cluster screen's "Try demo". Unset, as in every real launch, nothing changes.
+/// the Add a cluster screen's "Try demo". `ICHOR_UI_TEST_SCREEN` also opens one screen of it
+/// (UITestScreen), for the screenshot walk. Unset, as in every real launch, nothing changes.
 @MainActor
 @Observable
 final class UITestLaunch {
     static let shared = UITestLaunch()
 
     nonisolated private static let mode = ProcessInfo.processInfo.environment["ICHOR_UI_TEST"]
+    nonisolated private static let screen = ProcessInfo.processInfo.environment["ICHOR_UI_TEST_SCREEN"]
 
     /// A UI test is driving the app: the demo tour's coach marks stay hidden (DemoTour.configure).
     nonisolated static var active: Bool { mode != nil }
 
     /// Why the demo could not be added; shown over the screens (RootView) for the test to report.
     private(set) var failure: String?
+    /// The screen `ICHOR_UI_TEST_SCREEN` names, once the demo is on screen; MainNavigation opens it.
+    private(set) var initialRoute: Route?
     private var prepared = false
 
     /// From the root view, which stays mounted: once the stored configs are loaded, the demo the
@@ -83,6 +103,13 @@ final class UITestLaunch {
             _ = model.selectCluster(fingerprint: demo.fingerprint)
         } else {
             failure = "Demo added but not found among the clusters"
+            return
+        }
+        guard let screen = Self.screen else { return }
+        do {
+            initialRoute = try await UITestScreen.route(named: screen, model: model)
+        } catch {
+            failure = "Screen \(screen) not opened: \(error.localizedDescription)"
         }
     }
 }

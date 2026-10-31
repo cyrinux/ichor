@@ -77,7 +77,9 @@ struct FluxDiffView: View {
     private static let unfoldedAtFirst = 3
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { diff in content(diff) }
+        LoadStateView(state: state, retry: load) { diff in
+            content(diff).accessibilityIdentifier(SmokeID.screen("argocd-diff"))
+        }
             .task(id: key) { await load() }
             .task(id: key) { await loadSources() }
             .navigationDestination(item: $opened) { file in

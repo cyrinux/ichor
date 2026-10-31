@@ -6,6 +6,7 @@
 #   3. the Xcode project (XcodeGen) and the app.
 #
 #   scripts/ios-build.sh test   # core tests + simulator build (CI on every push)
+#   scripts/ios-build.sh screenshots  # the demo walk in both appearances (scripts/ios-screenshots.sh next)
 #   scripts/ios-build.sh ipa    # unsigned Release build packaged as an IPA (default)
 #   scripts/ios-build.sh appstore  # App Store build, signed and uploaded to App Store Connect
 #   scripts/ios-build.sh watch  # the Apple Watch app and complication, unsigned, for the watchOS
@@ -32,7 +33,7 @@ set -euo pipefail
 MODE="${1:-ipa}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 case "$MODE" in
-  test|ipa|watch|format) ;;
+  test|screenshots|ipa|watch|format) ;;
   appstore)
     : "${ICHOR_IOS_TEAM_ID:?ICHOR_IOS_TEAM_ID is not set}"
     : "${ASC_KEY_PATH:?ASC_KEY_PATH is not set (App Store Connect API key, AuthKey_<id>.p8)}"
@@ -40,7 +41,7 @@ case "$MODE" in
     : "${ASC_ISSUER_ID:?ASC_ISSUER_ID is not set}"
     ;;
   *)
-    echo "usage: $0 [test|ipa|appstore|watch|format]" >&2
+    echo "usage: $0 [test|screenshots|ipa|appstore|watch|format]" >&2
     exit 2
     ;;
 esac
@@ -164,6 +165,27 @@ case "$MODE" in
     rm -rf build/ui-tests.xcresult
     xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" \
       -only-testing:IchorUITests -resultBundlePath build/ui-tests.xcresult test-without-building
+    ;;
+  screenshots)
+    # The screenshot walk (IchorUITests/DemoScreenshotTests) in each appearance, from one build:
+    # result bundles build/screenshots-dark.xcresult and -light, read by scripts/ios-screenshots.sh.
+    # The same simulator and signing as `test`. The simulator is booted first, since appearance and
+    # status bar only apply to a booted one, and the appearance takes effect on the next launch.
+    # No parallel testing: a clone of the simulator would have neither.
+    sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')
+    [[ -n "$sim" ]] || { echo "no iPhone simulator available" >&2; exit 1; }
+    adhoc=(CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=)
+    xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" build-for-testing
+    xcrun simctl bootstatus "$sim" -b
+    for appearance in dark light; do
+      xcrun simctl ui "$sim" appearance "$appearance"
+      xcrun simctl status_bar "$sim" override --time 9:41 --batteryState charged --batteryLevel 100 \
+        --wifiBars 3 --cellularBars 4
+      rm -rf "build/screenshots-$appearance.xcresult"
+      TEST_RUNNER_ICHOR_SCREENSHOTS=1 xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug \
+        -destination "id=$sim" -parallel-testing-enabled NO -only-testing:IchorUITests/DemoScreenshotTests \
+        -resultBundlePath "build/screenshots-$appearance.xcresult" test-without-building
+    done
     ;;
   ipa)
     xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Release -destination 'generic/platform=iOS' build

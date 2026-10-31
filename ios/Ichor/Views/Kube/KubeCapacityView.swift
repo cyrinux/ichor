@@ -68,6 +68,7 @@ struct KubeCapacityView: View {
                 }
                 .refreshable { await load() }
                 .themedBackground()
+                .accessibilityIdentifier(SmokeID.screen("capacity"))
             }
         }
         .task { await load() }

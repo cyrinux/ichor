@@ -31,6 +31,7 @@ struct EventsView: View {
             Section {
                 ForEach(groups) { group in
                     EventRow(group: group, hostname: hostname(group.event.node), showNode: node == nil)
+                        .accessibilityIdentifier(SmokeID.events)
                 }
             } footer: {
                 if !events.isEmpty {

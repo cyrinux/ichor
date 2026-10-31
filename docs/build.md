@@ -206,3 +206,9 @@ build"). On a Mac, `scripts/ios-build.sh test` runs it on the first available iP
 after the build and writes `ios/build/ui-tests.xcresult`; in Xcode it is the Ichor scheme's
 test action (⌘U). The launch environment `ICHOR_UI_TEST=demo` (or `demo-kube`) adds the demo at
 launch and hides the tour (`ios/Ichor/App/UITestLaunch.swift`).
+
+The iPhone images under `docs/screenshots/ios/` come from `ios/IchorUITests/DemoScreenshotTests.swift`,
+which is skipped in that run. To retake the whole set on a Mac with Xcode 16 or newer and
+`brew install webp`: `scripts/ios-build.sh screenshots && scripts/ios-screenshots.sh`; it fails on a
+missing screen. Or run the `screenshots` workflow from the Actions tab, unzip its `screenshots-ios`
+artifact at the root of the repository and commit it.

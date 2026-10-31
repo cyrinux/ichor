@@ -98,7 +98,7 @@ struct ClusterUpgradePlanView: View {
         }
         Section {
             ForEach(Array(p.nodes.enumerated()), id: \.element.id) { index, node in
-                nodeRow(index + 1, node)
+                nodeRow(index + 1, node).accessibilityIdentifier(SmokeID.upgradePlan)
             }
         } header: {
             Text("Nodes, in upgrade order (\(p.done) of \(p.nodes.count) done)")

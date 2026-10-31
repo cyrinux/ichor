@@ -387,6 +387,7 @@ private struct WorkloadsList: View {
             }
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
+            .accessibilityIdentifier(SmokeID.screen("workloads"))
         }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
         .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
