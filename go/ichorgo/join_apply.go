@@ -135,6 +135,8 @@ type nodeJoin struct {
 
 	applied bool   // the config was sent: Cancel cannot undo anything any more
 	node    string // where the installed node is followed
+	// answered: the installed node answered with the cluster's identity at least once.
+	answered bool
 	// replaced are the addresses of the members already named like the new node: never followed.
 	replaced []string
 }
@@ -295,7 +297,24 @@ func (j *nodeJoin) follow(ctx context.Context, s *session) error {
 
 	defer m.Close() //nolint:errcheck
 
-	t := joinTracker{controlPlane: j.req.role == joinRoleControlPlane, hostname: j.req.hostname, disk: j.req.installDisk}
+	return j.followFrom(ctx, s, m, j.tracker())
+}
+
+// followInstalled follows a node that got its config as cloud user data: it never was in
+// maintenance mode.
+func (j *nodeJoin) followInstalled(ctx context.Context, s *session) error {
+	t := j.tracker()
+	t.leftMaintenance = true
+
+	return j.followFrom(ctx, s, nil, t)
+}
+
+func (j *nodeJoin) tracker() joinTracker {
+	return joinTracker{controlPlane: j.req.role == joinRoleControlPlane, hostname: j.req.hostname, disk: j.req.installDisk}
+}
+
+// followFrom polls until the node joined; m is only read while t has not left maintenance.
+func (j *nodeJoin) followFrom(ctx context.Context, s *session, m *client.Client, t joinTracker) error {
 	var downSince time.Time
 
 	timer := time.NewTimer(j.interval)
@@ -312,6 +331,8 @@ func (j *nodeJoin) follow(ctx context.Context, s *session) error {
 		if ctx.Err() != nil {
 			continue
 		}
+
+		j.answered = j.answered || o.installed.reachable
 
 		if !o.maintenance && !o.installed.reachable {
 			if downSince.IsZero() {

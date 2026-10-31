@@ -45,6 +45,7 @@ class SettingsActions(
     val onChangelog: () -> Unit,
     val onLicenses: () -> Unit,
     val onSupportedIntegrations: () -> Unit,
+    val onPluginIndex: () -> Unit,
     val onFunding: () -> Unit,
     val onCleared: () -> Unit,
     /** Shows the demo tour again on the Talos demo home (adding the demo if it was removed). */
@@ -77,7 +78,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
             SettingsPage.ALERTS -> MonitoringSection(app)
             SettingsPage.AI -> AiSection(app)
             SettingsPage.GIT_HOSTS -> GitHostsSection(app)
-            SettingsPage.PLUGINS -> PluginsSection(app.pluginRepository, stores.uiPreferences)
+            SettingsPage.PLUGINS -> PluginsSection(app.pluginRepository, stores.uiPreferences, actions.onPluginIndex)
             // The row is hidden without the feature; a stale back stack entry shows an empty page.
             SettingsPage.KUBERNETES ->
                 summary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(stores.talos, stores.appLock, it) }

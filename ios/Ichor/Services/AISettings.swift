@@ -23,7 +23,8 @@ final class AISettings {
     }
 
     /// A provider on the network may ask for a pod's logs, an object's events or YAML. Not in a
-    /// backup: a file does not decide what the model may read on this device.
+    /// backup: a file does not decide what the model may read on this device. The stored value is
+    /// the person's choice because only this didSet writes it: never write it from init or a restore.
     var allowTools: Bool {
         didSet { UserDefaults.standard.set(allowTools, forKey: AIKeys.allowTools) }
     }
