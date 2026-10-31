@@ -171,7 +171,9 @@ case "$MODE" in
     # result bundles build/screenshots-dark.xcresult and -light, read by scripts/ios-screenshots.sh.
     # The same simulator and signing as `test`. The simulator is booted first, since appearance and
     # status bar only apply to a booted one, and the appearance takes effect on the next launch.
-    # No parallel testing: a clone of the simulator would have neither.
+    # No parallel testing: a clone of the simulator would have neither. A test is retried once: a
+    # busy runner can stall the simulator ("Timed out while evaluating UI query"), and one stall
+    # would throw away the whole walk; a screen that fails twice still fails the run.
     sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')
     [[ -n "$sim" ]] || { echo "no iPhone simulator available" >&2; exit 1; }
     adhoc=(CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=)
@@ -183,7 +185,8 @@ case "$MODE" in
         --wifiBars 3 --cellularBars 4
       rm -rf "build/screenshots-$appearance.xcresult"
       TEST_RUNNER_ICHOR_SCREENSHOTS=1 xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug \
-        -destination "id=$sim" -parallel-testing-enabled NO -only-testing:IchorUITests/DemoScreenshotTests \
+        -destination "id=$sim" -parallel-testing-enabled NO -retry-tests-on-failure -test-iterations 2 \
+        -only-testing:IchorUITests/DemoScreenshotTests \
         -resultBundlePath "build/screenshots-$appearance.xcresult" test-without-building
     done
     ;;
