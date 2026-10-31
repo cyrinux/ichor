@@ -32,11 +32,13 @@ final class LogsBackendTests: XCTestCase {
     }
 
     func testAddsAMatcherToALokiSelector() {
-        XCTAssertEqual(logSearchQuery(kind: logsKindLoki, "", label: "namespace", value: "demo"), #"{namespace="demo"}"#)
+        XCTAssertEqual(
+            logSearchQuery(kind: logsKindLoki, "", label: "namespace", value: "demo"), #"{namespace="demo"}"#)
         XCTAssertEqual(
             logSearchQuery(kind: logsKindLoki, #"{pod="a"} |= "x""#, label: "namespace", value: "demo"),
             #"{pod="a",namespace="demo"} |= "x""#)
-        XCTAssertEqual(logSearchQuery(kind: logsKindLoki, "{}", label: "namespace", value: "demo"), #"{namespace="demo"}"#)
+        XCTAssertEqual(
+            logSearchQuery(kind: logsKindLoki, "{}", label: "namespace", value: "demo"), #"{namespace="demo"}"#)
         XCTAssertEqual(logSearchQuery(kind: logsKindLoki, "x", label: "a", value: "b\"c"), #"{a="b\"c"} x"#)
     }
 

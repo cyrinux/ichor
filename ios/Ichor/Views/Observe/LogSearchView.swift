@@ -88,12 +88,12 @@ struct LogSearchView: View {
         return VStack(alignment: .leading, spacing: 8) {
             Text("From \(source.label)").font(.caption).foregroundStyle(.secondary)
             TextField(example, text: $query, axis: .vertical)
-            .monoFont()
-            .lineLimit(1...4)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .textFieldStyle(.roundedBorder)
-            .accessibilityLabel(Text("Query"))
+                .monoFont()
+                .lineLimit(1...4)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .textFieldStyle(.roundedBorder)
+                .accessibilityLabel(Text("Query"))
             actions
             rangePicker
             if !saved.isEmpty { savedQueries }
@@ -183,11 +183,11 @@ struct LogSearchView: View {
                 ContentUnavailableView {
                     Label("No log backend found", systemImage: "text.magnifyingglass")
                 } description: {
-                    Text(
-                        verbatim: discoveryError
-                            ?? String(
-                                localized: "Set the URL and token of your Loki or VictoriaLogs, or install one in the cluster."
-                            ))
+                    if let discoveryError {
+                        Text(verbatim: discoveryError)
+                    } else {
+                        Text("Set the URL and token of your Loki or VictoriaLogs, or install one in the cluster.")
+                    }
                 } actions: {
                     Button("Set up a source") { sourceOpen = true }.buttonStyle(.borderedProminent)
                     Button("Search again") { Task { await discover(autoSelect: true) } }
