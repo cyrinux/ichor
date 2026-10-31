@@ -7,11 +7,9 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -31,10 +29,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.util.StartupTrace
+import name.levis.ichor.security.AppLockGate
 import name.levis.ichor.security.LockOnboarding
-import name.levis.ichor.security.LockScreen
-import name.levis.ichor.security.SecurityKeyPromptHost
 import name.levis.ichor.security.lockRequired
+import name.levis.ichor.security.secureWhileLockIsOn
 import name.levis.ichor.data.ConfigUnreadableException
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
@@ -53,7 +51,6 @@ import name.levis.ichor.ui.debug.shellKey
 import name.levis.ichor.ui.design.IchorTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 // FragmentActivity (still a ComponentActivity) is required by BiometricPrompt.
@@ -99,17 +96,7 @@ class MainActivity : FragmentActivity() {
         )
         val app = application as TalosApp
 
-        // With the lock on, keep cluster data out of the recents thumbnail and screenshots,
-        // unless the user explicitly allowed screenshots.
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
-                combine(app.appLock.enabled, app.uiPreferences.allowScreenshots) { lock, allow -> lock && !allow }
-                    .collect { secure ->
-                    if (secure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                }
-            }
-        }
+        secureWhileLockIsOn(app)
 
         // Reopened from Recents, the task's first intent comes again: already handled then.
         val fromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
@@ -147,7 +134,8 @@ class MainActivity : FragmentActivity() {
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
             IchorTheme(themeMode, uiStyle, clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
-                    LockGate(app, LaunchTargets(deepLink, openCluster, backupFile, openShell, openTarget), onWiped = ::recreate)
+                    val targets = LaunchTargets(deepLink, openCluster, backupFile, openShell, openTarget)
+                    AppLockGate(app, onWiped = ::recreate) { Root(app, targets) }
                 }
             }
         }
@@ -246,41 +234,6 @@ private fun Intent.deepLink(): DeepLink? {
     // A long press on the Quick Settings tile (see ClusterTileService).
     if (action == TileService.ACTION_QS_TILE_PREFERENCES) return DeepLink.CHECKUP
     return DeepLink.named(getStringExtra(MainActivity.EXTRA_OPEN))
-}
-
-/**
- * Nothing (not even the encrypted config) is loaded before the first unlock. Later relocks
- * draw over the app so navigation state survives.
- */
-@Composable
-private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit) {
-    val locked by app.appLock.locked.collectAsStateWithLifecycle()
-    val everUnlocked by app.appLock.everUnlocked.collectAsStateWithLifecycle()
-    val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
-    // A panic app had the config deleted while this activity was alive.
-    LaunchedEffect(Unit) { app.appLock.configDeleted.collect { onWiped() } }
-
-    Box {
-        if (everUnlocked) Root(app, targets)
-        if (locked) {
-            LockScreen(
-                onUnlocked = { app.appLock.unlock() },
-                onWipe = {
-                    scope.launch {
-                        app.configRepository.clear()
-                        // Sealed with the lost keys too: unreadable for good.
-                        app.kubeAuthStore.clear()
-                        app.appLock.setEnabled(false)
-                        onWiped()
-                    }
-                },
-                securityKeys = securityKeys,
-            )
-        }
-        // The "tap your security key" dialog, over the lock screen or whatever asked for a check.
-        SecurityKeyPromptHost(app)
-    }
 }
 
 /**
