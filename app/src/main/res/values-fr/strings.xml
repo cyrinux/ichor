@@ -6019,6 +6019,12 @@
     <string name="fleet_empty">Aucun cluster pour l\'instant.</string>
     <string name="fleet_demo_hint">Les clusters fictifs de la démo : un appui revient à la démo.</string>
     <string name="fleet_one_cluster">La liste s\'allonge avec chaque cluster ajouté.</string>
+    <string name="clusters_menu_tags">Étiquettes…</string>
+    <string name="cluster_tags_title">Étiquettes de %1$s</string>
+    <string name="cluster_tags_label">Étiquettes</string>
+    <string name="cluster_tags_hint">Séparées par des virgules. Gardées sur cet appareil et dans les sauvegardes, jamais dans la configuration.</string>
+    <string name="cluster_tags_suggestions">Utilisées sur d\'autres clusters</string>
+    <string name="fleet_filter_untagged">Sans étiquette</string>
     <string name="alert_rules_title">Règles</string>
     <string name="alert_rules_hint">Appliquées à chaque vérification : une alerte levée pendant les heures calmes n\'est pas renvoyée quand elles se terminent.</string>
     <string name="alert_rules_quiet">Heures calmes</string>

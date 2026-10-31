@@ -104,6 +104,8 @@ data class BackupCluster(
     val auditEvents: Boolean = false,
     /** An on-call integration is set up for it: only that, its token never leaves the device. */
     val oncallSet: Boolean = false,
+    /** The tags the user gave it; absent in older backups, ignored by older apps. */
+    val tags: List<String> = emptyList(),
 )
 
 @Serializable
@@ -167,6 +169,7 @@ fun backupClusters(
     repos: Map<String, ClusterRepo> = emptyMap(),
     auditEvents: Set<String> = emptySet(),
     oncallSet: Set<String> = emptySet(),
+    tags: Map<String, List<String>> = emptyMap(),
 ): Map<String, BackupCluster> = fingerprints.filter { it.isNotBlank() }.distinct().associateWith { fp ->
     BackupCluster(
         name = names[fp],
@@ -180,6 +183,7 @@ fun backupClusters(
         repository = repos[fp]?.let { BackupClusterRepo(it.repoURL, it.branch, it.talosDir, it.kubernetesDir) },
         auditEvents = fp in auditEvents,
         oncallSet = fp in oncallSet,
+        tags = tags[fp].orEmpty(),
     )
 }
 
@@ -198,6 +202,8 @@ data class RestoredClusters(
     val repos: Map<String, ClusterRepo> = emptyMap(),
     /** The clusters that record actions. */
     val auditEvents: Set<String> = emptySet(),
+    /** Normalized like typed ones; a cluster with none is left out. */
+    val tags: Map<String, List<String>> = emptyMap(),
 )
 
 /** [clusters] narrowed to [fingerprints] (the restored config's) and validated. */
@@ -219,6 +225,7 @@ fun restoredClusters(clusters: Map<String, BackupCluster>, fingerprints: List<St
             c.repository?.let { normalizeClusterRepo(ClusterRepo(it.repoURL, it.branch, it.talosDir, it.kubernetesDir)) }?.let { fp to it }
         }.toMap(),
         auditEvents = known.filterValues { it.auditEvents }.keys,
+        tags = known.mapValues { (_, c) -> normalizeTags(c.tags.joinToString(",")) }.filterValues { it.isNotEmpty() },
     )
 }
 

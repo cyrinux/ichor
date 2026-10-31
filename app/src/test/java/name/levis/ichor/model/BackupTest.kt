@@ -42,6 +42,26 @@ class BackupTest {
     }
 
     @Test
+    fun tagsRoundTripAndAreCheckedLikeTypedOnes() {
+        val saved = backupClusters(
+            listOf("aaaa", "bbbb"), emptyMap(), emptyMap(), emptySet(), emptyMap(), emptyMap(),
+            tags = mapOf("aaaa" to listOf("prod", "eu"), "gone" to listOf("old")),
+        )
+        assertEquals(listOf("prod", "eu"), saved.getValue("aaaa").tags)
+        assertTrue(saved.getValue("bbbb").tags.isEmpty())
+
+        val json = TalosJson.encodeToString(BackupCluster.serializer(), saved.getValue("aaaa"))
+        val back = TalosJson.decodeFromString(BackupCluster.serializer(), json)
+        assertEquals(mapOf("aaaa" to listOf("prod", "eu")), restoredClusters(mapOf("aaaa" to back), listOf("aaaa")).tags)
+
+        val messy = restoredClusters(mapOf("aaaa" to BackupCluster(tags = listOf(" PROD ", "prod", ""))), listOf("aaaa"))
+        assertEquals(mapOf("aaaa" to listOf("prod")), messy.tags)
+        // An older backup has no tags.
+        val older = TalosJson.decodeFromString(BackupCluster.serializer(), """{"name":"Home"}""")
+        assertTrue(restoredClusters(mapOf("aaaa" to older), listOf("aaaa")).tags.isEmpty())
+    }
+
+    @Test
     fun restoredClustersDropsUnknownAndInvalidEntries() {
         val restored = restoredClusters(
             mapOf(

@@ -42,7 +42,8 @@ tour** shows it again.
   policies, virtual machines, capacity, live events and Alertmanager (acknowledge or resolve the
   PagerDuty incident from the alert), with RBAC checked before you tap. Clusters come from a kubeconfig or a cloud account: EKS, GKE, AKS, DigitalOcean,
   Rancher, Omni, OIDC. The `?` on the add screen says what each way in needs: a cloud
-  account, a kubeconfig or a Talos identity for the phone.
+  account, a kubeconfig or a Talos identity for the phone. Tag clusters (prod, staging, a region)
+  and filter the list of all clusters by tag.
 - **GitOps:** Argo CD and Flux apps with the diff a sync would apply, Argo Rollouts, the files
   an app deploys at the revision the cluster runs, edits reviewed and opened as pull requests,
   a cluster repository for Talos machine config patches, offered a dependency-update bot

@@ -81,6 +81,8 @@ class BackupManager(
     private val auditEvents: AuditEventClusters? = null,
     /** Whether a cluster has an on-call integration on this device; the backup only says that. */
     private val onCallSet: (String) -> Boolean = { false },
+    /** The tags given to clusters; null leaves them out. */
+    private val tags: ClusterTags? = null,
 ) {
     /**
      * The backup file of the stored config and settings, sealed as [seal] says (the app's format,
@@ -129,6 +131,7 @@ class BackupManager(
                     clusterRepos.repos.value,
                     auditEvents?.fingerprints?.value.orEmpty(),
                     fingerprints.filter(onCallSet).toSet(),
+                    tags?.tags?.value.orEmpty(),
                 ),
                 kubeAuth = backupKubeAuth(signInKeys(stored.summary.contexts), kubeAuth.all(), Ichorgo::kubeAuthForBackup),
                 // The real scope only (pinScope with screenshot mode off): masked pins hold made-up names.
@@ -191,6 +194,7 @@ class BackupManager(
         restored.colors.forEach { (fp, color) -> colors.set(fp, color) }
         fingerprints.forEach { fp ->
             names.set(fp, restored.names[fp].orEmpty())
+            tags?.set(fp, restored.tags[fp].orEmpty())
             vpnOnly.set(fp, fp in restored.vpnOnly)
             auditEvents?.set(fp, fp in restored.auditEvents)
             // Checked like a typed one: an address the Go core refuses is dropped.

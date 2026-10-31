@@ -24,6 +24,7 @@ final class AppModel {
         static let contextIndex = "activeContextIndex"
         static let clusterColors = "clusterColors"
         static let clusterNames = "clusterNames"
+        static let clusterTags = "clusterTags"
         static let kubeServers = "kubeServers"
         static let kubeAccess = "kubeAccess"
         static let snapshotKeys = "snapshotKeys"
@@ -84,6 +85,10 @@ final class AppModel {
     /// importing it again still updates the same cluster.
     private(set) var clusterNames: [String: String]
 
+    /// The tags the user gave clusters ("prod", "eu"), by context fingerprint. Only on this
+    /// device and in backups, never in the config.
+    private(set) var clusterTags: [String: [String]]
+
     /// The Kubernetes API address the user set for clusters, by context fingerprint, to use
     /// instead of the one in the cluster's kubeconfig (checked by TalosClient.normalizeKubeServer).
     private(set) var kubeServers: [String: String]
@@ -120,6 +125,7 @@ final class AppModel {
         self.git = git
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
+        clusterTags = UserDefaults.standard.dictionary(forKey: Keys.clusterTags) as? [String: [String]] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
         kubeAccess = UserDefaults.standard.dictionary(forKey: Keys.kubeAccess) as? [String: String] ?? [:]
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
@@ -171,6 +177,18 @@ final class AppModel {
         var names = clusterNames
         names[context.fingerprint] = normalizeClusterName(input)
         storeNames(names)
+    }
+
+    /// Gives `context`'s cluster (all its contexts, so a fleet row finds them whichever was
+    /// checked) the tags typed in `input`.
+    func setTags(_ input: String, for context: ContextSummary) {
+        guard !context.fingerprint.isEmpty else { return }
+        let tags = normalizeTags(input)
+        var saved = clusterTags
+        for fingerprint in clusterFingerprints(of: context, contexts: summary?.contexts ?? []) {
+            saved[fingerprint] = tags.isEmpty ? nil : tags
+        }
+        storeTags(saved)
     }
 
     /// Sets the Kubernetes API address of `context` (`server` already normalized, "" for the kubeconfig's).
@@ -238,6 +256,14 @@ final class AppModel {
         guard servers != kubeServers else { return }
         kubeServers = servers
         UserDefaults.standard.set(servers, forKey: Keys.kubeServers)
+    }
+
+    // Internal, not private: AppModel+Clusters.swift uses it.
+
+    func storeTags(_ tags: [String: [String]]) {
+        guard tags != clusterTags else { return }
+        clusterTags = tags
+        UserDefaults.standard.set(tags, forKey: Keys.clusterTags)
     }
 
     // Internal, not private: AppModel+Clusters.swift uses it.

@@ -91,6 +91,8 @@ struct ClustersView: View {
     @State private var removing: ContextSummary?
     @State private var renaming: ContextSummary?
     @State private var newName = ""
+    /// The cluster whose tags sheet is open.
+    @State private var tagging: ContextSummary?
     @State private var error: String?
     @State private var editingEndpoints: ContextSummary?
     /// The cluster whose repository sheet is open.
@@ -167,6 +169,7 @@ struct ClustersView: View {
                 context: context, label: model.labels.of(context), saved: git.repos[context.fingerprint])
         }
         .sheet(item: $editingOnCall) { OnCallSheet(fingerprint: $0.fingerprint) }
+        .sheet(item: $tagging) { ClusterTagsSheet(context: $0) }
         .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
         .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }
         .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
@@ -274,6 +277,7 @@ struct ClustersView: View {
                                 .font(.caption)
                                 .foregroundStyle(Color.secondary)
                         }
+                        tagChips(context)
                     }
                     Spacer()
                 }
@@ -309,6 +313,24 @@ struct ClustersView: View {
                     Label("Rename", systemImage: "pencil")
                 }
             }
+        }
+    }
+
+    /// The cluster's tags under its name. Shown in screenshot mode too: they are the user's words.
+    @ViewBuilder
+    private func tagChips(_ context: ContextSummary) -> some View {
+        let tags = clusterTagsOf(
+            saved: model.clusterTags,
+            fingerprints: clusterFingerprints(of: context, contexts: model.summary?.contexts ?? []))
+        if !tags.isEmpty {
+            Text(verbatim: tags.joined(separator: " · "))
+                .font(.caption2)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color.secondary.opacity(0.14), in: RoundedRectangle(cornerRadius: 6))
+                .foregroundStyle(Color.secondary)
+                .accessibilityLabel(Text("Tags"))
+                .accessibilityValue(Text(verbatim: tags.joined(separator: ", ")))
         }
     }
 
@@ -367,6 +389,13 @@ struct ClustersView: View {
                 startRenaming(context)
             } label: {
                 Label("Rename", systemImage: "pencil")
+            }
+        }
+        if !context.demo && !context.fingerprint.isEmpty {
+            Button {
+                tagging = context
+            } label: {
+                Label("Tags…", systemImage: "tag")
             }
         }
         // The demo's repository is built in.

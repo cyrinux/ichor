@@ -14,12 +14,15 @@ struct FleetView: View {
     @State private var failed = false
     @State private var refreshing = false
     @State private var now = Date()
+    /// The tags the list is filtered by, kept for the next time (encodeTagFilter).
+    @AppStorage("fleetTagFilter") private var tagFilter = ""
     private let alertsOn = BackgroundMonitor.alertsEnabled
 
-    /// What the list is read again for: a rename, screenshot mode, a cluster added or removed.
+    /// What the list is read again for: a rename, new tags, screenshot mode, a cluster added or removed.
     private struct Inputs: Equatable {
         let labels: ClusterLabels
         let contexts: [String]
+        let tags: [String: [String]]
     }
 
     var body: some View {
@@ -29,6 +32,7 @@ struct FleetView: View {
             if let summary, !summary.clusters.isEmpty {
                 Section {
                     Text(verbatim: summaryLine(summary.counts)).font(.footnote).foregroundStyle(.secondary)
+                    if summary.groups.contains(where: { !$0.tag.isEmpty }) { tagChips(summary.groups) }
                     if !alertsOn && !demo { alertsOff }
                     if demo {
                         Text("The demo's made-up clusters: a tap goes back to the demo.")
@@ -36,7 +40,10 @@ struct FleetView: View {
                     }
                 }
                 Section {
-                    ForEach(summary.clusters) { row in
+                    ForEach(
+                        fleetRowsWithTags(
+                            summary.clusters, groups: summary.groups, selected: decodeTagFilter(tagFilter))
+                    ) { row in
                         let cluster = contexts.first { $0.name == row.context && !$0.demo }
                         Button {
                             open(cluster)
@@ -71,7 +78,7 @@ struct FleetView: View {
             }
         }
         // Read again on open, on each change of names or clusters, and once a minute (the ages).
-        .task(id: Inputs(labels: model.labels, contexts: contexts.map(\.name))) {
+        .task(id: Inputs(labels: model.labels, contexts: contexts.map(\.name), tags: model.clusterTags)) {
             while !Task.isCancelled {
                 await load()
                 try? await Task.sleep(for: .seconds(60))
@@ -98,6 +105,38 @@ struct FleetView: View {
         }
     }
 
+    /// One chip per tag with its attention count, "Untagged" for the clusters without any: several
+    /// can be on, a cluster shows when it is in any of them. Same as Android's FleetTagFilter.
+    private func tagChips(_ groups: [FleetGroup]) -> some View {
+        let active = activeTagFilter(groups: groups, selected: decodeTagFilter(tagFilter))
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(groups, id: \.tag) { group in
+                    let on = active.contains(group.tag)
+                    Button {
+                        tagFilter = encodeTagFilter(on ? active.subtracting([group.tag]) : active.union([group.tag]))
+                    } label: {
+                        Text(verbatim: chipLabel(group))
+                            .font(.footnote)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                on ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.12), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+        }
+    }
+
+    /// "prod · Need attention: 2", or the tag alone when all is well.
+    private func chipLabel(_ group: FleetGroup) -> String {
+        let tag = group.tag.isEmpty ? String(localized: "Untagged") : group.tag
+        let attention = group.counts.needAttention
+        return attention > 0 ? "\(tag) · " + String(localized: "Need attention: \(attention)") : tag
+    }
+
     /// "Need attention: 2 · Not checked: 1 · Fine: 5", without the zeros.
     private func summaryLine(_ counts: FleetCounts) -> String {
         [
@@ -122,7 +161,8 @@ struct FleetView: View {
             } else {
                 let entries = fleetEntries(
                     snapshots: SharedStore.snapshots(activeCluster: model.activeSummary.map(monitorClusterKey)),
-                    reachability: BackgroundMonitor.reachability(), contexts: contexts, labels: model.labels)
+                    reachability: BackgroundMonitor.reachability(), contexts: contexts, labels: model.labels,
+                    tags: model.clusterTags)
                 summary = try await TalosClient.fleetSummary(entries: entries, now: at)
             }
             failed = false

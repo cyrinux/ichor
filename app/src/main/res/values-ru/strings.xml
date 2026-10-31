@@ -6276,6 +6276,12 @@
     <string name="fleet_empty">Кластеров пока нет.</string>
     <string name="fleet_demo_hint">Вымышленные кластеры демо: касание возвращает в демо.</string>
     <string name="fleet_one_cluster">Список растёт с каждым добавленным кластером.</string>
+    <string name="clusters_menu_tags">Теги…</string>
+    <string name="cluster_tags_title">Теги %1$s</string>
+    <string name="cluster_tags_label">Теги</string>
+    <string name="cluster_tags_hint">Через запятую. Хранятся на этом устройстве и в резервных копиях, но не в конфигурации.</string>
+    <string name="cluster_tags_suggestions">Используются на других кластерах</string>
+    <string name="fleet_filter_untagged">Без тега</string>
     <string name="alert_rules_title">Правила</string>
     <string name="alert_rules_hint">Применяются при каждой проверке: оповещение, возникшее в тихие часы, не отправляется повторно после их окончания.</string>
     <string name="alert_rules_quiet">Тихие часы</string>

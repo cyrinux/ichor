@@ -6019,6 +6019,12 @@
     <string name="fleet_empty">Ancora nessun cluster.</string>
     <string name="fleet_demo_hint">I cluster inventati della demo: un tocco torna alla demo.</string>
     <string name="fleet_one_cluster">L\'elenco cresce con ogni cluster che aggiungi.</string>
+    <string name="clusters_menu_tags">Etichette…</string>
+    <string name="cluster_tags_title">Etichette di %1$s</string>
+    <string name="cluster_tags_label">Etichette</string>
+    <string name="cluster_tags_hint">Separate da virgole. Restano su questo dispositivo e nei backup, mai nella configurazione.</string>
+    <string name="cluster_tags_suggestions">Usate su altri cluster</string>
+    <string name="fleet_filter_untagged">Senza etichetta</string>
     <string name="alert_rules_title">Regole</string>
     <string name="alert_rules_hint">Applicate a ogni controllo: un avviso scattato durante le ore di silenzio non viene inviato di nuovo quando finiscono.</string>
     <string name="alert_rules_quiet">Ore di silenzio</string>

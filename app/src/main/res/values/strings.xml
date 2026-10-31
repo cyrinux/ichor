@@ -6024,6 +6024,12 @@
     <string name="fleet_empty">No cluster yet.</string>
     <string name="fleet_demo_hint">The demo\'s made-up clusters: a tap goes back to the demo.</string>
     <string name="fleet_one_cluster">The list grows with each cluster you add.</string>
+    <string name="clusters_menu_tags">Tags…</string>
+    <string name="cluster_tags_title">Tags of %1$s</string>
+    <string name="cluster_tags_label">Tags</string>
+    <string name="cluster_tags_hint">Separated by commas. Kept on this device and in backups, never in the config.</string>
+    <string name="cluster_tags_suggestions">Used on other clusters</string>
+    <string name="fleet_filter_untagged">Untagged</string>
     <string name="fleet_track_etcd" translatable="false">etcd</string>
     <string name="alert_rules_title">Rules</string>
     <string name="alert_rules_hint">Applied at each check: an alert raised during quiet hours is not posted again once they end.</string>

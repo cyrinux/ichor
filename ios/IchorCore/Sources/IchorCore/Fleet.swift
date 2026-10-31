@@ -45,13 +45,13 @@ public struct FleetEntry: Encodable, Equatable, Sendable {
     /// `snapshot` nil: a cluster not checked yet.
     init(
         key: String, name: String, context: String, kube: Bool, snapshot: ClusterSnapshot?, failures: Int,
-        masked: Bool
+        masked: Bool, tags: [String] = []
     ) {
         self.key = key
         self.name = name
         self.context = context
         self.kube = kube || snapshot?.kube == true
-        tags = []
+        self.tags = tags
         takenAt = snapshot.map { Int64(($0.takenAt.timeIntervalSince1970 * 1000).rounded()) } ?? 0
         self.failures = failures
         nodes = (snapshot?.nodes ?? [:]).mapValues {
@@ -99,10 +99,11 @@ public func demoFleetOnly(_ contexts: [ContextSummary]) -> Bool {
 /// The fleet screen's input: one entry per cluster of `contexts` (the demo left out: its own
 /// snapshot exists only while it is on screen), keyed and stored by monitorClusterKey, from the
 /// snapshot the monitor kept; a cluster with none yet has takenAt 0 (never checked). Names as
-/// the app shows them (`labels`); in screenshot mode the hostnames are left out too.
+/// the app shows them (`labels`); in screenshot mode the hostnames are left out too. `tags` by
+/// fingerprint, the user's words: shown even in screenshot mode.
 public func fleetEntries(
     snapshots: [String: ClusterSnapshot], reachability: [String: Reachability], contexts: [ContextSummary],
-    labels: ClusterLabels
+    labels: ClusterLabels, tags: [String: [String]] = [:]
 ) -> [FleetEntry] {
     var seen = Set<String>()
     return contexts.filter { !$0.demo }.compactMap { context in
@@ -110,7 +111,8 @@ public func fleetEntries(
         guard seen.insert(key).inserted else { return nil }
         return FleetEntry(
             key: key, name: labels.of(context), context: context.name, kube: context.isKube,
-            snapshot: snapshots[key], failures: reachability[key]?.misses ?? 0, masked: labels.masked)
+            snapshot: snapshots[key], failures: reachability[key]?.misses ?? 0, masked: labels.masked,
+            tags: clusterTagsOf(saved: tags, fingerprints: clusterFingerprints(of: context, contexts: contexts)))
     }
 }
 
@@ -122,7 +124,7 @@ public enum FleetTone: String, WireEnum, Sendable, CaseIterable {
 }
 
 /// The fleet screen's list (FleetSummary): the rows worst first, the tone counts, the worst
-/// tone (unknown for an empty fleet) and one group per tag (drawn by a later step).
+/// tone (unknown for an empty fleet) and one group per tag (the filter chips).
 public struct FleetSummary: Decodable, Equatable, Sendable {
     public let clusters: [FleetRow]
     public let counts: FleetCounts

@@ -116253,6 +116253,76 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ответы ИИ могут быть ошибочными. Проверяйте команду перед запуском, особенно если она сбрасывает узел или изменяет etcd." } }
       }
     },
+    "Tags…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tags…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Etiquetas…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Étiquettes…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Etichette…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タグ…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tags…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Теги…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Теги…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签…" } }
+      }
+    },
+    "Tags of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tags von %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Etiquetas de %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Étiquettes de %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Etichette di %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のタグ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tags de %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Теги %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Теги %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 的标签" } }
+      }
+    },
+    "Separated by commas. Kept on this device and in backups, never in the config." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Durch Kommas getrennt. Bleiben auf diesem Gerät und in Backups, nie in der Konfiguration." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Separadas por comas. Se guardan en este dispositivo y en las copias de seguridad, nunca en la configuración." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Séparées par des virgules. Gardées sur cet appareil et dans les sauvegardes, jamais dans la configuration." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Separate da virgole. Restano su questo dispositivo e nei backup, mai nella configurazione." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カンマで区切ります。この端末とバックアップにのみ保存され、設定には書き込まれません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Separadas por vírgulas. Ficam neste dispositivo e nos backups, nunca na configuração." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Через запятую. Хранятся на этом устройстве и в резервных копиях, но не в конфигурации." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Через кому. Зберігаються на цьому пристрої та в резервних копіях, але не в конфігурації." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "以逗号分隔。仅保存在此设备和备份中，绝不写入配置。" } }
+      }
+    },
+    "Used on other clusters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf anderen Clustern verwendet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usadas en otros clústeres" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utilisées sur d'autres clusters" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Usate su altri cluster" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "他のクラスターで使用中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Usadas em outros clusters" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Используются на других кластерах" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Використовуються на інших кластерах" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "其他集群使用的标签" } }
+      }
+    },
+    "Untagged" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ohne Tag" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin etiqueta" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sans étiquette" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Senza etichetta" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タグなし" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem tag" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Без тега" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Без тегу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无标签" } }
+      }
+    },
     "Rename %@" : {
       "extractionState" : "manual",
       "localizations" : {

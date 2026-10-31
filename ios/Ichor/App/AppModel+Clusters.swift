@@ -141,10 +141,12 @@ extension AppModel {
     func restoreClusterSettings(
         names: [String: String], colors: [String: Int], kubeServers servers: [String: String],
         vpnOnly restoredVpnOnly: Set<String> = [], kubeAccess links: [String: String] = [:],
-        repos: [String: ClusterRepo] = [:], auditEvents restoredAuditEvents: Set<String> = []
+        repos: [String: ClusterRepo] = [:], auditEvents restoredAuditEvents: Set<String> = [],
+        tags: [String: [String]] = [:]
     ) {
         storeColors(clusterColors.merging(colors) { _, new in new })
         storeNames(names)
+        storeTags(tags)
         storeKubeServers(servers)
         settings.storeVpnOnly(restoredVpnOnly)
         settings.storeAuditEventClusters(restoredAuditEvents)
@@ -369,6 +371,7 @@ extension AppModel {
         // Every cluster gets a color of its own; removed ones are forgotten.
         storeColors(assignClusterColors(saved: clusterColors, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeTags(keepClusterTags(saved: clusterTags, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSkippedTalosUpdates(

@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Router
+import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.VpnLock
 import name.levis.ichor.ui.design.IchorAlertDialog
@@ -94,12 +95,14 @@ import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.KUBE_AUTH_TOKEN
 import name.levis.ichor.model.accessLabel
 import name.levis.ichor.model.clusterGroups
+import name.levis.ichor.model.clusterTagsOf
 import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.parseCloudContext
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
+import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.ui.components.BundledLogo
 import name.levis.ichor.ui.components.ClusterLogo
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -274,7 +277,12 @@ fun ClusterSheet(
     onKubeServer: ((ContextSummary, String) -> Unit)? = null,
     /** "All clusters" at the top (the fleet view); null: not offered. */
     onFleet: (() -> Unit)? = null,
+    /** The tags given to clusters, by fingerprint. */
+    tags: Map<String, List<String>> = emptyMap(),
+    /** Saves a line of tags typed for a cluster; null: not offered. */
+    onTags: ((ContextSummary, String) -> Unit)? = null,
 ) {
+    var tagging by remember { mutableStateOf<ContextSummary?>(null) }
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var addressing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
@@ -307,6 +315,8 @@ fun ClusterSheet(
                     // Not in screenshot mode: the dialog would show the given name.
                     onRename = { renaming = context }.takeIf { !labels.masked && context.fingerprint.isNotBlank() },
                     onColor = { coloring = context },
+                    tags = clusterTagsOf(tags, clusterFingerprints(config.summary, context)),
+                    onTags = { tagging = context }.takeIf { onTags != null && context.fingerprint.isNotBlank() && !context.demo },
                     vpnOnly = context.fingerprint in vpnOnly,
                     onVpnOnly = { on: Boolean -> onVpnOnly(context, on) }.takeIf { context.fingerprint.isNotBlank() },
                     watched = context.fingerprint !in unwatched,
@@ -399,6 +409,21 @@ fun ClusterSheet(
         )
     }
 
+    tagging?.let { context ->
+        val own = clusterFingerprints(config.summary, context)
+        ClusterTagsDialog(
+            label = labels.of(context),
+            current = clusterTagsOf(tags, own),
+            saved = tags,
+            own = own,
+            onSave = {
+                onTags?.invoke(context, it)
+                tagging = null
+            },
+            onDismiss = { tagging = null },
+        )
+    }
+
     coloring?.let { context ->
         ClusterColorDialog(
             name = labels.of(context),
@@ -437,6 +462,8 @@ private fun ClusterRow(
     onSelect: () -> Unit,
     onRename: (() -> Unit)?,
     onColor: () -> Unit,
+    tags: List<String>,
+    onTags: (() -> Unit)?,
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
     watched: Boolean,
@@ -488,6 +515,7 @@ private fun ClusterRow(
                     )
                 }
                 if (signInNeeded) Text(stringResource(R.string.kube_signin_needed), color = LocalStatusColors.current.warn)
+                if (tags.isNotEmpty()) ClusterTagChips(tags)
             }
         },
         leadingContent = { ClusterLogo(context, color, selected) },
@@ -498,6 +526,7 @@ private fun ClusterRow(
                 label = label,
                 onRename = onRename,
                 onColor = onColor,
+                onTags = onTags,
                 vpnOnly = vpnOnly,
                 onVpnOnly = onVpnOnly,
                 watched = watched,
@@ -529,6 +558,7 @@ private fun ClusterRowMenu(
     label: String,
     onRename: (() -> Unit)?,
     onColor: () -> Unit,
+    onTags: (() -> Unit)?,
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
     watched: Boolean,
@@ -565,6 +595,13 @@ private fun ClusterRowMenu(
                 leadingIcon = { Icon(Icons.Outlined.Palette, contentDescription = null) },
                 onClick = item(onColor),
             )
+            onTags?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.clusters_menu_tags)) },
+                    leadingIcon = { Icon(Icons.Outlined.Sell, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
             onVpnOnly?.let { toggle ->
                 // A setting, not an action: the menu stays open to show it changed.
                 DropdownMenuItem(

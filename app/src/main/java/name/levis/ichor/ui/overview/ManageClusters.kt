@@ -2,6 +2,7 @@ package name.levis.ichor.ui.overview
 
 import name.levis.ichor.selectCluster
 import name.levis.ichor.renameCluster
+import name.levis.ichor.setClusterTags
 import name.levis.ichor.setVpnOnly
 import name.levis.ichor.setWatched
 import name.levis.ichor.setAuditEvents
@@ -54,6 +55,7 @@ fun ManageClustersSheet(
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
+    val tags by app.clusterTags.tags.collectAsStateWithLifecycle()
     val unwatched by app.unwatchedClusters.fingerprints.collectAsStateWithLifecycle()
     val auditEvents by app.auditEventClusters.fingerprints.collectAsStateWithLifecycle()
     val kubeServers by app.kubeServers.servers.collectAsStateWithLifecycle()
@@ -80,6 +82,8 @@ fun ManageClustersSheet(
             app.selectCluster(it)
         },
         onRename = { cluster, name -> app.renameCluster(cluster.fingerprint, name) },
+        tags = tags,
+        onTags = app::setClusterTags,
         onColor = { cluster, color -> app.clusterColors.set(cluster.fingerprint, color) },
         vpnOnly = vpnOnly,
         onVpnOnly = { cluster, on -> app.setVpnOnly(cluster.fingerprint, on) },

@@ -16,7 +16,6 @@ import name.levis.ichor.data.RunbookManager
 import name.levis.ichor.data.RunbookRepository
 import name.levis.ichor.data.CARotationManager
 import name.levis.ichor.data.PodSweepManager
-import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.ClusterRepoStore
 import name.levis.ichor.data.StagedEdits
 import name.levis.ichor.data.ProposalsStore
@@ -58,7 +57,6 @@ import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.GitHostStore
-import name.levis.ichor.model.BackupLockMode
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.GoCall
 import name.levis.ichor.data.GoogleTokenRenewer
@@ -92,7 +90,6 @@ import name.levis.ichor.monitor.toOverviewSeed
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.data.realFingerprint
-import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.SecurityKeyPrompts
@@ -111,6 +108,7 @@ import name.levis.ichor.data.ClusterUpgradeManager
 import name.levis.ichor.data.ConfigTryManager
 import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.ClusterNames
+import name.levis.ichor.data.ClusterTags
 import name.levis.ichor.data.AlertRulesRepository
 import name.levis.ichor.data.FleetRepository
 import name.levis.ichor.data.WakeOnLanStore
@@ -362,6 +360,7 @@ class TalosApp : Application() {
 
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
+    val clusterTags by lazy { ClusterTags(getSharedPreferences(ClusterTags.FILE, Context.MODE_PRIVATE)) }
     val wakeOnLan by lazy {
         val sealed = KeystoreValue(java.io.File(noBackupFilesDir, "wake-on-lan.enc"), "ichor-wake-on-lan")
         WakeOnLanStore.migrate(
@@ -495,24 +494,7 @@ class TalosApp : Application() {
     val localModelHost by lazy { LocalModelHost(localModels, ProcessLifecycleOwner.get().lifecycleScope) }
 
     /** Passphrase-sealed backups of the config and settings, restorable on another device (Android or iOS). */
-    val backupManager by lazy {
-        BackupManager(
-            configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, kubeAccess, kubeAuthStore, wakeOnLan, monitorStore,
-            pinStore, gitHostStore, aiPreferences, clusterRepos,
-            lockMode = { BackupLockMode.of(appLock.enabled.value, appLock.securityKeys.value != null) },
-            setPrivacyMask = this::setPrivacyMask,
-            notificationsAllowed = { canPostNotifications(this) },
-            onRestored = {
-                applyAuditEventClusters()
-                talosRepository.invalidate()
-                forgetShownCluster()
-            },
-            proposals = proposals,
-            plugins = pluginRepository,
-            auditEvents = auditEventClusters,
-            onCallSet = { onCallStore.read(it).isSet },
-        )
-    }
+    val backupManager by lazy { newBackupManager() }
 
     /** Re-evaluates whether background monitoring should run (alerts on or widget placed). */
     fun launchSync(runNow: Boolean = false) {
@@ -653,6 +635,7 @@ class TalosApp : Application() {
                 stored?.let {
                     clusterColors.sync(it.summary)
                     clusterNames.sync(it.summary)
+                    clusterTags.sync(it.summary)
                     wakeOnLan.sync(it.summary)
                     // Rewrites a sealed file (a Keystore call): off the main thread, its store is locked.
                     launch(Dispatchers.IO) { publicIps.sync(it.summary) }

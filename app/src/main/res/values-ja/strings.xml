@@ -5883,6 +5883,12 @@
     <string name="fleet_empty">クラスターはまだありません。</string>
     <string name="fleet_demo_hint">デモの架空のクラスター: タップするとデモに戻ります。</string>
     <string name="fleet_one_cluster">クラスターを追加するたびに一覧が増えます。</string>
+    <string name="clusters_menu_tags">タグ…</string>
+    <string name="cluster_tags_title">%1$s のタグ</string>
+    <string name="cluster_tags_label">タグ</string>
+    <string name="cluster_tags_hint">カンマで区切ります。この端末とバックアップにのみ保存され、設定には書き込まれません。</string>
+    <string name="cluster_tags_suggestions">他のクラスターで使用中</string>
+    <string name="fleet_filter_untagged">タグなし</string>
     <string name="alert_rules_title">ルール</string>
     <string name="alert_rules_hint">チェックのたびに適用されます。おやすみ時間中に発生したアラートは、終了後に改めて通知されません。</string>
     <string name="alert_rules_quiet">おやすみ時間</string>
