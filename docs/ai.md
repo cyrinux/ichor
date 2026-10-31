@@ -88,8 +88,10 @@ and never contacts a model provider.
   mode, and in anonymized mode through its mask and the sweep, on all of the text: a single plain word
   in a log line can still pass, as in the report. In `object_yaml`, every string value is treated as
   a name, the values of environment variables and what follows a flag named like a secret are
-  hidden. The health check helper never asks. *Let the model ask for more* in Settings → AI diagnosis
-  turns it off, and is not kept in a backup. A server that refuses the `tools` parameter is asked
+  hidden. The health check helper never asks. All of this is off by default: *Let the model ask for
+  more* in Settings → AI diagnosis turns it on; off, the model answers from the report alone. The
+  switch is not kept in a backup. Updating to this version turns it off for anyone who never chose,
+  and on Android a choice made earlier has to be made again. A server that refuses the `tools` parameter is asked
   again without it, and the answer says so.
 - **Check the answer:** a model can be wrong. Read a command before running it, especially one
   that resets a node or changes etcd membership.
