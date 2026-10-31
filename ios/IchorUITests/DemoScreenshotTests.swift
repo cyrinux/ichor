@@ -78,10 +78,7 @@ final class DemoScreenshotTests: XCTestCase {
 
         // The start button is at the end of the options, and enabled once an interface is known.
         let app = open("demo", screen: "capture")
-        let start = reveal(ID.captureStart, in: app)
-        let enabled = NSPredicate(format: "isEnabled == true")
-        wait(for: [expectation(for: enabled, evaluatedWith: start)], timeout: demoWalkTimeout)
-        start.tap()
+        revealEnabled(ID.captureStart, in: app).tap()
         capture("capture", settle: Settle.capture)
     }
 
@@ -96,18 +93,26 @@ final class DemoScreenshotTests: XCTestCase {
         capture("feature-kube-home", settle: Settle.feature)
     }
 
-    /// Swipes up until `id` lies inside the window. By its frame, not isHittable: asked of a row
-    /// of a Form that is still off screen, isHittable fails the test instead of answering.
+    /// Swipes up until `id` lies inside the window, enabled, on two looks in a row: the options load
+    /// late and can push a Form row back off screen, where the list drops it. Through snapshots,
+    /// which answer for a missing element: frame, isHittable or tap fail the test on one.
     @MainActor
-    private func reveal(_ id: String, in app: XCUIApplication) -> XCUIElement {
+    private func revealEnabled(_ id: String, in app: XCUIApplication) -> XCUIElement {
         let found = element(id, in: app)
-        _ = found.waitForExistence(timeout: Settle.feature)
-        let window = app.windows.firstMatch
-        for _ in 0..<8 {
-            if found.exists, !found.frame.isEmpty, window.frame.contains(found.frame) { return found }
-            app.swipeUp()
+        let window = app.windows.firstMatch.frame
+        var steady = false
+        for _ in 0..<30 {
+            let shot = try? found.snapshot()
+            if let shot, !shot.frame.isEmpty, window.contains(shot.frame) {
+                if shot.isEnabled, steady { return found }
+                steady = shot.isEnabled
+                Thread.sleep(forTimeInterval: Settle.standard)
+            } else {
+                steady = false
+                app.swipeUp()
+            }
         }
-        XCTFail("\(id) not reachable; on screen:\n\(app.debugDescription)")
+        XCTFail("\(id) not reachable and enabled; on screen:\n\(app.debugDescription)")
         return found
     }
 
