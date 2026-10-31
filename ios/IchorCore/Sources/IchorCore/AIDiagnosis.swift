@@ -78,8 +78,8 @@ public func selectedAIProvider(_ providers: [AIProvider], saved: String?) -> AIP
 /// Names and addresses are hidden unless the user turned that off.
 public func aiAnonymize(stored: Bool?) -> Bool { stored ?? true }
 
-/// A provider on the network may ask for more unless the user turned that off.
-public func aiAllowTools(stored: Bool?) -> Bool { stored ?? true }
+/// A provider on the network may ask for more only once the person turned that on.
+public func aiAllowTools(stored: Bool?) -> Bool { stored ?? false }
 
 /// The note sent with the report when the diagnosis is opened from a failed health check.
 /// English whatever the app's language: it is read by the model, not by the user.

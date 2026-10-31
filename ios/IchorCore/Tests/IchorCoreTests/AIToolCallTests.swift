@@ -22,8 +22,9 @@ final class AIToolCallTests: XCTestCase {
         XCTAssertEqual(twice.finished(tool: "object_yaml", bytes: 1, result: "x", error: nil), twice)
     }
 
-    func testTheSwitchIsOnByDefault() {
-        XCTAssertTrue(aiAllowTools(stored: nil))
+    func testTheSwitchIsOffByDefault() {
+        XCTAssertFalse(aiAllowTools(stored: nil))
         XCTAssertFalse(aiAllowTools(stored: false))
+        XCTAssertTrue(aiAllowTools(stored: true))
     }
 }
