@@ -96,10 +96,13 @@ class DemoScreenshots {
     }
 
     /** The Talos demo's overview, past the tour a fresh install shows once. */
-    private fun open(link: String): ActivityScenario<MainActivity> =
-        ActivityScenario.launch(
+    private fun open(link: String): ActivityScenario<MainActivity> {
+        // The images show the app as after its demo notice is closed.
+        ApplicationProvider.getApplicationContext<TalosApp>().uiPreferences.dismissDemoNotice()
+        return ActivityScenario.launch(
             Intent(Intent.ACTION_VIEW, Uri.parse(link)).setClass(ApplicationProvider.getApplicationContext(), MainActivity::class.java),
         )
+    }
 
     private fun openDemo(): ActivityScenario<MainActivity> {
         val scenario = open("ichor://demo")

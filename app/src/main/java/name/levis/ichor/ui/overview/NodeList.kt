@@ -179,14 +179,11 @@ internal fun NodeList(
     }
     // Offered once, after the first real cluster: first, above everything else.
     val offerAlerts = rememberAlertsOffer(isDemo = certificate?.isDemo != false)
+    val demoNotice = rememberDemoNotice(isDemo = certificate?.isDemo == true)
     val content: OverviewItems.() -> Unit = {
         if (offerAlerts) item(key = "alerts-offer", fullLine = true) { AlertsOfferCard() }
         outage?.let { item(fullLine = true) { LastKnownBanner(it, onRetry) } }
-        if (certificate?.isDemo == true) item(fullLine = true) {
-            IchorCard(Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
-            }
-        }
+        if (demoNotice) item(fullLine = true) { DemoNoticeCard() }
         if (BuildConfig.SELF_UPDATE) item(fullLine = true) { UpdateBanner(onClick = nav.onSettings) } else item(fullLine = true) { StoreUpdateBanner() }
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item(fullLine = true) { SupportCard(nav.onFunding) }
         certificate?.let { item(fullLine = true) { CertificateBanner(it, nav.onIssueConfig) } }
