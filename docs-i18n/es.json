@@ -24,6 +24,7 @@
   "Every <b>Kubernetes</b> and <b>Talos</b> cluster you run, right in your <b>pocket</b>.": "Todos tus clústeres de <b>Kubernetes</b> y <b>Talos</b>, directamente en tu <b>bolsillo</b>.",
   "<small>BETA ON</small><strong>Google Play</strong>": "<small>BETA EN</small><strong>Google Play</strong>",
   "<small>DOWNLOAD FOR</small><strong>iPhone</strong>": "<small>DESCARGAR PARA</small><strong>iPhone</strong>",
+  "Screenshots from": "Capturas de pantalla de",
   "No cluster at hand? Tap <b>Try demo</b>: five nodes, fully offline.": "¿No tienes un clúster a mano? Toca <b>Probar demo</b>: cinco nodos, totalmente sin conexión.",
   "The Ichor overview: a cluster's nodes, their health and live usage.": "La vista general de Ichor: los nodos de un clúster, su estado y su uso en directo.",
   "01 · Clusters": "01 · Clústeres",
