@@ -188,11 +188,15 @@
             <span data-i18n><small>DOWNLOAD FOR</small><strong>iPhone</strong></span>
           </a>
         </div>
+        <div class="platform" role="group" aria-label="Screenshots from">
+          <button type="button" data-platform="android" aria-pressed="true" translate="no">Android</button>
+          <button type="button" data-platform="ios" aria-pressed="false" translate="no">iPhone</button>
+        </div>
         <p class="demo">No cluster at hand? Tap <b>Try demo</b>: five nodes, fully offline.</p>
         <svg class="scroll-hint" width="22" height="22" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
         <div class="device">
-          <picture><source media="(prefers-color-scheme: light)" srcset="screenshots/overview-light.webp" /><img src="screenshots/overview.webp" width="540" height="1045"
+          <picture data-shot="overview"><source media="(prefers-color-scheme: light)" srcset="screenshots/overview-light.webp" /><img src="screenshots/overview.webp" width="540" height="1045"
             alt="The Ichor overview: a cluster's nodes, their health and live usage." /></picture>
         </div>
       </section>
@@ -233,7 +237,7 @@
             <li><b>Thirty days of history</b>: uptime, what changed since you last looked, a storage forecast.</li>
           </ul>
         </div>
-        <div class="shot"><picture><source media="(prefers-color-scheme: light)" srcset="screenshots/logs-light.webp" /><img src="screenshots/logs.webp" width="540" height="1045" loading="lazy" alt="A node's service logs, streaming." /></picture></div>
+        <div class="shot"><picture data-shot="logs"><source media="(prefers-color-scheme: light)" srcset="screenshots/logs-light.webp" /><img src="screenshots/logs.webp" width="540" height="1045" loading="lazy" alt="A node's service logs, streaming." /></picture></div>
       </section>
 
       <section class="feature reveal" id="operate">
@@ -247,7 +251,7 @@
             <li><b>Runbooks</b>: an ordered list of actions, its plan shown before it runs.</li>
           </ul>
         </div>
-        <div class="shot"><picture><source media="(prefers-color-scheme: light)" srcset="screenshots/upgrade-light.webp" /><img src="screenshots/upgrade.webp" width="540" height="1045" loading="lazy" alt="A cluster-wide Talos upgrade, node by node." /></picture></div>
+        <div class="shot"><picture data-shot="upgrade"><source media="(prefers-color-scheme: light)" srcset="screenshots/upgrade-light.webp" /><img src="screenshots/upgrade.webp" width="540" height="1045" loading="lazy" alt="A cluster-wide Talos upgrade, node by node." /></picture></div>
       </section>
 
       <section class="feature reveal" id="measure">
@@ -261,7 +265,7 @@
             <li><b>Capacity</b>: what losing a node would cost, before it happens.</li>
           </ul>
         </div>
-        <div class="shot"><picture><source media="(prefers-color-scheme: light)" srcset="screenshots/graphs-light.webp" /><img src="screenshots/graphs.webp" width="540" height="1045" loading="lazy" alt="Live CPU, memory and network graphs." /></picture></div>
+        <div class="shot"><picture data-shot="graphs"><source media="(prefers-color-scheme: light)" srcset="screenshots/graphs-light.webp" /><img src="screenshots/graphs.webp" width="540" height="1045" loading="lazy" alt="Live CPU, memory and network graphs." /></picture></div>
       </section>
 
       <section class="feature reveal" id="plugins">

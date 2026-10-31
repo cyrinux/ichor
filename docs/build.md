@@ -217,3 +217,6 @@ which is skipped in that run. To retake the whole set on a Mac with Xcode 16 or 
 `brew install webp`: `scripts/ios-build.sh screenshots && scripts/ios-screenshots.sh`; it fails on a
 missing screen. Or run the `screenshots` workflow from the Actions tab, unzip its `screenshots-ios`
 artifact at the root of the repository and commit it.
+
+The website shows both platforms' captures behind one Android / iPhone switch, so
+`scripts/site-i18n.py --check` requires every picture a page names (`data-shot`) in both sets.

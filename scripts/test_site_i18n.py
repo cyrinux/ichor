@@ -2,7 +2,9 @@
 
 import importlib.util
 import os
+import tempfile
 import unittest
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("site_i18n", os.path.join(HERE, "site-i18n.py"))
@@ -70,6 +72,38 @@ class LocalizeUrlsTest(unittest.TestCase):
                 '<meta property="og:url" content="https://cyrinux.github.io/ichor/" />')
         out = site_i18n.localize_urls(html, "uk", "index.html")
         self.assertEqual(out.count("https://cyrinux.github.io/ichor/uk/"), 2)
+
+
+class MissingShotsTest(unittest.TestCase):
+    PAGE = '<picture data-shot="logs"></picture><picture class="card-shot" data-shot="feature-pods"></picture>'
+    NAMES = ("logs", "feature-pods")
+
+    def tree(self, root, skip=()):
+        (root / "screenshots" / "ios").mkdir(parents=True)
+        for name in self.NAMES:
+            for folder in ("screenshots", "screenshots/ios"):
+                for suffix in ("", "-light"):
+                    relative = f"{folder}/{name}{suffix}.webp"
+                    if relative not in skip:
+                        (root / relative).touch()
+
+    def test_complete_sets_have_nothing_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.tree(Path(tmp))
+            self.assertEqual(site_i18n.missing_shots({"index.html": self.PAGE}, Path(tmp)), [])
+
+    def test_each_platform_and_theme_is_required(self):
+        for missing in ("screenshots/logs.webp", "screenshots/logs-light.webp",
+                        "screenshots/ios/feature-pods.webp", "screenshots/ios/logs-light.webp"):
+            with self.subTest(missing), tempfile.TemporaryDirectory() as tmp:
+                self.tree(Path(tmp), skip=(missing,))
+                self.assertEqual(site_i18n.missing_shots({"index.html": self.PAGE}, Path(tmp)), [missing])
+
+    def test_a_name_on_two_pages_is_reported_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.tree(Path(tmp), skip=("screenshots/ios/logs.webp",))
+            pages = {"index.html": self.PAGE, "features.html": self.PAGE}
+            self.assertEqual(site_i18n.missing_shots(pages, Path(tmp)), ["screenshots/ios/logs.webp"])
 
 
 if __name__ == "__main__":
