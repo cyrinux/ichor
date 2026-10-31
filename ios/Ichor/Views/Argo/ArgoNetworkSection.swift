@@ -90,7 +90,7 @@ struct ArgoNetworkSection: View {
                         .listRowInsets(EdgeInsets())
                 }
                 if let refreshError {
-                    Text(verbatim: refreshError).font(.caption).foregroundStyle(.secondary)
+                    LoadFailureRow(message: refreshError, retry: { changed() }, compact: true)
                 }
             }
         } header: {

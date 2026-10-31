@@ -107,7 +107,7 @@ struct SourceSheet: View {
                 } else if let outcome {
                     switch outcome {
                     case .success: Text(kind.answers).foregroundStyle(.green)
-                    case .failure(let error): Text(error.message).foregroundStyle(.red).font(.footnote)
+                    case .failure(let error): LoadFailureRow(message: error.message, compact: true, saying: false)
                     }
                 }
             }
@@ -132,7 +132,7 @@ struct SourceSheet: View {
     @ViewBuilder private var discoveredSection: some View {
         Section {
             if discovering { ProgressView() }
-            if let discoveryError { Text(discoveryError).foregroundStyle(.red).font(.footnote) }
+            if let discoveryError { LoadFailureRow(message: discoveryError, compact: true) }
             if discovered?.isEmpty == true { Text(kind.notFound).foregroundStyle(.secondary) }
             ForEach(discovered ?? [], id: \.self) { found in
                 Button {
@@ -266,7 +266,8 @@ struct PanelEditorSheet: View {
                     if running { ProgressView() }
                     switch result {
                     case .success(let res): PromChartView(panel: panel, result: res)
-                    case .failure(let error): Text(error.localizedDescription).foregroundStyle(.red).font(.footnote)
+                    case .failure(let error):
+                        LoadFailureRow(message: error.localizedDescription, compact: true, saying: false)
                     case nil: EmptyView()
                     }
                 }

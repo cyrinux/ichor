@@ -23,7 +23,7 @@ struct RunbookPlanView: View {
     var body: some View {
         Form {
             if let failure, plan == nil, params.isEmpty {
-                Section { Text(verbatim: failure).foregroundStyle(.red) }
+                Section { LoadFailureRow(message: failure, retry: { await load() }) }
             }
             if plan == nil, !params.isEmpty {
                 RunbookParamsForm(params: params, values: $values, choices: choices, failure: failure) {

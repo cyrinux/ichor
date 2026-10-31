@@ -16,7 +16,7 @@ struct PluginsSettingsView: View {
     var body: some View {
         Section {
             if let failure {
-                Text("Plugins: \(failure)").foregroundStyle(.red)
+                LoadFailureRow(message: failure, retry: { await load() })
             }
             if imported.isEmpty {
                 Text("No imported plugin yet.").foregroundStyle(.secondary)
@@ -124,7 +124,7 @@ private struct ImportedPluginRow: View {
                 if item.usable {
                     Text("Reads \(item.readsLine)").font(.caption).foregroundStyle(.secondary)
                 } else {
-                    Text("Off: \(item.error)").font(.caption).foregroundStyle(.red)
+                    Text("Off: \(item.error)").font(.caption).foregroundStyle(.secondary)
                 }
             }
         }

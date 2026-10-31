@@ -29,7 +29,8 @@ struct RolloutStatusSheet: View {
                         progress
                     }
                     if let error {
-                        Text(error).font(.caption).foregroundStyle(.red)
+                        // No Retry: it reads again by itself every 2 s.
+                        LoadFailureRow(message: error, compact: true)
                     }
                 } footer: {
                     if status?.done != true {

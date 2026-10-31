@@ -48,7 +48,7 @@ struct KubeObjectSummarySections: View {
             if summary.eventsError.isEmpty {
                 KubeEventsList(events: summary.events, showObject: false)
             } else {
-                Text(verbatim: SummaryText.eventsError(summary.eventsError)).font(.caption).foregroundStyle(.secondary)
+                LoadFailureRow(message: SummaryText.eventsError(summary.eventsError), compact: true, saying: false)
             }
         } header: {
             Text(verbatim: CheckupText.kubeEventsTitle)
