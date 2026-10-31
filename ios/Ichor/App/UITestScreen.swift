@@ -3,6 +3,7 @@ import IchorCore
 
 /// The screens the screenshot walk opens directly (`ICHOR_UI_TEST_SCREEN`, the names of
 /// Android's DemoScreenshots and scripts/ci-screenshots.sh), on the demo cluster.
+@MainActor
 enum UITestScreen {
     struct Failure: LocalizedError {
         let errorDescription: String?
