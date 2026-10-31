@@ -112,14 +112,7 @@ struct KubeHomeView: View {
             List {
                 // Offered once, after the first real cluster: first, above everything else.
                 AlertsOfferSection()
-                if model.activeSummary?.demo == true {
-                    Section {
-                        Text(
-                            "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
-                        )
-                        .font(.callout).foregroundStyle(.secondary)
-                    }
-                }
+                DemoNoticeSection()
                 HistorySinceSection(look: look)
                 if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                     Section { KubeExpiryBanner(notAfter: ctx.certNotAfter) }
