@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.automirrored.outlined.ManageSearch
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.QueryStats
@@ -274,6 +275,7 @@ private fun kubeToolGroupsNative(
         listOf(
             KubeTool(stringResource(R.string.kube_events_stream_title), Icons.Outlined.Timeline, nav.onEvents),
             KubeTool(stringResource(R.string.metrics_title), Icons.Outlined.QueryStats, nav.onMetrics),
+            KubeTool(stringResource(R.string.log_search_title), Icons.AutoMirrored.Outlined.ManageSearch, nav.onLogSearch),
             KubeTool(stringResource(R.string.checkup_title), Icons.Outlined.HealthAndSafety, nav.onCheckup),
             KubeTool(stringResource(R.string.capacity_title), Icons.Outlined.DataUsage, nav.onCapacity),
             KubeTool(stringResource(R.string.apihealth_title), Icons.Outlined.MonitorHeart, nav.onApiHealth),

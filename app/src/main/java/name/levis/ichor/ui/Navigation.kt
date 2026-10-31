@@ -278,6 +278,7 @@ fun Navigation(
                 val active = app.configRepository.config.value?.activeContext.orEmpty()
                 nav.navigate(Routes.podShell(active, ns, pod, container))
             },
+            onLogSearch = { nav.navigate(Routes.logSearch(it)) },
         )
     }
 
@@ -368,6 +369,7 @@ fun Navigation(
                         onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
                         onCheckup = { nav.navigate(Routes.CHECKUP) },
                         onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
+                        onLogSearch = { nav.navigate(Routes.logSearch()) },
                         onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                         onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                         onPolicies = { nav.navigate(Routes.POLICIES) },

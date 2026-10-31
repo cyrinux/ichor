@@ -17,6 +17,8 @@ struct WorkloadLogsSheet: View {
     /// The log written out for the share sheet: it can be larger than a share carries as text.
     @State private var shareFile: URL?
     @State private var message: String?
+    /// The cluster's log backend, for "Open in …"; nil without one.
+    @State private var logsBackend: PromSource?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,12 +53,27 @@ struct WorkloadLogsSheet: View {
                         Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
                 }
+                if let logsBackend {
+                    NavigationLink {
+                        LogSearchView(
+                            initialQuery: TalosClient.logsWorkloadQuery(
+                                kind: logsBackend.kind, namespace: workload.namespace, workload: workload.name))
+                    } label: {
+                        Image(systemName: "text.magnifyingglass")
+                            .accessibilityLabel(Text(verbatim: openInLogsBackendTitle(logsBackend)))
+                    }
+                }
                 Button {
                     refreshes += 1
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
                 .accessibilityLabel(Text("Refresh"))
+            }
+        }
+        .task {
+            if let client = model.client, let fingerprint = model.activeSummary?.fingerprint {
+                logsBackend = await LogsBackendStore.resolve(fingerprint, with: client)
             }
         }
         // The screenshot mode's generation too: the log is read again under the new names.

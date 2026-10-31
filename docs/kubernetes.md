@@ -14,6 +14,24 @@ per pod, 4 MiB in all, keeping the newest. A pod that cannot answer (still start
 down) shows no lines; a refused `pods/log` shows the refusal. Only what the kubelet still keeps
 can be read. A pod's own log sheet has the same filter and time range.
 
+## Log search (Loki, VictoriaLogs)
+
+The kubelet only keeps the current logs; a cluster running Loki or VictoriaLogs holds weeks of
+them. **Kubernetes → Observe → Log search** finds the backend among the cluster's Services
+(Loki's gateway first, then its read path, then a single binary; VictoriaLogs' `vlselect` or
+single server) and reads it through the API server's service proxy, which takes `get` on
+`services/proxy` in the backend's namespace. A backend outside the cluster is set by URL, with a
+token or password kept in the phone's encrypted store, never in a backup; the tenant goes out as
+`X-Scope-OrgID`.
+
+Type a query in the backend's language (LogQL, LogsQL) or build one with the label picker, choose
+1 h, 6 h, 24 h, 7 days or a custom range up to 31 days, and read the newest lines first, at most
+500 per search. Queries can be saved per cluster, up to 20. A metric query is refused: it has no
+log lines to show. A pod's log sheet and a workload's offer **Open in Loki** or **Open in
+VictoriaLogs** on the same screen, with the pod's or workload's selector over 24 hours; the
+selector uses the labels `namespace` and `pod`, so a shipper labelling them otherwise needs the
+query edited by hand.
+
 ## Image vulnerability scan
 
 **Scan images** on an app's sheet (and on a Talos node's Images screen, and on the Summary of a

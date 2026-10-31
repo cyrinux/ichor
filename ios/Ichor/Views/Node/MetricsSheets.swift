@@ -1,14 +1,16 @@
 import SwiftUI
 import IchorCore
 
-/// What a source sheet sets up: the metrics' query API or the Alertmanager, which differ only in wording.
+/// What a source sheet sets up: the metrics' query API, the Alertmanager or the log backend, which
+/// differ only in wording.
 enum SourceSheetKind {
-    case metrics, alertmanager
+    case metrics, alertmanager, logs
 
     var title: String {
         switch self {
         case .metrics: String(localized: "Metrics source")
         case .alertmanager: String(localized: "Alertmanager source")
+        case .logs: String(localized: "Log backend")
         }
     }
 
@@ -16,6 +18,7 @@ enum SourceSheetKind {
         switch self {
         case .metrics: String(localized: "No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster")
         case .alertmanager: String(localized: "No Alertmanager found in the cluster")
+        case .logs: String(localized: "No log backend found")
         }
     }
 
@@ -23,6 +26,7 @@ enum SourceSheetKind {
         switch self {
         case .metrics: String(localized: "Path prefix (Mimir: /prometheus)")
         case .alertmanager: String(localized: "Path prefix (Mimir: /alertmanager)")
+        case .logs: String(localized: "Path prefix (optional)")
         }
     }
 
@@ -30,6 +34,7 @@ enum SourceSheetKind {
         switch self {
         case .metrics: String(localized: "URL (e.g. https://mimir.example.com/prometheus)")
         case .alertmanager: String(localized: "URL (e.g. https://alerts.example.com)")
+        case .logs: String(localized: "URL (e.g. https://loki.example.com)")
         }
     }
 
@@ -37,6 +42,7 @@ enum SourceSheetKind {
         switch self {
         case .metrics: String(localized: "The query API answers.")
         case .alertmanager: String(localized: "The Alertmanager answers.")
+        case .logs: String(localized: "The log backend answers.")
         }
     }
 }

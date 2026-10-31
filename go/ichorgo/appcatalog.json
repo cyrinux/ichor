@@ -103,6 +103,7 @@
 {"id":"alloy","name":"Grafana Alloy","cat":"observability","icon":"sh:grafana-alloy"},
 {"id":"grafana-agent","name":"Grafana Agent","cat":"observability","icon":"grafana","images":["grafana/agent"]},
 {"id":"thanos","name":"Thanos","cat":"observability"},
+{"id":"victorialogs","name":"VictoriaLogs","cat":"observability","icon":"victoriametrics","match":["victoria-logs","victorialogs"]},
 {"id":"victoriametrics","name":"VictoriaMetrics","cat":"observability","prefixes":["victoriametrics/","docker.io/victoriametrics/"]},
 {"id":"opentelemetry","name":"OpenTelemetry Collector","cat":"observability","icon":"sh:opentelemetry","prefixes":["otel/","docker.io/otel/","ghcr.io/open-telemetry/"]},
 {"id":"jaeger","name":"Jaeger","cat":"observability","prefixes":["jaegertracing/","docker.io/jaegertracing/"]},

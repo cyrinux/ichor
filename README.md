@@ -54,7 +54,7 @@ tour** shows it again.
   Gatekeeper, KubeVirt, CAST AI and more, each with its findings in the cluster checkup, and
   [plugins](docs/plugins.md) for any CRD of your own.
 - **Troubleshooting:** cluster checkup, configuration drift, incident recorder, node pressure,
-  bottleneck metrics, network tests between nodes, node network tools, image vulnerability
+  bottleneck metrics, search Loki or VictoriaLogs, network tests between nodes, node network tools, image vulnerability
   scans, thirty days of history and an optional AI diagnosis.
 - **Operating safely:** read-only by default, typed confirmations, dry runs, an encrypted audit
   log, runbooks with parameters and a confirmation per destructive step, a security key or biometric lock,

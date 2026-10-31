@@ -300,6 +300,8 @@ enum Route: Hashable {
     case checkup
     /// The Alertmanager's alerts and silences (os:admin).
     case alerts
+    /// Search in the log backend (os:admin), running `query` at once when set.
+    case logSearch(query: String = "")
     case health
     case settings
     /// One group of Settings on its own page.
@@ -541,6 +543,7 @@ struct MainNavigation: View {
         case .flux(let downNodes, let selected): FluxView(downNodes: downNodes, selected: selected)
         case .checkup: CheckupView()
         case .alerts: AlertsView(path: $path)
+        case .logSearch(let query): LogSearchView(initialQuery: query)
         case .health: HealthView()
         case .settings: SettingsView()
         case .settingsPage(let page): SettingsPageView(page: page)

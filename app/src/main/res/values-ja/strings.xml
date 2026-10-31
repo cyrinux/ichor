@@ -6001,4 +6001,27 @@
     <string name="oncall_page_ack_failed">確認応答できませんでした: %1$s</string>
     <string name="oncall_page_no_incident">このアラートに対応する未解決のインシデントはありません</string>
     <string name="oncall_restore_note">オンコールトークンを再設定してください。バックアップには含まれません。</string>
+    <string name="log_search_title">ログ検索</string>
+    <string name="log_search_source">ログバックエンド</string>
+    <string name="log_search_none_found">ログバックエンドが見つかりません</string>
+    <string name="log_search_none_found_hint">Loki または VictoriaLogs の URL とトークンを設定するか、クラスターにインストールしてください。</string>
+    <string name="log_search_searching">ログバックエンドを探しています…</string>
+    <string name="log_search_reachable">ログバックエンドが応答しました。</string>
+    <string name="log_search_source_line">取得元: %1$s</string>
+    <string name="log_search_query">クエリ</string>
+    <string name="log_search_run">検索</string>
+    <string name="log_search_labels">ラベル</string>
+    <string name="log_search_pick_label">ラベルを選択</string>
+    <string name="log_search_pick_value">%1$s の値</string>
+    <string name="log_search_no_values">過去 1 日間に該当なし</string>
+    <string name="log_search_save">このクエリを保存</string>
+    <string name="log_search_unsave">このクエリを削除</string>
+    <string name="log_search_range_hours">%1$d 時間</string>
+    <string name="log_search_range_days">%1$d 日</string>
+    <string name="log_search_range_custom">カスタム</string>
+    <string name="log_search_custom_hours">遡る時間（最大 %1$d）</string>
+    <string name="log_search_count">%1$d 行</string>
+    <string name="log_search_idle">クエリを入力するかラベルを選択</string>
+    <string name="log_search_open_loki">Loki で開く</string>
+    <string name="log_search_open_victorialogs">VictoriaLogs で開く</string>
 </resources>

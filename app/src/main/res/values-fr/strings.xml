@@ -6139,4 +6139,27 @@
     <string name="oncall_page_ack_failed">Échec de l\'acquittement : %1$s</string>
     <string name="oncall_page_no_incident">Aucun incident ouvert pour cette alerte</string>
     <string name="oncall_restore_note">Saisissez de nouveau le jeton d\'astreinte : les sauvegardes ne le contiennent jamais.</string>
+    <string name="log_search_title">Recherche dans les logs</string>
+    <string name="log_search_source">Backend de logs</string>
+    <string name="log_search_none_found">Aucun backend de logs trouvé</string>
+    <string name="log_search_none_found_hint">Indiquez l\'URL et le jeton de votre Loki ou VictoriaLogs, ou installez-en un dans le cluster.</string>
+    <string name="log_search_searching">Recherche d\'un backend de logs…</string>
+    <string name="log_search_reachable">Le backend de logs répond.</string>
+    <string name="log_search_source_line">Depuis %1$s</string>
+    <string name="log_search_query">Requête</string>
+    <string name="log_search_run">Rechercher</string>
+    <string name="log_search_labels">Labels</string>
+    <string name="log_search_pick_label">Choisir un label</string>
+    <string name="log_search_pick_value">Valeurs de %1$s</string>
+    <string name="log_search_no_values">Rien vu sur la dernière journée</string>
+    <string name="log_search_save">Enregistrer cette requête</string>
+    <string name="log_search_unsave">Oublier cette requête</string>
+    <string name="log_search_range_hours">%1$d h</string>
+    <string name="log_search_range_days">%1$d j</string>
+    <string name="log_search_range_custom">Personnalisé</string>
+    <string name="log_search_custom_hours">Heures en arrière, jusqu\'à %1$d</string>
+    <string name="log_search_count">%1$d lignes</string>
+    <string name="log_search_idle">Saisissez une requête ou choisissez un label</string>
+    <string name="log_search_open_loki">Ouvrir dans Loki</string>
+    <string name="log_search_open_victorialogs">Ouvrir dans VictoriaLogs</string>
 </resources>

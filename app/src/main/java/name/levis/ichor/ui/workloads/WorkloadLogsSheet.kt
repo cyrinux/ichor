@@ -53,7 +53,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.ui.design.IchorAssistChip
+import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
+import name.levis.ichor.ui.logsearch.openInLogsBackendLabel
+import name.levis.ichor.ui.logsearch.rememberLogsBackend
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.LogFilter
 import name.levis.ichor.model.WORKLOAD_LOG_COLORS
@@ -119,6 +124,9 @@ fun WorkloadLogsSheet(
     vm: WorkloadLogsViewModel = viewModel(key = "workload-logs", factory = factory { WorkloadLogsViewModel(app.kubeRepository) }),
 ) {
     val context = LocalContext.current
+    val links = LocalKubeLinks.current
+    val appContext = context.applicationContext as TalosApp
+    val logsBackend = rememberLogsBackend()
     val state by vm.state.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val logs = (state as? UiState.Loaded)?.data
@@ -154,6 +162,14 @@ fun WorkloadLogsSheet(
                         onClick = { vm.load(workload, query.copy(tail = tail)) },
                         label = { Text(stringResource(R.string.workload_logs_tail, tail)) },
                     )
+                }
+                if (links != null && logsBackend != null) {
+                    item(key = "log-backend") {
+                        IchorAssistChip(onClick = {
+                            onDismiss()
+                            links.onLogSearch(appContext.logsBackendRepository.workloadQuery(logsBackend.kind, workload.namespace, workload.name))
+                        }, label = { Text(openInLogsBackendLabel(logsBackend)) })
+                    }
                 }
             }
             Box(Modifier.weight(1f).upwardScrollStaysInSheet()) {
