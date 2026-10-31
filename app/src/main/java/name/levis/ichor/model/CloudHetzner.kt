@@ -56,6 +56,36 @@ data class HetznerCreateSpec(
     val installDisk: String = "",
 )
 
+/** StartHetznerSnapshot's specJSON. The image's URL comes from the template, never from here. */
+@Serializable
+data class HetznerSnapshotSpec(
+    val templateNode: String = "",
+    val arch: String,
+    val location: String,
+)
+
+/** What a finished snapshot run reports. */
+@Serializable
+data class HetznerSnapshotResult(
+    val imageId: Long = 0,
+    val description: String = "",
+    val sizeGB: Double = 0.0,
+    val created: String = "",
+)
+
+/** The cost line of a snapshot run; prices before tax, in [currency]. */
+@Serializable
+data class HetznerSnapshotCost(
+    val serverType: String = "",
+    val hourly: String = "",
+    val monthlyPerGB: String = "",
+    val currency: String = "",
+)
+
+/** The locations a throwaway server of [arch] can be made in. */
+fun HetznerOptions.locationsFor(arch: String): List<HetznerLocation> =
+    locations.filter { l -> serverTypes.any { it.arch == arch && it.price(l.name) != null } }
+
 /** The snapshots a server of [type] can start from, Talos ones first as the core lists them. */
 fun HetznerOptions.snapshotsFor(type: HetznerServerType?): List<HetznerSnapshot> =
     if (type == null) emptyList() else snapshots.filter { it.arch == type.arch }

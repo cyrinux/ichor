@@ -78,6 +78,7 @@ data class JoinProgress(
 
 /** The phases of a join, in order. */
 enum class JoinPhase(val wire: String) {
+    KEY("key"),
     CREATING("creating"),
     STARTING("starting"),
     APPLYING("applying"),
@@ -87,6 +88,10 @@ enum class JoinPhase(val wire: String) {
     JOINING("joining"),
     OMNI("omni"),
     REGISTERING("registering"),
+    RESCUE("rescue"),
+    WRITING("writing"),
+    SNAPSHOT("snapshot"),
+    CLEANUP("cleanup"),
     DONE("done"),
     ;
 
@@ -101,6 +106,9 @@ enum class JoinPhase(val wire: String) {
 
         /** A server created with Omni's join config. */
         val cloudOmniRun = listOf(CREATING, STARTING, OMNI, DONE)
+
+        /** A throwaway server that becomes a Talos snapshot. */
+        val snapshotRun = listOf(KEY, CREATING, RESCUE, WRITING, SNAPSHOT, CLEANUP, DONE)
     }
 }
 

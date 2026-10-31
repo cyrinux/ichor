@@ -19,6 +19,8 @@ import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.EndpointProbe
 import name.levis.ichor.model.HetznerCreateSpec
 import name.levis.ichor.model.HetznerOptions
+import name.levis.ichor.model.HetznerSnapshotCost
+import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.HetznerTokenCheck
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.K8sUpgradePlan
@@ -313,6 +315,15 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.hetznerCreate]. */
     fun hetznerCreate(token: String, spec: HetznerCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.hetznerCreate(hetznerTokenJson(token), TalosJson.encodeToString(HetznerCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of a snapshot run. Creates nothing. */
+    suspend fun hetznerSnapshotEstimate(token: String, arch: String, location: String): HetznerSnapshotCost = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(HetznerSnapshotCost.serializer(), Ichorgo.hetznerSnapshotEstimate(hetznerTokenJson(token), arch, location))
+    }
+
+    /** See [TalosStreams.hetznerSnapshot]. */
+    fun hetznerSnapshot(token: String, spec: HetznerSnapshotSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.hetznerSnapshot(hetznerTokenJson(token), TalosJson.encodeToString(HetznerSnapshotSpec.serializer(), spec), stop)
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

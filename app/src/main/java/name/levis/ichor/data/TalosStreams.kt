@@ -7,6 +7,7 @@ import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.ImagePullListener
 import name.levis.ichorgo.JoinListener
+import name.levis.ichorgo.JoinRun
 import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.NetToolListener
 import name.levis.ichorgo.SnapshotListener
@@ -309,7 +310,17 @@ internal class TalosStreams(private val configs: ConfigRepository) {
      * Cancelling deletes the server it created, so a collector that goes away does not cancel:
      * only [stop] does, and the run always ends by itself.
      */
-    fun hetznerCreate(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> = callbackFlow {
+    fun hetznerCreate(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startHetznerCreate(yaml, context, tokenJson, specJson, listener) }
+
+    /**
+     * Makes a Talos snapshot with a throwaway server (StartHetznerSnapshot). Done's address is the
+     * result JSON. As for [hetznerCreate], only [stop] cancels: it deletes what the run created.
+     */
+    fun hetznerSnapshot(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startHetznerSnapshot(yaml, context, tokenJson, specJson, listener) }
+
+    private fun hetznerRun(stop: Flow<Any>, start: (String, String, JoinListener) -> JoinRun): Flow<JoinEvent> = callbackFlow {
         val stored = configs.forCall()
         val listener = object : JoinListener {
             override fun onProgress(json: String) {
@@ -322,7 +333,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                 close()
             }
         }
-        val run = Ichorgo.startHetznerCreate(stored.yaml, stored.activeContext, tokenJson, specJson, listener)
+        val run = start(stored.yaml, stored.activeContext, listener)
         launch {
             stop.first()
             run.cancel()

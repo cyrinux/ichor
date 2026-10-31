@@ -6199,7 +6199,6 @@
     <string name="hetzner_server_type">Tipo de servidor</string>
     <string name="hetzner_location">Ubicación</string>
     <string name="hetzner_snapshot">Instantánea de Talos</string>
-    <string name="hetzner_no_snapshot">Este proyecto no tiene ninguna instantánea para esta arquitectura. Crea primero una de Talos con la herramienta hcloud-upload-image, o crea el servidor a mano con las imágenes de arriba.</string>
     <string name="hetzner_cost">Unos %1$s por hora, %2$s al mes, sin impuestos</string>
     <string name="hetzner_create">Crear el servidor</string>
     <string name="hetzner_confirm_title">¿Crear %1$s en Hetzner?</string>
@@ -6211,4 +6210,22 @@
     <string name="hetzner_stop_hint">Detener borra el servidor que creó esta ejecución.</string>
     <string name="hetzner_stop_body">%1$s se borra en Hetzner. Un plano de control que ya respondió se conserva: primero debe quitarse su miembro de etcd.</string>
     <string name="hetzner_token_not_saved">No se puede leer el almacén de tokens: desbloquéalo e inténtalo de nuevo.</string>
+    <string name="hetzner_snapshot_missing">Aún no hay ninguna instantánea de Talos para %1$s: Ichor puede crear una.</string>
+    <string name="hetzner_snapshot_make">Crear una instantánea de Talos</string>
+    <string name="hetzner_snapshot_intro">Ichor crea un servidor desechable en el sistema de rescate de Hetzner, escribe la imagen de Talos de este clúster en su disco, toma una instantánea y luego elimina el servidor y su clave SSH temporal. No se toca nada del clúster. Tarda unos minutos.</string>
+    <string name="hetzner_snapshot_arch">Arquitectura</string>
+    <string name="hetzner_snapshot_cost">Aproximadamente una hora iniciada de %1$s (%2$s) más el almacenamiento de la instantánea a %3$s por GB al mes, sin impuestos</string>
+    <string name="hetzner_snapshot_confirm">Crear la instantánea</string>
+    <string name="hetzner_phase_key">Añadir una clave SSH temporal</string>
+    <string name="hetzner_phase_rescue">Iniciar el sistema de rescate</string>
+    <string name="hetzner_phase_writing">Escribir la imagen de Talos</string>
+    <string name="hetzner_phase_snapshot">Tomar la instantánea</string>
+    <string name="hetzner_phase_cleanup">Eliminar el servidor y la clave</string>
+    <string name="hetzner_snapshot_stop">Detener y limpiar</string>
+    <string name="hetzner_snapshot_stop_hint">Al detener se eliminan el servidor desechable y su clave.</string>
+    <string name="hetzner_snapshot_stop_body">La ejecución se detiene. Se eliminan el servidor desechable, su clave y una instantánea sin terminar.</string>
+    <string name="hetzner_snapshot_done">La instantánea %1$s está lista: elígela para crear el servidor.</string>
+    <string name="hetzner_snapshot_notification_title">Creando una instantánea de Talos</string>
+    <string name="hetzner_snapshot_notification_done">Instantánea de Talos creada</string>
+    <string name="hetzner_snapshot_notification_failed">La instantánea de Talos ha fallado</string>
 </resources>

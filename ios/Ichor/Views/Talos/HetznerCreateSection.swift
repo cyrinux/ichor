@@ -23,6 +23,7 @@ struct HetznerCreateSection: View {
     @State private var omniName = ""
     @State private var confirming = false
     @State private var addingToken = false
+    @State private var makingSnapshot = false
     @State private var confirmStop = false
     @State private var authError: String?
     private var job: JoinJob { .shared }
@@ -74,6 +75,11 @@ struct HetznerCreateSection: View {
                 HetznerTokenSheet { added in
                     reloadProjects()
                     pick(added)
+                }
+            }
+            if job.request?.snapshot != nil {
+                HetznerSnapshotRunSections { made in
+                    Task { await snapshotClosed(made) }
                 }
             }
             if let options { optionsSection(options) }
@@ -132,11 +138,19 @@ struct HetznerCreateSection: View {
             }
         }
         let snapshots = value.snapshots(for: type)
-        if type != nil, snapshots.isEmpty {
-            Text(
-                "This project has no snapshot for this architecture. Make a Talos one first with the hcloud-upload-image tool, or create the server by hand from the images above."
-            )
-            .font(.footnote).foregroundStyle(.secondary)
+        if let type, !demo, !snapshots.contains(where: \.talos) {
+            Text("No Talos snapshot for \(type.arch) yet: Ichor can make one.")
+                .font(.footnote).foregroundStyle(.secondary)
+            Button("Make a Talos snapshot") { makingSnapshot = true }
+                .disabled(job.isActive)
+                .sheet(isPresented: $makingSnapshot) {
+                    HetznerSnapshotSheet(
+                        options: value, arch: type.arch, location: location, template: omni ? "" : template,
+                        token: token
+                    ) { spec in
+                        startSnapshot(spec)
+                    }
+                }
         }
         Picker("Talos snapshot", selection: $snapshot) {
             Text(verbatim: "—").tag(HetznerSnapshot?.none)
@@ -157,7 +171,7 @@ struct HetznerCreateSection: View {
         }
         let chosen = snapshots.contains(where: { $0.id == snapshot?.id }) ? snapshot : nil
         Button("Create the server", role: .destructive) { confirming = true }
-            .disabled(name.isEmpty || chosen == nil || price == nil)
+            .disabled(name.isEmpty || chosen == nil || price == nil || job.isActive)
             .sheet(isPresented: $confirming) {
                 if let type, let chosen, let price {
                     let cost = "\(price.monthly) \(value.currency)"
@@ -192,6 +206,9 @@ struct HetznerCreateSection: View {
                 Button("Close") { job.clear() }
             case .appearedInOmni?:
                 Text("\(job.request?.hostname ?? "") appeared in Omni: allocate it there")
+                Button("Close") { job.clear() }
+            case .snapshotMade?:
+                // Not this section's run: a snapshot run has its own (HetznerSnapshotRunSections).
                 Button("Close") { job.clear() }
             case .failed(let error)?:
                 Text(verbatim: error).foregroundStyle(.statusBad)
@@ -249,6 +266,22 @@ struct HetznerCreateSection: View {
         let token = self.token
         options = .loading
         options = await LoadState.from { try await client.hetznerOptions(token: token) }
+    }
+
+    /// The throwaway server's run: followed like a join, with no node to add at its end.
+    private func startSnapshot(_ spec: HetznerSnapshotSpec) {
+        guard let client = model.client else { return }
+        let request = JoinRequest(
+            address: "", template: spec.templateNode, role: "", hostname: "Talos \(spec.arch)", disk: "",
+            staticAddress: "", snapshot: spec)
+        job.start(client: client, request: request, hetznerToken: token) { _ in }
+    }
+
+    /// The project's snapshots again, with the new one selected.
+    private func snapshotClosed(_ made: HetznerSnapshotResult?) async {
+        await loadOptions()
+        guard let made, case .loaded(let value, _, _) = options else { return }
+        snapshot = value.snapshots.first { $0.id == made.imageId } ?? snapshot
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.

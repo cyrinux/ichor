@@ -12,7 +12,7 @@ import (
 
 // The token comes from HETZNER_TOKEN (never a flag: it would show in the shell history).
 var cloudCommands = []command{
-	{name: "hetzner", args: "test|options|create TEMPLATE ROLE HOSTNAME DISK TYPE LOCATION SNAPSHOT_ID -yes", run: func(e env) (string, error) {
+	{name: "hetzner", args: "test|options|estimate ARCH LOCATION|snapshot ARCH LOCATION -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE LOCATION SNAPSHOT_ID -yes", run: func(e env) (string, error) {
 		token := os.Getenv("HETZNER_TOKEN")
 		if token == "" && flag.Arg(1) != "options" {
 			return "", errors.New("set HETZNER_TOKEN to a scratch project's token")
@@ -30,10 +30,32 @@ var cloudCommands = []command{
 			return ichorgo.HetznerOptions(e.cfg, e.context, string(tokenJSON))
 		case "create":
 			return hetznerCreate(e, string(tokenJSON))
+		case "estimate":
+			return ichorgo.HetznerSnapshotEstimate(string(tokenJSON), flag.Arg(2), flag.Arg(3))
+		case "snapshot":
+			return hetznerSnapshot(e, string(tokenJSON))
 		}
 
-		return "", errors.New("usage: hetzner test|options|create …")
+		return "", errors.New("usage: hetzner test|options|estimate|snapshot|create …")
 	}},
+}
+
+// hetznerSnapshot makes a billable snapshot with a throwaway server: scratch projects only, and
+// only with -yes.
+func hetznerSnapshot(e env, tokenJSON string) (string, error) {
+	if flag.NArg() != 5 || flag.Arg(4) != "-yes" {
+		return "", errors.New("usage: hetzner snapshot ARCH LOCATION -yes (creates a billable server and a snapshot)")
+	}
+
+	spec, err := json.Marshal(map[string]string{"arch": flag.Arg(2), "location": flag.Arg(3)})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartHetznerSnapshot(e.cfg, e.context, tokenJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
 }
 
 // hetznerCreate creates a billable server: scratch projects only, and only with -yes.

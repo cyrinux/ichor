@@ -55,6 +55,7 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
     SectionTitle(stringResource(R.string.join_node_step_apply))
     val current = run
     when {
+        current?.request?.snapshot != null -> SnapshotRunView(current, onStop = app.joinManager::stop, onClose = app.joinManager::dismiss)
         current != null -> JoinRunView(
             run = current,
             onStop = app.joinManager::stop,
@@ -205,8 +206,13 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
 
 /** Label of the step in the join timeline. */
 @get:StringRes
-private val JoinPhase.label: Int
+internal val JoinPhase.label: Int
     get() = when (this) {
+        JoinPhase.KEY -> R.string.hetzner_phase_key
+        JoinPhase.RESCUE -> R.string.hetzner_phase_rescue
+        JoinPhase.WRITING -> R.string.hetzner_phase_writing
+        JoinPhase.SNAPSHOT -> R.string.hetzner_phase_snapshot
+        JoinPhase.CLEANUP -> R.string.hetzner_phase_cleanup
         JoinPhase.CREATING -> R.string.hetzner_create
         JoinPhase.STARTING -> R.string.hetzner_phase_starting
         JoinPhase.OMNI -> R.string.hetzner_phase_omni

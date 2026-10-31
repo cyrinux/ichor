@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.HetznerSnapshotResult
+import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.JoinPhase
 import name.levis.ichor.model.JoinProgress
 import name.levis.ichor.ui.FollowedRun
@@ -31,10 +33,13 @@ data class JoinRequest(
     val hetzner: HetznerCreateSpec? = null,
     /** The Hetzner server joins Omni, not the cluster directly. */
     val omni: Boolean = false,
+    /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
+    val snapshot: HetznerSnapshotSpec? = null,
 ) {
     /** The steps of this run's timeline. */
     val phases: List<JoinPhase>
         get() = when {
+            snapshot != null -> JoinPhase.snapshotRun
             hetzner == null -> JoinPhase.maintenanceRun
             omni -> JoinPhase.cloudOmniRun
             else -> JoinPhase.cloudRun
@@ -53,6 +58,8 @@ data class JoinRunState(
     override val error: String? = null,
     /** Stop was requested: the run stops following (the install goes on). */
     val stopping: Boolean = false,
+    /** The finished snapshot of a [JoinRequest.snapshot] run. */
+    val snapshotResult: HetznerSnapshotResult? = null,
 ) : FollowedRun {
     override val hostname: String get() = request.hostname
 }
@@ -89,7 +96,8 @@ class JoinManager(
         val stopped = MutableStateFlow(false).also { stopRequested = it }
         job = scope.launch {
             try {
-                val events = request.hetzner?.let { lifecycle.hetznerCreate(hetznerToken, it, stopped.filter { s -> s }) }
+                val events = request.snapshot?.let { lifecycle.hetznerSnapshot(hetznerToken, it, stopped.filter { s -> s }) }
+                    ?: request.hetzner?.let { lifecycle.hetznerCreate(hetznerToken, it, stopped.filter { s -> s }) }
                     ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                 events
                     .collect { event ->
@@ -109,6 +117,12 @@ class JoinManager(
     }
 
     private suspend fun finish(context: String, done: JoinEvent.Done) {
+        // A snapshot run's "address" is its result; no node to add.
+        if (_current.value?.request?.snapshot != null) {
+            val result = runCatching { TalosJson.decodeFromString(HetznerSnapshotResult.serializer(), done.address) }.getOrNull()
+            _current.update { it?.copy(finished = true, error = done.error, snapshotResult = result) }
+            return
+        }
         // Omni keeps its own list of machines: no address to add.
         if (done.error == null && done.address.isBlank() && _current.value?.request?.omni == true) {
             _current.update { it?.copy(finished = true) }
