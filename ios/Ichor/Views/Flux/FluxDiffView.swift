@@ -75,11 +75,10 @@ struct FluxDiffView: View {
 
     /// Unfolded at first: the first objects that would change, so one change shows at a glance.
     private static let unfoldedAtFirst = 3
+    private static let smokeAnchor = SmokeID.screen("argocd-diff")
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { diff in
-            content(diff).accessibilityIdentifier(SmokeID.screen("argocd-diff"))
-        }
+        LoadStateView(state: state, retry: load) { diff in content(diff).smokeID(Self.smokeAnchor) }
             .task(id: key) { await load() }
             .task(id: key) { await loadSources() }
             .navigationDestination(item: $opened) { file in
