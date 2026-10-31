@@ -274,6 +274,9 @@ internal object Routes {
 
     fun settingsPage(page: SettingsPage) = "settings/${page.route}"
 
+    /** The plugin catalog, over Settings → Plugins; not under settings/, which [SETTINGS_PAGE] matches. */
+    const val PLUGIN_INDEX = "plugin-index"
+
     /** The action audit log; empty [cluster]: every cluster. */
     const val ACTIVITY = "activity?cluster={cluster}"
 

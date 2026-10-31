@@ -1,17 +1,20 @@
 package name.levis.ichor.ui.settings
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,29 +30,55 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.PluginRepository
+import name.levis.ichor.data.UiPreferences
 import name.levis.ichor.model.PluginIndex
 import name.levis.ichor.model.PluginIndexItem
 import name.levis.ichor.model.PluginUserItem
 import name.levis.ichor.ui.apps.AppIconTile
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.design.IchorCard
 import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import name.levis.ichor.ui.userMessage
 
 /**
- * Settings → Plugins → Browse the catalog: the plugin files of the index at [indexUrl] ("" for the
- * project's). Import downloads one, refused unless it has the digest the index published, has the
+ * Settings → Plugins → Browse the catalog: the plugin files of the index the preferences name ("" for
+ * the project's). Import downloads one, refused unless it has the digest the index published, has the
  * core check it, and opens the same consent sheet as any other import: only its Enable stores it.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun PluginIndexScreen(plugins: PluginRepository, indexUrl: String, onBack: () -> Unit) {
+fun PluginIndexScreen(plugins: PluginRepository, preferences: UiPreferences, onBack: () -> Unit) {
+    val indexUrl by preferences.pluginIndexUrl.collectAsStateWithLifecycle()
+    IchorScaffold(
+        topBar = {
+            IchorTopAppBar(
+                title = { Text(stringResource(R.string.plugin_index_browse)) },
+                navigationIcon = { BackButton(onBack) },
+            )
+        },
+    ) { padding ->
+        Column(
+            Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            PluginIndexContent(plugins, indexUrl.trim())
+        }
+    }
+}
+
+@Composable
+private fun PluginIndexContent(plugins: PluginRepository, indexUrl: String) {
     val scope = rememberCoroutineScope()
     var index by remember { mutableStateOf<PluginIndex?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -57,7 +86,6 @@ internal fun PluginIndexScreen(plugins: PluginRepository, indexUrl: String, onBa
     var importingId by remember { mutableStateOf<String?>(null) }
     var consent by remember { mutableStateOf<Pair<String, PluginUserItem>?>(null) }
 
-    BackHandler(onBack = onBack)
     LaunchedEffect(indexUrl, reload) {
         error = try {
             index = plugins.index(indexUrl)
@@ -85,8 +113,6 @@ internal fun PluginIndexScreen(plugins: PluginRepository, indexUrl: String, onBa
         }
     }
 
-    SectionTitle(stringResource(R.string.plugin_index_browse))
-    IchorTextButton(onClick = onBack) { Text(stringResource(R.string.plugins_title)) }
     MutedText(stringResource(R.string.plugin_index_note))
     error?.let { LoadFailureRow(it, onRetry = { reload++ }) }
 

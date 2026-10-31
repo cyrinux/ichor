@@ -22,6 +22,7 @@ import name.levis.ichor.ui.runbooks.RunbookRunScreen
 import name.levis.ichor.ui.runbooks.RunbooksScreen
 import name.levis.ichor.ui.search.SearchScreen
 import name.levis.ichor.ui.settings.LicensesScreen
+import name.levis.ichor.ui.settings.PluginIndexScreen
 import name.levis.ichor.ui.settings.SettingsActions
 import name.levis.ichor.ui.settings.SettingsPage
 import name.levis.ichor.ui.settings.SettingsPageScreen
@@ -109,6 +110,9 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
             onBack = { nav.popBackStack() },
         )
     }
+    composable(Routes.PLUGIN_INDEX) {
+        PluginIndexScreen(app.pluginRepository, app.uiPreferences, onBack = { nav.popBackStack() })
+    }
 }
 
 private fun settingsActions(nav: NavHostController, app: TalosApp) = SettingsActions(
@@ -122,6 +126,7 @@ private fun settingsActions(nav: NavHostController, app: TalosApp) = SettingsAct
     onChangelog = { nav.navigate(Routes.CHANGELOG) },
     onLicenses = { nav.navigate(Routes.LICENSES) },
     onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
+    onPluginIndex = { nav.navigate(Routes.PLUGIN_INDEX) },
     onFunding = { nav.navigate(Routes.FUNDING) },
     onCleared = {
         app.launchSync(runNow = true)
