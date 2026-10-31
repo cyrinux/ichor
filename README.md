@@ -134,6 +134,8 @@ The app is available in English, French, Spanish, Ukrainian, German, Italian, Si
   system's per-app language settings work too.
 - **iOS:** iOS sets the app's language in the Settings app; the app's Language row opens it.
 
+On Android, Settings → Appearance → UI style picks how the app is drawn: Material 3 or Material 3 Expressive.
+
 When you add or change a UI string, translate it in every language:
 
 | Platform | English source | Translations |

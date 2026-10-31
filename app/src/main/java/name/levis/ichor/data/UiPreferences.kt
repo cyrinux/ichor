@@ -48,6 +48,7 @@ enum class ThemeMode(@StringRes val label: Int) {
 /** The design language that draws the chrome (cards, bars, buttons), independent of [ThemeMode]. */
 enum class UiStyle(@StringRes val label: Int) {
     MATERIAL3(R.string.settings_ui_style_material3),
+    EXPRESSIVE(R.string.settings_ui_style_expressive),
     ;
 
     companion object {

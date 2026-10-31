@@ -29,18 +29,18 @@ fun IchorFilterChip(
     border: BorderStroke? = FilterChipDefaults.filterChipBorder(enabled, selected),
     interactionSource: MutableInteractionSource? = null,
 ) = FilterChip(
-    selected,
-    onClick,
-    label,
-    modifier,
-    enabled,
-    leadingIcon,
-    trailingIcon,
-    shape,
-    colors,
-    elevation,
-    border,
-    interactionSource,
+    selected = selected,
+    onClick = onClick,
+    label = label,
+    modifier = modifier,
+    enabled = enabled,
+    leadingIcon = leadingIcon,
+    trailingIcon = trailingIcon,
+    shape = shape,
+    colors = colors,
+    elevation = elevation,
+    border = border,
+    interactionSource = interactionSource,
 )
 
 @Composable
@@ -56,4 +56,16 @@ fun IchorAssistChip(
     elevation: ChipElevation? = AssistChipDefaults.assistChipElevation(),
     border: BorderStroke? = AssistChipDefaults.assistChipBorder(enabled),
     interactionSource: MutableInteractionSource? = null,
-) = AssistChip(onClick, label, modifier, enabled, leadingIcon, trailingIcon, shape, colors, elevation, border, interactionSource)
+) = AssistChip(
+    onClick = onClick,
+    label = label,
+    modifier = modifier,
+    enabled = enabled,
+    leadingIcon = leadingIcon,
+    trailingIcon = trailingIcon,
+    shape = shape,
+    colors = colors,
+    elevation = elevation,
+    border = border,
+    interactionSource = interactionSource,
+)

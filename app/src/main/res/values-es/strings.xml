@@ -500,6 +500,7 @@
     <string name="settings_ui_style">Estilo de interfaz</string>
     <string name="settings_ui_style_desc">Cómo se dibujan las tarjetas, barras y botones</string>
     <string name="settings_ui_style_material3">Material 3</string>
+    <string name="settings_ui_style_expressive">Material 3 Expressive</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_language_system">Predeterminado del sistema</string>
     <string name="settings_live_cluster_stats">Uso del clúster en directo</string>

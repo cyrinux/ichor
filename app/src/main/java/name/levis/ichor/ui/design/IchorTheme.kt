@@ -23,6 +23,10 @@ fun IchorTheme(
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(LocalUiStyle provides style) {
-        TalosTheme(mode, seed, content)
+        if (style == UiStyle.EXPRESSIVE) {
+            TalosTheme(mode, seed, material = { colors, inner -> ExpressiveTheme(colors, inner) }, content = content)
+        } else {
+            TalosTheme(mode, seed, content = content)
+        }
     }
 }

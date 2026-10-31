@@ -7,6 +7,7 @@ class UiStyleTest {
     @Test
     fun `parse reads a known style`() {
         assertEquals(UiStyle.MATERIAL3, UiStyle.parse("MATERIAL3"))
+        assertEquals(UiStyle.EXPRESSIVE, UiStyle.parse("EXPRESSIVE"))
     }
 
     @Test

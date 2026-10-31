@@ -465,6 +465,7 @@
     <string name="settings_ui_style">界面样式</string>
     <string name="settings_ui_style_desc">卡片、栏和按钮的绘制方式</string>
     <string name="settings_ui_style_material3">Material 3</string>
+    <string name="settings_ui_style_expressive">Material 3 Expressive</string>
     <string name="settings_language">语言</string>
     <string name="settings_language_system">系统默认</string>
     <string name="settings_live_cluster_stats">实时集群用量</string>
