@@ -239,6 +239,7 @@ struct OverviewView: View {
                                     }
                                 } else {
                                     overviewList(layout.visible, overview: overview, leading: true)
+                                        .accessibilityIdentifier(SmokeID.overview)
                                 }
                             }
                             .environment(\.availableWidth, geometry.size.width)

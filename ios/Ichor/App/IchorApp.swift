@@ -244,6 +244,8 @@ enum Route: Hashable {
     /// query fills the search (a node or disk alert names its node).
     case kubeNodes(filter: NodeFilter?, nodes: [KubeNodeInfo], query: String = "")
     case logs(node: String, hostname: String, service: String?)
+    /// A node's packet capture; the hub pushes its own, this one is the screenshot walk's.
+    case capture(node: String, hostname: String)
     /// Log of one Kubernetes container (from the Pods tab).
     case containerLogs(node: String, hostname: String, container: LogContainer)
     case insights
@@ -289,6 +291,9 @@ enum Route: Hashable {
     case argoWindows
     /// One Argo CD Application (a share link; the list pushes its own ArgoAppRoute).
     case argoApp(namespace: String, name: String)
+    /// What a sync of an Argo CD Application would change; the app pushes its own, this one is
+    /// the screenshot walk's.
+    case argoDiff(namespace: String, name: String)
     /// One Flux object (a share link; the list pushes its own FluxAppRoute).
     case fluxApp(kind: String, namespace: String, name: String)
     /// The directory dir (from the repository root) of an app's source, at the commit the cluster runs.
@@ -398,6 +403,11 @@ struct MainNavigation: View {
 
     var body: some View {
         shell
+            // The screen a UI test's launch asked for (UITestLaunch), once it is known. Never in a
+            // real launch, where the id stays nil.
+            .task(id: UITestLaunch.active ? UITestLaunch.shared.initialRoute : nil) {
+                if UITestLaunch.active, let route = UITestLaunch.shared.initialRoute { path = [route] }
+            }
             // Wake-on-LAN settings and results, for the node menus of every screen.
             .wakeOnLanPresenter()
             // The screenshot mode switching (under its cover): the screens pushed with the old names
@@ -541,6 +551,8 @@ struct MainNavigation: View {
         case .fluxApp(let kind, let namespace, let name):
             FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
                 .recordsOpened(.fluxApp(kind: kind, namespace: namespace, name: name), label: name, detail: namespace)
+        case .argoDiff(let namespace, let name): FluxDiffView(argo: namespace, name: name)
+        case .capture(let node, let hostname): CaptureView(node: node, hostname: hostname)
         case .gitOpsSource(let source, let dir, let app): SourceBrowserView(source: source, dir: dir, app: app)
         case .gitOpsFile(let source, let path, let app): SourceFileView(source: source, path: path, app: app)
         case .flux(let downNodes, let selected): FluxView(downNodes: downNodes, selected: selected)

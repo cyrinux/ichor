@@ -98,7 +98,7 @@ struct ClusterUpgradePlanView: View {
         }
         Section {
             ForEach(Array(p.nodes.enumerated()), id: \.element.id) { index, node in
-                nodeRow(index + 1, node)
+                nodeRow(index + 1, node).accessibilityIdentifier(SmokeID.upgradePlan)
             }
         } header: {
             Text("Nodes, in upgrade order (\(p.done) of \(p.nodes.count) done)")
@@ -182,7 +182,8 @@ struct ClusterUpgradePlanView: View {
             releases = try await TalosClient.talosReleases()
             if version.isEmpty { version = releases.first { !$0.prerelease }?.version ?? "" }
         } catch {
-            releasesError = error.localizedDescription
+            // The screenshot walk opens a set version: GitHub's answer is not part of its picture.
+            if !UITestLaunch.active { releasesError = error.localizedDescription }
         }
         if plan == nil { await loadPlan() }
     }

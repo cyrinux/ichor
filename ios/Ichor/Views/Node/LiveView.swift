@@ -65,7 +65,9 @@ struct LiveView: View {
             LiveChart(
                 title: cpuTitle,
                 points: stats.points, series: [(String(localized: "CPU"), ChartPalette.first, \.cpuPercent)],
-                format: { String(format: "%.0f%%", $0) }, fixedMax: 100)
+                format: { String(format: "%.0f%%", $0) }, fixedMax: 100
+            )
+            .accessibilityIdentifier(SmokeID.graphs)
             LiveChart(
                 title: memoryTitle,
                 points: stats.points, series: [(String(localized: "Memory"), ChartPalette.first, \.memPercent)],

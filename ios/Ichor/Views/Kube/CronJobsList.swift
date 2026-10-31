@@ -66,6 +66,7 @@ struct CronJobsList: View {
             }
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
+            .accessibilityIdentifier(SmokeID.screen("cronjobs"))
         }
         .confirmationDialog(
             confirm.map { String(localized: "Run \($0.displayName) now?") } ?? "",
