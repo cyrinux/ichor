@@ -6061,7 +6061,6 @@
     <string name="hetzner_server_type">服务器类型</string>
     <string name="hetzner_location">位置</string>
     <string name="hetzner_snapshot">Talos 快照</string>
-    <string name="hetzner_no_snapshot">此项目没有该架构的快照。请先用 hcloud-upload-image 工具制作 Talos 快照，或根据上面的镜像手动创建服务器。</string>
     <string name="hetzner_cost">每小时约 %1$s，每月 %2$s（税前）</string>
     <string name="hetzner_create">创建服务器</string>
     <string name="hetzner_confirm_title">在 Hetzner 创建 %1$s？</string>
@@ -6073,4 +6072,22 @@
     <string name="hetzner_stop_hint">停止会删除此次运行创建的服务器。</string>
     <string name="hetzner_stop_body">%1$s 将在 Hetzner 上删除。已响应的控制平面会保留：必须先移除其 etcd 成员。</string>
     <string name="hetzner_token_not_saved">无法读取令牌存储：请解锁后重试。</string>
+    <string name="hetzner_snapshot_missing">还没有 %1$s 的 Talos 快照：Ichor 可以制作一个。</string>
+    <string name="hetzner_snapshot_make">制作 Talos 快照</string>
+    <string name="hetzner_snapshot_intro">Ichor 会在 Hetzner 的救援系统中创建一台一次性服务器，把此集群的 Talos 镜像写入其磁盘并制作快照，然后删除该服务器及其临时 SSH 密钥。不会改动集群。需要几分钟。</string>
+    <string name="hetzner_snapshot_arch">架构</string>
+    <string name="hetzner_snapshot_cost">约一个起算小时的 %1$s（%2$s），另加快照存储费每 GB 每月 %3$s（税前）</string>
+    <string name="hetzner_snapshot_confirm">制作快照</string>
+    <string name="hetzner_phase_key">添加临时 SSH 密钥</string>
+    <string name="hetzner_phase_rescue">启动救援系统</string>
+    <string name="hetzner_phase_writing">写入 Talos 镜像</string>
+    <string name="hetzner_phase_snapshot">制作快照镜像</string>
+    <string name="hetzner_phase_cleanup">删除服务器和密钥</string>
+    <string name="hetzner_snapshot_stop">停止并清理</string>
+    <string name="hetzner_snapshot_stop_hint">停止会删除一次性服务器及其密钥。</string>
+    <string name="hetzner_snapshot_stop_body">运行将停止。一次性服务器、其密钥和未完成的快照都会被删除。</string>
+    <string name="hetzner_snapshot_done">快照 %1$s 已就绪：选择它来创建服务器。</string>
+    <string name="hetzner_snapshot_notification_title">正在制作 Talos 快照</string>
+    <string name="hetzner_snapshot_notification_done">Talos 快照已制作</string>
+    <string name="hetzner_snapshot_notification_failed">Talos 快照失败</string>
 </resources>

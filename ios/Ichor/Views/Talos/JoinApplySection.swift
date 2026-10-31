@@ -121,6 +121,9 @@ struct JoinApplySection: View {
             case .appearedInOmni?:
                 Text("\(job.request?.hostname ?? "") appeared in Omni: allocate it there")
                 Button("Close") { job.clear() }
+            case .snapshotMade(let made)?:
+                Text("Snapshot \(made.description) is ready: pick it to create the server.")
+                Button("Close") { job.clear() }
             case .failed(let error)?:
                 Label {
                     Text(verbatim: error)
@@ -176,6 +179,11 @@ struct JoinApplySection: View {
 extension JoinPhase {
     var localizedLabel: String {
         switch self {
+        case .key: String(localized: "Add a temporary SSH key")
+        case .rescue: String(localized: "Start the rescue system")
+        case .writing: String(localized: "Write the Talos image")
+        case .snapshot: String(localized: "Take the snapshot")
+        case .cleanup: String(localized: "Delete the server and the key")
         case .creating: String(localized: "Create the server")
         case .starting: String(localized: "Start the server")
         case .omni: String(localized: "Appear in Omni")

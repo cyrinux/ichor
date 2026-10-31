@@ -45,6 +45,14 @@ Part of the [Ichor documentation](../README.md#documentation).
      from a laptop.
   5. **Wait for the new member:** the screen polls etcd until a new healthy voting member joins.
 
+- **Making a Talos snapshot at Hetzner (Create the server at Hetzner → Make a Talos snapshot):**
+  billable, so the cost shows first, and nothing of the cluster is touched. The run creates, with a
+  Read & Write token: one temporary SSH key, one small server in the rescue system (its host key
+  pinned for the run, since it cannot be known in advance), then the snapshot, labelled `os=talos`.
+  It deletes the server and the key on every path, and an unfinished snapshot when it fails or is
+  stopped; the message names what was deleted. The one case that needs the Hetzner console is a
+  cleanup that fails: the message names the server and the key to delete there, and they stay
+  billed until then.
 - **Rotating the Talos CA (Settings → Clusters & backup → Rotate the cluster CA…, `os:admin`):**
   replaces the CA that signs every Talos API certificate, in the order of
   `talosctl rotate-ca --kubernetes=false`. Rotate it when a talosconfig leaked or a phone was

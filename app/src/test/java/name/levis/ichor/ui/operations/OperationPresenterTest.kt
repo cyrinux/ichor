@@ -13,6 +13,7 @@ import name.levis.ichor.data.ImagePullRunState
 import name.levis.ichor.data.ImageScanSession
 import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.JoinRunState
+import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.data.K8sUpgradeRunState
 import name.levis.ichor.data.MaintenanceRunState
 import name.levis.ichor.data.UpgradeRunState
@@ -166,6 +167,16 @@ class OperationPresenterTest {
         val run = JoinRunState(request, "lab")
         assertEquals(listOf(OperationAction.STOP_FOLLOWING), JoinPresenter.progress(run).actions)
         assertEquals(res(R.string.join_notification_title, "w-9"), JoinPresenter.progress(run).title)
+    }
+
+    @Test
+    fun aSnapshotRunIsNotNamedLikeANode() {
+        val spec = HetznerSnapshotSpec(arch = "amd64", location = "fsn1")
+        val request = JoinRequest("", "", "", "Talos amd64", "", "", snapshot = spec)
+        val run = JoinRunState(request, "lab")
+        assertEquals(res(R.string.hetzner_snapshot_notification_title), JoinPresenter.progress(run).title)
+        assertEquals(res(R.string.hetzner_snapshot_notification_failed), JoinPresenter.failedTitle(run))
+        assertEquals(listOf(OperationAction.STOP_FOLLOWING), JoinPresenter.progress(run).actions)
     }
 
     @Test

@@ -125,11 +125,15 @@ public struct JoinRequest: Equatable, Sendable {
     public let hetzner: HetznerCreateSpec?
     /// The Hetzner server joins Omni, not the cluster directly.
     public let omni: Bool
+    /// No node at all: a throwaway server becomes a Talos snapshot (`hostname` only labels the run).
+    public let snapshot: HetznerSnapshotSpec?
 
     public init(
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
-        replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, omni: Bool = false
+        replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, omni: Bool = false,
+        snapshot: HetznerSnapshotSpec? = nil
     ) {
+        self.snapshot = snapshot
         self.address = address
         self.template = template
         self.role = role
@@ -143,6 +147,7 @@ public struct JoinRequest: Equatable, Sendable {
 
     /// The steps of this run's timeline.
     public var phases: [JoinPhase] {
+        if snapshot != nil { return JoinPhase.snapshotRun }
         guard hetzner != nil else { return JoinPhase.maintenanceRun }
         return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
     }
@@ -151,7 +156,7 @@ public struct JoinRequest: Equatable, Sendable {
     public func withReplacing(_ on: Bool) -> JoinRequest {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
-            staticAddress: staticAddress, replacing: on, hetzner: hetzner, omni: omni)
+            staticAddress: staticAddress, replacing: on, hetzner: hetzner, omni: omni, snapshot: snapshot)
     }
 }
 
@@ -182,7 +187,8 @@ public struct JoinProgress: Decodable, Equatable, Sendable {
 
 /// Phases of a node join, in order.
 public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
-    case creating, starting, applying, installing, rebooting, booted, joining, omni, registering, done
+    case key, creating, starting, applying, installing, rebooting, booted, joining, omni, registering
+    case rescue, writing, snapshot, cleanup, done
 
     /// A node in maintenance mode that gets its config from the app.
     public static let maintenanceRun: [JoinPhase] = [
@@ -194,6 +200,8 @@ public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
     ]
     /// A server created with Omni's join config.
     public static let cloudOmniRun: [JoinPhase] = [.creating, .starting, .omni, .done]
+    /// A throwaway server that becomes a Talos snapshot.
+    public static let snapshotRun: [JoinPhase] = [.key, .creating, .rescue, .writing, .snapshot, .cleanup, .done]
 
     public static func < (a: Self, b: Self) -> Bool {
         allCases.firstIndex(of: a)! < allCases.firstIndex(of: b)!

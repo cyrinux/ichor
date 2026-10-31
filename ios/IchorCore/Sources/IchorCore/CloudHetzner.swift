@@ -115,6 +115,64 @@ public struct HetznerSnapshot: Decodable, Equatable, Hashable, Identifiable, Sen
     }
 }
 
+extension HetznerOptions {
+    /// The locations a throwaway server of `arch` can be made in.
+    public func locations(forArch arch: String) -> [HetznerLocation] {
+        locations.filter { location in
+            serverTypes.contains { $0.arch == arch && $0.price(in: location.name) != nil }
+        }
+    }
+}
+
+/// StartHetznerSnapshot's specJSON. The image's URL comes from the template, never from here.
+public struct HetznerSnapshotSpec: Encodable, Equatable, Sendable {
+    public let templateNode: String
+    public let arch: String
+    public let location: String
+
+    public init(templateNode: String = "", arch: String, location: String) {
+        self.templateNode = templateNode
+        self.arch = arch
+        self.location = location
+    }
+}
+
+/// What a finished snapshot run reports.
+public struct HetznerSnapshotResult: Decodable, Equatable, Sendable {
+    public let imageId: Int64
+    public let description: String
+    public let sizeGB: Double
+    public let created: String
+
+    private enum CodingKeys: String, CodingKey { case imageId, description, sizeGB, created }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        imageId = try c.field(.imageId, 0)
+        description = try c.field(.description, "")
+        sizeGB = try c.field(.sizeGB, 0)
+        created = try c.field(.created, "")
+    }
+}
+
+/// The cost line of a snapshot run; prices before tax, in `currency`.
+public struct HetznerSnapshotCost: Decodable, Equatable, Sendable {
+    public let serverType: String
+    public let hourly: String
+    public let monthlyPerGB: String
+    public let currency: String
+
+    private enum CodingKeys: String, CodingKey { case serverType, hourly, monthlyPerGB, currency }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        serverType = try c.field(.serverType, "")
+        hourly = try c.field(.hourly, "")
+        monthlyPerGB = try c.field(.monthlyPerGB, "")
+        currency = try c.field(.currency, "")
+    }
+}
+
 /// StartHetznerCreate's specJSON. Never holds the token.
 public struct HetznerCreateSpec: Encodable, Equatable, Sendable {
     public let serverType: String

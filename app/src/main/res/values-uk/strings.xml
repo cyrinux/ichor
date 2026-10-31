@@ -6456,7 +6456,6 @@
     <string name="hetzner_server_type">Тип сервера</string>
     <string name="hetzner_location">Розташування</string>
     <string name="hetzner_snapshot">Знімок Talos</string>
-    <string name="hetzner_no_snapshot">У цьому проєкті немає знімка для цієї архітектури. Спочатку створіть знімок Talos за допомогою hcloud-upload-image або створіть сервер вручну з образів вище.</string>
     <string name="hetzner_cost">Близько %1$s на годину, %2$s на місяць, без податків</string>
     <string name="hetzner_create">Створити сервер</string>
     <string name="hetzner_confirm_title">Створити %1$s у Hetzner?</string>
@@ -6468,4 +6467,22 @@
     <string name="hetzner_stop_hint">Зупинка видаляє сервер, створений цим запуском.</string>
     <string name="hetzner_stop_body">%1$s видаляється в Hetzner. Control plane, що вже відповіла, зберігається: спершу потрібно вилучити її учасника etcd.</string>
     <string name="hetzner_token_not_saved">Не вдається прочитати сховище токенів: розблокуйте його й повторіть спробу.</string>
+    <string name="hetzner_snapshot_missing">Знімка Talos для %1$s ще немає: Ichor може його створити.</string>
+    <string name="hetzner_snapshot_make">Створити знімок Talos</string>
+    <string name="hetzner_snapshot_intro">Ichor створює одноразовий сервер у системі відновлення Hetzner, записує образ Talos цього кластера на його диск, робить знімок, а потім видаляє сервер і його тимчасовий SSH-ключ. Кластер не змінюється. Це триває кілька хвилин.</string>
+    <string name="hetzner_snapshot_arch">Архітектура</string>
+    <string name="hetzner_snapshot_cost">Приблизно одна розпочата година %1$s (%2$s) плюс зберігання знімка по %3$s за ГБ на місяць, без податків</string>
+    <string name="hetzner_snapshot_confirm">Створити знімок</string>
+    <string name="hetzner_phase_key">Додати тимчасовий SSH-ключ</string>
+    <string name="hetzner_phase_rescue">Запустити систему відновлення</string>
+    <string name="hetzner_phase_writing">Записати образ Talos</string>
+    <string name="hetzner_phase_snapshot">Зробити знімок</string>
+    <string name="hetzner_phase_cleanup">Видалити сервер і ключ</string>
+    <string name="hetzner_snapshot_stop">Зупинити й очистити</string>
+    <string name="hetzner_snapshot_stop_hint">Зупинка видаляє одноразовий сервер і його ключ.</string>
+    <string name="hetzner_snapshot_stop_body">Виконання зупиняється. Одноразовий сервер, його ключ і незавершений знімок видаляються.</string>
+    <string name="hetzner_snapshot_done">Знімок %1$s готовий: виберіть його, щоб створити сервер.</string>
+    <string name="hetzner_snapshot_notification_title">Створення знімка Talos</string>
+    <string name="hetzner_snapshot_notification_done">Знімок Talos створено</string>
+    <string name="hetzner_snapshot_notification_failed">Не вдалося створити знімок Talos</string>
 </resources>

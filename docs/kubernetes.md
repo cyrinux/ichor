@@ -319,10 +319,13 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     follows it until it runs, then follows the node until it joins, or until the machine appears in
     Omni (allocate it there). A failed or stopped run deletes the server it created, except a
     control plane that already answered: it may be an etcd member, so remove the member first, then
-    delete the server. Each run is in the activity log. The snapshot is made once from a computer
-    with [`hcloud-upload-image`](https://github.com/apricote/hcloud-upload-image). The token can
-    delete everything in its project and never expires: it stays sealed on the device and is not in
-    backups. Elsewhere the app calls no provider API.
+    delete the server. Each run is in the activity log. A project with no Talos snapshot gets one
+    from the app itself (**Make a Talos snapshot**): a throwaway server in Hetzner's rescue system
+    for a few minutes, billed by Hetzner and deleted after, writes the Image Factory's image for
+    your Talos version and schematic, the way
+    [`hcloud-upload-image`](https://github.com/apricote/hcloud-upload-image) does from a computer;
+    see [safety](safety.md). The token can delete everything in its project and never expires: it
+    stays sealed on the device and is not in backups. Elsewhere the app calls no provider API.
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.
