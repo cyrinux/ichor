@@ -2,6 +2,8 @@
 agp = "9.4.1"
 kotlin = "2.4.21"
 composeBom = "2026.09.00"
+# Ahead of the BOM for the Material 3 Expressive APIs; back to the BOM once one carries 1.5.0.
+material3 = "1.5.0-beta02"
 activityCompose = "1.13.0"
 lifecycle = "2.11.0"
 navigation = "2.10.2"
@@ -42,7 +44,7 @@ compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeB
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
-compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 compose-material3-adaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
 compose-material3-adaptive-layout = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout" }
 compose-material3-adaptive-navigation = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation" }

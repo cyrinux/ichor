@@ -550,6 +550,7 @@
     <string name="settings_ui_style">Стиль інтерфейсу</string>
     <string name="settings_ui_style_desc">Як відображаються картки, панелі та кнопки</string>
     <string name="settings_ui_style_material3">Material 3</string>
+    <string name="settings_ui_style_expressive">Material 3 Expressive</string>
     <string name="settings_language">Мова</string>
     <string name="settings_language_system">Системна</string>
     <string name="settings_live_cluster_stats">Навантаження кластера наживо</string>

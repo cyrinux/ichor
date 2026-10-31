@@ -8,6 +8,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
@@ -16,7 +17,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import name.levis.ichor.data.UiStyle
 
+/** Expressive buttons change shape when pressed; one given its own shape keeps it. */
+@Composable
+private fun morphs(shape: Shape, default: Shape): Boolean = LocalUiStyle.current == UiStyle.EXPRESSIVE && shape == default
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun IchorButton(
     onClick: () -> Unit,
@@ -29,8 +36,15 @@ fun IchorButton(
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     interactionSource: MutableInteractionSource? = null,
     content: @Composable RowScope.() -> Unit,
-) = Button(onClick, modifier, enabled, shape, colors, elevation, border, contentPadding, interactionSource, content)
+) {
+    if (morphs(shape, ButtonDefaults.shape)) {
+        Button(onClick, ButtonDefaults.shapes(), modifier, enabled, colors, elevation, border, contentPadding, interactionSource, content)
+    } else {
+        Button(onClick, modifier, enabled, shape, colors, elevation, border, contentPadding, interactionSource, content)
+    }
+}
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun IchorTextButton(
     onClick: () -> Unit,
@@ -43,8 +57,15 @@ fun IchorTextButton(
     contentPadding: PaddingValues = ButtonDefaults.TextButtonContentPadding,
     interactionSource: MutableInteractionSource? = null,
     content: @Composable RowScope.() -> Unit,
-) = TextButton(onClick, modifier, enabled, shape, colors, elevation, border, contentPadding, interactionSource, content)
+) {
+    if (morphs(shape, ButtonDefaults.textShape)) {
+        TextButton(onClick, ButtonDefaults.shapes(), modifier, enabled, colors, elevation, border, contentPadding, interactionSource, content)
+    } else {
+        TextButton(onClick, modifier, enabled, shape, colors, elevation, border, contentPadding, interactionSource, content)
+    }
+}
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun IchorOutlinedButton(
     onClick: () -> Unit,
@@ -57,7 +78,13 @@ fun IchorOutlinedButton(
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     interactionSource: MutableInteractionSource? = null,
     content: @Composable RowScope.() -> Unit,
-) = OutlinedButton(onClick, modifier, enabled, shape, colors, elevation, border, contentPadding, interactionSource, content)
+) {
+    if (morphs(shape, ButtonDefaults.outlinedShape)) {
+        OutlinedButton(onClick, ButtonDefaults.shapes(), modifier, enabled, colors, elevation, border, contentPadding, interactionSource, content)
+    } else {
+        OutlinedButton(onClick, modifier, enabled, shape, colors, elevation, border, contentPadding, interactionSource, content)
+    }
+}
 
 @Composable
 fun IchorIconButton(

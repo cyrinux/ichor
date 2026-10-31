@@ -69,7 +69,7 @@ struct ClusterUpgradePlanView: View {
                     ForEach(offeredVersions, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
                 .onChange(of: version) { _, _ in Task { await loadPlan() } }
-                if let releasesError { Text(verbatim: releasesError).font(.footnote).foregroundStyle(.secondary) }
+                if let releasesError { LoadFailureRow(message: releasesError, retry: { await load() }, compact: true) }
             }
             if let plan {
                 switch plan {

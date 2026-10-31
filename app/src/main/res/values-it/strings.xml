@@ -501,6 +501,7 @@
     <string name="settings_ui_style">Stile dell\'interfaccia</string>
     <string name="settings_ui_style_desc">Come vengono disegnati schede, barre e pulsanti</string>
     <string name="settings_ui_style_material3">Material 3</string>
+    <string name="settings_ui_style_expressive">Material 3 Expressive</string>
     <string name="settings_language">Lingua</string>
     <string name="settings_language_system">Predefinita di sistema</string>
     <string name="settings_live_cluster_stats">Uso del cluster in tempo reale</string>

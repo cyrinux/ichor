@@ -387,7 +387,7 @@ struct UpgradeView: View {
                 )
                 .font(.footnote).foregroundStyle(.statusWarn)
             } else if !check.error.isEmpty {
-                Text(verbatim: check.error).font(.footnote).foregroundStyle(.secondary)
+                LoadFailureRow(message: check.error, retry: { await checkExtensions() }, compact: true)
             } else if check.unknown && !check.installed.isEmpty {
                 Text("Extensions not checked: the image is not from the Image Factory.").font(.footnote)
                     .foregroundStyle(.secondary)

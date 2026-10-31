@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.components
 
+import name.levis.ichor.data.UiStyle
+import name.levis.ichor.ui.design.IchorLoadingBox
+import name.levis.ichor.ui.design.LocalUiStyle
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +24,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Search
 import name.levis.ichor.ui.design.IchorButton
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import name.levis.ichor.ui.design.IchorIconButton
@@ -58,15 +60,13 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 /** A page (or a pane of one) still loading: the grey [style] shapes of what is coming. */
 @Composable
 fun LoadingBox(modifier: Modifier = Modifier, style: SkeletonStyle = SkeletonStyle.CARDS) {
-    SkeletonBox(modifier, style)
+    if (LocalUiStyle.current == UiStyle.EXPRESSIVE) IchorLoadingBox(modifier) else SkeletonBox(modifier, style)
 }
 
 /** A centred spinner, for a wait too small or too short-lived for a skeleton. */
 @Composable
 fun SpinnerBox(modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
+    IchorLoadingBox(modifier)
 }
 
 @Composable

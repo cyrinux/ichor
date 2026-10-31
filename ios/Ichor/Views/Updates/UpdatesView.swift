@@ -90,7 +90,7 @@ struct UpdatesView: View {
     private var proposeBar: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let planError {
-                Text(verbatim: planError).font(.caption).foregroundStyle(.red)
+                LoadFailureRow(message: planError, retry: { await proposeSelected() }, compact: true)
             }
             HStack(spacing: 8) {
                 if planning {
