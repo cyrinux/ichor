@@ -7,12 +7,16 @@ let demoWalkTimeout: TimeInterval = 60
 /// What the demo walks share (DemoSmokeTests, DemoScreenshotTests). Every step waits for an
 /// accessibility identifier, the app's SmokeID: a UI test cannot import the app.
 extension XCTestCase {
-    /// Launches the app on the demo; `screen` opens one of its screens (UITestScreen).
+    /// Launches the app on the demo; `screen` opens one of its screens (UITestScreen), `alone`
+    /// removes the other demo first.
     @MainActor
-    func launch(_ demo: String, screen: String? = nil, arguments: [String] = []) -> XCUIApplication {
+    func launch(
+        _ demo: String, screen: String? = nil, alone: Bool = false, arguments: [String] = []
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["ICHOR_UI_TEST"] = demo
         if let screen { app.launchEnvironment["ICHOR_UI_TEST_SCREEN"] = screen }
+        if alone { app.launchEnvironment["ICHOR_UI_TEST_ALONE"] = "1" }
         app.launchArguments += arguments
         app.launch()
         return app

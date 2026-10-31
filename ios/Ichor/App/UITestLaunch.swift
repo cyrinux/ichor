@@ -65,6 +65,7 @@ final class UITestLaunch {
 
     nonisolated private static let mode = ProcessInfo.processInfo.environment["ICHOR_UI_TEST"]
     nonisolated private static let screen = ProcessInfo.processInfo.environment["ICHOR_UI_TEST_SCREEN"]
+    nonisolated private static let alone = ProcessInfo.processInfo.environment["ICHOR_UI_TEST_ALONE"] == "1"
 
     /// A UI test is driving the app: the demo tour's coach marks stay hidden (DemoTour.configure).
     nonisolated static var active: Bool { mode != nil }
@@ -93,6 +94,13 @@ final class UITestLaunch {
                 try await model.saveKubeDemo()
             } else {
                 try await model.save(yaml: try await TalosClient.demoConfig(), replacingSameCluster: true)
+            }
+            // The screenshot walk's pictures show one cluster: the app data outlives a launch, and
+            // with two the home's header changes.
+            if Self.alone {
+                for other in model.summary?.contexts ?? [] where other.demo && other.isKube != kube {
+                    try await model.removeCluster(other.name)
+                }
             }
         } catch {
             failure = "Demo not added: \(error.localizedDescription)"

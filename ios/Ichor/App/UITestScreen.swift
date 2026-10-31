@@ -35,8 +35,10 @@ enum UITestScreen {
     /// The screens that need nothing read from the demo.
     private static func plainRoute(named name: String) -> Route? {
         switch name {
-        // "": the newest release the plan screen offers.
-        case "upgrade": .clusterUpgrade(version: "")
+        // A set version, newer than the demo's nodes: the newest release comes from GitHub, which
+        // refuses unauthenticated reads from a shared CI address (403), while the demo's plan
+        // answers for any version.
+        case "upgrade": .clusterUpgrade(version: "v1.15.0")
         case "plugins": .settingsPage(.plugins)
         case "capacity": .capacity
         case "argocd-diff": .argoDiff(namespace: argoApp.namespace, name: argoApp.name)

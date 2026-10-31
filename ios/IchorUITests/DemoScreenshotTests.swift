@@ -61,7 +61,7 @@ final class DemoScreenshotTests: XCTestCase {
 
     @MainActor
     func testCaptureTheDemo() {
-        waitFor(ID.overview, in: launch("demo", arguments: Self.closedNotice))
+        waitFor(ID.overview, in: open("demo"))
         capture("overview", settle: Settle.standard)
 
         let shots: [(name: String, anchor: String, settle: TimeInterval)] = [
@@ -72,12 +72,12 @@ final class DemoScreenshotTests: XCTestCase {
             ("upgrade", ID.upgradePlan, Settle.upgrade),
         ]
         for shot in shots {
-            waitFor(shot.anchor, in: launch("demo", screen: shot.name, arguments: Self.closedNotice))
+            waitFor(shot.anchor, in: open("demo", screen: shot.name))
             capture(shot.name, settle: shot.settle)
         }
 
         // The start button is at the end of the options, and enabled once an interface is known.
-        let app = launch("demo", screen: "capture", arguments: Self.closedNotice)
+        let app = open("demo", screen: "capture")
         let start = scrollTo(ID.captureStart, in: app, settle: Settle.feature)
         let enabled = NSPredicate(format: "isEnabled == true")
         wait(for: [expectation(for: enabled, evaluatedWith: start)], timeout: demoWalkTimeout)
@@ -89,11 +89,17 @@ final class DemoScreenshotTests: XCTestCase {
     @MainActor
     func testCaptureTheFeatures() {
         for feature in Self.features {
-            waitFor(feature.anchor, in: launch("demo", screen: feature.name, arguments: Self.closedNotice))
+            waitFor(feature.anchor, in: open("demo", screen: feature.name))
             capture("feature-\(feature.name)", settle: Settle.feature)
         }
-        waitFor(ID.kubeHome, in: launch("demo-kube", arguments: Self.closedNotice))
+        waitFor(ID.kubeHome, in: open("demo-kube"))
         capture("feature-kube-home", settle: Settle.feature)
+    }
+
+    /// The demo alone on the phone, its notice closed: the same picture in every run.
+    @MainActor
+    private func open(_ demo: String, screen: String? = nil) -> XCUIApplication {
+        launch(demo, screen: screen, alone: true, arguments: Self.closedNotice)
     }
 
     /// Lets the screen load its demo data, then attaches the whole screen as `name`.

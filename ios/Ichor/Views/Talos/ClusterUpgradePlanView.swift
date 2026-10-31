@@ -182,7 +182,8 @@ struct ClusterUpgradePlanView: View {
             releases = try await TalosClient.talosReleases()
             if version.isEmpty { version = releases.first { !$0.prerelease }?.version ?? "" }
         } catch {
-            releasesError = error.localizedDescription
+            // The screenshot walk opens a set version: GitHub's answer is not part of its picture.
+            if !UITestLaunch.active { releasesError = error.localizedDescription }
         }
         if plan == nil { await loadPlan() }
     }
