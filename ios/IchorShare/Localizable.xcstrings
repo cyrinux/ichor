@@ -191,6 +191,19 @@
         "ru": { "stringUnit": { "state": "translated", "value": "Не удалось сохранить файл." } }
       }
     },
+    "The file could not be protected, so it was not saved.": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Datei konnte nicht geschützt werden und wurde daher nicht gespeichert." } },
+        "es": { "stringUnit": { "state": "translated", "value": "No se pudo proteger el archivo, así que no se ha guardado." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Le fichier n’a pas pu être protégé : il n’a donc pas été enregistré." } },
+        "it": { "stringUnit": { "state": "translated", "value": "Impossibile proteggere il file, quindi non è stato salvato." } },
+        "uk": { "stringUnit": { "state": "translated", "value": "Не вдалося захистити файл, тому його не збережено." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "无法保护该文件,因此未保存。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ファイルを保護できなかったため、保存しませんでした。" } },
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Não foi possível proteger o arquivo, por isso ele não foi salvo." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Не удалось защитить файл, поэтому он не сохранён." } }
+      }
+    },
     "This file is too large for a config or a backup.": {
       "localizations": {
         "de": {

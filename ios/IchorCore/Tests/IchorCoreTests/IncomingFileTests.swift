@@ -73,6 +73,78 @@ final class IncomingFileTests: XCTestCase {
         XCTAssertEqual(pending.stale.map(\.lastPathComponent), [stale.lastPathComponent])
     }
 
+    func testStageProtectsTheFolderAndTheFileBeforeNamingIt() throws {
+        let (source, inbox) = try stagingFolders()
+        let fileManager = ProtectionFileManager()
+
+        let staged = try IncomingFile.stage(source, in: inbox, fileManager: fileManager)
+
+        XCTAssertEqual(try Data(contentsOf: staged), kubeconfig)
+        XCTAssertEqual(staged.deletingLastPathComponent().path, inbox.path)
+        XCTAssertEqual(staged.pathExtension, "yaml")
+        XCTAssertFalse(staged.lastPathComponent.hasPrefix("."))
+        XCTAssertEqual(fileManager.protected.count, 2)
+        XCTAssertEqual(fileManager.protected.first, inbox.path)
+        XCTAssertTrue(fileManager.protected.last?.hasPrefix(inbox.path + "/.") == true)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: inbox.path), [staged.lastPathComponent])
+    }
+
+    func testStageLeavesNoCopyWhenTheProtectionCannotBeSet() throws {
+        let (source, inbox) = try stagingFolders()
+        let fileManager = ProtectionFileManager()
+        fileManager.failSetOnFiles = true
+
+        XCTAssertThrowsError(try IncomingFile.stage(source, in: inbox, fileManager: fileManager)) {
+            XCTAssertEqual($0 as? IncomingFileError, .notProtected)
+        }
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: inbox.path), [])
+    }
+
+    func testStageLeavesNoCopyWhenTheFileReadsBackAWeakerClass() throws {
+        let (source, inbox) = try stagingFolders()
+        let fileManager = ProtectionFileManager()
+        fileManager.fileClassReadBack = .completeUntilFirstUserAuthentication
+
+        XCTAssertThrowsError(try IncomingFile.stage(source, in: inbox, fileManager: fileManager)) {
+            XCTAssertEqual($0 as? IncomingFileError, .notProtected)
+        }
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: inbox.path), [])
+    }
+
+    func testStageCopiesNothingWhenTheFolderCannotBeProtected() throws {
+        let (source, inbox) = try stagingFolders()
+        let fileManager = ProtectionFileManager()
+        fileManager.failSetOnFolders = true
+
+        XCTAssertThrowsError(try IncomingFile.stage(source, in: inbox, fileManager: fileManager)) {
+            XCTAssertEqual($0 as? IncomingFileError, .notProtected)
+        }
+        XCTAssertEqual(fileManager.protected, [])
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: inbox.path), [])
+    }
+
+    func testPendingNeverTakesAnUnfinishedCopyAndDropsIt() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("incoming-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try kubeconfig.write(to: folder.appendingPathComponent(".unfinished.yaml"))
+        try kubeconfig.write(to: folder.appendingPathComponent("sent.partial"))
+
+        let pending = IncomingFile.pending(in: folder)
+
+        XCTAssertEqual(pending.take.map(\.lastPathComponent), ["sent.partial"])
+        XCTAssertEqual(pending.stale.map(\.lastPathComponent), [".unfinished.yaml"])
+    }
+
+    private func stagingFolders() throws -> (source: URL, inbox: URL) {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("stage-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: root) }
+        let source = root.appendingPathComponent("config.yaml")
+        try kubeconfig.write(to: source)
+        return (source, root.appendingPathComponent("incoming", isDirectory: true))
+    }
+
     func testPendingOfAMissingFolderIsEmpty() {
         let pending = IncomingFile.pending(in: URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)"))
         XCTAssertTrue(pending.take.isEmpty && pending.stale.isEmpty)
@@ -84,5 +156,31 @@ final class IncomingFileTests: XCTestCase {
         try Data(repeating: 0x41, count: 200).write(to: url)
         XCTAssertEqual(IncomingFile.head(of: url).count, IncomingFile.headLength)
         XCTAssertEqual(IncomingFile.head(of: url.appendingPathExtension("missing")), Data())
+    }
+}
+
+/// Stands in for data protection, which only a device has: records the class set on each path and
+/// reads it back, or fails as told.
+private final class ProtectionFileManager: FileManager, @unchecked Sendable {
+    var failSetOnFiles = false
+    var failSetOnFolders = false
+    var fileClassReadBack: FileProtectionType?
+    private(set) var protected: [String] = []
+    private var classes: [String: FileProtectionType] = [:]
+
+    override func setAttributes(_ attributes: [FileAttributeKey: Any], ofItemAtPath path: String) throws {
+        var isFolder: ObjCBool = false
+        _ = fileExists(atPath: path, isDirectory: &isFolder)
+        if isFolder.boolValue ? failSetOnFolders : failSetOnFiles { throw CocoaError(.fileWriteNoPermission) }
+        classes[path] = attributes[.protectionKey] as? FileProtectionType
+    }
+
+    override func attributesOfItem(atPath path: String) throws -> [FileAttributeKey: Any] {
+        var isFolder: ObjCBool = false
+        _ = fileExists(atPath: path, isDirectory: &isFolder)
+        guard let set = classes[path] else { return [:] }
+        if !isFolder.boolValue, let fileClassReadBack { return [.protectionKey: fileClassReadBack] }
+        if !protected.contains(path) { protected.append(path) }
+        return [.protectionKey: set]
     }
 }
