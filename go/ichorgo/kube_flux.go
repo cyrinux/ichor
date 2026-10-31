@@ -24,6 +24,11 @@ const (
 	fluxOwnerNamespace = flux.OwnerNamespace
 
 	fluxActionReconcile = flux.ActionReconcile
+
+	fluxSourceRoot = flux.SourceRoot
+
+	fluxArtifactMaxFiles    = flux.ArtifactMaxFiles
+	fluxArtifactMaxUnpacked = flux.ArtifactMaxUnpacked
 )
 
 type (
@@ -40,6 +45,11 @@ type (
 	fluxResource            = flux.Resource
 	fluxCondition           = flux.Condition
 	fluxHistory             = flux.History
+	fluxKustomizeSpec       = flux.KustomizeSpec
+	fluxArtifact            = flux.Artifact
+
+	// fluxDiff is the Flux shape of a GitOps diff.
+	fluxDiff = gitOpsDiff
 )
 
 func fluxPath(groups map[string]string, kind, namespace, name string) (string, error) {
@@ -83,6 +93,9 @@ func fluxEnv(k *kubeClient) flux.Env {
 		},
 		UnhealthyPods: func(ctx context.Context, namespaces []string) ([]kubePod, error) {
 			return unhealthyPods(ctx, k, namespaces)
+		},
+		Exec: func(ctx context.Context, timeout time.Duration, maxOutput int, namespace, pod, container string, argv []string) ([]byte, []byte, error) {
+			return k.execWith(ctx, execLimits{timeout, maxOutput}, namespace, pod, container, argv)
 		},
 	}
 }
@@ -147,4 +160,44 @@ func KubeFluxAction(configYAML, contextName, kubeServer, kind, namespace, name, 
 	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
 		return flux.Action(ctx, k.api(), kind, namespace, name, action, time.Now())
 	})
+}
+
+func validateFluxDiff(kind, namespace, name string) error {
+	if kind != "Kustomization" {
+		return flux.ErrDiffKind
+	}
+
+	return validateKubeName("kustomization", namespace, name)
+}
+
+// KubeFluxDiff compares the Flux object kind namespace/name with what its source would
+// apply now (os:admin): per object created, changed (with a unified diff), deleted (pruned),
+// unchanged, encrypted (SOPS, not compared), ignored or error. Secret values never show.
+// Only kind Kustomization yet. kubeServer: see KubePods.
+func KubeFluxDiff(configYAML, contextName, kubeServer, kind, namespace, name string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+
+	if err := validateFluxDiff(kind, namespace, name); err != nil {
+		return "", err
+	}
+
+	target := kubeTarget{configYAML, contextName, kubeServer}
+	if isDemoContext(target.config, target.context) {
+		return toJSON(demoFluxDiff(namespace, name))
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), flux.DiffTimeout)
+	defer cancel()
+
+	res, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (fluxDiff, error) {
+		return flux.Diff(ctx, fluxEnv(k), namespace, name)
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return toJSON(res)
 }

@@ -1,6 +1,9 @@
 package ichorgo
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -20,6 +23,36 @@ func readFluxFixture(t *testing.T, name string) string {
 	}
 
 	return string(data)
+}
+
+// fluxTarball is a gzipped tarball of files (name -> content).
+func fluxTarball(t *testing.T, files map[string]string) []byte {
+	t.Helper()
+
+	var buf bytes.Buffer
+
+	gz := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gz)
+
+	for name, content := range files {
+		if err := tw.WriteHeader(&tar.Header{Name: name, Mode: 0o644, Size: int64(len(content)), Typeflag: tar.TypeReg}); err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := tw.Write([]byte(content)); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := gz.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	return buf.Bytes()
 }
 
 func fluxAppByName(t *testing.T, s fluxStatus, name string) fluxApp {

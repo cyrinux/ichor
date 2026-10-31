@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/kube/kubediff"
 )
 
 func decodeObject(t *testing.T, s string) map[string]any {
@@ -32,7 +34,7 @@ func TestDiffLiveChanges(t *testing.T) {
 			{"name":"app","image":"ghcr.io/org/app:1.3","env":[{"name":"LOG","value":"debug"}],"ports":[{"containerPort":8080}]}]}}},
 		"status":{"replicas":5}}`)
 
-	got := diffLiveChanges(live, wanted, newKubeDiffMasker())
+	got := kubediff.LiveChanges(live, wanted, newKubeDiffMasker())
 
 	labels := make([]string, len(got))
 	for i, c := range got {
@@ -56,12 +58,12 @@ func TestDiffLiveChanges(t *testing.T) {
 // Nothing of a Secret, nor a value holding a substituted Secret value, is ever offered.
 func TestDiffLiveChangesNeverSecrets(t *testing.T) {
 	secret := `{"apiVersion":"v1","kind":"Secret","metadata":{"name":"s"},"data":{"k":"%s"}}`
-	if c := diffLiveChanges(decodeObject(t, strings.Replace(secret, "%s", "bGl2ZQ==", 1)), decodeObject(t, strings.Replace(secret, "%s", "Z2l0", 1)), nil); c != nil {
+	if c := kubediff.LiveChanges(decodeObject(t, strings.Replace(secret, "%s", "bGl2ZQ==", 1)), decodeObject(t, strings.Replace(secret, "%s", "Z2l0", 1)), nil); c != nil {
 		t.Errorf("secret changes %v", c)
 	}
 
 	masker := newKubeDiffMasker()
-	masker.add("s3cr3t-password")
+	masker.Add("s3cr3t-password")
 
 	cm := `{"kind":"ConfigMap","metadata":{"name":"c"},"data":{"url":"%s","mode":"%s"}}`
 	live := decodeObject(t, strings.NewReplacer("%s", "x").Replace(cm))
@@ -69,7 +71,7 @@ func TestDiffLiveChangesNeverSecrets(t *testing.T) {
 	wanted := decodeObject(t, cm)
 	wanted["data"] = map[string]any{"url": "postgres://u:other@db", "mode": "a"}
 
-	got := diffLiveChanges(live, wanted, masker)
+	got := kubediff.LiveChanges(live, wanted, masker)
 	if len(got) != 1 || got[0].Label != "data.mode" {
 		t.Errorf("changes %+v", got)
 	}

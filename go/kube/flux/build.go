@@ -1,4 +1,4 @@
-package ichorgo
+package flux
 
 import (
 	"fmt"
@@ -23,20 +23,21 @@ import (
 // own settings, then the postBuild substitutions, commonMetadata and the owner labels.
 
 const (
-	fluxSourceRoot = "/source"
-	// fluxSubstitute set to "disabled" (label or annotation) keeps an object as written.
-	fluxSubstitute = "kustomize.toolkit.fluxcd.io/substitute"
+	// SourceRoot is where an artifact is unpacked for a build.
+	SourceRoot = "/source"
+	// substituteLabel set to "disabled" (label or annotation) keeps an object as written.
+	substituteLabel = "kustomize.toolkit.fluxcd.io/substitute"
 )
 
-// fluxKustomizeSpec holds the fields of a Kustomization's spec the build reads.
-type fluxKustomizeSpec struct {
-	SourceRef       fluxCrossRef `json:"sourceRef"`
-	Path            string       `json:"path"`
-	Prune           bool         `json:"prune"`
-	Suspend         bool         `json:"suspend"`
-	TargetNamespace string       `json:"targetNamespace"`
-	NamePrefix      string       `json:"namePrefix"`
-	NameSuffix      string       `json:"nameSuffix"`
+// KustomizeSpec holds the fields of a Kustomization's spec the build reads.
+type KustomizeSpec struct {
+	SourceRef       CrossRef `json:"sourceRef"`
+	Path            string   `json:"path"`
+	Prune           bool     `json:"prune"`
+	Suspend         bool     `json:"suspend"`
+	TargetNamespace string   `json:"targetNamespace"`
+	NamePrefix      string   `json:"namePrefix"`
+	NameSuffix      string   `json:"nameSuffix"`
 	CommonMetadata  *struct {
 		Labels      map[string]string `json:"labels"`
 		Annotations map[string]string `json:"annotations"`
@@ -68,22 +69,32 @@ type fluxKustomizeSpec struct {
 	} `json:"postBuild"`
 }
 
-// fluxBuilt is one object the build produced. Encrypted (SOPS) objects keep only their identity.
-type fluxBuilt struct {
-	obj       map[string]any
-	encrypted bool
+// Built is one object the build produced. Encrypted (SOPS) objects keep only their identity.
+type Built struct {
+	Obj       map[string]any
+	Encrypted bool
 }
 
-// buildFluxKustomization builds spec from the artifact unpacked under fluxSourceRoot in fs.
+// buildArtifact unpacks the tarball tgz in memory and builds spec from it.
+func buildArtifact(tgz []byte, spec KustomizeSpec, name, namespace string, vars map[string]string) ([]Built, error) {
+	fsys := filesys.MakeFsInMemory()
+	if err := UntarArtifact(tgz, fsys.WriteFile, SourceRoot); err != nil {
+		return nil, err
+	}
+
+	return BuildKustomization(fsys, spec, name, namespace, vars)
+}
+
+// BuildKustomization builds spec from the artifact unpacked under SourceRoot in fs.
 // vars are the postBuild variables, nil when the Kustomization has no postBuild.
-func buildFluxKustomization(fsys filesys.FileSystem, spec fluxKustomizeSpec, name, namespace string, vars map[string]string) ([]fluxBuilt, error) {
-	dir := path.Join(fluxSourceRoot, strings.TrimPrefix(path.Clean("/"+spec.Path), "/"))
+func BuildKustomization(fsys filesys.FileSystem, spec KustomizeSpec, name, namespace string, vars map[string]string) ([]Built, error) {
+	dir := path.Join(SourceRoot, strings.TrimPrefix(path.Clean("/"+spec.Path), "/"))
 
 	if !fsys.IsDir(dir) {
 		return nil, fmt.Errorf("the path %q is not in the source", spec.Path)
 	}
 
-	if err := writeFluxKustomization(fsys, spec, dir); err != nil {
+	if err := writeKustomization(fsys, spec, dir); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +110,7 @@ func buildFluxKustomization(fsys filesys.FileSystem, spec fluxKustomizeSpec, nam
 		return nil, fmt.Errorf("kustomize build: %w", err)
 	}
 
-	out := make([]fluxBuilt, 0, resmap.Size())
+	out := make([]Built, 0, resmap.Size())
 
 	for _, r := range resmap.Resources() {
 		y, err := r.AsYAML()
@@ -107,7 +118,7 @@ func buildFluxKustomization(fsys filesys.FileSystem, spec fluxKustomizeSpec, nam
 			return nil, err
 		}
 
-		b, err := fluxPostBuild(y, vars, spec, name, namespace)
+		b, err := postBuild(y, vars, spec, name, namespace)
 		if err != nil {
 			return nil, fmt.Errorf("%s %s: %w", r.GetKind(), r.GetName(), err)
 		}
@@ -118,10 +129,10 @@ func buildFluxKustomization(fsys filesys.FileSystem, spec fluxKustomizeSpec, nam
 	return out, nil
 }
 
-// writeFluxKustomization edits the path's kustomization file (generated when there is none)
+// writeKustomization edits the path's kustomization file (generated when there is none)
 // with the Kustomization's settings, as kustomize-controller does (fluxcd/pkg/kustomize
 // Generator.GenerateManifest, ported: that package pulls in controller-runtime).
-func writeFluxKustomization(fsys filesys.FileSystem, spec fluxKustomizeSpec, dir string) error {
+func writeKustomization(fsys filesys.FileSystem, spec KustomizeSpec, dir string) error {
 	data, kfile, generated, err := findOrGenerateKustomization(fsys, dir)
 	if err != nil {
 		return err
@@ -163,7 +174,7 @@ func writeFluxKustomization(fsys filesys.FileSystem, spec fluxKustomizeSpec, dir
 	}
 
 	for _, c := range spec.Components {
-		if !isLocalRelativePath(c) {
+		if !IsLocalRelativePath(c) {
 			return fmt.Errorf("component path %q must be local and relative", c)
 		}
 
@@ -249,7 +260,7 @@ func findOrGenerateKustomization(fsys filesys.FileSystem, dir string) (data []by
 		}()
 
 		if _, err := rf.SliceFromBytes(b); err != nil {
-			return fmt.Errorf("decode Kubernetes YAML from %s: %w", strings.TrimPrefix(p, fluxSourceRoot+"/"), err)
+			return fmt.Errorf("decode Kubernetes YAML from %s: %w", strings.TrimPrefix(p, SourceRoot+"/"), err)
 		}
 
 		resources = append(resources, "."+strings.TrimPrefix(p, dir))
@@ -272,8 +283,8 @@ func findOrGenerateKustomization(fsys filesys.FileSystem, dir string) (data []by
 	return data, path.Join(dir, konfig.DefaultKustomizationFileName()), true, err
 }
 
-// isLocalRelativePath is fluxcd/pkg/kustomize's check that a component is not remote.
-func isLocalRelativePath(p string) bool {
+// IsLocalRelativePath is fluxcd/pkg/kustomize's check that a component is not remote.
+func IsLocalRelativePath(p string) bool {
 	lower := strings.ToLower(p)
 	for _, prefix := range []string{"git::", "gh:", "ssh://", "https://", "http://", "git@", "github.com:", "github.com/"} {
 		if len(prefix) < len(p) && strings.HasPrefix(lower, prefix) {
@@ -284,13 +295,13 @@ func isLocalRelativePath(p string) bool {
 	return !path.IsAbs(p) && !path.IsAbs(strings.TrimPrefix(lower, "file://"))
 }
 
-// fluxPostBuild substitutes vars in one built object (unless it opts out), then sets
+// postBuild substitutes vars in one built object (unless it opts out), then sets
 // commonMetadata and the labels kustomize-controller marks what it applies with, on the
 // object's own metadata only, as the controller does after the build.
-func fluxPostBuild(y []byte, vars map[string]string, spec fluxKustomizeSpec, name, namespace string) (fluxBuilt, error) {
+func postBuild(y []byte, vars map[string]string, spec KustomizeSpec, name, namespace string) (Built, error) {
 	var obj map[string]any
 	if err := yaml.Unmarshal(y, &obj); err != nil {
-		return fluxBuilt{}, err
+		return Built{}, err
 	}
 
 	if _, ok := obj["sops"]; ok {
@@ -299,7 +310,7 @@ func fluxPostBuild(y []byte, vars map[string]string, spec fluxKustomizeSpec, nam
 		delete(obj, "stringData")
 		delete(obj, "spec")
 
-		return fluxBuilt{obj: obj, encrypted: true}, nil
+		return Built{Obj: obj, Encrypted: true}, nil
 	}
 
 	always := spec.PostBuild != nil && spec.PostBuild.SubstituteStrategy == "Always"
@@ -307,12 +318,12 @@ func fluxPostBuild(y []byte, vars map[string]string, spec fluxKustomizeSpec, nam
 		// Not strict, the controller's default: a variable without a value is empty.
 		s, err := envsubst.Eval(string(y), func(k string) (string, bool) { return vars[k], true })
 		if err != nil {
-			return fluxBuilt{}, fmt.Errorf("variable substitution: %w", err)
+			return Built{}, fmt.Errorf("variable substitution: %w", err)
 		}
 
 		obj = nil
 		if err := yaml.Unmarshal([]byte(s), &obj); err != nil {
-			return fluxBuilt{}, fmt.Errorf("variable substitution: %w", err)
+			return Built{}, fmt.Errorf("variable substitution: %w", err)
 		}
 	}
 
@@ -347,17 +358,17 @@ func fluxPostBuild(y []byte, vars map[string]string, spec fluxKustomizeSpec, nam
 		meta["annotations"] = annotations
 	}
 
-	labels[fluxOwnerName] = name
-	labels[fluxOwnerNamespace] = namespace
+	labels[OwnerName] = name
+	labels[OwnerNamespace] = namespace
 
-	return fluxBuilt{obj: obj}, nil
+	return Built{Obj: obj}, nil
 }
 
 func substitutionDisabled(obj map[string]any) bool {
 	meta, _ := obj["metadata"].(map[string]any)
 
 	for _, key := range []string{"labels", "annotations"} {
-		if m, ok := meta[key].(map[string]any); ok && m[fluxSubstitute] == "disabled" {
+		if m, ok := meta[key].(map[string]any); ok && m[substituteLabel] == "disabled" {
 			return true
 		}
 	}
