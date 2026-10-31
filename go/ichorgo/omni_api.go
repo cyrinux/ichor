@@ -189,33 +189,77 @@ type omniCluster struct {
 // access policy on all clusters: Omni refuses the list otherwise), through Omni's COSI state
 // API as omnictl does (Omni's ResourceService is its web UI's, behind its HTTP gateway).
 func omniListClusters(ctx context.Context, cc *grpc.ClientConn) ([]omniCluster, error) {
-	stream, err := v1alpha1.NewStateClient(cc).List(ctx, &v1alpha1.ListRequest{
-		Namespace: "default",
-		Type:      "Clusters.omni.sidero.dev",
-		Options:   &v1alpha1.ListOptions{},
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	var clusters []omniCluster
 
-	for {
-		resp, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
-			return clusters, nil
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		res := resp.GetResource()
+	err := omniListResources(ctx, cc, "Clusters.omni.sidero.dev", func(res *v1alpha1.Resource) {
 		if id := res.GetMetadata().GetId(); id != "" {
 			talos, kube := omniClusterVersions(res.GetSpec().GetYamlSpec())
 			clusters = append(clusters, omniCluster{Name: id, TalosVersion: talos, KubernetesVersion: kube})
 		}
+	})
+
+	return clusters, err
+}
+
+// omniListResources hands each resource of a type of Omni's default namespace to fn.
+func omniListResources(ctx context.Context, cc *grpc.ClientConn, resourceType string, fn func(*v1alpha1.Resource)) error {
+	stream, err := v1alpha1.NewStateClient(cc).List(ctx, &v1alpha1.ListRequest{
+		Namespace: "default",
+		Type:      resourceType,
+		Options:   &v1alpha1.ListOptions{},
+	})
+	if err != nil {
+		return err
 	}
+
+	for {
+		resp, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		fn(resp.GetResource())
+	}
+}
+
+// omniMachineHostnames lists the host names of the machines the session's identity sees
+// (MachineStatusSpec's network.hostname), allocated or not.
+func omniMachineHostnames(ctx context.Context, s *session) ([]string, error) {
+	cc, err := omniDial(s.context, s.signing)
+	if err != nil {
+		return nil, fmt.Errorf("connect to Omni: %w", err)
+	}
+
+	defer cc.Close() //nolint:errcheck
+
+	var hostnames []string
+
+	err = omniListResources(ctx, cc, "MachineStatuses.omni.sidero.dev", func(res *v1alpha1.Resource) {
+		if name := omniMachineHostname(res.GetSpec().GetYamlSpec()); name != "" {
+			hostnames = append(hostnames, name)
+		}
+	})
+
+	return hostnames, err
+}
+
+// omniMachineHostname reads a machine status's YAML spec, "" when it does not say.
+func omniMachineHostname(yamlSpec string) string {
+	var spec struct {
+		Network struct {
+			Hostname string `yaml:"hostname"`
+		} `yaml:"network"`
+	}
+
+	if yaml.Unmarshal([]byte(yamlSpec), &spec) != nil {
+		return ""
+	}
+
+	return spec.Network.Hostname
 }
 
 // omniClusterVersions reads the Talos and Kubernetes versions of a cluster's YAML spec, ""

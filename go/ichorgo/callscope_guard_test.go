@@ -27,6 +27,7 @@ var clusterlessRuns = []string{"StartDiscoverSignIn", "StartOmniAccountSignIn"}
 var delegatedRuns = map[string]string{
 	"StartEtcdSnapshot":          "startSnapshot",
 	"StartEtcdSnapshotEncrypted": "startSnapshot",
+	"StartHetznerCreate":         "hetznerCreate.start",
 	"StartNodeJoin":              "nodeJoin.start",
 	"StartRunbook":               "startRunbook",
 	"StartRunbookWith":           "startRunbook",
