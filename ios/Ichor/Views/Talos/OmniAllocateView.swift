@@ -11,6 +11,11 @@ struct OmniLabelsSection: View {
     @State private var extra = ""
     @State private var classLabels: [String] = []
 
+    // Explicit: the private @State makes the memberwise init private.
+    init(labelsJSON: Binding<String>) {
+        _labelsJSON = labelsJSON
+    }
+
     var body: some View {
         Section {
             Text(
@@ -274,9 +279,8 @@ struct OmniAllocateView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        async let loadedSets = LoadState.from { try await client.omniMachineSets() }
-        async let loadedMachines = LoadState.from { try await client.omniUnallocatedMachines() }
-        (sets, machines) = await (loadedSets, loadedMachines)
+        sets = await LoadState.from { try await client.omniMachineSets() }
+        machines = await LoadState.from { try await client.omniUnallocatedMachines() }
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.

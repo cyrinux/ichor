@@ -30,7 +30,8 @@ struct HetznerCreateSection: View {
     private var job: JoinJob { .shared }
 
     // Explicit: the private @State makes the memberwise init private.
-    init(omni: Bool, template: String, role: String, hostname: String, disk: String) {
+    init(omni: Bool, template: String, role: String, hostname: String, disk: String, path: Binding<[Route]>) {
+        _path = path
         self.omni = omni
         self.template = template
         self.role = role

@@ -28,6 +28,13 @@ struct CloudUserDataCard: View {
 
     private enum Action { case copy, share }
 
+    // Explicit: the private @State makes the memberwise init private.
+    init(omni: Bool, omniLabels: String, path: Binding<[Route]>) {
+        self.omni = omni
+        self.omniLabels = omniLabels
+        _path = path
+    }
+
     var body: some View {
         Section {
             Group {
