@@ -79,6 +79,10 @@ var omniCommands = []command{
 	}},
 	// Read only: the cluster's machine sets, and the machines no cluster has.
 	{name: "omni-machines", args: "", run: func(e env) (string, error) {
+		if err := omniSignIn(e.cfg, e.context, false); err != nil {
+			return "", fmt.Errorf("omni sign-in: %w", err)
+		}
+
 		sets, err := ichorgo.OmniMachineSets(e.cfg, e.context)
 		if err != nil {
 			return "", err
@@ -92,6 +96,10 @@ var omniCommands = []command{
 	{name: "omni-allocate", args: "MACHINE SET -yes", run: func(e env) (string, error) {
 		if flag.NArg() != 4 || flag.Arg(3) != "-yes" {
 			return "", errors.New("usage: omni-allocate MACHINE SET -yes (puts the machine in the cluster)")
+		}
+
+		if err := omniSignIn(e.cfg, e.context, false); err != nil {
+			return "", fmt.Errorf("omni sign-in: %w", err)
 		}
 
 		j := joinProbe{done: make(chan string, 1)}
