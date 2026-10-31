@@ -55,7 +55,8 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual($0.worst, .bad); XCTAssertEqual($0.clusters.first?.topFinding?.track, "nodes")
         },
         "plugin-index": ContractTests.row(PluginIndex.self) {
-            XCTAssertEqual($0.plugins.first?.installed, true); XCTAssertEqual($0.plugins.first?.iconApp.icon, "kube-green")
+            XCTAssertEqual($0.plugins.first?.installed, true)
+            XCTAssertEqual($0.plugins.first?.iconApp.icon, "kube-green")
         },
     ]
 

@@ -24,9 +24,11 @@ struct PluginIndexView: View {
     var body: some View {
         Form {
             Section {
-                Text("A plugin from the catalog must match the digest the index published, then you see what it reads and can change before enabling it.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "A plugin from the catalog must match the digest the index published, then you see what it reads and can change before enabling it."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
                 if let failure {
                     LoadFailureRow(message: failure, retry: { await load() })
                 }
