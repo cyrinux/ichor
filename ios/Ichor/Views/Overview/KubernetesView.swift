@@ -194,6 +194,19 @@ struct KubernetesView: View {
             case .cronJobs: CronJobsList(list: cronJobs, control: scopeControl, query: query, focus: focus)
             case .network: NetPerfView(session: netPerf)
             }
+        } topBar: {
+            Picker(selection: $tab) {
+                Text("Workloads").tag(Tab.workloads)
+                Text("Pods").tag(Tab.pods)
+                Text("CronJobs").tag(Tab.cronJobs)
+                Text("Network").tag(Tab.network)
+            } label: {
+                EmptyView()
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.bottom, 6)
+            .background(.bar)
         }
         // What the credentials may do in the namespace listed; nothing asked for every namespace
         // (a refusal everywhere says nothing of the namespace a row is in).
@@ -265,20 +278,6 @@ struct KubernetesView: View {
         }
         .task(id: model.summary?.contexts.map(\.fingerprint)) {
             if let summary = model.summary { KubeScopeStore.keep(fingerprints: summary.contexts.map(\.fingerprint)) }
-        }
-        .safeAreaInset(edge: .top) {
-            Picker(selection: $tab) {
-                Text("Workloads").tag(Tab.workloads)
-                Text("Pods").tag(Tab.pods)
-                Text("CronJobs").tag(Tab.cronJobs)
-                Text("Network").tag(Tab.network)
-            } label: {
-                EmptyView()
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .padding(.bottom, 6)
-            .background(.bar)
         }
         .searchable(
             text: $query, prompt: tab == .cronJobs ? Text("Name, schedule or image") : Text("Name, kind or image")

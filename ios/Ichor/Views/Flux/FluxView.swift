@@ -133,8 +133,9 @@ struct FluxView: View {
                     case .sources:
                         FluxSourcesList(status: status, query: query, busy: busy, refresh: load, act: act)
                     }
+                } topBar: {
+                    topBar(status)
                 }
-                .safeAreaInset(edge: .top) { topBar(status) }
             }
         }
     }

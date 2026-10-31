@@ -71,8 +71,7 @@ struct DataServicesView: View {
                     case .plugin(let id, _):
                         PluginList(pluginID: id, reload: pluginReload).id(id)
                     }
-                }
-                .safeAreaInset(edge: .top) {
+                } topBar: {
                     VStack(alignment: .leading, spacing: 8) {
                         LikelyCauseBanner(causes: services.likelyCauses(downNodes: downNodes))
                         if tabs.count > 1 {
