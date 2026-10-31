@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -192,7 +192,7 @@ private const val BANNER_LINKS = 5
 @Composable
 private fun BrokenLinksBanner(broken: List<TopologyLink>, names: Map<String, String>, onLink: (TopologyLink) -> Unit) {
     val bad = LocalStatusColors.current.bad
-    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.14f))) {
+    IchorCard(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.14f))) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 pluralStringResource(R.plurals.kubespan_links_down, broken.size, broken.size),
