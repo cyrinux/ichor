@@ -69,6 +69,8 @@ func newDiagnosisNames(data diagnosisData, report string) *diagnosisNames {
 
 	n.learnGitOps(data.GitOps)
 	n.learnDataServices(data.DataServices)
+	n.learnKube(data.Kube)
+	n.sweep(kubeSectionsIn(report, data))
 
 	return n
 }
@@ -209,7 +211,8 @@ func (n *diagnosisNames) learnQualified(ns, name, kind string) {
 }
 
 func (n *diagnosisNames) learn(name, kind string) {
-	if _, known := n.reals[name]; known || len(name) < minMaskedName || strings.ContainsAny(name, " \t") || slices.Contains(n.skip, name) {
+	if _, known := n.reals[name]; known || len(name) < minMaskedName || strings.ContainsAny(name, " \t") ||
+		slices.Contains(n.skip, name) || slices.Contains(n.keep, name) {
 		return
 	}
 

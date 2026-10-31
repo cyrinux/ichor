@@ -44,6 +44,7 @@ type inventoryWorkload struct {
 type idleWorkload struct {
 	inventoryWorkload
 	images []string
+	ready  int32
 }
 
 func (w idleWorkload) state() string {
@@ -105,18 +106,32 @@ func inBackground(read func() []idleWorkload) func() []idleWorkload {
 // readIdleWorkloads lists the Deployments and StatefulSets without a ready pod, with the reason
 // of those that want some. A kind the role may not list leaves the other.
 func readIdleWorkloads(ctx context.Context, k *kubeClient) ([]idleWorkload, error) {
-	results := make([][]idleWorkload, len(idleKinds))
-	errs := make([]error, len(idleKinds))
+	idle, errs := listWorkloadsWhere(ctx, k, idleKinds, func(w kubeWorkload) bool { return w.Ready == 0 })
 
-	forEachLimit(idleKinds, len(idleKinds), func(i int, kind workloadKind) {
+	if !slices.Contains(errs, nil) {
+		return nil, errors.Join(errs...)
+	}
+
+	addIdleReasons(ctx, k, idle)
+
+	return idle, nil
+}
+
+// listWorkloadsWhere lists the workloads of kinds that keep takes, and each kind's error.
+func listWorkloadsWhere(ctx context.Context, k *kubeClient, kinds []workloadKind, keep func(kubeWorkload) bool) ([]idleWorkload, []error) {
+	results := make([][]idleWorkload, len(kinds))
+	errs := make([]error, len(kinds))
+
+	forEachLimit(kinds, len(kinds), func(i int, kind workloadKind) {
 		errs[i] = errors.New("not read") // a panic keeps it
 		errs[i] = k.listAll(ctx, "/apis/apps/v1/"+kind.resource, pageQuery{}, func() { results[i] = nil }, func(page kubePage) error {
 			objs, err := decodeItems[appsObject](page)
 			for _, obj := range objs {
-				if w := mapWorkload(kind.kind, obj); w.Ready == 0 {
+				if w := mapWorkload(kind.kind, obj); keep(w) {
 					results[i] = append(results[i], idleWorkload{
 						inventoryWorkload: inventoryWorkload{Kind: w.Kind, Namespace: w.Namespace, Name: w.Name, Desired: w.Desired},
 						images:            w.Images,
+						ready:             w.Ready,
 					})
 				}
 			}
@@ -125,14 +140,7 @@ func readIdleWorkloads(ctx context.Context, k *kubeClient) ([]idleWorkload, erro
 		})
 	})
 
-	if !slices.Contains(errs, nil) {
-		return nil, errors.Join(errs...)
-	}
-
-	idle := slices.Concat(results...)
-	addIdleReasons(ctx, k, idle)
-
-	return idle, nil
+	return slices.Concat(results...), errs
 }
 
 // addIdleReasons explains the workloads that want pods from their unhealthy pods: the kubelet's
@@ -218,8 +226,8 @@ func stuckPodOf(pods []kubePod, w inventoryWorkload) int {
 	return first
 }
 
-// podOf tells a pod of the workload: a StatefulSet owns its pods, a Deployment through a
-// ReplicaSet named <deployment>-<pod-template-hash>.
+// podOf tells a pod of the workload: a StatefulSet or a DaemonSet owns its pods, a Deployment
+// through a ReplicaSet named <deployment>-<pod-template-hash>.
 func podOf(p kubePod, w inventoryWorkload) bool {
 	if p.Namespace != w.Namespace {
 		return false
@@ -228,8 +236,8 @@ func podOf(p kubePod, w inventoryWorkload) bool {
 	kind, name, _ := strings.Cut(p.Owner, "/")
 
 	switch w.Kind {
-	case "StatefulSet":
-		return kind == "StatefulSet" && name == w.Name
+	case "StatefulSet", "DaemonSet":
+		return kind == w.Kind && name == w.Name
 	default:
 		rest, ok := strings.CutPrefix(name, w.Name+"-")
 

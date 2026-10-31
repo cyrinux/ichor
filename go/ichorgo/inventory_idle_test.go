@@ -7,7 +7,7 @@ import (
 )
 
 func idle(kind, namespace, name string, desired int32, reason string, images ...string) idleWorkload {
-	return idleWorkload{inventoryWorkload{Kind: kind, Namespace: namespace, Name: name, Desired: desired, Reason: reason}, images}
+	return idleWorkload{inventoryWorkload: inventoryWorkload{Kind: kind, Namespace: namespace, Name: name, Desired: desired, Reason: reason}, images: images}
 }
 
 func appsByID(apps []inventoryApp) map[string]inventoryApp {
