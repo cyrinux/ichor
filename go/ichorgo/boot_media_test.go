@@ -195,20 +195,20 @@ func TestOmniJoinKernelArgs(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	got, err := omniJoinKernelArgs(ctx, cfgCtx, signer)
+	got, err := omniJoinKernelArgs(ctx, cfgCtx, signer, nil)
 	if err != nil || got != strings.Join(args, " ") {
 		t.Fatalf("kernel args = %q, %v", got, err)
 	}
 
 	f.denyJoin = true
 
-	if _, err := omniJoinKernelArgs(ctx, cfgCtx, signer); err == nil || !strings.Contains(err.Error(), "Operator role") {
+	if _, err := omniJoinKernelArgs(ctx, cfgCtx, signer, nil); err == nil || !strings.Contains(err.Error(), "Operator role") {
 		t.Errorf("denied: %v", err)
 	}
 
 	f.joinToken = ""
 
-	if _, err := omniJoinKernelArgs(ctx, cfgCtx, signer); err == nil {
+	if _, err := omniJoinKernelArgs(ctx, cfgCtx, signer, nil); err == nil {
 		t.Error("no default join token: no error")
 	}
 }
@@ -220,7 +220,7 @@ func TestAddOmniJoinInPrivacyMode(t *testing.T) {
 	s := &session{context: &clientconfig.Context{Auth: clientconfig.Auth{SideroV1: &clientconfig.SideroV1{Identity: testUserIdentity}}}}
 	m := bootMedia{Warnings: []string{}}
 
-	addOmniJoin(context.Background(), s, &m)
+	addOmniJoin(context.Background(), s, &m, nil)
 
 	if m.Omni != nil || len(m.Warnings) != 1 || !strings.Contains(m.Warnings[0], "privacy mode") {
 		t.Errorf("media = %+v", m)

@@ -11,6 +11,7 @@ struct HetznerCreateSection: View {
     let role: String
     let hostname: String
     let disk: String
+    @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
     @Environment(LockStore.self) private var lockStore
@@ -29,7 +30,8 @@ struct HetznerCreateSection: View {
     private var job: JoinJob { .shared }
 
     // Explicit: the private @State makes the memberwise init private.
-    init(omni: Bool, template: String, role: String, hostname: String, disk: String) {
+    init(omni: Bool, template: String, role: String, hostname: String, disk: String, path: Binding<[Route]>) {
+        _path = path
         self.omni = omni
         self.template = template
         self.role = role
@@ -206,6 +208,10 @@ struct HetznerCreateSection: View {
                 Button("Close") { job.clear() }
             case .appearedInOmni?:
                 Text("\(job.request?.hostname ?? "") appeared in Omni: allocate it there")
+                Button("Allocate in Omni") {
+                    job.clear()
+                    path.append(.omniAllocate)
+                }
                 Button("Close") { job.clear() }
             case .snapshotMade?:
                 // Not this section's run: a snapshot run has its own (HetznerSnapshotRunSections).

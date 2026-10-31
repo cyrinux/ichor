@@ -66,6 +66,6 @@ func TestOmniLive(t *testing.T) {
 	}
 
 	// The join arguments carry the join token: only their count is logged.
-	args, err := omniJoinKernelArgs(ctx, cfgCtx, signer)
+	args, err := omniJoinKernelArgs(ctx, cfgCtx, signer, nil)
 	t.Logf("GetMachineJoinConfig: %d kernel args, err %v", len(strings.Fields(args)), err)
 }

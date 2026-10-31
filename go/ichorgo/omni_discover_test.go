@@ -35,9 +35,14 @@ type fakeOmniAPI struct {
 	joinArgs   []string
 	joinConfig string
 	denyJoin   bool
+	// joinLabels are the machine_labels of the last join request (field 3).
+	joinLabels map[string]string
 
 	// machineStatuses are the YAML specs of Omni's machine statuses.
 	machineStatuses []string
+
+	// store holds resources by type and id, for omni_allocate_test.go.
+	store fakeOmniStore
 }
 
 func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
@@ -78,6 +83,10 @@ func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
 		token, _ := protoField(req, 2)
 		if string(token) != f.joinToken {
 			return status.Errorf(codes.NotFound, "join token %q", token)
+		}
+
+		if f.joinLabels, err = decodeTestJoinLabels(req); err != nil {
+			return status.Error(codes.InvalidArgument, err.Error())
 		}
 
 		for _, arg := range f.joinArgs {
@@ -121,6 +130,10 @@ func (f *fakeOmniAPI) Get(ctx context.Context, req *v1alpha1.GetRequest) (*v1alp
 		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
+	if res := f.store.get(req.GetType(), req.GetId()); res != nil {
+		return &v1alpha1.GetResponse{Resource: res}, nil
+	}
+
 	if req.GetNamespace() != "default" || req.GetType() != omniDefaultJoinTokenType || req.GetId() != "default" || f.joinToken == "" {
 		return nil, status.Errorf(codes.NotFound, "%s/%s/%s", req.GetNamespace(), req.GetType(), req.GetId())
 	}
@@ -137,6 +150,10 @@ func (f *fakeOmniAPI) List(req *v1alpha1.ListRequest, stream grpc.ServerStreamin
 
 	if err := message.NewGRPC(md, "/cosi.resource.State/List").VerifySignature(f.key); err != nil {
 		return status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if f.store.has(req.GetType()) {
+		return f.store.list(req.GetType(), stream)
 	}
 
 	if req.GetNamespace() == "default" && req.GetType() == "MachineStatuses.omni.sidero.dev" {

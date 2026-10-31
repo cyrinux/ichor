@@ -159,9 +159,13 @@ func TestOmniJoinConfig(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	join, err := omniJoinConfig(ctx, cfgCtx, omniSigner{identity: testUserIdentity, key: f.key})
+	join, err := omniJoinConfig(ctx, cfgCtx, omniSigner{identity: testUserIdentity, key: f.key}, map[string]string{"ichor/role": "worker", "rack": "b2"})
 	if err != nil || join.config != sampleOmniJoinConfig || join.kernelArgs != args[0] {
 		t.Fatalf("join = %+v, %v", join, err)
+	}
+
+	if f.joinLabels["ichor/role"] != "worker" || f.joinLabels["rack"] != "b2" || len(f.joinLabels) != 2 {
+		t.Errorf("labels in the join request = %v", f.joinLabels)
 	}
 
 	preview := omniJoinTokenPattern.ReplaceAllString(join.config, "${1}"+redacted)

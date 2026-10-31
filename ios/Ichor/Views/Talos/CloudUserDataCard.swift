@@ -9,6 +9,9 @@ import UniformTypeIdentifiers
 /// BootMediaView's list.
 struct CloudUserDataCard: View {
     let omni: Bool
+    /// On Omni, the labels to sign into the join token.
+    let omniLabels: String
+    @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
     @State private var members: LoadState<[NodeOverview]> = .loading
@@ -24,6 +27,13 @@ struct CloudUserDataCard: View {
     @State private var sharing = false
 
     private enum Action { case copy, share }
+
+    // Explicit: the private @State makes the memberwise init private.
+    init(omni: Bool, omniLabels: String, path: Binding<[Route]>) {
+        self.omni = omni
+        self.omniLabels = omniLabels
+        _path = path
+    }
 
     var body: some View {
         Section {
@@ -43,8 +53,12 @@ struct CloudUserDataCard: View {
         } header: {
             Text("Cloud host: user data")
         }
-        .task {
-            if omni { await generate() } else { await loadMembers() }
+        .task(id: omniLabels) {
+            if omni {
+                await generate()
+            } else if case .loading = members {
+                await loadMembers()
+            }
         }
         if let data {
             resultSection(data)
@@ -63,7 +77,7 @@ struct CloudUserDataCard: View {
             HetznerCreateSection(
                 omni: omni, template: template?.node ?? "", role: template.map { joinRole($0.role) } ?? "",
                 hostname: hostname.trimmingCharacters(in: .whitespaces),
-                disk: disk.trimmingCharacters(in: .whitespaces))
+                disk: disk.trimmingCharacters(in: .whitespaces), path: $path)
         }
     }
 
@@ -252,10 +266,14 @@ struct CloudUserDataCard: View {
         confirmed = false
         data = .loading
         let loaded = await LoadState.from {
-            try await client.nodeCloudUserData(
-                template: template?.node ?? "", role: template.map { joinRole($0.role) } ?? "",
-                hostname: omni ? "" : hostname.trimmingCharacters(in: .whitespaces),
-                installDisk: omni ? "" : disk.trimmingCharacters(in: .whitespaces))
+            if omni {
+                try await client.nodeCloudUserDataOmni(labelsJSON: omniLabels)
+            } else {
+                try await client.nodeCloudUserData(
+                    template: template?.node ?? "", role: template.map { joinRole($0.role) } ?? "",
+                    hostname: hostname.trimmingCharacters(in: .whitespaces),
+                    installDisk: disk.trimmingCharacters(in: .whitespaces))
+            }
         }
         guard current == request else { return }
         data = loaded

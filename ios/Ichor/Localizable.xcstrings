@@ -1,6 +1,330 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Allocate in Omni" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "In Omni zuweisen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Asignar en Omni" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Allouer dans Omni" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Assegna in Omni" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Omni で割り当て" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alocar no Omni" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выделить в Omni" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виділити в Omni" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Omni 中分配" } }
+      }
+    },
+    "Machines that registered in Omni and belong to no cluster yet. Pick one, and the machine set it joins." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Maschinen, die sich in Omni registriert haben und noch zu keinem Cluster gehören. Wähle eine aus und das Machine Set, dem sie beitritt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Máquinas registradas en Omni que aún no pertenecen a ningún clúster. Elige una y el conjunto de máquinas al que se une." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Machines enregistrées dans Omni et qui n'appartiennent encore à aucun cluster. Choisissez-en une et le machine set qu'elle rejoint." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Macchine registrate in Omni che non appartengono ancora a nessun cluster. Scegline una e il machine set a cui si unisce." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Omni に登録され、まだどのクラスタにも属していないマシンです。1 台と、参加先のマシンセットを選びます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Máquinas registradas no Omni que ainda não pertencem a nenhum cluster. Escolha uma e o conjunto de máquinas ao qual ela entra." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Машины, зарегистрированные в Omni и пока не входящие ни в один кластер. Выберите машину и набор машин, в который она войдёт." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Машини, зареєстровані в Omni, що ще не належать жодному кластеру. Виберіть машину й набір машин, до якого вона ввійде." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已在 Omni 中注册、尚未属于任何集群的机器。选择一台机器及其加入的机器集。" } }
+      }
+    },
+    "Machines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Maschinen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Máquinas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Machines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Macchine" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マシン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Máquinas" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Машины" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Машини" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "机器" } }
+      }
+    },
+    "No machine is waiting: boot one with Omni's join config and it shows up here." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Maschine wartet: Starte eine mit Omnis Join-Konfiguration, dann erscheint sie hier." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ninguna máquina en espera: arranca una con la configuración de unión de Omni y aparecerá aquí." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune machine en attente : démarrez-en une avec la configuration d'adhésion d'Omni et elle apparaîtra ici." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna macchina in attesa: avviane una con la configurazione di join di Omni e comparirà qui." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "待機中のマシンはありません。Omni の参加設定で起動すると、ここに表示されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma máquina aguardando: inicie uma com a configuração de entrada do Omni e ela aparecerá aqui." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет ожидающих машин: загрузите машину с конфигурацией присоединения Omni, и она появится здесь." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Немає машин в очікуванні: завантажте машину з конфігурацією приєднання Omni, і вона з’явиться тут." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有等待中的机器：使用 Omni 的加入配置启动一台，它就会显示在这里。" } }
+      }
+    },
+    "maintenance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wartung" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "mantenimiento" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "maintenance" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "manutenzione" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メンテナンス" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "manutenção" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "обслуживание" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "обслуговування" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "维护" } }
+      }
+    },
+    "offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "offline" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "sin conexión" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "hors ligne" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "offline" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オフライン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "offline" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "не в сети" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "не в мережі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "离线" } }
+      }
+    },
+    "Machine set" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Machine Set" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conjunto de máquinas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Machine set" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Machine set" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マシンセット" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conjunto de máquinas" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Набор машин" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Набір машин" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "机器集" } }
+      }
+    },
+    "Binds the machine to this set." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bindet die Maschine an dieses Set." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vincula la máquina a este conjunto." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lie la machine à ce set." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Associa la macchina a questo set." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マシンをこのセットに割り当てます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Vincula a máquina a este conjunto." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Привязывает машину к этому набору." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Прив’язує машину до цього набору." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将机器绑定到此机器集。" } }
+      }
+    },
+    "Machine class %@: its count goes up by one, and the class picks a matching machine." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Maschinenklasse %@: Die Anzahl steigt um eins, und die Klasse wählt eine passende Maschine." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clase de máquina %@: su número aumenta en uno y la clase elige una máquina compatible." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Classe de machine %@ : son nombre augmente de un, et la classe choisit une machine correspondante." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Classe di macchine %@: il conteggio aumenta di uno e la classe sceglie una macchina corrispondente." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マシンクラス %@: 台数が 1 増え、クラスが条件に合うマシンを選びます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Classe de máquina %@: a contagem aumenta em um, e a classe escolhe uma máquina compatível." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Класс машин %@: счётчик увеличится на один, и класс выберет подходящую машину." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Клас машин %@: лічильник збільшиться на один, і клас вибере відповідну машину." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "机器类 %@：数量加一，由该类选择一台匹配的机器。" } }
+      }
+    },
+    "Machine class %@ takes every matching machine: it picks this one up with no write." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Maschinenklasse %@ nimmt jede passende Maschine: Sie übernimmt diese ohne Schreibvorgang." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La clase de máquina %@ toma todas las máquinas compatibles: recoge esta sin ninguna escritura." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La classe de machine %@ prend toutes les machines correspondantes : elle prend celle-ci sans aucune écriture." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La classe di macchine %@ prende ogni macchina corrispondente: prende questa senza alcuna scrittura." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マシンクラス %@ は条件に合うマシンをすべて取得します。書き込みなしでこのマシンを取得します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A classe de máquina %@ pega todas as máquinas compatíveis: ela pega esta sem nenhuma gravação." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Класс машин %@ берёт все подходящие машины: эту он заберёт без записи." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Клас машин %@ бере всі відповідні машини: цю він забере без запису." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "机器类 %@ 会选取所有匹配的机器：无需写入即可选取这台机器。" } }
+      }
+    },
+    "The class asks for: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Klasse verlangt: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La clase pide: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La classe demande : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La classe richiede: %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスの条件: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A classe pede: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Класс требует: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Клас вимагає: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "该类要求：%@" } }
+      }
+    },
+    "Allocate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zuweisen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Asignar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Allouer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Assegna" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "割り当て" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alocar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выделить" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виділити" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分配" } }
+      }
+    },
+    "Allocate %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ zuweisen?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Asignar %@?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Allouer %@ ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Assegnare %@?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ を割り当てますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alocar %@?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выделить %@?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виділити %@?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分配 %@？" } }
+      }
+    },
+    "%@ joins machine set %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ tritt dem Machine Set %2$@ bei." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ joins machine set %2$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ se une al conjunto de máquinas %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ rejoint le machine set %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ si unisce al machine set %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ はマシンセット %2$@ に参加します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ entra no conjunto de máquinas %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ войдёт в набор машин %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ увійде до набору машин %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ 加入机器集 %2$@。" } }
+      }
+    },
+    "%@ joins the control plane through %@: the etcd quorum then counts one more member." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ tritt über %2$@ der Control Plane bei: Das etcd-Quorum zählt dann ein Mitglied mehr." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ joins the control plane through %2$@: the etcd quorum then counts one more member." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ se une al plano de control a través de %2$@: el cuórum de etcd contará un miembro más." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ rejoint le plan de contrôle via %2$@ : le quorum etcd compte alors un membre de plus." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ si unisce al control plane tramite %2$@: il quorum di etcd conterà un membro in più." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ は %2$@ を通じてコントロールプレーンに参加します。etcd クォーラムのメンバーが 1 つ増えます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ entra no plano de controle por meio de %2$@: o quórum do etcd passa a contar um membro a mais." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ войдёт в плоскость управления через %2$@: в кворуме etcd станет на одного участника больше." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ увійде до площини керування через %2$@: у кворумі etcd стане на одного учасника більше." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ 通过 %2$@ 加入控制平面：etcd 仲裁成员将增加一个。" } }
+      }
+    },
+    "%@ runs in the cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ läuft im Cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ funciona en el clúster" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ fonctionne dans le cluster" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ è in esecuzione nel cluster" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ はクラスタで稼働中です" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ está em execução no cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ работает в кластере" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ працює в кластері" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已在集群中运行" } }
+      }
+    },
+    "The allocation stays: stopping only stops following it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Zuweisung bleibt bestehen: Es wird nur das Verfolgen beendet." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La asignación se mantiene: detener solo deja de seguirla." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'allocation reste : arrêter met seulement fin au suivi." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'assegnazione resta: fermando si smette solo di seguirla." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "割り当ては残ります。停止しても追跡が止まるだけです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A alocação permanece: parar apenas deixa de acompanhá-la." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выделение останется: остановка лишь прекращает отслеживание." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виділення залишиться: зупинка лише припиняє відстеження." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分配会保留：停止只是不再跟踪。" } }
+      }
+    },
+    "%@ stays allocated, and Omni goes on with it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bleibt zugewiesen, und Omni macht damit weiter." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ sigue asignada y Omni continúa con ella." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ reste allouée et Omni continue avec elle." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ resta assegnata e Omni prosegue." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ は割り当てられたままで、Omni が処理を続けます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ continua alocada, e o Omni prossegue com ela." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ остаётся выделенной, и Omni продолжит работу с ней." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ залишається виділеною, і Omni продовжить роботу з нею." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 保持已分配状态，Omni 会继续处理。" } }
+      }
+    },
+    "The new machine's labels" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Labels der neuen Maschine" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Etiquetas de la nueva máquina" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Labels de la nouvelle machine" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Etichette della nuova macchina" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新しいマシンのラベル" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Rótulos da nova máquina" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Метки новой машины" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Мітки нової машини" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新机器的标签" } }
+      }
+    },
+    "Signed into the join token: the machine appears in Omni with them, and a machine class can pick it by them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "In das Join-Token signiert: Die Maschine erscheint damit in Omni, und eine Maschinenklasse kann sie danach auswählen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Firmadas en el token de unión: la máquina aparece con ellas en Omni y una clase de máquina puede elegirla por ellas." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Signés dans le jeton d'adhésion : la machine apparaît avec eux dans Omni, et une classe de machine peut la choisir d'après eux." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Firmate nel token di join: la macchina compare con esse in Omni e una classe di macchine può sceglierla in base a esse." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "参加トークンに署名されます。マシンはこのラベル付きで Omni に表示され、マシンクラスはこれで選択できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Assinados no token de entrada: a máquina aparece com eles no Omni, e uma classe de máquina pode escolhê-la por eles." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подписываются в токене присоединения: машина появится с ними в Omni, и класс машин сможет выбрать её по ним." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підписуються в токені приєднання: машина з’явиться з ними в Omni, і клас машин зможе вибрати її за ними." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "签入加入令牌：机器在 Omni 中显示时带有这些标签，机器类可据此选择它。" } }
+      }
+    },
+    "More labels (key=value, separated by commas)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weitere Labels (key=value, durch Kommas getrennt)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Más etiquetas (key=value, separadas por comas)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Autres labels (key=value, séparés par des virgules)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Altre etichette (key=value, separate da virgole)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追加のラベル (key=value、カンマ区切り)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Mais rótulos (key=value, separados por vírgulas)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Другие метки (key=value через запятую)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Інші мітки (key=value через кому)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更多标签（key=value，以逗号分隔）" } }
+      }
+    },
+    "This cluster's machine classes ask for: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Maschinenklassen dieses Clusters verlangen: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las clases de máquina de este clúster piden: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les classes de machine de ce cluster demandent : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le classi di macchine di questo cluster richiedono: %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このクラスタのマシンクラスの条件: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "As classes de máquina deste cluster pedem: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Классы машин этого кластера требуют: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Класи машин цього кластера вимагають: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此集群的机器类要求：%@" } }
+      }
+    },
+    "Apply the labels" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Labels anwenden" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aplicar las etiquetas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Appliquer les labels" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Applica le etichette" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ラベルを適用" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Aplicar os rótulos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Применить метки" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Застосувати мітки" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用标签" } }
+      }
+    },
     "Create the server at Hetzner" : {
       "extractionState" : "manual",
       "localizations" : {

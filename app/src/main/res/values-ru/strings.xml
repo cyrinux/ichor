@@ -6489,4 +6489,31 @@
     <string name="hetzner_snapshot_notification_title">Создание снимка Talos</string>
     <string name="hetzner_snapshot_notification_done">Снимок Talos создан</string>
     <string name="hetzner_snapshot_notification_failed">Не удалось создать снимок Talos</string>
+    <string name="omni_allocate_title">Выделить в Omni</string>
+    <string name="omni_allocate_intro">Машины, зарегистрированные в Omni и пока не входящие ни в один кластер. Выберите машину и набор машин, в который она войдёт.</string>
+    <string name="omni_allocate_machines">Машины</string>
+    <string name="omni_allocate_none">Нет ожидающих машин: загрузите машину с конфигурацией присоединения Omni, и она появится здесь.</string>
+    <string name="omni_allocate_maintenance">обслуживание</string>
+    <string name="omni_allocate_offline">не в сети</string>
+    <string name="omni_allocate_sets">Набор машин</string>
+    <string name="omni_allocate_set_none">Привязывает машину к этому набору.</string>
+    <string name="omni_allocate_set_static">Класс машин %1$s: счётчик увеличится на один, и класс выберет подходящую машину.</string>
+    <string name="omni_allocate_set_unlimited">Класс машин %1$s берёт все подходящие машины: эту он заберёт без записи.</string>
+    <string name="omni_allocate_needs">Класс требует: %1$s</string>
+    <string name="omni_allocate_action">Выделить</string>
+    <string name="omni_allocate_confirm_title">Выделить %1$s?</string>
+    <string name="omni_allocate_confirm_worker">%1$s войдёт в набор машин %2$s.</string>
+    <string name="omni_allocate_confirm_controlplane">%1$s войдёт в плоскость управления через %2$s: в кворуме etcd станет на одного участника больше.</string>
+    <string name="omni_phase_allocated">Выделить</string>
+    <string name="omni_phase_booting">Загрузка</string>
+    <string name="omni_allocate_done">%1$s работает в кластере</string>
+    <string name="omni_allocate_stop_hint">Выделение останется: остановка лишь прекращает отслеживание.</string>
+    <string name="omni_allocate_stop_body">%1$s остаётся выделенной, и Omni продолжит работу с ней.</string>
+    <string name="omni_labels_title">Метки новой машины</string>
+    <string name="omni_labels_intro">Подписываются в токене присоединения: машина появится с ними в Omni, и класс машин сможет выбрать её по ним.</string>
+    <string name="omni_labels_extra">Другие метки (key=value через запятую)</string>
+    <string name="omni_labels_classes">Классы машин этого кластера требуют: %1$s</string>
+    <string name="omni_labels_apply">Применить метки</string>
+    <string name="omni_role_worker">Worker</string>
+    <string name="omni_role_controlplane">Плоскость управления</string>
 </resources>

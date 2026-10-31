@@ -30,6 +30,7 @@ var delegatedRuns = map[string]string{
 	"StartHetznerCreate":         "hetznerCreate.start",
 	"StartHetznerSnapshot":       "hetznerSnapshotRun.start",
 	"StartNodeJoin":              "nodeJoin.start",
+	"StartOmniAllocate":          "omniAllocate.start",
 	"StartRunbook":               "startRunbook",
 	"StartRunbookWith":           "startRunbook",
 }

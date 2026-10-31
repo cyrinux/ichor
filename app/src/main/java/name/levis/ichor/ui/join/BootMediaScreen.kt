@@ -18,6 +18,8 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -60,6 +62,9 @@ class BootMediaViewModel(private val lifecycle: NodeLifecycleRepository) : ViewM
     val media: StateFlow<UiState<BootMedia>> = _media.asStateFlow()
     private var loading: Job? = null
 
+    /** On Omni, the labels to sign into the join token. */
+    private var omniLabels: String? = null
+
     init {
         load()
     }
@@ -68,9 +73,22 @@ class BootMediaViewModel(private val lifecycle: NodeLifecycleRepository) : ViewM
         loading?.cancel()
         _media.value = UiState.Loading
         loading = viewModelScope.launch {
-            _media.value = uiStateOf { lifecycle.nodeBootMedia("", _arch.value, _secureBoot.value) }
+            _media.value = uiStateOf {
+                val labels = omniLabels
+                if (labels == null) {
+                    lifecycle.nodeBootMedia("", _arch.value, _secureBoot.value)
+                } else {
+                    lifecycle.nodeBootMediaOmni("", _arch.value, _secureBoot.value, labels)
+                }
+            }
             (_media.value as? UiState.Loaded)?.data?.let { _arch.value = it.arch }
         }
+    }
+
+    fun setOmniLabels(labelsJson: String) {
+        if (labelsJson == omniLabels) return
+        omniLabels = labelsJson
+        load()
     }
 
     fun selectArch(arch: String) {
@@ -90,18 +108,24 @@ class BootMediaViewModel(private val lifecycle: NodeLifecycleRepository) : ViewM
  * over what does: the booter command for a laptop of the machine's network, the ISO, the iPXE
  * URL, on Omni the join arguments, and for a cloud host the user data to paste. [onAddNode]
  * continues with the machine in maintenance mode; null on Omni, which adds the machine itself
- * once it boots.
+ * once it boots. [onAllocate] opens Allocate in Omni, where there is something to show (Omni, the
+ * demo's samples). On Omni the role and labels chosen here are signed into the join token.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BootMediaScreen(
     onBack: () -> Unit,
     onAddNode: (() -> Unit)?,
+    onAllocate: (() -> Unit)? = null,
     vm: BootMediaViewModel = viewModel(key = "boot-media", factory = factory { BootMediaViewModel(app.nodeLifecycleRepository) }),
+    labelsVm: OmniLabelsViewModel = viewModel(key = "omni-labels", factory = factory { OmniLabelsViewModel(app.nodeLifecycleRepository) }),
 ) {
     val media by vm.media.collectAsStateWithLifecycle()
     val arch by vm.arch.collectAsStateWithLifecycle()
     val secureBoot by vm.secureBoot.collectAsStateWithLifecycle()
+    val omni = onAddNode == null
+    val labelsJson by labelsVm.labelsJson.collectAsStateWithLifecycle()
+    LaunchedEffect(omni, labelsJson) { if (omni) vm.setOmniLabels(labelsJson) }
     IchorScaffold(
         topBar = {
             IchorTopAppBar(
@@ -115,6 +139,7 @@ fun BootMediaScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             MutedText(stringResource(R.string.boot_media_intro))
+            if (omni) OmniLabelsCard(labelsVm)
             when (val state = media) {
                 UiState.Loading -> LoadingBox()
                 is UiState.Failed -> ErrorBox(state.message, vm::load)
@@ -124,11 +149,14 @@ fun BootMediaScreen(
                 }
             }
             // A server at a cloud provider boots its own image and reads the config as user data.
-            CloudUserDataCard(omni = onAddNode == null)
+            CloudUserDataCard(omni = omni, omniLabelsJson = labelsJson, onAllocate = onAllocate)
             if (onAddNode != null) {
                 IchorButton(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
             } else {
                 InfoNotice(stringResource(R.string.boot_media_omni_next))
+            }
+            onAllocate?.let {
+                IchorOutlinedButton(onClick = it, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.omni_allocate_title)) }
             }
         }
     }

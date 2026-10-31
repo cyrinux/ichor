@@ -31,6 +31,9 @@ import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.NodeResetPlan
+import name.levis.ichor.model.OmniAllocateSpec
+import name.levis.ichor.model.OmniMachine
+import name.levis.ichor.model.OmniMachineSets
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.UpgradeExtensionCheck
 import name.levis.ichor.ui.goErrorText
@@ -275,6 +278,30 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
                 Ichorgo.nodeCloudUserData(cfg, ctx, template, role, hostname, installDisk, extraEditsJson),
             )
         }
+
+    /** [nodeBootMedia] on Omni, with [labelsJson] signed into the join token. */
+    suspend fun nodeBootMediaOmni(template: String, arch: String, secureBoot: Boolean, labelsJson: String): BootMedia = call { cfg, ctx ->
+        TalosJson.decodeFromString(BootMedia.serializer(), Ichorgo.nodeBootMediaOmni(cfg, ctx, template, arch, secureBoot, labelsJson))
+    }
+
+    /** Omni's join config with [labelsJson] signed into the join token, and the cloud images. */
+    suspend fun nodeCloudUserDataOmni(template: String, labelsJson: String): CloudUserData = call { cfg, ctx ->
+        TalosJson.decodeFromString(CloudUserData.serializer(), Ichorgo.nodeCloudUserDataOmni(cfg, ctx, template, labelsJson))
+    }
+
+    /** The machine sets of the active cluster and how each takes machines. */
+    suspend fun omniMachineSets(): OmniMachineSets = call { cfg, ctx ->
+        TalosJson.decodeFromString(OmniMachineSets.serializer(), Ichorgo.omniMachineSets(cfg, ctx))
+    }
+
+    /** The machines registered in Omni that no cluster has. */
+    suspend fun omniUnallocatedMachines(): List<OmniMachine> = call { cfg, ctx ->
+        TalosJson.decodeFromString(ListSerializer(OmniMachine.serializer()), Ichorgo.omniUnallocatedMachines(cfg, ctx))
+    }
+
+    /** See [TalosStreams.omniAllocate]. */
+    fun omniAllocate(spec: OmniAllocateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.omniAllocate(spec.machineId, spec.machineSetId, stop)
 
     /** A new node's config from [template]'s, redacted (never cached; the full one only goes to the node). */
     suspend fun joinNodeConfigPreview(template: String, role: String, hostname: String, installDisk: String, staticAddress: String): JoinConfigPreview =

@@ -87,7 +87,7 @@ func NodeCloudUserData(configYAML, contextName, templateNode, role, hostname, in
 			}
 
 			data, err := withSession(configYAML, contextName, configPreviewTimeout, func(ctx context.Context, s *session) (cloudUserData, error) {
-				return omniCloudUserData(ctx, s, templateNode, role, hostname, installDisk)
+				return omniCloudUserData(ctx, s, templateNode, role, hostname, installDisk, nil)
 			})
 			if err != nil {
 				return "", err
@@ -112,9 +112,47 @@ func NodeCloudUserData(configYAML, contextName, templateNode, role, hostname, in
 	return toJSON(data)
 }
 
+// NodeCloudUserDataOmni is NodeCloudUserData on an Omni context with labelsJSON ({"key":"value"},
+// "" for none) signed into the join token: the machine appears in Omni with them, and a machine
+// class can pick it by them. Omni's own prefix is refused, as is another kind of context, and
+// privacy mode: the text carries the join token.
+func NodeCloudUserDataOmni(configYAML, contextName, templateNode, labelsJSON string) (out string, err error) {
+	// Only the errors are masked: the text is the point, and privacy mode refuses it first.
+	defer maskErr(&err)
+
+	contextName, templateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(templateNode))
+
+	labels, err := parseOmniLabels(labelsJSON)
+	if err != nil {
+		return "", err
+	}
+
+	if privacy.isEnabled() {
+		return "", errCloudOmniPrivacy
+	}
+
+	_, cfgCtx, err := resolveContext(configYAML, contextName)
+	if err != nil {
+		return "", err
+	}
+
+	if !isOmni(cfgCtx) {
+		return "", errNotOmni
+	}
+
+	data, err := withSession(configYAML, contextName, configPreviewTimeout, func(ctx context.Context, s *session) (cloudUserData, error) {
+		return omniCloudUserData(ctx, s, templateNode, "", "", "", labels)
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return toJSON(data)
+}
+
 // omniCloudUserData is Omni's join config, with the cloud images of the template member's
 // version and schematic when a member answers (the user data stays useful without them).
-func omniCloudUserData(ctx context.Context, s *session, templateNode, role, hostname, installDisk string) (cloudUserData, error) {
+func omniCloudUserData(ctx context.Context, s *session, templateNode, role, hostname, installDisk string, labels map[string]string) (cloudUserData, error) {
 	data := cloudUserData{Kind: cloudUserDataOmni, Warnings: []string{}}
 
 	if strings.TrimSpace(role+hostname+installDisk) != "" {
@@ -129,7 +167,7 @@ func omniCloudUserData(ctx context.Context, s *session, templateNode, role, host
 		data.withImages(media)
 	}
 
-	join, err := omniJoinConfig(ctx, s.context, s.signing.current())
+	join, err := omniJoinConfig(ctx, s.context, s.signing.current(), labels)
 	if err != nil {
 		return cloudUserData{}, err
 	}

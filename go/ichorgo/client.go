@@ -95,6 +95,23 @@ var sessions = newSessionCache(sessionIdle, openSession)
 // session whose key expired is opened again: from the store, which may hold a newer key,
 // else the open asks for a sign-in.
 func acquireSession(configYAML, contextName string) (*session, func(), error) {
+	s, release, err := acquireSigned(configYAML, contextName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := s.ready(context.Background()); err != nil {
+		release()
+
+		return nil, nil, err
+	}
+
+	return s, release, nil
+}
+
+// acquireSigned is acquireSession before the session learns its nodes: enough for Omni's own API,
+// which also serves a cluster with no machine yet.
+func acquireSigned(configYAML, contextName string) (*session, func(), error) {
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return nil, nil, err
@@ -107,12 +124,6 @@ func acquireSession(configYAML, contextName string) (*session, func(), error) {
 		if s, release, err = sessions.acquire(configYAML, contextName); err != nil {
 			return nil, nil, err
 		}
-	}
-
-	if err := s.ready(context.Background()); err != nil {
-		release()
-
-		return nil, nil, err
 	}
 
 	return s, release, nil

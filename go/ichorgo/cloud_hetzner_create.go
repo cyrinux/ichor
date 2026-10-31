@@ -339,7 +339,7 @@ func (h *hetznerCreate) userData() (cloudUserData, error) {
 	}
 
 	return withSession(h.join.config, h.join.context, configPreviewTimeout, func(ctx context.Context, s *session) (cloudUserData, error) {
-		return omniCloudUserData(ctx, s, h.spec.TemplateNode, "", "", "")
+		return omniCloudUserData(ctx, s, h.spec.TemplateNode, "", "", "", nil)
 	})
 }
 

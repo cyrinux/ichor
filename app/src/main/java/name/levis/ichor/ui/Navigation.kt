@@ -243,7 +243,9 @@ fun Navigation(
                 nav.navigate(Routes.K8S_UPGRADE) { launchSingleTop = true }
             }
             DeepLink.JOIN_NODE -> if (!startWithImport && app.joinManager.current.value != null) {
-                nav.navigate(Routes.JOIN_NODE) { launchSingleTop = true }
+                // An allocation is followed on its own screen; Add a node shows the other runs.
+                val route = if (app.joinManager.current.value?.request?.omniAllocate != null) Routes.OMNI_ALLOCATE else Routes.JOIN_NODE
+                nav.navigate(route) { launchSingleTop = true }
             }
             // The Kubernetes runs: the screen they were started from, while the manager holds them.
             DeepLink.ARGO_APP -> app.gitOpsOperations.argoSync.value?.takeIf { !startWithImport && canUseKube() }?.let {
