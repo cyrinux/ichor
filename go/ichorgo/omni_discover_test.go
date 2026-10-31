@@ -35,6 +35,9 @@ type fakeOmniAPI struct {
 	joinArgs   []string
 	joinConfig string
 	denyJoin   bool
+
+	// machineStatuses are the YAML specs of Omni's machine statuses.
+	machineStatuses []string
 }
 
 func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
@@ -134,6 +137,21 @@ func (f *fakeOmniAPI) List(req *v1alpha1.ListRequest, stream grpc.ServerStreamin
 
 	if err := message.NewGRPC(md, "/cosi.resource.State/List").VerifySignature(f.key); err != nil {
 		return status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if req.GetNamespace() == "default" && req.GetType() == "MachineStatuses.omni.sidero.dev" {
+		for i, spec := range f.machineStatuses {
+			res := &v1alpha1.Resource{
+				Metadata: &v1alpha1.Metadata{Namespace: "default", Type: req.GetType(), Id: fmt.Sprintf("machine-%d", i)},
+				Spec:     &v1alpha1.Spec{YamlSpec: spec},
+			}
+
+			if err := stream.Send(&v1alpha1.ListResponse{Resource: res}); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
 	if req.GetNamespace() != "default" || req.GetType() != "Clusters.omni.sidero.dev" {
