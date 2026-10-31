@@ -258,6 +258,12 @@ struct ClustersView: View {
                         )
                         .font(.caption)
                         .foregroundStyle(Color.secondary)
+                        if let proxy = context.proxyHost {
+                            Text("Through proxy \(proxy)")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                                .lineLimit(1)
+                        }
                         // Set on this device instead of the kubeconfig's; hidden in screenshot mode.
                         if !settings.privacyMask, model.usesOwnKubeServer(context),
                             let server = model.kubeServers[context.fingerprint]

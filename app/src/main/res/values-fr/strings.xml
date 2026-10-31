@@ -2181,6 +2181,7 @@
     <string name="kube_server_hint">Utilisée à la place de l’adresse du kubeconfig, par exemple une redirection de port, un répartiteur de charge ou un nom public : hôte, hôte:port ou URL https. Sans port, celui du kubeconfig est utilisé. Le certificat reste vérifié avec l’adresse propre du cluster. Laissez vide pour revenir à celle du kubeconfig. Sur cet appareil uniquement.</string>
     <string name="cluster_kube_server_menu">Adresse de l’API Kubernetes…</string>
     <string name="cluster_kube_server_set">Adresse de l’API : %1$s</string>
+    <string name="kube_proxy_via">Via le proxy %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pods</string>
@@ -4062,7 +4063,7 @@
     <string name="kube_problem_user_missing">Son utilisateur manque dans le fichier.</string>
     <string name="kube_problem_not_https">Le serveur n’utilise pas HTTPS : seuls les serveurs HTTPS sont pris en charge.</string>
     <string name="kube_problem_file_path">Il lit des fichiers de votre ordinateur. Lancez-y kubectl config view --flatten --minify et importez le résultat.</string>
-    <string name="kube_problem_proxy">La connexion par un proxy (proxy-url) n’est pas prise en charge.</string>
+    <string name="kube_problem_proxy">L’adresse du proxy dans proxy-url n’est pas valide.</string>
     <string name="kube_problem_basic_auth">La connexion par nom d’utilisateur et mot de passe n’est pas prise en charge.</string>
     <string name="kube_problem_sign_in_later">Cette connexion n’est pas encore prise en charge : elle arrive dans une prochaine version.</string>
     <string name="kube_problem_exec">Ce plugin exec n’est pas pris en charge. Utilisez un certificat client ou un jeton.</string>

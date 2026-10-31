@@ -48,6 +48,8 @@ data class ContextSummary(
     val problemDetail: String = "",
     /** The method the app signs in with (oidc, eks, gke, azure, digitalocean, rancher; omni, omni-service-account for a Talos context through Omni), "" for static credentials. */
     val signIn: String = "",
+    /** The kubeconfig's proxy-url as scheme://host:port (no credentials), "" without one. */
+    val proxyURL: String = "",
     /**
      * A Talos cluster's Kubernetes access: the fingerprint of the stored kubeconfig cluster its
      * Kubernetes calls go through, "" for the Talos admin kubeconfig. Set by the app, not the core.
@@ -63,6 +65,9 @@ val ContextSummary.isDemo: Boolean get() = demo
 
 /** Added from a kubeconfig: only the Kubernetes API, no Talos one. */
 val ContextSummary.isKube: Boolean get() = kind == KIND_KUBE
+
+/** The proxy's host and port, what the cluster's row says it goes through; null without a proxy. */
+val ContextSummary.proxyHost: String? get() = proxyURL.takeIf { it.isNotEmpty() }?.substringAfter("://")
 
 /** A Talos cluster that lists no endpoint (a talosconfig generated before it had addresses): nothing to reach yet. */
 val ContextSummary.needsEndpoint: Boolean get() = endpoints.isEmpty() && !demo && !isKube

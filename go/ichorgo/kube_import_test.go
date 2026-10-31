@@ -78,7 +78,9 @@ clusters:
 - name: plain
   cluster: {server: "http://k8s.example.org:8080"}
 - name: proxied
-  cluster: {server: "https://k8s.example.org:6443", proxy-url: "socks5://p:1080"}
+  cluster: {server: "https://k8s.example.org:6443", proxy-url: "socks5://u:secret@bastion.example.org:1080"}
+- name: bad-proxy
+  cluster: {server: "https://k8s.example.org:6443", proxy-url: "ftp://u:secret@bastion.example.org"}
 - name: ca-file
   cluster: {server: "https://k8s.example.org:6443", certificate-authority: /etc/ca.crt}
 users:
@@ -111,6 +113,7 @@ contexts:
 - {name: empty, context: {cluster: c, user: empty}}
 - {name: plain, context: {cluster: plain, user: sa}}
 - {name: proxied, context: {cluster: proxied, user: sa}}
+- {name: bad-proxy, context: {cluster: bad-proxy, user: sa}}
 - {name: ca-file, context: {cluster: ca-file, user: sa}}
 - {name: no-user, context: {cluster: c, user: nobody}}
 - {name: no-cluster, context: {cluster: nowhere, user: sa}}
@@ -205,7 +208,8 @@ func TestParseKubeconfigPreview(t *testing.T) {
 		"token-file":  {authToken, "", KubeProblemFilePath},
 		"empty":       {authNone, "", KubeProblemNoCredentials},
 		"plain":       {authToken, "", KubeProblemNotHTTPS},
-		"proxied":     {authToken, "", KubeProblemProxy},
+		"proxied":     {authToken, "", ""},
+		"bad-proxy":   {authToken, "", KubeProblemProxy},
 		"ca-file":     {authToken, "", KubeProblemFilePath},
 		"no-user":     {authNone, "", KubeProblemUserMissing},
 		"no-cluster":  {authToken, "", KubeProblemClusterMissing},
@@ -252,6 +256,14 @@ func TestParseKubeconfigPreview(t *testing.T) {
 
 	if c := byName["sa"]; len(c.Endpoints) != 1 || c.Endpoints[0] != "https://k8s.example.org:6443" {
 		t.Errorf("endpoints: %v", c.Endpoints)
+	}
+
+	if c := byName["proxied"]; c.ProxyURL != "socks5://bastion.example.org:1080" {
+		t.Errorf("proxy shown as %q", c.ProxyURL)
+	}
+
+	if c := byName["bad-proxy"]; c.ProxyURL != "" || strings.Contains(c.ProblemDetail, "secret") {
+		t.Errorf("invalid proxy: shown as %q, detail %q", c.ProxyURL, c.ProblemDetail)
 	}
 
 	if byName["cert"].ClusterID != byName["sa"].ClusterID || byName["cert"].Fingerprint == byName["sa"].Fingerprint {

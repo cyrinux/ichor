@@ -2106,6 +2106,7 @@
     <string name="kube_server_hint">kubeconfig のアドレスの代わりに使用します（ポートフォワード、ロードバランサー、公開名など）：host、host:port、または https URL。ポートを省略すると kubeconfig のポートを使用します。証明書は引き続きクラスター本来のアドレスで検証されます。kubeconfig のアドレスに戻すには空欄にしてください。このデバイスのみに適用されます。</string>
     <string name="cluster_kube_server_menu">Kubernetes API アドレス…</string>
     <string name="cluster_kube_server_set">API アドレス：%1$s</string>
+    <string name="kube_proxy_via">プロキシ %1$s 経由</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pod</string>
@@ -3951,7 +3952,7 @@
     <string name="kube_problem_user_missing">ファイルにユーザーがありません。</string>
     <string name="kube_problem_not_https">サーバーが HTTPS を使用していません。HTTPS サーバーのみサポートしています。</string>
     <string name="kube_problem_file_path">コンピューター上のファイルを参照しています。そのコンピューターで kubectl config view --flatten --minify を実行し、出力をインポートしてください。</string>
-    <string name="kube_problem_proxy">プロキシ経由の接続（proxy-url）はサポートしていません。</string>
+    <string name="kube_problem_proxy">proxy-url のプロキシアドレスが無効です。</string>
     <string name="kube_problem_basic_auth">ユーザー名とパスワードによるサインインはサポートしていません。</string>
     <string name="kube_problem_sign_in_later">このサインイン方法はまだサポートしていません。今後のバージョンで対応予定です。</string>
     <string name="kube_problem_exec">この exec プラグインはサポートしていません。クライアント証明書またはトークンを使用してください。</string>

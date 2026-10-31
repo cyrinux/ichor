@@ -2311,6 +2311,7 @@
     <string name="kube_server_hint">Використовується замість адреси з kubeconfig, наприклад переадресація порту, балансувальник навантаження або публічне ім’я: хост, хост:порт або https URL. Без порту використовується порт із kubeconfig. Сертифікат і далі перевіряється за власною адресою кластера. Залиште порожнім, щоб знову використовувати адресу з kubeconfig. Лише на цьому пристрої.</string>
     <string name="cluster_kube_server_menu">Адреса Kubernetes API…</string>
     <string name="cluster_kube_server_set">Адреса API: %1$s</string>
+    <string name="kube_proxy_via">Через проксі %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Поди</string>
@@ -4268,7 +4269,7 @@
     <string name="kube_problem_user_missing">У файлі бракує його користувача.</string>
     <string name="kube_problem_not_https">Сервер не використовує HTTPS: підтримуються лише сервери HTTPS.</string>
     <string name="kube_problem_file_path">Він читає файли з вашого комп’ютера. Виконайте там kubectl config view --flatten --minify та імпортуйте результат.</string>
-    <string name="kube_problem_proxy">Підключення через проксі (proxy-url) не підтримується.</string>
+    <string name="kube_problem_proxy">Адреса проксі в proxy-url недійсна.</string>
     <string name="kube_problem_basic_auth">Вхід за ім’ям користувача та паролем не підтримується.</string>
     <string name="kube_problem_sign_in_later">Цей спосіб входу ще не підтримується: він з’явиться в наступній версії.</string>
     <string name="kube_problem_exec">Цей плагін exec не підтримується. Використайте клієнтський сертифікат або токен.</string>

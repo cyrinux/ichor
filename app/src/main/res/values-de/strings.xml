@@ -2173,6 +2173,7 @@
     <string name="kube_server_hint">Wird statt der Adresse in der kubeconfig verwendet, z. B. eine Portweiterleitung, ein Load Balancer oder ein öffentlicher Name: Host, Host:Port oder eine https-URL. Ohne Port wird der aus der kubeconfig verwendet. Das Zertifikat wird weiterhin gegen die eigene Adresse des Clusters geprüft. Leer lassen, um wieder die der kubeconfig zu verwenden. Nur auf diesem Gerät.</string>
     <string name="cluster_kube_server_menu">Kubernetes-API-Adresse…</string>
     <string name="cluster_kube_server_set">API-Adresse: %1$s</string>
+    <string name="kube_proxy_via">Über Proxy %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pods</string>
@@ -4054,7 +4055,7 @@
     <string name="kube_problem_user_missing">Sein Benutzer fehlt in der Datei.</string>
     <string name="kube_problem_not_https">Der Server nutzt kein HTTPS: Nur HTTPS-Server werden unterstützt.</string>
     <string name="kube_problem_file_path">Er liest Dateien auf deinem Computer. Führe dort kubectl config view --flatten --minify aus und importiere die Ausgabe.</string>
-    <string name="kube_problem_proxy">Verbindungen über einen Proxy (proxy-url) werden nicht unterstützt.</string>
+    <string name="kube_problem_proxy">Die Proxy-Adresse in proxy-url ist ungültig.</string>
     <string name="kube_problem_basic_auth">Anmeldung mit Benutzername und Passwort wird nicht unterstützt.</string>
     <string name="kube_problem_sign_in_later">Diese Anmeldung wird noch nicht unterstützt: Sie kommt in einer späteren Version.</string>
     <string name="kube_problem_exec">Dieses Exec-Plugin wird nicht unterstützt. Nutze ein Client-Zertifikat oder ein Token.</string>

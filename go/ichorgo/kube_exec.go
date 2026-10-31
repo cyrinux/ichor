@@ -139,7 +139,7 @@ func (k *kubeClient) dialStream(ctx context.Context, path string) (*websocket.Co
 		return nil, err
 	}
 
-	ws, err := cfg.DialContext(ctx)
+	ws, err := k.openStream(ctx, cfg)
 	if err != nil {
 		// websocket.DialError does not unwrap: look at its Err by hand.
 		var dialErr *websocket.DialError

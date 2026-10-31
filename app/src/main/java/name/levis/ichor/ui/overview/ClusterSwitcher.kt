@@ -99,6 +99,7 @@ import name.levis.ichor.model.clusterTagsOf
 import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.parseCloudContext
+import name.levis.ichor.model.proxyHost
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
@@ -506,6 +507,7 @@ private fun ClusterRow(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+                context.proxyHost?.let { Text(stringResource(R.string.kube_proxy_via, it), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 kubeServer?.let { Text(stringResource(R.string.cluster_kube_server_set, it), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 // Which cluster needs a new talosconfig soon, without having to open each.
                 if (context.certNotAfter > 0 && daysUntil(context.certNotAfter) <= CERT_WARN_DAYS) {

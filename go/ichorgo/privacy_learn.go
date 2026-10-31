@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 )
 
@@ -90,6 +91,10 @@ func (m *privacyMask) learnKubeconfigLocked(configYAML string) {
 
 		if cluster := clusterOf(doc, name); cluster != nil {
 			m.learnTargetLocked(cluster.Cluster.Server)
+
+			if proxy, err := httpx.ParseProxyURL(cluster.Cluster.ProxyURL); err == nil {
+				m.learnTargetLocked(proxy.Host)
+			}
 		}
 	}
 }

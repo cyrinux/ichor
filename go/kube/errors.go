@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/cyrinux/ichor/go/internal/dialerr"
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // ListExpired starts the message of a 410 Gone: the continue token of a paged list expired
@@ -104,6 +105,12 @@ func TransportError(err error) string {
 		return "timed out"
 	}
 
+	// Its own sentence: the host in it is the proxy's, not the API server's.
+	var proxyErr *httpx.ProxyError
+	if errors.As(err, &proxyErr) {
+		return proxyErr.Error()
+	}
+
 	if reason := dialerr.Reason(err.Error()); reason != "" {
 		return reason
 	}
@@ -146,6 +153,8 @@ func IsTransportError(err error) bool {
 
 	var netErr net.Error
 
+	var proxyErr *httpx.ProxyError
+
 	return errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) ||
-		errors.As(err, &urlErr) || errors.As(err, &netErr) || dialerr.Reason(err.Error()) != ""
+		errors.As(err, &urlErr) || errors.As(err, &netErr) || errors.As(err, &proxyErr) || dialerr.Reason(err.Error()) != ""
 }

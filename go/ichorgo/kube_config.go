@@ -23,6 +23,8 @@ type kubeCredentials struct {
 	tokens *authTokenSource
 	// namespace is the current context's namespace, "" when it sets none.
 	namespace string
+	// proxy is the cluster's proxy-url, credentials included; nil for a direct connection.
+	proxy *url.URL
 }
 
 type kubeconfigFile struct {
@@ -34,6 +36,7 @@ type kubeconfigFile struct {
 			CertificateAuthorityData string `yaml:"certificate-authority-data"`
 			InsecureSkipTLSVerify    bool   `yaml:"insecure-skip-tls-verify"`
 			TLSServerName            string `yaml:"tls-server-name"`
+			ProxyURL                 string `yaml:"proxy-url"`
 		} `yaml:"cluster"`
 	} `yaml:"clusters"`
 	Users []struct {
@@ -93,6 +96,12 @@ func parseKubeconfig(data string) (*kubeCredentials, error) {
 		creds.server = server
 		creds.tls.ServerName = c.Cluster.TLSServerName
 		creds.tls.InsecureSkipVerify = c.Cluster.InsecureSkipTLSVerify //nolint:gosec // the user's own kubeconfig asks for it
+
+		if c.Cluster.ProxyURL != "" {
+			if creds.proxy, err = httpx.ParseProxyURL(c.Cluster.ProxyURL); err != nil {
+				return nil, fmt.Errorf("kubeconfig proxy-url: %w", err)
+			}
+		}
 
 		if c.Cluster.CertificateAuthorityData != "" {
 			pem, err := base64.StdEncoding.DecodeString(c.Cluster.CertificateAuthorityData)
