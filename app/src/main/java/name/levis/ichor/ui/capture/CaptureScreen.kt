@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.SMOKE_CAPTURE
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -132,7 +134,8 @@ fun CaptureScreen(
     ) { padding ->
         val s = session
         // The packets use the whole width (read sideways too); the setup form stays a readable column.
-        Column(Modifier.padding(padding).then(if (s == null) Modifier.readableWidth() else Modifier).fillMaxSize()) {
+        val shown = if (s?.packets.isNullOrEmpty()) Modifier else Modifier.testTag(SMOKE_CAPTURE)
+        Column(Modifier.padding(padding).then(if (s == null) Modifier.readableWidth() else Modifier).fillMaxSize().then(shown)) {
             if (s == null) {
                 CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start, peers = peers, onRetryLinks = linksVm::refresh)
             } else {

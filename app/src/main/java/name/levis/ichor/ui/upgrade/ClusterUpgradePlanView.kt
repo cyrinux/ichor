@@ -23,7 +23,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import name.levis.ichor.ui.components.SMOKE_UPGRADE
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -65,7 +67,8 @@ fun ClusterUpgradePlanView(
     var understood by rememberSaveable(version) { mutableStateOf(false) }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
+            .then(if (plan is UiState.Loaded) Modifier.testTag(SMOKE_UPGRADE) else Modifier),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (demo) InfoNotice(stringResource(R.string.cluster_upgrade_demo))

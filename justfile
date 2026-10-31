@@ -366,6 +366,10 @@ ios-build:
 screenshot name:
     scripts/screenshot.sh {{name}}
 
+# The Play listing's screenshots in all ten languages, on a running emulator (./build.sh smoke first)
+store-screenshots *args:
+    scripts/store-screenshots.sh {{args}}
+
 # The release history as JSON, from the release tags and conventional commits
 changelog *args:
     @scripts/changelog.py {{args}}

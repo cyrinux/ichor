@@ -16,6 +16,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+source "$root/scripts/screenshot-lib.sh"
 store="$root/fastlane/metadata/android/en-US/images/phoneScreenshots"
 site="$root/docs/screenshots"
 
@@ -25,20 +26,11 @@ from="${2:-}"
 command -v magick >/dev/null || { echo "ImageMagick (magick) is required" >&2; exit 1; }
 adb get-state >/dev/null
 
-# Bar heights in pixels, e.g. "type=statusBars frame=[0,0][1200,144]".
-bars="$(adb shell dumpsys window | grep -oE 'type=(statusBars|navigationBars) frame=\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]' | sort -u)"
-top="$(sed -nE 's/.*statusBars frame=\[0,0\]\[[0-9]+,([0-9]+)\].*/\1/p' <<<"$bars" | head -1)"
-nav="$(sed -nE 's/.*navigationBars frame=\[0,([0-9]+)\]\[[0-9]+,[0-9]+\].*/\1/p' <<<"$bars" | head -1)"
-
 mkdir -p "$store" "$site"
 raw="$(mktemp --suffix=.png)"
 trap 'rm -f "$raw"' EXIT
 if [[ -n "$from" ]]; then cp "$from" "$raw"; else adb exec-out screencap -p > "$raw"; fi
-height="$(magick identify -format '%h' "$raw")"
-width="$(magick identify -format '%w' "$raw")"
-top="${top:-0}"
-nav="${nav:-$height}"
-magick "$raw" -crop "${width}x$((nav - top))+0+${top}" +repage "$store/$name.png"
+crop_bars "$raw" "$store/$name.png"
 magick "$store/$name.png" -resize 540x -quality 82 "$site/$name.webp"
 echo "$store/$name.png"
 echo "$site/$name.webp"

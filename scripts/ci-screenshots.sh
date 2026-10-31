@@ -6,11 +6,12 @@
 # `./build.sh smoke && scripts/ci-screenshots.sh`.
 #
 # Writes docs/screenshots/NAME.webp (dark) and NAME-light.webp, and the dark ones as
-# fastlane/.../phoneScreenshots/N_NAME.png, N being the gallery order below.
+# fastlane/.../phoneScreenshots/N_NAME.png, N being the gallery order below. The other languages'
+# store pictures come from scripts/store-screenshots.sh, which retakes en-US with them.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APK_DIR="$ROOT/app/build/outputs/apk"
+source "$ROOT/scripts/screenshot-lib.sh"
 STORE="$ROOT/fastlane/metadata/android/en-US/images/phoneScreenshots"
 DEVICE_DIR=/data/local/tmp/ichor-screenshots
 # DemoScreenshots.NODE_SHOTS, after the overview.
@@ -19,15 +20,7 @@ SHOTS=(overview node-services logs events graphs capture upgrade)
 FEATURES=(plugins gitops capacity argocd-diff argocd metrics data-services castai cgroups apps
   workloads pods cronjobs netperf drift import kube-home)
 
-abi="$(adb shell getprop ro.product.cpu.abi | tr -d '\r')"
-app="$(find "$APK_DIR/debug" -name "*-${abi}-*.apk" -o -name "*-universal-*.apk" | head -1)"
-tests="$(find "$APK_DIR/androidTest" -name '*.apk' | head -1)"
-[[ -n "$app" && -n "$tests" ]] || { echo "no APK for $abi under $APK_DIR (run ./build.sh smoke)" >&2; exit 1; }
-
-adb install -r -g "$app"
-adb install -r -g "$tests"
-runner="$(adb shell pm list instrumentation | tr -d '\r' | sed -n 's/^instrumentation:\([^ ]*name\.levis\.ichor[^ ]*\) .*/\1/p' | head -1)"
-[[ -n "$runner" ]] || { echo "the screenshot test's instrumentation is not installed" >&2; exit 1; }
+install_test_apks "$ROOT"
 
 report="$ROOT/app/build/reports/screenshots.txt"
 mkdir -p "$(dirname "$report")"
