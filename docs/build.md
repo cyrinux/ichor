@@ -196,6 +196,11 @@ adb shell am start -W -a android.intent.action.VIEW -d 'ichor://demo' -p name.le
 adb shell am start -W -a android.intent.action.VIEW -d 'ichor://demo' -p name.levis.ichor
 ```
 
+The Play listing's screenshots walk this demo once per language: `./build.sh smoke`, then
+`just store-screenshots` on a running x86_64 AVD of API 33 or newer, or the Screenshots workflow
+run by hand with its `store` input. It writes all ten locales or nothing: a missing screen or a
+size Play would refuse fails the run.
+
 The same demo is the fixture of the **smoke test** (`app/src/androidTest/.../DemoSmokeTest.kt`,
 CI job `ui-smoke`). With an x86_64 AVD (API 34) running, `./build.sh smoke` builds the
 debug APK and the test APK, then `scripts/ui-smoke.sh` installs both and runs the test. It
