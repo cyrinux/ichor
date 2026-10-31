@@ -13,6 +13,39 @@ final class ClusterSummaryTests: XCTestCase {
             cpuCount: cpus, memTotal: mem ?? 8 * gib, memAvailable: free ?? 4 * gib)
     }
 
+    private func mesh(broken: Int, checked: Bool = true) -> ClusterTopology {
+        ClusterTopology(
+            mesh: TopologyMesh(
+                checked: checked, links: 3, broken: broken, pairs: (0..<broken).map { "node-a ↔ node-\($0)" }))
+    }
+
+    func testATunnelDownDegradesAClusterWhoseNodesAreAllReady() {
+        let s = ClusterSummary(nodes: [node("a"), node("b")], topology: mesh(broken: 1))
+        XCTAssertEqual(s.status, .degraded)
+        XCTAssertEqual(s.meshBroken, 1)
+        XCTAssertEqual(s.meshPairs, ["node-a ↔ node-0"])
+    }
+
+    func testATunnelDownNeverMakesTheClusterDown() {
+        XCTAssertEqual(ClusterSummary(nodes: [node("a", reachable: false)], topology: mesh(broken: 1)).status, .down)
+        let oneUnreachable = [node("a"), node("b", reachable: false)]
+        XCTAssertEqual(ClusterSummary(nodes: oneUnreachable, topology: mesh(broken: 2)).status, .degraded)
+    }
+
+    func testNoMeshKnownLeavesTheStatusToTheNodes() {
+        XCTAssertEqual(ClusterSummary(nodes: [node("a")]).status, .healthy)
+        XCTAssertEqual(ClusterSummary(nodes: [node("a")], topology: mesh(broken: 0)).status, .healthy)
+        let off = ClusterSummary(nodes: [node("a")], topology: ClusterTopology())
+        XCTAssertEqual(off.status, .healthy)
+        XCTAssertFalse(off.meshChecked)
+    }
+
+    func testAMapIsReadAgainOnceItIsOlderThanThirtySeconds() {
+        let now = Date()
+        XCTAssertTrue(topologyIsFresh(readAt: now.addingTimeInterval(-29), now: now))
+        XCTAssertFalse(topologyIsFresh(readAt: now.addingTimeInterval(-31), now: now))
+    }
+
     func testAllReadyIsHealthyWithSummedCapacity() {
         let s = ClusterSummary(nodes: [node("a"), node("b", cpus: 8, mem: 16 * gib, free: 2 * gib)])
         XCTAssertEqual(s.status, .healthy)

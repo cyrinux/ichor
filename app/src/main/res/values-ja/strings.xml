@@ -350,6 +350,12 @@
     <string name="kubespan_peer_up">アップ</string>
     <string name="kubespan_peer_down">ダウン</string>
     <string name="kubespan_peer_unknown">不明</string>
+    <plurals name="overview_summary_tunnels_down">
+        <item quantity="other">%1$d 本のトンネルが停止</item>
+    </plurals>
+    <string name="health_mesh_up">全 %1$d リンクが稼働中</string>
+    <string name="health_mesh_open_map">マップを開く</string>
+    <string name="health_mesh_server_note">サーバーのチェックは KubeSpan を対象にしていません。</string>
     <string name="kubespan_banner_meaning">これらのノード上の Pod は KubeSpan 経由で互いに通信できません。</string>
     <string name="kubespan_banner_check">確認事項: 各側が試したエンドポイント、UDP 51820 のファイアウォール、KubeSpan のエンドポイントフィルター。</string>
     <string name="kubespan_reason_never">ハンドシェイクなし</string>

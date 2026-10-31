@@ -203,11 +203,12 @@ internal fun NodeList(
                 onSkipTalosUpdate = onSkipTalosUpdate,
                 summary = { modifier -> ClusterSummaryCard(
                     clusterName ?: overview.context,
-                    clusterSummary(overview.nodes),
+                    clusterSummary(overview.nodes, topology),
                     live,
                     overview.nodesAnswered,
                     nav.onInsights,
                     nav.onCapacity,
+                    nav.onKubeSpan,
                     context = certificate,
                     modifier = modifier,
                 ) },

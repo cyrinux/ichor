@@ -380,10 +380,14 @@ struct OverviewView: View {
                 ClusterSummaryCard(
                     name: model.activeLabel,
                     context: model.activeSummary,
-                    summary: ClusterSummary(nodes: overview.nodes),
+                    summary: ClusterSummary(
+                        nodes: overview.nodes, topology: TopologyStore.shared.topology(for: model.topologyKey)),
                     answered: overview.answered(of: overviewNodeTargets),
                     live: liveStats ? ClusterLiveStore.shared.live(for: loadID) : nil
                 )
+                if let mesh = TopologyStore.shared.topology(for: model.topologyKey)?.mesh, mesh.broken > 0 {
+                    TunnelsDownLink(mesh: mesh)
+                }
                 // The card's two actions as named rows; the card itself opens nothing.
                 NavigationLink(value: Route.insights) {
                     Label {
@@ -656,7 +660,7 @@ struct OverviewView: View {
             // Alongside the rest: listing every node's containers takes a while.
             Task { await loadInventory(with: client, id: id) }
             Task { await loadAlerts(with: client, id: id) }
-            // The map that groups the nodes by site: once per cluster (see TopologyStore).
+            // The map that groups the nodes by site and says when a tunnel is down (see TopologyStore).
             if overview.outage == nil {
                 let key = model.topologyKey
                 Task { await TopologyStore.shared.load(with: client, key: key) }
