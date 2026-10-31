@@ -153,6 +153,31 @@ struct RunbookPlanSections: View {
     }
 }
 
+/// What a row says a step does: a plugin step in its plugin's words, the others by their action.
+func runbookStepSummary(_ step: RunbookPlanStep) -> String {
+    guard step.isPlugin else { return "\(step.action) · \(step.target.label)" }
+    return String(localized: "\(step.pluginName): \(step.label) on \(step.target.kind) \(step.target.name)")
+}
+
+/// A plugin step's icon, chosen as a plugin's row chooses it.
+struct RunbookPluginIcon: View {
+    let step: RunbookPlanStep
+    private let size: CGFloat = 24
+
+    var body: some View {
+        if let kind = step.pluginKind {
+            KindIcon(kind: kind, app: nil, size: size)
+        } else {
+            Image(systemName: step.pluginID == kubeGreenPluginID ? "moon.zzz" : "puzzlepiece.extension")
+                .font(.system(size: size * 0.5))
+                .foregroundStyle(.secondary)
+                .frame(width: size, height: size)
+                .background(.quaternary, in: RoundedRectangle(cornerRadius: size * 0.3))
+                .accessibilityHidden(true)
+        }
+    }
+}
+
 private struct RunbookPlanStepRow: View {
     let index: Int
     let step: RunbookPlanStep
@@ -160,6 +185,7 @@ private struct RunbookPlanStepRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
+                if step.isPlugin { RunbookPluginIcon(step: step) }
                 Text(verbatim: "\(index + 1). \(step.id)").font(.headline)
                 Spacer()
                 if step.destructive {
@@ -168,7 +194,7 @@ private struct RunbookPlanStepRow: View {
                         .accessibilityLabel(Text("Destructive"))
                 }
             }
-            Text(verbatim: "\(step.action) · \(step.target.label)")
+            Text(verbatim: runbookStepSummary(step))
                 .font(.system(.subheadline, design: .monospaced))
             if !step.detail.isEmpty {
                 Text(verbatim: step.detail).font(.caption).foregroundStyle(.secondary)

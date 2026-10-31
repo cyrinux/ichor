@@ -31,6 +31,33 @@ final class RunbooksTests: XCTestCase {
         XCTAssertEqual(runbookContinueIDs(["scale-down", "compact"]), "compact,scale-down")
     }
 
+    func testPluginStepConfirmsAsItsCardAsks() throws {
+        let plan = try TalosJSON.decode(
+            RunbookPlan.self,
+            from: #"""
+                {"name":"Plugin steps","steps":[
+                 {"id":"typed","action":"plugin/demo-actions/restart","target":{"kind":"Widget","namespace":"demo-shop","name":"alpha","node":""},"destructive":true,"pluginId":"demo-actions","pluginName":"Demo Actions","pluginIcon":"longhorn","label":"Restart","confirm":"typedName"},
+                 {"id":"plain","action":"plugin/demo-actions/pause","target":{"kind":"Widget","namespace":"demo-shop","name":"alpha"},"destructive":true,"pluginId":"demo-actions","label":"Pause","confirm":"plain"},
+                 {"id":"none","action":"plugin/demo-actions/tag","target":{"kind":"Widget","namespace":"demo-shop","name":"alpha"},"destructive":false,"pluginId":"demo-actions","label":"Tag","confirm":"none"},
+                 {"id":"pool","action":"plugin/demo-actions/retire","target":{"kind":"Pool","namespace":"","name":"shared"},"destructive":true,"pluginId":"demo-actions","confirm":"typedName"},
+                 {"id":"scale","action":"scale","target":{"namespace":"demo-shop","name":"ingest-api"},"destructive":true}
+                ],"errors":[]}
+                """#)
+        XCTAssertTrue(plan.steps[0].isPlugin)
+        XCTAssertEqual(plan.steps[0].pluginName, "Demo Actions")
+        XCTAssertEqual(plan.steps[0].label, "Restart")
+        XCTAssertEqual(plan.steps[0].pluginKind, .longhorn)
+        XCTAssertEqual(plan.steps[0].confirmation, .typedHostname("alpha"))
+        XCTAssertEqual(plan.steps[1].confirmation, .plain)
+        XCTAssertNil(plan.steps[1].pluginKind)
+        XCTAssertNil(plan.steps[2].confirmation)
+        XCTAssertEqual(plan.steps[3].confirmation, .typedHostname("shared"))
+        XCTAssertEqual(plan.steps[3].target.label, "Pool shared")
+        XCTAssertFalse(plan.steps[4].isPlugin)
+        XCTAssertNil(plan.steps[4].pluginKind)
+        XCTAssertEqual(plan.steps[4].confirmation, .plain)
+    }
+
     func testWaitStepDetailTimeoutAndClock() throws {
         let plan = try TalosJSON.decode(
             RunbookPlan.self,

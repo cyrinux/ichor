@@ -5724,6 +5724,7 @@
     <string name="runbook_wait_elapsed">待機 %1$s / %2$s</string>
     <string name="runbook_confirm_title">ステップ %1$s を実行しますか？</string>
     <string name="runbook_confirm_text">%2$s で %1$s</string>
+    <string name="runbook_plugin_step">%1$s: %3$s %4$s で %2$s</string>
     <string name="runbook_confirm">ステップを実行</string>
     <string name="runbook_done_ok">すべてのステップを実行しました。</string>
     <string name="runbook_done_failed">ステップが失敗しました。エラー時に続行する設定のステップを除き、後続のステップはスキップされました。</string>

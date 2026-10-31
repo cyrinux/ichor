@@ -369,6 +369,9 @@ Confirmation is the apps': `confirm: typedName` for what cannot be undone (`dele
 `stop` or `reset` subresource), `plain` (the default) for the rest, `none` for a harmless
 annotation.
 
+An action is also usable as a runbook step, `action: plugin/<id>/<action>`, with the same
+gate, confirmation and audit entry (`docs/runbooks.md`, "Plugin actions").
+
 ### Tools
 
 A tool is a check no expression can make (resolving hostnames from the phone): `tools.<id>:

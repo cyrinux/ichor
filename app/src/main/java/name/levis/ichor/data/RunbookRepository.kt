@@ -15,6 +15,7 @@ import name.levis.ichor.model.RunbookSummary
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.RunbookListener
+import java.util.Locale
 
 /** What a running runbook reports. */
 sealed interface RunbookEvent {
@@ -57,12 +58,12 @@ class RunbookRepository(go: GoCall) : GoRepository(go) {
 
     /** What each step would do on the cluster on screen, a parameter still shown as written; nothing runs. */
     suspend fun plan(yaml: String): RunbookPlan = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(RunbookPlan.serializer(), Ichorgo.runbookPlan(cfg, ctx, server, yaml))
+        TalosJson.decodeFromString(RunbookPlan.serializer(), Ichorgo.runbookPlan(cfg, ctx, server, yaml, Locale.getDefault().language))
     }
 
     /** What each step would do with [values] in place; a missing required value is an error. Nothing runs. */
     suspend fun plan(yaml: String, values: Map<String, String>): RunbookPlan = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(RunbookPlan.serializer(), Ichorgo.runbookPlanWith(cfg, ctx, server, yaml, valuesJson(values)))
+        TalosJson.decodeFromString(RunbookPlan.serializer(), Ichorgo.runbookPlanWith(cfg, ctx, server, yaml, valuesJson(values), Locale.getDefault().language))
     }
 
     private fun valuesJson(values: Map<String, String>): String =

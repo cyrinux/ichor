@@ -5724,6 +5724,7 @@
     <string name="runbook_wait_elapsed">已等待 %1$s / %2$s</string>
     <string name="runbook_confirm_title">运行步骤 %1$s？</string>
     <string name="runbook_confirm_text">在 %2$s 上执行 %1$s</string>
+    <string name="runbook_plugin_step">%1$s：在 %3$s %4$s 上执行 %2$s</string>
     <string name="runbook_confirm">运行步骤</string>
     <string name="runbook_done_ok">所有步骤均已运行。</string>
     <string name="runbook_done_failed">某个步骤失败：其后的步骤已跳过，设置了出错时继续的步骤除外。</string>

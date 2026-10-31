@@ -126,7 +126,7 @@ func TestRunbookPlanWithoutValuesShowsThePlaceholders(t *testing.T) {
 		t.Errorf("a step without its values is not refused yet: %+v", p.Steps[1])
 	}
 
-	if _, err := RunbookPlanWith(cfg, "admin@test", "", restartAnywhere, ""); err == nil || !strings.Contains(err.Error(), "missing a value for ns") {
+	if _, err := RunbookPlanWith(cfg, "admin@test", "", restartAnywhere, "", ""); err == nil || !strings.Contains(err.Error(), "missing a value for ns") {
 		t.Errorf("planned without its values: %v", err)
 	}
 }
@@ -134,7 +134,7 @@ func TestRunbookPlanWithoutValuesShowsThePlaceholders(t *testing.T) {
 func TestRunbookPlanWithShowsTheTargetAndAsksTheCluster(t *testing.T) {
 	_, cfg := runbookKube(t, func(ssarAttributes) bool { return false })
 
-	out, err := RunbookPlanWith(cfg, "admin@test", "", restartAnywhere, `{"ns":"demo-shop"}`)
+	out, err := RunbookPlanWith(cfg, "admin@test", "", restartAnywhere, `{"ns":"demo-shop"}`, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +152,7 @@ func TestRunbookPlanWithShowsTheTargetAndAsksTheCluster(t *testing.T) {
 		t.Errorf("the gate runs on the final target: %+v", p.Steps[0])
 	}
 
-	if _, err := RunbookPlanWith(cfg, "admin@test", "", restartAnywhere, "not json"); err == nil {
+	if _, err := RunbookPlanWith(cfg, "admin@test", "", restartAnywhere, "not json", ""); err == nil {
 		t.Error("broken values were accepted")
 	}
 }
@@ -233,7 +233,7 @@ func TestRunbookDemoPlansWithValuesAndRefusesTheRun(t *testing.T) {
 
 	cfg := demoKubeconfigForTest(t)
 
-	out, err := RunbookPlanWith(cfg, "", "", restartAnywhere, `{"ns":"demo-shop"}`)
+	out, err := RunbookPlanWith(cfg, "", "", restartAnywhere, `{"ns":"demo-shop"}`, "")
 	if err != nil || !strings.Contains(out, `"namespace":"demo-shop"`) {
 		t.Fatalf("plan = %s %v", out, err)
 	}

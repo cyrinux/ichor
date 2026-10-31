@@ -164,7 +164,7 @@ internal fun RunbookPlanSteps(plan: RunbookPlan, continueIds: Set<String>, onTog
     plan.steps.forEachIndexed { index, step ->
         if (index > 0) HorizontalDivider()
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            StepHeadline(step.action, step.id, step.destructive)
+            StepHeadline(step)
             Text(step.target.label, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
             if (step.detail.isNotEmpty()) MutedText(step.detail)
             if (step.role.isNotEmpty()) MutedText(stringResource(R.string.runbook_role, step.role))

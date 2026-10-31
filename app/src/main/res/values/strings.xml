@@ -5864,6 +5864,7 @@
     <string name="runbook_wait_elapsed">Waited %1$s of %2$s</string>
     <string name="runbook_confirm_title">Run step %1$s?</string>
     <string name="runbook_confirm_text">%1$s on %2$s</string>
+    <string name="runbook_plugin_step">%1$s: %2$s on %3$s %4$s</string>
     <string name="runbook_confirm">Run step</string>
     <string name="runbook_done_ok">Every step ran.</string>
     <string name="runbook_done_failed">A step failed: the steps after it were skipped unless they continue on error.</string>

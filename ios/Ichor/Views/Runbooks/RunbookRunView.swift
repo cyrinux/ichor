@@ -64,8 +64,8 @@ struct RunbookRunView: View {
         .sheet(item: $typing) { step in
             HostnameConfirmationSheet(
                 title: String(localized: "Run \(step.id)?"),
-                message: String(localized: "\(step.action) on \(step.target.node). Type the node to confirm."),
-                hostname: step.target.node,
+                message: typedMessage(step),
+                hostname: step.confirmName,
                 actionTitle: String(localized: "Run step"),
                 onConfirm: { confirm(step) }
             )
@@ -80,8 +80,16 @@ struct RunbookRunView: View {
             Button("Run step", role: .destructive) { confirm(step) }
             Button("Not now", role: .cancel) { decline() }
         } message: { step in
-            Text(verbatim: "\(step.action) · \(step.target.label)")
+            Text(verbatim: runbookStepSummary(step))
         }
+    }
+
+    /// What the typed confirmation says: a plugin step as its card says it, a node step by the node.
+    private func typedMessage(_ step: RunbookPlanStep) -> String {
+        guard step.isPlugin else {
+            return String(localized: "\(step.action) on \(step.target.node). Type the node to confirm.")
+        }
+        return String(localized: "\(step.label) runs on \(step.target.label) with your credentials.")
     }
 
     @ViewBuilder private func header(_ run: RunbookJob.Run) -> some View {
@@ -147,11 +155,12 @@ private struct RunbookStepStateRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: symbol).foregroundStyle(color).accessibilityHidden(true)
+                if step.isPlugin { RunbookPluginIcon(step: step) }
                 Text(verbatim: step.id).font(.headline)
                 Spacer()
                 Text(label).font(.caption).foregroundStyle(color)
             }
-            Text(verbatim: "\(step.action) · \(step.target.label)")
+            Text(verbatim: runbookStepSummary(step))
                 .font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
             if !step.detail.isEmpty {
                 Text(verbatim: step.detail).font(.caption).foregroundStyle(.secondary)
