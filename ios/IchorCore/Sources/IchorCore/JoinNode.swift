@@ -121,10 +121,14 @@ public struct JoinRequest: Equatable, Sendable {
     public let staticAddress: String
     /// The new node replaces a member discovery still lists under `hostname` (a dead node).
     public let replacing: Bool
+    /// A server to create at Hetzner for the node, with the config as its user data (`address` unused).
+    public let hetzner: HetznerCreateSpec?
+    /// The Hetzner server joins Omni, not the cluster directly.
+    public let omni: Bool
 
     public init(
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
-        replacing: Bool = false
+        replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, omni: Bool = false
     ) {
         self.address = address
         self.template = template
@@ -133,13 +137,21 @@ public struct JoinRequest: Equatable, Sendable {
         self.disk = disk
         self.staticAddress = staticAddress
         self.replacing = replacing
+        self.hetzner = hetzner
+        self.omni = omni
+    }
+
+    /// The steps of this run's timeline.
+    public var phases: [JoinPhase] {
+        guard hetzner != nil else { return JoinPhase.maintenanceRun }
+        return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
     }
 
     /// The same request, replacing (or not) the member already named `hostname`.
     public func withReplacing(_ on: Bool) -> JoinRequest {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
-            staticAddress: staticAddress, replacing: on)
+            staticAddress: staticAddress, replacing: on, hetzner: hetzner, omni: omni)
     }
 }
 
@@ -170,7 +182,18 @@ public struct JoinProgress: Decodable, Equatable, Sendable {
 
 /// Phases of a node join, in order.
 public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
-    case applying, installing, rebooting, booted, joining, registering, done
+    case creating, starting, applying, installing, rebooting, booted, joining, omni, registering, done
+
+    /// A node in maintenance mode that gets its config from the app.
+    public static let maintenanceRun: [JoinPhase] = [
+        .applying, .installing, .rebooting, .booted, .joining, .registering, .done,
+    ]
+    /// A server created with the config as its user data.
+    public static let cloudRun: [JoinPhase] = [
+        .creating, .starting, .rebooting, .booted, .joining, .registering, .done,
+    ]
+    /// A server created with Omni's join config.
+    public static let cloudOmniRun: [JoinPhase] = [.creating, .starting, .omni, .done]
 
     public static func < (a: Self, b: Self) -> Bool {
         allCases.firstIndex(of: a)! < allCases.firstIndex(of: b)!
@@ -182,8 +205,12 @@ public typealias JoinStep = TimelineStep<JoinPhase>
 
 /// Timeline of the join from the events so far, like maintenanceTimeline: phases only move
 /// forward, `finished` marks them all done, `failure` marks the furthest one failed.
-public func joinTimeline(_ events: [JoinProgress], finished: Bool = false, failure: String? = nil) -> [JoinStep] {
+public func joinTimeline(
+    _ events: [JoinProgress], finished: Bool = false, failure: String? = nil,
+    phases: [JoinPhase] = JoinPhase.maintenanceRun
+) -> [JoinStep] {
     foldTimeline(
-        events, phases: JoinPhase.allCases, finished: finished, failure: failure,
-        phase: { JoinPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
+        events, phases: phases, finished: finished, failure: failure,
+        phase: { event in JoinPhase(rawValue: event.phase).flatMap { phases.contains($0) ? $0 : nil } },
+        at: \.at, message: \.message)
 }

@@ -58,6 +58,13 @@ struct CloudUserDataCard: View {
                 )
             )
         }
+        // Once the text is made, the app can also create the server with it.
+        if case .loaded(_, _, _) = data {
+            HetznerCreateSection(
+                omni: omni, template: template?.node ?? "", role: template.map { joinRole($0.role) } ?? "",
+                hostname: hostname.trimmingCharacters(in: .whitespaces),
+                disk: disk.trimmingCharacters(in: .whitespaces))
+        }
     }
 
     @ViewBuilder

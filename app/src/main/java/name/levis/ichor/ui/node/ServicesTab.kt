@@ -46,6 +46,8 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SMOKE_NODE_SERVICES
+import androidx.compose.ui.platform.testTag
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -65,7 +67,7 @@ fun ServicesTab(
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     Loaded(state, vm::refresh, freshness = true) { data ->
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(Modifier.testTag(SMOKE_NODE_SERVICES), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(data, key = { it.id }) { svc ->
                 ServiceRow(
                     svc,

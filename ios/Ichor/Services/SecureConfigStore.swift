@@ -32,10 +32,11 @@ enum ConfigProtection: String {
 /// (SecurityKeyCrypto.seal): the items then read only after a key was tapped this run.
 enum SecureConfigStore {
     /// The sealed items, under the same key: the two configs, the sign-ins of the
-    /// kubeconfig clusters (KubeAuthStore), and the configs' parsed summaries
-    /// (ConfigSummaryCache, names and endpoints: sealed like the configs).
+    /// kubeconfig clusters (KubeAuthStore), the cloud providers' tokens (CloudProviderStore),
+    /// and the configs' parsed summaries (ConfigSummaryCache, names and endpoints: sealed like
+    /// the configs).
     enum Item: CaseIterable {
-        case talosconfig, kubeconfig, kubeAuth, summaryCache
+        case talosconfig, kubeconfig, kubeAuth, cloudTokens, summaryCache
 
         /// Derived from the others: never what keeps the key alive.
         fileprivate var isDerived: Bool { self == .summaryCache }
@@ -45,6 +46,7 @@ enum SecureConfigStore {
             case .talosconfig: "talosconfig.sealed"
             case .kubeconfig: "kubeconfig.sealed"
             case .kubeAuth: "kubeauth.sealed"
+            case .cloudTokens: "cloud-tokens.sealed"
             case .summaryCache: "config-summary.sealed"
             }
         }

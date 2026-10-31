@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.JoinPhase
 import name.levis.ichor.model.JoinProgress
 import name.levis.ichor.ui.FollowedRun
 
@@ -25,7 +27,19 @@ data class JoinRequest(
     val staticAddress: String,
     /** The new node replaces a member discovery still lists under [hostname] (a dead node). */
     val replacing: Boolean = false,
-)
+    /** A server to create at Hetzner for the node, with the config as its user data ([address] unused). */
+    val hetzner: HetznerCreateSpec? = null,
+    /** The Hetzner server joins Omni, not the cluster directly. */
+    val omni: Boolean = false,
+) {
+    /** The steps of this run's timeline. */
+    val phases: List<JoinPhase>
+        get() = when {
+            hetzner == null -> JoinPhase.maintenanceRun
+            omni -> JoinPhase.cloudOmniRun
+            else -> JoinPhase.cloudRun
+        }
+}
 
 /** The node join the app follows: at most one at a time. */
 data class JoinRunState(
@@ -62,16 +76,22 @@ class JoinManager(
     /** Set by [stop]: the Go run stops following and still reports how it ended. */
     private var stopRequested = MutableStateFlow(false)
 
-    /** Starts the join unless one is already followed; returns false then. */
+    /**
+     * Starts the join unless one is already followed; returns false then. [hetznerToken] is the
+     * project's token for a request with a server to create: kept out of the request, which
+     * stays on screen.
+     */
     @Synchronized
-    fun start(request: JoinRequest): Boolean {
+    fun start(request: JoinRequest, hetznerToken: String = ""): Boolean {
         if (_current.value?.running == true) return false
         val context = configs.config.value?.activeContext.orEmpty()
         _current.value = JoinRunState(request, context)
         val stopped = MutableStateFlow(false).also { stopRequested = it }
         job = scope.launch {
             try {
-                lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
+                val events = request.hetzner?.let { lifecycle.hetznerCreate(hetznerToken, it, stopped.filter { s -> s }) }
+                    ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
+                events
                     .collect { event ->
                         when (event) {
                             is JoinEvent.Progress -> _current.update { it?.copy(events = it.events + event.progress) }
@@ -89,6 +109,11 @@ class JoinManager(
     }
 
     private suspend fun finish(context: String, done: JoinEvent.Done) {
+        // Omni keeps its own list of machines: no address to add.
+        if (done.error == null && done.address.isBlank() && _current.value?.request?.omni == true) {
+            _current.update { it?.copy(finished = true) }
+            return
+        }
         if (done.error != null || done.address.isBlank()) {
             _current.update { it?.copy(finished = true, error = done.error ?: text(R.string.join_run_no_address, emptyList())) }
             return

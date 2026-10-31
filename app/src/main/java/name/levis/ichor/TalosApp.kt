@@ -17,6 +17,7 @@ import name.levis.ichor.data.RunbookRepository
 import name.levis.ichor.data.CARotationManager
 import name.levis.ichor.data.PodSweepManager
 import name.levis.ichor.data.ClusterRepoStore
+import name.levis.ichor.data.CloudProviderStore
 import name.levis.ichor.data.StagedEdits
 import name.levis.ichor.data.ProposalsStore
 import name.levis.ichor.data.AiPreferences
@@ -169,6 +170,11 @@ class TalosApp : Application() {
         KubeAuthStore(SecureStoreValue(java.io.File(filesDir, KubeAuthStore.FILE), KubeAuthStore.KEY_ALIAS, hasStrongBox(packageManager), appLock))
     }
 
+    /** The cloud providers' API tokens, sealed like the configs, never in a backup. */
+    val cloudProviderStore by lazy {
+        CloudProviderStore(SecureStoreValue(java.io.File(filesDir, CloudProviderStore.FILE), CloudProviderStore.KEY_ALIAS, hasStrongBox(packageManager), appLock))
+    }
+
     /** The "tap your security key" prompts the app lock shows (see SecurityKeyPrompts). */
     val keyPrompts by lazy { SecurityKeyPrompts() }
 
@@ -178,7 +184,10 @@ class TalosApp : Application() {
      */
     suspend fun resealCredentialStores() {
         configRepository.reseal()
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { kubeAuthStore.reseal() }
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            kubeAuthStore.reseal()
+            cloudProviderStore.reseal()
+        }
     }
     val kubeAuthRepository: KubeAuthRepository by lazy { KubeAuthRepository(configRepository, onSignInChanged = { googleTokenRenewer.forget(it) }) }
     /** The Go core's credentials and the results cache, shared by the repositories below. */
@@ -683,6 +692,7 @@ class TalosApp : Application() {
                     launch(Dispatchers.IO) { historyStore.sync(emptyList()) }
                     launch(Dispatchers.IO) {
                         kubeAuthStore.clear()
+                        cloudProviderStore.clear()
                         // Drops the tokens the core keeps in memory.
                         Ichorgo.setAuthStore(kubeAuthStore)
                     }

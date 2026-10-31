@@ -57,14 +57,8 @@ private const val PLUGIN_DOCS_URL = "https://cyrinux.github.io/ichor/plugins/"
  * consent sheet). An imported plugin the core no longer reads is shown off with its reason.
  */
 @Composable
-fun PluginsSection(plugins: PluginRepository, preferences: UiPreferences) {
+fun PluginsSection(plugins: PluginRepository, preferences: UiPreferences, onBrowse: () -> Unit) {
     val indexUrl by preferences.pluginIndexUrl.collectAsStateWithLifecycle()
-    var browsing by remember { mutableStateOf(false) }
-    if (browsing) {
-        PluginIndexScreen(plugins, indexUrl.trim(), onBack = { browsing = false })
-        return
-    }
-
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     var builtins by remember { mutableStateOf<List<PluginCatalogItem>>(emptyList()) }
@@ -123,7 +117,7 @@ fun PluginsSection(plugins: PluginRepository, preferences: UiPreferences) {
     IchorOutlinedButton(onClick = { importing = true }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.plugins_import))
     }
-    IchorOutlinedButton(onClick = { browsing = true }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = onBrowse, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.plugin_index_browse))
     }
     OutlinedTextField(

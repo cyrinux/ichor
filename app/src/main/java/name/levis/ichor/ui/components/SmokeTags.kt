@@ -29,6 +29,21 @@ const val SMOKE_CLUSTER_UPGRADE = "smoke-cluster-upgrade"
 /** The packet capture setup's Start button. */
 const val SMOKE_CAPTURE_START = "smoke-capture-start"
 
+/** A node's services, once loaded (the screenshot walks, androidTest DemoWalk). */
+const val SMOKE_NODE_SERVICES = "smoke-node-services"
+
+/** A node's machine events, once one has arrived. */
+const val SMOKE_EVENTS = "smoke-events"
+
+/** A node's live graphs, once they hold a sample. */
+const val SMOKE_GRAPHS = "smoke-graphs"
+
+/** A running capture, once it has shown a packet. */
+const val SMOKE_CAPTURE = "smoke-capture"
+
+/** The cluster upgrade screen, once its plan is loaded. */
+const val SMOKE_UPGRADE = "smoke-upgrade"
+
 /** A node screen's menu entry. */
 fun smokeMenuTag(entry: NodeMenuEntry) = "smoke-node-menu-${entry.name}"
 

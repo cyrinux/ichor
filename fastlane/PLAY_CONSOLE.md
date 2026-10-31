@@ -93,13 +93,16 @@ the Play Console reports.
 | Short / full description | `fastlane/metadata/android/<locale>/` |
 | App icon | `images/icon.png` (512×512) |
 | Feature graphic | `images/featureGraphic.png` (1024×500) |
-| Phone screenshots | `images/phoneScreenshots/` (7, 1200×2322 PNG) |
+| Phone screenshots | `<locale>/images/phoneScreenshots/` (7 per locale, 1080×2082 PNG) |
 | Default language | English (United States), en-US |
-| Translations | fr-FR, de-DE, es-ES, it-IT, uk |
+| Translations | fr-FR, es-ES, uk, de-DE, it-IT, zh-CN, ru-RU, pt-BR, ja-JP |
 
-The screenshots (ratio 1.94, under Play's 2:1 limit, and at least 1080 px wide) qualify for
+The screenshots (ratio 1.93, under Play's 2:1 limit, and at least 1080 px wide) qualify for
 featuring and recommendations. Their `N_` prefix sets the order `fastlane supply` uploads
-them in. Locales without their own images use the en-US ones.
+them in. To retake every locale: `just store-screenshots` on an emulator, or the Screenshots
+workflow with its `store` input and its `store-screenshots` artifact, then
+`scripts/play-assets.sh`. The icon and feature graphic exist in en-US only, and Play uses them
+for the other locales.
 
 ## Store settings
 

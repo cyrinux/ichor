@@ -6,14 +6,23 @@ name: Screenshots
 # unzip it at the root and commit docs/screenshots/ and the store's phoneScreenshots/. The iPhone
 # ones (ios/IchorUITests/DemoScreenshotTests.swift, scripts/ios-screenshots.sh) are taken on a
 # simulator and come back as `screenshots-ios`: unzip it at the root too and commit
-# docs/screenshots/ios/.
+# docs/screenshots/ios/. Run with the `store` input it takes the Play listing's pictures in all ten
+# languages instead (half an hour of emulator, so never on a pull request): the `store-screenshots`
+# artifact, unzipped the same way, then scripts/play-assets.sh.
 on:
   workflow_dispatch:
+    inputs:
+      store:
+        description: The Play listing's pictures in all ten languages, not the website's
+        type: boolean
+        default: false
   pull_request:
     paths:
       - app/src/androidTest/java/name/levis/ichor/DemoScreenshots.kt
+      - app/src/androidTest/java/name/levis/ichor/DemoWalk.kt
       - scripts/ci-screenshots.sh
       - scripts/screenshot.sh
+      - scripts/screenshot-lib.sh
       - .github/workflows/screenshots.yml
       - ios/IchorUITests/**
       - ios/Ichor/App/UITestLaunch.swift
@@ -29,6 +38,7 @@ concurrency:
 jobs:
   capture:
     name: Capture the demo (emulator)
+    if: ${{ !inputs.store }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -77,8 +87,58 @@ jobs:
             ${{ runner.temp }}/emulator.log
           if-no-files-found: ignore
 
+  store:
+    name: Capture the Play listing in every language (emulator)
+    if: ${{ inputs.store }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-toolchain
+
+      - name: Build the app and its instrumentation tests
+        env:
+          ICHOR_SKIP_TESTS: "1"
+          ICHOR_LOCAL_MODEL: "0"
+        run: ./build.sh smoke
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # The same device and image as the capture job, for the same reasons.
+      - name: Capture the screenshots on an emulator
+        env:
+          EMULATOR_DEVICE: pixel_4
+          EMULATOR_TARGET: default
+        run: nix shell nixpkgs#imagemagick --command scripts/ci-emulator.sh scripts/store-screenshots.sh --out "$RUNNER_TEMP/shots"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: store-screenshots
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: store-screenshots-report
+          path: |
+            app/build/reports/store-screenshots.txt
+            app/build/reports/store-screenshots/
+            ${{ runner.temp }}/emulator.log
+          if-no-files-found: ignore
+
   capture-ios:
     name: Capture the demo (simulator)
+    if: ${{ !inputs.store }}
     runs-on: macos-26
     timeout-minutes: 60
     steps:

@@ -26,6 +26,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.SMOKE_EVENTS
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -108,7 +110,7 @@ fun EventsScreen(
             if (rows.isEmpty()) {
                 EmptyText(stringResource(if (filter == EventFilter.ALL) R.string.events_empty else R.string.events_empty_filtered))
             } else {
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize().testTag(SMOKE_EVENTS)) {
                     itemsIndexed(rows, key = { i, row -> row.event.id.ifEmpty { "#$i" }.let { "${row.event.node}|$it" } }) { _, row ->
                         EventItem(row, hostname = hostnames[row.event.node] ?: row.event.node, showNode = node == null, now = now)
                         HorizontalDivider()

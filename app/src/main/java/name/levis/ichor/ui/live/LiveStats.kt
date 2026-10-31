@@ -2,7 +2,9 @@ package name.levis.ichor.ui.live
 
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import name.levis.ichor.ui.components.LoadFailureRow
+import name.levis.ichor.ui.components.SMOKE_GRAPHS
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -83,7 +85,7 @@ fun LiveStatsTab(
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().then(if (points.isEmpty()) Modifier else Modifier.testTag(SMOKE_GRAPHS)),
     ) {
         // No Retry: the next poll, a few seconds away, reads again on its own.
         state.error?.let { item { LoadFailureRow(it, onRetry = null, compact = true) } }

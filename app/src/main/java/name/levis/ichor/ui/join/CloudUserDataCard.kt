@@ -40,6 +40,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.CloudUserData
 import name.levis.ichor.model.joinTemplates
@@ -101,6 +104,9 @@ fun CloudUserDataCard(
     vm: CloudUserDataViewModel = viewModel(key = "cloud-user-data", factory = factory { CloudUserDataViewModel(app.nodeLifecycleRepository) }),
     configVm: JoinConfigViewModel = viewModel(key = "cloud-user-data-form", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
 ) {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val demo = config?.activeSummary?.isDemo == true
     val made by vm.data.collectAsStateWithLifecycle()
     val form by configVm.form.collectAsStateWithLifecycle()
     val members by configVm.members.collectAsStateWithLifecycle()
@@ -141,6 +147,8 @@ fun CloudUserDataCard(
             hint = stringResource(R.string.cloud_user_data_images_hint, loaded.talosVersion, loaded.images.first().arch),
         )
     }
+    // Once the text is made, the app can also create the server with it.
+    if (data is UiState.Loaded) HetznerCreateCard(form.takeUnless { omni }, demo)
 }
 
 /** The size, the warnings, the preview (secrets hidden) and Copy / Share of the full text. */
