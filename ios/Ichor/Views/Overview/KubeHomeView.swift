@@ -61,6 +61,7 @@ struct KubeHomeView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(SettingsStore.self) private var settings
+    @Environment(AISettings.self) private var ai
     @State private var state: LoadState<KubeNodesOverview> = .loading
     /// `state` is only what the last background check saw (a seed), until the cluster answers.
     @State private var fromMonitor = false
@@ -161,6 +162,14 @@ struct KubeHomeView: View {
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
+                // Optional: only once turned on in the settings.
+                if ai.enabled {
+                    Button {
+                        path.append(Route.diagnosis(note: ""))
+                    } label: {
+                        Label("AI diagnosis", systemImage: "sparkles")
+                    }
+                }
                 // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
                 ForEach(bar.icons.filter(offered)) { action in
                     Button {

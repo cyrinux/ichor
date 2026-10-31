@@ -38,17 +38,23 @@ func renderDiagnosis(d diagnosisData) string {
 	renderEtcd(&b, d)
 	renderGitOps(&b, d.GitOps)
 	renderDataServices(&b, d.DataServices)
+	renderKubeTrouble(&b, d.Kube)
 	renderEvents(&b, d)
 
-	// Log lines are raw bytes from the nodes: the report must be text all the way to the UI
-	// (an invalid string does not cross to Swift at all).
-	// The tags are neutralized here rather than when sending: what is shown is what is sent.
-	raw := strings.ToValidUTF8(strings.TrimRight(b.String(), "\n"), "\uFFFD")
+	return closeReport(b.String(), maxReportBytes)
+}
+
+// closeReport makes text a report of at most limit bytes, with the secrets stripped. Log lines
+// are raw bytes from the nodes: the report must be text all the way to the UI (an invalid string
+// does not cross to Swift at all). The tags are neutralized here rather than when sending: what
+// is shown is what is sent.
+func closeReport(text string, limit int) string {
+	raw := strings.ToValidUTF8(strings.TrimRight(text, "\n"), "\uFFFD")
 	clean := scrubSecrets(raw)
 
 	report := neutralizeTags(clean)
-	if len(report) > maxReportBytes {
-		report = clipUTF8(report, maxReportBytes) + "\n[The report was cut here: it is too large to send whole.]"
+	if len(report) > limit {
+		report = clipUTF8(report, limit) + "\n[The report was cut here: it is too large to send whole.]"
 	}
 
 	return report + "\n" + scrubFooter(raw, clean)

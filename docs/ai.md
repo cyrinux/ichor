@@ -13,8 +13,16 @@ and never contacts a model provider.
   control-plane static pods, pods without a running container, recent warning and error events,
   the last 40 log lines of services that are not healthy and, with an os:admin talosconfig,
   the storage, database and backup operators that are not fine (Longhorn, Garage,
-  CloudNativePG, Velero, cert-manager…), with the nodes involved. It never contains the
-  talosconfig, a machine configuration or a kubeconfig.
+  CloudNativePG, Velero, cert-manager…), with the nodes involved, and the workloads not ready and
+  the pods in trouble. It never contains the talosconfig, a machine configuration or a kubeconfig.
+- **On a kubeconfig cluster the report covers** what the Kubernetes API knows, read with your own
+  credentials within 20 seconds and cut at 32 KiB: the nodes with their pressure conditions, the
+  workloads with fewer ready pods than they want (a workload scaled to zero is not listed) and why,
+  the pods in CrashLoopBackOff, ImagePullBackOff or Pending (30 at most), the newest 30 Warning
+  events, the checkup's warnings and criticals, the plugins' critical findings, failed Helm
+  releases, and the Argo CD and Flux apps that are not fine. It needs to list nodes, pods, events,
+  Deployments, StatefulSets and DaemonSets across the cluster: what your credentials may not list
+  is left out, with a line saying so.
 - **Anonymized by default:** the nodes' names, IP addresses and domain, the Kubernetes
   namespaces and the names of pods, containers, GitOps apps and data service objects are
   replaced with placeholders (`cp-1`, `10.0.0.7`, `homelab.lan`, `ns-1`, `pod-3`) before the
@@ -24,7 +32,10 @@ and never contacts a model provider.
   node masked) and the container names of pods in those namespaces. The mask only knows the
   names the report's data states and those the kubelet logs as `pod="…"`: the rest of the log
   lines (other host names such as a registry or an API endpoint, a name in free text) is sent as
-  it is, so read the report first if your logs are sensitive.
+  it is, so read the report first if your logs are sensitive. The Kubernetes sections (the whole
+  report of a kubeconfig cluster) go further: images, and in their free text whatever is quoted
+  or shaped like a name (`acme-compute`, `registry.example.net/app:1`), become `img-1` and `obj-2`.
+  A single plain word that nothing marks as a name can still pass there.
 - **Secrets stripped, in every mode:** what looks like one (`Authorization` and `Bearer` values,
   `token=`, `password=`, `apikey=`, AWS and GitHub keys, JWTs, PEM blocks, long hex or base64
   runs other than image digests and container ids) becomes `[redacted]`, even when the names go

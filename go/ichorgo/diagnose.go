@@ -57,6 +57,7 @@ type diagnosisKind int
 const (
 	diagnosisFull   diagnosisKind = iota // the full cluster report (CollectDiagnosis)
 	diagnosisHealth                      // a failed health check (CollectHealthExplanation)
+	diagnosisKube                        // the report of a kubeconfig cluster, without Talos
 )
 
 // CollectDiagnosis reads the state of the cluster (os:reader calls only) into a report.
@@ -66,11 +67,17 @@ const (
 // everything else on screen. What looks like a secret is stripped either way.
 //
 // kubeServer is the cluster's Kubernetes API address the user set ("" for the kubeconfig's):
-// with os:admin, the Argo CD and Flux apps that are not fine are added (see collectGitOps).
+// with os:admin, the Argo CD and Flux apps that are not fine are added (see collectGitOps), and
+// the workloads not ready and the pods in trouble. A kubeconfig context has no Talos to read: its
+// report is what the Kubernetes API knows (see collectKubeDiagnosis).
 func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool) (d *Diagnosis, err error) {
 	defer maskErr(&err)
 
 	contextName = unmaskContext(configYAML, contextName)
+
+	if isKubeconfig(configYAML) {
+		return collectKubeReport(configYAML, contextName, kubeServer, anonymize)
+	}
 
 	d = &Diagnosis{}
 	d.screenshotMode, d.screenshotResets = privacy.state()
@@ -120,6 +127,10 @@ func (d *Diagnosis) systemPrompt(language string) string {
 		return healthExplainSystemPrompt(language, d.mask != nil)
 	}
 
+	if d.kind == diagnosisKube {
+		return kubeDiagnosisSystemPrompt(language, d.mask != nil)
+	}
+
 	return diagnosisSystemPrompt(language, d.mask != nil)
 }
 
@@ -131,6 +142,10 @@ func (d *Diagnosis) systemPromptFor(provider, language string) string {
 
 	if d.kind == diagnosisHealth {
 		return healthExplainSystemPromptSmall(language, d.mask != nil)
+	}
+
+	if d.kind == diagnosisKube {
+		return kubeDiagnosisSystemPromptSmall(language, d.mask != nil)
 	}
 
 	return diagnosisSystemPromptSmall(language, d.mask != nil)
