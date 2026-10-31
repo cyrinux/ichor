@@ -3,7 +3,10 @@ package name.levis.ichor
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.util.ExitRecords
+import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.Diagnostics
+import name.levis.ichor.model.BackupLockMode
+import name.levis.ichor.monitor.canPostNotifications
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.PrivacyMask
@@ -17,12 +20,32 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.auditEventClustersArgument
+import name.levis.ichor.model.normalizeTags
 import name.levis.ichor.model.signsOutOnRemoval
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 // The settings TalosApp's screens change, and what follows each change: extension functions
 // so TalosApp.kt stays the composition root.
+
+/** The backup manager, over every store a backup holds. */
+internal fun TalosApp.newBackupManager() = BackupManager(
+    configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, kubeAccess, kubeAuthStore, wakeOnLan, monitorStore,
+    pinStore, gitHostStore, aiPreferences, clusterRepos,
+    lockMode = { BackupLockMode.of(appLock.enabled.value, appLock.securityKeys.value != null) },
+    setPrivacyMask = this::setPrivacyMask,
+    notificationsAllowed = { canPostNotifications(this) },
+    onRestored = {
+        applyAuditEventClusters()
+        talosRepository.invalidate()
+        forgetShownCluster()
+    },
+    proposals = proposals,
+    plugins = pluginRepository,
+    auditEvents = auditEventClusters,
+    onCallSet = { onCallStore.read(it).isSet },
+    tags = clusterTags,
+)
 
 /** Shows another cluster (a context of the stored config); the widget and the alerts follow it. */
 fun TalosApp.selectCluster(name: String) {
@@ -39,6 +62,13 @@ fun TalosApp.renameCluster(fingerprint: String, name: String) {
         updateAllWidgets(this@renameCluster)
         syncWear()
     }
+}
+
+/** Gives the cluster of [context] (all its contexts, so a fleet row finds them whichever was checked) the tags typed in [input]. */
+fun TalosApp.setClusterTags(context: ContextSummary, input: String) {
+    val summary = configRepository.config.value?.summary ?: return
+    val tags = normalizeTags(input)
+    clusterFingerprints(summary, context).forEach { clusterTags.set(it, tags) }
 }
 
 /**

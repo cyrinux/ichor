@@ -6014,6 +6014,12 @@
     <string name="fleet_empty">Nenhum cluster ainda.</string>
     <string name="fleet_demo_hint">Os clusters fictícios da demo: um toque volta para a demo.</string>
     <string name="fleet_one_cluster">A lista cresce a cada cluster que você adiciona.</string>
+    <string name="clusters_menu_tags">Tags…</string>
+    <string name="cluster_tags_title">Tags de %1$s</string>
+    <string name="cluster_tags_label">Tags</string>
+    <string name="cluster_tags_hint">Separadas por vírgulas. Ficam neste dispositivo e nos backups, nunca na configuração.</string>
+    <string name="cluster_tags_suggestions">Usadas em outros clusters</string>
+    <string name="fleet_filter_untagged">Sem tag</string>
     <string name="alert_rules_title">Regras</string>
     <string name="alert_rules_hint">Aplicadas a cada verificação: um alerta surgido no horário silencioso não é enviado de novo quando ele termina.</string>
     <string name="alert_rules_quiet">Horário silencioso</string>

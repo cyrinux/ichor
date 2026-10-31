@@ -5,6 +5,7 @@ import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.NodeHealth
+import name.levis.ichor.model.clusterTagsOf
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.isKube
 import name.levis.ichor.widget.widgetLabel
@@ -61,12 +62,19 @@ fun demoFleetOnly(summary: ConfigSummary?): Boolean =
  * contexts; a cluster with none yet has takenAt 0 (never checked). Without a [summary] (the
  * config not loaded yet), one per stored snapshot. Names as the app shows them ([names] given
  * by the user, unless [masked]); in screenshot mode the hostnames are left out too, since the
- * snapshot keeps them as read.
+ * snapshot keeps them as read. [tags] by fingerprint, the user's words: shown even when [masked].
  */
-fun fleetEntries(state: MonitorState, summary: ConfigSummary?, names: Map<String, String>, masked: Boolean): List<FleetEntry> {
+fun fleetEntries(
+    state: MonitorState,
+    summary: ConfigSummary?,
+    names: Map<String, String>,
+    masked: Boolean,
+    tags: Map<String, List<String>> = emptyMap(),
+): List<FleetEntry> {
     if (summary == null) {
         return state.clusters.toSortedMap().map { (key, snapshot) ->
             entryOf(key, widgetLabel(snapshot, names, masked), snapshot.context, snapshot.kube, snapshot, state.reach[key], masked)
+                .copy(tags = tags[snapshot.fingerprint].orEmpty())
         }
     }
     val labels = ClusterLabels(names, masked)
@@ -76,6 +84,7 @@ fun fleetEntries(state: MonitorState, summary: ConfigSummary?, names: Map<String
         val monitorKey = monitorKeyOf(context)
         val snapshot = state.clusters[monitorKey]
         entryOf(key, labels.of(context), context.name, context.isKube, snapshot, state.reach[monitorKey], masked)
+            .copy(tags = clusterTagsOf(tags, group.map { it.fingerprint }))
     }
 }
 

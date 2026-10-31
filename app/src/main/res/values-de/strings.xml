@@ -6010,6 +6010,12 @@
     <string name="fleet_empty">Noch kein Cluster.</string>
     <string name="fleet_demo_hint">Die erfundenen Cluster der Demo: Ein Tippen führt zurück zur Demo.</string>
     <string name="fleet_one_cluster">Die Liste wächst mit jedem Cluster, den du hinzufügst.</string>
+    <string name="clusters_menu_tags">Tags…</string>
+    <string name="cluster_tags_title">Tags von %1$s</string>
+    <string name="cluster_tags_label">Tags</string>
+    <string name="cluster_tags_hint">Durch Kommas getrennt. Bleiben auf diesem Gerät und in Backups, nie in der Konfiguration.</string>
+    <string name="cluster_tags_suggestions">Auf anderen Clustern verwendet</string>
+    <string name="fleet_filter_untagged">Ohne Tag</string>
     <string name="alert_rules_title">Regeln</string>
     <string name="alert_rules_hint">Bei jeder Prüfung angewendet: Eine Warnung aus der Ruhezeit wird nach deren Ende nicht erneut gesendet.</string>
     <string name="alert_rules_quiet">Ruhezeit</string>

@@ -6019,6 +6019,12 @@
     <string name="fleet_empty">Aún no hay clústeres.</string>
     <string name="fleet_demo_hint">Los clústeres inventados de la demo: un toque vuelve a la demo.</string>
     <string name="fleet_one_cluster">La lista crece con cada clúster que añadas.</string>
+    <string name="clusters_menu_tags">Etiquetas…</string>
+    <string name="cluster_tags_title">Etiquetas de %1$s</string>
+    <string name="cluster_tags_label">Etiquetas</string>
+    <string name="cluster_tags_hint">Separadas por comas. Se guardan en este dispositivo y en las copias de seguridad, nunca en la configuración.</string>
+    <string name="cluster_tags_suggestions">Usadas en otros clústeres</string>
+    <string name="fleet_filter_untagged">Sin etiqueta</string>
     <string name="alert_rules_title">Reglas</string>
     <string name="alert_rules_hint">Se aplican en cada comprobación: una alerta surgida en las horas de silencio no se vuelve a enviar cuando terminan.</string>
     <string name="alert_rules_quiet">Horas de silencio</string>

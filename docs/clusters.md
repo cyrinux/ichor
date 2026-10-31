@@ -102,6 +102,13 @@ always clear which cluster a reboot is about to hit. Background alerts and the w
 the cluster on screen. On both homes, the summary card's name band and stat icon tiles carry the
 cluster's color, while health, metrics and bars keep their neutral surface and status colors.
 
+**Tags.** A cluster's menu has "Tags…": short words of your own (prod, staging, a region), up to
+eight, comma-separated. They show under its name and filter "All clusters", where each tag is a
+chip with how many of its clusters need attention, plus "Untagged". Selecting several shows the
+clusters in any of them, and the choice is kept. Like a given name or color, tags stay on this
+device and in its backups, and never reach the talosconfig or kubeconfig; screenshot mode leaves
+them visible, so do not put anything secret in one.
+
 **Search every cluster's nodes, pods, workloads and GitOps apps from the overview** (Android:
 "Search clusters" in the title's menu, or the search action of the top bar; iOS: "Search
 clusters" in the top bar's ⋯ menu, which can be moved to the bar). Results come from

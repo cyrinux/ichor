@@ -5883,6 +5883,12 @@
     <string name="fleet_empty">还没有集群。</string>
     <string name="fleet_demo_hint">演示中的虚构集群：点按会回到演示。</string>
     <string name="fleet_one_cluster">每添加一个集群，列表就会增加一项。</string>
+    <string name="clusters_menu_tags">标签…</string>
+    <string name="cluster_tags_title">%1$s 的标签</string>
+    <string name="cluster_tags_label">标签</string>
+    <string name="cluster_tags_hint">以逗号分隔。仅保存在此设备和备份中，绝不写入配置。</string>
+    <string name="cluster_tags_suggestions">其他集群使用的标签</string>
+    <string name="fleet_filter_untagged">无标签</string>
     <string name="alert_rules_title">规则</string>
     <string name="alert_rules_hint">每次检查时应用：免打扰时段内出现的告警在时段结束后不会再次发送。</string>
     <string name="alert_rules_quiet">免打扰时段</string>

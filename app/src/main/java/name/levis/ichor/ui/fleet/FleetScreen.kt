@@ -31,6 +31,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.FleetSources
 import name.levis.ichor.model.FleetCounts
+import name.levis.ichor.model.fleetRowsWithTags
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.needAttention
 import name.levis.ichor.monitor.syncMonitoring
@@ -59,7 +60,8 @@ fun FleetScreen(onBack: () -> Unit, onHome: () -> Unit, onAlertsSettings: () -> 
                 app.configRepository.config,
                 app.clusterNames.names,
                 app.uiPreferences.privacyMask,
-            ) { state, stored, names, mask -> FleetSources(state, stored?.summary, names, mask.enabled) }
+                app.clusterTags.tags,
+            ) { state, stored, names, mask, tags -> FleetSources(state, stored?.summary, names, mask.enabled, tags) }
             FleetViewModel(app.fleetRepository, sources, runCheck = { syncMonitoring(app, runNow = true) })
         },
     )
@@ -69,6 +71,7 @@ fun FleetScreen(onBack: () -> Unit, onHome: () -> Unit, onAlertsSettings: () -> 
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val colors by app.clusterColors.colors.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
+    val tagFilter by app.uiPreferences.fleetTagFilter.collectAsStateWithLifecycle()
     val contexts = config?.summary?.contexts.orEmpty()
     val demo = contexts.isNotEmpty() && contexts.all { it.isDemo }
 
@@ -97,9 +100,12 @@ fun FleetScreen(onBack: () -> Unit, onHome: () -> Unit, onAlertsSettings: () -> 
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item { MutedText(fleetSummaryLine(summary.counts)) }
+                    if (summary.groups.any { it.tag.isNotEmpty() }) {
+                        item { FleetTagFilter(summary.groups, tagFilter, app.uiPreferences::setFleetTagFilter) }
+                    }
                     if (!alertsOn && !demo) item { AlertsOffCard(onAlertsSettings) }
                     if (demo) item { MutedText(stringResource(R.string.fleet_demo_hint)) }
-                    items(summary.clusters, key = { it.key }) { row ->
+                    items(fleetRowsWithTags(summary.clusters, summary.groups, tagFilter), key = { it.key }) { row ->
                         val cluster = contexts.firstOrNull { it.name == row.context && !it.isDemo }
                         FleetRowCard(row, cluster, colors, masked = mask.enabled, now = state.now) {
                             cluster?.let { app.selectCluster(it.name) }

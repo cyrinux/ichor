@@ -11,8 +11,14 @@ import name.levis.ichor.monitor.demoFleetOnly
 import name.levis.ichor.monitor.fleetEntries
 import name.levis.ichorgo.Ichorgo
 
-/** What the fleet screen is drawn from: the monitor's snapshots, the clusters, their names and screenshot mode. */
-data class FleetSources(val state: MonitorState, val summary: ConfigSummary?, val names: Map<String, String>, val masked: Boolean)
+/** What the fleet screen is drawn from: the monitor's snapshots, the clusters, their names, screenshot mode and their tags. */
+data class FleetSources(
+    val state: MonitorState,
+    val summary: ConfigSummary?,
+    val names: Map<String, String>,
+    val masked: Boolean,
+    val tags: Map<String, List<String>> = emptyMap(),
+)
 
 /**
  * The fleet screen (every cluster's last background check, worst first), ranked by the Go core
@@ -28,7 +34,7 @@ class FleetRepository(
         val json = if (demoFleetOnly(sources.summary)) {
             demo(now)
         } else {
-            val entries = fleetEntries(sources.state, sources.summary, sources.names, sources.masked)
+            val entries = fleetEntries(sources.state, sources.summary, sources.names, sources.masked, sources.tags)
             rank(FleetJson.encodeToString(FleetEntries.serializer(), FleetEntries(entries)), now)
         }
         TalosJson.decodeFromString(FleetSummary.serializer(), json)

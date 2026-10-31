@@ -34,6 +34,16 @@ final class FleetTests: XCTestCase {
         XCTAssertTrue(entries[1].kube)
     }
 
+    func testTagsComeFromEveryContextOfTheClusterEvenWhenMasked() {
+        let entries = fleetEntries(
+            snapshots: [:], reachability: [:], contexts: [lab, labReader, dev],
+            labels: ClusterLabels(masked: true),
+            tags: ["fp-lab": ["prod"], "fp-lab-reader": ["prod", "eu"], "gone": ["old"]])
+
+        XCTAssertEqual(entries[0].tags, ["prod", "eu"])
+        XCTAssertEqual(entries[1].tags, [])
+    }
+
     func testScreenshotModeHidesTheGivenNamesAndHostnames() {
         let entries = fleetEntries(
             snapshots: ["c-lab": snapshot()], reachability: [:], contexts: [lab],

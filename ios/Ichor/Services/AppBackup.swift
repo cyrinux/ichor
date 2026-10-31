@@ -49,7 +49,8 @@ enum AppBackup {
                 kubeAccess: model.kubeAccess,
                 repos: model.git.repos,
                 auditEvents: model.settings.auditEventClusters,
-                oncallSet: Set(fingerprints.filter { OnCallStore.read($0).isSet })
+                oncallSet: Set(fingerprints.filter { OnCallStore.read($0).isSet }),
+                tags: model.clusterTags
             ),
             kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints),
             // iOS pins nothing in screenshot mode: the stored pins are all of the real scope.
@@ -119,7 +120,7 @@ enum AppBackup {
         model.restoreClusterSettings(
             names: restored.names, colors: restored.colors, kubeServers: kubeServers,
             vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess, repos: restored.repos,
-            auditEvents: restored.auditEvents)
+            auditEvents: restored.auditEvents, tags: restored.tags)
         // After the configs: the sign-ins of the kubeconfig and Omni clusters restored.
         KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.signInFingerprints))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)

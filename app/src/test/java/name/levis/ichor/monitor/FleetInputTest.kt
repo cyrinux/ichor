@@ -80,6 +80,25 @@ class FleetInputTest {
     }
 
     @Test
+    fun tagsComeFromEveryContextOfTheClusterEvenWhenMasked() {
+        val summary = ConfigSummary("admin@lab", listOf(lab, labReader, dev))
+        val tags = mapOf("fp-lab" to listOf("prod"), "fp-lab-reader" to listOf("prod", "eu"), "gone" to listOf("old"))
+
+        val entries = fleetEntries(MonitorState.EMPTY, summary, emptyMap(), masked = true, tags = tags)
+
+        assertEquals(listOf("prod", "eu"), entries[0].tags)
+        assertTrue(entries[1].tags.isEmpty())
+    }
+
+    @Test
+    fun withoutTheConfigTheTagsFollowTheSnapshotsFingerprint() {
+        val state = MonitorState(clusters = mapOf("fp-lab" to snapshot("admin@lab", "fp-lab")))
+        val entries = fleetEntries(state, summary = null, names = emptyMap(), masked = false, tags = mapOf("fp-lab" to listOf("prod")))
+
+        assertEquals(listOf("prod"), entries[0].tags)
+    }
+
+    @Test
     fun withoutTheConfigEverySnapshotIsAnEntry() {
         val state = MonitorState(clusters = mapOf("fp-lab" to snapshot("admin@lab", "fp-lab")))
         val entries = fleetEntries(state, summary = null, names = mapOf("fp-lab" to "Home lab"), masked = false)
