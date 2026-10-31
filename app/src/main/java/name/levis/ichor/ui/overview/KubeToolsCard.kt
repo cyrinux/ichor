@@ -96,12 +96,14 @@ internal fun KubeToolsCard(
     tailscale: Boolean = false,
     clusterLifecycle: Boolean = false,
     argoRollouts: Boolean = false,
+    virtualMachines: Boolean = false,
+    policies: Boolean = false,
     /** The active CRD plugins of other categories than Data services, each a tool in its family. */
     plugins: List<PluginDetectItem> = emptyList(),
     /** The integrations read with Data services: those outside storage open from their family. */
     dataServices: DataServices? = null,
 ) {
-    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins, dataServices = dataServices)
+    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, virtualMachines = virtualMachines, policies = policies, plugins = plugins, dataServices = dataServices)
     val labelStyle = MaterialTheme.typography.bodyLarge
     SectionCard(stringResource(R.string.common_kind_kubernetes)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -193,9 +195,11 @@ private fun kubeToolGroups(
     tailscale: Boolean,
     clusterLifecycle: Boolean,
     argoRollouts: Boolean,
+    virtualMachines: Boolean,
+    policies: Boolean,
     plugins: List<PluginDetectItem>,
     dataServices: DataServices?,
-): List<KubeToolGroup> = kubeToolGroupsNative(nav, crossplane, tailscale, clusterLifecycle, argoRollouts).mapIndexed { index, group ->
+): List<KubeToolGroup> = kubeToolGroupsNative(nav, crossplane, tailscale, clusterLifecycle, argoRollouts, virtualMachines, policies).mapIndexed { index, group ->
     val systems = dataServices?.let { services ->
         services.detected.filter { serviceToolGroup(it.family) == index }.map { kind ->
             val health = services.summary(kind)?.takeIf { it.attention > 0 }?.health
@@ -238,6 +242,8 @@ private fun kubeToolGroupsNative(
     tailscale: Boolean,
     clusterLifecycle: Boolean,
     argoRollouts: Boolean,
+    virtualMachines: Boolean,
+    policies: Boolean,
 ): List<KubeToolGroup> = listOf(
     KubeToolGroup(
         stringResource(R.string.kube_tools_group_workloads),
@@ -246,7 +252,8 @@ private fun kubeToolGroupsNative(
             KubeTool(stringResource(R.string.kube_jobs_title), Icons.Outlined.TaskAlt, nav.onJobs),
             KubeTool(stringResource(R.string.kb_helm_title), Icons.Outlined.Inventory2, nav.onHelm),
             KubeTool(stringResource(R.string.autoscaling_title), Icons.Outlined.Speed, nav.onAutoscaling),
-            KubeTool(stringResource(R.string.vm_title), Icons.Outlined.Computer, nav.onVirtualMachines),
+            // Only when the cluster serves KubeVirt: the read answers "not installed" quickly.
+            if (virtualMachines) KubeTool(stringResource(R.string.vm_title), Icons.Outlined.Computer, nav.onVirtualMachines) else null,
             // Only when the cluster serves Argo Rollouts: the read answers "not installed" quickly.
             if (argoRollouts) KubeTool(stringResource(R.string.argo_rollouts_title), Icons.Outlined.Upgrade, nav.onArgoRollouts) else null,
         ),
@@ -272,14 +279,15 @@ private fun kubeToolGroupsNative(
     KubeToolGroup(stringResource(R.string.kube_tools_group_security), emptyList()),
     KubeToolGroup(
         stringResource(R.string.kube_tools_group_observe),
-        listOf(
+        listOfNotNull(
             KubeTool(stringResource(R.string.kube_events_stream_title), Icons.Outlined.Timeline, nav.onEvents),
             KubeTool(stringResource(R.string.metrics_title), Icons.Outlined.QueryStats, nav.onMetrics),
             KubeTool(stringResource(R.string.log_search_title), Icons.AutoMirrored.Outlined.ManageSearch, nav.onLogSearch),
             KubeTool(stringResource(R.string.checkup_title), Icons.Outlined.HealthAndSafety, nav.onCheckup),
             KubeTool(stringResource(R.string.capacity_title), Icons.Outlined.DataUsage, nav.onCapacity),
             KubeTool(stringResource(R.string.apihealth_title), Icons.Outlined.MonitorHeart, nav.onApiHealth),
-            KubeTool(stringResource(R.string.kpol_title), Icons.Outlined.Gavel, nav.onPolicies),
+            // Only when the cluster runs Kyverno or Gatekeeper: the read answers "not installed" quickly.
+            if (policies) KubeTool(stringResource(R.string.kpol_title), Icons.Outlined.Gavel, nav.onPolicies) else null,
         ),
     ),
     KubeToolGroup(

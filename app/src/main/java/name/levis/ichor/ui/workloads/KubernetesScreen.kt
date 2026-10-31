@@ -46,7 +46,9 @@ import name.levis.ichor.ui.crossplane.CrossplaneViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.flows.CiliumViewModel
 import name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel
+import name.levis.ichor.ui.policies.PoliciesViewModel
 import name.levis.ichor.ui.tailscale.TailscaleViewModel
+import name.levis.ichor.ui.vms.VirtualMachinesViewModel
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.ActionBarActions
@@ -131,16 +133,22 @@ fun KubernetesScreen(
     val tailscale: TailscaleViewModel = viewModel(factory = factory { TailscaleViewModel(app.kubeBrowser) })
     val rollouts: ArgoRolloutsViewModel = viewModel(factory = factory { ArgoRolloutsViewModel(app.argoRolloutsRepository) })
     val lifecycle: ClusterLifecycleViewModel = viewModel(factory = factory { ClusterLifecycleViewModel(app.kubeBrowser) })
-    val operators = listOf<LoadingViewModel<*>>(crossplane, tailscale, rollouts, lifecycle)
+    val vms: VirtualMachinesViewModel = viewModel(factory = factory { VirtualMachinesViewModel(app.vmRepository) })
+    val admission: PoliciesViewModel = viewModel(factory = factory { PoliciesViewModel(app.policyRepository) })
+    val operators = listOf<LoadingViewModel<*>>(crossplane, tailscale, rollouts, lifecycle, vms, admission)
     LaunchedEffect(Unit) { operators.filter { it.state.value == UiState.Loading }.forEach { it.refresh() } }
     val crossplaneState by crossplane.state.collectAsStateWithLifecycle()
     val tailscaleState by tailscale.state.collectAsStateWithLifecycle()
     val rolloutsState by rollouts.state.collectAsStateWithLifecycle()
     val lifecycleState by lifecycle.state.collectAsStateWithLifecycle()
+    val vmsState by vms.state.collectAsStateWithLifecycle()
+    val admissionState by admission.state.collectAsStateWithLifecycle()
     val hasCrossplane = (crossplaneState as? UiState.Loaded)?.data?.installed == true
     val hasTailscale = (tailscaleState as? UiState.Loaded)?.data?.installed == true
     val hasRollouts = (rolloutsState as? UiState.Loaded)?.data?.installed == true
     val hasLifecycle = (lifecycleState as? UiState.Loaded)?.data?.installed == true
+    val hasVms = (vmsState as? UiState.Loaded)?.data?.installed == true
+    val hasPolicies = (admissionState as? UiState.Loaded)?.data?.installed == true
     // Which systems Data services reads, to offer those filed outside it; never blocks the tabs.
     val dataServices: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
     LaunchedEffect(Unit) { dataServices.load(Unit, dataServices.inventoryHints()) }
@@ -219,6 +227,8 @@ fun KubernetesScreen(
                                 KubernetesAction.TAILSCALE -> hasTailscale
                                 KubernetesAction.ARGO_ROLLOUTS -> hasRollouts
                                 KubernetesAction.CLUSTER_LIFECYCLE -> hasLifecycle
+                                KubernetesAction.VIRTUAL_MACHINES -> hasVms
+                                KubernetesAction.POLICIES -> hasPolicies
                                 // Unknown until read, or unreadable: no entry rather than one that fails.
                                 KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
                                     action.dataServiceKind in detected

@@ -86,6 +86,10 @@ struct KubeHomeView: View {
     @State private var clusterLifecycle: LoadState<ClusterLifecycle>?
     /// Argo Rollouts: nil until the cluster says it serves Rollouts (the read answers fast).
     @State private var argoRollouts: LoadState<ArgoRolloutsStatus>?
+    /// Whether the cluster serves KubeVirt; false until it says so, or when it refuses the read.
+    @State private var virtualMachines = false
+    /// Whether the cluster runs Kyverno or Gatekeeper; false until it says so, or when it refuses the read.
+    @State private var policies = false
     /// The Alertmanager's alerts: nil until one is found (none hides the section).
     @State private var alerts: LoadState<AMAlerts>?
     /// Who the API server takes the credentials for; nil until known (or when it cannot say).
@@ -236,6 +240,8 @@ struct KubeHomeView: View {
             tailscale = nil
             clusterLifecycle = nil
             argoRollouts = nil
+            virtualMachines = false
+            policies = false
             alerts = nil
             whoAmI = nil
             top = [:]
@@ -381,7 +387,7 @@ struct KubeHomeView: View {
         KubeToolsSections(
             services: toolServices, plugins: plugins.homeTiles, downNodes: loadedNotReadyNodes,
             crossplane: crossplane != nil, tailscale: tailscale != nil, clusterLifecycle: clusterLifecycle != nil,
-            argoRollouts: rolloutsInstalled
+            argoRollouts: rolloutsInstalled, virtualMachines: virtualMachines, policies: policies
         )
     }
 
@@ -565,6 +571,14 @@ struct KubeHomeView: View {
         let rolloutsNext = await loadArgoRollouts(with: client)
         guard id == loadID else { return }
         argoRollouts = rolloutsNext.map { (argoRollouts ?? .loading).refreshed(with: $0) }
+        // KubeVirt: answers "not installed" quickly when its API group is not served.
+        let vmsNext = (try? await client.virtualMachines().installed) ?? false
+        guard id == loadID else { return }
+        virtualMachines = vmsNext
+        // Kyverno or Gatekeeper: answers "not installed" quickly when neither API group is served.
+        let policiesNext = (try? await client.policies().installed) ?? false
+        guard id == loadID else { return }
+        policies = policiesNext
         let alertsNext = await loadAlerts(with: client)
         guard id == loadID else { return }
         alerts = alertsNext.map { (alerts ?? .loading).refreshed(with: $0) }

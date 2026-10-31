@@ -15,6 +15,8 @@ struct KubeToolsSections: View {
     var tailscale = false
     var clusterLifecycle = false
     var argoRollouts = false
+    var virtualMachines = false
+    var policies = false
     /// Ran while shown, again with each new `refreshID` (on the first section only, so once).
     var refreshID: Date?
     var onRefresh: (() async -> Void)?
@@ -39,10 +41,13 @@ struct KubeToolsSections: View {
             } label: {
                 toolLabel(Text("Autoscaling"), systemImage: "arrow.up.and.down")
             }
-            NavigationLink {
-                VirtualMachinesView()
-            } label: {
-                toolLabel(Text("Virtual machines"), systemImage: "desktopcomputer")
+            // Only when the cluster serves KubeVirt: the read answers "not installed" quickly.
+            if virtualMachines {
+                NavigationLink {
+                    VirtualMachinesView()
+                } label: {
+                    toolLabel(Text("Virtual machines"), systemImage: "desktopcomputer")
+                }
             }
             // Only when the cluster serves Argo Rollouts; a refused read (no access) stays quiet.
             if argoRollouts {
@@ -133,10 +138,13 @@ struct KubeToolsSections: View {
             } label: {
                 toolLabel(KubeHomeAction.apiHealth)
             }
-            NavigationLink {
-                PoliciesView()
-            } label: {
-                toolLabel(Text("Policies"), systemImage: "checkmark.shield")
+            // Only when the cluster runs Kyverno or Gatekeeper: the read answers "not installed" quickly.
+            if policies {
+                NavigationLink {
+                    PoliciesView()
+                } label: {
+                    toolLabel(Text("Policies"), systemImage: "checkmark.shield")
+                }
             }
             NavigationLink(value: Route.alerts) {
                 toolLabel(KubeHomeAction.alerts)
@@ -263,6 +271,7 @@ struct OverviewKubeTools: View {
                 services: loaded, plugins: plugins, downNodes: downNodes,
                 crossplane: operators.crossplane, tailscale: operators.tailscale,
                 clusterLifecycle: operators.clusterLifecycle, argoRollouts: operators.argoRollouts,
+                virtualMachines: operators.virtualMachines, policies: operators.policies,
                 refreshID: refreshID, onRefresh: loadOperators)
         }
     }
