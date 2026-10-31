@@ -207,6 +207,9 @@ struct HetznerCreateSection: View {
             case .appearedInOmni?:
                 Text("\(job.request?.hostname ?? "") appeared in Omni: allocate it there")
                 Button("Close") { job.clear() }
+            case .snapshotMade?:
+                // Not this section's run: a snapshot run has its own (HetznerSnapshotRunSections).
+                Button("Close") { job.clear() }
             case .failed(let error)?:
                 Text(verbatim: error).foregroundStyle(.statusBad)
                 Button("Close") { job.clear() }
