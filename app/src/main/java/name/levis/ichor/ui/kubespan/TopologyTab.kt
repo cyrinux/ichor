@@ -15,7 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -253,11 +253,11 @@ private fun LinkDetails(
             HorizontalDivider()
             LinkTest(it)
         }
-        OutlinedButton(onClick = { onTest?.invoke() }, enabled = onTest != null, modifier = Modifier.fillMaxWidth()) {
+        IchorOutlinedButton(onClick = { onTest?.invoke() }, enabled = onTest != null, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.topology_link_test_run))
         }
         onCapture?.let { capture ->
-            OutlinedButton(onClick = capture, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = capture, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.topology_link_capture))
             }
         }

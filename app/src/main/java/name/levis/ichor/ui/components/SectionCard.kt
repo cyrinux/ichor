@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,9 +50,9 @@ fun SectionCard(
         }
     }
     if (onOpen != null) {
-        Card(onClick = onOpen, modifier = modifier.fillMaxWidth(), content = body)
+        IchorCard(onClick = onOpen, modifier = modifier.fillMaxWidth(), content = body)
     } else {
-        Card(modifier = modifier.fillMaxWidth(), content = body)
+        IchorCard(modifier = modifier.fillMaxWidth(), content = body)
     }
 }
 

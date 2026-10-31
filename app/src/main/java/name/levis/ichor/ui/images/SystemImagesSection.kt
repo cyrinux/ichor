@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -119,7 +119,7 @@ private fun ScanControls(ui: SystemImagesUi, images: List<SystemImage>) {
                 Text(stringResource(R.string.imagescan_open), modifier = Modifier.padding(start = 6.dp))
             }
         }
-        OutlinedButton(onClick = { ui.onScan(images) }, enabled = !ui.busyElsewhere) {
+        IchorOutlinedButton(onClick = { ui.onScan(images) }, enabled = !ui.busyElsewhere) {
             Icon(Icons.Outlined.Security, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(
                 stringResource(if (report != null) R.string.imagescan_scan_again else R.string.imagescan_system_scan),

@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,7 +59,7 @@ internal fun NetPerfHistoryList(history: List<NetPerfReport>, onOpen: (NetPerfRe
         Text(stringResource(R.string.netperf_history_note, NETPERF_HISTORY_LIMIT), style = MaterialTheme.typography.bodySmall, color = muted)
     }
     history.forEach { report ->
-        Card(onClick = { onOpen(report) }, modifier = gutter.fillMaxWidth()) {
+        IchorCard(onClick = { onOpen(report) }, modifier = gutter.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     stringResource(R.string.netperf_summary, report.client, report.server, report.seconds),
@@ -91,8 +91,8 @@ internal fun NetPerfSaved(report: NetPerfReport, onBack: () -> Unit, onDelete: (
     }
     NetPerfResults(report.setup, report.results, running = false)
     Row(gutter.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_back)) }
-        OutlinedButton(onClick = onDelete, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_delete)) }
+        IchorOutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_back)) }
+        IchorOutlinedButton(onClick = onDelete, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_delete)) }
     }
 }
 

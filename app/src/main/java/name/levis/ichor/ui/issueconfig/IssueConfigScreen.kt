@@ -17,24 +17,24 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Warning
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -130,10 +130,10 @@ fun IssueConfigScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.issue_title))
@@ -202,7 +202,7 @@ private fun IssueFormContent(
 
     SectionTitle(stringResource(R.string.issue_roles))
     if (form.mode == IssueMode.RENEW && currentRoles.isNotEmpty()) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InfoRow(stringResource(R.string.common_label_roles), currentRoles.joinToString())
                 InfoRow(stringResource(R.string.issue_current_cert), certExpiry(summary.certNotAfter))
@@ -226,7 +226,7 @@ private fun IssueFormContent(
     SectionTitle(stringResource(R.string.issue_validity))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CertValidity.entries.forEach { v ->
-            FilterChip(selected = form.validity == v, onClick = { vm.setValidity(v) }, label = { Text(stringResource(v.label)) })
+            IchorFilterChip(selected = form.validity == v, onClick = { vm.setValidity(v) }, label = { Text(stringResource(v.label)) })
         }
     }
     MutedText(stringResource(R.string.issue_valid_until, formatDate(form.validity.expiresAt(System.currentTimeMillis()))))
@@ -235,7 +235,7 @@ private fun IssueFormContent(
         Text(it.message.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium)
     }
 
-    Button(
+    IchorButton(
         onClick = { onIssue(IssueRequest(form.mode, summary.name, roles, form.validity)) },
         enabled = !busy && roles.isNotEmpty(),
         modifier = Modifier.fillMaxWidth(),
@@ -251,7 +251,7 @@ private fun IssueFormContent(
 
 @Composable
 private fun ModeOption(selected: Boolean, title: String, description: String, onClick: () -> Unit) {
-    Card(Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onClick)) {
+    IchorCard(Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onClick)) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
             RadioButton(selected = selected, onClick = null)
             Column(Modifier.padding(start = 12.dp)) {
@@ -288,7 +288,7 @@ private fun IssueConfirmDialog(request: IssueRequest, onConfirm: () -> Unit, onD
     val until = formatDate(request.validity.expiresAt(System.currentTimeMillis()))
     val roles = request.roles.joinToString()
     val renew = request.mode == IssueMode.RENEW
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.Warning, contentDescription = null, tint = LocalStatusColors.current.warn) },
         title = { Text(stringResource(if (renew) R.string.issue_confirm_renew_title else R.string.issue_confirm_share_title)) },
@@ -303,18 +303,18 @@ private fun IssueConfirmDialog(request: IssueRequest, onConfirm: () -> Unit, onD
             )
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            IchorTextButton(onClick = onConfirm) {
                 Text(stringResource(if (renew) R.string.issue_renew_action else R.string.issue_share_action))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
 @Composable
 private fun RenewedContent(state: IssueState.Renewed, onDone: () -> Unit) {
     val ok = LocalStatusColors.current.ok
-    Card(colors = CardDefaults.cardColors(containerColor = ok.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = ok.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.issue_renewed_title), style = MaterialTheme.typography.titleMedium, color = ok)
             Text(
@@ -323,7 +323,7 @@ private fun RenewedContent(state: IssueState.Renewed, onDone: () -> Unit) {
             )
         }
     }
-    Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
+    IchorButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
 }
 
 private sealed interface SaveState {
@@ -348,7 +348,7 @@ private fun IssuedContent(state: IssueState.Issued, onDone: () -> Unit) {
         }
     }
 
-    Card(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.12f)), modifier = Modifier.fillMaxWidth()) {
         Text(
             stringResource(R.string.issue_result_warning, state.request.context, state.request.roles.joinToString(), formatDate(state.expiresAt)),
             color = bad,
@@ -366,7 +366,7 @@ private fun IssuedContent(state: IssueState.Issued, onDone: () -> Unit) {
     } else {
         TooLargeForQr(state.size)
     }
-    OutlinedButton(
+    IchorOutlinedButton(
         onClick = { saver.launch(issuedFileName(state.request.context, state.request.roles)) },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(stringResource(R.string.issue_save_file)) }
@@ -376,7 +376,7 @@ private fun IssuedContent(state: IssueState.Issued, onDone: () -> Unit) {
         SaveState.Idle -> Unit
     }
     MutedText(stringResource(R.string.issue_memory_only))
-    Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
+    IchorButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
 }
 
 @Composable

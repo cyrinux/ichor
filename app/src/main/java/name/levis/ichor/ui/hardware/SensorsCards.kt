@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +72,7 @@ fun NodeSensors.showsPciCard() = pci.isNotEmpty() || errors[SensorSection.PCI] !
 fun SensorsCard(s: NodeSensors) {
     val colors = LocalStatusColors.current
     var more by rememberSaveable { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { SectionTitle(stringResource(R.string.hardware_sensors)) }
@@ -93,7 +93,7 @@ fun SensorsCard(s: NodeSensors) {
                 InfoRow(stringResource(R.string.hardware_throttle_events), stringResource(R.string.hardware_throttle_counts, it.coreEvents.toInt(), it.packageEvents.toInt()))
             }
             if (s.voltages.isNotEmpty() || s.thermalZones.isNotEmpty()) {
-                TextButton(onClick = { more = !more }) {
+                IchorTextButton(onClick = { more = !more }) {
                     Text(stringResource(if (more) R.string.hardware_sensors_less else R.string.hardware_sensors_more))
                 }
                 if (more) {
@@ -167,7 +167,7 @@ private fun CpuFrequencies(freqs: List<CpuFrequency>) {
 /** The node's PCI devices: product, vendor, class and the driver bound to it. */
 @Composable
 fun PciCard(s: NodeSensors) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionTitle(stringResource(R.string.hardware_pci))
             s.errors[SensorSection.PCI]?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }

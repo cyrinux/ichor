@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,12 +52,12 @@ fun LazyListScope.recorderPage(
     }
     item {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-            Button(onClick = onToggleRecording) {
+            IchorButton(onClick = onToggleRecording) {
                 Text(stringResource(if (state.recording) R.string.insights_stop else R.string.insights_start))
             }
-            TextButton(onClick = onDelete, enabled = !state.recording && document != null) { Text(stringResource(R.string.common_delete)) }
+            IchorTextButton(onClick = onDelete, enabled = !state.recording && document != null) { Text(stringResource(R.string.common_delete)) }
             if (document != null) {
-                FilterChip(selected = metrics, onClick = { onMetrics(!metrics) }, label = { Text(stringResource(R.string.insights_show_metrics)) })
+                IchorFilterChip(selected = metrics, onClick = { onMetrics(!metrics) }, label = { Text(stringResource(R.string.insights_show_metrics)) })
             }
         }
     }

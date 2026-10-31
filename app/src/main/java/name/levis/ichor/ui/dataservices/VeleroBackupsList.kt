@@ -13,9 +13,9 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,7 +56,7 @@ fun VeleroBackupNowButton(schedule: VeleroSchedule, actions: VeleroActions, onAs
     val denial = rememberKubeDenial(KubeAction.VELERO_BACKUP_NOW, schedule.namespace)
     val blocker = schedule.backupNowBlocker
     val running = VeleroActions.backupKey(schedule) in busy
-    OutlinedButton(onClick = onAsk, enabled = blocker == null && denial == null && !running) {
+    IchorOutlinedButton(onClick = onAsk, enabled = blocker == null && denial == null && !running) {
         if (running) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
         else Text(stringResource(R.string.velero_backup_now))
     }
@@ -137,8 +137,8 @@ private fun VeleroBackupRow(namespace: String, b: VeleroBackupDetail, actions: V
             }
         }
         if (b.deletable && !deleting) {
-            TextButton(onClick = { onRestore(b) }) { Text(stringResource(R.string.velero_restore)) }
-            TextButton(onClick = { onDelete(b) }) { Text(stringResource(R.string.velero_delete)) }
+            IchorTextButton(onClick = { onRestore(b) }) { Text(stringResource(R.string.velero_restore)) }
+            IchorTextButton(onClick = { onDelete(b) }) { Text(stringResource(R.string.velero_delete)) }
         }
     }
 }

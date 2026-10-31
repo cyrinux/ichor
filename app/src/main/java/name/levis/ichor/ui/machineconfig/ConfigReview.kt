@@ -19,13 +19,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Restore
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -99,7 +99,7 @@ fun ConfigReviewContent(
                     ApplyChoice(preview.applyModes, onApply)
                     onAlsoApply?.let {
                         Text(stringResource(R.string.machine_config_multi_title), style = MaterialTheme.typography.labelLarge)
-                        OutlinedButton(onClick = it, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_multi_also)) }
+                        IchorOutlinedButton(onClick = it, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_multi_also)) }
                         MutedText(stringResource(R.string.machine_config_multi_also_desc))
                     }
                 }
@@ -123,7 +123,7 @@ private fun TryChoice(onTry: (Int) -> Unit) {
             ) { Text(minutesText(seconds)) }
         }
     }
-    Button(onClick = { onTry(timeout) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_try)) }
+    IchorButton(onClick = { onTry(timeout) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_try)) }
 }
 
 /** The ways to apply the change for good, each with what it does. */
@@ -131,7 +131,7 @@ private fun TryChoice(onTry: (Int) -> Unit) {
 internal fun ApplyChoice(modes: List<ConfigApplyMode>, onApply: (ConfigApplyMode) -> Unit) {
     Text(stringResource(R.string.machine_config_apply_other), style = MaterialTheme.typography.labelLarge)
     modes.forEach { mode ->
-        OutlinedButton(onClick = { onApply(mode) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(mode.label)) }
+        IchorOutlinedButton(onClick = { onApply(mode) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(mode.label)) }
         MutedText(stringResource(mode.description))
     }
 }
@@ -225,7 +225,7 @@ internal fun DiffView(lines: List<ConfigDiffLine>, modifier: Modifier = Modifier
 
 @Composable
 private fun Notice(text: String, color: Color) {
-    Card(colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
         Text(text, color = color, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
     }
 }
@@ -290,8 +290,8 @@ private fun Trying(run: ConfigTryState.Running, onKeep: () -> Unit, onRevert: ()
         Text(stringResource(R.string.machine_config_try_countdown), style = MaterialTheme.typography.titleMedium)
         Text(countdownText(secondsLeft(run.deadline, now)), style = MaterialTheme.typography.displayLarge, fontFamily = FontFamily.Monospace)
         if (run.message.isNotEmpty()) Notice(run.message, LocalStatusColors.current.bad)
-        Button(onClick = onKeep, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_keep)) }
-        OutlinedButton(onClick = onRevert, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_revert_now)) }
+        IchorButton(onClick = onKeep, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_keep)) }
+        IchorOutlinedButton(onClick = onRevert, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_revert_now)) }
         MutedText(stringResource(R.string.machine_config_try_leave_note))
     }
 }
@@ -313,9 +313,9 @@ private fun Ended(
     ) {
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(56.dp))
         Text(text, textAlign = TextAlign.Center)
-        Button(onClick = onDone) { Text(stringResource(done)) }
+        IchorButton(onClick = onDone) { Text(stringResource(done)) }
         onProposeInGit?.let {
-            OutlinedButton(onClick = it) { Text(stringResource(R.string.talos_writeback_action)) }
+            IchorOutlinedButton(onClick = it) { Text(stringResource(R.string.talos_writeback_action)) }
             Text(
                 stringResource(R.string.talos_writeback_action_desc),
                 style = MaterialTheme.typography.bodySmall,

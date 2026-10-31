@@ -11,7 +11,7 @@ import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,7 +84,7 @@ private fun FailureLine(text: String, onRetry: (() -> Unit)?, modifier: Modifier
 
 @Composable
 private fun RetryButton(onRetry: () -> Unit) {
-    TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+    IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
 }
 
 /** What a section shows for its [UiState]; kept apart from the composable so it can be tested. */

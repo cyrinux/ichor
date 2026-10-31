@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -92,12 +92,12 @@ private fun FilterBar(filter: AmFilter, onFilter: (AmFilter) -> Unit) {
         SearchField(filter.query, { onFilter(filter.copy(query = it)) }, stringResource(R.string.alerts_search), Modifier.fillMaxWidth())
         // One scrolling row: the states, then the severities (none picked: all of them).
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(filter.active, { onFilter(filter.copy(active = !filter.active)) }, { Text(stringResource(R.string.alerts_state_firing)) })
-            FilterChip(filter.silenced, { onFilter(filter.copy(silenced = !filter.silenced)) }, { Text(stringResource(R.string.alerts_state_silenced)) })
-            FilterChip(filter.inhibited, { onFilter(filter.copy(inhibited = !filter.inhibited)) }, { Text(stringResource(R.string.alerts_state_inhibited)) })
+            IchorFilterChip(filter.active, { onFilter(filter.copy(active = !filter.active)) }, { Text(stringResource(R.string.alerts_state_firing)) })
+            IchorFilterChip(filter.silenced, { onFilter(filter.copy(silenced = !filter.silenced)) }, { Text(stringResource(R.string.alerts_state_silenced)) })
+            IchorFilterChip(filter.inhibited, { onFilter(filter.copy(inhibited = !filter.inhibited)) }, { Text(stringResource(R.string.alerts_state_inhibited)) })
             AmSeverity.ALL.forEach { severity ->
                 val on = severity in filter.severities
-                FilterChip(
+                IchorFilterChip(
                     selected = on,
                     onClick = { onFilter(filter.copy(severities = if (on) filter.severities - severity else filter.severities + severity)) },
                     label = { Text(severityLabel(severity)) },
@@ -111,7 +111,7 @@ private fun FilterBar(filter: AmFilter, onFilter: (AmFilter) -> Unit) {
 /** An alertname: its severity, how many fire of how many, then each alert. */
 @Composable
 private fun GroupCard(group: AmGroup, onCall: OnCallIncidents?, onAlert: (AmAlert) -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 SeverityDot(group.severity)

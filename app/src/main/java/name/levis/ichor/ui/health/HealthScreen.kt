@@ -17,14 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -180,9 +180,9 @@ fun HealthScreen(
     val allowed = summary?.allows(Feature.HEALTH) ?: true
     LaunchedEffect(allowed) { if (allowed && !state.running && !state.finished) vm.start() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.health_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -208,7 +208,7 @@ fun HealthScreen(
                     onContinue = { onDiagnose(healthCheckNote(error)) },
                 )
             }
-            Card(Modifier.fillMaxWidth().weight(1f)) {
+            IchorCard(Modifier.fillMaxWidth().weight(1f)) {
                 LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     itemsIndexed(state.lines) { index, line ->
                         val failed = state.error != null && index == state.lines.lastIndex
@@ -255,7 +255,7 @@ private fun HealthHeader(state: HealthState, onRerun: () -> Unit) {
                 Text("", Modifier.weight(1f))
             }
         }
-        if (!state.running) Button(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
+        if (!state.running) IchorButton(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
     }
     // Rerun, right above, is the retry.
     state.error?.let { LoadFailureRow(it, onRetry = null) }

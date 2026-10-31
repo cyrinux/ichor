@@ -19,21 +19,21 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -102,15 +102,15 @@ fun PanelChatDialog(
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Surface(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
-            Scaffold(
+            IchorScaffold(
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 topBar = {
-                    TopAppBar(
+                    IchorTopAppBar(
                         title = { Text(stringResource(R.string.metrics_ai_title)) },
                         navigationIcon = { TooltipIconButton(Icons.Outlined.Close, stringResource(R.string.common_close), onClick = onDismiss) },
                         actions = {
                             if (state.messages.isNotEmpty()) {
-                                TextButton(onClick = vm::newChat) { Text(stringResource(R.string.metrics_ai_new_chat)) }
+                                IchorTextButton(onClick = vm::newChat) { Text(stringResource(R.string.metrics_ai_new_chat)) }
                             }
                         },
                     )
@@ -148,7 +148,7 @@ fun PanelChatDialog(
                             }
                             if (!askable) {
                                 MutedText(stringResource(target.notReadyText))
-                                OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
+                                IchorOutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
                                     Text(stringResource(R.string.overview_action_settings))
                                 }
                             } else if (state.messages.isEmpty()) {
@@ -185,9 +185,9 @@ private fun InputBar(value: String, onValueChange: (String) -> Unit, enabled: Bo
                 modifier = Modifier.weight(1f),
             )
             if (asking) {
-                TextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
+                IchorTextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
             } else {
-                IconButton(onClick = onSend, enabled = enabled && value.isNotBlank()) {
+                IchorIconButton(onClick = onSend, enabled = enabled && value.isNotBlank()) {
                     Icon(Icons.AutoMirrored.Outlined.Send, stringResource(R.string.metrics_ai_send))
                 }
             }
@@ -198,7 +198,7 @@ private fun InputBar(value: String, onValueChange: (String) -> Unit, enabled: Bo
 @Composable
 private fun UserBubble(text: String) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+        IchorCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
             Text(text, Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium)
         }
     }
@@ -227,7 +227,7 @@ private fun AnswerBubble(message: ChatMessage, providerName: String, asking: Boo
 @Composable
 private fun PanelSuggestionCard(panel: PanelSuggestion, sourceLabel: String, onUse: (PanelSuggestion) -> Unit) {
     val context = LocalContext.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(panel.title.ifBlank { panel.query }, style = MaterialTheme.typography.titleSmall)
             SelectionContainer {
@@ -249,8 +249,8 @@ private fun PanelSuggestionCard(panel: PanelSuggestion, sourceLabel: String, onU
             )
             if (panel.attempts > 1 && panel.verified) MutedText(stringResource(R.string.metrics_ai_fixed))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Button(onClick = { onUse(panel) }) { Text(stringResource(R.string.metrics_ai_use)) }
-                TextButton(onClick = { copyToClipboard(context, "query", panel.query) }) { Text(stringResource(R.string.ai_copy)) }
+                IchorButton(onClick = { onUse(panel) }) { Text(stringResource(R.string.metrics_ai_use)) }
+                IchorTextButton(onClick = { copyToClipboard(context, "query", panel.query) }) { Text(stringResource(R.string.ai_copy)) }
             }
         }
     }

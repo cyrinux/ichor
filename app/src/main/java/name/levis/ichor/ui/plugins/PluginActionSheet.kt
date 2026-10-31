@@ -12,15 +12,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,7 +72,7 @@ fun PluginActionButtons(items: List<PluginAction>, ref: PluginRef?, runner: Plug
         items.forEach { a ->
             val target = if (runner != null && a.usable) ref else null
             val busy = target != null && runner != null && pluginActionKey(target, a.id) in runner.busy
-            OutlinedButton(
+            IchorOutlinedButton(
                 onClick = {
                     when {
                         target == null -> Unit
@@ -149,12 +149,12 @@ private fun PluginActionDialog(action: PluginAction, target: PluginRef, onDismis
             onConfirm = run,
             onDismiss = onDismiss,
         )
-        else -> AlertDialog(
+        else -> IchorAlertDialog(
             onDismissRequest = onDismiss,
             title = { Text(title) },
             text = { Column(Modifier.verticalScroll(rememberScrollState())) { form() } },
-            confirmButton = { TextButton(onClick = run, enabled = problems.isEmpty()) { Text(action.label) } },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+            confirmButton = { IchorTextButton(onClick = run, enabled = problems.isEmpty()) { Text(action.label) } },
+            dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }
@@ -199,7 +199,7 @@ private fun BoolField(label: String, checked: Boolean, onChange: (Boolean) -> Un
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = null)
+        IchorSwitch(checked = checked, onCheckedChange = null)
     }
 }
 
@@ -211,7 +211,7 @@ private fun EnumField(label: String, choices: List<String>, value: String, probl
         Text(label, style = MaterialTheme.typography.labelLarge)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             choices.forEach { c ->
-                FilterChip(selected = c == value, onClick = { onChange(if (c == value) "" else c) }, label = { Text(c) })
+                IchorFilterChip(selected = c == value, onClick = { onChange(if (c == value) "" else c) }, label = { Text(c) })
             }
         }
         problem?.let { MutedText(problemText(it)) }

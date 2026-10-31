@@ -23,14 +23,14 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -107,9 +107,9 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.search_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -133,7 +133,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
                         placeholder = { Text(stringResource(R.string.search_hint), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                         trailingIcon = if (query.isNotEmpty()) {
-                            { IconButton(onClick = { vm.setQuery("") }) { Icon(Icons.Outlined.Close, stringResource(R.string.search_clear)) } }
+                            { IchorIconButton(onClick = { vm.setQuery("") }) { Icon(Icons.Outlined.Close, stringResource(R.string.search_clear)) } }
                         } else {
                             null
                         },
@@ -218,7 +218,7 @@ private fun RecentSearches(
         if (recent.isEmpty()) return@LazyColumn
         item { SectionTitle(stringResource(R.string.search_recent), Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         items(recent, key = { it }) { query ->
-            ListItem(
+            IchorListItem(
                 headlineContent = { Text(query, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 leadingContent = { Icon(Icons.Outlined.History, contentDescription = null) },
                 modifier = Modifier.combinedClickable(
@@ -265,7 +265,7 @@ private fun Results(
 private fun ResultRow(result: SearchResult, now: Long, onOpen: (ShareTarget) -> Unit) {
     val target = result.target
     val lastSeen = if (result.isStale(now)) stringResource(R.string.search_last_seen, timeAgo(result.at, now)) else null
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(result.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Column {

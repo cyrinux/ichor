@@ -12,12 +12,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -118,7 +118,7 @@ fun CloudUserDataCard(
                     TemplatePicker(joinTemplates(state.data), form.template) { configVm.pick(it, state.data) }
                     if (form.template.isNotBlank()) {
                         ConfigFields(form, emptyList(), configVm, withAddress = false)
-                        Button(
+                        IchorButton(
                             onClick = { vm.generate(form) },
                             enabled = form.complete && data != UiState.Loading,
                             modifier = Modifier.fillMaxWidth(),
@@ -156,7 +156,7 @@ private fun UserDataBody(data: CloudUserData, vm: CloudUserDataViewModel) {
     )
     data.warnings.forEach { InfoNotice(it) }
     if (data.isOmni) Text(stringResource(R.string.boot_media_sensitive), color = colors.warn, style = MaterialTheme.typography.bodySmall)
-    TextButton(onClick = { expanded = !expanded }) {
+    IchorTextButton(onClick = { expanded = !expanded }) {
         Text(stringResource(if (expanded) R.string.cloud_user_data_preview_hide else R.string.cloud_user_data_preview_show))
     }
     if (expanded) {
@@ -180,11 +180,11 @@ private fun UserDataActions(data: CloudUserData, vm: CloudUserDataViewModel) {
         if (data.isOmni || vm.confirmed) action() else pending = action
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = { guarded { copyToClipboard(context, title, data.userData, sensitive = true) } }, modifier = Modifier.weight(1f)) {
+        IchorOutlinedButton(onClick = { guarded { copyToClipboard(context, title, data.userData, sensitive = true) } }, modifier = Modifier.weight(1f)) {
             Icon(Icons.Outlined.ContentCopy, contentDescription = null)
             Text(stringResource(R.string.cloud_user_data_copy))
         }
-        OutlinedButton(onClick = { guarded { shareText(context, data.userData, title) } }, modifier = Modifier.weight(1f)) {
+        IchorOutlinedButton(onClick = { guarded { shareText(context, data.userData, title) } }, modifier = Modifier.weight(1f)) {
             Icon(Icons.Outlined.Share, contentDescription = null)
             Text(stringResource(R.string.cloud_user_data_share))
         }

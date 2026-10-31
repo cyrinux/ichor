@@ -13,17 +13,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -128,9 +128,9 @@ fun NetToolsScreen(
         vm.start(tool, target, options)
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.node_menu_net_tools))
@@ -160,7 +160,7 @@ fun NetToolsScreen(
             MutedText(stringResource(R.string.net_tools_intro))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 NetTool.entries.forEach { t ->
-                    FilterChip(selected = t == tool, onClick = { tool = t }, label = { Text(stringResource(t.label)) })
+                    IchorFilterChip(selected = t == tool, onClick = { tool = t }, label = { Text(stringResource(t.label)) })
                 }
             }
             OutlinedTextField(
@@ -183,7 +183,7 @@ fun NetToolsScreen(
                 NetTool.DNS -> {
                     SectionTitle(stringResource(R.string.net_tools_record))
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        NET_DNS_RECORDS.forEach { r -> FilterChip(selected = r == record, onClick = { record = r }, label = { Text(r) }) }
+                        NET_DNS_RECORDS.forEach { r -> IchorFilterChip(selected = r == record, onClick = { record = r }, label = { Text(r) }) }
                     }
                     OutlinedTextField(
                         value = server,
@@ -198,13 +198,13 @@ fun NetToolsScreen(
                 NetTool.PING -> {
                     SectionTitle(stringResource(R.string.net_tools_count))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PING_COUNTS.forEach { c -> FilterChip(selected = c == count, onClick = { count = c }, label = { Text("$c") }) }
+                        PING_COUNTS.forEach { c -> IchorFilterChip(selected = c == count, onClick = { count = c }, label = { Text("$c") }) }
                     }
                 }
                 else -> Unit
             }
             MutedText(stringResource(R.string.net_tools_privileged))
-            Button(onClick = ::start, enabled = problem == null, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = ::start, enabled = problem == null, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.net_tools_run))
             }
         }
@@ -220,17 +220,17 @@ private fun RunView(run: NetToolRunState, onCancel: () -> Unit, onAgain: () -> U
         run.running -> {
             LinearProgressIndicator(Modifier.fillMaxWidth())
             OutputLines(run.lines.takeLast(OUTPUT_TAIL))
-            OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_cancel)) }
+            IchorOutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_cancel)) }
         }
         result != null -> {
             NetToolResultCard(result)
             RawOutput(result.raw)
-            Button(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
+            IchorButton(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
         }
         else -> {
             Text(run.error.orEmpty().ifEmpty { stringResource(R.string.net_tools_no_answer) }, color = colors.bad)
             if (run.lines.isNotEmpty()) OutputLines(run.lines.takeLast(OUTPUT_TAIL))
-            Button(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
+            IchorButton(onClick = onAgain, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.net_tools_again)) }
         }
     }
 }

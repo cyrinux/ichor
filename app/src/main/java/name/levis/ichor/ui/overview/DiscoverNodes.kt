@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,7 +78,7 @@ class NodeDiscoveryViewModel(private val lifecycle: NodeLifecycleRepository) : V
 /** Tells how many cluster members the talosconfig misses; tap to pick which to add. */
 @Composable
 fun DiscoveredNodesBanner(count: Int, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 pluralStringResource(R.plurals.overview_discovered_nodes, count, count),
@@ -99,7 +99,7 @@ fun AddDiscoveredNodesDialog(
     onDismiss: () -> Unit,
 ) {
     var selected by remember(nodes) { mutableStateOf(nodes.map { it.address }.toSet()) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.discover_nodes_title)) },
         text = {
@@ -129,12 +129,12 @@ fun AddDiscoveredNodesDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            IchorTextButton(
                 enabled = selected.isNotEmpty(),
                 onClick = { onAdd(nodes.filter { it.address in selected }) },
             ) { Text(pluralStringResource(R.plurals.discover_nodes_add, selected.size, selected.size)) }
         },
-        dismissButton = { TextButton(onClick = onNotNow) { Text(stringResource(R.string.discover_nodes_not_now)) } },
+        dismissButton = { IchorTextButton(onClick = onNotNow) { Text(stringResource(R.string.discover_nodes_not_now)) } },
     )
 }
 

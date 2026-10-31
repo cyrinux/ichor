@@ -16,9 +16,9 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -138,7 +138,7 @@ private fun ScanBody(ui: AppScanUi) {
                     Text(stringResource(R.string.imagescan_view), modifier = Modifier.padding(start = 6.dp))
                 }
             }
-            OutlinedButton(onClick = ui.onScan, enabled = !ui.busyElsewhere && ui.canStart) {
+            IchorOutlinedButton(onClick = ui.onScan, enabled = !ui.busyElsewhere && ui.canStart) {
                 Icon(Icons.Outlined.Security, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(
                     stringResource(if (current != null || saved != null) R.string.imagescan_scan_again else R.string.imagescan_scan),
@@ -146,7 +146,7 @@ private fun ScanBody(ui: AppScanUi) {
                 )
             }
         }
-        TextButton(onClick = ui.onSavedList, contentPadding = PaddingValues(0.dp)) {
+        IchorTextButton(onClick = ui.onSavedList, contentPadding = PaddingValues(0.dp)) {
             Text(stringResource(R.string.imagescan_saved_link))
         }
     }
@@ -190,7 +190,7 @@ fun ScanProgressLines(session: ImageScanSession, onStop: () -> Unit) {
         LinearProgressIndicator(Modifier.fillMaxWidth())
     }
     if (!session.stopping) {
-        OutlinedButton(onClick = onStop) { Text(stringResource(R.string.imagescan_stop)) }
+        IchorOutlinedButton(onClick = onStop) { Text(stringResource(R.string.imagescan_stop)) }
     }
 }
 

@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,13 +49,13 @@ fun PrivacySection(app: TalosApp) {
     }
 
     SectionTitle(stringResource(R.string.settings_section_privacy))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_screenshot_mode), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_screenshot_mode_desc))
             }
-            Switch(
+            IchorSwitch(
                 checked = mask.enabled,
                 onCheckedChange = { app.setPrivacyMask(mask.copy(enabled = it, extraWords = words)) },
                 enabled = !switching,
@@ -83,13 +83,13 @@ fun PrivacySection(app: TalosApp) {
 @Composable
 private fun RemoteAppIconsSetting(app: TalosApp) {
     val enabled by app.uiPreferences.remoteAppIcons.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_remote_icons), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_remote_icons_desc))
             }
-            Switch(checked = enabled, onCheckedChange = app.uiPreferences::setRemoteAppIcons, modifier = Modifier.padding(start = 12.dp))
+            IchorSwitch(checked = enabled, onCheckedChange = app.uiPreferences::setRemoteAppIcons, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }
@@ -98,13 +98,13 @@ private fun RemoteAppIconsSetting(app: TalosApp) {
 @Composable
 private fun OfflineCacheSetting(app: TalosApp) {
     val enabled by app.uiPreferences.offlineCache.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_offline_cache), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_offline_cache_desc))
             }
-            Switch(checked = enabled, onCheckedChange = app::setOfflineCache, modifier = Modifier.padding(start = 12.dp))
+            IchorSwitch(checked = enabled, onCheckedChange = app::setOfflineCache, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }

@@ -29,10 +29,10 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -162,9 +162,9 @@ fun SourceFileScreen(
         }, onDismiss = { pickingNode = false })
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(path.substringAfterLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -265,7 +265,7 @@ private fun EditBlockNote(block: ProposeBlock, onAddToken: (() -> Unit)?) {
         }
         MutedText(text, Modifier.weight(1f))
         if (block is ProposeBlock.NoToken && onAddToken != null) {
-            TextButton(onClick = onAddToken) { Text(stringResource(R.string.gitops_source_add_token)) }
+            IchorTextButton(onClick = onAddToken) { Text(stringResource(R.string.gitops_source_add_token)) }
         }
     }
 }

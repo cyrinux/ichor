@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -13,7 +13,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,14 +74,14 @@ internal fun RunbookParamsForm(
             if (param.kind == RunbookParam.KIND_BOOL) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(param.prompt, modifier = Modifier.weight(1f))
-                    Switch(checked = value == "true", onCheckedChange = { onChange(param.name, it.toString()) })
+                    IchorSwitch(checked = value == "true", onCheckedChange = { onChange(param.name, it.toString()) })
                 }
             } else {
                 RunbookValueField(param, value, choices[param.kind].orEmpty()) { onChange(param.name, it) }
             }
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-        Button(onClick = onContinue, enabled = missingRunbookValues(params, values).isEmpty(), modifier = Modifier.fillMaxWidth()) {
+        IchorButton(onClick = onContinue, enabled = missingRunbookValues(params, values).isEmpty(), modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.runbook_params_continue))
         }
     }

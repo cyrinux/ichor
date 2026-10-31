@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -116,11 +116,11 @@ fun ScaledObjectPauseSection(row: ScaledObjectRow, busy: Boolean, onPause: (Int)
 
     SectionTitle(stringResource(R.string.autoscaling_pause_section))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = { picking = true }, enabled = denial == null && !busy) {
+        IchorOutlinedButton(onClick = { picking = true }, enabled = denial == null && !busy) {
             Text(stringResource(R.string.autoscaling_pause_at))
         }
         if (row.paused) {
-            OutlinedButton(onClick = { resuming = true }, enabled = denial == null && !busy) {
+            IchorOutlinedButton(onClick = { resuming = true }, enabled = denial == null && !busy) {
                 Text(stringResource(R.string.autoscaling_resume))
             }
         }
@@ -166,14 +166,14 @@ fun ScaledObjectPauseSection(row: ScaledObjectRow, busy: Boolean, onPause: (Int)
 @Composable
 private fun ScaledObjectPauseDialog(row: ScaledObjectRow, onPause: (Int) -> Unit, onDismiss: () -> Unit) {
     var count by rememberSaveable(row.key) { mutableIntStateOf((row.pausedReplicas ?: row.current).coerceIn(0, MAX_SCALE_REPLICAS)) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.autoscaling_pause_title, row.name)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.autoscaling_pause_text))
                 ReplicaStepper(stringResource(R.string.autoscaling_pause_replicas), count, 0..MAX_SCALE_REPLICAS) { count = it }
-                TextButton(onClick = { onPause(SCALED_OBJECT_HOLD) }, modifier = Modifier.fillMaxWidth()) {
+                IchorTextButton(onClick = { onPause(SCALED_OBJECT_HOLD) }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.autoscaling_hold))
                 }
                 Text(
@@ -184,9 +184,9 @@ private fun ScaledObjectPauseDialog(row: ScaledObjectRow, onPause: (Int) -> Unit
             }
         },
         confirmButton = {
-            TextButton(onClick = { onPause(count) }) { Text(stringResource(R.string.autoscaling_pause_confirm, count.toString())) }
+            IchorTextButton(onClick = { onPause(count) }) { Text(stringResource(R.string.autoscaling_pause_confirm, count.toString())) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -203,7 +203,7 @@ fun HpaBoundsSection(row: HpaRow, busy: Boolean, onSave: (Int, Int) -> Unit) {
     }
     val denial = rememberKubeDenial(KubeAction.AUTOSCALE, row.namespace)
     var editing by remember { mutableStateOf(false) }
-    OutlinedButton(onClick = { editing = true }, enabled = denial == null && !busy) {
+    IchorOutlinedButton(onClick = { editing = true }, enabled = denial == null && !busy) {
         Text(stringResource(R.string.autoscaling_bounds_edit))
     }
     KubeDenialNote(denial)

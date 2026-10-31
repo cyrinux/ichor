@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,7 +47,7 @@ import name.levis.ichor.util.timeAgo
 @Composable
 internal fun FleetRowCard(row: FleetRow, cluster: ContextSummary?, colors: Map<String, Int>, masked: Boolean, now: Long, onClick: () -> Unit) {
     val status = LocalStatusColors.current
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ToneDot(row.tone, ring = if (cluster != null) Color(colors.seedOf(cluster)) else status.muted)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

@@ -12,7 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,7 +80,7 @@ private fun RouteRow(route: KubeRoute, onObject: (KubeObjectRef) -> Unit) {
             RouteCertBadge(route, Modifier.padding(top = 2.dp))
         }
         route.objectRef?.let { ref ->
-            IconButton(
+            IchorIconButton(
                 onClick = { onObject(ref) },
                 modifier = Modifier.size(40.dp),
             ) {

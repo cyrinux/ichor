@@ -14,16 +14,16 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -141,8 +141,8 @@ fun KubeApplyScreen(onBack: () -> Unit, vm: KubeApplyViewModel = viewModel(facto
     val scope = rememberCoroutineScope()
     val expanded = remember { mutableStateMapOf<String, Boolean>() }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.kb_apply_title)) }, navigationIcon = { BackButton(onBack) }) },
+    IchorScaffold(
+        topBar = { IchorTopAppBar(title = { Text(stringResource(R.string.kb_apply_title)) }, navigationIcon = { BackButton(onBack) }) },
     ) { padding ->
         LazyColumn(Modifier.pageContent(padding).fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item(key = "input") {
@@ -159,7 +159,7 @@ fun KubeApplyScreen(onBack: () -> Unit, vm: KubeApplyViewModel = viewModel(facto
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedButton(onClick = { scope.launch { readClipboard(clipboard, context)?.let(vm::setManifests) } }, enabled = !state.busy) {
+                        IchorOutlinedButton(onClick = { scope.launch { readClipboard(clipboard, context)?.let(vm::setManifests) } }, enabled = !state.busy) {
                             Icon(Icons.Outlined.ContentPaste, contentDescription = null, modifier = Modifier.size(18.dp))
                             Text(stringResource(R.string.kb_apply_paste), modifier = Modifier.padding(start = 6.dp))
                         }
@@ -173,10 +173,10 @@ fun KubeApplyScreen(onBack: () -> Unit, vm: KubeApplyViewModel = viewModel(facto
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = vm::preview, enabled = !state.busy && state.manifests.isNotBlank(), modifier = Modifier.weight(1f)) {
+                        IchorOutlinedButton(onClick = vm::preview, enabled = !state.busy && state.manifests.isNotBlank(), modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.kb_apply_preview))
                         }
-                        Button(onClick = vm::apply, enabled = state.canApply, modifier = Modifier.weight(1f)) {
+                        IchorButton(onClick = vm::apply, enabled = state.canApply, modifier = Modifier.weight(1f)) {
                             Icon(Icons.Outlined.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                             Text(stringResource(R.string.kb_apply_apply), modifier = Modifier.padding(start = 6.dp))
                         }

@@ -22,16 +22,16 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -137,10 +137,10 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.argo_title))
@@ -232,7 +232,7 @@ private fun SelectionBar(count: Int, denial: KubePermission?, onClear: () -> Uni
     val enabled = denial == null
     BottomAppBar(
         actions = {
-            IconButton(onClick = onClear) { Icon(Icons.Outlined.Close, stringResource(R.string.argo_clear_selection)) }
+            IchorIconButton(onClick = onClear) { Icon(Icons.Outlined.Close, stringResource(R.string.argo_clear_selection)) }
             Column {
                 Text(pluralStringResource(R.plurals.argo_selected, count, count), style = MaterialTheme.typography.titleSmall)
                 KubeDenialNote(denial)
@@ -240,7 +240,7 @@ private fun SelectionBar(count: Int, denial: KubePermission?, onClear: () -> Uni
         },
         floatingActionButton = {
             Row {
-                OutlinedButton(onClick = onRefresh, enabled = count > 0 && enabled) {
+                IchorOutlinedButton(onClick = onRefresh, enabled = count > 0 && enabled) {
                     Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_refresh), modifier = Modifier.padding(start = 6.dp))
                 }

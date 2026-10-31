@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -90,14 +90,14 @@ fun ClusterUpgradePlanView(
                     )
                 }
                 SectionTitle(stringResource(R.string.cluster_upgrade_order, p.done, p.nodes.size))
-                Card(Modifier.fillMaxWidth()) {
+                IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(vertical = 8.dp)) { p.nodes.forEachIndexed { i, n -> PlanNodeRow(i + 1, n) } }
                 }
                 Checks(p.allBlockers(), warnings, understood) { understood = it }
                 if (p.upToDate) Text(stringResource(R.string.cluster_upgrade_up_to_date, p.version), color = colors.ok)
                 if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
                 MutedText(stringResource(R.string.cluster_upgrade_keep_open))
-                Button(
+                IchorButton(
                     onClick = { onStart(ClusterUpgradeChoice(p.version, drain && !p.drain, warnings.isEmpty() || understood)) },
                     enabled = p.canStart && busyWith == null && (warnings.isEmpty() || understood),
                     modifier = Modifier.fillMaxWidth(),
@@ -120,7 +120,7 @@ private fun VersionPicker(releases: UiState<List<TalosRelease>>, version: String
     val offered = ((releases as? UiState.Loaded)?.data.orEmpty().map { it.version } + version).filter { it.isNotEmpty() }.distinct().take(MAX_VERSIONS)
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         offered.forEach { v ->
-            FilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
+            IchorFilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
         }
     }
 }
@@ -149,7 +149,7 @@ private fun PlanNodeRow(position: Int, node: ClusterUpgradeNode) {
 @Composable
 private fun Checks(blockers: List<String>, warnings: List<String>, understood: Boolean, onUnderstood: (Boolean) -> Unit) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(stringResource(R.string.upgrade_checks))
             blockers.forEach { Text("✕ $it", color = colors.bad, style = MaterialTheme.typography.bodyMedium) }

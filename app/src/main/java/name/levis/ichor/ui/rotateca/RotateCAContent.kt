@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -98,7 +98,7 @@ internal fun PlanContent(
             }
             startError?.let { item { InlineError(it.asString()) } }
             item {
-                Button(onClick = onStart, enabled = plan.ready, modifier = Modifier.fillMaxWidth()) {
+                IchorButton(onClick = onStart, enabled = plan.ready, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.ca_rotate_start))
                 }
             }
@@ -139,20 +139,20 @@ internal fun RunContent(
             when {
                 run.running -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     MutedText(stringResource(R.string.ca_rotate_running_note))
-                    OutlinedButton(onClick = onStop, enabled = !run.stopping, modifier = Modifier.fillMaxWidth()) {
+                    IchorOutlinedButton(onClick = onStop, enabled = !run.stopping, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(if (run.stopping) R.string.ca_rotate_stopping else R.string.operation_stop))
                     }
                 }
                 failed -> SectionCard(stringResource(R.string.ca_rotate_failed_title)) {
                     Text(run.error.orEmpty(), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
                     MutedText(stringResource(if (run.transitionStored) R.string.ca_rotate_failed_after_handover else R.string.ca_rotate_failed_before_handover))
-                    Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
+                    IchorButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
                 }
                 else -> SectionCard(stringResource(R.string.ca_rotate_done_title)) {
                     Text(stringResource(R.string.ca_rotate_done_body), style = MaterialTheme.typography.bodyMedium)
                     run.finalStoreError?.let { MutedText(stringResource(R.string.ca_rotate_final_not_stored, it)) }
-                    Button(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.ca_rotate_issue_others)) }
-                    OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
+                    IchorButton(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.ca_rotate_issue_others)) }
+                    IchorOutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
                 }
             }
         }

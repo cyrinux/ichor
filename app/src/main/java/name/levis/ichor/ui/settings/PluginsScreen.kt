@@ -7,16 +7,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -93,7 +93,7 @@ fun PluginsSection(plugins: PluginRepository) {
     error?.let { LoadFailureRow(it, onRetry = { reload++ }) }
 
     Text(stringResource(R.string.plugins_imported), style = MaterialTheme.typography.titleSmall)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             if (imported.isEmpty()) {
                 MutedText(stringResource(R.string.plugins_empty), Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
@@ -108,14 +108,14 @@ fun PluginsSection(plugins: PluginRepository) {
             }
         }
     }
-    OutlinedButton(onClick = { importing = true }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { importing = true }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.plugins_import))
     }
     MutedText(stringResource(R.string.plugins_explainer))
-    TextButton(onClick = { uriHandler.openUri(PLUGIN_DOCS_URL) }) { Text(stringResource(R.string.plugins_docs)) }
+    IchorTextButton(onClick = { uriHandler.openUri(PLUGIN_DOCS_URL) }) { Text(stringResource(R.string.plugins_docs)) }
 
     Text(stringResource(R.string.plugins_builtin), style = MaterialTheme.typography.titleSmall)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             builtins.forEachIndexed { index, item ->
                 if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
@@ -134,17 +134,17 @@ fun PluginsSection(plugins: PluginRepository) {
         })
     }
     removing?.let { item ->
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { removing = null },
             title = { Text(stringResource(R.string.plugins_remove_title, item.name.ifEmpty { item.id })) },
             text = { Text(stringResource(R.string.plugins_remove_text)) },
             confirmButton = {
-                TextButton(onClick = {
+                IchorTextButton(onClick = {
                     removing = null
                     change { plugins.remove(item.id) }
                 }) { Text(stringResource(R.string.plugins_remove)) }
             },
-            dismissButton = { TextButton(onClick = { removing = null }) { Text(stringResource(R.string.common_cancel)) } },
+            dismissButton = { IchorTextButton(onClick = { removing = null }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }
@@ -170,13 +170,13 @@ private fun ImportedRow(item: PluginUserItem, onEnabled: (Boolean) -> Unit, onRe
                 )
             }
         }
-        Switch(
+        IchorSwitch(
             checked = item.enabled,
             onCheckedChange = onEnabled,
             enabled = item.usable,
             modifier = Modifier.semantics { contentDescription = enabledLabel },
         )
-        IconButton(onClick = onRemove) {
+        IchorIconButton(onClick = onRemove) {
             Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.plugins_remove))
         }
     }

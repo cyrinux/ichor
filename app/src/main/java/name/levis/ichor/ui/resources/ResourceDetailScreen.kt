@@ -19,14 +19,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -88,10 +88,10 @@ fun ResourceDetailScreen(
     // Secrets on screen: no screenshot, no recents thumbnail.
     SecureWhile(ref.sensitive)
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -168,7 +168,7 @@ private fun SensitiveWarning(onShow: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(vertical = 12.dp),
         )
-        Button(onClick = onShow) { Text(stringResource(R.string.resources_show)) }
+        IchorButton(onClick = onShow) { Text(stringResource(R.string.resources_show)) }
     }
 }
 

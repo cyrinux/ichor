@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -111,7 +111,7 @@ private fun ResourcesContent(
     }
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     SectionTitle(stringResource(R.string.node_section_system))
                     InfoRow(stringResource(R.string.node_uptime), uptime)
@@ -123,7 +123,7 @@ private fun ResourcesContent(
             }
         }
         item {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     SectionTitle(stringResource(R.string.node_section_memory))
                     val used = r.memTotal - r.memAvailable
@@ -137,7 +137,7 @@ private fun ResourcesContent(
         pressure?.let { (state, onDetails) -> item { PressureCard(state, onDetails, onPressureRetry) } }
         if (r.mounts.isNotEmpty()) {
             item {
-                Card(Modifier.fillMaxWidth()) {
+                IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         SectionTitle(stringResource(R.string.node_section_disks))
                         r.mounts.forEach { m ->

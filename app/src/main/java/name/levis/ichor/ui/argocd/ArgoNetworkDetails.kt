@@ -18,7 +18,7 @@ import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -110,7 +110,7 @@ private fun DetailActions(node: ArgoNetNode, actions: ArgoNetActions) {
             Action(Icons.Outlined.Computer, stringResource(R.string.argo_net_open_node)) { onNode(target, 0) }
         }
         if (node.kind == ArgoNetNode.POD) {
-            OutlinedButton(onClick = { actions.onDeletePod?.invoke() }, enabled = actions.onDeletePod != null) {
+            IchorOutlinedButton(onClick = { actions.onDeletePod?.invoke() }, enabled = actions.onDeletePod != null) {
                 Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.common_delete), modifier = Modifier.padding(start = 6.dp))
             }

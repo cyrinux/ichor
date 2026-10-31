@@ -10,13 +10,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,12 +50,12 @@ import name.levis.ichor.util.formatDateTime
  */
 @Composable
 fun SignInBanner(method: String, needed: SignInNeeded?, onSignIn: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.kube_signin_needed), style = MaterialTheme.typography.titleMedium, color = LocalStatusColors.current.warn)
             Text(stringResource(R.string.kube_signin_needed_body, signInMethodText(method.ifEmpty { needed?.method.orEmpty() })), style = MaterialTheme.typography.bodyMedium)
             needed?.reason?.takeIf { it.isNotEmpty() }?.let { MutedText(it) }
-            Button(onClick = onSignIn) { Text(stringResource(R.string.kube_signin_action)) }
+            IchorButton(onClick = onSignIn) { Text(stringResource(R.string.kube_signin_action)) }
         }
     }
 }
@@ -72,7 +72,7 @@ fun SignInAction(message: UiText, onSignedIn: () -> Unit) {
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val target = config?.let(::signInContextFor) ?: return
     var open by remember { mutableStateOf(false) }
-    Button(onClick = { open = true }) { Text(stringResource(R.string.kube_signin_action)) }
+    IchorButton(onClick = { open = true }) { Text(stringResource(R.string.kube_signin_action)) }
     if (open) {
         SignInSheet(
             context = target,
@@ -108,7 +108,7 @@ fun SignInAccountDialog(cluster: ContextSummary, label: String, onSignIn: () -> 
     val info by produceState<Result<KubeSignInInfo?>?>(null, cluster.name) {
         value = runCatching { app.kubeAuthRepository.info(cluster.name) }
     }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.kube_signin_account_title, label)) },
         text = {
@@ -121,14 +121,14 @@ fun SignInAccountDialog(cluster: ContextSummary, label: String, onSignIn: () -> 
             }
         },
         confirmButton = {
-            TextButton(onClick = onSignIn) {
+            IchorTextButton(onClick = onSignIn) {
                 Text(stringResource(if (info?.getOrNull()?.signedIn == true) R.string.kube_signin_again else R.string.kube_signin_action))
             }
         },
         dismissButton = {
             Row {
                 if (info?.getOrNull()?.signedIn == true) {
-                    TextButton(onClick = {
+                    IchorTextButton(onClick = {
                         scope.launch {
                             runCatching { app.kubeAuthRepository.signOut(cluster.name) }
                             app.signInChanged()
@@ -136,7 +136,7 @@ fun SignInAccountDialog(cluster: ContextSummary, label: String, onSignIn: () -> 
                         }
                     }) { Text(stringResource(R.string.kube_signin_sign_out), color = LocalStatusColors.current.bad) }
                 }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
             }
         },
     )
@@ -154,7 +154,7 @@ fun KubeAccessDialog(
     onPick: (String?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.kube_access_title, label)) },
         text = {
@@ -166,7 +166,7 @@ fun KubeAccessDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) } },
     )
 }
 

@@ -15,12 +15,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -140,9 +140,9 @@ fun ResourceListScreen(
     LaunchedEffect(deleted) { if (deleted != 0L) vm.refresh() }
     PollWhileStarted { vm.follow() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(type.kind, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -196,7 +196,7 @@ private fun ColumnScope.Rows(
     PagedProgress(progress)
     IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
     if (hasWideColumns(columns)) {
-        FilterChip(selected = wide, onClick = { onWide(!wide) }, label = { Text(stringResource(R.string.kb_wide)) }, modifier = Modifier.padding(horizontal = 16.dp))
+        IchorFilterChip(selected = wide, onClick = { onWide(!wide) }, label = { Text(stringResource(R.string.kb_wide)) }, modifier = Modifier.padding(horizontal = 16.dp))
     }
     val now = remember(load) { System.currentTimeMillis() }
     PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = Modifier.weight(1f)) {

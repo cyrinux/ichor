@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +36,7 @@ internal fun TaintEditDialog(initial: NodeTaintEdit?, onSave: (NodeTaintEdit) ->
     var value by remember { mutableStateOf(initial?.value.orEmpty()) }
     var effect by remember { mutableStateOf(initial?.effect ?: TAINT_EFFECTS.first()) }
     val valid = key.isNotBlank() && effect in TAINT_EFFECTS
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (initial == null) R.string.node_meta_add_taint else R.string.node_meta_edit)) },
         text = {
@@ -47,17 +47,17 @@ internal fun TaintEditDialog(initial: NodeTaintEdit?, onSave: (NodeTaintEdit) ->
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Kubernetes' own names, never translated.
                     TAINT_EFFECTS.forEach { name ->
-                        FilterChip(selected = effect == name, onClick = { effect = name }, label = { Text(name) })
+                        IchorFilterChip(selected = effect == name, onClick = { effect = name }, label = { Text(name) })
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(NodeTaintEdit(key.trim(), value.trim(), effect)) }, enabled = valid) {
+            IchorTextButton(onClick = { onSave(NodeTaintEdit(key.trim(), value.trim(), effect)) }, enabled = valid) {
                 Text(stringResource(R.string.common_ok))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -71,7 +71,7 @@ internal fun LabelEditDialog(
 ) {
     var key by remember { mutableStateOf(initialKey.orEmpty()) }
     var value by remember { mutableStateOf(initialValue) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (initialKey == null) R.string.node_meta_add_label else R.string.node_meta_edit)) },
         text = {
@@ -81,11 +81,11 @@ internal fun LabelEditDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(key.trim(), value.trim()) }, enabled = key.isNotBlank()) {
+            IchorTextButton(onClick = { onSave(key.trim(), value.trim()) }, enabled = key.isNotBlank()) {
                 Text(stringResource(R.string.common_ok))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

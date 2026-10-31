@@ -24,7 +24,7 @@ import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -96,7 +96,7 @@ fun NodesCard(
     val dense = isDenseCluster(total)
     // The demo tour points at the first node in trouble, as listed.
     val degraded = remember(groups) { groups.firstDegraded() }
-    Card(Modifier.fillMaxWidth().animateContentSize()) {
+    IchorCard(Modifier.fillMaxWidth().animateContentSize()) {
         SectionHeader(
             stringResource(R.string.overview_stat_nodes),
             (if (dense) titleModifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.overview_nodes_open_all)) { onAllNodes(null) }

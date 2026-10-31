@@ -15,15 +15,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.runtime.LaunchedEffect
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.ImportTextRoute
@@ -126,10 +126,10 @@ internal fun DiscoverCard(
         finally { scanned = null }
     }
     if (scanning) {
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { scanning = false },
             confirmButton = {},
-            dismissButton = { OutlinedButton(onClick = { scanning = false }) { Text(stringResource(R.string.common_cancel)) } },
+            dismissButton = { IchorOutlinedButton(onClick = { scanning = false }) { Text(stringResource(R.string.common_cancel)) } },
             text = { QrScanner(onScanned = { scanned = it; scanning = false }, modifier = Modifier.height(360.dp)) },
         )
     }
@@ -141,7 +141,7 @@ internal fun DiscoverCard(
         MutedText(stringResource(R.string.kube_discover_body))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             providers.forEach { p ->
-                FilterChip(
+                IchorFilterChip(
                     selected = provider == p,
                     onClick = { provider = p; values.clear(); scanError = false },
                     label = { Text(stringResource(p.label)) },
@@ -152,7 +152,7 @@ internal fun DiscoverCard(
         if (sets.size > 1) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 sets.forEachIndexed { index, set ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = option == index,
                         onClick = {
                             option = index
@@ -171,12 +171,12 @@ internal fun DiscoverCard(
             RoleChecklist(state.choices, picked, enabled = !state.running) { choice, on -> if (on) picked.add(choice) else picked.remove(choice) }
         }
         if (provider == DiscoveryProvider.GKE) {
-            OutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan)) }
+            IchorOutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan)) }
             if (scanError) Text(stringResource(R.string.kube_discover_scan_invalid), color = LocalStatusColors.current.bad)
             MutedText(stringResource(R.string.kube_discover_credentials_warning))
         }
         if (provider == DiscoveryProvider.EKS && AWS_SSO_START_URL in fields && !choosing) {
-            OutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan_aws)) }
+            IchorOutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan_aws)) }
             if (scanError) Text(stringResource(R.string.kube_discover_scan_aws_invalid), color = LocalStatusColors.current.bad)
             MutedText(stringResource(R.string.kube_discover_scan_aws_hint))
         }
@@ -280,8 +280,8 @@ private fun DiscoverActions(
         }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = onCancel, enabled = !running, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-        Button(
+        IchorOutlinedButton(onClick = onCancel, enabled = !running, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
+        IchorButton(
             onClick = if (google) signInWithGoogle else onDiscover,
             enabled = !running && (google || enabled),
             modifier = Modifier.weight(1f),

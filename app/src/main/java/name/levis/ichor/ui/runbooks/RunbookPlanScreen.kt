@@ -8,15 +8,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorScaffold
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,9 +98,9 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(title = { Text(plan?.name ?: stringResource(R.string.runbooks_title)) }, navigationIcon = { BackButton(onBack) })
+            IchorTopAppBar(title = { Text(plan?.name ?: stringResource(R.string.runbooks_title)) }, navigationIcon = { BackButton(onBack) })
         },
     ) { padding ->
         val yaml = yamlText
@@ -130,7 +130,7 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
                 if (current.description.isNotEmpty()) MutedText(current.description)
                 if (params.isNotEmpty()) {
                     MutedText(stringResource(R.string.runbook_params_values, runbookValuesLabel(values)))
-                    TextButton(onClick = {
+                    IchorTextButton(onClick = {
                         plan = null
                         continueIds = emptySet()
                     }) { Text(stringResource(R.string.runbook_params_change)) }
@@ -140,7 +140,7 @@ fun RunbookPlanScreen(id: String, onBack: () -> Unit, onRunning: () -> Unit) {
                     Text(stringResource(R.string.runbook_blocked), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                 }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                Button(
+                IchorButton(
                     onClick = {
                         // The core refuses the demo before any step: its reason shows on the run screen.
                         runCatching { app.runbookManager.start(yaml, current, continueIds, values) }
@@ -173,7 +173,7 @@ internal fun RunbookPlanSteps(plan: RunbookPlan, continueIds: Set<String>, onTog
                 if (onToggleContinue != null && !step.continueOnError) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(R.string.runbook_continue), modifier = Modifier.weight(1f))
-                        Switch(checked = step.id in continueIds, onCheckedChange = { onToggleContinue(step.id, it) })
+                        IchorSwitch(checked = step.id in continueIds, onCheckedChange = { onToggleContinue(step.id, it) })
                     }
                 }
             }

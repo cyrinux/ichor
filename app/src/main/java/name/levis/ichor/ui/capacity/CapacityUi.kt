@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -111,7 +111,7 @@ fun CapacityHeader(capacity: KubeCapacity, onWhatIf: () -> Unit) {
             StatTileRow(Modifier, cpu, memory, pods)
         }
         CapacityNotes(capacity)
-        if (t.schedulableNodes > 1) OutlinedButton(onClick = onWhatIf) { Text(stringResource(R.string.capacity_what_if)) }
+        if (t.schedulableNodes > 1) IchorOutlinedButton(onClick = onWhatIf) { Text(stringResource(R.string.capacity_what_if)) }
     }
 }
 

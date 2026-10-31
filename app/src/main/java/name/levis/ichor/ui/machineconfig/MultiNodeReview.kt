@@ -21,8 +21,8 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -30,7 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -66,7 +66,7 @@ fun MultiNodePickerDialog(
     onPreview: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.machine_config_multi_pick_title)) },
         text = {
@@ -87,11 +87,11 @@ fun MultiNodePickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onPreview, enabled = candidates is UiState.Loaded && selected.isNotEmpty()) {
+            IchorTextButton(onClick = onPreview, enabled = candidates is UiState.Loaded && selected.isNotEmpty()) {
                 Text(stringResource(R.string.machine_config_multi_preview))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -229,7 +229,7 @@ fun MultiApplyContent(
                     },
                 )
             }
-            Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(if (unfinished) R.string.machine_config_back_to_draft else R.string.machine_config_done))
             }
         }
@@ -269,7 +269,7 @@ private fun NodeStateRow(node: MultiConfigNodeState, detail: String, onProposeIn
         }
         onProposeInGit?.let { propose ->
             val label = stringResource(R.string.talos_writeback_node, node.name)
-            TextButton(onClick = propose, modifier = Modifier.semantics { contentDescription = label }) {
+            IchorTextButton(onClick = propose, modifier = Modifier.semantics { contentDescription = label }) {
                 Text(stringResource(R.string.talos_writeback_action))
             }
         }

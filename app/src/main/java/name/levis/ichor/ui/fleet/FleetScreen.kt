@@ -10,14 +10,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -72,9 +72,9 @@ fun FleetScreen(onBack: () -> Unit, onHome: () -> Unit, onAlertsSettings: () -> 
     val contexts = config?.summary?.contexts.orEmpty()
     val demo = contexts.isNotEmpty() && contexts.all { it.isDemo }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.fleet_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -124,10 +124,10 @@ private fun fleetSummaryLine(counts: FleetCounts): String = listOfNotNull(
 /** Without background checks nothing fills the list: their settings, one tap away. */
 @Composable
 private fun AlertsOffCard(onAlertsSettings: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.fleet_alerts_off), style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = onAlertsSettings) { Text(stringResource(R.string.fleet_alerts_settings)) }
+            IchorTextButton(onClick = onAlertsSettings) { Text(stringResource(R.string.fleet_alerts_settings)) }
         }
     }
 }

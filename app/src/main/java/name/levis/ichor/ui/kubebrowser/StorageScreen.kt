@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -97,9 +97,9 @@ fun StorageScreen(
             }, onDismiss = { confirming = null })
     }
     result?.let {
-        androidx.compose.material3.AlertDialog(onDismissRequest = { result = null },
+        name.levis.ichor.ui.design.IchorAlertDialog(onDismissRequest = { result = null },
             title = { Text(stringResource(R.string.snapshot_create)) }, text = { Text(it) },
-            confirmButton = { androidx.compose.material3.TextButton(onClick = { result = null }) { Text(stringResource(R.string.common_ok)) } })
+            confirmButton = { name.levis.ichor.ui.design.IchorTextButton(onClick = { result = null }) { Text(stringResource(R.string.common_ok)) } })
     }
     KubeScopedList(
         title = stringResource(R.string.storage_title),
@@ -192,13 +192,13 @@ private fun ClaimRow(
             MutedText(stringResource(R.string.storage_kube_pods, c.pods.joinToString(", ")), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         c.managedKind?.let { kind ->
-            AssistChip(onClick = { onDataService(kind) }, label = { Text(stringResource(R.string.storage_kube_open, kind.title)) })
+            IchorAssistChip(onClick = { onDataService(kind) }, label = { Text(stringResource(R.string.storage_kube_open, kind.title)) })
         }
         c.managedPlugin?.let { id ->
-            AssistChip(onClick = { onPlugin(id) }, label = { Text(stringResource(R.string.storage_kube_open, c.managedName)) })
+            IchorAssistChip(onClick = { onPlugin(id) }, label = { Text(stringResource(R.string.storage_kube_open, c.managedName)) })
         }
         if (canSnapshot) {
-            AssistChip(onClick = onSnapshot, enabled = denial == null, label = { Text(stringResource(R.string.snapshot_create)) })
+            IchorAssistChip(onClick = onSnapshot, enabled = denial == null, label = { Text(stringResource(R.string.snapshot_create)) })
             denial?.let { name.levis.ichor.ui.components.KubeDenialNote(it) }
         }
     }

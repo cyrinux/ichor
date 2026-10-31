@@ -8,12 +8,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,7 +34,7 @@ import name.levis.ichor.data.ICHOR_WEBSITE_URL
 @Composable
 fun InfoHint(title: String, text: String, modifier: Modifier = Modifier, link: String? = null) {
     var open by rememberSaveable { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, modifier = modifier) {
+    IchorIconButton(onClick = { open = true }, modifier = modifier) {
         Icon(
             Icons.Outlined.Info,
             contentDescription = stringResource(R.string.common_more_info),
@@ -44,14 +44,14 @@ fun InfoHint(title: String, text: String, modifier: Modifier = Modifier, link: S
     }
     if (open) {
         val uri = LocalUriHandler.current
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { open = false },
             title = { Text(title) },
             text = { Text(text, modifier = Modifier.verticalScroll(rememberScrollState())) },
-            confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.common_ok)) } },
+            confirmButton = { IchorTextButton(onClick = { open = false }) { Text(stringResource(R.string.common_ok)) } },
             dismissButton = if (link == null) null else {
                 {
-                    TextButton(onClick = {
+                    IchorTextButton(onClick = {
                         open = false
                         uri.openUri(link)
                     }) { Text(stringResource(R.string.common_documentation)) }

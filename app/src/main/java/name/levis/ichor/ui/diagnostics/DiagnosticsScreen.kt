@@ -16,18 +16,18 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -90,10 +90,10 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
     }
     val entries = (state as? UiState.Loaded)?.data?.entries.orEmpty()
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.diagnostics_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -167,14 +167,14 @@ private fun DiagnosticsList(view: DiagnosticsView, modifier: Modifier) {
 @Composable
 private fun ExitCard(exit: ExitRecord) {
     var showTrace by rememberSaveable(exit.at) { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(reasonLabel(exit.reason), style = MaterialTheme.typography.titleSmall)
             MutedText(formatDateTime(exit.at))
             if (exit.description.isNotEmpty()) Text(exit.description, style = MaterialTheme.typography.bodySmall)
             MutedText(stringResource(R.string.diagnostics_exit_details, exit.status, exit.importance, formatBytes(exit.pss * 1024)))
             if (exit.trace.isNotEmpty()) {
-                TextButton(onClick = { showTrace = !showTrace }) {
+                IchorTextButton(onClick = { showTrace = !showTrace }) {
                     Text(stringResource(if (showTrace) R.string.diagnostics_trace_hide else R.string.diagnostics_trace_show))
                 }
                 if (showTrace) {
@@ -221,7 +221,7 @@ private fun reasonLabel(reason: String): String = reason.replace('_', ' ').repla
 @Composable
 private fun ExportDialog(export: DiagExport, onShare: (java.io.File) -> Unit, onSave: (java.io.File) -> Unit, onDismiss: () -> Unit) {
     val ready = export as? DiagExport.Ready
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.diagnostics_export)) },
         text = {
@@ -238,13 +238,13 @@ private fun ExportDialog(export: DiagExport, onShare: (java.io.File) -> Unit, on
         },
         confirmButton = {
             ready?.let { r ->
-                TextButton(onClick = { onShare(r.file) }) { Text(stringResource(R.string.diagnostics_share)) }
+                IchorTextButton(onClick = { onShare(r.file) }) { Text(stringResource(R.string.diagnostics_share)) }
             }
         },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
-                ready?.let { r -> TextButton(onClick = { onSave(r.file) }) { Text(stringResource(R.string.diagnostics_save)) } }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
+                ready?.let { r -> IchorTextButton(onClick = { onSave(r.file) }) { Text(stringResource(R.string.diagnostics_save)) } }
             }
         },
     )

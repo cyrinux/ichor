@@ -12,19 +12,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -231,13 +231,13 @@ fun KubeObjectScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            if (customizing) TopAppBar(
+            if (customizing) IchorTopAppBar(
                 title = { Text(stringResource(R.string.bar_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
+                actions = { IchorTextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else IchorTopAppBar(
                 title = {
                     Column {
                         Text(ref.name, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -269,7 +269,7 @@ fun KubeObjectScreen(
                             },
                             onCustomize = { customizing = true },
                         )
-                        current.review == null -> TextButton(onClick = vm::review) { Text(stringResource(R.string.kb_review)) }
+                        current.review == null -> IchorTextButton(onClick = vm::review) { Text(stringResource(R.string.kb_review)) }
                     }
                 },
             )
@@ -277,7 +277,7 @@ fun KubeObjectScreen(
     ) { padding ->
         if (customizing) {
             ActionBarEditor(bar, kubeObjectActionLook, app.uiPreferences::setKubeObjectBar, Modifier.padding(padding))
-            return@Scaffold
+            return@IchorScaffold
         }
         // Asked while editing: an update the credentials cannot run cannot be saved.
         val saveDenial = if (current != null) rememberKubeCanDenial("update", ref.group, ref.resource, ref.namespace, ref.name) else null
@@ -420,15 +420,15 @@ private fun ReviewContent(edit: ObjectEdit, saveDenial: KubePermission?, onBack:
         is UiState.Failed -> Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             ErrorCard(review.message.asString())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
-                TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                IchorOutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
+                IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
             }
         }
         is UiState.Loaded -> {
             if (!review.data.changed) {
                 Column(Modifier.fillMaxSize()) {
                     InfoBox(stringResource(R.string.kb_no_changes), Modifier.weight(1f))
-                    OutlinedButton(onClick = onBack, modifier = Modifier.padding(16.dp).navigationBarsPadding()) { Text(stringResource(R.string.kb_back_to_editor)) }
+                    IchorOutlinedButton(onClick = onBack, modifier = Modifier.padding(16.dp).navigationBarsPadding()) { Text(stringResource(R.string.kb_back_to_editor)) }
                 }
                 return
             }
@@ -440,8 +440,8 @@ private fun ReviewContent(edit: ObjectEdit, saveDenial: KubePermission?, onBack:
                     edit.saveError?.let { ErrorCard(it.asString()) }
                     KubeDenialNote(saveDenial)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedButton(onClick = onBack, enabled = !edit.saving) { Text(stringResource(R.string.kb_back_to_editor)) }
-                        Button(onClick = onSave, enabled = !edit.saving && saveDenial == null) { Text(stringResource(R.string.kb_save)) }
+                        IchorOutlinedButton(onClick = onBack, enabled = !edit.saving) { Text(stringResource(R.string.kb_back_to_editor)) }
+                        IchorButton(onClick = onSave, enabled = !edit.saving && saveDenial == null) { Text(stringResource(R.string.kb_save)) }
                         if (edit.saving) CircularProgressIndicator(Modifier.padding(start = 8.dp))
                     }
                 }

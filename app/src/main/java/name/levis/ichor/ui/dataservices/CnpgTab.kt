@@ -15,7 +15,7 @@ import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -194,7 +194,7 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, pr
         if (c.recoverableAt > 0) InfoRow(stringResource(R.string.cnpg_recoverable), agoOrNever(c.recoverableAt))
         // The Go core picks the method; a cluster set up for none of them is refused with a reason.
         if (!c.hibernated) {
-            OutlinedButton(onClick = onBackup, enabled = !backingUp && !promoting && !lifecycleBusy, modifier = Modifier.padding(top = 8.dp)) {
+            IchorOutlinedButton(onClick = onBackup, enabled = !backingUp && !promoting && !lifecycleBusy, modifier = Modifier.padding(top = 8.dp)) {
                 Text(stringResource(R.string.cnpg_backup_now))
             }
         }

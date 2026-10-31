@@ -12,15 +12,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,7 +62,7 @@ fun PanelEditorDialog(
     // A preview is about one query: another one (typed, picked or proposed) drops it.
     LaunchedEffect(panel.query) { preview = null }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (panel.id.isBlank()) R.string.metrics_add_panel else R.string.metrics_edit_panel)) },
         text = {
@@ -89,7 +89,7 @@ fun PanelEditorDialog(
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
+                    IchorOutlinedButton(
                         enabled = panel.query.isNotBlank() && !running,
                         onClick = {
                             running = true
@@ -100,7 +100,7 @@ fun PanelEditorDialog(
                         },
                     ) { Text(stringResource(R.string.metrics_run)) }
                     if (onAskAi != null) {
-                        OutlinedButton(onClick = onAskAi) {
+                        IchorOutlinedButton(onClick = onAskAi) {
                             Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(stringResource(R.string.metrics_ai_ask))
@@ -116,12 +116,12 @@ fun PanelEditorDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            IchorTextButton(
                 enabled = panel.title.isNotBlank() && panel.query.isNotBlank(),
                 onClick = { onSave(panel.copy(title = panel.title.trim(), query = panel.query.trim(), legend = panel.legend.trim())) },
             ) { Text(stringResource(R.string.metrics_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -129,7 +129,7 @@ fun PanelEditorDialog(
 private fun PresetPicker(presets: List<PromPanel>, onPick: (PromPanel) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { open = true }) { Text(stringResource(R.string.metrics_from_preset)) }
+        IchorOutlinedButton(onClick = { open = true }) { Text(stringResource(R.string.metrics_from_preset)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             presets.forEach { p -> DropdownMenuItem(text = { Text(p.title) }, onClick = { open = false; onPick(p) }) }
         }
@@ -140,7 +140,7 @@ private fun PresetPicker(presets: List<PromPanel>, onPick: (PromPanel) -> Unit) 
 private fun UnitPicker(unit: String, onUnit: (String) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { open = true }) { Text(stringResource(R.string.metrics_panel_unit, unitLabel(unit))) }
+        IchorOutlinedButton(onClick = { open = true }) { Text(stringResource(R.string.metrics_panel_unit, unitLabel(unit))) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             METRICS_UNITS.forEach { u -> DropdownMenuItem(text = { Text(unitLabel(u)) }, onClick = { open = false; onUnit(u) }) }
         }

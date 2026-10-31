@@ -9,10 +9,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorListItem
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -32,9 +32,9 @@ import name.levis.ichor.ui.components.pageContent
 @Composable
 fun SettingsScreen(configs: ConfigRepository, onBack: () -> Unit, onOpen: (SettingsPage) -> Unit) {
     val config by configs.config.collectAsStateWithLifecycle()
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -48,7 +48,7 @@ fun SettingsScreen(configs: ConfigRepository, onBack: () -> Unit, onOpen: (Setti
 
 @Composable
 private fun SettingsPageRow(page: SettingsPage, onClick: () -> Unit) {
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(stringResource(page.title)) },
         supportingContent = { Text(stringResource(page.summary)) },
         // The title already names the row: the icons are decoration for TalkBack.

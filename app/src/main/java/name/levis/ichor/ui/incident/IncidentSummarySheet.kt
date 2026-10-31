@@ -16,14 +16,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -94,7 +94,7 @@ fun IncidentSummarySheet(cluster: ContextSummary, onDismiss: () -> Unit) {
             Text(title, style = MaterialTheme.typography.titleLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IncidentWindow.entries.forEach { w ->
-                    FilterChip(selected = window == w, onClick = { window = w }, label = { Text(stringResource(w.label)) })
+                    IchorFilterChip(selected = window == w, onClick = { window = w }, label = { Text(stringResource(w.label)) })
                 }
             }
             ToggleRow(stringResource(R.string.incident_hide_names), hideNames, { hideNames = it })
@@ -105,11 +105,11 @@ fun IncidentSummarySheet(cluster: ContextSummary, onDismiss: () -> Unit) {
                     if (!s.hasHistory) MutedText(stringResource(R.string.incident_empty))
                     SummaryPreview(s.markdown)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { shareText(context, s.markdown, title) }) {
+                        IchorButton(onClick = { shareText(context, s.markdown, title) }) {
                             Icon(Icons.Outlined.Share, contentDescription = null)
                             Text(stringResource(R.string.incident_share), Modifier.padding(start = 8.dp))
                         }
-                        OutlinedButton(onClick = { copyToClipboard(context, title, s.markdown) }) {
+                        IchorOutlinedButton(onClick = { copyToClipboard(context, title, s.markdown) }) {
                             Icon(Icons.Outlined.ContentCopy, contentDescription = null)
                             Text(stringResource(R.string.incident_copy), Modifier.padding(start = 8.dp))
                         }

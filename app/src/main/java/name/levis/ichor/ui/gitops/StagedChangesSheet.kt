@@ -13,15 +13,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.EditNote
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,7 +39,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 /** "Staged changes (2)": opens the Staged changes sheet. */
 @Composable
 fun StagedChip(count: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    AssistChip(
+    IchorAssistChip(
         onClick = onClick,
         label = { Text(stringResource(R.string.staged_chip, count.toString())) },
         leadingIcon = { Icon(Icons.Outlined.EditNote, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
@@ -76,8 +76,8 @@ fun StagedChangesSheet(
             state.rows.forEach { row -> StagedFileRow(row, onEdit = onEdit?.let { e -> { e(row.file.path) } }, onRemove = { onRemove(row.file.path) }) }
             state.notes.forEach { MutedText(it) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
-                Button(onClick = onPropose, enabled = state.rows.isNotEmpty()) { Text(stringResource(R.string.gitops_propose_open)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
+                IchorButton(onClick = onPropose, enabled = state.rows.isNotEmpty()) { Text(stringResource(R.string.gitops_propose_open)) }
             }
         }
     }

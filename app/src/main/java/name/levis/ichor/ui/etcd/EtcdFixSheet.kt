@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -217,7 +217,7 @@ fun rememberEtcdFixFlow(vm: EtcdFixViewModel, contextName: String, fingerprint: 
 @Composable
 private fun EtcdFixConfirmDialog(order: List<String>, canSnapshot: Boolean, onConfirm: (snapshot: Boolean) -> Unit, onDismiss: () -> Unit) {
     var snapshot by remember { mutableStateOf(canSnapshot) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_fix_confirm_title)) },
         text = {
@@ -233,8 +233,8 @@ private fun EtcdFixConfirmDialog(order: List<String>, canSnapshot: Boolean, onCo
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(snapshot) }) { Text(stringResource(R.string.etcd_fix_start)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onConfirm(snapshot) }) { Text(stringResource(R.string.etcd_fix_start)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -259,7 +259,7 @@ private val EtcdFixMember.stateLabel: Int
 fun EtcdFixPanel(state: EtcdFixState, onCancel: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     val failed = state.error != null
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.etcd_fix_title), style = MaterialTheme.typography.titleSmall)
             etcdFixTimeline(state.events, state.finished, failed).forEach { (phase, status) ->
@@ -276,14 +276,14 @@ fun EtcdFixPanel(state: EtcdFixState, onCancel: () -> Unit, onDismiss: () -> Uni
             }
             state.snapshotSaved?.let { Text(stringResource(R.string.etcd_fix_snapshot_saved, it), style = MaterialTheme.typography.bodySmall) }
             when {
-                state.running -> TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+                state.running -> IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 failed -> {
                     Text(state.error.orEmpty(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 else -> {
                     Text(stringResource(R.string.etcd_fix_done), color = colors.ok)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
             }
         }

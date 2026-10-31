@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -171,12 +171,12 @@ fun KubernetesScreen(
         SanitizeSheet(scope.scope.namespace, app.kubeRepository, app.podSweepManager, config?.activeContext.orEmpty(), onDismiss = { sanitizing = false })
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            if (customizing) TopAppBar(
+            if (customizing) IchorTopAppBar(
                 title = { Text(stringResource(R.string.bar_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
+                actions = { IchorTextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else IchorTopAppBar(
                 title = { Text("Kubernetes") },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -233,7 +233,7 @@ fun KubernetesScreen(
     ) { padding ->
         if (customizing) {
             ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding), groups = kubernetesActionGroups)
-            return@Scaffold
+            return@IchorScaffold
         }
         Column(Modifier.pageContent(padding).fillMaxSize()) {
             PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {

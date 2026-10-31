@@ -6,7 +6,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -84,7 +84,7 @@ fun CrossplaneActionToasts(results: Flow<CrossplaneActionResult>) = ResultToasts
 fun CrossplaneActionsMenu(o: CrossplaneObject, busy: Boolean, onPick: (CrossplaneAction) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { open = true }, enabled = !busy) {
+        IchorIconButton(onClick = { open = true }, enabled = !busy) {
             Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.crossplane_actions, o.label))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

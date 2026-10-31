@@ -12,11 +12,11 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -106,9 +106,9 @@ fun SavedScansScreen(
         systemImagesNode(s.app)?.let { stringResource(R.string.imagescan_saved_system, it) } ?: names[s.app] ?: objectScanLabel(s.app) ?: s.app
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.imagescan_saved_title))
@@ -180,7 +180,7 @@ fun SavedScansScreen(
 /** The app, when and with what it was scanned, its severities and what was new; [onForget] deletes it. */
 @Composable
 private fun SavedScanRow(scan: SavedScan, name: String, onForget: () -> Unit, onOpen: () -> Unit) {
-    ListItem(
+    IchorListItem(
         modifier = Modifier.clickable(onClick = onOpen),
         headlineContent = { Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {

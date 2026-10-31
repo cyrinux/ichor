@@ -20,16 +20,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -100,7 +100,7 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // Refused for want of a sign-in: signing in is the way out, then it loads again.
             SignInAction(message, onSignedIn = onRetry)
-            Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            IchorButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
         }
     }
 }
@@ -196,7 +196,7 @@ fun InfoRow(label: String, value: String, mono: Boolean = false, valueColor: Col
 /** Top app bar "back" arrow. */
 @Composable
 fun BackButton(onClick: () -> Unit) {
-    IconButton(onClick = onClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+    IchorIconButton(onClick = onClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
 }
 
 /** Single-line filter box with a search icon. */
@@ -261,7 +261,7 @@ fun ToggleRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, desc
                 MutedText(description)
             }
         }
-        Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
+        IchorSwitch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
     }
 }
 

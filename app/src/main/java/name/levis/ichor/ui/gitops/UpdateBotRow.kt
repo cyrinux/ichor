@@ -10,14 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -90,7 +90,7 @@ fun UpdateBotRow(app: TalosApp, repo: ClusterRepo) {
                 )
                 c.config.proposable -> {
                     MutedText(stringResource(R.string.repo_update_bot_none))
-                    TextButton(onClick = { reviewing = true }) { Text(stringResource(R.string.repo_update_bot_propose)) }
+                    IchorTextButton(onClick = { reviewing = true }) { Text(stringResource(R.string.repo_update_bot_propose)) }
                 }
                 else -> MutedText(c.config.notes.firstOrNull().orEmpty())
             }
@@ -170,8 +170,8 @@ private fun UpdateBotDraftSheet(app: TalosApp, src: GitSource, cfg: UpdateBotCon
                     )
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-                    Button(onClick = ::openForm) { Text(stringResource(R.string.repo_update_bot_continue)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                    IchorButton(onClick = ::openForm) { Text(stringResource(R.string.repo_update_bot_continue)) }
                 }
             }
         }

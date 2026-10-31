@@ -21,19 +21,19 @@ import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorAssistChip
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -131,19 +131,19 @@ fun WorkloadSheet(
             val restartDenial = access?.denial(KubeAction.restart(workload.kind))
             val pauseDenial = access?.denial(KubeAction.PAUSE_ROLLOUT)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onRestart, enabled = workload.canRestart && restartDenial == null) {
+                IchorOutlinedButton(onClick = onRestart, enabled = workload.canRestart && restartDenial == null) {
                     Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                     Text(stringResource(R.string.workloads_restart_confirm))
                 }
                 if (onPods != null) {
-                    OutlinedButton(onClick = onPods) {
+                    IchorOutlinedButton(onClick = onPods) {
                         Icon(Icons.Outlined.ViewInAr, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.pods_title))
                     }
                 }
-                OutlinedButton(onClick = { showLogs = true }) {
+                IchorOutlinedButton(onClick = { showLogs = true }) {
                     Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                     Text(stringResource(R.string.workload_logs_open))
@@ -208,7 +208,7 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
         Text(kubeGreenWarning, color = colors.warn, style = MaterialTheme.typography.bodySmall)
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { target = clampReplicas(target - 1) }, enabled = target > 0 && !busy) {
+        IchorIconButton(onClick = { target = clampReplicas(target - 1) }, enabled = target > 0 && !busy) {
             Icon(Icons.Outlined.Remove, stringResource(R.string.workloads_scale_less))
         }
         Text(
@@ -216,14 +216,14 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
             style = MaterialTheme.typography.titleMedium,
             fontFamily = FontFamily.Monospace,
         )
-        IconButton(onClick = { target = clampReplicas(target + 1) }, enabled = target < MAX_SCALE_REPLICAS && !busy) {
+        IchorIconButton(onClick = { target = clampReplicas(target + 1) }, enabled = target < MAX_SCALE_REPLICAS && !busy) {
             Icon(Icons.Outlined.Add, stringResource(R.string.workloads_scale_more))
         }
         Spacer(Modifier.weight(1f))
         if (busy) {
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
-            Button(
+            IchorButton(
                 onClick = { if (argoOwner != null) askArgo = true else proceed() },
                 enabled = target != workload.desired && denial == null,
             ) { Text(stringResource(R.string.workloads_scale_apply)) }
@@ -315,7 +315,7 @@ private fun RevisionRow(revision: KubeRevision, enabled: Boolean, onOpen: () -> 
             if (revision.changeCause.isNotEmpty()) MutedText(revision.changeCause)
         }
         if (!revision.current) {
-            TextButton(onClick = onOpen, enabled = enabled) { Text(stringResource(R.string.workloads_rollback)) }
+            IchorTextButton(onClick = onOpen, enabled = enabled) { Text(stringResource(R.string.workloads_rollback)) }
         }
     }
 }
@@ -324,7 +324,7 @@ private fun RevisionRow(revision: KubeRevision, enabled: Boolean, onOpen: () -> 
 @Composable
 private fun PauseButton(workload: KubeWorkload, enabled: Boolean, onPause: (Boolean) -> Unit) {
     val paused = workload.workloadState == WorkloadState.PAUSED
-    OutlinedButton(onClick = { onPause(!paused) }, enabled = enabled) {
+    IchorOutlinedButton(onClick = { onPause(!paused) }, enabled = enabled) {
         Icon(if (paused) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
         Text(stringResource(if (paused) R.string.rollout_resume else R.string.rollout_pause))
@@ -336,7 +336,7 @@ private fun PauseButton(workload: KubeWorkload, enabled: Boolean, onPause: (Bool
 private fun AutoscalerChip(autoscaler: WorkloadAutoscaler, onAutoscaling: (() -> Unit)?) {
     val colors = LocalStatusColors.current
     val label = stringResource(R.string.workloads_autoscaled_by, autoscaler.label())
-    AssistChip(
+    IchorAssistChip(
         onClick = { onAutoscaling?.invoke() },
         label = { Text(label, style = MaterialTheme.typography.labelMedium) },
         leadingIcon = {

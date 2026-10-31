@@ -12,15 +12,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -94,14 +94,14 @@ fun MonitoringSection(app: TalosApp) {
     }
 
     SectionTitle(stringResource(R.string.monitor_section))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.monitor_background_alerts), style = MaterialTheme.typography.titleMedium)
                     MutedText(stringResource(R.string.monitor_background_alerts_desc, CERT_WARN_DAYS))
                 }
-                Switch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
             }
             // The sealed configs cannot be read in the background after Android closed the app.
             if (securityKeys?.required == true) InfoNotice(stringResource(R.string.monitor_security_key_note))
@@ -111,7 +111,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_data_services), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_data_services_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = dataWatched,
                     onCheckedChange = { store.setDataServicesWatched(it) },
                     enabled = enabled,
@@ -124,7 +124,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_imported_plugins), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_imported_plugins_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = importedPlugins,
                     onCheckedChange = { store.setImportedPluginAlerts(it) },
                     enabled = enabled,
@@ -137,7 +137,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_gitops), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_gitops_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = gitopsWatched,
                     onCheckedChange = { store.setGitopsWatched(it) },
                     enabled = enabled,
@@ -150,7 +150,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_checkup), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_checkup_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = checkupWatched,
                     onCheckedChange = { store.setCheckupWatched(it) },
                     enabled = enabled,
@@ -163,7 +163,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_alertmanager), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_alertmanager_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = alertmanagerWatched,
                     onCheckedChange = { store.setAlertmanagerWatched(it) },
                     enabled = enabled,
@@ -176,7 +176,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_storage), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_storage_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = storageWatched,
                     onCheckedChange = { store.setStorageWatched(it) },
                     enabled = enabled,
@@ -190,7 +190,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_storage_trend), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_storage_trend_desc, TREND_OPEN_DAYS.toInt()))
                 }
-                Switch(
+                IchorSwitch(
                     checked = storageTrend,
                     onCheckedChange = { store.setStorageTrendAlerts(it) },
                     enabled = enabled && storageWatched,
@@ -203,7 +203,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_sensors), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_sensors_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = sensorsWatched,
                     onCheckedChange = { store.setSensorsWatched(it) },
                     enabled = enabled,
@@ -217,7 +217,7 @@ fun MonitoringSection(app: TalosApp) {
                     Text(stringResource(R.string.monitor_unreachable), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.monitor_unreachable_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = unreachable,
                     onCheckedChange = { store.setUnreachableAlerts(it) },
                     enabled = enabled,
@@ -255,11 +255,11 @@ fun MonitoringSection(app: TalosApp) {
             // The Quick Settings tile shows the same snapshot; below Android 13 it is added from the shade's editor.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val context = LocalContext.current
-                OutlinedButton(onClick = { ClusterTileService.requestAdd(context) }, modifier = Modifier.fillMaxWidth()) {
+                IchorOutlinedButton(onClick = { ClusterTileService.requestAdd(context) }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.settings_add_tile))
                 }
             }
-            OutlinedButton(onClick = { app.launchSync(runNow = true) }, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = { app.launchSync(runNow = true) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.common_check_now))
             }
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
@@ -283,7 +283,7 @@ private fun SensorThreshold(store: MonitorStore, enabled: Boolean) {
     val auto = threshold == SENSOR_THRESHOLD_AUTO
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.monitor_sensors_auto), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Switch(
+        IchorSwitch(
             checked = auto,
             onCheckedChange = { store.setSensorThreshold(if (it) SENSOR_THRESHOLD_AUTO else SENSOR_THRESHOLD_DEFAULT) },
             enabled = enabled,

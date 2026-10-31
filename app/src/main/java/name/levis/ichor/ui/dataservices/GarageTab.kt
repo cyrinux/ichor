@@ -26,7 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -206,7 +206,7 @@ private fun InstanceCard(
         // The block report only has something to say while blocks fail to resync.
         if (actionable && failing) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onBlocks) { Text(stringResource(R.string.garage_block_errors)) }
+                IchorTextButton(onClick = onBlocks) { Text(stringResource(R.string.garage_block_errors)) }
             }
         }
     }

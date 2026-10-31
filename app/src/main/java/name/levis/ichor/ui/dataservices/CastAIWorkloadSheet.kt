@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -84,7 +84,7 @@ private fun Pills(rec: CastAIRecommendation) {
 /** A pod's CPU and memory requests, before and after, with the change. */
 @Composable
 private fun PerPod(rec: CastAIRecommendation) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             val known = rec.change != CastAIChange.UNKNOWN
             BigChange(
@@ -122,7 +122,7 @@ private fun BigChange(title: String, before: String, after: String, delta: Strin
 /** One container: its requests before and after, and how much of each limit the new request takes. */
 @Composable
 private fun ContainerCard(c: CastAIContainer) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(c.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
             ContainerLine(stringResource(R.string.castai_cpu), castAIChangeText(c.originalCpu.ifEmpty { c.cpu }, c.cpu), c.cpuLimit, c.cpuLimitPercent, warn = false)

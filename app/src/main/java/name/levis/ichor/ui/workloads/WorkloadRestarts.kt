@@ -2,9 +2,9 @@ package name.levis.ichor.ui.workloads
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -111,7 +111,7 @@ fun RestartResultToasts(results: Flow<RestartResult>) = ResultToasts(results) { 
 
 @Composable
 fun RestartConfirmDialog(workload: KubeWorkload, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.workloads_restart_title, workload.kind, workload.name)) },
         text = {
@@ -123,8 +123,8 @@ fun RestartConfirmDialog(workload: KubeWorkload, onConfirm: () -> Unit, onDismis
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(stringResource(R.string.workloads_restart_confirm), color = LocalStatusColors.current.bad) }
+            IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.workloads_restart_confirm), color = LocalStatusColors.current.bad) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

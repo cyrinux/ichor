@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -123,7 +123,7 @@ private fun PluginToolButtons(tools: List<PluginTool>, busy: Boolean, onRun: (Pl
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         tools.forEach { tool ->
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                OutlinedButton(onClick = { onRun(tool) }, enabled = !busy) { Text(tool.label) }
+                IchorOutlinedButton(onClick = { onRun(tool) }, enabled = !busy) { Text(tool.label) }
                 if (tool.hint.isNotEmpty()) MutedText(tool.hint)
             }
         }

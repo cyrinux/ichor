@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,7 +65,7 @@ fun VolumeFillHistory(node: String) {
     val volumes = history.volumes.filter { it.node == node && it.series.size >= 2 }
     if (volumes.isEmpty()) return
     val forecasts = rememberVolumeForecast()?.volumes.orEmpty().associateBy { it.key }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SectionTitle(pluralStringResource(R.plurals.history_volumes_title, HISTORY_SHORT_DAYS, HISTORY_SHORT_DAYS))
             volumes.forEach { volume ->

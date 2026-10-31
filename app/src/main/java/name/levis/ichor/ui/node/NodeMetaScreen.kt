@@ -17,18 +17,18 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -120,10 +120,10 @@ fun NodeMetaScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.node_meta_title))
@@ -256,7 +256,7 @@ private fun NodeMetaEditor(
             taintRows(draft, onEdit, onRemoveTaint)
             labelRows(draft, onEdit, onRemoveLabel)
         }
-        Button(
+        IchorButton(
             onClick = onReview,
             enabled = draft.changed && !planning,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -336,7 +336,7 @@ private fun MetaRow(text: String, effect: String?, locked: Boolean, onEdit: () -
 
 @Composable
 private fun AddRow(label: String, onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
+    IchorTextButton(onClick = onClick) {
         Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(label, Modifier.padding(start = 8.dp))
     }

@@ -16,12 +16,12 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -156,9 +156,9 @@ fun DataServicesScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(initial?.takeIf { solo }?.title ?: stringResource(R.string.data_services_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -212,8 +212,8 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
         Text(stringResource(R.string.data_services_none), style = MaterialTheme.typography.titleMedium)
         MutedText(stringResource(R.string.data_services_none_hint))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onSupportedIntegrations) { Text(stringResource(R.string.supported_integrations_title)) }
-            OutlinedButton(onClick = onRequestIntegration) { Text(stringResource(R.string.settings_integrations_open)) }
+            IchorOutlinedButton(onClick = onSupportedIntegrations) { Text(stringResource(R.string.supported_integrations_title)) }
+            IchorOutlinedButton(onClick = onRequestIntegration) { Text(stringResource(R.string.settings_integrations_open)) }
         }
     }
 }

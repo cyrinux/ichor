@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -84,7 +84,7 @@ private fun Controls(query: String, onQuery: (String) -> Unit, filter: FluxFilte
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(FluxFilter.entries.filter { it != FluxFilter.ALL }, key = { it.name }) { f ->
                 val count = counts[f] ?: 0
-                FilterChip(
+                IchorFilterChip(
                     selected = filter == f,
                     onClick = { onFilter(if (filter == f) FluxFilter.ALL else f) },
                     enabled = count > 0 || filter == f,

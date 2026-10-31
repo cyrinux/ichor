@@ -14,10 +14,10 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -97,9 +97,9 @@ fun ApiHealthScreen(
     val progress by vm.readProgress.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.apihealth_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
@@ -120,7 +120,7 @@ private fun ApiHealthList(report: ApiHealthReport, onAudit: () -> Unit) {
         item(key = "verdict") { VerdictHeader(report) }
         // The metrics group clients; the audit log names them, and what they do wrong.
         item(key = "audit") {
-            OutlinedButton(onClick = onAudit, modifier = Modifier.padding(horizontal = 16.dp)) {
+            IchorOutlinedButton(onClick = onAudit, modifier = Modifier.padding(horizontal = 16.dp)) {
                 Icon(Icons.Outlined.PersonSearch, contentDescription = null)
                 Text(stringResource(R.string.audit_open), Modifier.padding(start = 8.dp))
             }

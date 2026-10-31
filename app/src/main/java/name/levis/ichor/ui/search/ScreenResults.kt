@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -38,7 +38,7 @@ internal fun LazyListScope.screensGroup(
     }
     items(if (expanded) rows else rows.take(SCREENS_SHOWN), key = { "screen-${it.id}" }) { match ->
         val spec = specs.getValue(match.id)
-        ListItem(
+        IchorListItem(
             headlineContent = { Text(match.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             supportingContent = { Text(match.subtitle.ifEmpty { match.section }, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             leadingContent = { Icon(spec.icon, contentDescription = null) },
@@ -47,7 +47,7 @@ internal fun LazyListScope.screensGroup(
     }
     if (!expanded && rows.size > SCREENS_SHOWN) {
         item(key = "screens-all") {
-            ListItem(
+            IchorListItem(
                 headlineContent = { Text(stringResource(R.string.search_show_all)) },
                 leadingContent = { Icon(Icons.Outlined.ExpandMore, contentDescription = null) },
                 modifier = Modifier.clickable(onClick = onExpand),

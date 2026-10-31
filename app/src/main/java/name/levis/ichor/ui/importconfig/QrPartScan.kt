@@ -13,7 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -158,7 +158,7 @@ private fun QrPartProgress(
                     Text(stringResource(notice.message), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
                 }
             }
-            TextButton(onClick = onStartOver) { Text(stringResource(R.string.qr_parts_start_over)) }
+            IchorTextButton(onClick = onStartOver) { Text(stringResource(R.string.qr_parts_start_over)) }
         }
     }
 }

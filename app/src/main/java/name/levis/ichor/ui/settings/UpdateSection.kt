@@ -11,12 +11,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,7 +56,7 @@ fun UpdatesSection(updates: () -> UpdateManager) {
 @Composable
 private fun UpdateSourceCard(text: String) {
     SectionTitle(stringResource(R.string.update_section))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         MutedText(text, Modifier.padding(16.dp))
     }
 }
@@ -71,7 +71,7 @@ private fun SelfUpdateSection(updates: UpdateManager) {
     fun install(info: UpdateInfo) = scope.launch { updates.downloadAndInstall(info) }
 
     SectionTitle(stringResource(R.string.update_section))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             MutedText(stringResource(R.string.update_source_github))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -79,7 +79,7 @@ private fun SelfUpdateSection(updates: UpdateManager) {
                     Text(stringResource(R.string.update_auto_check), style = MaterialTheme.typography.titleMedium)
                     MutedText(stringResource(R.string.update_auto_check_desc, BuildConfig.UPDATE_REPO))
                 }
-                Switch(checked = autoCheck, onCheckedChange = updates::setAutoCheck, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = autoCheck, onCheckedChange = updates::setAutoCheck, modifier = Modifier.padding(start = 12.dp))
             }
 
             when (val s = state) {
@@ -94,7 +94,7 @@ private fun SelfUpdateSection(updates: UpdateManager) {
                         Text(s.info.notes.lines().take(8).joinToString("\n"), style = MaterialTheme.typography.bodySmall)
                     }
                     if (updates.canInstall) {
-                        Button(onClick = { install(s.info) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.update_download_install)) }
+                        IchorButton(onClick = { install(s.info) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.update_download_install)) }
                     } else {
                         Text(
                             stringResource(R.string.update_debug_build),
@@ -109,19 +109,19 @@ private fun SelfUpdateSection(updates: UpdateManager) {
                 }
                 is UpdateState.NeedsInstallPermission -> {
                     Text(stringResource(R.string.update_needs_permission), style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(onClick = {
+                    IchorOutlinedButton(onClick = {
                         context.startActivity(
                             Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")),
                         )
                     }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.update_open_permission)) }
-                    Button(onClick = { install(s.info) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.update_try_again)) }
+                    IchorButton(onClick = { install(s.info) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.update_try_again)) }
                 }
                 UpdateState.Installing -> Text(stringResource(R.string.update_installing))
                 is UpdateState.Failed -> Text(s.message.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
             }
 
             val busy = state is UpdateState.Checking || state is UpdateState.Downloading || state is UpdateState.Installing
-            OutlinedButton(
+            IchorOutlinedButton(
                 onClick = { scope.launch { updates.check() } },
                 enabled = !busy,
                 modifier = Modifier.fillMaxWidth(),

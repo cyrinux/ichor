@@ -22,7 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -97,11 +97,11 @@ fun KubeYamlEditor(
 
     Column(modifier.fillMaxSize().imePadding()) {
         if (schemaHelp) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            TextButton(onClick = { onOpenHelp(field.text, field.selection.start, SchemaHelpMode.EXPLAIN) }) {
+            IchorTextButton(onClick = { onOpenHelp(field.text, field.selection.start, SchemaHelpMode.EXPLAIN) }) {
                 Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.kb_explain_field), Modifier.padding(start = 6.dp))
             }
-            TextButton(onClick = { onOpenHelp(field.text, field.selection.start, SchemaHelpMode.ADD) }) {
+            IchorTextButton(onClick = { onOpenHelp(field.text, field.selection.start, SchemaHelpMode.ADD) }) {
                 Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.kb_add_field), Modifier.padding(start = 6.dp))
             }
@@ -155,7 +155,7 @@ private fun HelpFailure(message: String, onRetry: () -> Unit) {
         return
     }
     InlineError(message)
-    TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+    IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
 }
 
 @Composable

@@ -18,12 +18,12 @@ import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -116,7 +116,7 @@ fun <A : Enum<A>> LazyListScope.actionBarItems(
     items(bar.menu, key = ::slot) { action -> BarRow(action, look, inMenu = true, current, onChange, drag, spacing, groups?.label?.invoke(action)) }
     if (!bar.isDefault) item(key = "bar-reset") {
         Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().animateItem()) {
-            TextButton(onClick = { onChange(bar.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
+            IchorTextButton(onClick = { onChange(bar.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
         }
     }
 }
@@ -170,7 +170,7 @@ private fun <A : Enum<A>> LazyItemScope.BarRow(
     val lifted = drag.dragged == action
     val moveUp = stringResource(R.string.overview_edit_move_up)
     val moveDown = stringResource(R.string.overview_edit_move_down)
-    Card(
+    IchorCard(
         elevation = CardDefaults.cardElevation(defaultElevation = if (lifted) 8.dp else 0.dp),
         modifier = Modifier
             .fillMaxWidth()

@@ -9,14 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -147,11 +147,11 @@ private fun DownloadState(app: TalosApp, model: LocalModelInfo, changes: Int) {
             MutedText(
                 stringResource(R.string.ai_local_downloading, (fraction * 100).toInt(), formatModelSize(done), formatModelSize(model.bytes)),
             )
-            TextButton(onClick = { ModelDownloads.cancel(context, store, model.id) }) { Text(stringResource(R.string.common_cancel)) }
+            IchorTextButton(onClick = { ModelDownloads.cancel(context, store, model.id) }) { Text(stringResource(R.string.common_cancel)) }
         }
         current is DownloadStatus.Waiting && current.id == model.id -> {
             WaitingLine(current.allowMetered)
-            TextButton(onClick = { ModelDownloads.cancel(context, store, model.id) }) { Text(stringResource(R.string.common_cancel)) }
+            IchorTextButton(onClick = { ModelDownloads.cancel(context, store, model.id) }) { Text(stringResource(R.string.common_cancel)) }
         }
         else -> {
             if (current is DownloadStatus.Failed && current.id == model.id) {
@@ -166,13 +166,13 @@ private fun DownloadState(app: TalosApp, model: LocalModelInfo, changes: Int) {
                     Text(stringResource(R.string.ai_local_allow_metered), style = MaterialTheme.typography.bodyMedium)
                     MutedText(stringResource(R.string.ai_local_allow_metered_desc))
                 }
-                Switch(checked = allowMetered, onCheckedChange = { allowMetered = it }, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = allowMetered, onCheckedChange = { allowMetered = it }, modifier = Modifier.padding(start = 12.dp))
             }
-            Button(
+            IchorButton(
                 onClick = { ModelDownloads.start(context, store, model.id, allowMetered) },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.ai_local_download, formatModelSize(model.bytes - partialBytes(store, model.id)))) }
-            TextButton(onClick = { uri.openUri(model.licenseUrl) }) { Text(stringResource(R.string.ai_local_license, model.license)) }
+            IchorTextButton(onClick = { uri.openUri(model.licenseUrl) }) { Text(stringResource(R.string.ai_local_license, model.license)) }
         }
     }
 }
@@ -209,7 +209,7 @@ private fun WaitingLine(allowMetered: Boolean) {
 @Composable
 private fun DeleteModel(app: TalosApp, id: String, settings: AiSettings?) {
     var confirm by remember { mutableStateOf(false) }
-    TextButton(onClick = { confirm = true }) { Text(stringResource(R.string.ai_local_delete), color = LocalStatusColors.current.bad) }
+    IchorTextButton(onClick = { confirm = true }) { Text(stringResource(R.string.ai_local_delete), color = LocalStatusColors.current.bad) }
     if (confirm) {
         ConfirmDialog(
             title = stringResource(R.string.ai_local_delete),
@@ -244,7 +244,7 @@ private fun ImportModel(app: TalosApp, settings: AiSettings) {
             importing = false
         }
     }
-    OutlinedButton(enabled = !importing, onClick = { pick.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(enabled = !importing, onClick = { pick.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(if (importing) R.string.ai_local_importing else R.string.ai_local_import))
     }
     error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }

@@ -10,15 +10,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,9 +61,9 @@ fun RunbookRunScreen(onBack: () -> Unit, onActivity: (cluster: String) -> Unit) 
     // The confirmation of the step waiting now opens by itself; closed, a button opens it again.
     var confirming by remember(run?.waiting?.index) { mutableStateOf(true) }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(run?.plan?.name ?: stringResource(R.string.runbooks_title)) },
                 navigationIcon = {
                     BackButton {
@@ -98,16 +98,16 @@ fun RunbookRunScreen(onBack: () -> Unit, onActivity: (cluster: String) -> Unit) 
                 }
                 val waiting = state.waiting
                 if (waiting != null && !confirming) {
-                    Button(onClick = { confirming = true }, modifier = Modifier.fillMaxWidth()) {
+                    IchorButton(onClick = { confirming = true }, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.runbook_confirm))
                     }
                 }
                 if (state.running) {
-                    OutlinedButton(onClick = manager::stop, enabled = !state.stopping, modifier = Modifier.fillMaxWidth()) {
+                    IchorOutlinedButton(onClick = manager::stop, enabled = !state.stopping, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.operation_stop))
                     }
                 } else {
-                    Button(onClick = { onActivity(config?.activeContext.orEmpty()) }, modifier = Modifier.fillMaxWidth()) {
+                    IchorButton(onClick = { onActivity(config?.activeContext.orEmpty()) }, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.runbook_activity))
                     }
                 }

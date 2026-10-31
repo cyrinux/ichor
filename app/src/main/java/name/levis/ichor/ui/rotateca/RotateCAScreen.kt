@@ -5,9 +5,9 @@ import androidx.compose.runtime.getValue
 import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -79,9 +79,9 @@ fun RotateCAScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.ca_rotate_title)) },
                 navigationIcon = { BackButton(onBack) },
             )

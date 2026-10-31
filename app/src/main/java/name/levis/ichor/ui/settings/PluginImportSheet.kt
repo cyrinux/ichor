@@ -19,18 +19,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -189,17 +189,17 @@ private fun ImportStep(plugins: PluginRepository, onChecked: (yaml: String, item
                 modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = {
+                IchorOutlinedButton(onClick = {
                     scope.launch {
                         clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }
                             ?.getItemAt(0)?.coerceToText(context)?.toString()?.let { yaml = it }
                     }
                 }) { Text(stringResource(R.string.plugins_paste_clipboard)) }
-                Button(onClick = { check(yaml) }, enabled = yaml.isNotBlank() && !busy) { Text(stringResource(R.string.plugins_check)) }
+                IchorButton(onClick = { check(yaml) }, enabled = yaml.isNotBlank() && !busy) { Text(stringResource(R.string.plugins_check)) }
             }
         }
         PluginSource.FILE ->
-            Button(onClick = { picker.launch(arrayOf("*/*")) }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = { picker.launch(arrayOf("*/*")) }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.plugins_pick_file))
             }
         PluginSource.URL -> {
@@ -211,7 +211,7 @@ private fun ImportStep(plugins: PluginRepository, onChecked: (yaml: String, item
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Button(
+            IchorButton(
                 onClick = {
                     run {
                         val text = plugins.download(url.trim())
@@ -242,7 +242,7 @@ private fun ImportStep(plugins: PluginRepository, onChecked: (yaml: String, item
             }
             MutedText(stringResource(R.string.plugins_scan_hint))
             if (error != null && !busy) {
-                OutlinedButton(
+                IchorOutlinedButton(
                     onClick = {
                         error = null
                         scanKey++
@@ -298,8 +298,8 @@ private fun ConsentStep(consent: PluginConsent, enabling: Boolean, failure: Stri
         Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-        TextButton(onClick = onCancel, enabled = !enabling) { Text(stringResource(R.string.common_cancel)) }
-        Button(onClick = onEnable, enabled = !enabling) { Text(stringResource(R.string.plugins_enable)) }
+        IchorTextButton(onClick = onCancel, enabled = !enabling) { Text(stringResource(R.string.common_cancel)) }
+        IchorButton(onClick = onEnable, enabled = !enabling) { Text(stringResource(R.string.plugins_enable)) }
     }
 }
 

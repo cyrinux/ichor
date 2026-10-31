@@ -9,17 +9,17 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -86,7 +86,7 @@ fun RuleSwitch(title: String, hint: String?, checked: Boolean, enabled: Boolean,
             Text(title, style = MaterialTheme.typography.titleSmall)
             hint?.let { MutedText(it) }
         }
-        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled, modifier = Modifier.padding(start = 12.dp))
+        IchorSwitch(checked = checked, onCheckedChange = onChange, enabled = enabled, modifier = Modifier.padding(start = 12.dp))
     }
 }
 
@@ -99,14 +99,14 @@ fun QuietHoursEditor(quiet: QuietHours, enabled: Boolean, onChange: (QuietHours)
     var picking by remember { mutableStateOf<Boolean?>(null) } // true: start, false: end
     var zones by remember { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        OutlinedButton(onClick = { picking = true }, enabled = enabled, modifier = Modifier.weight(1f)) {
+        IchorOutlinedButton(onClick = { picking = true }, enabled = enabled, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.alert_rules_from, quiet.start), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        OutlinedButton(onClick = { picking = false }, enabled = enabled, modifier = Modifier.weight(1f)) {
+        IchorOutlinedButton(onClick = { picking = false }, enabled = enabled, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.alert_rules_until, quiet.end), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
-    OutlinedButton(onClick = { zones = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { zones = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.alert_rules_zone, zoneLabel(quiet.tz)), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     RuleSwitch(
@@ -148,17 +148,17 @@ private fun ClockDialog(title: String, value: String, onPick: (String) -> Unit, 
     val (hour, minute) = clockOf(value)
     val is24 = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val state = rememberTimePickerState(initialHour = hour, initialMinute = minute, is24Hour = is24)
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { TimePicker(state = state, modifier = Modifier.semantics { contentDescription = title }) },
         confirmButton = {
-            TextButton(onClick = {
+            IchorTextButton(onClick = {
                 onPick(clockText(state.hour, state.minute))
                 onDismiss()
             }) { Text(stringResource(R.string.common_ok)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -169,7 +169,7 @@ private fun ZoneDialog(current: String, onPick: (String) -> Unit, onDismiss: () 
     val all = remember { ZoneId.getAvailableZoneIds().filter { '/' in it && !it.startsWith("Etc/") && !it.startsWith("SystemV/") }.sorted() }
     val shown = remember(query) { listOf("") + all.filter { it.contains(query.trim(), ignoreCase = true) } }
     val search = stringResource(R.string.alert_rules_zone_search)
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.alert_rules_zone_title)) },
         text = {
@@ -202,6 +202,6 @@ private fun ZoneDialog(current: String, onPick: (String) -> Unit, onDismiss: () 
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

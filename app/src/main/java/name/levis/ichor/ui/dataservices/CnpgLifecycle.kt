@@ -1,6 +1,6 @@
 package name.levis.ichor.ui.dataservices
 
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -33,7 +33,7 @@ fun CnpgLifecycleButtons(cluster: CnpgCluster, busy: Boolean, onAction: (CnpgLif
         else listOfNotNull(CnpgLifecycleAction.RESTART.takeIf { cluster.currentPrimary.isNotEmpty() }, CnpgLifecycleAction.HIBERNATE)
     actions.forEach { action ->
         val denial = rememberKubeDenial(action.permission, cluster.namespace)
-        OutlinedButton(onClick = { onAction(action) }, enabled = !busy && denial == null) { Text(stringResource(action.title)) }
+        IchorOutlinedButton(onClick = { onAction(action) }, enabled = !busy && denial == null) { Text(stringResource(action.title)) }
         denial?.let { KubeDenialNote(it) }
     }
 }

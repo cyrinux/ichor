@@ -15,13 +15,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Policy
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -105,7 +105,7 @@ fun DropDetailSheet(group: DropGroup, vm: FlowsViewModel, onDismiss: () -> Unit)
             }
             Hint(group)
 
-            OutlinedButton(onClick = { copyFlow(context, group.sample) }, modifier = Modifier.padding(top = 8.dp)) {
+            IchorOutlinedButton(onClick = { copyFlow(context, group.sample) }, modifier = Modifier.padding(top = 8.dp)) {
                 Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.flows_copy_json), modifier = Modifier.padding(start = 8.dp))
             }
@@ -145,7 +145,7 @@ private fun Policies(title: String, refs: List<PolicyRef>, onOpen: (PolicyRef) -
     SectionTitle(title)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         refs.forEach { ref ->
-            AssistChip(
+            IchorAssistChip(
                 onClick = { onOpen(ref) },
                 label = { Text(ref.label, fontFamily = FontFamily.Monospace) },
                 leadingIcon = { Icon(Icons.Outlined.Policy, contentDescription = ref.kind, modifier = Modifier.size(18.dp)) },

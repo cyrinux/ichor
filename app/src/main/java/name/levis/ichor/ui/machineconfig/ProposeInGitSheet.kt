@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -96,7 +96,7 @@ private fun Plan(writeBack: WriteBack, hostname: String, onReview: (String, Stri
         MutedText(stringResource(R.string.talos_writeback_nothing))
         return
     }
-    Button(
+    IchorButton(
         onClick = { onReview(plan.file, encodeQuickEdit(QuickEdit.talos(hostname, plan, patch.firstPath))) },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(stringResource(R.string.talos_writeback_review)) }

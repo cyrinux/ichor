@@ -16,19 +16,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorAssistChip
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -87,7 +87,7 @@ fun QuickEditImageSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply: (
         if (choices.size > 1) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 choices.forEachIndexed { i, c ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = i == selected,
                         onClick = { if (!sheet.applying) selected = i },
                         label = { Text(c.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -140,7 +140,7 @@ fun QuickEditReplicasSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply
         if (choices.size > 1) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 choices.forEachIndexed { i, c ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = i == selected,
                         onClick = { if (!sheet.applying) selected = i },
                         label = { Text(c.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -152,7 +152,7 @@ fun QuickEditReplicasSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply
         }
         Text(stringResource(R.string.gitops_quick_replica_count), style = MaterialTheme.typography.labelLarge)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { target -= 1 }, enabled = target > 0 && !sheet.applying) {
+            IchorIconButton(onClick = { target -= 1 }, enabled = target > 0 && !sheet.applying) {
                 Icon(Icons.Outlined.Remove, stringResource(R.string.workloads_scale_less))
             }
             Text(
@@ -160,7 +160,7 @@ fun QuickEditReplicasSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply
                 style = MaterialTheme.typography.titleMedium,
                 fontFamily = FontFamily.Monospace,
             )
-            IconButton(onClick = { target += 1 }, enabled = target < MAX_SCALE_REPLICAS && !sheet.applying) {
+            IchorIconButton(onClick = { target += 1 }, enabled = target < MAX_SCALE_REPLICAS && !sheet.applying) {
                 Icon(Icons.Outlined.Add, stringResource(R.string.workloads_scale_more))
             }
         }
@@ -170,7 +170,7 @@ fun QuickEditReplicasSheet(sheet: QuickSheet, targets: QuickEditTargets, onApply
 /** A suggested tag: what it is ([label]) and the [tag] it sets. */
 @Composable
 private fun TagChip(label: String, tag: String, enabled: Boolean, onClick: () -> Unit) {
-    AssistChip(
+    IchorAssistChip(
         onClick = onClick,
         enabled = enabled,
         label = {
@@ -205,8 +205,8 @@ private fun QuickSheetFrame(
             sheet.error?.let { InlineError(it.asString(), Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
                 if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.common_cancel)) }
-                Button(onClick = onApply, enabled = enabled && !busy) { Text(stringResource(R.string.gitops_quick_review)) }
+                IchorTextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.common_cancel)) }
+                IchorButton(onClick = onApply, enabled = enabled && !busy) { Text(stringResource(R.string.gitops_quick_review)) }
             }
         }
     }

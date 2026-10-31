@@ -12,12 +12,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -106,10 +106,10 @@ fun NodesScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.overview_stat_nodes)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -199,9 +199,9 @@ private fun visibleNode(key: Any): String? = (key as? String)?.takeIf { it.start
 @Composable
 private fun FilterChips(current: NodeFilter?, onSelect: (NodeFilter?) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = current == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.nodes_filter_all)) })
+        IchorFilterChip(selected = current == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.nodes_filter_all)) })
         NodeFilter.entries.forEach { filter ->
-            FilterChip(selected = current == filter, onClick = { onSelect(filter) }, label = { Text(stringResource(filterLabel(filter))) })
+            IchorFilterChip(selected = current == filter, onClick = { onSelect(filter) }, label = { Text(stringResource(filterLabel(filter))) })
         }
     }
 }
@@ -217,9 +217,9 @@ private fun filterLabel(filter: NodeFilter) = when (filter) {
 @Composable
 private fun SiteChips(groups: List<NodeGroup>, current: String?, onSelect: (String?) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = current == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.nodes_site_all)) })
+        IchorFilterChip(selected = current == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.nodes_site_all)) })
         groups.forEach { group ->
-            FilterChip(
+            IchorFilterChip(
                 selected = current == group.key,
                 onClick = { onSelect(group.key) },
                 label = { Text(siteLabel(group), maxLines = 1, overflow = TextOverflow.Ellipsis) },

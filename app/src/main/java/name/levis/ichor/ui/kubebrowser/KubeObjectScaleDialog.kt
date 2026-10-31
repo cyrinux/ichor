@@ -8,14 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +65,7 @@ fun KubeObjectScaleDialog(
     val enabled = loaded != null && target != loaded.replicas && !scale.applying && denial == null &&
         (!toZero || confirmationMatches(typed, ref.name))
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (!scale.applying) onDismiss() },
         title = { Text(stringResource(R.string.kb_scale_title, ref.name)) },
         text = {
@@ -74,7 +74,7 @@ fun KubeObjectScaleDialog(
                     UiState.Loading -> CircularProgressIndicator(Modifier.padding(4.dp))
                     is UiState.Failed -> {
                         InlineError(s.message.asString())
-                        TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                        IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                     }
                     is UiState.Loaded -> ScaleStepper(ref, s.data, target, scale.applying, onTarget)
                 }
@@ -95,10 +95,10 @@ fun KubeObjectScaleDialog(
         confirmButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (scale.applying) CircularProgressIndicator(Modifier.padding(end = 8.dp))
-                TextButton(onClick = onApply, enabled = enabled) { Text(stringResource(R.string.workloads_scale_apply)) }
+                IchorTextButton(onClick = onApply, enabled = enabled) { Text(stringResource(R.string.workloads_scale_apply)) }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !scale.applying) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss, enabled = !scale.applying) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -106,7 +106,7 @@ fun KubeObjectScaleDialog(
 private fun ScaleStepper(ref: KubeObjectRef, s: KubeObjectScale, target: Int, applying: Boolean, onTarget: (Int) -> Unit) {
     val colors = LocalStatusColors.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { onTarget(target - 1) }, enabled = target > 0 && !applying) {
+        IchorIconButton(onClick = { onTarget(target - 1) }, enabled = target > 0 && !applying) {
             Icon(Icons.Outlined.Remove, stringResource(R.string.workloads_scale_less))
         }
         Text(
@@ -114,7 +114,7 @@ private fun ScaleStepper(ref: KubeObjectRef, s: KubeObjectScale, target: Int, ap
             style = MaterialTheme.typography.titleMedium,
             fontFamily = FontFamily.Monospace,
         )
-        IconButton(onClick = { onTarget(target + 1) }, enabled = target < MAX_SCALE_REPLICAS && !applying) {
+        IchorIconButton(onClick = { onTarget(target + 1) }, enabled = target < MAX_SCALE_REPLICAS && !applying) {
             Icon(Icons.Outlined.Add, stringResource(R.string.workloads_scale_more))
         }
     }

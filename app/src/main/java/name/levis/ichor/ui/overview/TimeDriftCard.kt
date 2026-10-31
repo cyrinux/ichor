@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,7 +84,7 @@ fun TimeDriftCard(state: UiState<ClusterTime>, hostnames: Map<String, String>) {
     } else {
         null
     }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             // The header toggles the per-node list.
             SectionHeader(
@@ -151,11 +151,11 @@ private fun NodeTimeRow(t: NodeTime, hostname: String) {
         )
     }
     if (showError) {
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { showError = false },
             title = { Text(hostname) },
             text = { Text(t.error.orEmpty(), style = MaterialTheme.typography.bodySmall) },
-            confirmButton = { TextButton(onClick = { showError = false }) { Text(stringResource(R.string.common_ok)) } },
+            confirmButton = { IchorTextButton(onClick = { showError = false }) { Text(stringResource(R.string.common_ok)) } },
         )
     }
 }

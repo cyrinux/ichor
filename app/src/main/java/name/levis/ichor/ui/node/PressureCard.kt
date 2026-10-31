@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,11 +44,11 @@ class PressureViewModel(private val talos: TalosRepository, private val node: St
  */
 @Composable
 fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit, onRetry: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { SectionTitle(stringResource(R.string.node_section_pressure)) }
-                TextButton(onClick = onDetails) { Text(stringResource(R.string.node_pressure_details)) }
+                IchorTextButton(onClick = onDetails) { Text(stringResource(R.string.node_pressure_details)) }
             }
             MutedText(stringResource(R.string.node_pressure_caption))
             SectionLoaded(

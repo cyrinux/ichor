@@ -18,15 +18,15 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -95,9 +95,9 @@ fun UpdatesScreen(onBack: () -> Unit, onOpen: (UpdateOpen) -> Unit) {
             onDismiss = onBack,
         )
     }
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.updates_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -141,7 +141,7 @@ private fun ProposeBar(state: UpdatesUiState, onPropose: () -> Unit) {
                 } else {
                     MutedText(stringResource(R.string.updates_select_hint), Modifier.weight(1f))
                 }
-                Button(onClick = onPropose, enabled = count > 0 && !state.planning) {
+                IchorButton(onClick = onPropose, enabled = count > 0 && !state.planning) {
                     Text(pluralStringResource(R.plurals.updates_propose_count, count, count))
                 }
             }

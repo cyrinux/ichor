@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,9 +102,9 @@ fun BootMediaScreen(
     val media by vm.media.collectAsStateWithLifecycle()
     val arch by vm.arch.collectAsStateWithLifecycle()
     val secureBoot by vm.secureBoot.collectAsStateWithLifecycle()
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.boot_media_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -126,7 +126,7 @@ fun BootMediaScreen(
             // A server at a cloud provider boots its own image and reads the config as user data.
             CloudUserDataCard(omni = onAddNode == null)
             if (onAddNode != null) {
-                Button(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
+                IchorButton(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
             } else {
                 InfoNotice(stringResource(R.string.boot_media_omni_next))
             }
@@ -146,7 +146,7 @@ private fun TargetCard(media: BootMedia, arch: String, secureBoot: Boolean, onAr
         Text(media.schematic, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             bootArchitectures.forEach { a ->
-                FilterChip(selected = a == arch, onClick = { onArch(a) }, label = { Text(a) })
+                IchorFilterChip(selected = a == arch, onClick = { onArch(a) }, label = { Text(a) })
             }
         }
         ToggleRow(stringResource(R.string.boot_media_secure_boot), secureBoot, onSecureBoot)

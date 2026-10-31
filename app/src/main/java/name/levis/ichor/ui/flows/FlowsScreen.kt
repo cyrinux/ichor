@@ -18,18 +18,18 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import name.levis.ichor.ui.design.IchorOutlinedCard
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Surface
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -101,9 +101,9 @@ fun FlowsScreen(
         if (ready) lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { vm.stream(filter) }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.flows_title))
@@ -147,7 +147,7 @@ fun FlowsScreen(
 @Composable
 private fun HubbleOff(status: CiliumStatus, modifier: Modifier) {
     Box(modifier.fillMaxSize().padding(16.dp)) {
-        OutlinedCard(Modifier.fillMaxWidth()) {
+        IchorOutlinedCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     stringResource(if (status.calico) R.string.flows_whisker_off_title else R.string.flows_hubble_off_title),
@@ -170,13 +170,13 @@ private fun FilterBar(vm: FlowsViewModel, filter: HubbleFilter) {
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        FilterChip(
+        IchorFilterChip(
             selected = filter.dropsOnly,
             onClick = { vm.setFilter(filter.copy(dropsOnly = !filter.dropsOnly)) },
             label = { Text(stringResource(R.string.flows_drops_only)) },
         )
         Box {
-            FilterChip(
+            IchorFilterChip(
                 selected = filter.namespace != null,
                 onClick = {
                     vm.loadPolicies() // its namespaces join the list

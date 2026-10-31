@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +52,7 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     if (!fellBack || (protection != KeyProtection.TEE && !moving)) return
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.security_key_fell_back), style = MaterialTheme.typography.bodyMedium)
             if (moving) {
@@ -62,7 +62,7 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(
+                IchorTextButton(
                     enabled = !moving,
                     onClick = click@{
                         // A second tap before the button shows disabled: one move at a time.
@@ -76,7 +76,7 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
                         }
                     },
                 ) { Text(stringResource(R.string.security_key_move)) }
-                TextButton(enabled = !moving, onClick = configs::dismissKeyFallback) { Text(stringResource(R.string.common_ok)) }
+                IchorTextButton(enabled = !moving, onClick = configs::dismissKeyFallback) { Text(stringResource(R.string.common_ok)) }
             }
         }
     }

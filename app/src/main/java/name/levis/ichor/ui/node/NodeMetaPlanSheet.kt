@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,11 +81,11 @@ internal fun NodeMetaPlanSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = onDismiss, enabled = !applying) { Text(stringResource(R.string.common_cancel)) }
+                IchorTextButton(onClick = onDismiss, enabled = !applying) { Text(stringResource(R.string.common_cancel)) }
                 if (plan.stale || plan.blockers.isNotEmpty()) {
-                    TextButton(onClick = onReload, enabled = !applying) { Text(stringResource(R.string.node_meta_reload)) }
+                    IchorTextButton(onClick = onReload, enabled = !applying) { Text(stringResource(R.string.node_meta_reload)) }
                 }
-                Button(onClick = onApply, enabled = plan.canApply && !applying) {
+                IchorButton(onClick = onApply, enabled = plan.canApply && !applying) {
                     if (applying) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                     else Text(stringResource(R.string.node_meta_apply))
                 }

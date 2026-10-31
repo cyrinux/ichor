@@ -12,16 +12,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -78,7 +78,7 @@ fun GarageBlocksSheet(state: GarageBlocksState, onReload: () -> Unit, onRepair: 
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         InlineError(error.asString())
-                        if (state.report == null) OutlinedButton(onClick = onReload) { Text(stringResource(R.string.common_retry)) }
+                        if (state.report == null) IchorOutlinedButton(onClick = onReload) { Text(stringResource(R.string.common_retry)) }
                     }
                 }
             }
@@ -100,7 +100,7 @@ private fun Header(state: GarageBlocksState, onReload: () -> Unit) {
             Text(stringResource(R.string.garage_block_errors), style = MaterialTheme.typography.titleLarge)
             Text(state.instance.label, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        IconButton(onClick = onReload, enabled = !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
+        IchorIconButton(onClick = onReload, enabled = !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
     }
 }
 
@@ -131,7 +131,7 @@ private fun Summary(report: GarageBlockReport) {
 private fun RepairButton(enabled: Boolean, running: Boolean, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
         if (running) CircularProgressIndicator(Modifier.padding(end = 12.dp).size(20.dp), strokeWidth = 2.dp)
-        Button(onClick = onClick, enabled = enabled) { Text(stringResource(R.string.garage_blocks_repair)) }
+        IchorButton(onClick = onClick, enabled = enabled) { Text(stringResource(R.string.garage_blocks_repair)) }
     }
 }
 

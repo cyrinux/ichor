@@ -9,13 +9,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -108,7 +108,7 @@ fun GitCompareSheet(
                     }
                     if (found.files.any { it.patch }) {
                         MutedText(stringResource(R.string.talos_git_order))
-                        Button(
+                        IchorButton(
                             onClick = {
                                 compare = UiState.Loading
                                 scope.launch {
@@ -163,12 +163,12 @@ private fun CompareResult(result: TalosRepoCompare, onEditDraft: (String) -> Uni
     if (result.needsReboot) StatusPill(stringResource(R.string.talos_git_reboot), colors.warn)
     var expanded by remember { mutableStateOf(true) }
     result.diff.resources.forEach { r -> DiffResourceCard(r, expanded = expanded) { expanded = !expanded } }
-    OutlinedButton(onClick = { onEditDraft(result.draft) }, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { onEditDraft(result.draft) }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.talos_git_edit_from_diff))
     }
     MutedText(stringResource(R.string.talos_git_edit_from_diff_desc))
     onProposeLive?.let { propose ->
-        OutlinedButton(onClick = { propose(result.draft) }, modifier = Modifier.fillMaxWidth()) {
+        IchorOutlinedButton(onClick = { propose(result.draft) }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.talos_writeback_live))
         }
         MutedText(stringResource(R.string.talos_writeback_live_desc))

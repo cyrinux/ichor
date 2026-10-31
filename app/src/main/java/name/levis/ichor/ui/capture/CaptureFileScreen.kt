@@ -12,12 +12,12 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -114,10 +114,10 @@ fun CaptureFileScreen(
     val save = rememberSaveCapture { message -> scope.launch { snackbar.showSnackbar(message.resolve(context)) } }
     val file = vm.file
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.captures_title))
@@ -220,7 +220,7 @@ private fun LoadMore(state: PcapView, onLoad: () -> Unit) {
         if (state.loading) {
             CircularProgressIndicator()
         } else {
-            OutlinedButton(onClick = onLoad) { Text(stringResource(R.string.captures_load_more, PCAP_PAGE_SIZE)) }
+            IchorOutlinedButton(onClick = onLoad) { Text(stringResource(R.string.captures_load_more, PCAP_PAGE_SIZE)) }
         }
     }
 }

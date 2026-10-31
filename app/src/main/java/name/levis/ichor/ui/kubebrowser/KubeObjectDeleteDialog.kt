@@ -9,13 +9,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +63,7 @@ fun KubeObjectDeleteDialog(
     val enabled = typedOk && !delete.deleting && denial == null
     val colors = LocalStatusColors.current
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (!delete.deleting) onDismiss() },
         title = { Text(stringResource(R.string.kb_delete_title, ref.name)) },
         text = {
@@ -75,7 +75,7 @@ fun KubeObjectDeleteDialog(
                     }
                     is UiState.Failed -> {
                         ErrorCard(p.message.asString())
-                        TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                        IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                     }
                     is UiState.Loaded -> DeletePreviewContent(p.data, delete.propagation, onPropagation)
                 }
@@ -96,7 +96,7 @@ fun KubeObjectDeleteDialog(
         confirmButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (delete.deleting) CircularProgressIndicator(Modifier.padding(end = 8.dp))
-                TextButton(onClick = { onConfirm(preview?.isProtected == true) }, enabled = enabled) {
+                IchorTextButton(onClick = { onConfirm(preview?.isProtected == true) }, enabled = enabled) {
                     Text(
                         stringResource(if (preview?.isProtected == true) R.string.kb_delete_anyway else R.string.kb_delete),
                         color = if (enabled) colors.bad else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -104,7 +104,7 @@ fun KubeObjectDeleteDialog(
                 }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !delete.deleting) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss, enabled = !delete.deleting) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

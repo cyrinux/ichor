@@ -12,15 +12,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -280,15 +280,15 @@ fun KubeHomeScreen(
         KubeHomeCard.ALERTS.takeIf { alerts is UiState.Loaded && alertsShown == null },
     )
 
-    Scaffold(
+    IchorScaffold(
         modifier = Modifier.testTag(SMOKE_KUBE_HOME),
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
         topBar = {
-            if (customizing) TopAppBar(
+            if (customizing) IchorTopAppBar(
                 title = { Text(stringResource(R.string.kube_home_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
+                actions = { IchorTextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else IchorTopAppBar(
                 modifier = Modifier.clusterSwipe(config, app::selectCluster),
                 title = {
                     Box {
@@ -441,7 +441,7 @@ private fun KubeHomeList(
     ) {
         if (offerAlerts) item(key = "alerts-offer") { AlertsOfferCard() }
         if (cluster?.demo == true) item(key = "demo") {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -497,7 +497,7 @@ private fun KubeHomeList(
             }
         }
         if (layout.visible.isEmpty()) item(key = "all-hidden") {
-            Card(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
+            IchorCard(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
                 MutedText(stringResource(R.string.overview_edit_all_hidden), modifier = Modifier.padding(16.dp))
             }
         }

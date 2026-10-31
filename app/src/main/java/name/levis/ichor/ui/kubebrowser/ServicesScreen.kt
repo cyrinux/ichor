@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -77,7 +77,7 @@ fun ServicesScreen(
             if (loaded?.partialAccess == true) MutedText(stringResource(R.string.kube_services_partial), modifier = notes)
             if (loaded?.anyPending == true) {
                 MutedText(stringResource(lbHint(loaded.lbController)), modifier = notes)
-                TextButton(onClick = onLoadBalancing, modifier = Modifier.padding(horizontal = 4.dp)) {
+                IchorTextButton(onClick = onLoadBalancing, modifier = Modifier.padding(horizontal = 4.dp)) {
                     Text(stringResource(R.string.lb_open))
                 }
             }
@@ -141,13 +141,13 @@ private fun ServiceRowItem(svc: ServiceRow, onClick: () -> Unit, onObject: (Kube
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 svc.routes.forEach { route ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        AssistChip(
+                        IchorAssistChip(
                             onClick = { runCatching { uriHandler.openUri(route.url) } },
                             label = { Text(route.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         )
                         RouteCertBadge(route)
                         route.objectRef?.let { ref ->
-                            IconButton(onClick = { onObject(ref) }, modifier = Modifier.size(32.dp)) {
+                            IchorIconButton(onClick = { onObject(ref) }, modifier = Modifier.size(32.dp)) {
                                 Icon(
                                     Icons.Outlined.Info,
                                     contentDescription = stringResource(R.string.apps_detail_routes_object),

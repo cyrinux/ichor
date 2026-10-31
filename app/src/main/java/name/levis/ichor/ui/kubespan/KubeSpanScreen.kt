@@ -19,13 +19,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -97,10 +97,10 @@ fun KubeSpanScreen(
     // The peer whose sheet is open: node address and public key.
     var opened by remember { mutableStateOf<Pair<KubeSpanNode, KubeSpanPeer>?>(null) }
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(if (tab == MAP_TAB) mapState else state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text("KubeSpan") },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -173,7 +173,7 @@ private fun Summary(nodes: List<KubeSpanNode>) {
 @Composable
 private fun NodeCard(node: KubeSpanNode, hostname: String, siderolink: SiderolinkDiag?, onPeer: (KubeSpanPeer) -> Unit) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

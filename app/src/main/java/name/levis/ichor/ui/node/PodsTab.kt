@@ -18,10 +18,10 @@ import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -126,12 +126,12 @@ fun PodsTab(
             SearchField(filter, { filter = it }, stringResource(R.string.node_pods_filter), Modifier.fillMaxWidth())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.node_processes_sort), style = MaterialTheme.typography.labelMedium)
-                FilterChip(
+                IchorFilterChip(
                     selected = sort == ContainerSort.CPU,
                     onClick = { sort = ContainerSort.CPU },
                     label = { Text(stringResource(R.string.node_processes_sort_cpu)) },
                 )
-                FilterChip(
+                IchorFilterChip(
                     selected = sort == ContainerSort.MEMORY,
                     onClick = { sort = ContainerSort.MEMORY },
                     label = { Text(stringResource(R.string.node_processes_sort_memory)) },
@@ -224,7 +224,7 @@ private fun ContainerItem(
         ContainerDetails(row, Modifier.weight(1f), muted, warn)
         if (onRestart != null) {
             Box {
-                IconButton(onClick = { menuOpen = true }) {
+                IchorIconButton(onClick = { menuOpen = true }) {
                     Icon(Icons.Outlined.MoreVert, stringResource(R.string.container_actions))
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {

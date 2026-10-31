@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,7 +69,7 @@ fun KubeEventRows(events: List<KubeEvent>, showObject: Boolean, now: Long, key: 
     if (events.isEmpty()) MutedText(stringResource(R.string.kube_events_empty))
     (if (all) events else events.take(EVENTS_PREVIEW)).forEach { EventRow(it, now, showObject) }
     if (events.size > EVENTS_PREVIEW) {
-        TextButton(onClick = { all = !all }) {
+        IchorTextButton(onClick = { all = !all }) {
             Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, events.size.toString()))
         }
     }

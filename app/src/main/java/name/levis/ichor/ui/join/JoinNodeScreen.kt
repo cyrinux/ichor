@@ -14,15 +14,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,7 +96,7 @@ class JoinNodeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewMo
 /** Step 0: no machine in maintenance mode yet; opens the booter command, ISO and iPXE link. */
 @Composable
 private fun BootMachineCard(onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
@@ -130,9 +130,9 @@ fun JoinNodeScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val address by vm.address.collectAsStateWithLifecycle()
     val inspection by vm.inspection.collectAsStateWithLifecycle()
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { ClusterScreenTitle(stringResource(R.string.join_node_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -179,7 +179,7 @@ private fun AddressField(address: String, onAddress: (String) -> Unit, onInspect
             keyboardActions = KeyboardActions(onGo = { onInspect() }),
             modifier = Modifier.weight(1f),
         )
-        Button(onClick = onInspect, enabled = !busy && joinAddress(address).isNotEmpty()) {
+        IchorButton(onClick = onInspect, enabled = !busy && joinAddress(address).isNotEmpty()) {
             Text(stringResource(R.string.join_node_inspect))
         }
     }
@@ -189,7 +189,7 @@ private fun AddressField(address: String, onAddress: (String) -> Unit, onInspect
 private fun InspectionView(node: MaintenanceInspection) {
     val colors = LocalStatusColors.current
     if (!node.maintenance) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 StatusPill(stringResource(R.string.join_node_installed_pill), colors.warn)
                 Text(stringResource(R.string.join_node_installed, node.address), style = MaterialTheme.typography.bodyMedium)
@@ -197,7 +197,7 @@ private fun InspectionView(node: MaintenanceInspection) {
         }
         return
     }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(node.address, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
@@ -221,7 +221,7 @@ private fun InspectionView(node: MaintenanceInspection) {
 /** A card with a title, the section's error if it failed, "none" when empty, else [content]. */
 @Composable
 private fun Section(title: String, error: String?, empty: Boolean, content: @Composable () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionTitle(title)
             when {

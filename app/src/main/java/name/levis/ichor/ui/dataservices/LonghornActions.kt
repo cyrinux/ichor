@@ -9,14 +9,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -233,7 +233,7 @@ private val LonghornAction.menuLabel: Int
 @Composable
 fun ReplicaCountDialog(label: String, current: Int, choices: IntRange, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
     var count by remember { mutableIntStateOf(current.coerceIn(choices)) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.longhorn_replicas_title, label)) },
         text = {
@@ -249,8 +249,8 @@ fun ReplicaCountDialog(label: String, current: Int, choices: IntRange, onConfirm
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(count) }, enabled = count != current) { Text(stringResource(R.string.longhorn_replicas_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onConfirm(count) }, enabled = count != current) { Text(stringResource(R.string.longhorn_replicas_confirm)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

@@ -17,15 +17,15 @@ import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -173,10 +173,10 @@ private fun SyncFooter(destructive: List<KubeDiffResource>, onDryRun: () -> Unit
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onDryRun, modifier = Modifier.weight(1f)) {
+            IchorOutlinedButton(onClick = onDryRun, modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.argo_sync_confirm_dry_run))
             }
-            Button(onClick = onSync, modifier = Modifier.weight(1f)) {
+            IchorButton(onClick = onSync, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.argo_sync_confirm), modifier = Modifier.padding(start = 8.dp))
             }
@@ -191,7 +191,7 @@ private fun Toggle(title: String, description: String, checked: Boolean, onChang
             Text(title, style = MaterialTheme.typography.bodyLarge)
             MutedText(description)
         }
-        Switch(checked = checked, onCheckedChange = onChange)
+        IchorSwitch(checked = checked, onCheckedChange = onChange)
     }
 }
 

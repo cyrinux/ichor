@@ -12,12 +12,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -89,9 +89,9 @@ fun CrossplaneScreen(
     val busy by vm.actions.busy.collectAsStateWithLifecycle()
     CrossplaneActionToasts(vm.actions.results)
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.crossplane_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
@@ -146,7 +146,7 @@ private fun CrossplaneList(
                 SearchField(query, onQuery, stringResource(R.string.crossplane_search), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(horizontal = 16.dp)) {
                     CrossplaneFilter.entries.forEach { f ->
-                        FilterChip(selected = filter == f, onClick = { onFilter(f) }, label = { Text(filterLabel(f)) })
+                        IchorFilterChip(selected = filter == f, onClick = { onFilter(f) }, label = { Text(filterLabel(f)) })
                     }
                 }
                 HorizontalDivider(Modifier.padding(top = 8.dp))

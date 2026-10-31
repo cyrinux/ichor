@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +72,7 @@ internal fun PodPullLine(pod: KubePod, links: PodPullLinks?) {
 @Composable
 private fun PullProblemDialog(pod: KubePod, pull: PullProblem, title: String, links: PodPullLinks?, onDismiss: () -> Unit) {
     val node = links?.let { pod.node.takeIf { n -> n.isNotEmpty() }?.let(it.talosNode) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.pod_pull_message_title)) },
         text = {
@@ -88,18 +88,18 @@ private fun PullProblemDialog(pod: KubePod, pull: PullProblem, title: String, li
                 if (links != null && node != null) PullLinks(pull, node, links, onDismiss)
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) } },
     )
 }
 
 @Composable
 private fun PullLinks(pull: PullProblem, node: NodeOverview, links: PodPullLinks, onDismiss: () -> Unit) {
     when (pull.pullKind) {
-        PullKind.RATE_LIMITED -> TextButton(onClick = {
+        PullKind.RATE_LIMITED -> IchorTextButton(onClick = {
             onDismiss()
             links.onMirrorSnippet(node, pull.registry)
         }) { Text(stringResource(R.string.pod_pull_open_mirror_snippet)) }
-        PullKind.NETWORK -> TextButton(onClick = {
+        PullKind.NETWORK -> IchorTextButton(onClick = {
             onDismiss()
             links.onNetTools(node)
         }) { Text(stringResource(R.string.pod_pull_open_net_tools, node.hostname.ifEmpty { node.node })) }

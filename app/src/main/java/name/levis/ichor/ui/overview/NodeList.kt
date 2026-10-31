@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -183,7 +183,7 @@ internal fun NodeList(
         if (offerAlerts) item(key = "alerts-offer", fullLine = true) { AlertsOfferCard() }
         outage?.let { item(fullLine = true) { LastKnownBanner(it, onRetry) } }
         if (certificate?.isDemo == true) item(fullLine = true) {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -235,7 +235,7 @@ internal fun NodeList(
             }
         }
         if (layout.visible.none(shows)) item(key = "all-hidden", fullLine = true) {
-            Card(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
+            IchorCard(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
                 MutedText(stringResource(R.string.overview_edit_all_hidden), modifier = Modifier.padding(16.dp))
             }
         }

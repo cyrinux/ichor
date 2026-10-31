@@ -5,7 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,7 +18,7 @@ import name.levis.ichor.R
 /** The cluster sheet's first row: "All clusters", the fleet view of every cluster's last check. */
 @Composable
 fun AllClustersRow(onClick: () -> Unit) {
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(stringResource(R.string.fleet_title), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = { Text(stringResource(R.string.fleet_row_hint)) },
         leadingContent = { Icon(Icons.Outlined.ViewAgenda, contentDescription = null) },

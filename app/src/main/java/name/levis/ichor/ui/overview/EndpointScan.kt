@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -130,7 +130,7 @@ fun EndpointScanDialog(
         onDismiss()
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = close,
         title = { Text(stringResource(R.string.endpoint_scan_title)) },
         text = {
@@ -149,12 +149,12 @@ fun EndpointScanDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = close) { Text(stringResource(R.string.common_ok)) } },
+        confirmButton = { IchorTextButton(onClick = close) { Text(stringResource(R.string.common_ok)) } },
         dismissButton = {
             val s = state
             val nothing = s is EndpointScanState.Failed || (s is EndpointScanState.Done && s.matches.isEmpty())
             if (nothing && onEditEndpoints != null) {
-                TextButton(onClick = {
+                IchorTextButton(onClick = {
                     close()
                     onEditEndpoints()
                 }) { Text(stringResource(R.string.endpoints_edit)) }

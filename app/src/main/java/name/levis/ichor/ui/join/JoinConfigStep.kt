@@ -13,9 +13,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -129,7 +129,7 @@ fun JoinConfigStep(vm: JoinConfigViewModel, disks: List<String>) {
             TemplatePicker(joinTemplates(nodes), form.template) { vm.pick(it, nodes) }
             if (form.template.isNotBlank()) {
                 ConfigFields(form, disks, vm)
-                Button(onClick = vm::generate, enabled = form.complete && preview != UiState.Loading, modifier = Modifier.fillMaxWidth()) {
+                IchorButton(onClick = vm::generate, enabled = form.complete && preview != UiState.Loading, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.join_config_preview))
                 }
             }
@@ -153,7 +153,7 @@ internal fun TemplatePicker(templates: List<NodeOverview>, selected: String, onP
     Text(stringResource(R.string.join_config_template), style = MaterialTheme.typography.labelLarge)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         templates.forEach { node ->
-            FilterChip(
+            IchorFilterChip(
                 selected = node.node == selected,
                 onClick = { onPick(node) },
                 label = { Text("${node.hostname.ifBlank { node.node }} · ${roleLabel(joinRole(node.role))}") },
@@ -186,7 +186,7 @@ internal fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinCon
     if (disks.isNotEmpty()) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             disks.forEach { disk ->
-                FilterChip(selected = disk == form.disk, onClick = { vm.disk(disk) }, label = { Text(disk, fontFamily = FontFamily.Monospace) })
+                IchorFilterChip(selected = disk == form.disk, onClick = { vm.disk(disk) }, label = { Text(disk, fontFamily = FontFamily.Monospace) })
             }
         }
     }
@@ -209,7 +209,7 @@ private fun AddressField(form: JoinConfigForm, vm: JoinConfigViewModel) {
 
 @Composable
 private fun PreviewCard(preview: JoinConfigPreview) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.join_config_valid, preview.hostname, formatBytes(preview.size.toLong())), style = MaterialTheme.typography.titleSmall)
             preview.warnings.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }

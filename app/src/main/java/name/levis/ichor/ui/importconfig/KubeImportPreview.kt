@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,7 +75,7 @@ internal fun KubePreviewCard(
         }
         // A token context: a dedicated ServiceAccount's beats an admin's.
         if (rows.any { it.context.auth == KUBE_AUTH_TOKEN }) {
-            TextButton(onClick = { serviceAccountHelp = true }) { Text(stringResource(R.string.sa_help_title)) }
+            IchorTextButton(onClick = { serviceAccountHelp = true }) { Text(stringResource(R.string.sa_help_title)) }
         }
         if (rows.none { it.importable }) {
             Text(stringResource(R.string.import_kube_none_importable), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)
@@ -91,8 +91,8 @@ internal fun KubePreviewCard(
         preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
         MutedText(stringResource(R.string.import_stored_encrypted))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-            Button(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
+            IchorOutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
+            IchorButton(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.import_import))
             }
         }
@@ -112,7 +112,7 @@ private fun KubeContextRow(
     val ctx = row.context
     // EKS and GKE name contexts by ARN or gke_project_location_name: show the cluster's name.
     val cloud = parseCloudContext(ctx.name)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = row.included, onCheckedChange = onInclude, enabled = row.importable)

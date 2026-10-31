@@ -26,7 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -173,7 +173,7 @@ private fun FilterRow(apps: List<InventoryApp>, categories: List<Pair<String, In
 
 @Composable
 private fun CountChip(label: String, count: Int, selected: Boolean, leading: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
-    FilterChip(
+    IchorFilterChip(
         selected = selected,
         onClick = onClick,
         leadingIcon = leading,

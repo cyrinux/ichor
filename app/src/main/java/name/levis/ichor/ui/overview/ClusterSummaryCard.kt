@@ -13,13 +13,13 @@ import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -79,7 +79,7 @@ fun ClusterSummaryCard(
     modifier: Modifier = Modifier,
 ) {
     val troubles = troubles(summary)
-    Card(modifier = modifier.fillMaxWidth()) {
+    IchorCard(modifier = modifier.fillMaxWidth()) {
         // A fixed box, so the name does not shift once the logo has loaded.
         SummaryIdentityBand(name, leading = context?.let { { BundledLogo(clusterLogo(it), Modifier.padding(end = 8.dp).size(24.dp)) } })
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)) {
@@ -123,7 +123,7 @@ private fun Footer(onInsights: () -> Unit, onCapacity: () -> Unit) {
 
 @Composable
 internal fun SummaryFooterButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    TextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
+    IchorTextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(label, modifier = Modifier.padding(start = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }

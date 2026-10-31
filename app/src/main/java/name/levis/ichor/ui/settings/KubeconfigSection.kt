@@ -9,14 +9,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -102,13 +102,13 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
     }
 
     SectionTitle(stringResource(R.string.settings_kube_section))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // A cluster added from a kubeconfig exports that kubeconfig, not one Talos issues.
             MutedText(stringResource(if (talosContext.isKube) R.string.settings_kube_desc_imported else R.string.settings_kube_desc))
             if (!talosContext.allows(Feature.KUBECONFIG)) {
                 RoleNotice(Feature.KUBECONFIG, talosContext.roles)
-            } else OutlinedButton(
+            } else IchorOutlinedButton(
                 onClick = ::export,
                 enabled = state != ExportState.Working,
                 modifier = Modifier.fillMaxWidth(),
@@ -131,7 +131,7 @@ private fun ImageScannerSetting() {
     val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
     val selected by prefs.imageScanner.collectAsStateWithLifecycle()
 
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.settings_image_scanner), style = MaterialTheme.typography.titleMedium)
             MutedText(stringResource(R.string.settings_image_scanner_desc))
@@ -175,14 +175,14 @@ private fun NodeDebugShellSetting(appLock: AppLock) {
         }
     }
 
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.settings_node_debug_shell), style = MaterialTheme.typography.titleMedium)
                     MutedText(stringResource(R.string.settings_node_debug_shell_desc))
                 }
-                Switch(checked = enabled, onCheckedChange = ::set, modifier = Modifier.padding(start = 12.dp))
+                IchorSwitch(checked = enabled, onCheckedChange = ::set, modifier = Modifier.padding(start = 12.dp))
             }
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
         }

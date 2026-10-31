@@ -10,20 +10,20 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +57,7 @@ fun AiSection(app: TalosApp) {
     val settings by prefs.settings.collectAsStateWithLifecycle()
 
     SectionTitle(stringResource(R.string.ai_title))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SwitchRow(
                 title = stringResource(R.string.ai_title),
@@ -85,7 +85,7 @@ private fun SwitchRow(title: String, description: String, checked: Boolean, onCh
             Text(title, style = MaterialTheme.typography.titleMedium)
             MutedText(description)
         }
-        Switch(checked = checked, onCheckedChange = onChange, modifier = Modifier.padding(start = 12.dp))
+        IchorSwitch(checked = checked, onCheckedChange = onChange, modifier = Modifier.padding(start = 12.dp))
     }
 }
 
@@ -126,7 +126,7 @@ private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
         visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
         trailingIcon = {
-            IconButton(onClick = { keyVisible = !keyVisible }) {
+            IchorIconButton(onClick = { keyVisible = !keyVisible }) {
                 Icon(
                     if (keyVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = stringResource(if (keyVisible) R.string.ai_api_key_hide else R.string.ai_api_key_show),
@@ -135,7 +135,7 @@ private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
         },
         modifier = Modifier.fillMaxWidth(),
     )
-    TextButton(onClick = { uriHandler.openUri(provider.keyUrl) }) { Text(stringResource(R.string.ai_get_key)) }
+    IchorTextButton(onClick = { uriHandler.openUri(provider.keyUrl) }) { Text(stringResource(R.string.ai_get_key)) }
     ModelField(app, settings, provider, apiKey)
     OutlinedTextField(
         value = settings.baseUrl,
@@ -168,7 +168,7 @@ private fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider
         modifier = Modifier.fillMaxWidth(),
     )
     Box {
-        TextButton(
+        IchorTextButton(
             enabled = !loading,
             onClick = {
                 loading = true

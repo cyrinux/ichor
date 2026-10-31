@@ -19,26 +19,26 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Commit
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -228,10 +228,10 @@ fun MachineConfigScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(
@@ -300,8 +300,8 @@ fun MachineConfigScreen(
                     Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    OutlinedButton(onClick = ::back, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.machine_config_discard)) }
-                    Button(onClick = vm::review, enabled = editor.canReview, modifier = Modifier.weight(1f)) {
+                    IchorOutlinedButton(onClick = ::back, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.machine_config_discard)) }
+                    IchorButton(onClick = vm::review, enabled = editor.canReview, modifier = Modifier.weight(1f)) {
                         Text(stringResource(R.string.machine_config_review))
                     }
                 }
@@ -339,7 +339,7 @@ fun MachineConfigScreen(
                                 Text(stringResource(R.string.machine_config_reveal), style = MaterialTheme.typography.titleSmall)
                                 MutedText(stringResource(R.string.machine_config_reveal_desc))
                             }
-                            Switch(checked = revealed, onCheckedChange = ::toggleReveal)
+                            IchorSwitch(checked = revealed, onCheckedChange = ::toggleReveal)
                         }
                         if (revealed) RevealedBanner()
                     }
@@ -569,7 +569,7 @@ private fun ViewPicker(selected: ConfigView, withMeta: Boolean, onSelect: (Confi
 @Composable
 private fun RevealedBanner() {
     val bad = LocalStatusColors.current.bad
-    Card(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
         Text(
             stringResource(R.string.machine_config_revealed_warning),
             color = bad,

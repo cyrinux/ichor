@@ -2,9 +2,9 @@ package name.levis.ichor.ui.backup
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,10 +39,10 @@ fun BackupSection(hasConfig: Boolean, vm: BackupViewModel = backupViewModel()) {
     val backup = rememberBackupAction(vm)
 
     MutedText(stringResource(R.string.backup_desc))
-    OutlinedButton(onClick = backup, enabled = hasConfig && !busy, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = backup, enabled = hasConfig && !busy, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.backup_create))
     }
-    OutlinedButton(onClick = { confirmRestore = true }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+    IchorOutlinedButton(onClick = { confirmRestore = true }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.backup_restore))
     }
     BackupStatus(state)
@@ -97,7 +97,7 @@ fun RestoreBackupButton(onRestored: () -> Unit, vm: BackupViewModel = backupView
     val state by vm.state.collectAsStateWithLifecycle()
     val pickBackup = BackupFlow(vm, onRestored)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        TextButton(onClick = pickBackup, enabled = state != BackupState.Restoring) { Text(stringResource(R.string.backup_restore)) }
+        IchorTextButton(onClick = pickBackup, enabled = state != BackupState.Restoring) { Text(stringResource(R.string.backup_restore)) }
         if (state is BackupState.Failed) BackupStatus(state)
     }
 }

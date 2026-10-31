@@ -10,11 +10,11 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,9 +72,9 @@ fun RunbooksScreen(onBack: () -> Unit, onOpen: (id: String) -> Unit) {
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.runbooks_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -126,7 +126,7 @@ fun RunbooksScreen(onBack: () -> Unit, onOpen: (id: String) -> Unit) {
 
 @Composable
 private fun RunbookRow(item: RunbookItem, modifier: Modifier) {
-    ListItem(
+    IchorListItem(
         modifier = modifier,
         headlineContent = { Text(item.name) },
         supportingContent = {

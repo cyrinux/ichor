@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.VpnLock
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -58,11 +58,11 @@ fun VpnRequiredBox(onRetry: () -> Unit, modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = {
+            IchorButton(onClick = {
                 runCatching { context.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)) }
                     .onFailure { if (it !is ActivityNotFoundException) throw it }
             }) { Text(stringResource(R.string.common_vpn_settings)) }
-            OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            IchorOutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
         }
     }
 }

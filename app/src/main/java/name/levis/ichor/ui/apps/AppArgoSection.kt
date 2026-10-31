@@ -19,7 +19,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -170,7 +170,7 @@ private fun ArgoAppCard(app: ArgoApp, busy: Boolean, onSync: () -> Unit, onRefre
                     Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_sync), modifier = Modifier.padding(start = 6.dp))
                 }
-                OutlinedButton(onClick = onRefresh, enabled = !busy) {
+                IchorOutlinedButton(onClick = onRefresh, enabled = !busy) {
                     Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_refresh), modifier = Modifier.padding(start = 6.dp))
                 }

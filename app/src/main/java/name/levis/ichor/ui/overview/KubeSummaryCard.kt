@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,7 +68,7 @@ internal fun KubeSummaryCard(
 ) {
     val listed = nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() }
     val summary = remember(listed, top) { listed?.clusterSummary(top) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         SummaryIdentityBand(name, leading = { BundledLogo(clusterLogo(cluster), Modifier.padding(end = 8.dp).size(24.dp)) })
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

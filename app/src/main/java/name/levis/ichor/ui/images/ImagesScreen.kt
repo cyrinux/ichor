@@ -14,12 +14,12 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -114,10 +114,10 @@ fun ImagesScreen(
     }
     if (pullShown) ImagePullSheet(pulls, onDismiss = { pullShown = false })
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.images_title))
@@ -203,7 +203,7 @@ private fun systemImagesUi(node: String, vm: SystemImagesViewModel, onOpen: (Ima
 
 @Composable
 private fun SortChip(value: ImageSort, current: ImageSort, label: Int, onSelect: (ImageSort) -> Unit) {
-    FilterChip(selected = current == value, onClick = { onSelect(value) }, label = { Text(stringResource(label)) })
+    IchorFilterChip(selected = current == value, onClick = { onSelect(value) }, label = { Text(stringResource(label)) })
 }
 
 @Composable

@@ -18,12 +18,12 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Widgets
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -116,7 +116,7 @@ fun AlertSheet(
                     LinkButton(Icons.Outlined.Dns, stringResource(R.string.alerts_open_node, node)) { links.onNode(node) }
                 }
             }
-            Button(onClick = onSilence, enabled = silenceDenial == null, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            IchorButton(onClick = onSilence, enabled = silenceDenial == null, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 Icon(Icons.Outlined.NotificationsOff, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.alerts_silence), modifier = Modifier.padding(start = 8.dp))
             }
@@ -141,7 +141,7 @@ fun AlertSheet(
 
 @Composable
 private fun LinkButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick) {
+    IchorOutlinedButton(onClick = onClick) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(label, modifier = Modifier.padding(start = 6.dp))
     }

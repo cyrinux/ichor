@@ -8,15 +8,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -115,9 +115,9 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     val silenceDenial = rememberProxyDenial(source, "create")
     val expireDenial = rememberProxyDenial(source, "delete")
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.alerts_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -231,8 +231,8 @@ private fun NoSource(state: AlertsState, modifier: Modifier, onSetUp: () -> Unit
         }
         Text(stringResource(R.string.alerts_none_found), style = MaterialTheme.typography.titleMedium)
         MutedText(state.discoveryError ?: state.error ?: stringResource(R.string.alerts_none_found_hint))
-        Button(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
-        TextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
+        IchorButton(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
+        IchorTextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
     }
 }
 

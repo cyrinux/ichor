@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -90,7 +90,7 @@ fun FluxResourceGroup(kind: String, resources: List<FluxResource>, onRestart: ((
                     if (r.namespace.isNotEmpty()) Text(r.namespace, style = MaterialTheme.typography.labelSmall, color = muted)
                 }
                 if (onRestart != null && r.restartable) {
-                    IconButton(onClick = { onRestart(r) }, enabled = rememberKubeDenial(KubeAction.restart(r.kind), r.namespace) == null) {
+                    IchorIconButton(onClick = { onRestart(r) }, enabled = rememberKubeDenial(KubeAction.restart(r.kind), r.namespace) == null) {
                         Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.workloads_restart_confirm), tint = muted, modifier = Modifier.size(18.dp))
                     }
                 }

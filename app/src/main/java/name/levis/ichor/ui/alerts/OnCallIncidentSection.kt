@@ -3,11 +3,11 @@ package name.levis.ichor.ui.alerts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,25 +61,25 @@ fun OnCallIncidentSection(incident: OnCallIncident, confidence: String, busy: Bo
     if (confidence != OnCallConfidence.EXACT) MutedText(stringResource(R.string.oncall_match_by_name))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (incident.status == OnCallStatus.TRIGGERED) {
-            Button(onClick = { onAct(OnCallVerb.ACKNOWLEDGE) }, enabled = !busy) { Text(stringResource(R.string.oncall_acknowledge)) }
+            IchorButton(onClick = { onAct(OnCallVerb.ACKNOWLEDGE) }, enabled = !busy) { Text(stringResource(R.string.oncall_acknowledge)) }
         }
-        OutlinedButton(onClick = { confirmResolve = true }, enabled = !busy) { Text(stringResource(R.string.oncall_resolve)) }
+        IchorOutlinedButton(onClick = { confirmResolve = true }, enabled = !busy) { Text(stringResource(R.string.oncall_resolve)) }
         if (incident.url.isNotEmpty()) {
-            OutlinedButton(onClick = { runCatching { uri.openUri(incident.url) } }) { Text(stringResource(R.string.oncall_open)) }
+            IchorOutlinedButton(onClick = { runCatching { uri.openUri(incident.url) } }) { Text(stringResource(R.string.oncall_open)) }
         }
     }
     if (confirmResolve) {
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { confirmResolve = false },
             title = { Text(stringResource(R.string.oncall_resolve_title)) },
             text = { Text(stringResource(R.string.oncall_resolve_body, incident.number.toString())) },
             confirmButton = {
-                TextButton(onClick = {
+                IchorTextButton(onClick = {
                     confirmResolve = false
                     onAct(OnCallVerb.RESOLVE)
                 }) { Text(stringResource(R.string.oncall_resolve)) }
             },
-            dismissButton = { TextButton(onClick = { confirmResolve = false }) { Text(stringResource(R.string.common_cancel)) } },
+            dismissButton = { IchorTextButton(onClick = { confirmResolve = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }

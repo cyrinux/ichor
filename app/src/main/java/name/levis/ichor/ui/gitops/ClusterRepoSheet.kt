@@ -10,15 +10,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -130,7 +130,7 @@ fun ClusterRepoSheet(app: TalosApp, fingerprint: String, label: String, onDismis
             )
             if (host.isNotEmpty() && !hostListed) {
                 Text(stringResource(R.string.repo_no_git_host, host), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)
-                onGitHosts?.let { TextButton(onClick = it) { Text(stringResource(R.string.repo_open_git_hosts)) } }
+                onGitHosts?.let { IchorTextButton(onClick = it) { Text(stringResource(R.string.repo_open_git_hosts)) } }
             }
             OutlinedTextField(
                 value = branch,
@@ -160,7 +160,7 @@ fun ClusterRepoSheet(app: TalosApp, fingerprint: String, label: String, onDismis
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = { repo?.let(::runCheck) }, enabled = repo != null && check != RepoCheck.Running) {
+                IchorOutlinedButton(onClick = { repo?.let(::runCheck) }, enabled = repo != null && check != RepoCheck.Running) {
                     Text(stringResource(if (check == RepoCheck.Running) R.string.git_host_checking else R.string.git_host_check))
                 }
                 if (check == RepoCheck.Running) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -171,13 +171,13 @@ fun ClusterRepoSheet(app: TalosApp, fingerprint: String, label: String, onDismis
             MutedText(stringResource(R.string.repo_edits_are_proposals))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 if (saved != null) {
-                    TextButton(onClick = {
+                    IchorTextButton(onClick = {
                         app.clusterRepos.set(fingerprint, null)
                         onDismiss()
                     }) { Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error) }
                 }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-                Button(
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                IchorButton(
                     onClick = {
                         app.clusterRepos.set(fingerprint, repo)
                         onDismiss()

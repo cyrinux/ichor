@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,7 +60,7 @@ fun SinceLastLookedCard(fingerprint: String) {
     }
     val shown = since ?: return
     val lines = sinceLines(shown) { key, from, to -> app.alertMutes.during(fingerprint, key, from, to) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.history_since_title), style = MaterialTheme.typography.titleSmall)
             lines.take(SINCE_MAX_LINES).forEach { line ->
@@ -72,7 +72,7 @@ fun SinceLastLookedCard(fingerprint: String) {
             }
             if (lines.size > SINCE_MAX_LINES) MutedText(stringResource(R.string.history_since_more, lines.size - SINCE_MAX_LINES))
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = {
+                IchorTextButton(onClick = {
                     app.lastLooked.mark(fingerprint, System.currentTimeMillis())
                     since = null
                 }) { Text(stringResource(R.string.history_since_dismiss)) }

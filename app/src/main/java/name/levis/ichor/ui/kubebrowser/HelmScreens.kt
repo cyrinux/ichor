@@ -18,10 +18,10 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -171,9 +171,9 @@ fun HelmReleaseScreen(
         ReleaseTab.SUMMARY -> null
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(name, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -248,7 +248,7 @@ private fun RevisionRow(r: HelmRevision, now: Long, enabled: Boolean, onRollback
             ToneLabel(r.status, statusColor(r.status))
             MutedText(stringResource(R.string.kube_events_ago, ageSince(r.updated * 1000, now)), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (onRollback != null) {
-                TextButton(onClick = onRollback, enabled = enabled, contentPadding = PaddingValues(horizontal = 8.dp), modifier = Modifier.heightIn(min = 32.dp)) {
+                IchorTextButton(onClick = onRollback, enabled = enabled, contentPadding = PaddingValues(horizontal = 8.dp), modifier = Modifier.heightIn(min = 32.dp)) {
                     Text(stringResource(R.string.helm_rollback_action), style = MaterialTheme.typography.labelMedium)
                 }
             }

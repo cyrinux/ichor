@@ -17,14 +17,14 @@ import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -101,9 +101,9 @@ fun ActivityScreen(
     val entries = (state as? UiState.Loaded)?.data.orEmpty()
     val shareTitle = stringResource(R.string.activity_share)
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.activity_title))
@@ -168,7 +168,7 @@ private fun ActivityList(entries: List<ActivityEntry>, showCluster: Boolean, mod
                 Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                FilterChip(
+                IchorFilterChip(
                     selected = filter == ActivityFilter(),
                     onClick = {
                         clusterFilter = null
@@ -177,17 +177,17 @@ private fun ActivityList(entries: List<ActivityEntry>, showCluster: Boolean, mod
                     },
                     label = { Text(stringResource(R.string.activity_filter_all)) },
                 )
-                FilterChip(selected = failedOnly, onClick = { failedOnly = !failedOnly }, label = { Text(stringResource(R.string.activity_filter_failed)) })
+                IchorFilterChip(selected = failedOnly, onClick = { failedOnly = !failedOnly }, label = { Text(stringResource(R.string.activity_filter_failed)) })
                 // Only a choice when there is more than one.
                 if (clusters.size > 1) {
                     clusters.forEach { c ->
-                        FilterChip(selected = clusterFilter == c, onClick = { clusterFilter = c.takeIf { clusterFilter != c } }, label = { Text(c) })
+                        IchorFilterChip(selected = clusterFilter == c, onClick = { clusterFilter = c.takeIf { clusterFilter != c } }, label = { Text(c) })
                     }
                 }
                 if (actions.size > 1) {
                     actions.forEach { a ->
                         val label = ActivityEntry(action = a).actionLabel
-                        FilterChip(selected = actionFilter == a, onClick = { actionFilter = a.takeIf { actionFilter != a } }, label = { Text(label) })
+                        IchorFilterChip(selected = actionFilter == a, onClick = { actionFilter = a.takeIf { actionFilter != a } }, label = { Text(label) })
                     }
                 }
             }
@@ -209,7 +209,7 @@ private fun ActivityList(entries: List<ActivityEntry>, showCluster: Boolean, mod
 @Composable
 private fun ActivityRow(entry: ActivityEntry, showCluster: Boolean) {
     val status = LocalStatusColors.current
-    ListItem(
+    IchorListItem(
         leadingContent = {
             if (entry.failed) {
                 Icon(Icons.Outlined.ErrorOutline, stringResource(R.string.activity_filter_failed), tint = status.bad)

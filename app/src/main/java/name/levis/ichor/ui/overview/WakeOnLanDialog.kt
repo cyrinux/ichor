@@ -21,12 +21,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -80,7 +80,7 @@ fun WakeOnLanDialog(
         if (saved == null && mac.isBlank()) links.singleOrNull()?.let { mac = it.mac }
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.wol_title, node.hostname)) },
         text = {
@@ -104,7 +104,7 @@ fun WakeOnLanDialog(
                 if (links.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         links.forEach { link ->
-                            FilterChip(
+                            IchorFilterChip(
                                 selected = parseMac(mac)?.toList() == parseMac(link.mac)?.toList(),
                                 onClick = {
                                     mac = link.mac
@@ -152,7 +152,7 @@ fun WakeOnLanDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            IchorTextButton(onClick = {
                 parseWolTarget(mac, broadcast, port).fold(
                     onSuccess = onSave,
                     onFailure = { error = (it as? WolInputException)?.error },
@@ -161,9 +161,9 @@ fun WakeOnLanDialog(
         },
         dismissButton = {
             if (saved != null) {
-                TextButton(onClick = { onSave(null) }) { Text(stringResource(R.string.wol_forget)) }
+                IchorTextButton(onClick = { onSave(null) }) { Text(stringResource(R.string.wol_forget)) }
             }
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+            IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

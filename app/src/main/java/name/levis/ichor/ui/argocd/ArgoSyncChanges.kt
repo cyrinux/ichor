@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,5 +72,5 @@ fun ArgoSyncChanges(diff: UiState<FluxDiff>, changes: List<KubeDiffResource>?, o
 @Composable
 private fun FullDiffLink(onFullDiff: (() -> Unit)?) {
     if (onFullDiff == null) return
-    TextButton(onClick = onFullDiff) { Text(stringResource(R.string.argo_sync_open_full_diff)) }
+    IchorTextButton(onClick = onFullDiff) { Text(stringResource(R.string.argo_sync_open_full_diff)) }
 }

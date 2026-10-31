@@ -12,16 +12,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Key
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -116,11 +116,11 @@ fun SecurityKeysRows(app: TalosApp, authThen: (title: String, action: () -> Unit
                     Text(key.label, style = MaterialTheme.typography.bodyMedium)
                     MutedText(stringResource(R.string.security_key_enrolled_on, DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(key.enrolledAt))))
                 }
-                IconButton(onClick = {
-                    val current = enrolment ?: return@IconButton
+                IchorIconButton(onClick = {
+                    val current = enrolment ?: return@IchorIconButton
                     if (current.required && current.keys.size == 1) {
                         onError(context.getString(R.string.security_key_remove_last_required))
-                        return@IconButton
+                        return@IchorIconButton
                     }
                     authThen(context.getString(R.string.security_key_remove, key.label)) {
                         app.appLock.setSecurityKeys(current.without(key.credentialId))
@@ -132,7 +132,7 @@ fun SecurityKeysRows(app: TalosApp, authThen: (title: String, action: () -> Unit
         }
         if (keys.size < SECURITY_KEY_MAX) {
             Spacer(Modifier.height(8.dp))
-            OutlinedButton(
+            IchorOutlinedButton(
                 onClick = { authThen(context.getString(R.string.security_key_add)) { flow = KeyFlow.Enrol } },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(if (keys.isEmpty()) R.string.security_key_add else R.string.security_key_add_spare)) }
@@ -143,7 +143,7 @@ fun SecurityKeysRows(app: TalosApp, authThen: (title: String, action: () -> Unit
                     Text(stringResource(R.string.security_key_require), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.security_key_require_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = enrolment?.required == true,
                     onCheckedChange = { on ->
                         if (on) authThen(context.getString(R.string.security_key_require)) { flow = KeyFlow.Require }
@@ -223,7 +223,7 @@ private fun SecurityKeyFlowDialog(app: TalosApp, flow: KeyFlow, onDone: () -> Un
         }
     }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (done || error != null) onDone() },
         icon = { Icon(Icons.Outlined.Key, contentDescription = null, modifier = Modifier.size(32.dp)) },
         title = { Text(stringResource(if (flow == KeyFlow.Enrol) R.string.security_key_flow_enrol_title else R.string.security_key_flow_require_title), textAlign = TextAlign.Center) },
@@ -256,15 +256,15 @@ private fun SecurityKeyFlowDialog(app: TalosApp, flow: KeyFlow, onDone: () -> Un
         },
         confirmButton = {
             when {
-                done -> TextButton(onClick = onDone) { Text(stringResource(R.string.common_ok)) }
-                error != null -> TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.common_retry)) }
-                pinRequest != null -> TextButton(onClick = ::submitPin, enabled = FidoPin.valid(pin)) {
+                done -> IchorTextButton(onClick = onDone) { Text(stringResource(R.string.common_ok)) }
+                error != null -> IchorTextButton(onClick = { attempt++ }) { Text(stringResource(R.string.common_retry)) }
+                pinRequest != null -> IchorTextButton(onClick = ::submitPin, enabled = FidoPin.valid(pin)) {
                     Text(stringResource(R.string.common_ok))
                 }
             }
         },
         dismissButton = {
-            if (!done) TextButton(onClick = onDone) { Text(stringResource(R.string.common_cancel)) }
+            if (!done) IchorTextButton(onClick = onDone) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

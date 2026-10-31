@@ -2,7 +2,7 @@ package name.levis.ichor.ui.components
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
@@ -29,6 +29,6 @@ fun TooltipIconButton(
         state = rememberTooltipState(),
         modifier = modifier,
     ) {
-        IconButton(onClick = onClick, enabled = enabled) { Icon(icon, label) }
+        IchorIconButton(onClick = onClick, enabled = enabled) { Icon(icon, label) }
     }
 }

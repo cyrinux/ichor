@@ -8,16 +8,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorScaffold
+import name.levis.ichor.ui.design.IchorSwitch
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,9 +73,9 @@ class NetworkViewModel(private val talos: TalosRepository, private val node: Str
 @Composable
 fun NetworkScreen(node: String, hostname: String, onBack: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.network_title))
@@ -127,7 +127,7 @@ private fun NetworkContent(network: NodeNetwork, showVirtual: Boolean, onShowVir
                     Text(stringResource(R.string.network_show_virtual), style = MaterialTheme.typography.titleSmall)
                     MutedText(pluralStringResource(R.plurals.network_virtual_hidden, hidden, hidden))
                 }
-                Switch(checked = showVirtual, onCheckedChange = onShowVirtual)
+                IchorSwitch(checked = showVirtual, onCheckedChange = onShowVirtual)
             }
         }
         item {
@@ -167,7 +167,7 @@ private fun NetworkContent(network: NodeNetwork, showVirtual: Boolean, onShowVir
 /** A card with a title, the section's error if it failed, "none" when empty, else [content]. */
 @Composable
 private fun Section(title: String, error: String?, empty: Boolean, content: @Composable () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(title)
             when {

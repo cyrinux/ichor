@@ -12,8 +12,8 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -329,10 +329,10 @@ internal fun OverviewTopBar(
     state: UiState<ClusterOverview>,
     cards: OverviewCardsState,
 ) {
-    if (customizing) TopAppBar(
+    if (customizing) IchorTopAppBar(
         title = { Text(stringResource(R.string.overview_edit_title)) },
-        actions = { TextButton(onClick = { onCustomizing(false) }) { Text(stringResource(R.string.overview_edit_done)) } },
-    ) else TopAppBar(
+        actions = { IchorTextButton(onClick = { onCustomizing(false) }) { Text(stringResource(R.string.overview_edit_done)) } },
+    ) else IchorTopAppBar(
         // Swipe the bar sideways for the previous/next cluster, tap the title for the menu.
         modifier = Modifier.clusterSwipe(config, app::selectCluster),
         title = {

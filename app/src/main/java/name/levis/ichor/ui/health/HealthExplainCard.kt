@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,7 +51,7 @@ fun HealthExplainCard(
     val language = LocalConfiguration.current.locales[0].language
     val askable = target.askable
 
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.ai_health_explain_title), style = MaterialTheme.typography.titleMedium)
             when {
@@ -64,14 +64,14 @@ fun HealthExplainCard(
                             stringResource(R.string.ai_health_explain_hint, providerName)
                         },
                     )
-                    Button(onClick = { onExplain(language) }, modifier = Modifier.fillMaxWidth()) {
+                    IchorButton(onClick = { onExplain(language) }, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.ai_health_explain))
                     }
                 }
                 else -> MutedText(stringResource(target.notReadyText))
             }
             ExplainAnswer(explain)
-            OutlinedButton(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.ai_health_continue))
             }
         }
@@ -87,7 +87,7 @@ private fun ExplainProgress(providerName: String, onStop: () -> Unit) {
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
+        IchorTextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
     }
 }
 
@@ -105,7 +105,7 @@ private fun ExplainAnswer(explain: ExplainState) {
     if (explain.text.isNotEmpty() && !explain.running) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             MutedText(stringResource(R.string.ai_disclaimer), Modifier.weight(1f))
-            TextButton(onClick = { copyToClipboard(context, "answer", explain.text) }) { Text(stringResource(R.string.ai_copy)) }
+            IchorTextButton(onClick = { copyToClipboard(context, "answer", explain.text) }) { Text(stringResource(R.string.ai_copy)) }
         }
     }
 }
