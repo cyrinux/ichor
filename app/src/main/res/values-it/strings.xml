@@ -6199,7 +6199,6 @@
     <string name="hetzner_server_type">Tipo di server</string>
     <string name="hetzner_location">Posizione</string>
     <string name="hetzner_snapshot">Snapshot Talos</string>
-    <string name="hetzner_no_snapshot">Questo progetto non ha snapshot per questa architettura. Creane prima uno Talos con lo strumento hcloud-upload-image, oppure crea il server a mano dalle immagini qui sopra.</string>
     <string name="hetzner_cost">Circa %1$s all\'ora, %2$s al mese, tasse escluse</string>
     <string name="hetzner_create">Crea il server</string>
     <string name="hetzner_confirm_title">Creare %1$s su Hetzner?</string>
@@ -6211,4 +6210,22 @@
     <string name="hetzner_stop_hint">Fermare elimina il server creato da questa esecuzione.</string>
     <string name="hetzner_stop_body">%1$s viene eliminato su Hetzner. Un control plane che ha già risposto viene mantenuto: prima va rimosso il suo membro etcd.</string>
     <string name="hetzner_token_not_saved">Impossibile leggere l\'archivio dei token: sbloccalo e riprova.</string>
+    <string name="hetzner_snapshot_missing">Nessuno snapshot Talos per %1$s: Ichor può crearne uno.</string>
+    <string name="hetzner_snapshot_make">Crea uno snapshot Talos</string>
+    <string name="hetzner_snapshot_intro">Ichor crea un server usa e getta nel sistema di ripristino di Hetzner, scrive l\'immagine Talos di questo cluster sul suo disco, crea uno snapshot, poi elimina il server e la sua chiave SSH temporanea. Il cluster non viene toccato. Richiede alcuni minuti.</string>
+    <string name="hetzner_snapshot_arch">Architettura</string>
+    <string name="hetzner_snapshot_cost">Circa un\'ora iniziata di %1$s (%2$s) più l\'archiviazione dello snapshot a %3$s per GB al mese, tasse escluse</string>
+    <string name="hetzner_snapshot_confirm">Crea lo snapshot</string>
+    <string name="hetzner_phase_key">Aggiungi una chiave SSH temporanea</string>
+    <string name="hetzner_phase_rescue">Avvia il sistema di ripristino</string>
+    <string name="hetzner_phase_writing">Scrivi l\'immagine Talos</string>
+    <string name="hetzner_phase_snapshot">Acquisisci lo snapshot</string>
+    <string name="hetzner_phase_cleanup">Elimina il server e la chiave</string>
+    <string name="hetzner_snapshot_stop">Interrompi e pulisci</string>
+    <string name="hetzner_snapshot_stop_hint">Interrompendo si eliminano il server usa e getta e la sua chiave.</string>
+    <string name="hetzner_snapshot_stop_body">L\'esecuzione si interrompe. Il server usa e getta, la sua chiave e uno snapshot incompleto vengono eliminati.</string>
+    <string name="hetzner_snapshot_done">Lo snapshot %1$s è pronto: sceglilo per creare il server.</string>
+    <string name="hetzner_snapshot_notification_title">Creazione di uno snapshot Talos</string>
+    <string name="hetzner_snapshot_notification_done">Snapshot Talos creato</string>
+    <string name="hetzner_snapshot_notification_failed">Lo snapshot Talos non è riuscito</string>
 </resources>

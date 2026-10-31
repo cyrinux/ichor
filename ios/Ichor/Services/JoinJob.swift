@@ -17,6 +17,8 @@ final class JoinJob {
         case joined(String)
         /// The server's machine appeared in Omni, which keeps its own list.
         case appearedInOmni
+        /// The finished snapshot of a request with `snapshot`.
+        case snapshotMade(HetznerSnapshotResult)
         case failed(String)
     }
 
@@ -36,8 +38,10 @@ final class JoinJob {
     var timeline: [JoinStep] {
         let phases = request?.phases ?? JoinPhase.maintenanceRun
         return switch outcome {
-        case .joined?, .appearedInOmni?: joinTimeline(events, finished: true, phases: phases)
-        case .failed(let message)?: joinTimeline(events, failure: message, phases: phases)
+        case .joined?, .appearedInOmni?, .snapshotMade?: joinTimeline(events, finished: true, phases: phases)
+        case .failed(let message)?:
+            // A snapshot's failure stays on the step that failed, not on the cleanup that followed.
+            joinTimeline(events.filter { $0.phase != JoinPhase.cleanup.rawValue }, failure: message, phases: phases)
         case nil: joinTimeline(events, phases: phases)
         }
     }
@@ -62,7 +66,9 @@ final class JoinJob {
         // For the reminder posted when the app leaves the screen.
         Task { _ = await BackgroundMonitor.requestPermission() }
         let run =
-            request.hetzner.map { client.startHetznerCreate($0, token: hetznerToken) } ?? client.startNodeJoin(request)
+            request.snapshot.map { client.startHetznerSnapshot($0, token: hetznerToken) }
+            ?? request.hetzner.map { client.startHetznerCreate($0, token: hetznerToken) }
+            ?? client.startNodeJoin(request)
         stop = run.stop
         task = Task {
             var result = Outcome.failed(String(localized: "The join ended without a result."))
@@ -72,6 +78,10 @@ final class JoinJob {
                 case .done(let address, let error):
                     if let error {
                         result = .failed(error)
+                    } else if request.snapshot != nil {
+                        // The "address" of a snapshot run is its result.
+                        let made = try? JSONDecoder().decode(HetznerSnapshotResult.self, from: Data(address.utf8))
+                        if let made { result = .snapshotMade(made) }
                     } else if !address.isEmpty {
                         result = .joined(address)
                     } else if request.omni {

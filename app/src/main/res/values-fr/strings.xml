@@ -6199,7 +6199,6 @@
     <string name="hetzner_server_type">Type de serveur</string>
     <string name="hetzner_location">Emplacement</string>
     <string name="hetzner_snapshot">Instantané Talos</string>
-    <string name="hetzner_no_snapshot">Ce projet n\'a pas d\'instantané pour cette architecture. Créez d\'abord un instantané Talos avec l\'outil hcloud-upload-image, ou créez le serveur à la main à partir des images ci-dessus.</string>
     <string name="hetzner_cost">Environ %1$s par heure, %2$s par mois, hors taxes</string>
     <string name="hetzner_create">Créer le serveur</string>
     <string name="hetzner_confirm_title">Créer %1$s chez Hetzner ?</string>
@@ -6211,4 +6210,22 @@
     <string name="hetzner_stop_hint">Arrêter supprime le serveur créé par cette exécution.</string>
     <string name="hetzner_stop_body">%1$s est supprimé chez Hetzner. Un plan de contrôle qui a déjà répondu est conservé : son membre etcd doit d\'abord être retiré.</string>
     <string name="hetzner_token_not_saved">Le magasin de jetons est illisible : déverrouillez-le et réessayez.</string>
+    <string name="hetzner_snapshot_missing">Pas encore d\'instantané Talos pour %1$s : Ichor peut en créer un.</string>
+    <string name="hetzner_snapshot_make">Créer un instantané Talos</string>
+    <string name="hetzner_snapshot_intro">Ichor crée un serveur jetable dans le système de secours de Hetzner, écrit l\'image Talos de ce cluster sur son disque, prend un instantané, puis supprime le serveur et sa clé SSH temporaire. Rien n\'est modifié sur le cluster. Cela prend quelques minutes.</string>
+    <string name="hetzner_snapshot_arch">Architecture</string>
+    <string name="hetzner_snapshot_cost">Environ une heure entamée de %1$s (%2$s) plus le stockage de l\'instantané à %3$s par Go par mois, hors taxes</string>
+    <string name="hetzner_snapshot_confirm">Créer l\'instantané</string>
+    <string name="hetzner_phase_key">Ajouter une clé SSH temporaire</string>
+    <string name="hetzner_phase_rescue">Démarrer le système de secours</string>
+    <string name="hetzner_phase_writing">Écrire l\'image Talos</string>
+    <string name="hetzner_phase_snapshot">Prendre l\'instantané</string>
+    <string name="hetzner_phase_cleanup">Supprimer le serveur et la clé</string>
+    <string name="hetzner_snapshot_stop">Arrêter et nettoyer</string>
+    <string name="hetzner_snapshot_stop_hint">Arrêter supprime le serveur jetable et sa clé.</string>
+    <string name="hetzner_snapshot_stop_body">L\'exécution s\'arrête. Le serveur jetable, sa clé et un instantané inachevé sont supprimés.</string>
+    <string name="hetzner_snapshot_done">L\'instantané %1$s est prêt : choisissez-le pour créer le serveur.</string>
+    <string name="hetzner_snapshot_notification_title">Création d\'un instantané Talos</string>
+    <string name="hetzner_snapshot_notification_done">Instantané Talos créé</string>
+    <string name="hetzner_snapshot_notification_failed">L\'instantané Talos a échoué</string>
 </resources>

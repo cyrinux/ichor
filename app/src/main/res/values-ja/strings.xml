@@ -6061,7 +6061,6 @@
     <string name="hetzner_server_type">サーバータイプ</string>
     <string name="hetzner_location">ロケーション</string>
     <string name="hetzner_snapshot">Talos スナップショット</string>
-    <string name="hetzner_no_snapshot">このプロジェクトにはこのアーキテクチャのスナップショットがありません。先に hcloud-upload-image ツールで Talos のものを作成するか、上のイメージから手動でサーバーを作成してください。</string>
     <string name="hetzner_cost">1 時間あたり約 %1$s、1 か月あたり %2$s (税抜)</string>
     <string name="hetzner_create">サーバーを作成</string>
     <string name="hetzner_confirm_title">Hetzner に %1$s を作成しますか?</string>
@@ -6073,4 +6072,22 @@
     <string name="hetzner_stop_hint">停止すると、この実行で作成したサーバーが削除されます。</string>
     <string name="hetzner_stop_body">%1$s は Hetzner で削除されます。すでに応答したコントロールプレーンは保持されます。先にその etcd メンバーを削除する必要があります。</string>
     <string name="hetzner_token_not_saved">トークンストアを読み取れません。ロックを解除してもう一度お試しください。</string>
+    <string name="hetzner_snapshot_missing">%1$s の Talos スナップショットはまだありません。Ichor で作成できます。</string>
+    <string name="hetzner_snapshot_make">Talos スナップショットを作成</string>
+    <string name="hetzner_snapshot_intro">Ichor は Hetzner のレスキューシステムで使い捨てサーバーを作成し、このクラスターの Talos イメージをそのディスクに書き込んでスナップショットを取得し、サーバーと一時 SSH キーを削除します。クラスターには一切触れません。数分かかります。</string>
+    <string name="hetzner_snapshot_arch">アーキテクチャ</string>
+    <string name="hetzner_snapshot_cost">%1$s の開始 1 時間分 (%2$s) 程度と、スナップショットの保存料 1 GB あたり月 %3$s (税抜)</string>
+    <string name="hetzner_snapshot_confirm">スナップショットを作成</string>
+    <string name="hetzner_phase_key">一時 SSH キーを追加</string>
+    <string name="hetzner_phase_rescue">レスキューシステムを起動</string>
+    <string name="hetzner_phase_writing">Talos イメージを書き込み</string>
+    <string name="hetzner_phase_snapshot">スナップショットを取得</string>
+    <string name="hetzner_phase_cleanup">サーバーとキーを削除</string>
+    <string name="hetzner_snapshot_stop">停止してクリーンアップ</string>
+    <string name="hetzner_snapshot_stop_hint">停止すると使い捨てサーバーとそのキーが削除されます。</string>
+    <string name="hetzner_snapshot_stop_body">実行を停止します。使い捨てサーバー、そのキー、未完成のスナップショットは削除されます。</string>
+    <string name="hetzner_snapshot_done">スナップショット %1$s の準備ができました。選択してサーバーを作成してください。</string>
+    <string name="hetzner_snapshot_notification_title">Talos スナップショットを作成中</string>
+    <string name="hetzner_snapshot_notification_done">Talos スナップショットを作成しました</string>
+    <string name="hetzner_snapshot_notification_failed">Talos スナップショットに失敗しました</string>
 </resources>

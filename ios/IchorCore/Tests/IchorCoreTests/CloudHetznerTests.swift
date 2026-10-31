@@ -59,4 +59,32 @@ final class CloudHetznerTests: XCTestCase {
         XCTAssertEqual(request.withReplacing(true).hetzner, spec)
         XCTAssertTrue(request.withReplacing(true).omni)
     }
+
+    func testASnapshotRunHasItsOwnSteps() throws {
+        let spec = HetznerSnapshotSpec(arch: "amd64", location: "fsn1")
+        let request = JoinRequest(
+            address: "", template: "", role: "", hostname: "Talos amd64", disk: "", staticAddress: "", snapshot: spec)
+        XCTAssertEqual(request.phases, JoinPhase.snapshotRun)
+        XCTAssertEqual(request.withReplacing(true).snapshot, spec)
+
+        let steps = joinTimeline(
+            [JoinProgress(phase: "key"), JoinProgress(phase: "writing")], phases: JoinPhase.snapshotRun)
+        XCTAssertEqual(steps.map(\.phase), JoinPhase.snapshotRun)
+        XCTAssertEqual(steps[0].state, .done)
+    }
+
+    func testASnapshotResultAndItsCostDecode() throws {
+        let result = try JSONDecoder().decode(
+            HetznerSnapshotResult.self,
+            from: Data(#"{"imageId":33,"description":"Talos v1.14.2","labels":{"os":"talos"},"sizeGB":1.5}"#.utf8))
+        XCTAssertEqual(result.imageId, 33)
+        XCTAssertEqual(result.sizeGB, 1.5)
+        XCTAssertEqual(result.created, "")
+
+        let cost = try JSONDecoder().decode(
+            HetznerSnapshotCost.self,
+            from: Data(#"{"serverType":"cx23","hourly":"0.0060","monthlyPerGB":"0.0119","currency":"EUR"}"#.utf8))
+        XCTAssertEqual(cost.serverType, "cx23")
+        XCTAssertEqual(cost.monthlyPerGB, "0.0119")
+    }
 }

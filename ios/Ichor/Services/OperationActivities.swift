@@ -322,8 +322,15 @@ enum OperationActivities {
     private static func join() -> OperationContent? {
         let job = JoinJob.shared
         guard let request = job.request else { return nil }
-        let title = String(localized: "Adding \(request.hostname)")
+        let title =
+            request.snapshot != nil
+            ? String(localized: "Making a Talos snapshot") : String(localized: "Adding \(request.hostname)")
         switch job.outcome {
+        case .snapshotMade(let made)?:
+            return OperationContent(
+                title: title,
+                step: String(localized: "Snapshot \(made.description) is ready: pick it to create the server."),
+                phase: .succeeded)
         case .joined(let address)?:
             return OperationContent(
                 title: title, step: String(localized: "\(request.hostname) joined the cluster as \(address)"),

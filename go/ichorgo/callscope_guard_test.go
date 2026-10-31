@@ -28,6 +28,7 @@ var delegatedRuns = map[string]string{
 	"StartEtcdSnapshot":          "startSnapshot",
 	"StartEtcdSnapshotEncrypted": "startSnapshot",
 	"StartHetznerCreate":         "hetznerCreate.start",
+	"StartHetznerSnapshot":       "hetznerSnapshotRun.start",
 	"StartNodeJoin":              "nodeJoin.start",
 	"StartRunbook":               "startRunbook",
 	"StartRunbookWith":           "startRunbook",

@@ -24,6 +24,36 @@ extension TalosClient {
     func startHetznerCreate(
         _ spec: HetznerCreateSpec, token: String
     ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        let tokenJSON = Self.hetznerTokenJSON(token)
+        return hetznerRun { [config, context] bridge in
+            IchorgoStartHetznerCreate(config, context, tokenJSON, specJSON, bridge)
+        }
+    }
+
+    /// The cost line of a snapshot run. Creates nothing.
+    static func hetznerSnapshotEstimate(token: String, arch: String, location: String) async throws
+        -> HetznerSnapshotCost
+    {
+        let tokenJSON = hetznerTokenJSON(token)
+        return try await json { IchorgoHetznerSnapshotEstimate(tokenJSON, arch, location, $0) }
+    }
+
+    /// Makes a Talos snapshot with a throwaway server (StartHetznerSnapshot): `done`'s address is the
+    /// result JSON. `stop` deletes what the run created, and so only `stop` stops it, as above.
+    func startHetznerSnapshot(
+        _ spec: HetznerSnapshotSpec, token: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        let tokenJSON = Self.hetznerTokenJSON(token)
+        return hetznerRun { [config, context] bridge in
+            IchorgoStartHetznerSnapshot(config, context, tokenJSON, specJSON, bridge)
+        }
+    }
+
+    private func hetznerRun(
+        _ start: (JoinBridge) -> IchorgoJoinRun?
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
         let (stream, continuation) = AsyncStream.makeStream(of: JoinEvent.self)
         let bridge = JoinBridge(
             progress: { continuation.yield(.progress($0)) },
@@ -32,9 +62,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
-        let started = IchorgoStartHetznerCreate(config, context, Self.hetznerTokenJSON(token), specJSON, bridge)
-        let run = started.map(GoObject.init)
+        let run = start(bridge).map(GoObject.init)
         continuation.onTermination = { _ in
             _ = bridge  // keep the listener alive for the whole run
             _ = run

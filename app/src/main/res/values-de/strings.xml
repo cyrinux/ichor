@@ -6190,7 +6190,6 @@
     <string name="hetzner_server_type">Servertyp</string>
     <string name="hetzner_location">Standort</string>
     <string name="hetzner_snapshot">Talos-Snapshot</string>
-    <string name="hetzner_no_snapshot">Dieses Projekt hat keinen Snapshot für diese Architektur. Erstelle zuerst einen Talos-Snapshot mit dem Tool hcloud-upload-image oder lege den Server von Hand aus den Images oben an.</string>
     <string name="hetzner_cost">Etwa %1$s pro Stunde, %2$s pro Monat, vor Steuern</string>
     <string name="hetzner_create">Server erstellen</string>
     <string name="hetzner_confirm_title">%1$s bei Hetzner erstellen?</string>
@@ -6202,4 +6201,22 @@
     <string name="hetzner_stop_hint">Stoppen löscht den Server, den dieser Lauf erstellt hat.</string>
     <string name="hetzner_stop_body">%1$s wird bei Hetzner gelöscht. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden.</string>
     <string name="hetzner_token_not_saved">Der Token-Speicher kann nicht gelesen werden: Entsperre ihn und versuche es erneut.</string>
+    <string name="hetzner_snapshot_missing">Noch kein Talos-Snapshot für %1$s: Ichor kann einen erstellen.</string>
+    <string name="hetzner_snapshot_make">Talos-Snapshot erstellen</string>
+    <string name="hetzner_snapshot_intro">Ichor erstellt einen Wegwerf-Server im Rescue-System von Hetzner, schreibt das Talos-Image dieses Clusters auf seine Festplatte, erstellt einen Snapshot und löscht dann den Server und seinen temporären SSH-Schlüssel. Am Cluster wird nichts verändert. Das dauert einige Minuten.</string>
+    <string name="hetzner_snapshot_arch">Architektur</string>
+    <string name="hetzner_snapshot_cost">Etwa eine angefangene Stunde %1$s (%2$s) plus Snapshot-Speicher zu %3$s pro GB und Monat, vor Steuern</string>
+    <string name="hetzner_snapshot_confirm">Snapshot erstellen</string>
+    <string name="hetzner_phase_key">Temporären SSH-Schlüssel hinzufügen</string>
+    <string name="hetzner_phase_rescue">Rescue-System starten</string>
+    <string name="hetzner_phase_writing">Talos-Image schreiben</string>
+    <string name="hetzner_phase_snapshot">Snapshot aufnehmen</string>
+    <string name="hetzner_phase_cleanup">Server und Schlüssel löschen</string>
+    <string name="hetzner_snapshot_stop">Stoppen und aufräumen</string>
+    <string name="hetzner_snapshot_stop_hint">Beim Stoppen werden der Wegwerf-Server und sein Schlüssel gelöscht.</string>
+    <string name="hetzner_snapshot_stop_body">Der Lauf wird gestoppt. Der Wegwerf-Server, sein Schlüssel und ein unfertiger Snapshot werden gelöscht.</string>
+    <string name="hetzner_snapshot_done">Snapshot %1$s ist bereit: Wähle ihn aus, um den Server zu erstellen.</string>
+    <string name="hetzner_snapshot_notification_title">Talos-Snapshot wird erstellt</string>
+    <string name="hetzner_snapshot_notification_done">Talos-Snapshot erstellt</string>
+    <string name="hetzner_snapshot_notification_failed">Der Talos-Snapshot ist fehlgeschlagen</string>
 </resources>

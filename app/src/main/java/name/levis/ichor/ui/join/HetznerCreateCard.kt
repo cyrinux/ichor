@@ -42,6 +42,7 @@ import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.HetznerCreateSpec
 import name.levis.ichor.model.HetznerOptions
+import name.levis.ichor.model.HetznerSnapshotCost
 import name.levis.ichor.model.HetznerTokenCheck
 import name.levis.ichor.model.snapshotsFor
 import name.levis.ichor.ui.UiState
@@ -98,6 +99,21 @@ class HetznerCreateViewModel(private val lifecycle: NodeLifecycleRepository, pri
         viewModelScope.launch { loadOptions(if (project.isBlank()) "" else token(project)) }
     }
 
+    /** Lists the snapshots again, keeping the shown form (and what is picked in it) meanwhile. */
+    fun refresh() {
+        val project = _project.value
+        if (project.isBlank()) return
+        loading?.cancel()
+        loading = viewModelScope.launch {
+            val token = token(project)
+            val state = uiStateOf { lifecycle.hetznerOptions(token) }
+            if (state is UiState.Loaded) _options.value = state
+        }
+    }
+
+    suspend fun estimate(arch: String, location: String): HetznerSnapshotCost =
+        lifecycle.hetznerSnapshotEstimate(token(_project.value), arch, location)
+
     private fun loadOptions(token: String) {
         loading?.cancel()
         _options.value = UiState.Loading
@@ -147,6 +163,8 @@ fun HetznerCreateCard(
     val options by vm.options.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var addingToken by remember { mutableStateOf(false) }
+    var snapshotFor by remember { mutableStateOf<SnapshotAsk?>(null) }
+    var madeSnapshot by rememberSaveable { mutableStateOf(0L) }
     LaunchedEffect(demo) { vm.load(demo) }
 
     SectionCard(stringResource(R.string.hetzner_title)) {
@@ -170,11 +188,25 @@ fun HetznerCreateCard(
                     }
                 }
             }
+            if (current?.request?.snapshot != null) {
+                SnapshotRunView(current, onStop = app.joinManager::stop) {
+                    madeSnapshot = current.snapshotResult?.imageId ?: madeSnapshot
+                    app.joinManager.dismiss()
+                    vm.refresh()
+                }
+            }
             when (val state = options) {
                 null -> Unit
                 UiState.Loading -> LoadingBox()
                 is UiState.Failed -> ErrorBox(state.message, vm::reload)
-                is UiState.Loaded -> ServerForm(state.data, form) { request ->
+                is UiState.Loaded -> ServerForm(
+                    options = state.data,
+                    form = form,
+                    busy = current?.running == true,
+                    canMakeSnapshot = !demo,
+                    madeSnapshot = madeSnapshot,
+                    onMakeSnapshot = { arch, location -> snapshotFor = SnapshotAsk(state.data, arch, location) },
+                ) { request ->
                     // The token is read only now, and goes to the run alone.
                     scope.launch { app.joinManager.start(request, if (project.isBlank()) "" else vm.token(project)) }
                 }
@@ -182,12 +214,42 @@ fun HetznerCreateCard(
         }
     }
     if (addingToken) TokenDialog(vm) { addingToken = false }
+    snapshotFor?.let { ask ->
+        HetznerSnapshotSheet(
+            options = ask.options,
+            initialArch = ask.arch,
+            initialLocation = ask.location,
+            template = form?.template.orEmpty(),
+            estimate = vm::estimate,
+            onStart = { spec ->
+                snapshotFor = null
+                val request = JoinRequest(
+                    address = "", template = spec.templateNode, role = "", hostname = "Talos ${spec.arch}", disk = "",
+                    staticAddress = "", snapshot = spec,
+                )
+                // The token is read only now, and goes to the run alone.
+                scope.launch { app.joinManager.start(request, vm.token(project)) }
+            },
+            onDismiss = { snapshotFor = null },
+        )
+    }
 }
+
+/** What the snapshot sheet opens with. */
+private data class SnapshotAsk(val options: HetznerOptions, val arch: String, val location: String)
 
 /** The pickers, the cost line and the confirmed Create. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ServerForm(options: HetznerOptions, form: JoinConfigForm?, onCreate: (JoinRequest) -> Unit) {
+private fun ServerForm(
+    options: HetznerOptions,
+    form: JoinConfigForm?,
+    busy: Boolean,
+    canMakeSnapshot: Boolean,
+    madeSnapshot: Long,
+    onMakeSnapshot: (arch: String, location: String) -> Unit,
+    onCreate: (JoinRequest) -> Unit,
+) {
     val colors = LocalStatusColors.current
     val authenticated = rememberAuthenticated()
     var typeName by rememberSaveable { mutableStateOf("") }
@@ -195,6 +257,7 @@ private fun ServerForm(options: HetznerOptions, form: JoinConfigForm?, onCreate:
     var snapshotId by rememberSaveable { mutableStateOf(0L) }
     var omniName by rememberSaveable { mutableStateOf("") }
     var confirm by remember { mutableStateOf(false) }
+    LaunchedEffect(madeSnapshot) { if (madeSnapshot != 0L) snapshotId = madeSnapshot }
 
     val type = options.serverTypes.firstOrNull { it.name == typeName }
     val snapshots = options.snapshotsFor(type)
@@ -229,7 +292,12 @@ private fun ServerForm(options: HetznerOptions, form: JoinConfigForm?, onCreate:
         }
     }
     Text(stringResource(R.string.hetzner_snapshot), style = MaterialTheme.typography.labelLarge)
-    if (type != null && snapshots.isEmpty()) InfoNotice(stringResource(R.string.hetzner_no_snapshot))
+    if (type != null && canMakeSnapshot && snapshots.none { it.talos }) {
+        InfoNotice(stringResource(R.string.hetzner_snapshot_missing, type.arch))
+        IchorOutlinedButton(onClick = { onMakeSnapshot(type.arch, locationName) }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.hetzner_snapshot_make))
+        }
+    }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         snapshots.forEach { s ->
             IchorFilterChip(selected = s.id == snapshotId, onClick = { snapshotId = s.id }, label = { Text(s.description.ifBlank { s.id.toString() }) })
@@ -244,7 +312,7 @@ private fun ServerForm(options: HetznerOptions, form: JoinConfigForm?, onCreate:
     }
     IchorButton(
         onClick = { confirm = true },
-        enabled = hostname.isNotEmpty() && snapshot != null && price != null,
+        enabled = !busy && hostname.isNotEmpty() && snapshot != null && price != null,
         modifier = Modifier.fillMaxWidth(),
     ) { Text(stringResource(R.string.hetzner_create)) }
 

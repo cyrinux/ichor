@@ -183,18 +183,243 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 快照" } }
       }
     },
-    "This project has no snapshot for this architecture. Make a Talos one first with the hcloud-upload-image tool, or create the server by hand from the images above." : {
+    "No Talos snapshot for %@ yet: Ichor can make one." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieses Projekt hat keinen Snapshot für diese Architektur. Erstelle zuerst einen Talos-Snapshot mit dem Tool hcloud-upload-image oder lege den Server von Hand aus den Images oben an." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este proyecto no tiene ninguna instantánea para esta arquitectura. Crea primero una de Talos con la herramienta hcloud-upload-image, o crea el servidor a mano con las imágenes de arriba." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce projet n'a pas d'instantané pour cette architecture. Créez d'abord un instantané Talos avec l'outil hcloud-upload-image, ou créez le serveur à la main à partir des images ci-dessus." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo progetto non ha snapshot per questa architettura. Creane prima uno Talos con lo strumento hcloud-upload-image, oppure crea il server a mano dalle immagini qui sopra." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロジェクトにはこのアーキテクチャのスナップショットがありません。先に hcloud-upload-image ツールで Talos のものを作成するか、上のイメージから手動でサーバーを作成してください。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este projeto não tem snapshot para esta arquitetura. Crie primeiro um Talos com a ferramenta hcloud-upload-image, ou crie o servidor manualmente a partir das imagens acima." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этом проекте нет снимка для этой архитектуры. Сначала создайте снимок Talos с помощью hcloud-upload-image или создайте сервер вручную из образов выше." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цьому проєкті немає знімка для цієї архітектури. Спочатку створіть знімок Talos за допомогою hcloud-upload-image або створіть сервер вручну з образів вище." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此项目没有该架构的快照。请先用 hcloud-upload-image 工具制作 Talos 快照，或根据上面的镜像手动创建服务器。" } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch kein Talos-Snapshot für %@: Ichor kann einen erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no hay ninguna instantánea de Talos para %@: Ichor puede crear una." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'instantané Talos pour %@ : Ichor peut en créer un." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuno snapshot Talos per %@: Ichor può crearne uno." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ の Talos スナップショットはまだありません。Ichor で作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não há snapshot Talos para %@: o Ichor pode criar um." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Снимка Talos для %@ пока нет: Ichor может его создать." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Знімка Talos для %@ ще немає: Ichor може його створити." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "还没有 %@ 的 Talos 快照：Ichor 可以制作一个。" } }
+      }
+    },
+    "Make a Talos snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-Snapshot erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear una instantánea de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer un instantané Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea uno snapshot Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos スナップショットを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar um snapshot Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать снимок Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити знімок Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 Talos 快照" } }
+      }
+    },
+    "Ichor creates a throwaway server in Hetzner's rescue system, writes this cluster's Talos image to its disk, takes a snapshot, then deletes the server and its temporary SSH key. Nothing of the cluster is touched. It takes a few minutes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor erstellt einen Wegwerf-Server im Rescue-System von Hetzner, schreibt das Talos-Image dieses Clusters auf seine Festplatte, erstellt einen Snapshot und löscht dann den Server und seinen temporären SSH-Schlüssel. Am Cluster wird nichts verändert. Das dauert einige Minuten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea un servidor desechable en el sistema de rescate de Hetzner, escribe la imagen de Talos de este clúster en su disco, toma una instantánea y luego elimina el servidor y su clave SSH temporal. No se toca nada del clúster. Tarda unos minutos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée un serveur jetable dans le système de secours de Hetzner, écrit l'image Talos de ce cluster sur son disque, prend un instantané, puis supprime le serveur et sa clé SSH temporaire. Rien n'est modifié sur le cluster. Cela prend quelques minutes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea un server usa e getta nel sistema di ripristino di Hetzner, scrive l'immagine Talos di questo cluster sul suo disco, crea uno snapshot, poi elimina il server e la sua chiave SSH temporanea. Il cluster non viene toccato. Richiede alcuni minuti." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor は Hetzner のレスキューシステムで使い捨てサーバーを作成し、このクラスターの Talos イメージをそのディスクに書き込んでスナップショットを取得し、サーバーと一時 SSH キーを削除します。クラスターには一切触れません。数分かかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria um servidor descartável no sistema de resgate da Hetzner, grava a imagem Talos deste cluster no disco, tira um snapshot e depois exclui o servidor e sua chave SSH temporária. Nada do cluster é alterado. Leva alguns minutos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor создаёт одноразовый сервер в системе восстановления Hetzner, записывает образ Talos этого кластера на его диск, делает снимок, затем удаляет сервер и его временный SSH-ключ. Кластер не затрагивается. Это занимает несколько минут." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor створює одноразовий сервер у системі відновлення Hetzner, записує образ Talos цього кластера на його диск, робить знімок, а потім видаляє сервер і його тимчасовий SSH-ключ. Кластер не змінюється. Це триває кілька хвилин." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 会在 Hetzner 的救援系统中创建一台一次性服务器，把此集群的 Talos 镜像写入其磁盘并制作快照，然后删除该服务器及其临时 SSH 密钥。不会改动集群。需要几分钟。" } }
+      }
+    },
+    "About one started hour of %@ (%@) plus snapshot storage at %@ per GB per month, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About one started hour of %1$@ (%2$@) plus snapshot storage at %3$@ per GB per month, before tax" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa eine angefangene Stunde %1$@ (%2$@) plus Snapshot-Speicher zu %3$@ pro GB und Monat, vor Steuern" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aproximadamente una hora iniciada de %1$@ (%2$@) más el almacenamiento de la instantánea a %3$@ por GB al mes, sin impuestos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ une heure entamée de %1$@ (%2$@) plus le stockage de l'instantané à %3$@ par Go par mois, hors taxes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa un'ora iniziata di %1$@ (%2$@) più l'archiviazione dello snapshot a %3$@ per GB al mese, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ の開始 1 時間分 (%2$@) 程度と、スナップショットの保存料 1 GB あたり月 %3$@ (税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de uma hora iniciada de %1$@ (%2$@) mais o armazenamento do snapshot a %3$@ por GB por mês, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Примерно один начатый час %1$@ (%2$@) плюс хранение снимка по %3$@ за ГБ в месяц, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Приблизно одна розпочата година %1$@ (%2$@) плюс зберігання знімка по %3$@ за ГБ на місяць, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约一个起算小时的 %1$@（%2$@），另加快照存储费每 GB 每月 %3$@（税前）" } }
+      }
+    },
+    "Make the snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Snapshot erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la instantánea" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'instantané" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea lo snapshot" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スナップショットを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar o snapshot" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать снимок" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити знімок" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作快照" } }
+      }
+    },
+    "Add a temporary SSH key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Temporären SSH-Schlüssel hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una clave SSH temporal" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter une clé SSH temporaire" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi una chiave SSH temporanea" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一時 SSH キーを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma chave SSH temporária" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить временный SSH-ключ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати тимчасовий SSH-ключ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加临时 SSH 密钥" } }
+      }
+    },
+    "Start the rescue system" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rescue-System starten" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar el sistema de rescate" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer le système de secours" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia il sistema di ripristino" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "レスキューシステムを起動" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar o sistema de resgate" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить систему восстановления" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запустити систему відновлення" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启动救援系统" } }
+      }
+    },
+    "Write the Talos image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-Image schreiben" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escribir la imagen de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Écrire l'image Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scrivi l'immagine Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos イメージを書き込み" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Gravar a imagem Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Записать образ Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Записати образ Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "写入 Talos 镜像" } }
+      }
+    },
+    "Take the snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Snapshot aufnehmen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tomar la instantánea" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prendre l'instantané" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Acquisisci lo snapshot" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スナップショットを取得" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tirar o snapshot" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сделать снимок" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зробити знімок" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作快照镜像" } }
+      }
+    },
+    "Delete the server and the key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Server und Schlüssel löschen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar el servidor y la clave" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer le serveur et la clé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elimina il server e la chiave" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバーとキーを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Excluir o servidor e a chave" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить сервер и ключ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалити сервер і ключ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除服务器和密钥" } }
+      }
+    },
+    "Stop and clean up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stoppen und aufräumen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener y limpiar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter et nettoyer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Interrompi e pulisci" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止してクリーンアップ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar e limpar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановить и очистить" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинити й очистити" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止并清理" } }
+      }
+    },
+    "Stopping deletes the throwaway server and its key." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beim Stoppen werden der Wegwerf-Server und sein Schlüssel gelöscht." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Al detener se eliminan el servidor desechable y su clave." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter supprime le serveur jetable et sa clé." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Interrompendo si eliminano il server usa e getta e la sua chiave." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止すると使い捨てサーバーとそのキーが削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar exclui o servidor descartável e sua chave." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "При остановке одноразовый сервер и его ключ удаляются." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинка видаляє одноразовий сервер і його ключ." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止会删除一次性服务器及其密钥。" } }
+      }
+    },
+    "The run stops. The throwaway server, its key and an unfinished snapshot are deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Lauf wird gestoppt. Der Wegwerf-Server, sein Schlüssel und ein unfertiger Snapshot werden gelöscht." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La ejecución se detiene. Se eliminan el servidor desechable, su clave y una instantánea sin terminar." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'exécution s'arrête. Le serveur jetable, sa clé et un instantané inachevé sont supprimés." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'esecuzione si interrompe. Il server usa e getta, la sua chiave e uno snapshot incompleto vengono eliminati." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "実行を停止します。使い捨てサーバー、そのキー、未完成のスナップショットは削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A execução para. O servidor descartável, sua chave e um snapshot inacabado são excluídos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выполнение останавливается. Одноразовый сервер, его ключ и незавершённый снимок удаляются." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виконання зупиняється. Одноразовий сервер, його ключ і незавершений знімок видаляються." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行将停止。一次性服务器、其密钥和未完成的快照都会被删除。" } }
+      }
+    },
+    "Snapshot %@ is ready: pick it to create the server." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Snapshot %@ ist bereit: Wähle ihn aus, um den Server zu erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La instantánea %@ está lista: elígela para crear el servidor." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'instantané %@ est prêt : choisissez-le pour créer le serveur." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lo snapshot %@ è pronto: sceglilo per creare il server." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スナップショット %@ の準備ができました。選択してサーバーを作成してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O snapshot %@ está pronto: escolha-o para criar o servidor." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Снимок %@ готов: выберите его, чтобы создать сервер." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Знімок %@ готовий: виберіть його, щоб створити сервер." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快照 %@ 已就绪：选择它来创建服务器。" } }
+      }
+    },
+    "Making a Talos snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-Snapshot wird erstellt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Creando una instantánea de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Création d'un instantané Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creazione di uno snapshot Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos スナップショットを作成中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criando um snapshot Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создание снимка Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створення знімка Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在制作 Talos 快照" } }
+      }
+    },
+    "Talos snapshot made" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-Snapshot erstellt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Instantánea de Talos creada" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Instantané Talos créé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Snapshot Talos creato" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos スナップショットを作成しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Snapshot Talos criado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Снимок Talos создан" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Знімок Talos створено" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 快照已制作" } }
+      }
+    },
+    "The Talos snapshot failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Talos-Snapshot ist fehlgeschlagen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La instantánea de Talos ha fallado" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'instantané Talos a échoué" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lo snapshot Talos non è riuscito" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos スナップショットに失敗しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O snapshot Talos falhou" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось создать снимок Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вдалося створити знімок Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 快照失败" } }
       }
     },
     "About %@ per hour, %@ per month, before tax" : {
