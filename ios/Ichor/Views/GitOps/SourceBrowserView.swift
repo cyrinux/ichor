@@ -48,7 +48,9 @@ struct SourceBrowserView: View {
             } else if let searched {
                 searchResults(searched)
             } else {
-                LoadStateView(state: state, retry: load) { tree in content(tree) }
+                LoadStateView(state: state, retry: load) { tree in
+                    content(tree).accessibilityIdentifier(SmokeID.screen("gitops"))
+                }
             }
         }
         .modifier(

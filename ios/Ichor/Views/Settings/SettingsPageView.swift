@@ -30,6 +30,7 @@ struct SettingsPageView: View {
             }
         }
         .themedBackground()
+        .smokeID(page == .plugins ? SmokeID.screen("plugins") : nil)
         .navigationTitle(Text(page.title))
     }
 }

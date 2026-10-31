@@ -85,6 +85,7 @@ struct CgroupsView: View {
                             .accessibilityValue(cgroupAccessibilityValue(row, expanded: open.contains(row.id)))
                             .accessibilityAddTraits(row.hasChildren ? .isButton : [])
                             .accessibilityAction { toggle() }
+                            .accessibilityIdentifier(SmokeID.screen("cgroups"))
                     }
                 }
             }

@@ -191,6 +191,7 @@ struct MetricsView: View {
             }
         }
         .refreshable { await refresh() }
+        .accessibilityIdentifier(SmokeID.screen("metrics"))
     }
 
     private var noSource: some View {

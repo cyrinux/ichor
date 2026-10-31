@@ -3,10 +3,12 @@ name: Screenshots
 # The website and store screenshots, taken from the offline demo on an emulator
 # (androidTest DemoScreenshots, scripts/ci-screenshots.sh). Run by hand before a release or a
 # website change; the images come back as the `screenshots` artifact, laid out as in the repo:
-# unzip it at the root and commit docs/screenshots/ and the store's phoneScreenshots/. Run with
-# the `store` input it takes the Play listing's pictures in all ten languages instead (half an
-# hour of emulator, so never on a pull request): the `store-screenshots` artifact, unzipped the
-# same way, then scripts/play-assets.sh.
+# unzip it at the root and commit docs/screenshots/ and the store's phoneScreenshots/. The iPhone
+# ones (ios/IchorUITests/DemoScreenshotTests.swift, scripts/ios-screenshots.sh) are taken on a
+# simulator and come back as `screenshots-ios`: unzip it at the root too and commit
+# docs/screenshots/ios/. Run with the `store` input it takes the Play listing's pictures in all ten
+# languages instead (half an hour of emulator, so never on a pull request): the `store-screenshots`
+# artifact, unzipped the same way, then scripts/play-assets.sh.
 on:
   workflow_dispatch:
     inputs:
@@ -22,6 +24,9 @@ on:
       - scripts/screenshot.sh
       - scripts/screenshot-lib.sh
       - .github/workflows/screenshots.yml
+      - ios/IchorUITests/**
+      - ios/Ichor/App/UITestLaunch.swift
+      - scripts/ios-screenshots.sh
 
 permissions:
   contents: read
@@ -129,4 +134,50 @@ jobs:
             app/build/reports/store-screenshots.txt
             app/build/reports/store-screenshots/
             ${{ runner.temp }}/emulator.log
+          if-no-files-found: ignore
+
+  capture-ios:
+    name: Capture the demo (simulator)
+    if: ${{ !inputs.store }}
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # scripts/version.sh derives the version from tags and history
+          persist-credentials: false
+
+      - uses: ./.github/actions/ios-toolchain
+
+      # Restored, never saved here: ios.yml's test job on main is the only writer of the caches.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/llama-xcframework-*
+          key: llama-xcframework-${{ runner.os }}-${{ hashFiles('native/llama-cpp.env') }}
+
+      - name: Install cwebp
+        run: brew install webp
+
+      - name: Walk the demo on a simulator, in both appearances
+        env:
+          ICHOR_SKIP_TESTS: "1" # ios.yml's test job runs the core tests
+        run: scripts/ios-build.sh screenshots
+
+      - name: Write the images
+        run: scripts/ios-screenshots.sh
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screenshots-ios
+          path: docs/screenshots/ios/*.webp
+
+      # What the walk captured, with the element tree of a screen that never showed.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: screenshots-ios-report
+          path: |
+            ios/build/screenshots-dark.xcresult
+            ios/build/screenshots-light.xcresult
+          retention-days: 7
           if-no-files-found: ignore
