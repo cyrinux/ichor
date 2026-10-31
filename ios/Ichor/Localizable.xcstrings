@@ -1,6 +1,344 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Create the server at Hetzner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Server bei Hetzner erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear el servidor en Hetzner" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer le serveur chez Hetzner" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea il server su Hetzner" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Hetzner にサーバーを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar o servidor na Hetzner" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать сервер в Hetzner" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити сервер у Hetzner" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Hetzner 创建服务器" } }
+      }
+    },
+    "Ichor creates the server from a Talos snapshot of your project, with this user data, and follows it until the node joins." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor erstellt den Server aus einem Talos-Snapshot deines Projekts mit diesen Benutzerdaten und verfolgt ihn, bis der Knoten beitritt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea el servidor a partir de una instantánea de Talos de tu proyecto, con estos datos de usuario, y lo sigue hasta que el nodo se une." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée le serveur à partir d'un instantané Talos de votre projet, avec ces données utilisateur, et le suit jusqu'à ce que le nœud rejoigne le cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea il server da uno snapshot Talos del tuo progetto, con questi dati utente, e lo segue finché il nodo non si unisce." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はプロジェクトの Talos スナップショットからこのユーザーデータでサーバーを作成し、ノードが参加するまで追跡します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria o servidor a partir de um snapshot Talos do seu projeto, com estes dados de usuário, e o acompanha até o nó entrar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor создаёт сервер из снимка Talos вашего проекта с этими пользовательскими данными и следит за ним, пока узел не присоединится." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor створює сервер зі знімка Talos вашого проєкту з цими даними користувача й стежить за ним, доки вузол не приєднається." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 使用你项目中的 Talos 快照和此用户数据创建服务器，并跟踪到节点加入为止。" } }
+      }
+    },
+    "Ichor creates the server from a Talos snapshot of your project, with this join config, and follows it until the machine appears in Omni." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor erstellt den Server aus einem Talos-Snapshot deines Projekts mit dieser Join-Konfiguration und verfolgt ihn, bis die Maschine in Omni erscheint." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea el servidor a partir de una instantánea de Talos de tu proyecto, con esta configuración de unión, y lo sigue hasta que la máquina aparece en Omni." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée le serveur à partir d'un instantané Talos de votre projet, avec cette configuration d'adhésion, et le suit jusqu'à ce que la machine apparaisse dans Omni." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea il server da uno snapshot Talos del tuo progetto, con questa configurazione di join, e lo segue finché la macchina non appare in Omni." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はプロジェクトの Talos スナップショットからこの参加設定でサーバーを作成し、マシンが Omni に表示されるまで追跡します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria o servidor a partir de um snapshot Talos do seu projeto, com esta configuração de entrada, e o acompanha até a máquina aparecer no Omni." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor создаёт сервер из снимка Talos вашего проекта с этой конфигурацией подключения и следит за ним, пока машина не появится в Omni." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor створює сервер зі знімка Talos вашого проєкту з цією конфігурацією приєднання й стежить за ним, доки машина не з'явиться в Omni." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 使用你项目中的 Talos 快照和此加入配置创建服务器，并跟踪到机器出现在 Omni 中为止。" } }
+      }
+    },
+    "Demo cluster: these are samples, and nothing is created." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demo-Cluster: Das sind Beispiele, und es wird nichts erstellt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clúster de demostración: son ejemplos y no se crea nada." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cluster de démonstration : ce sont des exemples, et rien n'est créé." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cluster demo: sono esempi e non viene creato nulla." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デモクラスター: これらはサンプルで、何も作成されません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cluster de demonstração: estes são exemplos e nada é criado." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Демо-кластер: это примеры, ничего не создаётся." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Демо-кластер: це приклади, нічого не створюється." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "演示集群：这些是示例，不会创建任何内容。" } }
+      }
+    },
+    "Add a Hetzner token" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hetzner-Token hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir un token de Hetzner" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un jeton Hetzner" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un token Hetzner" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Hetzner トークンを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar um token da Hetzner" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить токен Hetzner" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати токен Hetzner" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 Hetzner 令牌" } }
+      }
+    },
+    "Remove this token" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieses Token entfernen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar este token" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer ce jeton" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi questo token" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このトークンを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover este token" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить этот токен" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вилучити цей токен" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除此令牌" } }
+      }
+    },
+    "A Read & Write token never expires and can delete everything in its project, including its servers. It stays sealed on this device and is not in backups." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Read-&-Write-Token läuft nie ab und kann alles in seinem Projekt löschen, auch die Server. Es bleibt versiegelt auf diesem Gerät und ist nicht in Backups enthalten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Un token de lectura y escritura nunca caduca y puede borrar todo en su proyecto, incluidos los servidores. Queda sellado en este dispositivo y no está en las copias de seguridad." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un jeton Read & Write n'expire jamais et peut tout supprimer dans son projet, y compris les serveurs. Il reste scellé sur cet appareil et n'est pas dans les sauvegardes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Un token Read & Write non scade mai e può eliminare tutto nel suo progetto, compresi i server. Resta sigillato su questo dispositivo e non è nei backup." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Read & Write トークンは期限切れにならず、サーバーを含むプロジェクト内のすべてを削除できます。このデバイスに封印され、バックアップには含まれません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Um token Read & Write nunca expira e pode excluir tudo no projeto, inclusive os servidores. Ele fica selado neste dispositivo e não entra nos backups." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Токен Read & Write не истекает и может удалить всё в своём проекте, включая серверы. Он остаётся запечатанным на этом устройстве и не попадает в резервные копии." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Токен Read & Write не спливає й може видалити все у своєму проєкті, зокрема сервери. Він залишається запечатаним на цьому пристрої й не потрапляє до резервних копій." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "读写令牌永不过期，可以删除其项目中的所有内容，包括服务器。它密封保存在此设备上，不包含在备份中。" } }
+      }
+    },
+    "Project name (yours, for this list)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projektname (deiner, für diese Liste)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nombre del proyecto (el tuyo, para esta lista)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nom du projet (le vôtre, pour cette liste)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nome del progetto (il tuo, per questo elenco)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロジェクト名 (この一覧用の自分の名前)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nome do projeto (o seu, para esta lista)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Название проекта (ваше, для этого списка)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Назва проєкту (ваша, для цього списку)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "项目名称（你自己的，用于此列表）" } }
+      }
+    },
+    "Read & Write token: %@ servers in this project." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Read-&-Write-Token: %@ Server in diesem Projekt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Token de lectura y escritura: %@ servidores en este proyecto." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Jeton Read & Write : %@ serveurs dans ce projet." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Token Read & Write: %@ server in questo progetto." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Read & Write トークン: このプロジェクトのサーバーは %@ 台です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Token Read & Write: %@ servidores neste projeto." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Токен Read & Write: серверов в этом проекте: %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Токен Read & Write: серверів у цьому проєкті: %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "读写令牌：此项目中有 %@ 台服务器。" } }
+      }
+    },
+    "Read-only token: it can list, not create. Make a Read & Write one to create a server." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur-Lese-Token: Es kann auflisten, aber nicht erstellen. Erstelle ein Read-&-Write-Token, um einen Server anzulegen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Token de solo lectura: puede listar, no crear. Crea uno de lectura y escritura para crear un servidor." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Jeton en lecture seule : il peut lister, pas créer. Créez-en un Read & Write pour créer un serveur." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Token di sola lettura: può elencare, non creare. Creane uno Read & Write per creare un server." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "読み取り専用トークン: 一覧はできますが作成はできません。サーバーを作成するには Read & Write トークンを作成してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Token somente leitura: pode listar, não criar. Crie um Read & Write para criar um servidor." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Токен только для чтения: он может показывать список, но не создавать. Для создания сервера нужен токен Read & Write." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Токен лише для читання: він може показувати список, але не створювати. Щоб створити сервер, потрібен токен Read & Write." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "只读令牌：可以列出，不能创建。要创建服务器，请生成读写令牌。" } }
+      }
+    },
+    "Server type" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Servertyp" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tipo de servidor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Type de serveur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tipo di server" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバータイプ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tipo de servidor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тип сервера" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тип сервера" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器类型" } }
+      }
+    },
+    "Location" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Standort" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ubicación" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Emplacement" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Posizione" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロケーション" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Localização" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Расположение" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Розташування" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "位置" } }
+      }
+    },
+    "Talos snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-Snapshot" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Instantánea de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Instantané Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Snapshot Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos スナップショット" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Snapshot Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Снимок Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Знімок Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 快照" } }
+      }
+    },
+    "This project has no snapshot for this architecture. Make a Talos one first with the hcloud-upload-image tool, or create the server by hand from the images above." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieses Projekt hat keinen Snapshot für diese Architektur. Erstelle zuerst einen Talos-Snapshot mit dem Tool hcloud-upload-image oder lege den Server von Hand aus den Images oben an." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este proyecto no tiene ninguna instantánea para esta arquitectura. Crea primero una de Talos con la herramienta hcloud-upload-image, o crea el servidor a mano con las imágenes de arriba." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce projet n'a pas d'instantané pour cette architecture. Créez d'abord un instantané Talos avec l'outil hcloud-upload-image, ou créez le serveur à la main à partir des images ci-dessus." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo progetto non ha snapshot per questa architettura. Creane prima uno Talos con lo strumento hcloud-upload-image, oppure crea il server a mano dalle immagini qui sopra." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロジェクトにはこのアーキテクチャのスナップショットがありません。先に hcloud-upload-image ツールで Talos のものを作成するか、上のイメージから手動でサーバーを作成してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este projeto não tem snapshot para esta arquitetura. Crie primeiro um Talos com a ferramenta hcloud-upload-image, ou crie o servidor manualmente a partir das imagens acima." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этом проекте нет снимка для этой архитектуры. Сначала создайте снимок Talos с помощью hcloud-upload-image или создайте сервер вручную из образов выше." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цьому проєкті немає знімка для цієї архітектури. Спочатку створіть знімок Talos за допомогою hcloud-upload-image або створіть сервер вручну з образів вище." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此项目没有该架构的快照。请先用 hcloud-upload-image 工具制作 Talos 快照，或根据上面的镜像手动创建服务器。" } }
+      }
+    },
+    "About %@ per hour, %@ per month, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$@ per hour, %2$@ per month, before tax" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$@ pro Stunde, %2$@ pro Monat, vor Steuern" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$@ por hora, %2$@ al mes, sin impuestos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$@ par heure, %2$@ par mois, hors taxes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$@ all'ora, %2$@ al mese, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1 時間あたり約 %1$@、1 か月あたり %2$@ (税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$@ por hora, %2$@ por mês, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$@ в час, %2$@ в месяц, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$@ на годину, %2$@ на місяць, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每小时约 %1$@，每月 %2$@（税前）" } }
+      }
+    },
+    "Create the server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Server erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear el servidor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer le serveur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea il server" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバーを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar o servidor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать сервер" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити сервер" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建服务器" } }
+      }
+    },
+    "Create %@ at Hetzner?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bei Hetzner erstellen?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Crear %@ en Hetzner?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer %@ chez Hetzner ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare %@ su Hetzner?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Hetzner に %@ を作成しますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar %@ na Hetzner?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать %@ в Hetzner?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити %@ у Hetzner?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Hetzner 创建 %@？" } }
+      }
+    },
+    "This creates a billable server (%@ in %@, %@ per month). Its user data goes to Hetzner with the cluster's secrets or Omni's join token. A failed run deletes the server." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This creates a billable server (%1$@ in %2$@, %3$@ per month). Its user data goes to Hetzner with the cluster's secrets or Omni's join token. A failed run deletes the server." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das erstellt einen kostenpflichtigen Server (%1$@ in %2$@, %3$@ pro Monat). Seine Benutzerdaten gehen mit den Secrets des Clusters oder dem Join-Token von Omni an Hetzner. Ein fehlgeschlagener Lauf löscht den Server." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto crea un servidor de pago (%1$@ en %2$@, %3$@ al mes). Sus datos de usuario van a Hetzner con los secretos del clúster o el token de unión de Omni. Una ejecución fallida borra el servidor." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela crée un serveur facturé (%1$@ à %2$@, %3$@ par mois). Ses données utilisateur partent chez Hetzner avec les secrets du cluster ou le jeton d'adhésion d'Omni. Une exécution échouée supprime le serveur." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un server a pagamento (%1$@ in %2$@, %3$@ al mese). I suoi dati utente vanno a Hetzner con i segreti del cluster o il token di join di Omni. Un'esecuzione non riuscita elimina il server." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "課金対象のサーバーを作成します (%1$@、%2$@、月額 %3$@)。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに Hetzner に送られます。実行に失敗するとサーバーは削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isso cria um servidor pago (%1$@ em %2$@, %3$@ por mês). Os dados de usuário vão para a Hetzner com os segredos do cluster ou o token de entrada do Omni. Uma execução com falha exclui o servidor." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Будет создан платный сервер (%1$@ в %2$@, %3$@ в месяц). Его пользовательские данные передаются в Hetzner вместе с секретами кластера или токеном подключения Omni. При сбое сервер удаляется." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Буде створено платний сервер (%1$@ у %2$@, %3$@ на місяць). Його дані користувача передаються до Hetzner разом із секретами кластера або токеном приєднання Omni. У разі збою сервер видаляється." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会创建一台计费服务器（%1$@，位于 %2$@，每月 %3$@）。其用户数据连同集群机密或 Omni 加入令牌会发送到 Hetzner。运行失败时会删除服务器。" } }
+      }
+    },
+    "Start the server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Server starten" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar el servidor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer le serveur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia il server" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバーを起動" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar o servidor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить сервер" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запустити сервер" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启动服务器" } }
+      }
+    },
+    "Appear in Omni" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "In Omni erscheinen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aparecer en Omni" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Apparaître dans Omni" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apparire in Omni" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Omni に表示" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Aparecer no Omni" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Появиться в Omni" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "З'явитися в Omni" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "出现在 Omni 中" } }
+      }
+    },
+    "%@ appeared in Omni: allocate it there" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ ist in Omni erschienen: Weise die Maschine dort zu" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ ha aparecido en Omni: asígnala allí" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ est apparu dans Omni : allouez-le là-bas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ è apparso in Omni: assegnalo lì" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ が Omni に表示されました: そこで割り当ててください" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ apareceu no Omni: aloque-o lá" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ появился в Omni: назначьте его там" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ з'явився в Omni: призначте його там" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已出现在 Omni 中：请在那里分配" } }
+      }
+    },
+    "Stop and delete the server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stoppen und Server löschen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener y borrar el servidor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter et supprimer le serveur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ferma ed elimina il server" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止してサーバーを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar e excluir o servidor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановить и удалить сервер" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинити й видалити сервер" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止并删除服务器" } }
+      }
+    },
+    "Stopping deletes the server this run created." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stoppen löscht den Server, den dieser Lauf erstellt hat." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener borra el servidor que creó esta ejecución." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter supprime le serveur créé par cette exécution." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermare elimina il server creato da questa esecuzione." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止すると、この実行で作成したサーバーが削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar exclui o servidor criado por esta execução." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановка удаляет сервер, созданный этим запуском." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинка видаляє сервер, створений цим запуском." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止会删除此次运行创建的服务器。" } }
+      }
+    },
+    "%@ is deleted at Hetzner. A control plane that already answered is kept: its etcd member must go first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ wird bei Hetzner gelöscht. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ se borra en Hetzner. Un plano de control que ya respondió se conserva: primero debe quitarse su miembro de etcd." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ est supprimé chez Hetzner. Un plan de contrôle qui a déjà répondu est conservé : son membre etcd doit d'abord être retiré." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ viene eliminato su Hetzner. Un control plane che ha già risposto viene mantenuto: prima va rimosso il suo membro etcd." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ は Hetzner で削除されます。すでに応答したコントロールプレーンは保持されます。先にその etcd メンバーを削除する必要があります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ é excluído na Hetzner. Um control plane que já respondeu é mantido: primeiro é preciso remover o membro etcd dele." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ удаляется в Hetzner. Уже ответившая control plane сохраняется: сначала нужно удалить её участника etcd." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ видаляється в Hetzner. Control plane, що вже відповіла, зберігається: спершу потрібно вилучити її учасника etcd." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将在 Hetzner 上删除。已响应的控制平面会保留：必须先移除其 etcd 成员。" } }
+      }
+    },
     "Looked at" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -5,6 +5,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.BootMedia
 import name.levis.ichor.model.CARotationPlan
 import name.levis.ichor.model.CARotationProgress
@@ -15,6 +17,9 @@ import name.levis.ichor.model.CpReplacePlan
 import name.levis.ichor.model.CpReplaceWait
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.EndpointProbe
+import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.HetznerOptions
+import name.levis.ichor.model.HetznerTokenCheck
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.K8sUpgradePlan
 import name.levis.ichor.model.K8sVersionChoice
@@ -294,6 +299,23 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
         replacing: Boolean,
         stop: Flow<Any>,
     ): Flow<JoinEvent> = streams.joinNode(address, template, role, hostname, installDisk, staticAddress, replacing, stop)
+
+    /** What a Hetzner token may do. Creates nothing. */
+    suspend fun hetznerTest(token: String): HetznerTokenCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(HetznerTokenCheck.serializer(), Ichorgo.hetznerTest(hetznerTokenJson(token)))
+    }
+
+    /** Server types, locations and snapshots ([token] may be blank on the demo). Never cached. */
+    suspend fun hetznerOptions(token: String): HetznerOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(HetznerOptions.serializer(), Ichorgo.hetznerOptions(cfg, ctx, hetznerTokenJson(token)))
+    }
+
+    /** See [TalosStreams.hetznerCreate]. */
+    fun hetznerCreate(token: String, spec: HetznerCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.hetznerCreate(hetznerTokenJson(token), TalosJson.encodeToString(HetznerCreateSpec.serializer(), spec), stop)
+
+    private fun hetznerTokenJson(token: String): String =
+        TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))
 
     /** What rotating the active context's Talos API CA would do (os:admin). Never cached. */
     suspend fun caRotationPlan(): CARotationPlan = call { cfg, ctx ->

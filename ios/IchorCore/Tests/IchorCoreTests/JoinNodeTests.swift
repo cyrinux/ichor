@@ -119,7 +119,7 @@ final class JoinNodeTests: XCTestCase {
             JoinProgress(phase: "rebooting", message: "down", at: 3),
             JoinProgress(phase: "rebooting", message: "still down", at: 4),
         ])
-        XCTAssertEqual(steps.map(\.phase), JoinPhase.allCases)
+        XCTAssertEqual(steps.map(\.phase), JoinPhase.maintenanceRun)
         XCTAssertEqual(steps.map(\.state), [.done, .done, .current, .pending, .pending, .pending, .pending])
         XCTAssertEqual(steps[2].at, 3)
         XCTAssertEqual(steps[2].message, "still down")

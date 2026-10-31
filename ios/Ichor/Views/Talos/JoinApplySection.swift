@@ -118,6 +118,9 @@ struct JoinApplySection: View {
                     job.clear()
                     onOpenNode(NodeRef(address: address, hostname: hostname, role: role))
                 }
+            case .appearedInOmni?:
+                Text("\(job.request?.hostname ?? "") appeared in Omni: allocate it there")
+                Button("Close") { job.clear() }
             case .failed(let error)?:
                 Label {
                     Text(verbatim: error)
@@ -173,6 +176,9 @@ struct JoinApplySection: View {
 extension JoinPhase {
     var localizedLabel: String {
         switch self {
+        case .creating: String(localized: "Create the server")
+        case .starting: String(localized: "Start the server")
+        case .omni: String(localized: "Appear in Omni")
         case .applying: String(localized: "Send the config")
         case .installing: String(localized: "Install")
         case .rebooting: String(localized: "Reboot")
