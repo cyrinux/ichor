@@ -213,6 +213,15 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _alertsOfferPending.value = pending
     }
 
+    /** The demo's notice on the home, closed once for every demo: later demos do not bring it back. */
+    private val _demoNoticeDismissed = MutableStateFlow(prefs.getBoolean(KEY_DEMO_NOTICE_DISMISSED, false))
+    val demoNoticeDismissed: StateFlow<Boolean> = _demoNoticeDismissed.asStateFlow()
+
+    fun dismissDemoNotice() {
+        prefs.edit().putBoolean(KEY_DEMO_NOTICE_DISMISSED, true).apply()
+        _demoNoticeDismissed.value = true
+    }
+
     /** Shows the demo tour the first time a demo is added; later demos do not bring it back. */
     fun offerDemoTour() {
         if (prefs.getBoolean(KEY_TOUR_OFFERED, false)) return
@@ -415,6 +424,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_RECENT_TARGETS = "recent_targets"
         private const val KEY_TOUR_PENDING = "demo_tour_pending"
         private const val KEY_TOUR_OFFERED = "demo_tour_offered"
+        private const val KEY_DEMO_NOTICE_DISMISSED = "demo_notice_dismissed"
         private const val KEY_ALERTS_OFFER_PENDING = "alerts_offer_pending"
         private const val KEY_ALERTS_OFFERED = "alerts_offered"
 

@@ -21,14 +21,7 @@ struct OverviewBannerSections: View {
         if let lastKnownOutage {
             Section { LastKnownBanner(outage: lastKnownOutage, retry: retry) }
         }
-        if model.activeSummary?.demo == true {
-            Section {
-                Text(
-                    "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
-                )
-                .font(.callout).foregroundStyle(.secondary)
-            }
-        }
+        DemoNoticeSection()
         if showsSwitcherTip {
             Section { DemoTourSwitcherTip() }
         }
@@ -40,6 +33,25 @@ struct OverviewBannerSections: View {
             Section { DiscoveredNodesBanner(count: discovered, open: showDiscovered) }
         }
         if support.visible { Section { SupportCard(prompt: support) } }
+    }
+}
+
+/// The demo's sample data and read-only state, on its home until closed: later demos do not bring
+/// it back.
+struct DemoNoticeSection: View {
+    @Environment(AppModel.self) private var model
+    @AppStorage("overview.demoNoticeDismissed") private var dismissed = false
+
+    var body: some View {
+        if model.activeSummary?.demo == true, !dismissed {
+            Section {
+                Text(
+                    "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
+                )
+                .font(.callout).foregroundStyle(.secondary)
+                Button("Dismiss") { dismissed = true }
+            }
+        }
     }
 }
 

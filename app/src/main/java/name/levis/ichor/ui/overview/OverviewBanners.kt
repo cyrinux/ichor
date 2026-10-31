@@ -80,6 +80,28 @@ internal fun ScreenshotModeIcon(modifier: Modifier = Modifier.padding(end = 4.dp
     )
 }
 
+/** Whether the home of the cluster on screen ([isDemo]) shows the demo's notice: until it is closed. */
+@Composable
+internal fun rememberDemoNotice(isDemo: Boolean): Boolean {
+    val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
+    val dismissed by prefs.demoNoticeDismissed.collectAsStateWithLifecycle()
+    return isDemo && !dismissed
+}
+
+/** The demo's sample data and read-only state, on its home until closed. */
+@Composable
+internal fun DemoNoticeCard() {
+    val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
+    IchorCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text(stringResource(R.string.demo_notice), style = MaterialTheme.typography.bodyMedium)
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                IchorTextButton(onClick = prefs::dismissDemoNotice) { Text(stringResource(R.string.common_close)) }
+            }
+        }
+    }
+}
+
 /** Shown when the daily check found a newer release; opens Settings → Updates. */
 @Composable
 internal fun UpdateBanner(onClick: () -> Unit) {
