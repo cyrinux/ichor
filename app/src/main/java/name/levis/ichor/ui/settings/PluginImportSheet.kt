@@ -82,11 +82,9 @@ private enum class PluginSource(@StringRes val label: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PluginImportSheet(plugins: PluginRepository, onDismiss: () -> Unit) {
-    val scope = rememberCoroutineScope()
     // The file checked and what it showed: nothing is stored until Enable.
     var checked by remember { mutableStateOf<Pair<String, PluginUserItem>?>(null) }
     var enabling by remember { mutableStateOf(false) }
-    var failure by remember { mutableStateOf<String?>(null) }
 
     ModalBottomSheet(onDismissRequest = { if (!enabling) onDismiss() }) {
         Column(
@@ -97,30 +95,63 @@ internal fun PluginImportSheet(plugins: PluginRepository, onDismiss: () -> Unit)
             if (current == null) {
                 ImportStep(plugins, onChecked = { yaml, item -> checked = yaml to item })
             } else {
-                ConsentStep(
-                    current.second.consent(),
-                    enabling = enabling,
-                    failure = failure,
-                    onEnable = {
-                        enabling = true
-                        failure = null
-                        scope.launch {
-                            try {
-                                plugins.import(current.first)
-                                onDismiss()
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                failure = e.userMessage()
-                            }
-                            enabling = false
-                        }
-                    },
-                    onCancel = onDismiss,
-                )
+                ConsentContent(plugins, current.first, current.second, enabling, { enabling = it }, onDismiss)
             }
         }
     }
+}
+
+/**
+ * The consent step alone, for a file already downloaded and checked (the catalog): [item] is
+ * what [PluginRepository.check] said of [yaml]. Only Enable stores it.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun PluginConsentSheet(plugins: PluginRepository, yaml: String, item: PluginUserItem, onDismiss: () -> Unit) {
+    var enabling by remember { mutableStateOf(false) }
+    ModalBottomSheet(onDismissRequest = { if (!enabling) onDismiss() }) {
+        Column(
+            Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 16.dp).navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            ConsentContent(plugins, yaml, item, enabling, { enabling = it }, onDismiss)
+        }
+    }
+}
+
+/** [ConsentStep] with its Enable: stores [yaml] and closes, or says why not. */
+@Composable
+private fun ConsentContent(
+    plugins: PluginRepository,
+    yaml: String,
+    item: PluginUserItem,
+    enabling: Boolean,
+    onEnabling: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    var failure by remember { mutableStateOf<String?>(null) }
+    ConsentStep(
+        item.consent(),
+        enabling = enabling,
+        failure = failure,
+        onEnable = {
+            onEnabling(true)
+            failure = null
+            scope.launch {
+                try {
+                    plugins.import(yaml)
+                    onDismiss()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    failure = e.userMessage()
+                }
+                onEnabling(false)
+            }
+        },
+        onCancel = onDismiss,
+    )
 }
 
 @Composable

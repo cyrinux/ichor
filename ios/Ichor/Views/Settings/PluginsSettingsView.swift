@@ -7,6 +7,8 @@ import IchorCore
 struct PluginsSettingsView: View {
     /// docs/plugins.md, published by the website workflow (scripts/site-reference.py).
     private let pluginDocsURL = URL(string: "https://cyrinux.github.io/ichor/plugins/")!
+    /// The plugin index to browse; "": the project's.
+    @AppStorage("pluginIndexURL") private var indexURL = ""
     @State private var imported: [PluginUserItem] = []
     @State private var builtins: [PluginCatalogItem] = []
     @State private var failure: String?
@@ -46,6 +48,21 @@ struct PluginsSettingsView: View {
                 importing = true
             } label: {
                 Label("Import a plugin", systemImage: "square.and.arrow.down")
+            }
+            NavigationLink {
+                PluginIndexView(indexURL: indexURL.trimmingCharacters(in: .whitespacesAndNewlines))
+            } label: {
+                Label("Browse the catalog", systemImage: "square.grid.2x2")
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                TextField("Index URL", text: $indexURL)
+                    .keyboardType(.URL)
+                    .textContentType(.URL)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                Text("Leave empty for the Ichor catalog. Only use an index you trust.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Link(destination: pluginDocsURL) {
                 Label("Plugin documentation", systemImage: "book")

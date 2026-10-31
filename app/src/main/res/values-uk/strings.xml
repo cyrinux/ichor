@@ -5944,6 +5944,16 @@
     <string name="plugins_consent_note">Він читає з вашим власним доступом до Kubernetes і ніколи не звертається ні до чого, крім API Kubernetes. Вимкніть або видаліть його будь-коли в Налаштування → Плагіни.</string>
     <string name="plugins_replaces">Він замінює імпортований плагін з тим самим id.</string>
     <string name="plugins_enable">Увімкнути</string>
+    <string name="plugin_index_browse">Переглянути каталог</string>
+    <string name="plugin_index_url">URL індексу</string>
+    <string name="plugin_index_url_hint">Залиште порожнім для каталогу Ichor. Використовуйте лише індекс, якому довіряєте.</string>
+    <string name="plugin_index_note">Плагін із каталогу має збігатися з дайджестом, опублікованим в індексі; потім перед увімкненням ви побачите, що він читає і може змінювати.</string>
+    <string name="plugin_index_source">Джерело: %1$s</string>
+    <string name="plugin_index_empty">У цьому індексі ще немає плагінів.</string>
+    <string name="plugin_index_loading">Завантаження каталогу…</string>
+    <string name="plugin_index_installed">Встановлено</string>
+    <string name="plugin_index_import">Імпортувати</string>
+    <string name="plugin_index_maintainer">Підтримує: %1$s</string>
     <string name="repo_title">Репозиторій</string>
     <string name="repo_none">Для цього кластера не збережено репозиторій: додайте його з меню кластера в списку (Репозиторій кластера).</string>
     <string name="repo_propose_applies">На кластері нічого не зміниться, доки зміну не буде злито й застосовано.</string>

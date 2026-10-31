@@ -46,6 +46,10 @@ var pluginCommands = []command{
 		// plugin-from-crd MANIFEST: a validated, CRD-linted plugin draft (plugin.Generate); refuses a CRD the app already reads unless -force.
 		return noOutput, pluginFromCRD(flag.Args()[1:], os.Stdout, os.Stderr)
 	}},
+	{name: "plugin-index", args: "[-check] [-ref REF] DIR [DIR ...]", noConfig: true, run: func(e env) (string, error) {
+		// plugin-index [-check] [-ref REF] DIR...: writes plugins/index.json from the plugin files; -check fails when it is stale.
+		return noOutput, pluginIndex(flag.Args()[1:], os.Stdout)
+	}},
 	{name: "plugin-qr", args: "TEXT", noConfig: true, run: func(e env) (string, error) {
 		// plugin-qr TEXT: PluginQRPayload, what a scanned code holds (a plugin link or file); fetches nothing.
 		if flag.NArg() != 2 {

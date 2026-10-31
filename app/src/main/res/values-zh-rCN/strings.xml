@@ -5558,6 +5558,16 @@
     <string name="plugins_consent_note">它使用你自己的 Kubernetes 访问权限读取，且只调用 Kubernetes API。可随时在“设置 → 插件”中关闭或移除。</string>
     <string name="plugins_replaces">它将替换具有相同 id 的已导入插件。</string>
     <string name="plugins_enable">启用</string>
+    <string name="plugin_index_browse">浏览目录</string>
+    <string name="plugin_index_url">索引 URL</string>
+    <string name="plugin_index_url_hint">留空则使用 Ichor 目录。请只使用您信任的索引。</string>
+    <string name="plugin_index_note">目录中的插件必须与索引发布的摘要一致,然后您可以在启用前查看它读取和可更改的内容。</string>
+    <string name="plugin_index_source">来源:%1$s</string>
+    <string name="plugin_index_empty">此索引尚未列出任何插件。</string>
+    <string name="plugin_index_loading">正在加载目录…</string>
+    <string name="plugin_index_installed">已安装</string>
+    <string name="plugin_index_import">导入</string>
+    <string name="plugin_index_maintainer">维护者:%1$s</string>
     <string name="repo_title">仓库</string>
     <string name="repo_none">此集群尚未保存仓库：在集群列表中通过其菜单添加（集群仓库）。</string>
     <string name="repo_propose_applies">在合并并应用之前，集群上不会发生任何更改。</string>

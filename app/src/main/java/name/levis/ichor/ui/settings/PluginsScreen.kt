@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import name.levis.ichor.ui.design.IchorAlertDialog
@@ -15,6 +16,7 @@ import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorSwitch
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
@@ -31,12 +33,15 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.data.PluginRepository
+import name.levis.ichor.data.UiPreferences
 import name.levis.ichor.model.PluginCatalogItem
 import name.levis.ichor.model.PluginUserItem
 import name.levis.ichor.ui.components.MutedText
@@ -52,7 +57,14 @@ private const val PLUGIN_DOCS_URL = "https://cyrinux.github.io/ichor/plugins/"
  * consent sheet). An imported plugin the core no longer reads is shown off with its reason.
  */
 @Composable
-fun PluginsSection(plugins: PluginRepository) {
+fun PluginsSection(plugins: PluginRepository, preferences: UiPreferences) {
+    val indexUrl by preferences.pluginIndexUrl.collectAsStateWithLifecycle()
+    var browsing by remember { mutableStateOf(false) }
+    if (browsing) {
+        PluginIndexScreen(plugins, indexUrl.trim(), onBack = { browsing = false })
+        return
+    }
+
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     var builtins by remember { mutableStateOf<List<PluginCatalogItem>>(emptyList()) }
@@ -111,6 +123,18 @@ fun PluginsSection(plugins: PluginRepository) {
     IchorOutlinedButton(onClick = { importing = true }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.plugins_import))
     }
+    IchorOutlinedButton(onClick = { browsing = true }, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.plugin_index_browse))
+    }
+    OutlinedTextField(
+        value = indexUrl,
+        onValueChange = preferences::setPluginIndexUrl,
+        label = { Text(stringResource(R.string.plugin_index_url)) },
+        supportingText = { Text(stringResource(R.string.plugin_index_url_hint)) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
+        modifier = Modifier.fillMaxWidth(),
+    )
     MutedText(stringResource(R.string.plugins_explainer))
     IchorTextButton(onClick = { uriHandler.openUri(PLUGIN_DOCS_URL) }) { Text(stringResource(R.string.plugins_docs)) }
 

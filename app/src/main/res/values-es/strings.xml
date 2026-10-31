@@ -5693,6 +5693,16 @@
     <string name="plugins_consent_note">Lee con tu propio acceso a Kubernetes y nunca llama a nada más que a la API de Kubernetes. Desactívalo o elimínalo cuando quieras en Ajustes → Plugins.</string>
     <string name="plugins_replaces">Sustituye al plugin importado con el mismo id.</string>
     <string name="plugins_enable">Activar</string>
+    <string name="plugin_index_browse">Explorar el catálogo</string>
+    <string name="plugin_index_url">URL del índice</string>
+    <string name="plugin_index_url_hint">Déjalo vacío para el catálogo de Ichor. Usa solo un índice de confianza.</string>
+    <string name="plugin_index_note">Un plugin del catálogo debe coincidir con el resumen publicado en el índice; después ves qué lee y qué puede cambiar antes de activarlo.</string>
+    <string name="plugin_index_source">Desde %1$s</string>
+    <string name="plugin_index_empty">Este índice aún no incluye ningún plugin.</string>
+    <string name="plugin_index_loading">Cargando el catálogo…</string>
+    <string name="plugin_index_installed">Instalado</string>
+    <string name="plugin_index_import">Importar</string>
+    <string name="plugin_index_maintainer">Mantenido por %1$s</string>
     <string name="repo_title">Repositorio</string>
     <string name="repo_none">No hay ningún repositorio guardado para este clúster: añade uno desde su menú en la lista de clústeres (Repositorio del clúster).</string>
     <string name="repo_propose_applies">Nada cambia en el clúster hasta que se fusione y se aplique.</string>

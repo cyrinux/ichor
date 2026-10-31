@@ -883,6 +883,10 @@
       },
       "type": "object"
     },
+    "description": {
+      "description": "Description is one line about the plugin, shown by the plugin index.",
+      "type": "string"
+    },
     "detect": {
       "description": "Detect activates the plugin when any entry matches.",
       "items": {
@@ -941,6 +945,10 @@
     "id": {
       "description": "ID is unique across built-in and user plugins: lowercase letters, digits and dashes.",
       "pattern": "^[a-z0-9-]+$",
+      "type": "string"
+    },
+    "maintainer": {
+      "description": "Maintainer is who keeps the plugin file, shown by the plugin index.",
       "type": "string"
     },
     "name": {
