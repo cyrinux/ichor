@@ -205,6 +205,8 @@ fun KubeHomeScreen(
     tailscaleVm: name.levis.ichor.ui.tailscale.TailscaleViewModel = viewModel(key = "overview-tailscale", factory = factory { name.levis.ichor.ui.tailscale.TailscaleViewModel(app.kubeBrowser) }),
     lifecycleVm: name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel = viewModel(key = "overview-cluster-lifecycle", factory = factory { name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel(app.kubeBrowser) }),
     rolloutsVm: name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel = viewModel(key = "overview-argo-rollouts", factory = factory { name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel(app.argoRolloutsRepository) }),
+    vmsVm: name.levis.ichor.ui.vms.VirtualMachinesViewModel = viewModel(key = "overview-virtual-machines", factory = factory { name.levis.ichor.ui.vms.VirtualMachinesViewModel(app.vmRepository) }),
+    policiesVm: name.levis.ichor.ui.policies.PoliciesViewModel = viewModel(key = "overview-policies", factory = factory { name.levis.ichor.ui.policies.PoliciesViewModel(app.policyRepository) }),
     alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
     pluginsVm: PluginDetectViewModel = viewModel(key = "overview-plugins", factory = factory { PluginDetectViewModel(app.pluginRepository) }),
     appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
@@ -251,6 +253,8 @@ fun KubeHomeScreen(
         tailscaleVm.refresh(reset = true)
         lifecycleVm.refresh(reset = true)
         rolloutsVm.refresh(reset = true)
+        vmsVm.refresh(reset = true)
+        policiesVm.refresh(reset = true)
         alertsVm.load(gitopsKey)
         pluginsVm.load(gitopsKey, hints = "")
         // The apps from the pods, as the Talos overview lists them from the nodes' containers.
@@ -267,6 +271,8 @@ fun KubeHomeScreen(
     val tailscale by tailscaleVm.state.collectAsStateWithLifecycle()
     val lifecycle by lifecycleVm.state.collectAsStateWithLifecycle()
     val rollouts by rolloutsVm.state.collectAsStateWithLifecycle()
+    val vms by vmsVm.state.collectAsStateWithLifecycle()
+    val policies by policiesVm.state.collectAsStateWithLifecycle()
     val alerts by alertsVm.state.collectAsStateWithLifecycle()
     val argoShown = argo.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val fluxShown = flux.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
@@ -278,6 +284,8 @@ fun KubeHomeScreen(
     val tailscaleShown = tailscale.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val lifecycleShown = lifecycle.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val rolloutsShown = (rollouts as? UiState.Loaded)?.data?.installed == true
+    val vmsShown = (vms as? UiState.Loaded)?.data?.installed == true
+    val policiesShown = (policies as? UiState.Loaded)?.data?.installed == true
     val alertsShown = alerts.takeIf { it.alertmanagerFound }
     // Cards the cluster has nothing for, left out of the editor too; each offered until its answer came.
     val absentCards = setOfNotNull(
@@ -393,6 +401,8 @@ fun KubeHomeScreen(
                     tailscale = tailscaleShown != null,
                     clusterLifecycle = lifecycleShown != null,
                     argoRollouts = rolloutsShown,
+                    virtualMachines = vmsShown,
+                    policies = policiesShown,
                     alerts = alertsShown,
                     cardRetry = OverviewCardRetry(argo = argoVm::refresh, flux = fluxVm::refresh, alerts = alertsVm::refresh),
                     // A skeleton while the pods are listed, as on the Talos overview.
@@ -431,6 +441,8 @@ private fun KubeHomeList(
     tailscale: Boolean,
     clusterLifecycle: Boolean,
     argoRollouts: Boolean,
+    virtualMachines: Boolean,
+    policies: Boolean,
     alerts: UiState<AlertsOverview?>?,
     cardRetry: OverviewCardRetry,
     /** The apps from the pods; null when the credentials may not list them. */
@@ -494,7 +506,7 @@ private fun KubeHomeList(
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, top, nodesExpanded, onToggleNodes, onNode, nav.onAllNodes, nodeRowActions) }
                 }
                 KubeHomeCard.TOOLS -> item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins.homeTiles, dataServices = toolServices) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, virtualMachines = virtualMachines, policies = policies, plugins = plugins.homeTiles, dataServices = toolServices) }
                 }
                 KubeHomeCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {

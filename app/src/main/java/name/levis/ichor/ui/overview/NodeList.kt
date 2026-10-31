@@ -350,6 +350,8 @@ private fun OverviewItems.overviewCard(
                     tailscale = ops.tailscale,
                     clusterLifecycle = ops.clusterLifecycle,
                     argoRollouts = ops.argoRollouts,
+                    virtualMachines = ops.virtualMachines,
+                    policies = ops.policies,
                     plugins = cards.toolPlugins,
                     dataServices = (cards.dataServices as? UiState.Loaded)?.data,
                 )

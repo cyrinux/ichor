@@ -371,7 +371,7 @@ and what goes if a node goes down?":
 
 **Kubernetes → Policies** shows the admission policies of the cluster, Kyverno policies and OPA
 Gatekeeper constraints in one list, to answer "is a policy blocking this rollout, and can I relax
-it?" in two taps:
+it?" in two taps. The entry shows only on a cluster running one of them:
 
 - **The engines:** each Kyverno or Gatekeeper controller ready or not, and what its webhook does
   while the engine is down: `Fail` refuses every request it covers (an outage blocks
@@ -434,7 +434,8 @@ points to the ScaledObject's `minReplicaCount` / `maxReplicaCount` instead.
 
 **Kubernetes → Virtual machines** shows the KubeVirt virtual machines of the cluster ("Harvester"
 in the title on a Harvester cluster), to answer "which VM is down, where does it run, is it
-still importing its disk?" and act on it from the phone:
+still importing its disk?" and act on it from the phone. The entry shows only on a cluster that
+serves KubeVirt.
 
 - **The list:** counts by state (running, stopped, failing, migrating, importing), then each VM
   failing first with KubeVirt's status, its node, first address and guest OS, and a line for a

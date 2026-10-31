@@ -210,7 +210,8 @@ private fun PolicyList(
                     ResultCounts(it.fail, it.warn, it.pass, Modifier.padding(horizontal = 16.dp))
                 }
             }
-            HorizontalDivider()
+            // The cards have no title of their own to keep them off the line.
+            HorizontalDivider(Modifier.padding(bottom = 8.dp))
         }
         if (rows.isEmpty()) {
             val empty = if (report.kyverno) R.string.kpol_empty else R.string.kpol_empty_gatekeeper

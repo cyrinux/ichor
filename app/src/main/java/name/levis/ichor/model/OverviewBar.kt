@@ -40,11 +40,11 @@ typealias KubeHomeBar = ActionBar<KubeHomeAction>
  * bar drops it.
  */
 enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS,
-    /** Kyverno's admission policies; last, so the saved and default bars keep their icons. */
+    /** Kyverno's admission policies, offered when the cluster runs an engine; last, so the saved and default bars keep their icons. */
     POLICIES,
     /** What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs. */
     AUTOSCALING,
-    /** KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs. Clean up
+    /** KubeVirt (and Harvester) virtual machines, offered when the cluster runs it; last, so the saved bars keep theirs. Clean up
      *  dead pods was here: it is a control of the Pods tab now, and a saved bar drops it. */
     VIRTUAL_MACHINES,
     /** Crossplane, the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal, each offered

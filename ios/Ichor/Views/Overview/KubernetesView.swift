@@ -77,8 +77,8 @@ struct KubernetesView: View {
     /// Read once on open: Live flows needs Cilium, or Calico with Whisker.
     @State private var cilium: CiliumStatus?
     /// Read once on open, as on the Kubernetes home: whether the cluster runs Crossplane, the
-    /// Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal (each read answers
-    /// "not installed" quickly). Unknown or unreadable: not offered.
+    /// Tailscale operator, Argo Rollouts, KubeVirt, Kyverno or Gatekeeper and Cluster API / Sidero
+    /// Metal (each read answers "not installed" quickly). Unknown or unreadable: not offered.
     @State private var operators = KubeOperators()
     /// The systems Data services reads here, to offer those filed outside it; empty until read or when unreadable.
     @State private var dataKinds: Set<DataServiceKind> = []
@@ -132,6 +132,8 @@ struct KubernetesView: View {
         case .tailscale: operators.tailscale
         case .argoRollouts: operators.argoRollouts
         case .clusterLifecycle: operators.clusterLifecycle
+        case .virtualMachines: operators.virtualMachines
+        case .admissionPolicies: operators.policies
         case .certManager, .castai: action.dataServiceKind.map(dataKinds.contains) ?? false
         default: true
         }
@@ -647,6 +649,8 @@ struct KubeOperators: Equatable {
     var tailscale = false
     var argoRollouts = false
     var clusterLifecycle = false
+    var virtualMachines = false
+    var policies = false
 
     static func read(with client: TalosClient) async -> KubeOperators {
         var found = KubeOperators()
@@ -654,6 +658,8 @@ struct KubeOperators: Equatable {
         found.tailscale = (try? await client.tailscale().installed) ?? false
         found.argoRollouts = (try? await client.argoRollouts().installed) ?? false
         found.clusterLifecycle = (try? await client.clusterLifecycle().installed) ?? false
+        found.virtualMachines = (try? await client.virtualMachines().installed) ?? false
+        found.policies = (try? await client.policies().installed) ?? false
         return found
     }
 }
