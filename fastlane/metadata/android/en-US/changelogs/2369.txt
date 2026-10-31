@@ -1,0 +1,6 @@
+• On Android, swipe or long-press a Kubernetes node, Flux, alert or silence row
+• On iOS, sections that fail to load say so quietly and offer Retry instead of red text
+• Material 3 Expressive as a UI style on Android
+• On Android, swipe or long-press a pod, workload or CronJob row
+• Sections that fail to load say so quietly and offer Retry instead of red text
+• The AI diagnosis masks namespaces and pod names and strips tokens from logs
