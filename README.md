@@ -52,7 +52,8 @@ tour** shows it again.
 - **Operators:** Longhorn, CloudNativePG, Garage, Rook Ceph, Velero, cert-manager, External
   Secrets, Sealed Secrets, ExternalDNS, Crossplane, Tailscale, Cluster API, Kyverno,
   Gatekeeper, KubeVirt, CAST AI and more, each with its findings in the cluster checkup, and
-  [plugins](docs/plugins.md) for any CRD of your own.
+  [plugins](docs/plugins.md) for any CRD of your own, imported from a file, a QR code or a
+  catalog with their digest verified.
 - **Troubleshooting:** cluster checkup, configuration drift, incident recorder, node pressure,
   bottleneck metrics, network tests between nodes, node network tools, image vulnerability
   scans, thirty days of history and an optional AI diagnosis.

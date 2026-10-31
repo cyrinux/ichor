@@ -217,6 +217,7 @@ Loading is strict:
 | `id` | yes | string | `[a-z0-9-]+`, unique across built-in and user plugins |
 | `name` | yes | string | the product name, never translated |
 | `website`, `icon`, `catalogId` | no | string | `icon` and `catalogId` are app catalog ids |
+| `description`, `maintainer` | no | string | one line about the plugin and who keeps the file, shown by the [catalog](#catalog) |
 | `category` | no | string | where the plugin shows on the Kubernetes home: `data-services` (default; a line of the Data services card and a tab of its screen), `networking`, `workloads` or `compute` (a tool in that family), `policies` or `security` (a tool in Security), `gitops` (a tool in Browse) |
 | `screen` | no | string | `native:<route>` opens a native screen from the hub tile |
 | `detect[]` | yes | list | each sets exactly one of `group` (with an optional `resource`, for a shared group: it must be served at the version the plugin declares for it, else at the group's preferred version), `pods` (a catalog id) or `service`; any match activates the plugin |
@@ -741,6 +742,51 @@ the app.
 | `PluginUserExport()` | the imported plugins for the backup, sorted by id: `{"plugins":[{"id","enabled","yaml"}]}` |
 | `PluginUserRestore(json)` | stores a backup's `plugins`, each checked as an import is and kept on or off: `{"restored":[id],"errors":[{"id","error"}]}` |
 | `PluginCatalog()` | the installed plugins: the built-ins, then the enabled imported ones (`"user": true`) |
+| `PluginIndexFetch(url)` | reads a plugin index (`""` for this project's): https only, 256 KiB, kept an hour; each entry says `installed` and `builtin` |
+| `PluginIndexDownload(url, sha256)` | downloads a file an index lists and answers it only with that digest; stores nothing |
+
+## Catalog
+
+Settings → Plugins → Browse the catalog lists the plugin files of an index, with what each one
+reads, its maintainer and its website, so that nobody needs to know a URL. The default index is
+`plugins/index.json` of this repository; the Index URL field on the same screen replaces it with
+a company's own, at any https address.
+
+The list only says what can be picked. Import downloads the entry's file with the same limits as
+any https URL and refuses it unless its sha256 is the one the index published ("the file changed
+since the index was published"). The file is then checked and shown on the consent sheet like
+any other: nothing is stored or enabled before its Enable, and it stays under the rules of
+[User plugins](#user-plugins). The index is a trust decision, so read who maintains a plugin
+before enabling it, and only point the app at an index you trust: its digests vouch that a file
+is the one the index names, not that the file is good.
+
+**How it is built.** `just plugin-index` writes the file from every plugin of `go/plugin/drafts/`,
+validated and linted, and stops at one that does not pass. `./build.sh check` and the release
+workflow fail when the file is stale, and the CRD request workflow regenerates it with each draft.
+`just probe plugin-index [-check] [-ref REF] DIR...` builds one from other directories.
+File URLs point at `main` by default, where the index and its files land together.
+
+```json
+{
+  "schemaVersion": "ichor.dev/plugin-index/v1",
+  "generatedAt": "2026-10-31T12:00:00Z",
+  "plugins": [{
+    "id": "demo-sleep", "name": "Demo Sleep", "description": "Sleep schedules", "version": "ichor.dev/plugin/v1alpha1",
+    "url": "https://example.com/plugins/demo-sleep.yaml", "sha256": "<64 hex digits>",
+    "resources": ["sleepinfos.kube-green.com"], "icon": "kube-green",
+    "website": "https://example.com", "maintainer": "demo-maintainer"
+  }]
+}
+```
+
+An entry without an https `url` or a sha256, or with an id that could not name a stored file, makes
+the app refuse the whole index. A `website` that is not https is dropped, and `icon` only ever
+names an icon bundled with the app: the catalog downloads nothing but the index and the file you
+pick. An entry whose id a built-in plugin has is shown as built-in and cannot be imported.
+
+**To propose a plugin**, open a request from its CRD (see
+[Writing a plugin from a CRD](#writing-a-plugin-from-a-crd)): a maintainer reviews the draft it
+produces, and merging it lists it in the catalog.
 
 ## Command line
 
@@ -758,6 +804,7 @@ validated first, before any config is read.
 | `just probe plugin-findings [-locale xx] [-hints a,b] [-demo]` | every active built-in plugin's findings, what the background monitor reads (`KubePluginFindings`), from the cluster (`-context CTX`) or the samples (`-demo`) | the report as JSON (see "Findings") | 0, or 1 when the API server answers nothing |
 | `just probe plugin-action ID ACTION NAMESPACE NAME [PARAMS_JSON]` | runs a built-in plugin's action on one object (`KubePluginAction`; `""` as `NAMESPACE` for a cluster-scoped resource), `-context CTX`. It changes the cluster | `done` | 0, or 1 with the error |
 | `just probe plugin-tool ID TOOL [-scope NS] [-locale xx] [-demo]` | runs a plugin's tool (`KubePluginTool`) over what it reads from the cluster (`-context CTX`) or its samples (`-demo`); read-only | the tool's result as JSON (see "Tools") | 0, or 1 with the error (`unknown tool`, a tool with no demo under `-demo`) |
+| `just probe plugin-index [-check] [-ref REF] DIR...` | writes `plugins/index.json` from every plugin file of the directories, relative to the repository root ([Catalog](#catalog)); `-check` writes nothing and fails when it is stale | `{"ok":true,"plugins":n}` | 0, or 1 (a file that does not validate, an id listed twice, a stale file) |
 | `just probe plugin-from-crd MANIFEST [-id ID] [-name NAME] [-website URL] [-category C] [-out FILE] [-force]` | writes a plugin draft for a CRD manifest (see "Writing a plugin from a CRD"), validated and linted against it; refuses a CRD a built-in plugin or a native integration already reads unless `-force` | the draft on stdout (or in `-out`); `{"ok":true,"id":"…","warnings":n}` on stderr | 0, or 1 (`already covered by built-in plugin kube-green`, a file that is not a CRD) |
 | `just probe plugin-i18n FILE [-fill JSON] [-no-glossary] [-dry-run]` | completes the file's `i18n` section: the labels the built-in plugins already translate (their glossary, the most frequent wording), then the translations of `-fill` (`{locale: {English: translation}}`), each refused when it is not a label of the file, is empty, spans lines or loses a `{{ hole }}` or `%d`; the rest of the file is left as it is | `{"ok":true,"id":"…","filled":n,"missing":{"fr":["…"]}}`, the labels still English per language | 0, or 1 (a refused translation names the language and the label) |
 | `just probe plugin-list` | the built-in plugins | one JSON line each: `{id, name, version, category, resources, cards, actions, findings, file}` | 0 |

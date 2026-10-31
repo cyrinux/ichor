@@ -95,6 +95,17 @@ extension TalosClient {
         try await run { IchorgoPluginFetchURL(url, $0) }
     }
 
+    /// The plugin index at `url` ("" for the project's), kept an hour by the core (no cluster call).
+    static func pluginIndex(url: String) async throws -> PluginIndex {
+        try await json { IchorgoPluginIndexFetch(url, $0) }
+    }
+
+    /// A plugin file an index lists; the core refuses it unless it has the digest `sha256`. Nothing
+    /// is stored: the file still goes through checkPlugin and the consent step.
+    static func downloadPluginFromIndex(url: String, sha256: String) async throws -> String {
+        try await run { IchorgoPluginIndexDownload(url, sha256, $0) }
+    }
+
     /// What a scanned code holds: a plugin link (https, checked like downloadPlugin's) or the
     /// plugin file; anything else throws. Nothing is fetched or stored.
     static func pluginQRPayload(_ text: String) async throws -> PluginQRPayload {

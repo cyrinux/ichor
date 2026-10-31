@@ -19,6 +19,10 @@ type Plugin struct {
 	ID string `yaml:"id" json:"id" schema:"required,pattern=^[a-z0-9-]+$"`
 	// Name is the product name, a proper noun, never translated.
 	Name string `yaml:"name" json:"name" schema:"required"`
+	// Description is one line about the plugin, shown by the plugin index.
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	// Maintainer is who keeps the plugin file, shown by the plugin index.
+	Maintainer string `yaml:"maintainer,omitempty" json:"maintainer,omitempty"`
 	// Website is the project's home page.
 	Website string `yaml:"website,omitempty" json:"website,omitempty"`
 	// Icon is an app catalog id (assets/appicons).

@@ -5693,6 +5693,16 @@
     <string name="plugins_consent_note">Legge con il tuo accesso Kubernetes e non chiama mai nient\'altro che l\'API Kubernetes. Disattivalo o rimuovilo quando vuoi in Impostazioni → Plugin.</string>
     <string name="plugins_replaces">Sostituisce il plugin importato con lo stesso id.</string>
     <string name="plugins_enable">Attiva</string>
+    <string name="plugin_index_browse">Sfoglia il catalogo</string>
+    <string name="plugin_index_url">URL dell’indice</string>
+    <string name="plugin_index_url_hint">Lascia vuoto per il catalogo di Ichor. Usa solo un indice di cui ti fidi.</string>
+    <string name="plugin_index_note">Un plugin del catalogo deve corrispondere al digest pubblicato dall’indice, poi vedi cosa legge e cosa può modificare prima di attivarlo.</string>
+    <string name="plugin_index_source">Da %1$s</string>
+    <string name="plugin_index_empty">Questo indice non elenca ancora alcun plugin.</string>
+    <string name="plugin_index_loading">Caricamento del catalogo…</string>
+    <string name="plugin_index_installed">Installato</string>
+    <string name="plugin_index_import">Importa</string>
+    <string name="plugin_index_maintainer">Gestito da %1$s</string>
     <string name="repo_title">Repository</string>
     <string name="repo_none">Nessun repository salvato per questo cluster: aggiungine uno dal suo menu nell’elenco dei cluster (Repository del cluster).</string>
     <string name="repo_propose_applies">Sul cluster non cambia nulla finché non viene unita e applicata.</string>
