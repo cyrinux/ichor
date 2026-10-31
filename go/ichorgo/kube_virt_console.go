@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
@@ -186,7 +185,7 @@ func (k *kubeClient) dialVMConsole(ctx context.Context, path string) (*websocket
 		return nil, err
 	}
 
-	conn, err := (&tls.Dialer{NetDialer: cfg.Dialer, Config: cfg.TlsConfig}).DialContext(ctx, "tcp", hostWithPort(cfg.Location.Host))
+	conn, err := k.dialAPIServer(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}

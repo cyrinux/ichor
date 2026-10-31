@@ -44,7 +44,7 @@ extension ContextSummary {
                     "Certificates or keys are file paths. Run kubectl config view --flatten --minify and import its output."
             )
         case "kube-proxy-url":
-            return String(localized: "Connecting through a proxy (proxy-url) is not supported.")
+            return String(localized: "The proxy address in proxy-url is not valid.")
         case "kube-basic-auth":
             return String(localized: "Signing in with a username and password is not supported.")
         case "kube-sign-in-later":

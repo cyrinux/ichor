@@ -83,6 +83,8 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     /// The method the app signs this kubeconfig context in with (oidc, eks, gke, azure,
     /// digitalocean, rancher), nil for static credentials (see KubeSignInInfo).
     public let signIn: String?
+    /// The kubeconfig's proxy-url as scheme://host:port (no credentials), nil without one.
+    public let proxyURL: String?
     /// A Talos context signed in through Sidero Omni (no certificate): who it signs as, and
     /// the Omni cluster. `signIn` is then omni or omni-service-account.
     public let omni: Bool
@@ -101,14 +103,21 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     /// addresses): nothing to reach until one is added or found on the network.
     public var needsEndpoint: Bool { endpoints.isEmpty && !demo && !isKube }
 
+    /// The proxy's host and port, what the cluster's row says it goes through.
+    public var proxyHost: String? {
+        guard let proxyURL, !proxyURL.isEmpty else { return nil }
+        return proxyURL.components(separatedBy: "://").last
+    }
+
     public init(
         name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
         endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
         demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
         user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
         signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil,
-        authKey: String? = nil
+        authKey: String? = nil, proxyURL: String? = nil
     ) {
+        self.proxyURL = proxyURL
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -134,7 +143,7 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
-        case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn
+        case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn, proxyURL
         case omni, identity, cluster, authKey
         case clusterID = "clusterId"
     }
@@ -159,6 +168,7 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
         problem = try c.decodeIfPresent(String.self, forKey: .problem)
         problemDetail = try c.decodeIfPresent(String.self, forKey: .problemDetail)
         signIn = try c.decodeIfPresent(String.self, forKey: .signIn).flatMap { $0.isEmpty ? nil : $0 }
+        proxyURL = try c.decodeIfPresent(String.self, forKey: .proxyURL)
         omni = try c.field(.omni, false)
         identity = try c.decodeIfPresent(String.self, forKey: .identity)
         cluster = try c.decodeIfPresent(String.self, forKey: .cluster)

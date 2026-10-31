@@ -12,6 +12,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // kubeContextSummary is contextSummary for a kubeconfig context, plus what the import
@@ -34,6 +36,8 @@ type kubeContextSummary struct {
 	// SignIn is the method the app signs in with ("" for static credentials); see
 	// KubeSignInInfo for how and whether it is signed in.
 	SignIn string `json:"signIn,omitempty"`
+	// ProxyURL is the kubeconfig's proxy-url as scheme://host:port, never with its credentials.
+	ProxyURL string `json:"proxyURL,omitempty"`
 }
 
 type kubeconfigSummary struct {
@@ -103,6 +107,10 @@ func summarizeKubeContext(doc *kubeconfigDoc, name string) kubeContextSummary {
 		s.Endpoints = []string{cluster.Cluster.Server}
 		s.Insecure = cluster.Cluster.InsecureSkipTLSVerify
 		s.Demo = isDemoServer(cluster)
+
+		if proxy, err := httpx.ParseProxyURL(cluster.Cluster.ProxyURL); err == nil {
+			s.ProxyURL = httpx.ProxyDisplay(proxy)
+		}
 	}
 
 	if hasUser {
@@ -300,7 +308,9 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 	case c.CertificateAuthority != "" && c.CertificateAuthorityData == "":
 		return KubeProblemFilePath, c.CertificateAuthority
 	case c.ProxyURL != "":
-		return KubeProblemProxy, c.ProxyURL
+		if _, err := httpx.ParseProxyURL(c.ProxyURL); err != nil {
+			return KubeProblemProxy, err.Error()
+		}
 	}
 
 	switch method, _ := kubeAuthMethod(user); method {

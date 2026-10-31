@@ -27,6 +27,18 @@ final class KubeClustersTests: XCTestCase {
         XCTAssertEqual(summary.importableIndices, [1])
     }
 
+    func testProxyHostComesFromTheKubeconfigSummary() throws {
+        let json = #"""
+            {"current":"p","contexts":[
+              {"name":"p","kind":"kube","proxyURL":"socks5://bastion.example.org:1080"},
+              {"name":"q","kind":"kube"}
+            ]}
+            """#
+        let summary = try TalosJSON.decode(ConfigSummary.self, from: json)
+        XCTAssertEqual(summary.contexts[0].proxyHost, "bastion.example.org:1080")
+        XCTAssertNil(summary.contexts[1].proxyHost)
+    }
+
     func testTalosContextWithoutKindIsTalos() throws {
         let json = #"{"current":"lab","contexts":[{"name":"lab","endpoints":["10.0.0.1"],"roles":["os:admin"]}]}"#
         let lab = try XCTUnwrap(TalosJSON.decode(ConfigSummary.self, from: json).contexts.first)

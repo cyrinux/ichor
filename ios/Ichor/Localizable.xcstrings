@@ -171554,43 +171554,32 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сертификаты или ключи указаны как пути к файлам. Выполните kubectl config view --flatten --minify и импортируйте результат." } }
       }
     },
-    "Connecting through a proxy (proxy-url) is not supported." : {
+    "The proxy address in proxy-url is not valid." : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La connexion via un proxy (proxy-url) n'est pas prise en charge."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La conexión a través de un proxy (proxy-url) no es compatible."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Підключення через проксі (proxy-url) не підтримується."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindungen über einen Proxy (proxy-url) werden nicht unterstützt."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La connessione tramite un proxy (proxy-url) non è supportata."
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不支持通过代理（proxy-url）连接。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロキシ経由の接続（proxy-url）はサポートしていません。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A conexão por proxy (proxy-url) não é compatível." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подключение через прокси (proxy-url) не поддерживается." } }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’adresse du proxy dans proxy-url n’est pas valide." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La dirección del proxy en proxy-url no es válida." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Адреса проксі в proxy-url недійсна." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Proxy-Adresse in proxy-url ist ungültig." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’indirizzo del proxy in proxy-url non è valido." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "proxy-url 中的代理地址无效。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "proxy-url のプロキシアドレスが無効です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O endereço do proxy em proxy-url não é válido." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Адрес прокси в proxy-url недействителен." } }
+      }
+    },
+    "Through proxy %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Via le proxy %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "A través del proxy %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Через проксі %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Über Proxy %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tramite il proxy %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通过代理 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロキシ %@ 経由" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pelo proxy %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Через прокси %@" } }
       }
     },
     "Signing in with a username and password is not supported." : {

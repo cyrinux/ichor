@@ -35,6 +35,7 @@ import name.levis.ichor.model.kubeAuthLabel
 import name.levis.ichor.model.kubeImportRows
 import name.levis.ichor.model.kubeProblemText
 import name.levis.ichor.model.parseCloudContext
+import name.levis.ichor.model.proxyHost
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.cloudDetail
@@ -123,6 +124,7 @@ private fun KubeContextRow(
             Column(Modifier.padding(start = 12.dp)) {
                 if (cloud != null) MutedText(cloudDetail(cloud))
                 InfoRow(stringResource(R.string.import_kube_server), ctx.endpoints.joinToString("\n"), mono = true)
+                ctx.proxyHost?.let { MutedText(stringResource(R.string.kube_proxy_via, it)) }
                 InfoRow(stringResource(R.string.import_kube_auth), authText(ctx.auth, ctx.authDetail))
                 if (ctx.user.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_user), ctx.user)
                 if (ctx.namespace.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_namespace), ctx.namespace)

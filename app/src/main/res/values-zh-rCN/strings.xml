@@ -2096,6 +2096,7 @@
     <string name="kube_server_hint">替代 kubeconfig 中的地址使用，例如端口转发、负载均衡器或公共名称：host、host:port 或 https URL。未指定端口时使用 kubeconfig 中的端口。证书仍按集群自身地址校验。留空则恢复使用 kubeconfig 中的地址。仅在此设备上生效。</string>
     <string name="cluster_kube_server_menu">Kubernetes API 地址…</string>
     <string name="cluster_kube_server_set">API 地址：%1$s</string>
+    <string name="kube_proxy_via">通过代理 %1$s</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pod</string>
@@ -3941,7 +3942,7 @@
     <string name="kube_problem_user_missing">文件中缺少其用户。</string>
     <string name="kube_problem_not_https">该服务器未使用 HTTPS：仅支持 HTTPS 服务器。</string>
     <string name="kube_problem_file_path">它会读取你电脑上的文件。在电脑上运行 kubectl config view --flatten --minify 并导入其输出。</string>
-    <string name="kube_problem_proxy">不支持通过代理（proxy-url）连接。</string>
+    <string name="kube_problem_proxy">proxy-url 中的代理地址无效。</string>
     <string name="kube_problem_basic_auth">不支持使用用户名和密码登录。</string>
     <string name="kube_problem_sign_in_later">暂不支持此登录方式：将在后续版本中提供。</string>
     <string name="kube_problem_exec">不支持此 exec 插件。使用客户端证书或令牌。</string>

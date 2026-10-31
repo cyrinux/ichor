@@ -37,6 +37,8 @@ type kubeClient struct {
 	tls          *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
 	// namespace is the kubeconfig context's namespace, "" when it sets none.
 	namespace string
+	// proxy is the kubeconfig's proxy-url, for connections outside http; nil dials directly.
+	proxy *httpx.ProxyDialer
 }
 
 // openKubeClient builds a client for kubeconfig and picks the first API server address that
@@ -151,9 +153,14 @@ func kubeServerCandidates(server *url.URL, talosEndpoints []string) []*url.URL {
 
 func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
 	// The API server does not redirect: the client never sends the credentials anywhere else.
-	httpc := httpx.New(httpx.Opts{TLS: creds.tls, DialTimeout: kubeProbeTimeout, IdleTimeout: sessionIdle})
+	httpc := httpx.New(httpx.Opts{TLS: creds.tls, DialTimeout: kubeProbeTimeout, IdleTimeout: sessionIdle, ProxyURL: creds.proxy})
 
-	return &kubeClient{base: base, http: httpc, token: creds.token, tokens: creds.tokens, tls: creds.tls.Clone(), namespace: creds.namespace}
+	k := &kubeClient{base: base, http: httpc, token: creds.token, tokens: creds.tokens, tls: creds.tls.Clone(), namespace: creds.namespace}
+	if creds.proxy != nil {
+		k.proxy = httpx.NewProxyDialer(creds.proxy, kubeProbeTimeout)
+	}
+
+	return k
 }
 
 // bearer is the token to send, "" for none (a client certificate).

@@ -11,6 +11,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -37,6 +38,11 @@ type Opts struct {
 	// FollowRedirects follows https redirects; otherwise a redirect is the final answer, so a
 	// credential is never carried anywhere else.
 	FollowRedirects bool
+	// ProxyURL is the proxy every connection of this client goes through (from ParseProxyURL);
+	// nil is none. The environment's proxy settings are never read.
+	ProxyURL *url.URL
+	// proxyTLS is for the hop to an https proxy; nil is the system's roots.
+	proxyTLS *tls.Config
 }
 
 // BaseTLS is the TLS setup every client starts from: TLS 1.2 at least, the given roots (nil
@@ -64,6 +70,12 @@ func New(o Opts) *http.Client {
 		TLSHandshakeTimeout: handshake,
 		IdleConnTimeout:     cmp.Or(o.IdleTimeout, idleTimeout),
 		ForceAttemptHTTP2:   true,
+	}
+
+	if o.ProxyURL != nil {
+		dialer := NewProxyDialer(o.ProxyURL, dial)
+		dialer.tls = o.proxyTLS
+		transport.DialContext = dialer.DialContext
 	}
 
 	client := &http.Client{Transport: transport, Timeout: o.Timeout, CheckRedirect: RefuseRedirect}

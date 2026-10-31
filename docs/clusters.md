@@ -152,10 +152,20 @@ cluster, encrypted on the phone. Format and actions: [docs/runbooks.md](runbooks
 A cluster can also be added from a kubeconfig alone, the same ways as a talosconfig (file,
 paste, QR, or "Open with" / the share sheet); the app tells the two apart. The preview lists
 every context with how it signs in, and why one cannot be added (a file path to inline with
-`kubectl config view --flatten --minify`, a proxy, plain HTTP…). These clusters get a
+`kubectl config view --flatten --minify`, plain HTTP…). These clusters get a
 Kubernetes home (nodes, API server version, who you are signed in as) and every Kubernetes
 screen, grouped on that home as Workloads, Networking, Storage, Observe and Browse; the Talos
 ones are hidden. What they may do is up to their RBAC.
+
+**A cluster behind a proxy:** a kubeconfig's `proxy-url` is honoured as `kubectl` does, with
+`http://`, `https://` or `socks5://` (`socks5h://` too), for every Kubernetes call of that
+cluster, terminals and port-forwards included; the cluster's row says "Through proxy <host>".
+`ssh -D 1080 user@bastion` on a machine the phone reaches gives such a proxy. A password goes
+in the address (`http://user:password@host:port`) and stays in the sealed kubeconfig. The proxy
+sees the API server's host and port, not the requests or the token (they are in TLS). An https
+proxy's certificate is checked against the phone's own roots. It does not carry the Talos API,
+Omni, or a sign-in provider's own calls (OIDC, EKS…), which stay direct; the environment's proxy
+settings are never read.
 
 Each node on that home also says where the cloud put it, read from its labels: the
 autoscaler pool it came from (a Karpenter NodePool — open source or EKS Auto Mode — an EKS

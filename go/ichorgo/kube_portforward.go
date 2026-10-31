@@ -149,7 +149,7 @@ func forwardConn(ctx context.Context, k *kubeClient, namespace, pod string, port
 		return err
 	}
 
-	ws, err := cfg.DialContext(ctx)
+	ws, err := k.openStream(ctx, cfg)
 	if err != nil {
 		var dialErr *websocket.DialError
 		if errors.As(err, &dialErr) && errors.Is(dialErr.Err, websocket.ErrBadStatus) {
@@ -283,7 +283,7 @@ func (k *kubeClient) dialPodPort(ctx context.Context, namespace, pod string, por
 		return nil, err
 	}
 
-	ws, err := cfg.DialContext(ctx)
+	ws, err := k.openStream(ctx, cfg)
 	if err != nil {
 		var dialErr *websocket.DialError
 		if errors.As(err, &dialErr) && errors.Is(dialErr.Err, websocket.ErrBadStatus) {

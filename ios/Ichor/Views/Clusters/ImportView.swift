@@ -618,6 +618,9 @@ private struct KubePreviewList: View {
         .disabled(ctx.problem != nil)
         if let cloud { Text(verbatim: cloud.localizedDetail).font(.footnote).foregroundStyle(.secondary) }
         LabeledContent("Server", value: ctx.endpoints.first ?? "")
+        if let proxy = ctx.proxyHost {
+            Text("Through proxy \(proxy)").font(.footnote).foregroundStyle(.secondary)
+        }
         LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
         if ctx.problem == nil, let method = ctx.signIn {
             Text("Signs in with \(KubeAuthWording.methodLabel(method)) once added.")
