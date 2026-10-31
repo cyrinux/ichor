@@ -6021,4 +6021,27 @@
     <string name="oncall_page_ack_failed">无法确认：%1$s</string>
     <string name="oncall_page_no_incident">此告警没有未关闭的事件</string>
     <string name="oncall_restore_note">请重新设置值班令牌：备份绝不包含它。</string>
+    <string name="log_search_title">日志搜索</string>
+    <string name="log_search_source">日志后端</string>
+    <string name="log_search_none_found">未找到日志后端</string>
+    <string name="log_search_none_found_hint">请设置 Loki 或 VictoriaLogs 的 URL 和令牌，或在集群中安装一个。</string>
+    <string name="log_search_searching">正在查找日志后端…</string>
+    <string name="log_search_reachable">日志后端有响应。</string>
+    <string name="log_search_source_line">来自 %1$s</string>
+    <string name="log_search_query">查询</string>
+    <string name="log_search_run">搜索</string>
+    <string name="log_search_labels">标签</string>
+    <string name="log_search_pick_label">选择标签</string>
+    <string name="log_search_pick_value">%1$s 的值</string>
+    <string name="log_search_no_values">过去一天没有内容</string>
+    <string name="log_search_save">保存此查询</string>
+    <string name="log_search_unsave">忘记此查询</string>
+    <string name="log_search_range_hours">%1$d 小时</string>
+    <string name="log_search_range_days">%1$d 天</string>
+    <string name="log_search_range_custom">自定义</string>
+    <string name="log_search_custom_hours">回溯小时数，最多 %1$d</string>
+    <string name="log_search_count">%1$d 行</string>
+    <string name="log_search_idle">输入查询或选择标签</string>
+    <string name="log_search_open_loki">在 Loki 中打开</string>
+    <string name="log_search_open_victorialogs">在 VictoriaLogs 中打开</string>
 </resources>

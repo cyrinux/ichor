@@ -46,6 +46,7 @@ func screenCatalog(model: AppModel, nodes: [NodeOverview]) -> [ScreenSpec] {
     add("workloads", String(localized: "Workloads"), cluster, "square.stack.3d.up", .workloads, when: kube)
     add("alerts", String(localized: "Alerts"), cluster, "bell", .alerts, when: kube)
     add("metrics", String(localized: "Metrics"), cluster, "chart.xyaxis.line", .metrics, when: kube)
+    add("log-search", String(localized: "Log search"), cluster, "text.magnifyingglass", .logSearch(), when: kube)
     add("argocd", "Argo CD", cluster, "arrow.triangle.2.circlepath", .argoCD(downNodes: []), when: kube)
     add("flux", "Flux", cluster, "arrow.triangle.branch", .flux(downNodes: []), when: kube)
     add(

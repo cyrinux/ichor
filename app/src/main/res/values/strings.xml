@@ -6167,4 +6167,27 @@
     <string name="oncall_page_ack_failed">Could not acknowledge: %1$s</string>
     <string name="oncall_page_no_incident">No open incident for this alert</string>
     <string name="oncall_restore_note">Set the on-call token again: backups never carry it.</string>
+    <string name="log_search_title">Log search</string>
+    <string name="log_search_source">Log backend</string>
+    <string name="log_search_none_found">No log backend found</string>
+    <string name="log_search_none_found_hint">Set the URL and token of your Loki or VictoriaLogs, or install one in the cluster.</string>
+    <string name="log_search_searching">Looking for a log backend…</string>
+    <string name="log_search_reachable">The log backend answers.</string>
+    <string name="log_search_source_line">From %1$s</string>
+    <string name="log_search_query">Query</string>
+    <string name="log_search_run">Search</string>
+    <string name="log_search_labels">Labels</string>
+    <string name="log_search_pick_label">Pick a label</string>
+    <string name="log_search_pick_value">Values of %1$s</string>
+    <string name="log_search_no_values">Nothing seen in the last day</string>
+    <string name="log_search_save">Save this query</string>
+    <string name="log_search_unsave">Forget this query</string>
+    <string name="log_search_range_hours">%1$d h</string>
+    <string name="log_search_range_days">%1$d d</string>
+    <string name="log_search_range_custom">Custom</string>
+    <string name="log_search_custom_hours">Hours back, up to %1$d</string>
+    <string name="log_search_count">%1$d lines</string>
+    <string name="log_search_idle">Type a query or pick a label</string>
+    <string name="log_search_open_loki">Open in Loki</string>
+    <string name="log_search_open_victorialogs">Open in VictoriaLogs</string>
 </resources>

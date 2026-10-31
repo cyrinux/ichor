@@ -115,6 +115,7 @@ class KubeHomeNavigation(
     val onCheckup: () -> Unit,
     /** Free room per node, workloads by priority, and what losing a node costs. */
     val onCapacity: () -> Unit,
+    val onLogSearch: () -> Unit,
     val onApiHealth: () -> Unit,
     val onNetworkPolicies: () -> Unit,
     /** Kyverno's admission policies and their findings. */

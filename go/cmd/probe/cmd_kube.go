@@ -357,6 +357,17 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "logs-discover", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.LogsDiscover(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "logs-query", args: "QUERY [SOURCE_JSON]", run: runLogsQuery},
+	{name: "logs-labels", args: "SOURCE_JSON [LABEL]", run: func(e env) (out string, err error) {
+		out, err = ichorgo.LogsLabels(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+
+		return out, err
+	}},
 	{name: "maintenance-plan", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeMaintenancePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 
@@ -443,6 +454,39 @@ func runSuspendCronjob(e env) (out string, err error) {
 }
 
 // runCordon serves cordon, uncordon: e.cmd tells which.
+// runLogsQuery searches the last 24 hours of the log backend SOURCE_JSON, else the likeliest
+// one found in the cluster.
+func runLogsQuery(e env) (string, error) {
+	source := flag.Arg(2)
+
+	if source == "" {
+		found, err := ichorgo.LogsDiscover(e.cfg, e.context, e.kubeServer)
+		if err != nil {
+			return "", err
+		}
+
+		var discovery struct {
+			Candidates []struct {
+				Source json.RawMessage `json:"source"`
+			} `json:"candidates"`
+		}
+
+		if err := json.Unmarshal([]byte(found), &discovery); err != nil {
+			return "", err
+		}
+
+		if len(discovery.Candidates) == 0 {
+			return "", errors.New("no log backend found: pass SOURCE_JSON")
+		}
+
+		source = string(discovery.Candidates[0].Source)
+	}
+
+	now := time.Now()
+
+	return ichorgo.LogsQuery(e.cfg, e.context, e.kubeServer, source, flag.Arg(1), now.Add(-24*time.Hour).UnixMilli(), now.UnixMilli(), 100)
+}
+
 func runCordon(e env) (out string, err error) {
 	if err = ichorgo.KubeCordon(e.cfg, e.context, e.kubeServer, flag.Arg(1), e.cmd == "cordon"); err == nil {
 		out = e.cmd + "ed"

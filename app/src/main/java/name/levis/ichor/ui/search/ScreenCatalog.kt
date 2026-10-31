@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.automirrored.outlined.ManageSearch
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.QueryStats
@@ -80,6 +81,7 @@ fun screenCatalog(cluster: ContextSummary, nodes: List<NodeOverview> = emptyList
         ScreenSpec("workloads", R.string.overview_action_workloads, c, Icons.Outlined.Widgets) { Routes.workloads() }.takeIf { kube },
         ScreenSpec("alerts", R.string.alerts_title, c, Icons.Outlined.NotificationsActive) { Routes.alerts() }.takeIf { kube },
         ScreenSpec("metrics", R.string.metrics_title, c, Icons.Outlined.QueryStats) { Routes.metrics() }.takeIf { kube },
+        ScreenSpec("log-search", R.string.log_search_title, c, Icons.AutoMirrored.Outlined.ManageSearch) { Routes.logSearch() }.takeIf { kube },
         ScreenSpec("argocd", R.string.argo_title, c, Icons.Outlined.Sync) { Routes.ARGO_CD }.takeIf { kube },
         ScreenSpec("flux", R.string.flux_title, c, Icons.Outlined.AccountTree) { Routes.FLUX }.takeIf { kube },
         ScreenSpec("data-services", R.string.data_services_title, c, Icons.Outlined.Storage) { Routes.dataServices() }.takeIf { kube },

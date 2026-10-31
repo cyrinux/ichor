@@ -80,7 +80,7 @@ struct SidebarNavigation<Detail: View>: View {
 /// The active cluster's sections in the sidebar: each opens its screen as the only one in the
 /// detail column (Overview pops to the home).
 enum SidebarSection: String, CaseIterable, Identifiable {
-    case overview, alerts, kubernetes, argoCD, flux, dataServices, activity, search, settings
+    case overview, alerts, logSearch, kubernetes, argoCD, flux, dataServices, activity, search, settings
 
     var id: String { rawValue }
 
@@ -91,7 +91,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 
     private var readsKube: Bool {
         switch self {
-        case .kubernetes, .argoCD, .flux, .dataServices: true
+        case .logSearch, .kubernetes, .argoCD, .flux, .dataServices: true
         default: false
         }
     }
@@ -101,6 +101,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         switch self {
         case .overview: Text("Overview")
         case .alerts: Text("Alerts")
+        case .logSearch: Text("Log search")
         case .kubernetes: Text(verbatim: "Kubernetes")
         case .argoCD: Text(verbatim: "Argo CD")
         case .flux: Text(verbatim: "Flux")
@@ -115,6 +116,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         switch self {
         case .overview: "square.grid.2x2"
         case .alerts: "bell"
+        case .logSearch: "text.magnifyingglass"
         case .kubernetes: "shippingbox"
         case .argoCD: "arrow.triangle.2.circlepath"
         case .flux: "arrow.triangle.branch"
@@ -130,6 +132,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         switch self {
         case .overview: nil
         case .alerts: .alerts
+        case .logSearch: .logSearch()
         case .kubernetes: .workloads
         case .argoCD: .argoCD(downNodes: [])
         case .flux: .flux(downNodes: [])

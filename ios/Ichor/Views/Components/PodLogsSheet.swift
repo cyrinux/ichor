@@ -41,6 +41,9 @@ struct PodLogsSheet: View {
     @State private var display = LogDisplay()
     @State private var forwarding = false
     @State private var shelling = false
+    /// The cluster's log backend, for "Open in …"; nil without one.
+    @State private var logsBackend: PromSource?
+    @State private var searchingLogs = false
     /// CPU and memory in use (metrics-server); nil without it.
     @State private var usage: KubeTopPod?
 
@@ -67,6 +70,9 @@ struct PodLogsSheet: View {
             .task(id: pod.id) {
                 let top = try? await model.client?.topPod(namespace: pod.namespace, name: pod.name)
                 usage = top?.available == true ? top?.pods.first : nil
+                if let client = model.client, let fingerprint = model.activeSummary?.fingerprint {
+                    logsBackend = await LogsBackendStore.resolve(fingerprint, with: client)
+                }
             }
             .navigationTitle(Text(verbatim: pod.name))
             .navigationBarTitleDisplayMode(.inline)
@@ -91,6 +97,13 @@ struct PodLogsSheet: View {
                                 Label("Copy", systemImage: "doc.on.doc")
                             }
                             ShareLink(item: text) { Label("Share", systemImage: "square.and.arrow.up") }
+                        }
+                        if let logsBackend {
+                            Button {
+                                searchingLogs = true
+                            } label: {
+                                Label(openInLogsBackendTitle(logsBackend), systemImage: "text.magnifyingglass")
+                            }
                         }
                         Button {
                             forwarding = true
@@ -123,6 +136,11 @@ struct PodLogsSheet: View {
             .onChange(of: following) { _, on in if on { previous = false } }
             .navigationDestination(isPresented: $forwarding) {
                 PortForwardView(namespace: pod.namespace, pod: pod.name)
+            }
+            .navigationDestination(isPresented: $searchingLogs) {
+                LogSearchView(
+                    initialQuery: TalosClient.logsPodQuery(
+                        kind: logsBackend?.kind ?? "", namespace: pod.namespace, pod: pod.name))
             }
             // In the container picked for the log; "" lets Kubernetes pick the only one.
             .navigationDestination(isPresented: $shelling) {

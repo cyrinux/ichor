@@ -128,6 +128,8 @@ import name.levis.ichor.data.SkippedTalosUpdates
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
 import name.levis.ichor.data.AlertmanagerStore
+import name.levis.ichor.data.LogsBackendRepository
+import name.levis.ichor.data.LogsBackendStore
 import name.levis.ichor.data.ClusterSecureFiles
 import name.levis.ichor.data.HistoryRepository
 import name.levis.ichor.data.HistoryStore
@@ -231,6 +233,7 @@ class TalosApp : Application() {
     val fleetRepository by lazy { FleetRepository() }
     val pluginRepository by lazy { PluginRepository(goCall) }
     val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
+    val logsBackendRepository by lazy { LogsBackendRepository(goCall) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
     internal val offlineCache by lazy {
@@ -387,6 +390,7 @@ class TalosApp : Application() {
     /** Each cluster's Prometheus/Mimir source and saved PromQL panels (Metrics screen). */
     val metricsStore by lazy { MetricsStore(this) }
     val alertmanagerStore by lazy { AlertmanagerStore(this) }
+    val logsBackendStore by lazy { LogsBackendStore(this) }
     val onCallStore by lazy { OnCallStore(this) }
     /** Each cluster's 30-day history ring, one record per monitor run, sealed per cluster. */
     val historyStore by lazy {
@@ -666,6 +670,7 @@ class TalosApp : Application() {
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
                     launch(Dispatchers.IO) { alertmanagerStore.sync(fingerprints) }
+                    launch(Dispatchers.IO) { logsBackendStore.sync(fingerprints) }
                     launch(Dispatchers.IO) { onCallStore.sync(fingerprints) }
                     launch(Dispatchers.IO) { historyStore.sync(fingerprints) }
                     lastLooked.sync(it.summary)
@@ -674,6 +679,7 @@ class TalosApp : Application() {
                 if (stored == null && configRepository.generation.value > 0) {
                     launch(Dispatchers.IO) { metricsStore.sync(emptyList()) }
                     launch(Dispatchers.IO) { alertmanagerStore.sync(emptyList()) }
+                    launch(Dispatchers.IO) { logsBackendStore.sync(emptyList()) }
                     launch(Dispatchers.IO) { historyStore.sync(emptyList()) }
                     launch(Dispatchers.IO) {
                         kubeAuthStore.clear()
