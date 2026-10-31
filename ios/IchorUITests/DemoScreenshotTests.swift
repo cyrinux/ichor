@@ -78,7 +78,7 @@ final class DemoScreenshotTests: XCTestCase {
 
         // The start button is at the end of the options, and enabled once an interface is known.
         let app = open("demo", screen: "capture")
-        let start = scrollTo(ID.captureStart, in: app, settle: Settle.feature)
+        let start = reveal(ID.captureStart, in: app)
         let enabled = NSPredicate(format: "isEnabled == true")
         wait(for: [expectation(for: enabled, evaluatedWith: start)], timeout: demoWalkTimeout)
         start.tap()
@@ -94,6 +94,21 @@ final class DemoScreenshotTests: XCTestCase {
         }
         waitFor(ID.kubeHome, in: open("demo-kube"))
         capture("feature-kube-home", settle: Settle.feature)
+    }
+
+    /// Swipes up until `id` lies inside the window. By its frame, not isHittable: asked of a row
+    /// of a Form that is still off screen, isHittable fails the test instead of answering.
+    @MainActor
+    private func reveal(_ id: String, in app: XCUIApplication) -> XCUIElement {
+        let found = element(id, in: app)
+        _ = found.waitForExistence(timeout: Settle.feature)
+        let window = app.windows.firstMatch
+        for _ in 0..<8 {
+            if found.exists, !found.frame.isEmpty, window.frame.contains(found.frame) { return found }
+            app.swipeUp()
+        }
+        XCTFail("\(id) not reachable; on screen:\n\(app.debugDescription)")
+        return found
     }
 
     /// The demo alone on the phone, its notice closed: the same picture in every run.
