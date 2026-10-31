@@ -31,7 +31,7 @@ tour** shows it again.
 ## What it does
 
 - **Talos nodes:** status, services, resources, logs, events, etcd, live graphs, machine config
-  with try mode, hardware, storage, KubeSpan (a red banner when a tunnel is down), packet capture and a debug shell. Reboot, shut down
+  with try mode, hardware, storage, KubeSpan (a red banner when a tunnel is down, also said on the home summary and in Cluster health), packet capture and a debug shell. Reboot, shut down
   or wake a node, upgrade Talos node by node or the whole cluster, upgrade Kubernetes, add,
   replace, reset or wipe a node, recover etcd, rotate the Talos CA. Alerts when a node goes down or a KubeSpan tunnel between two
   nodes is down (on by default on Talos clusters), with quiet hours, a per-cluster

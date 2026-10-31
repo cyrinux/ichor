@@ -375,6 +375,13 @@
     <string name="kubespan_peer_up">Verbunden</string>
     <string name="kubespan_peer_down">Getrennt</string>
     <string name="kubespan_peer_unknown">Unbekannt</string>
+    <plurals name="overview_summary_tunnels_down">
+        <item quantity="one">%1$d Tunnel ausgefallen</item>
+        <item quantity="other">%1$d Tunnel ausgefallen</item>
+    </plurals>
+    <string name="health_mesh_up">Alle %1$d Verbindungen aktiv</string>
+    <string name="health_mesh_open_map">Karte öffnen</string>
+    <string name="health_mesh_server_note">Die Serverprüfungen decken KubeSpan nicht ab.</string>
     <string name="kubespan_banner_meaning">Pods auf diesen Nodes können sich über KubeSpan nicht gegenseitig erreichen.</string>
     <string name="kubespan_banner_check">Zu prüfen: der von jeder Seite versuchte Endpoint, Firewalls auf UDP 51820, die KubeSpan-Endpoint-Filter.</string>
     <string name="kubespan_reason_never">nie ein Handshake</string>

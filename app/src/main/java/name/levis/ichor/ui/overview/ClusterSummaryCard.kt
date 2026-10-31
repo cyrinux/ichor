@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.overview
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -63,7 +65,8 @@ internal const val SUMMARY_SEPARATOR = "  ·  "
  * which Talos version, and the capacity of the nodes that answered. With [live] usage, CPU
  * and memory follow it; without, they show the overview's snapshot. The card itself does not
  * open anything: its footer's two labelled buttons open the cluster insights ([onInsights])
- * and the Capacity screen ([onCapacity]).
+ * and the Capacity screen ([onCapacity]); a KubeSpan tunnel down is a row of its own that opens
+ * the map ([onKubeSpan]).
  */
 @Composable
 fun ClusterSummaryCard(
@@ -74,6 +77,7 @@ fun ClusterSummaryCard(
     answered: NodesAnswered?,
     onInsights: () -> Unit,
     onCapacity: () -> Unit,
+    onKubeSpan: () -> Unit,
     /** The active context, for the provider logo before the name; none: no logo. */
     context: ContextSummary? = null,
     modifier: Modifier = Modifier,
@@ -94,6 +98,7 @@ fun ClusterSummaryCard(
                 if (answered == null) ClusterStatusPill(summary.status)
             }
             if (answered != null) AnsweredProgress(answered) else if (troubles.size > 1) Breakdown(troubles)
+            if (summary.meshBroken > 0) TunnelsDown(summary, onKubeSpan)
             HorizontalDivider(Modifier.padding(vertical = 12.dp))
             // Live memory only once it covers every node the overview reached, never fewer.
             val reached = summary.total - summary.unreachable
@@ -200,6 +205,26 @@ private fun Breakdown(troubles: List<Trouble>) {
             if (i > 0) MutedText(SUMMARY_SEPARATOR)
             Text(text, style = MaterialTheme.typography.bodySmall, color = color)
         }
+    }
+}
+
+/** The KubeSpan tunnels down and between which nodes: the way to the map that shows them. */
+@Composable
+private fun TunnelsDown(summary: ClusterSummary, onClick: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp)
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.health_mesh_open_map), onClick = onClick)
+            .heightIn(min = 48.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            pluralStringResource(R.plurals.overview_summary_tunnels_down, summary.meshBroken, summary.meshBroken),
+            style = MaterialTheme.typography.bodyMedium,
+            color = LocalStatusColors.current.bad,
+        )
+        if (summary.meshPairs.isNotEmpty()) MutedText(summary.meshPairs.joinToString(", "))
     }
 }
 

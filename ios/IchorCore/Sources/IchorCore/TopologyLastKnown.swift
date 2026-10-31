@@ -81,6 +81,15 @@ private extension ClusterTopology {
     }
 }
 
+/// How long a cluster map counts as just read: the home asks again after each overview load, and
+/// this keeps the outage retries and two loads in a row from reading it twice.
+public let topologyMaxAge: TimeInterval = 30
+
+/// A map read at `readAt` needs no new read yet.
+public func topologyIsFresh(readAt: Date, now: Date = Date()) -> Bool {
+    now.timeIntervalSince(readAt) < topologyMaxAge
+}
+
 extension TopologyNode {
     /// When an unreachable node last answered, nil when unknown.
     public var lastSeenDate: Date? {

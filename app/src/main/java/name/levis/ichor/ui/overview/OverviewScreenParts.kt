@@ -493,6 +493,8 @@ internal fun OverviewLoaded(
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     topology: () -> ClusterTopology?,
+    /** Moves when a fresh map landed: the node order and the summary read it again. */
+    topologyFetches: Int,
     summary: ContextSummary?,
     clusterLabels: ClusterLabels,
     unreachable: UnreachableActions,
@@ -511,8 +513,8 @@ internal fun OverviewLoaded(
             onEditEndpoints = unreachable.onEditEndpoints.takeIf { summary?.demo == false && !clusterLabels.masked },
         ) else NodeList(
             overview = s.data,
-            // In the map's order, site by site, once the KubeSpan map was fetched (or kept from before).
-            topology = remember(s.data) { topology() },
+            // In the map's order, site by site, once the KubeSpan map landed (or kept from before).
+            topology = remember(s.data, topologyFetches) { topology() },
             outage = down?.takeIf { s.data.hasLastKnown },
             onRetry = onRetry,
             clusterName = summary?.let(clusterLabels::of),

@@ -100,6 +100,26 @@ struct ClusterSummaryCard: View {
     }
 }
 
+/// The KubeSpan tunnels down and between which nodes: the way to the map that shows them.
+struct TunnelsDownLink: View {
+    let mesh: TopologyMesh
+
+    var body: some View {
+        NavigationLink(value: Route.kubespan) {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(mesh.broken) tunnels down").foregroundStyle(.statusBad)
+                    if !mesh.pairs.isEmpty {
+                        Text(verbatim: mesh.pairs.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.statusBad)
+            }
+        }
+    }
+}
+
 /// The parts with a muted "  ·  " between them.
 func dotJoined(_ parts: [Text]) -> Text {
     parts.indices.reduce(Text(verbatim: "")) { text, i in

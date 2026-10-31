@@ -382,6 +382,13 @@
     <string name="kubespan_peer_up">Actif</string>
     <string name="kubespan_peer_down">Coupé</string>
     <string name="kubespan_peer_unknown">Inconnu</string>
+    <plurals name="overview_summary_tunnels_down">
+        <item quantity="one">%1$d tunnel coupé</item>
+        <item quantity="other">%1$d tunnels coupés</item>
+    </plurals>
+    <string name="health_mesh_up">Les %1$d liens sont actifs</string>
+    <string name="health_mesh_open_map">Ouvrir la carte</string>
+    <string name="health_mesh_server_note">Les vérifications du serveur ne couvrent pas KubeSpan.</string>
     <string name="kubespan_banner_meaning">Les pods de ces nœuds ne peuvent pas se joindre via KubeSpan.</string>
     <string name="kubespan_banner_check">À vérifier : l\'endpoint essayé de chaque côté, les pare-feu sur UDP 51820, les filtres d\'endpoints KubeSpan.</string>
     <string name="kubespan_reason_never">aucun handshake</string>

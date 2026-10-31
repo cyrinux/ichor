@@ -350,6 +350,12 @@
     <string name="kubespan_peer_up">连通</string>
     <string name="kubespan_peer_down">断开</string>
     <string name="kubespan_peer_unknown">未知</string>
+    <plurals name="overview_summary_tunnels_down">
+        <item quantity="other">%1$d 条隧道中断</item>
+    </plurals>
+    <string name="health_mesh_up">全部 %1$d 条链路正常</string>
+    <string name="health_mesh_open_map">打开地图</string>
+    <string name="health_mesh_server_note">服务器检查不包括 KubeSpan。</string>
     <string name="kubespan_banner_meaning">这些节点上的 Pod 无法通过 KubeSpan 互相访问。</string>
     <string name="kubespan_banner_check">检查项：双方尝试的端点、UDP 51820 上的防火墙、KubeSpan 端点过滤器。</string>
     <string name="kubespan_reason_never">从未握手</string>
