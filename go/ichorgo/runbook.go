@@ -34,6 +34,8 @@ type runbookStep struct {
 	Target          runbookTarget `yaml:"target" json:"target"`
 	Params          runbookParams `yaml:"params" json:"-"`
 	ContinueOnError bool          `yaml:"continueOnError" json:"-"`
+	// Plugin: action is plugin/<id>/<action>, resolved when it loaded (runbook_plugin.go).
+	Plugin *runbookPluginStep `yaml:"-" json:"-"`
 }
 
 type runbookTarget struct {
@@ -226,15 +228,33 @@ func loadRunbookStep(node *yaml.Node, index int, values map[string]string, draft
 	label := fmt.Sprintf("#%d", index+1)
 
 	var named struct {
-		ID string `yaml:"id"`
+		ID     string `yaml:"id"`
+		Action string `yaml:"action"`
 	}
 
-	if node.Load(&named) == nil && strings.TrimSpace(named.ID) != "" {
+	if err := node.Load(&named); err == nil && strings.TrimSpace(named.ID) != "" {
 		label = strings.TrimSpace(named.ID)
+	}
+
+	// Which params hold a ${name} shows only before they are replaced.
+	var open map[string]bool
+
+	if draft && isRunbookPluginAction(named.Action) {
+		for i := 0; i+1 < len(node.Content); i += 2 {
+			if node.Content[i].Value == "params" {
+				open = openPluginParams(node.Content[i+1])
+			}
+		}
 	}
 
 	if err := substituteRunbookStep(node, values); err != nil {
 		return runbookStep{}, fmt.Errorf("step %s: %w", label, err)
+	}
+
+	// A plugin step's params are the action's own, not the fixed runbookParams.
+	var pluginParams *yaml.Node
+	if isRunbookPluginAction(named.Action) {
+		pluginParams = cutPluginStepParams(node)
 	}
 
 	var step runbookStep
@@ -247,8 +267,15 @@ func loadRunbookStep(node *yaml.Node, index int, values map[string]string, draft
 		return runbookStep{}, fmt.Errorf("step %s: no id", label)
 	}
 
-	if err := step.validate(draft); err != nil {
-		return runbookStep{}, fmt.Errorf("step %s: %w", step.ID, err)
+	var checked error
+	if isRunbookPluginAction(step.Action) {
+		checked = step.bindPlugin(pluginParams, open, draft)
+	} else {
+		checked = step.validate(draft)
+	}
+
+	if checked != nil {
+		return runbookStep{}, fmt.Errorf("step %s: %w", step.ID, checked)
 	}
 
 	return step, nil
@@ -396,6 +423,13 @@ type runbookPlanStep struct {
 	Detail string `json:"detail"`
 	// TimeoutSeconds is how long a wait step may wait, 0 for the other actions.
 	TimeoutSeconds int `json:"timeoutSeconds"`
+	// A plugin step's: its plugin, the action's label in the plan's locale, and the
+	// confirmation its card asks for (none, plain, typedName). Empty for the other actions.
+	PluginID   string `json:"pluginId"`
+	PluginName string `json:"pluginName"`
+	PluginIcon string `json:"pluginIcon"`
+	Label      string `json:"label"`
+	Confirm    string `json:"confirm"`
 }
 
 type runbookPlanResult struct {
@@ -408,7 +442,7 @@ type runbookPlanResult struct {
 // RunbookPlan is RunbookPlanWith before the values are known, for what the import shows: a
 // parameter without a default stays ${name} in its step, which the cluster is not asked about.
 // RunbookPlanWith is the plan of a run.
-func RunbookPlan(configYAML, contextName, kubeServer, runbookYAML string) (out string, err error) {
+func RunbookPlan(configYAML, contextName, kubeServer, runbookYAML, locale string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -418,20 +452,22 @@ func RunbookPlan(configYAML, contextName, kubeServer, runbookYAML string) (out s
 		return "", err
 	}
 
-	return planRunbook(configYAML, contextName, kubeServer, rb)
+	return planRunbook(configYAML, contextName, kubeServer, locale, rb)
 }
 
 // RunbookPlanWith validates runbookYAML (docs/runbooks.md) with valuesJSON ({"name":"value"},
 // "" for none: its parameters, see RunbookSummary) in place, and says what each step will do,
 // without running anything: {"name","description","steps":[{"id","action","target":{"kind",
 // "namespace","name","node"},"destructive","continueOnError","role","allowed","denied",
-// "detail","timeoutSeconds"}],"errors":[]}. detail and timeoutSeconds describe a wait or
-// assert step (empty and 0 otherwise). role is
+// "detail","timeoutSeconds","pluginId","pluginName","pluginIcon","label","confirm"}],
+// "errors":[]}. detail and timeoutSeconds describe a wait or assert step (empty and 0
+// otherwise); pluginId to confirm a plugin step (empty otherwise), label in locale ("" for
+// English), confirm none, plain or typedName as its card asks. role is
 // the Talos role the step needs; allowed false with denied the reason when the credentials'
 // role or the cluster's RBAC refuses it. A runbook that does not load, or misses a required
 // value, is an error naming the step or the parameters. In the demo every step is allowed
 // (StartRunbookWith refuses the run). kubeServer: see KubePods.
-func RunbookPlanWith(configYAML, contextName, kubeServer, runbookYAML, valuesJSON string) (out string, err error) {
+func RunbookPlanWith(configYAML, contextName, kubeServer, runbookYAML, valuesJSON, locale string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -446,17 +482,18 @@ func RunbookPlanWith(configYAML, contextName, kubeServer, runbookYAML, valuesJSO
 		return "", err
 	}
 
-	return planRunbook(configYAML, contextName, kubeServer, rb)
+	return planRunbook(configYAML, contextName, kubeServer, locale, rb)
 }
 
-func planRunbook(configYAML, contextName, kubeServer string, rb runbook) (string, error) {
+func planRunbook(configYAML, contextName, kubeServer, locale string, rb runbook) (string, error) {
 	gate := newRunbookGate(configYAML, contextName, kubeServer)
 	plan := runbookPlanResult{Name: rb.Name, Description: rb.Description, Steps: make([]runbookPlanStep, 0, len(rb.Steps)), Errors: []string{}}
 
 	for _, s := range rb.Steps {
-		a := runbookActions[s.Action].of(s)
+		a := s.action()
 		ps := runbookPlanStep{ID: s.ID, Action: s.Action, Target: s.Target, Destructive: a.destructive, ContinueOnError: s.ContinueOnError, Role: a.roles[0]}
 		ps.Detail, ps.TimeoutSeconds = s.conditionDetail()
+		s.describePluginStep(&ps, locale)
 
 		if !s.unresolved() {
 			ps.Denied = gate.denied(s, a)
@@ -491,7 +528,7 @@ func RunbookSummary(runbookYAML string) (out string, err error) {
 
 	sum := runbookSummary{Name: rb.Name, Description: rb.Description, Steps: len(rb.Steps), Params: rb.Params}
 	for _, s := range rb.Steps {
-		if runbookActions[s.Action].destructive {
+		if s.action().destructive {
 			sum.Destructive++
 		}
 	}

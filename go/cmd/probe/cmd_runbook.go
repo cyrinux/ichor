@@ -25,7 +25,7 @@ var runbookCommands = []command{
 			return "", err
 		}
 
-		return ichorgo.RunbookPlanWith(e.cfg, e.context, e.kubeServer, src, values)
+		return ichorgo.RunbookPlanWith(e.cfg, e.context, e.kubeServer, src, values, "")
 	}},
 	{name: "runbook-run", args: "FILE [name=value ...] [-yes]", run: probeRunbookRun},
 }
@@ -77,7 +77,7 @@ func probeRunbookRun(e env) (string, error) {
 		return "", err
 	}
 
-	planJSON, err := ichorgo.RunbookPlanWith(e.cfg, e.context, e.kubeServer, src, values)
+	planJSON, err := ichorgo.RunbookPlanWith(e.cfg, e.context, e.kubeServer, src, values, "")
 	if err != nil {
 		return "", err
 	}

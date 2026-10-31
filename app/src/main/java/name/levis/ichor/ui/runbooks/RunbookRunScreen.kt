@@ -88,7 +88,7 @@ fun RunbookRunScreen(onBack: () -> Unit, onActivity: (cluster: String) -> Unit) 
                     if (index > 0) HorizontalDivider()
                     val st = state.steps.getOrNull(index)
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        StepHeadline(step.action, step.id, step.destructive)
+                        StepHeadline(step)
                         MutedText(step.target.label)
                         if (step.detail.isNotEmpty()) MutedText(step.detail)
                         st?.let { StepStateText(it) }
@@ -139,16 +139,19 @@ private fun RunHeader(state: RunbookRunState) {
     }
 }
 
-/** The confirmation of the waiting destructive [step]: typed hostname for a node, else a plain dialog. Closed, the run still waits. */
+/**
+ * The confirmation of the waiting destructive [step]: the hostname typed for a node, the object's name typed when its plugin
+ * asks for that, else a plain dialog. Closed, the run still waits.
+ */
 @Composable
 private fun ConfirmStep(index: Int, step: RunbookPlanStep, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
     val title = stringResource(R.string.runbook_confirm_title, step.id)
-    val text = stringResource(R.string.runbook_confirm_text, step.action, step.target.label)
+    val text = stringResource(R.string.runbook_confirm_text, step.actionLabel, step.target.label)
     val confirm = stringResource(R.string.runbook_confirm)
     if (step.confirmsByHostname()) {
         HostnameConfirmDialog(
             title = title,
-            hostname = step.target.node,
+            hostname = step.confirmName,
             confirmLabel = confirm,
             onConfirm = { onConfirm(index) },
             onDismiss = onDismiss,

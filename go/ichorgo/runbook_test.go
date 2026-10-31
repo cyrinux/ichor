@@ -117,7 +117,7 @@ func (r *runbookRecorder) wait(t *testing.T) (runbookResult, string) {
 func planOf(t *testing.T, cfg, cluster, src string) runbookPlanResult {
 	t.Helper()
 
-	out, err := RunbookPlan(cfg, cluster, "", src)
+	out, err := RunbookPlan(cfg, cluster, "", src, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestRunbookLoadErrorsNameTheStep(t *testing.T) {
 	}
 
 	for name, c := range cases {
-		_, err := RunbookPlan("", "", "", c.src)
+		_, err := RunbookPlan("", "", "", c.src, "")
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: err = %v, want %q", name, err, c.want)
 		}

@@ -180,7 +180,7 @@ func (r runbookExec) run(ctx context.Context, rb runbook) runbookResult {
 			continue
 		}
 
-		if runbookActions[s.Action].destructive {
+		if s.action().destructive {
 			st.State = runbookWaiting
 			emitJSON(st, func(js string) { r.listener.OnStep(i, js) })
 
@@ -247,6 +247,10 @@ func (r runbookExec) record(rb runbook, res runbookResult) {
 func (r runbookExec) step(ctx context.Context, s runbookStep, progress func(string)) (string, error) {
 	cfg, cluster, server := r.target.config, r.target.context, r.target.server
 	t, p := s.Target, s.Params
+
+	if s.Plugin != nil {
+		return r.pluginAction(s)
+	}
 
 	switch s.Action {
 	case "scale":

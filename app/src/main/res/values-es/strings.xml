@@ -5859,6 +5859,7 @@
     <string name="runbook_wait_elapsed">Esperado %1$s de %2$s</string>
     <string name="runbook_confirm_title">¿Ejecutar el paso %1$s?</string>
     <string name="runbook_confirm_text">%1$s en %2$s</string>
+    <string name="runbook_plugin_step">%1$s: %2$s en %3$s %4$s</string>
     <string name="runbook_confirm">Ejecutar paso</string>
     <string name="runbook_done_ok">Todos los pasos se ejecutaron.</string>
     <string name="runbook_done_failed">Un paso falló: los siguientes se omitieron salvo que continúen si falla.</string>

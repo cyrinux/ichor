@@ -57,7 +57,7 @@ func (s storedRunbook) item() runbookItem {
 
 	it.Name, it.Description, it.Steps = rb.Name, rb.Description, len(rb.Steps)
 	for _, st := range rb.Steps {
-		if runbookActions[st.Action].destructive {
+		if st.action().destructive {
 			it.Destructive++
 		}
 	}

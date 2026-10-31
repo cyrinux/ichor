@@ -27,7 +27,9 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.pinScope
+import name.levis.ichor.model.RunbookPlanStep
 import name.levis.ichor.model.RunbookStepState
+import name.levis.ichor.ui.plugins.PluginIcon
 import name.levis.ichor.ui.theme.LocalStatusColors
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -69,12 +71,18 @@ internal fun StepStateText(state: RunbookStepState) {
     Text(text, color = if (color == Color.Unspecified) MaterialTheme.colorScheme.onSurface else color, style = MaterialTheme.typography.labelMedium)
 }
 
-/** The step's action and id, the badge when destructive. */
+/** The step's id and action (with its plugin's icon and words for a plugin step), the badge when destructive. */
 @Composable
-internal fun StepHeadline(action: String, id: String, destructive: Boolean) {
+internal fun StepHeadline(step: RunbookPlanStep) {
+    val action = if (step.isPlugin) {
+        stringResource(R.string.runbook_plugin_step, step.pluginName, step.actionLabel, step.target.kind, step.target.name)
+    } else {
+        step.action
+    }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("$id · $action", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f, fill = false))
-        if (destructive) DestructiveBadge()
+        if (step.isPlugin) PluginIcon(step.pluginIcon, step.pluginName, 24.dp)
+        Text("${step.id} · $action", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f, fill = false))
+        if (step.destructive) DestructiveBadge()
     }
 }
 

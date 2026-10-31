@@ -5854,6 +5854,7 @@
     <string name="runbook_wait_elapsed">Aguardou %1$s de %2$s</string>
     <string name="runbook_confirm_title">Executar a etapa %1$s?</string>
     <string name="runbook_confirm_text">%1$s em %2$s</string>
+    <string name="runbook_plugin_step">%1$s: %2$s em %3$s %4$s</string>
     <string name="runbook_confirm">Executar etapa</string>
     <string name="runbook_done_ok">Todas as etapas foram executadas.</string>
     <string name="runbook_done_failed">Uma etapa falhou: as etapas seguintes foram ignoradas, exceto as que continuam em caso de erro.</string>

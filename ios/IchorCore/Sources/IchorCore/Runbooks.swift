@@ -163,12 +163,12 @@ public struct RunbookTarget: Decodable, Equatable, Hashable, Sendable {
 
     public var isNode: Bool { !node.isEmpty }
 
-    /// "node 10.5.0.2", "Deployment demo-shop/ingest-api", "demo-shop/store-compaction", or
-    /// "Cluster" for a whole-cluster check.
+    /// "node 10.5.0.2", "Deployment demo-shop/ingest-api", "demo-shop/store-compaction",
+    /// "Pool shared" for a plugin's cluster-scoped object, or "Cluster" for a whole-cluster check.
     public var label: String {
         if isNode { return node }
         if namespace.isEmpty && name.isEmpty { return kind }
-        let object = "\(namespace)/\(name)"
+        let object = namespace.isEmpty ? name : "\(namespace)/\(name)"
         return kind.isEmpty ? object : "\(kind) \(object)"
     }
 }
@@ -188,15 +188,32 @@ public struct RunbookPlanStep: Decodable, Equatable, Hashable, Identifiable, Sen
     public let detail: String
     /// How long a wait step may wait; 0 for the other actions.
     public let timeoutSeconds: Int
+    /// A plugin step's plugin; empty for the other actions.
+    public let pluginID: String
+    public let pluginName: String
+    public let pluginIcon: String
+    /// A plugin step's action label, localised by the core.
+    public let label: String
+    /// The confirmation a plugin step's card asks for: none, plain or typedName.
+    public let confirm: String
 
     private enum CodingKeys: String, CodingKey {
         case id, action, target, destructive, continueOnError, role, allowed, denied, detail, timeoutSeconds
+        case pluginID = "pluginId"
+        case pluginName, pluginIcon, label, confirm
     }
 
     public init(
         id: String, action: String, target: RunbookTarget, destructive: Bool = false, continueOnError: Bool = false,
-        role: String = "", allowed: Bool = true, denied: String = "", detail: String = "", timeoutSeconds: Int = 0
+        role: String = "", allowed: Bool = true, denied: String = "", detail: String = "", timeoutSeconds: Int = 0,
+        pluginID: String = "", pluginName: String = "", pluginIcon: String = "", label: String = "",
+        confirm: String = ""
     ) {
+        self.pluginID = pluginID
+        self.pluginName = pluginName
+        self.pluginIcon = pluginIcon
+        self.label = label
+        self.confirm = confirm
         self.id = id
         self.action = action
         self.target = target
@@ -221,13 +238,29 @@ public struct RunbookPlanStep: Decodable, Equatable, Hashable, Identifiable, Sen
         denied = try c.field(.denied, "")
         detail = try c.field(.detail, "")
         timeoutSeconds = try c.field(.timeoutSeconds, 0)
+        pluginID = try c.field(.pluginID, "")
+        pluginName = try c.field(.pluginName, "")
+        pluginIcon = try c.field(.pluginIcon, "")
+        label = try c.field(.label, "")
+        confirm = try c.field(.confirm, "")
     }
 
-    /// How its run is confirmed: a node step by typing the node, a Kubernetes one plainly;
-    /// nil for a step that runs without asking.
+    public var isPlugin: Bool { !pluginID.isEmpty }
+
+    /// The data service whose icon a plugin step shows, as a plugin's row does.
+    public var pluginKind: DataServiceKind? {
+        isPlugin ? DataServiceKind(rawValue: pluginIcon.isEmpty ? pluginID : pluginIcon) : nil
+    }
+
+    /// What a typed confirmation asks for: the node, or the object's name.
+    public var confirmName: String { target.isNode ? target.node : target.name }
+
+    /// How its run is confirmed: a node step by typing the node, a plugin step whose card asks
+    /// for it by typing the object's name, the others plainly; nil for a step that runs without
+    /// asking.
     public var confirmation: RunbookConfirmation? {
         guard destructive else { return nil }
-        return target.isNode ? .typedHostname(target.node) : .plain
+        return target.isNode || confirm == "typedName" ? .typedHostname(confirmName) : .plain
     }
 }
 
