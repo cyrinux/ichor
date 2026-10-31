@@ -24,6 +24,7 @@
   "Every <b>Kubernetes</b> and <b>Talos</b> cluster you run, right in your <b>pocket</b>.": "你运行的每个 <b>Kubernetes</b> 和 <b>Talos</b> 集群，都在你的<b>口袋</b>里。",
   "<small>BETA ON</small><strong>Google Play</strong>": "<small>测试版已登陆</small><strong>Google Play</strong>",
   "<small>DOWNLOAD FOR</small><strong>iPhone</strong>": "<small>下载 · 适用于</small><strong>iPhone</strong>",
+  "Screenshots from": "截图来自",
   "No cluster at hand? Tap <b>Try demo</b>: five nodes, fully offline.": "手头没有集群？点按<b>试用演示</b>：五个节点，完全离线。",
   "The Ichor overview: a cluster's nodes, their health and live usage.": "Ichor 概览：集群的节点、健康状况和实时用量。",
   "01 · Clusters": "01 · 集群",

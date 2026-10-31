@@ -1,4 +1,5 @@
-// Shared by the home page and the full tour: language, top bar, menu, reveal on scroll.
+// Shared by the home page and the full tour: language, top bar, menu, reveal on scroll,
+// screenshots' platform.
 
 // First visit in English: follow the browser's language when the site has it. Picking a
 // language in the menu is remembered and wins from then on.
@@ -93,4 +94,61 @@
   document.querySelectorAll(".reveal").forEach(function (element) {
     reveal.observe(element);
   });
+})();
+
+// The screenshots show the Android app or the iPhone app. The pages hold the Android files, what
+// a visitor without JavaScript sees; an Apple device starts on the iPhone ones, and a choice made
+// with the switch is remembered. A picture with no iPhone file stays on Android.
+(function () {
+  var pictures = document.querySelectorAll("picture[data-shot]");
+  var buttons = document.querySelectorAll(".platform [data-platform]");
+
+  function setUrl(element, name, platform) {
+    var folder = platform === "ios" ? "screenshots/ios/" : "screenshots/";
+    var url = element.getAttribute(name).replace(/screenshots\/(ios\/)?/, folder);
+    if (url !== element.getAttribute(name)) element.setAttribute(name, url);
+  }
+
+  function show(picture, platform) {
+    picture.querySelectorAll("source").forEach(function (source) {
+      setUrl(source, "srcset", platform);
+    });
+    setUrl(picture.querySelector("img"), "src", platform);
+  }
+
+  function apply(platform) {
+    document.documentElement.setAttribute("data-platform", platform);
+    pictures.forEach(function (picture) {
+      show(picture, platform);
+    });
+    buttons.forEach(function (button) {
+      button.setAttribute("aria-pressed", String(button.dataset.platform === platform));
+    });
+  }
+
+  function initial() {
+    var stored = null;
+    try {
+      stored = localStorage.getItem("platform");
+    } catch (e) {}
+    if (stored === "ios" || stored === "android") return stored;
+    return /iPhone|iPad|Macintosh/.test(navigator.userAgent) ? "ios" : "android";
+  }
+
+  document.documentElement.classList.add("js");
+  pictures.forEach(function (picture) {
+    var image = picture.querySelector("img");
+    image.addEventListener("error", function () {
+      if (image.getAttribute("src").indexOf("screenshots/ios/") !== -1) show(picture, "android");
+    });
+  });
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      try {
+        localStorage.setItem("platform", button.dataset.platform);
+      } catch (e) {}
+      apply(button.dataset.platform);
+    });
+  });
+  apply(initial());
 })();

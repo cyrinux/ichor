@@ -49,6 +49,41 @@
   font-weight: 600;
 }
 
+/* Which app the screenshots show. Needs site.js, so it stays hidden without JavaScript. */
+.platform {
+  display: none;
+  gap: 0.4rem;
+  margin-top: 1.2rem;
+}
+
+html.js .platform {
+  display: inline-flex;
+}
+
+.platform button {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--navy-ink-2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--navy-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.platform button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.platform button:focus-visible {
+  outline: 2px solid var(--navy-ink);
+  outline-offset: 2px;
+}
+
 .demo {
   margin: 1.2rem 0 0;
   font-size: 0.95rem;
@@ -63,7 +98,6 @@
 .device {
   margin-top: 1.2rem;
   width: min(78vw, 20rem);
-  aspect-ratio: 540 / 1045;
   padding: 0.7rem 0.7rem 0;
   border: 0.45rem solid #05090f;
   border-bottom: 0;
