@@ -382,6 +382,13 @@
     <string name="kubespan_peer_up">Attivo</string>
     <string name="kubespan_peer_down">Inattivo</string>
     <string name="kubespan_peer_unknown">Sconosciuto</string>
+    <plurals name="overview_summary_tunnels_down">
+        <item quantity="one">%1$d tunnel inattivo</item>
+        <item quantity="other">%1$d tunnel inattivi</item>
+    </plurals>
+    <string name="health_mesh_up">Tutti i %1$d collegamenti attivi</string>
+    <string name="health_mesh_open_map">Apri mappa</string>
+    <string name="health_mesh_server_note">I controlli del server non coprono KubeSpan.</string>
     <string name="kubespan_banner_meaning">I pod su questi nodi non possono raggiungersi tramite KubeSpan.</string>
     <string name="kubespan_banner_check">Cosa controllare: l\'endpoint provato da ciascun lato, i firewall su UDP 51820, i filtri degli endpoint KubeSpan.</string>
     <string name="kubespan_reason_never">nessun handshake</string>

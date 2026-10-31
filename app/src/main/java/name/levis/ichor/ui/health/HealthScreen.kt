@@ -53,7 +53,12 @@ import name.levis.ichor.model.healthLineStatus
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
+import name.levis.ichor.data.TOPOLOGY
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.ClusterTopology
+import name.levis.ichor.model.TopologyMesh
+import name.levis.ichor.ui.design.IchorTextButton
+import androidx.compose.ui.res.pluralStringResource
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
@@ -102,6 +107,10 @@ class HealthViewModel(
     val explain: StateFlow<ExplainState> = _explain.asStateFlow()
     private var explainJob: Job? = null
 
+    /** The KubeSpan links: `talosctl health` does not look at them. Null until read. */
+    private val _mesh = MutableStateFlow<TopologyMesh?>(null)
+    val mesh: StateFlow<TopologyMesh?> = _mesh.asStateFlow()
+
     // A run started under the previous screenshot mode setting stops, its lines dropped.
     init {
         MaskScoped().watch(viewModelScope) {
@@ -109,7 +118,14 @@ class HealthViewModel(
             explainJob?.cancel()
             _explain.value = ExplainState()
             _state.value = HealthState()
+            _mesh.value = null
         }
+    }
+
+    /** Best effort, with any role: a failure keeps what the last read saw, and shows nothing without one. */
+    fun loadMesh() {
+        _mesh.value = talos.cached<ClusterTopology>(TOPOLOGY)?.value?.mesh
+        viewModelScope.launch { runCatching { talos.topology() }.onSuccess { _mesh.value = it.mesh } }
     }
 
     fun start() {
@@ -169,6 +185,7 @@ class HealthViewModel(
 fun HealthScreen(
     onBack: () -> Unit,
     onDiagnose: (note: String) -> Unit,
+    onKubeSpan: () -> Unit,
     vm: HealthViewModel = viewModel(factory = factory { HealthViewModel(app.talosRepository, app.diagnosisRepository, app.aiPreferences) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -179,6 +196,9 @@ fun HealthScreen(
     val summary = config?.activeSummary
     val allowed = summary?.allows(Feature.HEALTH) ?: true
     LaunchedEffect(allowed) { if (allowed && !state.running && !state.finished) vm.start() }
+    val isTalos = summary != null && !summary.isKube
+    LaunchedEffect(isTalos) { if (isTalos) vm.loadMesh() }
+    val mesh by vm.mesh.collectAsStateWithLifecycle()
 
     IchorScaffold(
         topBar = {
@@ -193,12 +213,22 @@ fun HealthScreen(
         },
     ) { padding ->
         Column(Modifier.pageContent(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Above the role check: reading the mesh needs no more than os:reader.
+            mesh?.takeIf { it.checked }?.let { m ->
+                MeshCard(m, serverHealthy = state.finished && state.error == null, onOpenMap = onKubeSpan)
+            }
             if (!allowed) {
                 summary?.let { RoleNotice(Feature.HEALTH, it) }
                 if (summary?.isKube != true) MutedText(stringResource(R.string.health_any_role_hint))
                 return@Column
             }
-            HealthHeader(state, onRerun = vm::start)
+            HealthHeader(
+                state,
+                onRerun = {
+                    vm.start()
+                    if (isTalos) vm.loadMesh()
+                },
+            )
             // Only when the optional AI diagnosis is on, and there is a failure to explain.
             state.error?.takeIf { ai.enabled && state.finished }?.let { error ->
                 HealthExplainCard(
@@ -221,6 +251,29 @@ fun HealthScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+/** The KubeSpan links, which the server's checks do not cover; a clean server run must not hide a tunnel down. */
+@Composable
+private fun MeshCard(mesh: TopologyMesh, serverHealthy: Boolean, onOpenMap: () -> Unit) {
+    val colors = LocalStatusColors.current
+    IchorCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("KubeSpan", style = MaterialTheme.typography.titleSmall)
+                    if (mesh.broken > 0) {
+                        Text(pluralStringResource(R.plurals.kubespan_links_down, mesh.broken, mesh.broken), color = colors.bad)
+                    } else {
+                        Text(stringResource(R.string.health_mesh_up, mesh.links), color = colors.ok)
+                    }
+                }
+                IchorTextButton(onClick = onOpenMap) { Text(stringResource(R.string.health_mesh_open_map)) }
+            }
+            mesh.pairs.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
+            if (mesh.broken > 0 && serverHealthy) MutedText(stringResource(R.string.health_mesh_server_note))
         }
     }
 }

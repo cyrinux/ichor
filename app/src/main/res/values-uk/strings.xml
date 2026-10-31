@@ -425,6 +425,15 @@
     <string name="kubespan_peer_up">Працює</string>
     <string name="kubespan_peer_down">Не працює</string>
     <string name="kubespan_peer_unknown">Невідомо</string>
+    <plurals name="overview_summary_tunnels_down">
+        <item quantity="one">%1$d тунель не працює</item>
+        <item quantity="few">%1$d тунелі не працюють</item>
+        <item quantity="many">%1$d тунелів не працюють</item>
+        <item quantity="other">%1$d тунелі не працюють</item>
+    </plurals>
+    <string name="health_mesh_up">Усі зв\'язки активні: %1$d</string>
+    <string name="health_mesh_open_map">Відкрити карту</string>
+    <string name="health_mesh_server_note">Перевірки сервера не охоплюють KubeSpan.</string>
     <string name="kubespan_banner_meaning">Поди на цих вузлах не можуть зв\'язатися між собою через KubeSpan.</string>
     <string name="kubespan_banner_check">Що перевірити: endpoint, який пробувала кожна сторона, брандмауери на UDP 51820, фільтри endpoint у KubeSpan.</string>
     <string name="kubespan_reason_never">жодного handshake</string>

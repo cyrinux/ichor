@@ -17,10 +17,16 @@ public struct ClusterSummary: Equatable, Sendable {
     public let cpuCount: Int
     public let memTotal: UInt64
     public let memAvailable: UInt64
+    /// The KubeSpan links were read: false without KubeSpan or before the map landed.
+    public let meshChecked: Bool
+    public let meshBroken: Int
+    /// "node-a ↔ node-b" of the broken links, worst first.
+    public let meshPairs: [String]
 
     public init(
         total: Int, ready: Int, notReady: Int, unreachable: Int, versions: [String],
-        cpuCount: Int, memTotal: UInt64, memAvailable: UInt64
+        cpuCount: Int, memTotal: UInt64, memAvailable: UInt64,
+        meshChecked: Bool = false, meshBroken: Int = 0, meshPairs: [String] = []
     ) {
         self.total = total
         self.ready = ready
@@ -30,9 +36,12 @@ public struct ClusterSummary: Equatable, Sendable {
         self.cpuCount = cpuCount
         self.memTotal = memTotal
         self.memAvailable = memAvailable
+        self.meshChecked = meshChecked
+        self.meshBroken = meshBroken
+        self.meshPairs = meshPairs
     }
 
-    public init(nodes: [NodeOverview]) {
+    public init(nodes: [NodeOverview], topology: ClusterTopology? = nil) {
         let reachable = nodes.filter(\.reachable)
         var versions: [String] = []
         for version in reachable.map(\.version)
@@ -49,13 +58,17 @@ public struct ClusterSummary: Equatable, Sendable {
             versions: versions.sorted { compareTalosVersions($0, $1) < 0 },
             cpuCount: reachable.reduce(0) { $0 + $1.cpuCount },
             memTotal: reachable.reduce(0) { $0 + $1.memTotal },
-            memAvailable: reachable.reduce(0) { $0 + $1.memAvailable }
+            memAvailable: reachable.reduce(0) { $0 + $1.memAvailable },
+            meshChecked: topology?.mesh.checked ?? false,
+            meshBroken: topology?.mesh.broken ?? 0,
+            meshPairs: topology?.mesh.pairs ?? []
         )
     }
 
     public var status: ClusterStatus {
         if total == 0 || unreachable == total { return .down }
-        return ready == total ? .healthy : .degraded
+        // A tunnel down is a degraded cluster, never a down one: its nodes still answer.
+        return ready == total && meshBroken == 0 ? .healthy : .degraded
     }
 
     /// Memory in use across the cluster, nil when no node said how much it has.

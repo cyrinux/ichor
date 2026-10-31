@@ -377,6 +377,13 @@
     <string name="kubespan_peer_up">Up</string>
     <string name="kubespan_peer_down">Down</string>
     <string name="kubespan_peer_unknown">Unknown</string>
+    <plurals name="overview_summary_tunnels_down">
+        <item quantity="one">%1$d tunnel down</item>
+        <item quantity="other">%1$d tunnels down</item>
+    </plurals>
+    <string name="health_mesh_up">All %1$d links up</string>
+    <string name="health_mesh_open_map">Open map</string>
+    <string name="health_mesh_server_note">Server checks do not cover KubeSpan.</string>
     <string name="kubespan_banner_meaning">Pods on these nodes cannot reach each other over KubeSpan.</string>
     <string name="kubespan_banner_check">What to check: the endpoint each side tried, firewalls on UDP 51820, the KubeSpan endpoint filters.</string>
     <string name="kubespan_reason_never">never handshaked</string>

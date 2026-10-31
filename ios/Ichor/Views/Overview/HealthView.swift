@@ -14,6 +14,7 @@ struct HealthView: View {
 
     var body: some View {
         List {
+            meshSection
             if !model.allows(.health) {
                 RoleNotice(feature: .health, roles: model.activeSummary?.roles ?? [])
                 Text("The overview and etcd screens show node readiness and etcd status with any role.")
@@ -53,9 +54,36 @@ struct HealthView: View {
         .themedBackground()
         .navigationTitle("Cluster health")
         .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.health)) } }
+        .task(id: runID) { await loadMesh(force: runID > 0) }
         .task(id: runID) { await run() }
         .task(id: ai.enabled) { if ai.enabled { await ai.loadProviders() } }
         .onDisappear { explanation.stop() }
+    }
+
+    /// The KubeSpan links, which the server's checks do not cover; shown with any role, nothing
+    /// without KubeSpan or when they could not be read.
+    @ViewBuilder private var meshSection: some View {
+        if let mesh = TopologyStore.shared.topology(for: model.topologyKey)?.mesh, mesh.checked {
+            Section {
+                if mesh.broken > 0 {
+                    Text("\(mesh.broken) peer links down").foregroundStyle(.statusBad)
+                } else {
+                    Text("All \(mesh.links) links up").foregroundStyle(.statusOK)
+                }
+                ForEach(mesh.pairs, id: \.self) { Text(verbatim: $0).font(.footnote) }
+                if mesh.broken > 0, finished, error == nil {
+                    Text("Server checks do not cover KubeSpan.").font(.footnote).foregroundStyle(.secondary)
+                }
+                NavigationLink { KubeSpanView() } label: { Text("Open map") }
+            } header: {
+                Text(verbatim: "KubeSpan")
+            }
+        }
+    }
+
+    private func loadMesh(force: Bool) async {
+        guard model.activeSummary?.isKube != true, let client = model.client else { return }
+        await TopologyStore.shared.load(with: client, key: model.topologyKey, force: force)
     }
 
     private func lineColor(_ status: HealthLineStatus) -> Color {

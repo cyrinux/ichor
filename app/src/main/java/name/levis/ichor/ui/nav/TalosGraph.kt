@@ -397,7 +397,11 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         )
     }
     composable(Routes.HEALTH) {
-        HealthScreen(onBack = { nav.popBackStack() }, onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) })
+        HealthScreen(
+            onBack = { nav.popBackStack() },
+            onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) },
+            onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
+        )
     }
 }
 

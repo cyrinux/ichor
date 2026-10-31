@@ -25,6 +25,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.first
 import name.levis.ichor.util.StartupTrace
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
@@ -168,6 +169,14 @@ private fun TalosOverview(
     val loaded = (state as? UiState.Loaded)?.let { !it.fromMonitor && !it.data.partial } == true && outage == null
     LiveStatsEffects(app, liveVm, state, liveEnabled, loaded, config?.activeContext, invalidations)
 
+    // The KubeSpan map, read here after every complete overview (a pull too): the summary says when a
+    // tunnel is down whether or not the KubeSpan screen was ever opened. Best effort, no spinner.
+    val loadedAt = (state as? UiState.Loaded)?.fetchedAt?.takeIf { loaded }
+    var topologyFetches by remember { mutableIntStateOf(0) }
+    LaunchedEffect(loadedAt, config?.activeContext, invalidations) {
+        if (loadedAt != null) runCatching { vm.talos.topology() }.onSuccess { topologyFetches++ }
+    }
+
     // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).
     val discovered by discoveryVm.offer.collectAsStateWithLifecycle()
     // Long-press a card to arrange them: order, hide, show again.
@@ -245,6 +254,7 @@ private fun TalosOverview(
                     onRefresh = { refreshOverview(vm, timeVm, discoveryVm, cardVms, cards, scope) },
                     onRetry = vm::refresh,
                     topology = { vm.talos.cached<ClusterTopology>(TOPOLOGY)?.value },
+                    topologyFetches = topologyFetches,
                     summary = config?.activeSummary,
                     clusterLabels = clusterLabels,
                     unreachable = UnreachableActions(

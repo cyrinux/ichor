@@ -21,6 +21,33 @@ class ClusterSummaryTest {
         cpuCount = cpus, memTotal = mem, memAvailable = free,
     )
 
+    private fun mesh(broken: Int, checked: Boolean = true) = ClusterTopology(
+        mesh = TopologyMesh(checked = checked, links = 3, broken = broken, pairs = List(broken) { "node-a ↔ node-$it" }),
+    )
+
+    @Test
+    fun aTunnelDownDegradesAClusterWhoseNodesAreAllReady() {
+        val s = clusterSummary(listOf(node("a"), node("b")), mesh(broken = 1))
+        assertEquals(ClusterStatus.DEGRADED, s.status)
+        assertEquals(1, s.meshBroken)
+        assertEquals(listOf("node-a ↔ node-0"), s.meshPairs)
+    }
+
+    @Test
+    fun aTunnelDownNeverMakesTheClusterDown() {
+        assertEquals(ClusterStatus.DOWN, clusterSummary(listOf(node("a", reachable = false)), mesh(broken = 1)).status)
+        assertEquals(ClusterStatus.DEGRADED, clusterSummary(listOf(node("a"), node("b", reachable = false)), mesh(broken = 2)).status)
+    }
+
+    @Test
+    fun noMeshKnownLeavesTheStatusToTheNodes() {
+        assertEquals(ClusterStatus.HEALTHY, clusterSummary(listOf(node("a"))).status)
+        assertEquals(ClusterStatus.HEALTHY, clusterSummary(listOf(node("a")), mesh(broken = 0)).status)
+        val off = clusterSummary(listOf(node("a")), ClusterTopology())
+        assertEquals(ClusterStatus.HEALTHY, off.status)
+        assertEquals(false, off.meshChecked)
+    }
+
     @Test
     fun allReadyIsHealthyWithSummedCapacity() {
         val s = clusterSummary(listOf(node("a"), node("b", cpus = 8, mem = 16 * gib, free = 2 * gib)))
