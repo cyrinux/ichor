@@ -137,5 +137,6 @@ class OverviewScreenNavigation(
         onUpdates = onUpdates,
         onApps = onApps,
         onOpenTarget = onOpenTarget,
+        onDiagnose = onDiagnose,
     )
 }

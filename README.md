@@ -98,7 +98,7 @@ tag and compared in CI (`just verify-release`, see
 | [Safety](docs/safety.md) | What protects the cluster and the phone |
 | [etcd](docs/etcd.md) | Snapshots, recovery, the NOSPACE fix |
 | [Cluster insights](docs/insights.md) | Drift, incident recorder, bottleneck metrics |
-| [AI diagnosis](docs/ai.md) | Optional, off by default |
+| [AI diagnosis](docs/ai.md) | Optional, off by default, on Talos and kubeconfig clusters |
 | [Plugins](docs/plugins.md) | The plugin file format and how to write one from a CRD |
 | [Runbooks](docs/runbooks.md) | The runbook format and its actions |
 | [Build](docs/build.md) | Repository layout, Android, iOS and CI builds |

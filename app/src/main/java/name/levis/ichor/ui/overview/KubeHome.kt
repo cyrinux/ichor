@@ -14,7 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -177,6 +181,8 @@ class KubeHomeNavigation(
     val onApps: (attention: Boolean) -> Unit,
     /** Opens a pinned object's screen, like its share link. */
     val onOpenTarget: (ShareTarget) -> Unit,
+    /** The optional AI diagnosis, once turned on in Settings. */
+    val onDiagnose: () -> Unit,
 )
 
 /**
@@ -204,6 +210,7 @@ fun KubeHomeScreen(
     appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
+    val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()
     val invalidations by vm.kube.invalidations.collectAsStateWithLifecycle()
@@ -286,6 +293,14 @@ fun KubeHomeScreen(
         modifier = Modifier.testTag(SMOKE_KUBE_HOME),
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
+        // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.
+        floatingActionButton = {
+            if (ai.enabled && !customizing) {
+                SmallFloatingActionButton(onClick = nav.onDiagnose) {
+                    Icon(Icons.Outlined.AutoAwesome, stringResource(R.string.ai_title))
+                }
+            }
+        },
         topBar = {
             if (customizing) IchorTopAppBar(
                 title = { Text(stringResource(R.string.kube_home_edit_title)) },
