@@ -549,6 +549,7 @@
     <string name="settings_ui_style">Стиль интерфейса</string>
     <string name="settings_ui_style_desc">Как отображаются карточки, панели и кнопки</string>
     <string name="settings_ui_style_material3">Material 3</string>
+    <string name="settings_ui_style_expressive">Material 3 Expressive</string>
     <string name="settings_language">Язык</string>
     <string name="settings_language_system">Как в системе</string>
     <string name="settings_live_cluster_stats">Использование кластера в реальном времени</string>

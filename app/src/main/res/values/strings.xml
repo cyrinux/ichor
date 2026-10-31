@@ -496,6 +496,7 @@
     <string name="settings_ui_style">UI style</string>
     <string name="settings_ui_style_desc">How cards, bars and buttons are drawn</string>
     <string name="settings_ui_style_material3">Material 3</string>
+    <string name="settings_ui_style_expressive">Material 3 Expressive</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_system">System default</string>
     <string name="settings_live_cluster_stats">Live cluster usage</string>

@@ -493,6 +493,7 @@
     <string name="settings_ui_style">UI-Stil</string>
     <string name="settings_ui_style_desc">Wie Karten, Leisten und Schaltflächen gezeichnet werden</string>
     <string name="settings_ui_style_material3">Material 3</string>
+    <string name="settings_ui_style_expressive">Material 3 Expressive</string>
     <string name="settings_language">Sprache</string>
     <string name="settings_language_system">Systemstandard</string>
     <string name="settings_live_cluster_stats">Live-Clusterauslastung</string>

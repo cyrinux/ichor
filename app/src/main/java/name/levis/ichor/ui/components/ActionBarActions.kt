@@ -12,9 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
@@ -26,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ActionBar
+import name.levis.ichor.ui.design.LocalFloatingActions
 
 /**
  * The sections a screen's menu reads in: each action's section ([label], a string resource) and
@@ -38,7 +41,8 @@ class ActionGroups<A>(val label: (A) -> Int, val sections: (List<A>) -> List<Pai
  * also leads to arranging them ([customizeLabel]). Actions not [offered] here (a role, a tab, what
  * the cluster runs) take no room; those not [enabled] show greyed out, and those with a
  * [refusal] (the credentials may not run it) too, the reason under their label in the menu.
- * With [groups], the menu reads in titled sections; without, it is one list.
+ * With [groups], the menu reads in titled sections; without, it is one list. In a UI style that
+ * floats a screen's actions, they leave the top bar for its scaffold's toolbar.
  */
 @Composable
 fun <A : Enum<A>> ActionBarActions(
@@ -55,6 +59,35 @@ fun <A : Enum<A>> ActionBarActions(
     groups: ActionGroups<A>? = null,
     /** The smoke test's anchor (SmokeTags.kt) for an action, on its icon or its menu item. */
     testTag: (A) -> String? = { null },
+) {
+    val row: @Composable () -> Unit = {
+        ActionRow(bar, look, onClick, customizeLabel, onCustomize, offered, enabled, refusal, marker, groups, testTag)
+    }
+    val floating = LocalFloatingActions.current
+    if (floating == null) {
+        row()
+    } else {
+        val latest by rememberUpdatedState(row)
+        DisposableEffect(floating) {
+            floating.content = { latest() }
+            onDispose { floating.content = null }
+        }
+    }
+}
+
+@Composable
+private fun <A : Enum<A>> ActionRow(
+    bar: ActionBar<A>,
+    look: ActionLook<A>,
+    onClick: (A) -> Unit,
+    customizeLabel: String,
+    onCustomize: () -> Unit,
+    offered: (A) -> Boolean,
+    enabled: (A) -> Boolean,
+    refusal: (A) -> String?,
+    marker: (A) -> Modifier,
+    groups: ActionGroups<A>?,
+    testTag: (A) -> String?,
 ) {
     fun tagged(action: A): Modifier = testTag(action)?.let { Modifier.testTag(it) } ?: Modifier
     bar.icons.filter(offered).forEach { action ->
