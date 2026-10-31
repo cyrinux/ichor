@@ -1,6 +1,6 @@
 package name.levis.ichor.ui.flux
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxApp
 import name.levis.ichor.model.FluxFilter
 import name.levis.ichor.model.FluxState
@@ -48,7 +49,7 @@ private val ICON = 40.dp
 
 /** Every Kustomization and HelmRelease, worst first: filter chips with counts and a search field above the rows. */
 @Composable
-fun FluxAppsTab(status: FluxStatus, busy: Set<String>, onOpen: (FluxApp) -> Unit) {
+fun FluxAppsTab(status: FluxStatus, busy: Set<String>, onOpen: (FluxApp) -> Unit, onAct: (FluxApp, FluxAction) -> Unit) {
     var filter by rememberSaveable { mutableStateOf(FluxFilter.ALL) }
     var query by rememberSaveable { mutableStateOf("") }
     val apps = remember(status) { status.sortedApps }
@@ -71,7 +72,10 @@ fun FluxAppsTab(status: FluxStatus, busy: Set<String>, onOpen: (FluxApp) -> Unit
             )
         }
         items(shown, key = { it.key }) { app ->
-            FluxAppRow(app, busy = app.key in busy, onClick = { onOpen(app) })
+            val appBusy = app.key in busy
+            FluxAppQuickActions(app, appBusy, onClick = { onOpen(app) }, onAct = { onAct(app, it) }) {
+                FluxAppRow(app, busy = appBusy)
+            }
             HorizontalDivider()
         }
     }
@@ -101,12 +105,13 @@ private fun Controls(query: String, onQuery: (String) -> Unit, filter: FluxFilte
 /**
  * Icon, name with the Kustomization applying it, kind and short revision (chart@version for a
  * release) and when Ready last changed, its state glyph; under it the reason when it is not ready.
+ * Tap, long press and the TalkBack actions belong to the FluxAppQuickActions around it.
  */
 @Composable
-fun FluxAppRow(app: FluxApp, busy: Boolean, onClick: () -> Unit) {
+fun FluxAppRow(app: FluxApp, busy: Boolean) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
-        Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.common_open), onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         FluxAppIcon(app, ICON)

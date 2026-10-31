@@ -53,6 +53,7 @@ import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.overview.KubeHomeViewModel
 import name.levis.ichor.ui.overview.KubeNodeActionSheets
 import name.levis.ichor.ui.overview.KubeNodeRow
+import name.levis.ichor.ui.overview.KubeNodeRowActions
 import name.levis.ichor.ui.overview.healthSummary
 import name.levis.ichor.ui.overview.statusLabel
 
@@ -80,7 +81,9 @@ fun KubeNodesScreen(
     var filter by rememberSaveable { mutableStateOf(initialFilter) }
     var sheetFor by remember { mutableStateOf<KubeNodeInfo?>(null) }
     val snackbar = remember { SnackbarHostState() }
-    KubeNodeActionSheets(sheetFor, snackbar, onClose = { sheetFor = null }, onDrain = onDrain, onDebug = onDebug, onCordoned = vm::refresh, onMeta = onMeta)
+    var cordoning by remember { mutableStateOf<KubeNodeInfo?>(null) }
+    val rowActions = remember(onDrain, onMeta, onDebug) { KubeNodeRowActions(onCordon = { cordoning = it }, onDrain = onDrain, onMeta = onMeta, onDebug = onDebug) }
+    KubeNodeActionSheets(sheetFor, cordoning, { cordoning = it }, snackbar, onClose = { sheetFor = null }, onDrain = onDrain, onDebug = onDebug, onCordoned = vm::refresh, onMeta = onMeta)
 
     IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -112,7 +115,7 @@ fun KubeNodesScreen(
                         EmptyText(emptyOrNoMatch(query, R.string.nodes_none, R.string.nodes_no_match))
                     } else {
                         NodeList(groups) { node ->
-                            KubeNodeRow(node, onClick = { onNode?.invoke(node) ?: run { sheetFor = node } }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+                            KubeNodeRow(node, onClick = { onNode?.invoke(node) ?: run { sheetFor = node } }, rowActions, modifier =Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
                         }
                     }
                 }

@@ -111,7 +111,12 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
                 PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                     SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
                         if (page == 0) {
-                            FluxAppsTab(s.data, busy, onOpen = { onApp(it.kind, it.namespace, it.name) })
+                            FluxAppsTab(
+                                s.data,
+                                busy,
+                                onOpen = { onApp(it.kind, it.namespace, it.name) },
+                                onAct = { fluxApp, action -> confirm = FluxConfirm(action, fluxApp.kind, fluxApp.namespace, fluxApp.name, owner = fluxApp.ownerKey) },
+                            )
                         } else {
                             FluxSourcesTab(s.data, busy, onAct = { src, action -> confirm = FluxConfirm(action, src.kind, src.namespace, src.name) })
                         }

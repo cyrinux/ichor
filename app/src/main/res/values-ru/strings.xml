@@ -194,6 +194,7 @@
     <string name="row_actions">Действия</string>
     <string name="row_logs">Журналы</string>
     <string name="row_scale">Масштабировать…</string>
+    <string name="row_silence_ellipsis">Заглушить…</string>
     <string name="overview_action_live_graphs">Графики в реальном времени</string>
     <string name="overview_action_services_logs">Сервисы и журналы</string>
     <string name="overview_action_kernel_log">Журнал ядра</string>

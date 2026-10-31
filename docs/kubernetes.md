@@ -58,7 +58,9 @@ A pod swipes right to its logs and left to Delete, and long-presses to Logs, Liv
 Hubble), Pin, Share and Delete; a workload swipes right to Restart and long-presses to Restart,
 Scale…, Pin and Share; a CronJob swipes right to Run now and left to Suspend or Resume. Each
 opens the same confirmation as its button, an action the account may not take is dimmed with
-the reason in the menu, and TalkBack lists every action on the row.
+the reason in the menu, and TalkBack lists every action on the row. A Kubernetes node swipes left
+to Cordon (or Uncordon) and long-presses to that, Drain…, Taints and labels… and, with the setting
+on, the debug shell; a tap does what it did.
 
 When kube-green has the namespace asleep, a workload sheet says so on the row (with its wake-up
 time) and warns before scaling a workload or resuming a CronJob, since kube-green restores the

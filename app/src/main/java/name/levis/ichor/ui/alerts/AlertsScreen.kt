@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.model.OnCallIncident
 import name.levis.ichor.model.OnCallVerb
 import name.levis.ichor.data.onCallRepository
 import name.levis.ichor.model.isDemo
@@ -94,6 +95,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     var sourceOpen by remember { mutableStateOf(false) }
     var opened by remember { mutableStateOf<AmAlert?>(null) }
     var silencing by remember { mutableStateOf<AmAlert?>(null) }
+    var resolving by remember { mutableStateOf<OnCallIncident?>(null) }
     LaunchedEffect(key) { vm.load() }
     ActionToasts(vm)
     // Asked from a notification: once the alerts are read, if it still fires (not again on rotation).
@@ -140,7 +142,22 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
                 }
                 SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
                     when (page) {
-                        0 -> AlertsTab(state.alerts, state.filter, vm::setFilter, onAlert = { opened = it }, onRefresh = vm::refresh, onCall = state.onCall, onCallError = state.onCallError)
+                        0 -> AlertsTab(
+                            state.alerts,
+                            state.filter,
+                            vm::setFilter,
+                            onAlert = { opened = it },
+                            onRefresh = vm::refresh,
+                            rowCallbacks = AlertRowCallbacks(
+                                silenceDenial = silenceDenial,
+                                onSilence = { silencing = it },
+                                onCallBusy = { it in busy },
+                                onAcknowledge = { vm.act(it, OnCallVerb.ACKNOWLEDGE) },
+                                onResolve = { resolving = it },
+                            ),
+                            onCall = state.onCall,
+                            onCallError = state.onCallError,
+                        )
                         else -> SilencesTab(
                             state.silences,
                             state.withExpired,
@@ -167,6 +184,16 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
             onCall = state.onCall,
             onCallBusy = { it in busy },
             onCallAct = vm::act,
+        )
+    }
+    resolving?.let { incident ->
+        OnCallResolveDialog(
+            incident,
+            onConfirm = {
+                resolving = null
+                vm.act(incident, OnCallVerb.RESOLVE)
+            },
+            onDismiss = { resolving = null },
         )
     }
     silencing?.let { alert ->

@@ -69,17 +69,25 @@ fun OnCallIncidentSection(incident: OnCallIncident, confidence: String, busy: Bo
         }
     }
     if (confirmResolve) {
-        IchorAlertDialog(
-            onDismissRequest = { confirmResolve = false },
-            title = { Text(stringResource(R.string.oncall_resolve_title)) },
-            text = { Text(stringResource(R.string.oncall_resolve_body, incident.number.toString())) },
-            confirmButton = {
-                IchorTextButton(onClick = {
-                    confirmResolve = false
-                    onAct(OnCallVerb.RESOLVE)
-                }) { Text(stringResource(R.string.oncall_resolve)) }
+        OnCallResolveDialog(
+            incident,
+            onConfirm = {
+                confirmResolve = false
+                onAct(OnCallVerb.RESOLVE)
             },
-            dismissButton = { IchorTextButton(onClick = { confirmResolve = false }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { confirmResolve = false },
         )
     }
+}
+
+/** The one question before resolving [incident]: PagerDuty closes it for everyone on call. */
+@Composable
+fun OnCallResolveDialog(incident: OnCallIncident, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    IchorAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.oncall_resolve_title)) },
+        text = { Text(stringResource(R.string.oncall_resolve_body, incident.number.toString())) },
+        confirmButton = { IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.oncall_resolve)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    )
 }

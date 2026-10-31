@@ -88,7 +88,10 @@ fun SilencesTab(
                 ) {
                     if (state.data.silences.isEmpty()) item { MutedText(stringResource(R.string.alerts_silences_none), Modifier.padding(vertical = 16.dp)) }
                     items(state.data.silences, key = { it.id }) { silence ->
-                        SilenceCard(silence, expiring = silence.id in busy, canExpire = denial == null, onExpire = { confirming = silence })
+                        val expiring = silence.id in busy
+                        SilenceQuickActions(silence.state, expiring, denial, onExpire = { confirming = silence }) {
+                            SilenceCard(silence, expiring = expiring, canExpire = denial == null, onExpire = { confirming = silence })
+                        }
                     }
                 }
             }
@@ -118,7 +121,7 @@ private fun SilenceCard(silence: AmSilence, expiring: Boolean, canExpire: Boolea
             }
             if (silence.comment.isNotEmpty()) Text(silence.comment, style = MaterialTheme.typography.bodyMedium)
             if (silence.createdBy.isNotEmpty()) MutedText(stringResource(R.string.alerts_silence_by, silence.createdBy))
-            if (silence.state != AmSilenceState.EXPIRED) {
+            if (silenceExpirable(silence.state)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                     if (expiring) CircularProgressIndicator(Modifier.padding(end = 8.dp), strokeWidth = 2.dp)
                     IchorTextButton(onClick = onExpire, enabled = !expiring && canExpire) {

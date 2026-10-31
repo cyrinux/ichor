@@ -30,6 +30,10 @@ fun KubePermission.denialText(): UiText =
     if (namespace.isEmpty()) UiText.Res(R.string.kube_access_denied_cluster, verb, resource)
     else UiText.Res(R.string.kube_access_denied, verb, resource, namespace)
 
+/** Why the account may not act, for a dimmed menu entry; null when it may. */
+@Composable
+fun KubePermission?.denialReason(): String? = this?.denialText()?.asString()
+
 /**
  * The access of the active cluster's credentials to the app's Kubernetes actions in
  * [namespace] ("" for cluster-wide ones, e.g. a node's), read when shown and again for another

@@ -149,6 +149,7 @@
     <string name="row_actions">操作</string>
     <string name="row_logs">ログ</string>
     <string name="row_scale">スケール…</string>
+    <string name="row_silence_ellipsis">サイレンス…</string>
     <string name="overview_action_live_graphs">ライブグラフ</string>
     <string name="overview_action_services_logs">サービスとログ</string>
     <string name="overview_action_kernel_log">カーネルログ</string>

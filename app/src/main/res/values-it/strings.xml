@@ -169,6 +169,7 @@
     <string name="row_actions">Azioni</string>
     <string name="row_logs">Log</string>
     <string name="row_scale">Scala…</string>
+    <string name="row_silence_ellipsis">Silenzia…</string>
     <string name="overview_action_live_graphs">Grafici live</string>
     <string name="overview_action_services_logs">Servizi e log</string>
     <string name="overview_action_kernel_log">Log del kernel</string>

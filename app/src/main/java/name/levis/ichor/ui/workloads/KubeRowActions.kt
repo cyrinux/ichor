@@ -25,17 +25,12 @@ import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.canScale
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.QuickActionRow
 import name.levis.ichor.ui.components.RowAction
-import name.levis.ichor.ui.components.denialText
+import name.levis.ichor.ui.components.denialReason
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.share.rememberPinAction
 import name.levis.ichor.ui.share.rememberShareAction
-
-/** Why the account may not act, for a dimmed menu entry; null when it may. */
-@Composable
-private fun KubePermission?.reason(): String? = this?.denialText()?.asString()
 
 /**
  * A pod row's quick actions: swipe right for its logs, left to delete it (the confirmation
@@ -60,7 +55,7 @@ internal fun PodQuickActions(
         stringResource(R.string.common_delete),
         onDelete,
         enabled = !deleting && pod.status != "Terminating" && denial == null,
-        disabledReason = denial.reason(),
+        disabledReason = denial.denialReason(),
         destructive = true,
     )
     val flows = onFlows?.let { RowAction(Icons.Outlined.Stream, stringResource(R.string.flows_title), it) }
@@ -89,7 +84,7 @@ internal fun WorkloadQuickActions(
         stringResource(R.string.workloads_restart_confirm),
         onRestart,
         enabled = !restarting && workload.canRestart && denial == null,
-        disabledReason = denial.reason(),
+        disabledReason = denial.denialReason(),
     )
     val scale = RowAction(Icons.Outlined.OpenInFull, stringResource(R.string.row_scale), onOpen).takeIf { workload.canScale }
     val menu = listOfNotNull(restart, scale, rememberPinAction(target, workload.name), rememberShareAction(target))
@@ -127,14 +122,14 @@ internal fun CronJobQuickActions(
         stringResource(R.string.cronjobs_run_now),
         onRun,
         enabled = !triggering && cronJob.triggerable && runDenial == null,
-        disabledReason = runDenial.reason() ?: stringResource(R.string.cronjobs_schedule_only).takeIf { !cronJob.triggerable },
+        disabledReason = runDenial.denialReason() ?: stringResource(R.string.cronjobs_schedule_only).takeIf { !cronJob.triggerable },
     )
     val suspend = RowAction(
         if (cronJob.suspended) Icons.Outlined.PlayCircle else Icons.Outlined.PauseCircle,
         stringResource(if (cronJob.suspended) R.string.cronjobs_resume else R.string.cronjobs_suspend),
         onSuspend,
         enabled = !suspending && suspendDenial == null,
-        disabledReason = suspendDenial.reason(),
+        disabledReason = suspendDenial.denialReason(),
     )
     val menu = listOfNotNull(run, suspend, rememberPinAction(target, cronJob.name), rememberShareAction(target))
     val shape = CardDefaults.shape

@@ -71,6 +71,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   readiness, applied and attempted revision, source, what a Kustomization applied and a
   release's Helm history, and their Git, OCI and Helm sources; reconcile (with its source
   first if wanted), suspend or resume any of them, and force or reset a HelmRelease that gave up.
+  Swipe a row right to reconcile and left to suspend or resume, after the same question as the
+  buttons; on Android a long press lists the actions, with Pin and Share on an app.
   The detail shows a HelmRelease's drift as Flux reports it (with **Correct drift**), the
   dependsOn chain as a tree with what waits on it, and the object's events. Like Argo CD,
   Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the admin
@@ -283,7 +285,8 @@ Part of the [Ichor documentation](../README.md#documentation).
   [Cluster checkup](kubernetes.md#cluster-checkup).
 - **Alertmanager:** the cluster's alerts grouped by name, worst first, and its silences. Swipe an
   alert to silence it (the form opens with matchers that mute only that alert; nothing is sent
-  before **Silence**), swipe a silence to expire it (iPhone and iPad).
+  before **Silence**), swipe a silence to expire it. On Android a long press on an alert also lists
+  the PagerDuty incident's Acknowledge and Resolve, and Share.
 - **On-call (PagerDuty):** set a token, your PagerDuty email and the services to watch per cluster
   (**On-call**, under Settings → Clusters on Android and in a cluster's menu on iOS; **Test** checks
   the token). An alert with an open incident shows **Triggered** or **Acknowledged by …**. Its sheet

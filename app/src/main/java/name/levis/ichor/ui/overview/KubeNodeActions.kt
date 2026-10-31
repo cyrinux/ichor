@@ -27,10 +27,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +46,9 @@ import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubeNodeInfo
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.QuickActionRow
+import name.levis.ichor.ui.components.RowAction
+import name.levis.ichor.ui.components.denialReason
 import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.ui.node.CordonDialog
 import name.levis.ichor.ui.uiText
@@ -128,6 +128,8 @@ private const val NODE_DEBUG_NAMESPACE = "default"
 @Composable
 internal fun KubeNodeActionSheets(
     node: KubeNodeInfo?,
+    cordoning: KubeNodeInfo?,
+    onCordoning: (KubeNodeInfo?) -> Unit,
     snackbar: SnackbarHostState,
     onClose: () -> Unit,
     onDrain: (name: String) -> Unit,
@@ -137,13 +139,12 @@ internal fun KubeNodeActionSheets(
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val debugShell by app.uiPreferences.nodeDebugShell.collectAsStateWithLifecycle()
-    var cordoning by remember { mutableStateOf<KubeNodeInfo?>(null) }
     node?.let {
         KubeNodeMenuSheet(
             node = it,
             onCordon = {
                 onClose()
-                cordoning = it
+                onCordoning(it)
             },
             onDrain = {
                 onClose()
@@ -164,8 +165,46 @@ internal fun KubeNodeActionSheets(
             onDismiss = onClose,
         )
     }
-    KubeNodeCordonDialog(cordoning, snackbar, onDone = { cordoning = null }, onCordoned = onCordoned)
+    KubeNodeCordonDialog(cordoning, snackbar, onDone = { onCordoning(null) }, onCordoned = onCordoned)
 }
+
+/** What a node row's swipe and long press lead to; [onCordon] asks first. */
+internal class KubeNodeRowActions(
+    val onCordon: (KubeNodeInfo) -> Unit,
+    val onDrain: (name: String) -> Unit,
+    val onMeta: (name: String) -> Unit,
+    val onDebug: (name: String) -> Unit,
+)
+
+/**
+ * A node row's quick actions: swipe left to cordon or uncordon (the confirmation first); a long
+ * press lists that, Drain…, Taints and labels… and, with the setting on, the debug shell, each
+ * dimmed with the reason when refused. A tap stays the caller's ([onClick]).
+ */
+@Composable
+internal fun KubeNodeQuickActions(node: KubeNodeInfo, actions: KubeNodeRowActions, onClick: () -> Unit, content: @Composable () -> Unit) {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val debugShell by app.uiPreferences.nodeDebugShell.collectAsStateWithLifecycle()
+    // Nodes are cluster-scoped, and a drain evicts pods of every namespace.
+    val access = rememberKubeActionAccess("")
+    val podAccess = rememberKubeActionAccess(NODE_DEBUG_NAMESPACE)
+    val cordon = kubeNodeRowAction(
+        stringResource(if (node.cordoned) R.string.node_menu_uncordon else R.string.node_menu_cordon),
+        Icons.Outlined.Block,
+        access?.denial(KubeAction.CORDON_NODE),
+    ) { actions.onCordon(node) }
+    val menu = listOfNotNull(
+        cordon,
+        kubeNodeRowAction(stringResource(R.string.node_menu_drain), Icons.AutoMirrored.Outlined.Logout, access?.denial(KubeAction.DRAIN_NODE)) { actions.onDrain(node.name) },
+        kubeNodeRowAction(stringResource(R.string.node_meta_menu), Icons.Outlined.Sell, access?.denial(KubeAction.EDIT_NODE_META)) { actions.onMeta(node.name) },
+        kubeNodeRowAction(stringResource(R.string.node_menu_kube_debug_shell), Icons.Outlined.Terminal, podAccess?.denial(KubeAction.DEBUG_NODE)) { actions.onDebug(node.name) }.takeIf { debugShell },
+    )
+    QuickActionRow(leading = null, trailing = cordon, menu = menu, onClick = onClick, content = content)
+}
+
+@Composable
+private fun kubeNodeRowAction(label: String, icon: ImageVector, denial: KubePermission?, onClick: () -> Unit) =
+    RowAction(icon, label, onClick, enabled = denial == null, disabledReason = denial.denialReason())
 
 /**
  * The cordon or uncordon confirmation for [target] (none when null). On confirm the cordon runs
