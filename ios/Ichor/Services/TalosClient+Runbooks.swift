@@ -49,18 +49,20 @@ extension TalosClient {
 
     /// What each step will do, its role and whether the cluster allows it, a parameter still
     /// shown as written; runs nothing.
-    func runbookPlan(yaml: String) async throws -> RunbookPlan {
+    func runbookPlan(yaml: String, locale: String = pluginLocale()) async throws -> RunbookPlan {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoRunbookPlan(config, context, kubeServer, yaml, $0)
+            IchorgoRunbookPlan(config, context, kubeServer, yaml, locale, $0)
         }
     }
 
     /// The plan with `values` in place; a missing required value is an error. Runs nothing.
-    func runbookPlan(yaml: String, values: [String: String]) async throws -> RunbookPlan {
+    func runbookPlan(yaml: String, values: [String: String], locale: String = pluginLocale()) async throws
+        -> RunbookPlan
+    {
         let valuesJSON = Self.runbookValuesJSON(values)
         return try await Self.json {
             [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoRunbookPlanWith(config, context, kubeServer, yaml, valuesJSON, $0)
+            IchorgoRunbookPlanWith(config, context, kubeServer, yaml, valuesJSON, locale, $0)
         }
     }
 

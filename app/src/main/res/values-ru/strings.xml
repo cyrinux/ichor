@@ -6114,6 +6114,7 @@
     <string name="runbook_wait_elapsed">Ожидание %1$s из %2$s</string>
     <string name="runbook_confirm_title">Выполнить шаг %1$s?</string>
     <string name="runbook_confirm_text">%1$s для %2$s</string>
+    <string name="runbook_plugin_step">%1$s: %2$s для %3$s %4$s</string>
     <string name="runbook_confirm">Выполнить шаг</string>
     <string name="runbook_done_ok">Все шаги выполнены.</string>
     <string name="runbook_done_failed">Шаг завершился ошибкой: следующие шаги пропущены, если они не продолжают работу при ошибке.</string>

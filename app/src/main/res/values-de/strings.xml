@@ -5850,6 +5850,7 @@
     <string name="runbook_wait_elapsed">%1$s von %2$s gewartet</string>
     <string name="runbook_confirm_title">Schritt %1$s ausführen?</string>
     <string name="runbook_confirm_text">%1$s auf %2$s</string>
+    <string name="runbook_plugin_step">%1$s: %2$s auf %3$s %4$s</string>
     <string name="runbook_confirm">Schritt ausführen</string>
     <string name="runbook_done_ok">Alle Schritte wurden ausgeführt.</string>
     <string name="runbook_done_failed">Ein Schritt ist fehlgeschlagen: Die folgenden wurden übersprungen, sofern sie nicht bei Fehler fortfahren.</string>

@@ -57,7 +57,8 @@ data class RunbookTarget(val kind: String = "", val namespace: String = "", val 
     val label: String get() = when {
         isNode -> node
         namespace.isEmpty() && name.isEmpty() -> kind
-        else -> listOf(kind, "$namespace/$name").filter { it.isNotBlank() }.joinToString(" ")
+        // A cluster-scoped object of a plugin has no namespace.
+        else -> listOf(kind, if (namespace.isEmpty()) name else "$namespace/$name").filter { it.isNotBlank() }.joinToString(" ")
     }
 }
 
@@ -76,7 +77,23 @@ data class RunbookPlanStep(
     val detail: String = "",
     /** How long a wait step may wait; 0 for the other actions. */
     val timeoutSeconds: Int = 0,
-)
+    /** A plugin step's plugin; empty for the other actions. */
+    val pluginId: String = "",
+    val pluginName: String = "",
+    val pluginIcon: String = "",
+    /** A plugin step's action label, localised by the core. */
+    val label: String = "",
+    /** The confirmation a plugin step's card asks for: none, plain or typedName. */
+    val confirm: String = "",
+) {
+    val isPlugin: Boolean get() = pluginId.isNotEmpty()
+
+    /** The action in words: a plugin step's label, else the action's name. */
+    val actionLabel: String get() = label.ifEmpty { action }
+
+    /** What a typed confirmation asks for: the node, or the object's name. */
+    val confirmName: String get() = if (target.isNode) target.node else target.name
+}
 
 @Serializable
 data class RunbookPlan(
@@ -118,5 +135,7 @@ data class RunbookStepState(
 @Serializable
 data class RunbookResult(val ok: Boolean = false, val steps: List<RunbookStepState> = emptyList())
 
-/** How a destructive step is confirmed: a node's hostname typed, or a plain confirmation. */
-fun RunbookPlanStep.confirmsByHostname(): Boolean = target.isNode
+/** How a destructive step is confirmed: a node's hostname or, when its plugin asks, the object's name typed; else a plain confirmation. */
+fun RunbookPlanStep.confirmsByHostname(): Boolean = target.isNode || confirm == CONFIRM_TYPED_NAME
+
+private const val CONFIRM_TYPED_NAME = "typedName"

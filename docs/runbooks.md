@@ -84,6 +84,7 @@ file: `just probe runbook-plan FILE ns=demo-shop -context CTX`.
 | `nodeMaintenance` | node | `action`: `reboot` (default), `shutdown` or `none`; `includeBare`; `acknowledge` | yes | os:admin |
 | `wait` | as `until` says (below) | `until` (required); `timeoutSeconds` (default 300, at most 1800); `intervalSeconds` (default 5, at least 2); `minReplicas` | no | as `until` says |
 | `assert` | as `until` says (below) | `until` (required); `minReplicas` | no | as `until` says |
+| `plugin/<id>/<action>` | an object of the kind the action applies to (the default) | the action's own `params` | unless its `confirm` is `none` | os:admin |
 
 - The role is the Talos client role of a talosconfig cluster; on a kubeconfig cluster the
   Kubernetes actions are checked against its RBAC only, and the node actions are refused.
@@ -119,7 +120,31 @@ The Kubernetes checks go through the kubeconfig Talos issues on a talosconfig cl
 os:admin) and run on kubeconfig clusters too; `etcdHealthy` needs the talosconfig. The plan
 says what each check waits for ("wait up to 5 min for ingest-api to be available").
 
+### Plugin actions
+
+A step `action: plugin/<id>/<action>` runs an action of an installed plugin (`docs/plugins.md`,
+"Actions"), the built-in ones and the imported ones that are switched on, through the function
+its card's button calls: the same can-I rows in the plan, the same re-check of the object when
+it runs, the same refusal in the demo and the same Activity entry, `plugin:<id>:<action>`. The
+step confirms as the card does: the object's name typed for `confirm: typedName`, a plain
+question for `plain`, nothing for `none`. Its `params` are the action's, checked against what
+it declares; `${name}` works there too. A cluster-scoped object takes `target.name` only.
+
+The plugin is looked up when the runbook loads. An unknown plugin or action, a kind the action
+does not apply to, and a plugin switched off are errors naming the step, at import and on the
+runbook's row, so a runbook shared with a phone that lacks the plugin says so there.
+
 ## Examples
+
+Refresh a secret through the External Secrets plugin, then restart what reads it:
+
+```yaml
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Refresh and restart
+steps:
+  - {id: refresh, action: plugin/external-secrets/forceSync, target: {kind: ExternalSecret, namespace: demo-shop, name: db-creds}}
+  - {id: restart, action: rolloutRestart, target: {namespace: demo-shop, name: ingest-api}}
+```
 
 Pause ingestion, compact, resume:
 
