@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/cyrinux/ichor/go/kube"
 )
@@ -19,6 +20,9 @@ type Env struct {
 	Version func(ctx context.Context) string
 	// UnhealthyPods reads the pods of namespaces that are not healthy; nil shows none.
 	UnhealthyPods func(ctx context.Context, namespaces []string) ([]kube.Pod, error)
+	// Exec runs a command in a container, within timeout and maxOutput; nil falls back to the
+	// API server's service proxy for a source's artifact.
+	Exec func(ctx context.Context, timeout time.Duration, maxOutput int, namespace, pod, container string, argv []string) (stdout, stderr []byte, err error)
 }
 
 func (e Env) version(ctx context.Context) string {

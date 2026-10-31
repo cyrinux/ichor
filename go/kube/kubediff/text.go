@@ -1,4 +1,4 @@
-package ichorgo
+package kubediff
 
 import (
 	"fmt"
@@ -11,15 +11,15 @@ type diffOp struct {
 	line string
 }
 
-// unifiedDiff is `diff -u` of two texts (fromName, toName in the header), "" when they are
+// Unified is `diff -u` of two texts (fromName, toName in the header), "" when they are
 // equal. The common head and tail are set aside first; what is left is compared line by
 // line, or shown as removed then added when it is too large to compare.
-func unifiedDiff(a, b, fromName, toName string) string {
+func Unified(a, b, fromName, toName string) string {
 	if a == b {
 		return ""
 	}
 
-	ops := diffLines(diffSplitLines(a), diffSplitLines(b))
+	ops := diffLines(SplitLines(a), SplitLines(b))
 
 	var out strings.Builder
 
@@ -32,8 +32,8 @@ func unifiedDiff(a, b, fromName, toName string) string {
 	return out.String()
 }
 
-// diffSplitLines splits s into its lines, without their "\n".
-func diffSplitLines(s string) []string {
+// SplitLines splits s into its lines, without their "\n".
+func SplitLines(s string) []string {
 	if s == "" {
 		return nil
 	}

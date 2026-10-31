@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cyrinux/ichor/go/gitforge"
+	"github.com/cyrinux/ichor/go/kube/kubediff"
 )
 
 // The review step of a file edited in the source browser, and the defaults of the pull
@@ -54,8 +55,8 @@ func textDiff(before, after, name string) gitOpsDiff {
 		r.Change = diffChangeChanged
 		r.Diff = unifiedDiff(from, to, "a/"+name, "b/"+name)
 
-		if len(r.Diff) > diffMaxBytes {
-			cut := strings.LastIndexByte(r.Diff[:diffMaxBytes], '\n')
+		if len(r.Diff) > kubediff.MaxBytes {
+			cut := strings.LastIndexByte(r.Diff[:kubediff.MaxBytes], '\n')
 			r.Diff, r.Truncated = r.Diff[:cut+1], true
 		}
 	}

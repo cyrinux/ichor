@@ -46,37 +46,14 @@ func StartFluxReconcileFollow(configYAML, contextName, kubeServer, kind, namespa
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	var last *flux.Progress
-
-	emit := func(p flux.Progress) {
-		if last != nil && last.Phase == p.Phase && last.Message == p.Message {
-			return
-		}
-
-		p.At = time.Now().UnixMilli()
-		last = &p
-		emitJSON(p, listener.OnProgress)
-	}
+	target := kubeTarget{configYAML, contextName, kubeServer}
 
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
 		defer holdCalls(configYAML, contextName)()
 
-		var (
-			result string
-			err    error
-		)
-
-		switch invalid := validateFluxFollow(kind, namespace, name); {
-		case invalid != nil:
-			err = invalid
-		case isDemoContext(configYAML, contextName):
-			result, err = runDemoFluxReconcile(ctx, emit)
-		default:
-			result, err = flux.Follow(ctx, fluxFollowClient(kubeTarget{configYAML, contextName, kubeServer}), followFatal, kind, namespace, name, emit)
-		}
+		result, err := runFluxFollow(ctx, target, kind, namespace, name, fluxFollowEmit(listener))
 
 		if ctx.Err() != nil {
 			listener.OnDone("", "")
@@ -88,6 +65,34 @@ func StartFluxReconcileFollow(configYAML, contextName, kubeServer, kind, namespa
 	}()
 
 	return &FluxReconcileRun{cancel: cancel}
+}
+
+// fluxFollowEmit tells the listener of each change: the same phase and message are not repeated.
+func fluxFollowEmit(listener FluxReconcileListener) func(flux.Progress) {
+	var last *flux.Progress
+
+	return func(p flux.Progress) {
+		if last != nil && last.Phase == p.Phase && last.Message == p.Message {
+			return
+		}
+
+		p.At = time.Now().UnixMilli()
+		last = &p
+		emitJSON(p, listener.OnProgress)
+	}
+}
+
+// runFluxFollow follows the reconcile, or plays the demo's.
+func runFluxFollow(ctx context.Context, target kubeTarget, kind, namespace, name string, emit func(flux.Progress)) (string, error) {
+	if err := validateFluxFollow(kind, namespace, name); err != nil {
+		return "", err
+	}
+
+	if isDemoContext(target.config, target.context) {
+		return runDemoFluxReconcile(ctx, emit)
+	}
+
+	return flux.Follow(ctx, fluxFollowClient(target), followFatal, kind, namespace, name, emit)
 }
 
 func validateFluxFollow(kind, namespace, name string) error {

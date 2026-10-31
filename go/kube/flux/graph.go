@@ -193,7 +193,7 @@ func mapKustomization(o KustomizationObject, urls map[Ref]string) App {
 
 	if inv := o.Status.Inventory; inv != nil {
 		for _, e := range inv.Entries {
-			r, ok := ParseInventoryID(e.ID)
+			r, ok := parseInventoryID(e.ID)
 			if !ok {
 				continue
 			}
@@ -216,9 +216,9 @@ func mapKustomization(o KustomizationObject, urls map[Ref]string) App {
 	return a
 }
 
-// ParseInventoryID reads "<namespace>_<name>_<group>_<kind>" (namespace and group may be
+// parseInventoryID reads "<namespace>_<name>_<group>_<kind>" (namespace and group may be
 // empty; Kubernetes names hold no "_").
-func ParseInventoryID(id string) (Resource, bool) {
+func parseInventoryID(id string) (Resource, bool) {
 	parts := strings.Split(id, "_")
 	if len(parts) != 4 || parts[1] == "" || parts[3] == "" {
 		return Resource{}, false
