@@ -85,6 +85,10 @@ func omniOIDCToken(ctx context.Context, cfgCtx *clientconfig.Context, signer omn
 		return "", time.Time{}, fmt.Errorf("discover Omni OIDC endpoints: %w", errors.Join(err, errors.New("no endpoints")))
 	}
 
+	if err := d.check(); err != nil {
+		return "", time.Time{}, fmt.Errorf("discover Omni OIDC endpoints: %w", err)
+	}
+
 	verifier := randomToken() + randomToken()
 	challenge := sha256.Sum256([]byte(verifier))
 
