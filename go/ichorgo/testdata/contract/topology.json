@@ -3,6 +3,7 @@
     {
       "a": "demo-cp-1",
       "b": "demo-cp-2",
+      "broken": false,
       "sides": [
         {
           "endpoint": "192.0.2.11:51820",
@@ -25,11 +26,13 @@
           "tx": 524288
         }
       ],
+      "since": 0,
       "state": "up"
     },
     {
       "a": "demo-cp-1",
       "b": "demo-cp-3",
+      "broken": false,
       "sides": [
         {
           "endpoint": "198.51.100.20:51820",
@@ -52,11 +55,13 @@
           "tx": 524288
         }
       ],
+      "since": 0,
       "state": "up"
     },
     {
       "a": "demo-cp-1",
       "b": "demo-worker-1",
+      "broken": false,
       "sides": [
         {
           "endpoint": "192.0.2.20:51820",
@@ -79,9 +84,19 @@
           "tx": 524288
         }
       ],
+      "since": 0,
       "state": "up"
     }
   ],
+  "mesh": {
+    "broken": 2,
+    "checked": true,
+    "links": 10,
+    "pairs": [
+      "demo-worker-1 ↔ demo-worker-2",
+      "demo-cp-3 ↔ demo-worker-2"
+    ]
+  },
   "nodes": [
     {
       "addresses": [

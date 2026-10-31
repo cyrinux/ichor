@@ -40,7 +40,7 @@ private extension ClusterTopology {
                 site: n.site, kubespan: n.kubespan, queried: n.queried, error: n.error, lastSeen: seen
             )
         }
-        return ClusterTopology(nodes: filled, links: links, sites: sites).backTo(id, beforeSite: beforeSite)
+        return ClusterTopology(nodes: filled, links: links, sites: sites, mesh: mesh).backTo(id, beforeSite: beforeSite)
     }
 
     /// The node `id` back on the site it was on: the site of this map with the same zone or
@@ -55,7 +55,8 @@ private extension ClusterTopology {
             let named = TopologySite(
                 id: current.id, label: beforeSite.label, kind: beforeSite.kind,
                 country: current.country.isEmpty ? beforeSite.country : current.country, nodes: current.nodes)
-            return ClusterTopology(nodes: nodes, links: links, sites: sites.map { $0.id == current.id ? named : $0 })
+            let renamed = sites.map { $0.id == current.id ? named : $0 }
+            return ClusterTopology(nodes: nodes, links: links, sites: renamed, mesh: mesh)
         }
         let moved = sites.compactMap { s -> TopologySite? in
             switch s.id {
@@ -76,7 +77,7 @@ private extension ClusterTopology {
                 zone: n.zone, region: n.region, country: n.country, site: same.id,
                 kubespan: n.kubespan, queried: n.queried, error: n.error, lastSeen: n.lastSeen)
         }
-        return ClusterTopology(nodes: placed, links: links, sites: moved)
+        return ClusterTopology(nodes: placed, links: links, sites: moved, mesh: mesh)
     }
 }
 

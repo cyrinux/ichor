@@ -1,12 +1,16 @@
 package name.levis.ichor.ui.kubespan
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -46,6 +51,7 @@ import java.text.DateFormat
 import name.levis.ichor.model.TopologyLinkSide
 import name.levis.ichor.model.TopologyNode
 import name.levis.ichor.model.isBroken
+import name.levis.ichor.model.isOneSided
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.localizedDuration
@@ -94,6 +100,9 @@ fun TopologyContent(
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { TopologySummary(topology) }
+        if (topology.links.any { it.isBroken }) {
+            item { BrokenLinksBanner(topology.links.filter { it.isBroken }, names, onLink = { link = it }) }
+        }
         if (topology.nodes.isNotEmpty()) {
             item {
                 NetPerfPickBar(
@@ -176,6 +185,49 @@ private fun TopologySummary(topology: ClusterTopology) {
     )
 }
 
+/** The most banner rows: the title still counts them all. */
+private const val BANNER_LINKS = 5
+
+/** What is wrong with the mesh, in words: a broken link is easy to miss among many on the map. */
+@Composable
+private fun BrokenLinksBanner(broken: List<TopologyLink>, names: Map<String, String>, onLink: (TopologyLink) -> Unit) {
+    val bad = LocalStatusColors.current.bad
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.14f))) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                pluralStringResource(R.plurals.kubespan_links_down, broken.size, broken.size),
+                style = MaterialTheme.typography.titleMedium,
+                color = bad,
+            )
+            // Dead tunnels before the ones a single end reports down.
+            broken.sortedBy { it.isOneSided }.take(BANNER_LINKS).forEach { link ->
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { onLink(link) },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "${names[link.a] ?: link.a} ↔ ${names[link.b] ?: link.b} · ${linkReason(link)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+            Text(stringResource(R.string.kubespan_banner_meaning), style = MaterialTheme.typography.bodyMedium)
+            MutedText(stringResource(R.string.kubespan_banner_check))
+        }
+    }
+}
+
+/** Why the link is broken. */
+@Composable
+private fun linkReason(link: TopologyLink): String = when {
+    link.isOneSided -> stringResource(R.string.topology_link_degraded)
+    link.reason == "noEndpoint" -> stringResource(R.string.kubespan_reason_no_endpoint)
+    link.reason == "neverHandshaked" -> stringResource(R.string.kubespan_reason_never)
+    link.reason == "staleHandshake" ->
+        stringResource(R.string.kubespan_reason_stale, localizedDuration(System.currentTimeMillis() / 1000 - link.since))
+    else -> stringResource(R.string.kubespan_peer_down)
+}
+
 @Composable
 private fun LinkDetails(
     link: TopologyLink,
@@ -189,6 +241,7 @@ private fun LinkDetails(
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("${names[link.a] ?: link.a}  ↔  ${names[link.b] ?: link.b}", style = MaterialTheme.typography.titleMedium)
+        if (link.isBroken) Text(linkReason(link), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium)
         link.sides.forEachIndexed { i, side ->
             if (i > 0) HorizontalDivider()
             LinkSideRow(side, names)

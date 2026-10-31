@@ -122,11 +122,18 @@ struct TopologyMapView: View {
                     context.stroke(path, with: .color(.accentColor), style: StrokeStyle(lineWidth: 4, lineCap: .round))
                     continue
                 }
+                let color = linkColor(link)
                 context.stroke(
                     path,
-                    with: .color(linkColor(link.state).opacity(link.isBroken ? 1 : 0.55)),
-                    style: StrokeStyle(lineWidth: link.isBroken ? 3 : 2, dash: link.state == "up" ? [] : [10, 6])
+                    with: .color(color.opacity(link.isBroken ? 1 : 0.55)),
+                    style: StrokeStyle(
+                        lineWidth: link.isBroken ? 3 : 2, dash: link.state == "up" && !link.isBroken ? [] : [10, 6])
                 )
+                // A dot at the middle of the curve: it reads among many links.
+                if link.isBroken, let middle = layout.middle(of: link, in: topology) {
+                    let dot = CGRect(x: middle.x - 5, y: middle.y - 5, width: 10, height: 10)
+                    context.fill(Path(ellipseIn: dot), with: .color(color))
+                }
             }
         }
         .frame(width: layout.width, height: layout.height)
@@ -141,7 +148,7 @@ struct TopologyMapView: View {
                 Button {
                     onLink(index)
                 } label: {
-                    Text(verbatim: "\(linkName(topology.links[index])), \(linkStateLabel(topology.links[index].state))")
+                    Text(verbatim: "\(linkName(topology.links[index])), \(linkLabel(topology.links[index]))")
                 }
             }
         }
@@ -155,6 +162,26 @@ func linkColor(_ state: String) -> Color {
     case "down": .statusBad
     case "degraded": .statusWarn
     default: .gray
+    }
+}
+
+/// A link's colour: a broken one reads as such whatever Talos calls its state.
+func linkColor(_ link: TopologyLink) -> Color {
+    if link.isOneSided { return .statusWarn }
+    return link.isBroken ? .statusBad : linkColor(link.state)
+}
+
+/// What is wrong with the link, or its state when nothing is.
+func linkLabel(_ link: TopologyLink) -> String {
+    guard link.isBroken else { return linkStateLabel(link.state) }
+    if link.isOneSided { return String(localized: "One end down") }
+    switch link.reason {
+    case "noEndpoint": return String(localized: "no endpoint to try")
+    case "neverHandshaked": return String(localized: "never handshaked")
+    case "staleHandshake":
+        let age = localizedDuration(Int64(Date().timeIntervalSince1970) - link.since)
+        return String(localized: "no handshake for \(age)")
+    default: return String(localized: "Down")
     }
 }
 
@@ -189,7 +216,7 @@ private struct TopologyNodeChip: View {
                         .foregroundStyle(.primary)
                     Text(verbatim: detail)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(detailColor)
                 }
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -240,7 +267,16 @@ private struct TopologyNodeChip: View {
         return String(localized: "Last seen \(FreshnessFooter.ago(Date().timeIntervalSince(seen)))")
     }
 
-    private var detail: String { pickLabel ?? lastSeen ?? zone ?? role }
+    private var brokenLabel: String? {
+        broken > 0 ? String(localized: "\(broken) peer links down") : nil
+    }
+
+    private var detail: String { pickLabel ?? lastSeen ?? brokenLabel ?? zone ?? role }
+
+    /// The count is the one thing here that needs seeing.
+    private var detailColor: Color {
+        pickLabel == nil && lastSeen == nil && brokenLabel != nil ? .statusBad : .secondary
+    }
 
     private var accessibilityValue: String {
         var parts = [pickLabel, role, node.zone.nonEmpty].compactMap { $0 }
@@ -268,10 +304,13 @@ private struct TopologyNodeChip: View {
 /// What the line styles mean.
 struct TopologyLegend: View {
     var body: some View {
-        HStack(spacing: 16) {
-            item(.statusOK, dashed: false, String(localized: "Up"))
-            item(.statusWarn, dashed: true, String(localized: "One end down"))
-            item(.statusBad, dashed: true, String(localized: "Down"))
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 16) {
+                item(.statusOK, dashed: false, String(localized: "Up"))
+                item(.statusWarn, dashed: true, String(localized: "One end down"))
+                item(.statusBad, dashed: true, String(localized: "Down"))
+            }
+            item(.gray, dashed: true, String(localized: "Unknown (still trying)"))
         }
     }
 

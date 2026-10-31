@@ -76,10 +76,13 @@ fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>
 private fun PeerDiagnosis(peer: KubeSpanDiagPeer, node: KubeSpanDiag) {
     val colors = LocalStatusColors.current
     val now = System.currentTimeMillis() / 1000
-    if (peer.verdicts.isEmpty()) {
-        Text(stringResource(R.string.kubespan_diag_ok), color = colors.ok)
-    } else {
-        peer.verdicts.forEach { Text(it.message, color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
+    when {
+        peer.verdicts.isNotEmpty() -> peer.verdicts.forEach {
+            // A peer just added is no problem yet.
+            Text(it.message, color = if (it.kind == "justStarted") colors.muted else colors.bad, style = MaterialTheme.typography.bodyMedium)
+        }
+        peer.state == "up" -> Text(stringResource(R.string.kubespan_diag_ok), color = colors.ok)
+        else -> Text(stringResource(R.string.kubespan_diag_no_handshake), color = colors.bad)
     }
 
     SectionTitle(stringResource(R.string.kubespan_diag_endpoints))

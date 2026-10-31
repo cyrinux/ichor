@@ -9,6 +9,18 @@ data class ClusterTopology(
     val nodes: List<TopologyNode> = emptyList(),
     val links: List<TopologyLink> = emptyList(),
     val sites: List<TopologySite> = emptyList(),
+    val mesh: TopologyMesh = TopologyMesh(),
+)
+
+/** The links summed up for the screens that do not draw them. */
+@Serializable
+data class TopologyMesh(
+    /** A node listed peers: false without KubeSpan, and then nothing is known. */
+    val checked: Boolean = false,
+    val links: Int = 0,
+    val broken: Int = 0,
+    /** "node-a ↔ node-b" of the broken links, worst first, five at most. */
+    val pairs: List<String> = emptyList(),
 )
 
 @Serializable
@@ -50,6 +62,12 @@ data class TopologyLink(
     /** "up", "down", "degraded" (one end reports it down) or "unknown". */
     val state: String = "unknown",
     val sides: List<TopologyLinkSide> = emptyList(),
+    /** The core's verdict: an "unknown" tunnel can be dead. A map cached before it knew only the state. */
+    val broken: Boolean = state == "down" || state == "degraded",
+    /** Why it is broken: noEndpoint, neverHandshaked, staleHandshake, down or oneSide. */
+    val reason: String = "",
+    /** Epoch seconds of the broken side's last handshake, 0 for never. */
+    val since: Long = 0,
 )
 
 @Serializable
@@ -65,9 +83,12 @@ data class TopologyLinkSide(
     val lastHandshake: Long = 0,
 )
 
-val TopologyLink.isBroken: Boolean get() = state == "down" || state == "degraded"
+val TopologyLink.isBroken: Boolean get() = broken
 
-/** Links the node is an end of that are down or degraded. */
+/** Broken, while one end still reports it up: a warning, not a dead tunnel. */
+val TopologyLink.isOneSided: Boolean get() = broken && (reason == "oneSide" || state == "degraded")
+
+/** Links the node is an end of that are broken. */
 fun ClusterTopology.brokenLinks(nodeId: String): Int = links.count { it.isBroken && (it.a == nodeId || it.b == nodeId) }
 
 /** A run of the overview's nodes on one site of the map; [site] null for nodes the map does not know. */

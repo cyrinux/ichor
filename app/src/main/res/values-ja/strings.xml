@@ -350,6 +350,14 @@
     <string name="kubespan_peer_up">アップ</string>
     <string name="kubespan_peer_down">ダウン</string>
     <string name="kubespan_peer_unknown">不明</string>
+    <string name="kubespan_banner_meaning">これらのノード上の Pod は KubeSpan 経由で互いに通信できません。</string>
+    <string name="kubespan_banner_check">確認事項: 各側が試したエンドポイント、UDP 51820 のファイアウォール、KubeSpan のエンドポイントフィルター。</string>
+    <string name="kubespan_reason_never">ハンドシェイクなし</string>
+    <string name="kubespan_reason_stale">%1$s ハンドシェイクなし</string>
+    <string name="kubespan_reason_no_endpoint">試すエンドポイントなし</string>
+    <string name="kubespan_peer_never">未接続</string>
+    <string name="kubespan_legend_unknown">不明（試行中）</string>
+    <string name="kubespan_diag_no_handshake">Talos はこのピアとのハンドシェイクを報告していません。</string>
     <string name="kubespan_handshake_ago">%1$s前にハンドシェイク</string>
     <string name="kubespan_diag_loading">リンクがアップまたはダウンしている理由を読み込み中…</string>
     <string name="kubespan_diag_unknown">このノードはこのピアを報告していません。</string>

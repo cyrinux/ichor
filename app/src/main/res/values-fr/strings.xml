@@ -382,6 +382,14 @@
     <string name="kubespan_peer_up">Actif</string>
     <string name="kubespan_peer_down">Coupé</string>
     <string name="kubespan_peer_unknown">Inconnu</string>
+    <string name="kubespan_banner_meaning">Les pods de ces nœuds ne peuvent pas se joindre via KubeSpan.</string>
+    <string name="kubespan_banner_check">À vérifier : l\'endpoint essayé de chaque côté, les pare-feu sur UDP 51820, les filtres d\'endpoints KubeSpan.</string>
+    <string name="kubespan_reason_never">aucun handshake</string>
+    <string name="kubespan_reason_stale">aucun handshake depuis %1$s</string>
+    <string name="kubespan_reason_no_endpoint">aucun endpoint à essayer</string>
+    <string name="kubespan_peer_never">Jamais connecté</string>
+    <string name="kubespan_legend_unknown">Inconnu (tentatives en cours)</string>
+    <string name="kubespan_diag_no_handshake">Talos ne signale aucun handshake pour ce pair.</string>
     <string name="kubespan_handshake_ago">handshake il y a %1$s</string>
     <string name="kubespan_diag_loading">Lecture de l\'état du lien…</string>
     <string name="kubespan_diag_unknown">Ce nœud ne signale pas ce pair.</string>

@@ -26,18 +26,22 @@ func TestBuildKubeSpanNode(t *testing.T) {
 		t.Fatalf("got %+v", got)
 	}
 
-	// Sorted by label; endpoint/handshake rendered; unknown state for zero values.
-	p := got.Peers[0]
+	// The broken peer first, then by label; endpoint/handshake rendered; unknown state for zero values.
+	p := got.Peers[1]
 	if p.Label != "cp-1" || p.State != "up" || p.Endpoint != "10.0.0.2:51820" || p.LastHandshake != handshake.Unix() || p.Rx != 10 || p.Tx != 20 {
-		t.Errorf("peer[0] = %+v", p)
+		t.Errorf("peer[1] = %+v", p)
 	}
 
-	if got.Peers[1].State != "down" || got.Peers[2].State != "unknown" || got.Peers[2].Endpoint != "" || got.Peers[2].LastHandshake != 0 {
-		t.Errorf("peers = %+v", got.Peers)
+	if d := got.Peers[0]; d.State != "down" || !d.Broken || d.Reason != kubespanReasonNever {
+		t.Errorf("peer[0] = %+v", d)
 	}
 
-	if got.Up != 1 || got.Down != 1 {
-		t.Errorf("up=%d down=%d", got.Up, got.Down)
+	if u := got.Peers[2]; u.State != "unknown" || u.Broken || u.Endpoint != "" || u.LastHandshake != 0 {
+		t.Errorf("peer[2] = %+v", u)
+	}
+
+	if got.Up != 1 || got.Down != 1 || got.Unknown != 1 || got.Broken != 1 {
+		t.Errorf("up=%d down=%d unknown=%d broken=%d", got.Up, got.Down, got.Unknown, got.Broken)
 	}
 }
 

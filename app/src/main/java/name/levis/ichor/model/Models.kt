@@ -303,6 +303,9 @@ data class KubeSpanNode(
     val up: Int = 0,
     val down: Int = 0,
     val peers: List<KubeSpanPeer> = emptyList(),
+    val unknown: Int = 0,
+    /** Down, and unknown ones the core judges dead. */
+    val broken: Int = down,
 )
 
 @Serializable
@@ -314,6 +317,10 @@ data class KubeSpanPeer(
     val rx: Long = 0,
     val tx: Long = 0,
     val lastHandshake: Long = 0,
+    /** The core's verdict: an "unknown" peer can be dead. */
+    val broken: Boolean = state == "down",
+    /** Why it is broken: noEndpoint, neverHandshaked, staleHandshake or down. */
+    val reason: String = "",
 )
 
 /** Space a defragmentation would give back (on-disk size minus space in use). */

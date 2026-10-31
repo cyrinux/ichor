@@ -498,21 +498,59 @@ public struct KubeSpanNode: Decodable, Equatable, Identifiable, Sendable {
     public let enabled: Bool
     public let up: Int
     public let down: Int
+    public let unknown: Int
+    /// Down, and unknown ones the core judges dead.
+    public let broken: Int
     public let peers: [KubeSpanPeer]
 
     public var id: String { node }
+
+    private enum CodingKeys: String, CodingKey { case node, error, enabled, up, down, unknown, broken, peers }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        node = try c.decode(String.self, forKey: .node)
+        error = try c.decodeIfPresent(String.self, forKey: .error)
+        enabled = try c.field(.enabled, false)
+        up = try c.field(.up, 0)
+        down = try c.field(.down, 0)
+        unknown = try c.field(.unknown, 0)
+        broken = try c.field(.broken, down)
+        peers = try c.field(.peers, [])
+    }
 }
 
 public struct KubeSpanPeer: Decodable, Equatable, Identifiable, Sendable {
     public let publicKey: String
     public let label: String
     public let state: String  // up | down | unknown
+    /// The core's verdict: an "unknown" peer can be dead.
+    public let broken: Bool
+    /// Why it is broken: noEndpoint, neverHandshaked, staleHandshake or down.
+    public let reason: String
     public let endpoint: String
     public let rx: Int64
     public let tx: Int64
     public let lastHandshake: Int64
 
     public var id: String { publicKey }
+
+    private enum CodingKeys: String, CodingKey {
+        case publicKey, label, state, broken, reason, endpoint, rx, tx, lastHandshake
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        publicKey = try c.decode(String.self, forKey: .publicKey)
+        label = try c.field(.label, "")
+        state = try c.field(.state, "unknown")
+        broken = try c.field(.broken, state == "down")
+        reason = try c.field(.reason, "")
+        endpoint = try c.field(.endpoint, "")
+        rx = try c.field(.rx, 0)
+        tx = try c.field(.tx, 0)
+        lastHandshake = try c.field(.lastHandshake, 0)
+    }
 }
 
 public extension EtcdNodeStatus {

@@ -382,6 +382,14 @@
     <string name="kubespan_peer_up">Activo</string>
     <string name="kubespan_peer_down">Caído</string>
     <string name="kubespan_peer_unknown">Desconocido</string>
+    <string name="kubespan_banner_meaning">Los pods de estos nodos no pueden comunicarse entre sí por KubeSpan.</string>
+    <string name="kubespan_banner_check">Qué comprobar: el endpoint que probó cada lado, los cortafuegos en UDP 51820, los filtros de endpoints de KubeSpan.</string>
+    <string name="kubespan_reason_never">ningún handshake</string>
+    <string name="kubespan_reason_stale">sin handshake desde hace %1$s</string>
+    <string name="kubespan_reason_no_endpoint">ningún endpoint que probar</string>
+    <string name="kubespan_peer_never">Nunca conectado</string>
+    <string name="kubespan_legend_unknown">Desconocido (aún intentando)</string>
+    <string name="kubespan_diag_no_handshake">Talos no informa de ningún handshake con este par.</string>
     <string name="kubespan_handshake_ago">handshake hace %1$s</string>
     <string name="kubespan_diag_loading">Leyendo por qué el enlace está activo o caído…</string>
     <string name="kubespan_diag_unknown">Este nodo no informó de este par.</string>

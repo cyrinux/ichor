@@ -109,12 +109,12 @@ private struct KubeSpanPeersList: View {
 
     var body: some View {
         List {
-            let down = overview.nodes.reduce(0) { $0 + $1.down }
+            let down = overview.nodes.reduce(0) { $0 + $1.broken }
             Section {
                 Text(summary(down: down))
                     .foregroundStyle(down > 0 ? .red : .secondary)
             }
-            ForEach(overview.nodes) { node in
+            ForEach(problemsFirst) { node in
                 Section {
                     if let error = node.error { Text(error).font(.caption).foregroundStyle(.statusBad) }
                     if let link = diag?.node(node.node)?.siderolink {
@@ -139,8 +139,8 @@ private struct KubeSpanPeersList: View {
                             StatusPill(label: String(localized: "Unreachable"), color: .red)
                         } else if !node.enabled {
                             StatusPill(label: String(localized: "Off"), color: .gray)
-                        } else if node.down > 0 {
-                            StatusPill(label: String(localized: "\(node.down) down"), color: .red)
+                        } else if node.broken > 0 {
+                            StatusPill(label: String(localized: "\(node.broken) down"), color: .red)
                         } else {
                             StatusPill(label: String(localized: "\(node.up)/\(node.peers.count) up"), color: .green)
                         }
@@ -148,6 +148,14 @@ private struct KubeSpanPeersList: View {
                 }
             }
         }
+    }
+
+    /// The nodes with a problem first, then by name.
+    private var problemsFirst: [KubeSpanNode] {
+        func rank(_ node: KubeSpanNode) -> (Int, String) {
+            (node.broken == 0 ? 1 : 0, hostnames[node.node] ?? node.node)
+        }
+        return overview.nodes.sorted { rank($0) < rank($1) }
     }
 
     private func summary(down: Int) -> String {
@@ -166,7 +174,13 @@ private struct PeerRow: View {
             HStack {
                 Text(peer.label.isEmpty ? String(peer.publicKey.prefix(12)) : peer.label)
                 Spacer()
-                LinkStatePill(state: peer.state)
+                if peer.state == "up" || !peer.broken {
+                    LinkStatePill(state: peer.state)
+                } else if peer.reason == "noEndpoint" || peer.reason == "neverHandshaked" {
+                    StatusPill(label: String(localized: "Never connected"), color: .red)
+                } else {
+                    LinkStatePill(state: "down")
+                }
             }
             Text(details).font(.caption).foregroundStyle(.secondary)
         }
@@ -219,12 +233,16 @@ private struct PeerDiagnosisSheet: View {
             List {
                 if let diagnosis {
                     Section {
-                        if diagnosis.verdicts.isEmpty {
+                        if !diagnosis.verdicts.isEmpty {
+                            ForEach(diagnosis.verdicts, id: \.self) {
+                                // A peer just added is no problem yet.
+                                Text(verbatim: $0.message)
+                                    .foregroundStyle($0.kind == "justStarted" ? Color.secondary : Color.statusBad)
+                            }
+                        } else if diagnosis.state == "up" {
                             Text("No problem found on this link.").foregroundStyle(.statusOK)
                         } else {
-                            ForEach(diagnosis.verdicts, id: \.self) {
-                                Text(verbatim: $0.message).foregroundStyle(.statusBad)
-                            }
+                            Text("Talos reports no handshake on this peer.").foregroundStyle(.statusBad)
                         }
                     }
                     Section("Endpoints tried") {
