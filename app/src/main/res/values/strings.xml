@@ -592,6 +592,8 @@
     <string name="monitor_widget_hint">The home-screen widget uses the same checks; adding it keeps them running even with alerts off.</string>
     <string name="monitor_channel_nodes">Node alerts</string>
     <string name="monitor_channel_nodes_desc">A node goes down, stops answering or is ready again</string>
+    <string name="monitor_channel_mesh">KubeSpan tunnels</string>
+    <string name="monitor_channel_mesh_desc">A tunnel between two nodes goes down or is back</string>
     <string name="monitor_channel_cluster">Cluster alerts</string>
     <string name="monitor_channel_cluster_desc">etcd alarms, cluster checkup findings, Alertmanager alerts and unreachable clusters</string>
     <string name="monitor_channel_data">Data service alerts</string>
@@ -873,6 +875,10 @@
     <plurals name="widget_unreachable">
         <item quantity="one">%1$d unreachable</item>
         <item quantity="other">%1$d unreachable</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="one">%1$d tunnel down</item>
+        <item quantity="other">%1$d tunnels down</item>
     </plurals>
     <string name="widget_all_ready">all ready</string>
     <string name="widget_etcd_no_alarms">etcd: no alarms</string>
@@ -4546,6 +4552,10 @@
     <string name="monitor_storage_trend_desc">Notifies when a volume\'s growth over the last week would make it critical within %1$d days, and once it no longer does. Uses the history of the checks; needs node storage on.</string>
     <string name="monitor_sensors">Node temperatures</string>
     <string name="monitor_sensors_desc">Alert when a node runs hot or its cores are throttled (Talos clusters; reads every node\'s sensors at each check).</string>
+    <string name="monitor_kubespan">KubeSpan tunnels</string>
+    <string name="monitor_kubespan_desc">Alert when a tunnel between two nodes is down (Talos clusters; reads every node\'s peers at each check).</string>
+    <string name="monitor_kubespan_down">Tunnel %1$s is down</string>
+    <string name="monitor_kubespan_up">Tunnel %1$s is back</string>
     <string name="monitor_sensors_auto">Each sensor\'s own limit (critical − 5 °C, else its max)</string>
     <string name="monitor_sensors_threshold">Alert at %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s runs hot (%2$s °C)</string>

@@ -22,6 +22,7 @@ extension FleetFinding {
         case "gitops": detail == "argocd" ? "Argo CD" : detail == "flux" ? "Flux" : "GitOps"
         case "storage": String(localized: "Storage")
         case "sensor": String(localized: "Temperature")
+        case "kubespan": "KubeSpan"
         case "plugin": String(localized: "Plugins")
         default: String(localized: "Finding")
         }

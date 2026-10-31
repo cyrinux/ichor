@@ -40,6 +40,7 @@ object WatchColors {
 fun statusText(res: Resources, item: StatusItem): String = when (item) {
     is StatusItem.NotReady -> res.getQuantityString(R.plurals.wear_not_ready, item.count, item.count)
     is StatusItem.Unreachable -> res.getQuantityString(R.plurals.wear_unreachable, item.count, item.count)
+    is StatusItem.TunnelsDown -> res.getQuantityString(R.plurals.wear_tunnels_down, item.count, item.count)
     StatusItem.AllReady -> res.getString(R.string.wear_all_ready)
     is StatusItem.Etcd -> if (item.alarms == 0) {
         res.getString(R.string.wear_etcd_no_alarms)

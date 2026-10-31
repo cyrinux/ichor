@@ -31,6 +31,20 @@ class ClusterStatusTest {
     }
 
     @Test
+    fun aTunnelDownIsBadAndNeverAllReady() {
+        val down = counts().copy(kubespanChecked = true, tunnelsDown = 2)
+        assertEquals(listOf(StatusItem.TunnelsDown(2), StatusItem.Etcd(0)), statusItems(down))
+        assertEquals(
+            listOf(StatusItem.Unreachable(1), StatusItem.TunnelsDown(2)),
+            statusItems(counts(ready = 2, unreachable = 1).copy(kubespanChecked = true, tunnelsDown = 2)),
+        )
+        assertEquals(Tone.BAD, toneOf(StatusItem.TunnelsDown(1)))
+        assertEquals(Tone.BAD, toneOf(down, now, now))
+        // Not read this time: says nothing.
+        assertEquals(StatusItem.AllReady, statusItems(counts().copy(tunnelsDown = 2)).first())
+    }
+
+    @Test
     fun toneIsTheWorstItemEvenBeyondTheTwoShown() {
         assertEquals(Tone.OK, toneOf(counts(), now, now))
         assertEquals(Tone.WARN, toneOf(counts(ready = 2, notReady = 1), now, now))

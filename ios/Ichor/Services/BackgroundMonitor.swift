@@ -106,6 +106,16 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: sensorsKey) }
     }
 
+    static let kubespanKey = "monitor.kubespan"
+    /// On by default: also read every node's KubeSpan peers, to alert when a tunnel goes down (cheap, Talos only).
+    static var kubespanWatched: Bool {
+        get {
+            let defaults = UserDefaults.standard
+            return defaults.object(forKey: kubespanKey) == nil ? true : defaults.bool(forKey: kubespanKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: kubespanKey) }
+    }
+
     static let sensorThresholdKey = "monitor.sensorThreshold"
     /// sensorThresholdAuto (each sensor's own limit) or the °C every node is held to.
     static var sensorThreshold: Int {
@@ -507,6 +517,9 @@ enum BackgroundMonitor {
         let watchSensors = sensorsWatched && !context.isKube
         let knownSensors = knownSensorIssues(previous, context: context.name)
         let sensorLimit = sensorThreshold
+        // And the KubeSpan tunnels: Go judges them from every node's peers, the app only keeps the verdict.
+        let watchKubespan = kubespanWatched && !context.isKube
+        let knownKubespan = knownKubespanIssues(previous, context: context.name)
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
@@ -533,6 +546,10 @@ enum BackgroundMonitor {
             guard let health = try? await client.clusterSensorHealth() else { return nil }
             return sensorIssuesOf(health, threshold: sensorLimit, known: knownSensors)
         }
+        async let kubespanRead = ifWatched(watchKubespan, within: left) { () -> [String: String]? in
+            guard let health = try? await client.kubeSpanMeshHealth() else { return nil }
+            return kubespanIssuesOf(health, known: knownKubespan)
+        }
         let dataServices = await dataRead
         let gitopsIssues = await gitopsRead
         let checkupIssues = await checkupRead
@@ -540,6 +557,7 @@ enum BackgroundMonitor {
         let storage = await storageRead
         let storageIssues = storage?.issues
         let sensorIssues = await sensorRead
+        let kubespanIssues = await kubespanRead
         let pluginIssues = await pluginRead
         let now = Date()
         if let kubeNodes {
@@ -568,6 +586,7 @@ enum BackgroundMonitor {
                 alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
                 storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
                 sensorWatched: watchSensors, sensorIssues: sensorIssues,
+                kubespanWatched: watchKubespan, kubespanIssues: kubespanIssues,
                 pluginWatched: watchPlugins, pluginIssues: pluginIssues),
             extras)
     }

@@ -126,6 +126,7 @@ internal fun trackLabel(finding: FleetFinding): Int = when (finding.track) {
     }
     "storage" -> R.string.storage_title
     "sensor" -> R.string.fleet_track_sensor
+    "kubespan" -> R.string.snippet_kubespan
     "plugin" -> R.string.plugins_title
     else -> R.string.fleet_track_other
 }

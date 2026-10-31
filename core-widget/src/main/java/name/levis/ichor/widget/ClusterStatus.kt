@@ -15,12 +15,16 @@ data class NodeCounts(
     /** The etcd alarm list could be read this time (a failed read is never an all-clear). */
     val etcdChecked: Boolean,
     val etcdAlarms: Int,
+    /** The KubeSpan mesh could be read this time (absent from an older phone's payload: not checked). */
+    val kubespanChecked: Boolean = false,
+    val tunnelsDown: Int = 0,
 )
 
 /** One dot + label in the widget's status row. */
 sealed interface StatusItem {
     data class NotReady(val count: Int) : StatusItem
     data class Unreachable(val count: Int) : StatusItem
+    data class TunnelsDown(val count: Int) : StatusItem
     data object AllReady : StatusItem
     data class Etcd(val alarms: Int) : StatusItem
 }
@@ -36,6 +40,7 @@ fun statusItems(c: NodeCounts, max: Int = 2): List<StatusItem> {
     val health = buildList {
         if (c.notReady > 0) add(StatusItem.NotReady(c.notReady))
         if (c.unreachable > 0) add(StatusItem.Unreachable(c.unreachable))
+        if (c.kubespanChecked && c.tunnelsDown > 0) add(StatusItem.TunnelsDown(c.tunnelsDown))
         if (isEmpty() && c.total > 0 && c.ready == c.total) add(StatusItem.AllReady)
     }
     val etcd = if (c.etcdChecked) listOf(StatusItem.Etcd(c.etcdAlarms)) else emptyList()
@@ -46,6 +51,7 @@ fun statusItems(c: NodeCounts, max: Int = 2): List<StatusItem> {
 fun toneOf(item: StatusItem): Tone = when (item) {
     is StatusItem.NotReady -> Tone.WARN
     is StatusItem.Unreachable -> Tone.BAD
+    is StatusItem.TunnelsDown -> Tone.BAD
     StatusItem.AllReady -> Tone.OK
     is StatusItem.Etcd -> if (item.alarms == 0) Tone.OK else Tone.BAD
 }

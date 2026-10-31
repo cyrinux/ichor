@@ -65,6 +65,7 @@ fun MonitoringSection(app: TalosApp) {
     val storageWatched by store.storageWatched.collectAsStateWithLifecycle()
     val storageTrend by store.storageTrendAlerts.collectAsStateWithLifecycle()
     val sensorsWatched by store.sensorsWatched.collectAsStateWithLifecycle()
+    val kubespanWatched by store.kubespanWatched.collectAsStateWithLifecycle()
     val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
     val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
@@ -211,6 +212,19 @@ fun MonitoringSection(app: TalosApp) {
                 )
             }
             if (sensorsWatched) SensorThreshold(store, enabled)
+            // And for the KubeSpan tunnels: on by default, every node's peers are read at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_kubespan), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_kubespan_desc))
+                }
+                IchorSwitch(
+                    checked = kubespanWatched,
+                    onCheckedChange = { store.setKubespanWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
             // And for a cluster that stops answering: once, after that many checks in a row.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

@@ -596,6 +596,8 @@
     <string name="monitor_widget_hint">El widget de la pantalla de inicio usa las mismas comprobaciones; si lo añades, siguen ejecutándose aunque las alertas estén desactivadas.</string>
     <string name="monitor_channel_nodes">Alertas de nodos</string>
     <string name="monitor_channel_nodes_desc">Un nodo cae, deja de responder o vuelve a estar listo</string>
+    <string name="monitor_channel_mesh">Túneles de KubeSpan</string>
+    <string name="monitor_channel_mesh_desc">Un túnel entre dos nodos cae o se recupera</string>
     <string name="monitor_channel_cluster">Alertas del clúster</string>
     <string name="monitor_channel_cluster_desc">Alarmas de etcd, hallazgos del chequeo del clúster, alertas de Alertmanager y clústeres inaccesibles</string>
     <string name="monitor_channel_data">Alertas de servicios de datos</string>
@@ -875,6 +877,10 @@
     <plurals name="widget_unreachable">
         <item quantity="one">%1$d inaccesible</item>
         <item quantity="other">%1$d inaccesibles</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="one">%1$d túnel caído</item>
+        <item quantity="other">%1$d túneles caídos</item>
     </plurals>
     <string name="widget_all_ready">todos listos</string>
     <string name="widget_etcd_no_alarms">etcd: sin alarmas</string>
@@ -4543,6 +4549,10 @@
     <string name="monitor_storage_trend_desc">Notifica cuando el crecimiento de un volumen en la última semana lo volvería crítico en %1$d días, y una vez cuando ya no. Usa el historial de las comprobaciones; requiere el almacenamiento de los nodos.</string>
     <string name="monitor_sensors">Temperaturas de los nodos</string>
     <string name="monitor_sensors_desc">Avisa cuando un nodo se calienta o sus núcleos se limitan (clústeres Talos; lee los sensores de cada nodo en cada comprobación).</string>
+    <string name="monitor_kubespan">Túneles de KubeSpan</string>
+    <string name="monitor_kubespan_desc">Avisa cuando un túnel entre dos nodos está caído (clústeres Talos; lee los pares de cada nodo en cada comprobación).</string>
+    <string name="monitor_kubespan_down">Túnel %1$s caído</string>
+    <string name="monitor_kubespan_up">Túnel %1$s recuperado</string>
     <string name="monitor_sensors_auto">El límite de cada sensor (crítico − 5 °C, si no su máximo)</string>
     <string name="monitor_sensors_threshold">Avisar a %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s se calienta (%2$s °C)</string>

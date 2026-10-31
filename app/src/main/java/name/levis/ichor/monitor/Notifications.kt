@@ -23,7 +23,9 @@ import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.checkup.sectionLook
 import name.levis.ichor.ui.share.shareLinkFor
+import name.levis.ichor.util.DurationFormat
 import name.levis.ichor.util.formatBytes
+import name.levis.ichor.util.formatDuration
 
 /** The single channel every alert used before [AlertChannel]: its settings carry over once. */
 private const val LEGACY_CHANNEL_ID = "cluster-alerts"
@@ -180,6 +182,8 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertTitle(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertTitle(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertTitle(context, alert)
+    AlertKind.KUBESPAN_DOWN -> context.getString(R.string.monitor_kubespan_down, alert.subject)
+    AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan_up, alert.subject)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertTitle(context, alert)
     AlertKind.PROPOSAL_MERGED -> context.getString(R.string.monitor_proposal_merged, ProposalDetail.parse(alert.detail).number)
     AlertKind.PROPOSAL_CLOSED -> context.getString(R.string.monitor_proposal_closed, ProposalDetail.parse(alert.detail).number)
@@ -226,6 +230,30 @@ private fun sensorAlertText(context: Context, alert: Alert): String {
         d.throttled -> context.getString(R.string.monitor_sensor_throttled_text)
         else -> context.getString(R.string.monitor_sensor_hot_text, d.label, celsius(d.limit))
     }
+}
+
+/** "never handshaked · Pods on these nodes cannot reach each other over KubeSpan.", in the map banner's words. */
+private fun kubespanAlertText(context: Context, alert: Alert): String {
+    val d = KubeSpanDetail.parse(alert.detail)
+    val reason = when (d.reason) {
+        KUBESPAN_REASON_NO_ENDPOINT -> context.getString(R.string.kubespan_reason_no_endpoint)
+        KUBESPAN_REASON_NEVER -> context.getString(R.string.kubespan_reason_never)
+        KUBESPAN_REASON_STALE -> context.getString(
+            R.string.kubespan_reason_stale,
+            formatDuration(
+                System.currentTimeMillis() / 1000 - d.since,
+                DurationFormat(
+                    daysHours = context.getString(R.string.common_duration_days_hours),
+                    hoursMinutes = context.getString(R.string.common_duration_hours_minutes),
+                    minutes = context.getString(R.string.common_duration_minutes),
+                    lessThanMinute = context.getString(R.string.common_duration_less_than_minute),
+                ),
+            ),
+        )
+        KUBESPAN_REASON_ONE_SIDE -> context.getString(R.string.topology_link_degraded)
+        else -> context.getString(R.string.kubespan_peer_down)
+    }
+    return "$reason · ${context.getString(R.string.kubespan_banner_meaning)}"
 }
 
 private fun celsius(value: Double): String = String.format(java.util.Locale.ROOT, "%.1f", value)
@@ -383,6 +411,8 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertText(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertText(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertText(context, alert)
+    AlertKind.KUBESPAN_DOWN -> kubespanAlertText(context, alert)
+    AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertText(context, alert)
     // The request's own title, unmasked: left out in screenshot mode.
     AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED ->

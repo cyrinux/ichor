@@ -6,8 +6,8 @@ package ichorgo
 const fleetMinute = 60 * 1000
 
 // DemoFleetSummary is FleetSummary of a made-up fleet as of nowMillis: one bad cluster with an
-// unreachable node, one warn with a firing warning alert, one not checked for two hours and
-// two fine. Its names are invented, so the result is not masked.
+// unreachable node, one bad with a KubeSpan tunnel down, one warn with a firing warning alert,
+// one not checked for two hours and one fine. Its names are invented, so the result is not masked.
 func DemoFleetSummary(nowMillis int64) string {
 	out, err := toJSON(summarizeFleet(demoFleetEntries(nowMillis), nowMillis))
 	if err != nil {
@@ -53,8 +53,9 @@ func demoFleetEntries(nowMillis int64) []fleetEntry {
 		{
 			Key: "demo-edge", Name: "edge", Context: "edge", Tags: []string{"prod"},
 			TakenAt: nowMillis - 3*fleetMinute,
-			Nodes:   map[string]fleetNode{"10.0.2.11": ready("edge-1")}, EtcdChecked: true, EtcdAlarms: []string{},
+			Nodes:   map[string]fleetNode{"10.0.2.11": ready("edge-1"), "10.0.2.12": ready("edge-2")}, EtcdChecked: true, EtcdAlarms: []string{},
 			StorageChecked: true, StorageIssues: map[string]string{},
+			KubespanChecked: true, KubespanIssues: map[string]string{"edge-1|edge-2": "critical|neverHandshaked|0|edge-1|edge-2"},
 		},
 		{
 			Key: "demo-dev", Name: "dev", Context: "dev", Kube: true, Tags: []string{},

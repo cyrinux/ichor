@@ -24,6 +24,7 @@ import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.KubeCronJobList
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePodPage
+import name.levis.ichor.model.KubeSpanMeshHealth
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.OnCallIncidents
@@ -54,6 +55,7 @@ class ContractTest {
         "inventory" to Row(Inventory.serializer()),
         "kubespan" to Row(KubeSpanOverview.serializer()) { assertTrue(it.nodes.isNotEmpty()) },
         "topology" to Row(ClusterTopology.serializer()),
+        "kubespan-mesh" to Row(KubeSpanMeshHealth.serializer()) { assertEquals(it.broken, it.issues.size) },
         "cluster-updates" to Row(ClusterUpdates.serializer()) { assertTrue(updateSections(it).images.isNotEmpty()) },
         "update-proposal-plan" to Row(UpdateProposalPlan.serializer()) { assertEquals(2, it.files[0].changes.size) },
         "diag-entries" to Row(ListSerializer(DiagEntry.serializer())) { assertEquals("ClusterOverview", it[0].attrs.getValue("fn").content) },

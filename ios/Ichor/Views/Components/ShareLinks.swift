@@ -32,7 +32,7 @@ extension ShareTarget {
     /// node of it (a node or disk alert) opens its nodes searched for that node.
     func route(client: TalosClient?, kube: Bool = false) async -> Route? {
         if kube, target == .node || target == .storage { return await kubeNodeRoute(client: client) }
-        if kube, [Target.node, .etcd, .health, .storage, .hardware].contains(target) { return nil }
+        if kube, [Target.node, .etcd, .health, .storage, .hardware, .kubespan].contains(target) { return nil }
         if target == .node || target == .storage || target == .hardware {
             guard let nodes = try? await client?.overview().nodes,
                 let node = nodes.first(where: {
@@ -65,6 +65,7 @@ extension ShareTarget {
                     hints: "", downNodes: [], kind: dataServiceKind, solo: dataServiceKind?.opensAlone == true)
         case .checkup: .checkup
         case .alerts: .alerts
+        case .kubespan: .kubespan
         }
     }
 

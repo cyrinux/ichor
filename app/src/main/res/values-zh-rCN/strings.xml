@@ -561,6 +561,8 @@
     <string name="monitor_widget_hint">主屏幕小组件使用相同的检查；添加小组件后，即使关闭告警，检查也会继续运行。</string>
     <string name="monitor_channel_nodes">节点告警</string>
     <string name="monitor_channel_nodes_desc">节点宕机、停止响应或重新就绪</string>
+    <string name="monitor_channel_mesh">KubeSpan 隧道</string>
+    <string name="monitor_channel_mesh_desc">两个节点之间的隧道断开或恢复</string>
     <string name="monitor_channel_cluster">集群告警</string>
     <string name="monitor_channel_cluster_desc">etcd 警报、集群检查发现的问题、Alertmanager 告警和无法访问的集群</string>
     <string name="monitor_channel_data">数据服务告警</string>
@@ -836,6 +838,9 @@
     </plurals>
     <plurals name="widget_unreachable">
         <item quantity="other">%1$d 个无法访问</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="other">%1$d 条隧道断开</item>
     </plurals>
     <string name="widget_all_ready">全部就绪</string>
     <string name="widget_etcd_no_alarms">etcd：无告警</string>
@@ -4431,6 +4436,10 @@
     <string name="monitor_storage_trend_desc">当某个卷按过去一周的增长速度将在 %1$d 天内达到严重时通知，不再如此时再通知一次。使用检查历史；需要开启节点存储。</string>
     <string name="monitor_sensors">节点温度</string>
     <string name="monitor_sensors_desc">当节点过热或其核心被降频时告警（Talos 集群；每次检查都会读取每个节点的传感器）。</string>
+    <string name="monitor_kubespan">KubeSpan 隧道</string>
+    <string name="monitor_kubespan_desc">当两个节点之间的隧道断开时发出提醒(Talos 集群;每次检查都会读取每个节点的对等端)。</string>
+    <string name="monitor_kubespan_down">隧道 %1$s 已断开</string>
+    <string name="monitor_kubespan_up">隧道 %1$s 已恢复</string>
     <string name="monitor_sensors_auto">每个传感器自身的上限（严重值 − 5 °C，否则为其最大值）</string>
     <string name="monitor_sensors_threshold">达到 %1$d °C 时告警</string>
     <string name="monitor_sensor_hot">%1$s 过热（%2$s °C）</string>

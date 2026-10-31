@@ -106748,6 +106748,266 @@
         "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "У %lld узла дрейф часов · макс. ±%@" } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "У %lld узлов дрейф часов · макс. ±%@" } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "У %lld узлов дрейф часов · макс. ±%@" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "У %lld узла дрейф часов · макс. ±%@" } } } } }
       }
     },
+    "KubeSpan tunnels" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KubeSpan tunnels"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnels KubeSpan"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KubeSpan-Tunnel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Túneles de KubeSpan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel KubeSpan"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KubeSpan トンネル"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Túneis KubeSpan"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Туннели KubeSpan"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тунелі KubeSpan"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KubeSpan 隧道"
+          }
+        }
+      }
+    },
+    "Alert when a tunnel between two nodes is down (Talos clusters; reads every node's peers at each check)." : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alert when a tunnel between two nodes is down (Talos clusters; reads every node's peers at each check)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerte quand un tunnel entre deux nœuds est coupé (clusters Talos ; lit les pairs de chaque nœud à chaque contrôle)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warnt, wenn ein Tunnel zwischen zwei Nodes ausgefallen ist (Talos-Cluster; liest bei jeder Prüfung die Peers aller Nodes)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisa cuando un túnel entre dos nodos está caído (clústeres Talos; lee los pares de cada nodo en cada comprobación)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisa quando un tunnel tra due nodi è caduto (cluster Talos; legge i peer di ogni nodo a ogni controllo)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 つのノード間のトンネルが切断されたら通知します(Talos クラスタ、チェックごとに全ノードのピアを読み取ります)。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisa quando um túnel entre dois nós está fora do ar (clusters Talos; lê os pares de cada nó a cada verificação)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оповещать, когда туннель между двумя узлами не работает (кластеры Talos; при каждой проверке читает пиры всех узлов)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сповіщати, коли тунель між двома вузлами не працює (кластери Talos; під час кожної перевірки читає піри всіх вузлів)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当两个节点之间的隧道断开时发出提醒(Talos 集群;每次检查都会读取每个节点的对等端)。"
+          }
+        }
+      }
+    },
+    "Tunnel %@ is down" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ is down"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ coupé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ ist ausgefallen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Túnel %@ caído"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ caduto"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トンネル %@ が切断されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Túnel %@ fora do ar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Туннель %@ не работает"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тунель %@ не працює"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隧道 %@ 已断开"
+          }
+        }
+      }
+    },
+    "Tunnel %@ is back" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ is back"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ rétabli"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ ist wieder da"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Túnel %@ recuperado"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel %@ di nuovo attivo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トンネル %@ が復旧しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Túnel %@ de volta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Туннель %@ снова работает"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тунель %@ знову працює"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隧道 %@ 已恢复"
+          }
+        }
+      }
+    },
     "%lld unreachable" : {
       "extractionState" : "manual",
       "localizations" : {

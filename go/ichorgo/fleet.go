@@ -62,6 +62,9 @@ type fleetEntry struct {
 	SensorIssues   map[string]string `json:"sensorIssues"`
 	PluginChecked  bool              `json:"pluginChecked"`
 	PluginIssues   map[string]string `json:"pluginIssues"`
+
+	KubespanChecked bool              `json:"kubespanChecked"`
+	KubespanIssues  map[string]string `json:"kubespanIssues"`
 }
 
 // fleetFinding is the one thing a row says is wrong. Detail is the GitOps tool ("argocd",

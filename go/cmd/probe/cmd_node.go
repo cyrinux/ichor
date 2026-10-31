@@ -263,6 +263,10 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "kubespan-mesh", run: func(e env) (string, error) {
+		// What the monitor's tunnel alert reads: the broken links of every node's peers.
+		return ichorgo.KubeSpanMeshHealth(e.cfg, e.context)
+	}},
 	{name: "stats", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeStats(e.cfg, e.context, flag.Arg(1))
 

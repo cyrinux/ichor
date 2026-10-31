@@ -96,6 +96,11 @@ func TestFleetTone(t *testing.T) {
 			&fleetFinding{Track: "storage", Severity: "warning", Subject: "node-a EPHEMERAL"}},
 		{"sensor uses the hostname", map[string]any{"sensorChecked": true, "sensorIssues": map[string]string{"10.0.0.1|hot": "critical|hot|node-a|cpu|95.0|90.0"}}, fleetBad,
 			&fleetFinding{Track: "sensor", Severity: "critical", Subject: "node-a hot"}},
+		{"kubespan names both ends", map[string]any{"kubespanChecked": true, "kubespanIssues": map[string]string{"node-a|node-b": "critical|neverHandshaked|0|node-a|node-b"}}, fleetBad,
+			&fleetFinding{Track: "kubespan", Severity: "critical", Subject: "node-a ↔ node-b", Detail: "neverHandshaked"}},
+		{"kubespan short value uses the key", map[string]any{"kubespanChecked": true, "kubespanIssues": map[string]string{"node-a|node-b": "critical"}}, fleetBad,
+			&fleetFinding{Track: "kubespan", Severity: "critical", Subject: "node-a ↔ node-b"}},
+		{"kubespan unchecked is ignored", map[string]any{"kubespanChecked": false, "kubespanIssues": map[string]string{"node-a|node-b": "critical|down|0|node-a|node-b"}}, fleetOK, nil},
 		{"plugin JSON severity", map[string]any{"pluginChecked": true, "pluginIssues": map[string]string{"plugin:x:y:ns/a": `{"severity":"critical","plugin":"x"}`}}, fleetBad,
 			&fleetFinding{Track: "plugin", Severity: "critical", Subject: "plugin:x:y:ns/a"}},
 		{"stale keeps counts", map[string]any{"takenAt": fleetNow - 2*fleetStaleAfterMillis, "nodes": fleetNodes("UNREACHABLE", "READY")}, fleetUnknown,
@@ -116,6 +121,38 @@ func TestFleetTone(t *testing.T) {
 				t.Errorf("top = %+v, want %+v", row.TopFinding, tc.top)
 			}
 		})
+	}
+}
+
+func TestFleetKubespanRanksAfterAlertmanagerBeforeCheckup(t *testing.T) {
+	tunnel := map[string]string{"node-a|node-b": "critical|down|0|node-a|node-b"}
+
+	got := runFleet(t, fleetCluster("c", map[string]any{
+		"amChecked": true, "amIssues": map[string]string{"f1": "critical|DiskFull|x"},
+		"kubespanChecked": true, "kubespanIssues": tunnel,
+		"checkupChecked": true, "checkupIssues": map[string]string{"security|Pod|ns/x": "critical"},
+	}))
+
+	row := got.Clusters[0]
+	if row.TopFinding == nil || row.TopFinding.Track != "alertmanager" {
+		t.Errorf("top = %+v, want the Alertmanager critical", row.TopFinding)
+	}
+
+	if row.Critical != 3 {
+		t.Errorf("critical = %d, want 3", row.Critical)
+	}
+
+	if want := []string{"etcd", "alertmanager", "kubespan", "checkup"}; !slices.Equal(row.TracksChecked, want) {
+		t.Errorf("tracksChecked = %v, want %v", row.TracksChecked, want)
+	}
+
+	got = runFleet(t, fleetCluster("c", map[string]any{
+		"kubespanChecked": true, "kubespanIssues": tunnel,
+		"checkupChecked": true, "checkupIssues": map[string]string{"security|Pod|ns/x": "critical"},
+	}))
+
+	if top := got.Clusters[0].TopFinding; top == nil || top.Track != "kubespan" {
+		t.Errorf("top = %+v, want the tunnel before the checkup", top)
 	}
 }
 
@@ -243,7 +280,7 @@ func TestDemoFleetSummary(t *testing.T) {
 		t.Fatalf("demo = %+v", got)
 	}
 
-	if want := (fleetCounts{Bad: 1, Warn: 1, Unknown: 1, OK: 2}); got.Counts != want {
+	if want := (fleetCounts{Bad: 2, Warn: 1, Unknown: 1, OK: 1}); got.Counts != want {
 		t.Errorf("counts = %+v, want %+v", got.Counts, want)
 	}
 

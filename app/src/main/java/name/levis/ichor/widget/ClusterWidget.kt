@@ -146,6 +146,7 @@ private fun StatusChip(res: Context, item: StatusItem) {
     val (color, text) = when (item) {
         is StatusItem.NotReady -> Warn to plural.getQuantityString(R.plurals.widget_not_ready, item.count, item.count)
         is StatusItem.Unreachable -> Bad to plural.getQuantityString(R.plurals.widget_unreachable, item.count, item.count)
+        is StatusItem.TunnelsDown -> Bad to plural.getQuantityString(R.plurals.widget_tunnels_down, item.count, item.count)
         StatusItem.AllReady -> Ok to res.getString(R.string.widget_all_ready)
         is StatusItem.Etcd -> if (item.alarms == 0) {
             Ok to res.getString(R.string.widget_etcd_no_alarms)

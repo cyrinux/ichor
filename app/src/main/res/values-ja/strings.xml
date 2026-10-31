@@ -561,6 +561,8 @@
     <string name="monitor_widget_hint">ホーム画面のウィジェットも同じチェックを使用します。ウィジェットを追加すると、アラートがオフでもチェックは実行され続けます。</string>
     <string name="monitor_channel_nodes">ノードのアラート</string>
     <string name="monitor_channel_nodes_desc">ノードのダウン、応答停止、または準備完了への復帰</string>
+    <string name="monitor_channel_mesh">KubeSpan トンネル</string>
+    <string name="monitor_channel_mesh_desc">2 つのノード間のトンネルの切断と復旧</string>
     <string name="monitor_channel_cluster">クラスターのアラート</string>
     <string name="monitor_channel_cluster_desc">etcd アラーム、クラスターチェックの検出結果、Alertmanager のアラート、到達不能なクラスター</string>
     <string name="monitor_channel_data">データサービスのアラート</string>
@@ -836,6 +838,9 @@
     </plurals>
     <plurals name="widget_unreachable">
         <item quantity="other">%1$d個が到達不能</item>
+    </plurals>
+    <plurals name="widget_tunnels_down">
+        <item quantity="other">トンネル %1$d 本が切断</item>
     </plurals>
     <string name="widget_all_ready">すべて準備完了</string>
     <string name="widget_etcd_no_alarms">etcd：アラームなし</string>
@@ -4431,6 +4436,10 @@
     <string name="monitor_storage_trend_desc">過去1週間のボリュームの増加ペースで%1$d日以内に緊急レベルに達する見込みのとき、およびその見込みがなくなったときに通知します。チェックの履歴を使用します。ノードのストレージを有効にする必要があります。</string>
     <string name="monitor_sensors">ノードの温度</string>
     <string name="monitor_sensors_desc">ノードが高温になったとき、またはコアがスロットリングされたときにアラートを出します（Talos クラスター。チェックのたびにすべてのノードのセンサーを読み取ります）。</string>
+    <string name="monitor_kubespan">KubeSpan トンネル</string>
+    <string name="monitor_kubespan_desc">2 つのノード間のトンネルが切断されたら通知します(Talos クラスタ、チェックごとに全ノードのピアを読み取ります)。</string>
+    <string name="monitor_kubespan_down">トンネル %1$s が切断されました</string>
+    <string name="monitor_kubespan_up">トンネル %1$s が復旧しました</string>
     <string name="monitor_sensors_auto">各センサー固有の上限（critical − 5 °C、なければ max）</string>
     <string name="monitor_sensors_threshold">%1$d °C でアラート</string>
     <string name="monitor_sensor_hot">%1$s が高温です（%2$s °C）</string>

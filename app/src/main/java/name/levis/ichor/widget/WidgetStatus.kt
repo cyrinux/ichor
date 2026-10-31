@@ -11,7 +11,7 @@ import name.levis.ichor.monitor.monitorKeyOf
 
 /** [s]'s node and etcd counts, all the widget and the watch show of it. */
 fun nodeCounts(s: ClusterSnapshot): NodeCounts =
-    NodeCounts(s.nodes.size, s.readyCount, s.notReadyCount, s.unreachableCount, s.etcdChecked, s.etcdAlarms.size)
+    NodeCounts(s.nodes.size, s.readyCount, s.notReadyCount, s.unreachableCount, s.etcdChecked, s.etcdAlarms.size, s.kubespanChecked, s.kubespanIssues.size)
 
 fun isStale(s: ClusterSnapshot?, now: Long): Boolean = isStaleAt(s?.takenAt, now)
 
