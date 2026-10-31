@@ -510,6 +510,9 @@
     <string name="clusters_title">Кластеры</string>
     <string name="rail_clusters">Кластеры</string>
     <string name="clusters_switch">Сменить кластер</string>
+    <string name="clusters_access_profiles">Профили доступа: %1$d</string>
+    <string name="clusters_at">Кластер · %1$s</string>
+    <string name="clusters_unnamed_group">Кластер</string>
     <string name="clusters_manage">Управление кластерами…</string>
     <string name="clusters_add">Добавить кластер</string>
     <string name="clusters_swipe_hint">Проведите по верхней панели влево или вправо, чтобы сменить кластер.</string>

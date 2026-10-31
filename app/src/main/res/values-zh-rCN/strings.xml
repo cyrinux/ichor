@@ -426,6 +426,9 @@
     <string name="clusters_title">集群</string>
     <string name="rail_clusters">集群</string>
     <string name="clusters_switch">切换集群</string>
+    <string name="clusters_access_profiles">%1$d 个访问配置</string>
+    <string name="clusters_at">集群 · %1$s</string>
+    <string name="clusters_unnamed_group">集群</string>
     <string name="clusters_manage">管理集群…</string>
     <string name="clusters_add">添加集群</string>
     <string name="clusters_swipe_hint">左右滑动顶栏即可切换集群。</string>

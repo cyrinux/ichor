@@ -454,6 +454,9 @@
     <string name="clusters_title">Cluster</string>
     <string name="rail_clusters">Cluster</string>
     <string name="clusters_switch">Cluster wechseln</string>
+    <string name="clusters_access_profiles">%1$d Zugangsprofile</string>
+    <string name="clusters_at">Cluster · %1$s</string>
+    <string name="clusters_unnamed_group">Cluster</string>
     <string name="clusters_manage">Cluster verwalten…</string>
     <string name="clusters_add">Cluster hinzufügen</string>
     <string name="clusters_swipe_hint">Wische über die obere Leiste nach links oder rechts, um den Cluster zu wechseln.</string>
