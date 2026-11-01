@@ -1543,6 +1543,8 @@
     <string name="cluster_upgrade_all">全部升级</string>
     <string name="cluster_upgrade_intro">所有节点依次升级：先控制平面（其中 etcd leader 最后），然后是工作节点。每两个节点之间，应用会检查集群是否恢复健康。</string>
     <string name="cluster_upgrade_version">版本</string>
+    <string name="cluster_upgrade_more_versions">再显示 %1$d 个</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s 不在最新版本之列；仍保持选中。</string>
     <string name="cluster_upgrade_drain">先排空每个节点</string>
     <string name="cluster_upgrade_drain_desc">升级前对节点禁止调度并驱逐其 Pod，使它们在节点重启前迁移。</string>
     <string name="cluster_upgrade_order">节点，按升级顺序（已完成 %1$d/%2$d）</string>

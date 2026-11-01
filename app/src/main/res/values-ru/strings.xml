@@ -1699,6 +1699,8 @@
     <string name="cluster_upgrade_all">Обновить все</string>
     <string name="cluster_upgrade_intro">Узлы обновляются по очереди: сначала control plane (лидер etcd — последним из них), затем рабочие узлы. Между узлами приложение проверяет, что кластер снова исправен.</string>
     <string name="cluster_upgrade_version">Версия</string>
+    <string name="cluster_upgrade_more_versions">Показать ещё: %1$d</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s нет среди последних выпусков; версия остаётся выбранной.</string>
     <string name="cluster_upgrade_drain">Сначала освобождать каждый узел</string>
     <string name="cluster_upgrade_drain_desc">Запретить планирование на узле и вытеснить его поды перед обновлением, чтобы они переехали до перезагрузки.</string>
     <string name="cluster_upgrade_order">Узлы в порядке обновления (готово %1$d из %2$d)</string>

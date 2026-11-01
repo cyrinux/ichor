@@ -1,8 +1,9 @@
 package name.levis.ichor.ui.upgrade
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
+import name.levis.ichor.ui.design.IchorAssistChip
 import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,6 +35,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ClusterUpgradeNode
 import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.TalosRelease
+import name.levis.ichor.model.offeredVersions
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.ErrorBox
@@ -112,6 +115,7 @@ fun ClusterUpgradePlanView(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun VersionPicker(releases: UiState<List<TalosRelease>>, version: String, onVersion: (String) -> Unit) {
     when (releases) {
@@ -120,15 +124,21 @@ private fun VersionPicker(releases: UiState<List<TalosRelease>>, version: String
         is UiState.Failed -> MutedText(releases.message.asString())
         is UiState.Loaded -> Unit
     }
-    val offered = ((releases as? UiState.Loaded)?.data.orEmpty().map { it.version } + version).filter { it.isNotEmpty() }.distinct().take(MAX_VERSIONS)
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        offered.forEach { v ->
+    var showAll by rememberSaveable { mutableStateOf(false) }
+    val offered = offeredVersions((releases as? UiState.Loaded)?.data.orEmpty().map { it.version }, version, showAll)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        offered.versions.forEach { v ->
             IchorFilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
         }
+        if (offered.hidden > 0) {
+            IchorAssistChip(onClick = { showAll = true }, label = { Text(stringResource(R.string.cluster_upgrade_more_versions, offered.hidden)) })
+        }
+    }
+    // Not while the list is still loading: nothing says yet that it is absent.
+    if (offered.selectedUnlisted && releases !is UiState.Loading) {
+        MutedText(stringResource(R.string.cluster_upgrade_version_unlisted, version))
     }
 }
-
-private const val MAX_VERSIONS = 6
 
 @Composable
 private fun PlanNodeRow(position: Int, node: ClusterUpgradeNode) {

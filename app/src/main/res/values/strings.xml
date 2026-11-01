@@ -1599,6 +1599,8 @@
     <string name="cluster_upgrade_all">Upgrade all</string>
     <string name="cluster_upgrade_intro">Every node is upgraded one after the other: control planes first, the etcd leader last of them, then the workers. Between nodes, the app checks the cluster is healthy again.</string>
     <string name="cluster_upgrade_version">Version</string>
+    <string name="cluster_upgrade_more_versions">Show %1$d more</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s is not among the latest releases; it stays selected.</string>
     <string name="cluster_upgrade_drain">Drain each node first</string>
     <string name="cluster_upgrade_drain_desc">Cordon the node and evict its pods before its upgrade, so they move before it reboots.</string>
     <string name="cluster_upgrade_order">Nodes, in upgrade order (%1$d of %2$d done)</string>

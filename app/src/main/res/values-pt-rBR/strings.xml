@@ -1595,6 +1595,8 @@
     <string name="cluster_upgrade_all">Atualizar tudo</string>
     <string name="cluster_upgrade_intro">Cada nó é atualizado um após o outro: primeiro os control planes, com o líder do etcd por último entre eles, depois os workers. Entre um nó e outro, o app verifica se o cluster voltou a ficar íntegro.</string>
     <string name="cluster_upgrade_version">Versão</string>
+    <string name="cluster_upgrade_more_versions">Mostrar mais %1$d</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s não está entre as versões mais recentes; continua selecionada.</string>
     <string name="cluster_upgrade_drain">Drenar cada nó antes</string>
     <string name="cluster_upgrade_drain_desc">Isolar o nó e remover seus pods antes da atualização, para que eles saiam antes de ele reiniciar.</string>
     <string name="cluster_upgrade_order">Nós, na ordem de atualização (%1$d de %2$d concluídos)</string>

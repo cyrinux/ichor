@@ -129,6 +129,40 @@ class UpgradeTest {
         assertTrue(steps.all { it.status == StepStatus.PENDING })
     }
 
+    private val tenReleases = (9 downTo 0).map { "v1.12.$it" }
+
+    @Test
+    fun offeredVersionsKeepsTheSelectedSeventh() {
+        val offered = offeredVersions(tenReleases, "v1.12.3", showAll = false)
+        assertEquals(listOf("v1.12.9", "v1.12.8", "v1.12.7", "v1.12.6", "v1.12.5", "v1.12.4", "v1.12.3"), offered.versions)
+        assertEquals(3, offered.hidden)
+        assertFalse(offered.selectedUnlisted)
+    }
+
+    @Test
+    fun offeredVersionsShowsAllAndFlagsAnUnlistedChoice() {
+        val all = offeredVersions(tenReleases, "v1.12.3", showAll = true)
+        assertEquals(tenReleases, all.versions)
+        assertEquals(0, all.hidden)
+
+        val unlisted = offeredVersions(tenReleases, "v1.11.0", showAll = false)
+        assertEquals(tenReleases.take(6) + "v1.11.0", unlisted.versions)
+        assertEquals(4, unlisted.hidden)
+        assertTrue(unlisted.selectedUnlisted)
+
+        val nothingChosen = offeredVersions(tenReleases, "", showAll = false)
+        assertEquals(tenReleases.take(6), nothingChosen.versions)
+        assertFalse(nothingChosen.selectedUnlisted)
+    }
+
+    @Test
+    fun offeredVersionsWithoutAListKeepTheChoice() {
+        val offline = offeredVersions(emptyList(), "v1.12.3", showAll = false)
+        assertEquals(listOf("v1.12.3"), offline.versions)
+        assertEquals(0, offline.hidden)
+        assertTrue(offline.selectedUnlisted)
+    }
+
     @Test
     fun releaseSuggestionsStableFirst() {
         val releases = listOf(TalosRelease("v1.15.0-beta.1", prerelease = true), TalosRelease("v1.14.2"), TalosRelease("v1.14.1"))

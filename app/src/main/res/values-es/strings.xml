@@ -1600,6 +1600,8 @@
     <string name="cluster_upgrade_all">Actualizar todos</string>
     <string name="cluster_upgrade_intro">Cada nodo se actualiza uno tras otro: primero los planos de control, el líder de etcd el último de ellos, luego los workers. Entre nodos, la app comprueba que el clúster vuelve a estar sano.</string>
     <string name="cluster_upgrade_version">Versión</string>
+    <string name="cluster_upgrade_more_versions">Mostrar %1$d más</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s no está entre las últimas versiones; sigue seleccionada.</string>
     <string name="cluster_upgrade_drain">Vaciar cada nodo primero</string>
     <string name="cluster_upgrade_drain_desc">Acordonar el nodo y desalojar sus pods antes de su actualización, para que se muevan antes del reinicio.</string>
     <string name="cluster_upgrade_order">Nodos, en orden de actualización (%1$d de %2$d hechos)</string>
