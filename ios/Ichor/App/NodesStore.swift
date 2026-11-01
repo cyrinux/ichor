@@ -113,4 +113,10 @@ final class NodesStore {
     func dismissNodes(_ nodes: [DiscoveredNode], of context: String) {
         dismissedByContext[context, default: []].formUnion(nodes.map(\.address))
     }
+
+    /// Addresses and hostnames just taken out of a context: a member lingers for a while, and
+    /// discovery must not offer them back.
+    func noteForgotten(_ names: [String], of context: String) {
+        dismissedByContext[context, default: []].formUnion(names.filter { !$0.isEmpty })
+    }
 }

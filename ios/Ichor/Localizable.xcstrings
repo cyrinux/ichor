@@ -204017,6 +204017,190 @@
           }
         }
       }
+    },
+    "Also remove %@ from this cluster?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer aussi %@ de ce cluster ?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Quitar también %@ de este clúster?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ auch aus diesem Cluster entfernen?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovere anche %@ da questo cluster?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Також вилучити %@ із цього кластера?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同时从此集群中移除 %@？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ をこのクラスタからも削除しますか？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover %@ também deste cluster?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Также удалить %@ из этого кластера?" } }
+      }
+    },
+    "The app stops targeting this node, and its Kubernetes Node is deleted once its kubelet has stopped." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’app ne cible plus ce nœud, et son objet Node Kubernetes est supprimé une fois son kubelet arrêté." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La app deja de usar este nodo, y su Node de Kubernetes se elimina cuando su kubelet se detiene." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die App spricht diesen Knoten nicht mehr an, und sein Kubernetes-Node wird gelöscht, sobald sein Kubelet angehalten ist." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’app smette di usare questo nodo e il suo Node Kubernetes viene eliminato quando il kubelet si ferma." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Застосунок більше не звертатиметься до цього вузла, а його Node у Kubernetes буде видалено, щойно kubelet зупиниться." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用将不再以此节点为目标，其 Kubernetes Node 会在 kubelet 停止后删除。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリはこのノードを対象にしなくなり、kubelet の停止後に Kubernetes の Node が削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O app deixa de usar este nó, e o Node do Kubernetes é excluído quando o kubelet parar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Приложение больше не будет обращаться к этому узлу, а его Node в Kubernetes будет удалён после остановки kubelet." } }
+      }
+    },
+    "Remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вилучити" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить" } }
+      }
+    },
+    "Keep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Conserver" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conservar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Behalten" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mantieni" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Залишити" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保留" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "残す" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Manter" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Оставить" } }
+      }
+    },
+    "Forget node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Oublier le nœud" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Olvidar nodo" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Knoten vergessen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dimentica nodo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Забути вузол" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忘记节点" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノードを忘れる" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Esquecer nó" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Забыть узел" } }
+      }
+    },
+    "This node does not answer and the cluster no longer lists it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce nœud ne répond pas et le cluster ne le liste plus." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este nodo no responde y el clúster ya no lo incluye." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieser Knoten antwortet nicht und der Cluster führt ihn nicht mehr auf." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo nodo non risponde e il cluster non lo elenca più." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Цей вузол не відповідає, і кластер більше його не показує." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此节点没有响应，集群也不再列出它。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このノードは応答せず、クラスタにも表示されなくなっています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este nó não responde e o cluster não o lista mais." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Этот узел не отвечает, и кластер больше его не показывает." } }
+      }
+    },
+    "Forget %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Oublier %@ ?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Olvidar %@?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ vergessen?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dimenticare %@?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Забути %@?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忘记 %@？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ を忘れますか？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Esquecer %@?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Забыть %@?" } }
+      }
+    },
+    "The app stops targeting this node. The machine itself is not changed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’app ne cible plus ce nœud. La machine elle-même n’est pas modifiée." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La app deja de usar este nodo. La máquina no se modifica." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die App spricht diesen Knoten nicht mehr an. Die Maschine selbst wird nicht verändert." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’app smette di usare questo nodo. La macchina non viene modificata." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Застосунок більше не звертатиметься до цього вузла. Сама машина не змінюється." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用将不再以此节点为目标。机器本身不会改变。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリはこのノードを対象にしなくなります。マシン自体は変更されません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O app deixa de usar este nó. A máquina não é alterada." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Приложение больше не будет обращаться к этому узлу. Сама машина не изменяется." } }
+      }
+    },
+    "The app also connects through this address: change the endpoints if it no longer answers." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’app se connecte aussi par cette adresse : modifiez les points d’accès si elle ne répond plus." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La app también se conecta por esta dirección: cambia los endpoints si deja de responder." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die App verbindet sich auch über diese Adresse: Ändere die Endpunkte, wenn sie nicht mehr antwortet." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’app si connette anche tramite questo indirizzo: modifica gli endpoint se non risponde più." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Застосунок також підключається через цю адресу: змініть кінцеві точки, якщо вона більше не відповідає." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用也通过此地址连接：如果它不再响应，请更改端点。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリはこのアドレス経由でも接続します。応答しなくなったらエンドポイントを変更してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O app também se conecta por este endereço: altere os endpoints se ele não responder mais." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Приложение также подключается через этот адрес: измените конечные точки, если он перестанет отвечать." } }
+      }
+    },
+    "%@: removed from this cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ : retiré de ce cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@: quitado de este clúster" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@: aus diesem Cluster entfernt" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@: rimosso da questo cluster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@: вилучено з цього кластера" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@：已从此集群移除" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@：このクラスタから削除しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@: removido deste cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@: удалён из этого кластера" } }
+      }
+    },
+    "%@: not removed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: not removed: %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ : non retiré : %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: no se quitó: %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: nicht entfernt: %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: non rimosso: %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: не вилучено: %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@：未移除：%2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@：削除されませんでした：%2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: não removido: %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: не удалён: %2$@" } }
+      }
+    },
+    "%@: Kubernetes Node deleted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ : Node Kubernetes supprimé" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@: Node de Kubernetes eliminado" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@: Kubernetes-Node gelöscht" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@: Node Kubernetes eliminato" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@: Node у Kubernetes видалено" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@：Kubernetes Node 已删除" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@：Kubernetes の Node を削除しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@: Node do Kubernetes excluído" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@: Node в Kubernetes удалён" } }
+      }
+    },
+    "%@: Kubernetes Node not deleted: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Kubernetes Node not deleted: %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ : Node Kubernetes non supprimé : %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node de Kubernetes no eliminado: %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Kubernetes-Node nicht gelöscht: %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node Kubernetes non eliminato: %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node у Kubernetes не видалено: %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@：Kubernetes Node 未删除：%2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@：Kubernetes の Node は削除されませんでした：%2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node do Kubernetes não excluído: %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node в Kubernetes не удалён: %2$@" } }
+      }
     }
   },
   "version" : "1.0"

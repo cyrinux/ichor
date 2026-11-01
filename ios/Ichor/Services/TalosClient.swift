@@ -133,6 +133,12 @@ struct TalosClient: Sendable {
         return try await run { IchorgoAddContextNodes(stored, context, list, $0) }
     }
 
+    /// `stored` with `nodes` (addresses) out of context's nodes; its endpoints stay.
+    static func removeContextNodes(stored: String, context: String, nodes: [String]) async throws -> String {
+        let list = nodes.joined(separator: ",")
+        return try await run { IchorgoRemoveContextNodes(stored, context, list, $0) }
+    }
+
     /// Screenshot mode: Go masks IPs, hostnames, context names and `extraWords`
     /// (comma-separated) in everything it returns, and unmasks what it is given back.
     static func setPrivacyMask(enabled: Bool, extraWords: String) {

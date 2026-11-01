@@ -18,4 +18,26 @@ extension TalosClient {
             _ = IchorgoNodeReset(config, context, node, wipe.rawValue, graceful, reboot, error)
         }
     }
+
+    /// Whether node can leave this context, and whether it is also an endpoint. No network.
+    func removalPlan(node: String) async throws -> ContextNodeRemoval {
+        try await Self.json { [config, context] in
+            IchorgoContextNodeRemovalPlan(config, context, node, $0)
+        }
+    }
+
+    /// Whether node does not answer and the cluster no longer lists it. Read-only.
+    func forgettable(node: String) async throws -> Bool {
+        let check: NodeForgetCheck = try await Self.json { [config, context] in
+            IchorgoNodeForgettable(config, context, node, $0)
+        }
+        return check.forgettable
+    }
+
+    /// Deletes the Node of a node being reset once its kubelet has stopped; waits up to 5 minutes.
+    func deleteDepartedNode(hostname: String, node: String) async throws {
+        try await Self.run { [config, context, kubeServer] error -> Void in
+            _ = IchorgoKubeDeleteDepartedNode(config, context, kubeServer, hostname, node, 300, error)
+        }
+    }
 }

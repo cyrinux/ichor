@@ -19,6 +19,8 @@ struct NodeDetailView: View {
     /// The cordon / uncordon choice is shown (the node's current state is not known here).
     @State private var showingCordon = false
     @State private var showingReset = false
+    /// After a reset that wipes the system disk: also take the node out of the cluster?
+    @State private var removalOffer: ContextNodeRemoval?
     /// The cluster's history over `period` (uptime strip); nil without one.
     @State private var history: HistoryQueryResult?
     @State private var period = HistoryPeriod.week
@@ -36,6 +38,7 @@ struct NodeDetailView: View {
     var body: some View {
         List {
             header
+            NodeForgetSection(ref: ref) { close() }
             NodeStatusSection(ref: ref, open: $open)
             NodeInspectSection(node: ref.address, open: $open)
             NodeTroubleshootSection(node: ref.address, open: $open)
@@ -101,8 +104,45 @@ struct NodeDetailView: View {
         .alert(resultMessage ?? "", isPresented: $resultMessage.isPresent()) {
             Button("OK") {
                 guard succeeded else { return }
-                if let onDone { onDone() } else { dismiss() }
+                close()
             }
+        }
+        .confirmationDialog(
+            String(localized: "Also remove \(ref.hostname) from this cluster?"),
+            isPresented: $removalOffer.isPresent(), titleVisibility: .visible
+        ) {
+            Button("Remove", role: .destructive) { Task { await removeAfterReset() } }
+            Button("Keep", role: .cancel) { close() }
+        } message: {
+            Text("The app stops targeting this node, and its Kubernetes Node is deleted once its kubelet has stopped.")
+        }
+    }
+
+    private func close() {
+        if let onDone { onDone() } else { dismiss() }
+    }
+
+    /// Each step says how it ended; the client outlives the context edit, so the wait for the
+    /// kubelet still reaches this cluster.
+    private func removeAfterReset() async {
+        guard let client = model.client else { return }
+        running = true
+        defer { running = false }
+        succeeded = true
+        do {
+            let context = model.activeContext
+            try await model.removeNodes([ref.address])
+            nodes.noteForgotten([ref.address, ref.hostname], of: context)
+        } catch {
+            resultMessage = String(localized: "\(ref.hostname): not removed: \(error.localizedDescription)")
+            return
+        }
+        do {
+            try await client.deleteDepartedNode(hostname: ref.hostname, node: ref.address)
+            resultMessage = String(localized: "\(ref.hostname): Kubernetes Node deleted")
+        } catch {
+            resultMessage = String(
+                localized: "\(ref.hostname): Kubernetes Node not deleted: \(error.localizedDescription)")
         }
     }
 
@@ -195,7 +235,12 @@ struct NodeDetailView: View {
             try await client.reset(
                 node: ref.address, wipe: request.wipe, graceful: request.graceful, reboot: request.reboot)
             succeeded = true
-            resultMessage = String(localized: "\(ref.hostname): reset requested")
+            // A node that keeps its system disk stays in the cluster.
+            if request.wipe != .user, let removal = try? await client.removalPlan(node: ref.address), removal.allowed {
+                removalOffer = removal
+            } else {
+                resultMessage = String(localized: "\(ref.hostname): reset requested")
+            }
         } catch {
             succeeded = false
             resultMessage = error.localizedDescription

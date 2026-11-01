@@ -297,6 +297,10 @@ class ConfigRepository(
     suspend fun addNodes(contextName: String, nodes: List<String>) =
         edit { Ichorgo.addContextNodes(it, contextName, nodes.joinToString(",")) }
 
+    /** Takes [nodes] out of the nodes of [contextName]; its endpoints stay. Refused for the last one. */
+    suspend fun removeNodes(contextName: String, nodes: List<String>) =
+        edit { Ichorgo.removeContextNodes(it, contextName, nodes.joinToString(",")) }
+
     /** Replaces the endpoints of [contextName] with [endpoints], in order. */
     suspend fun setEndpoints(contextName: String, endpoints: List<String>) =
         edit { Ichorgo.setContextEndpoints(it, contextName, endpoints.joinToString(",")) }
