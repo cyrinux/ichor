@@ -1,1 +1,1 @@
-Ichor für Talos Linux
+Ichor für Kubernetes & Talos

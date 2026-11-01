@@ -36,7 +36,7 @@ characters per language.
 
 ## One-time setup
 
-1. **Create the app** in the Play Console (App name `Ichor for Talos Linux`, App, Free) and fill in
+1. **Create the app** in the Play Console (App name `Ichor for Kubernetes & Talos`, App, Free) and fill in
    the forms below.
 2. **Play App Signing: choose "Use existing app signing key"** and upload the release key
    (Play's PEPK tool encrypts it). Play installs and GitHub/Obtainium installs then share one
@@ -89,7 +89,7 @@ the Play Console reports.
 
 | Field | Value |
 |---|---|
-| App name | `Ichor for Talos Linux` |
+| App name | `Ichor for Kubernetes & Talos` (`<locale>/title.txt`; Play itself adds "(Early Access)" until the app is in production) |
 | Short / full description | `fastlane/metadata/android/<locale>/` |
 | App icon | `images/icon.png` (512×512) |
 | Feature graphic | `images/featureGraphic.png` (1024×500) |

@@ -1,1 +1,1 @@
-Ichor：Talos Linux 用アプリ
+Ichor：Kubernetes・Talos 用
