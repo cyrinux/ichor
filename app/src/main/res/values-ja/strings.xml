@@ -4915,6 +4915,7 @@
     <string name="kube_menu_explore">探索</string>
     <string name="kube_menu_health">ヘルス</string>
     <string name="kube_menu_installed">インストール済み</string>
+    <string name="home_menu_app">アプリ</string>
     <string name="capacity_intro">空き容量はスケジューラーと同様に、allocatable に対する requests で計算します。使用量は metrics-server から取得します。</string>
     <string name="capacity_n_plus_one_ok">N+1：どのノードを1つ失っても Pending の Pod は発生しません</string>
     <string name="capacity_n_plus_one_short">%1$s を失うと%2$s個の Pod が Pending になります</string>

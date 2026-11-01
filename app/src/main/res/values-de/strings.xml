@@ -5035,6 +5035,7 @@
     <string name="kube_menu_explore">Erkunden</string>
     <string name="kube_menu_health">Zustand</string>
     <string name="kube_menu_installed">Hier installiert</string>
+    <string name="home_menu_app">App</string>
     <string name="capacity_intro">Freier Platz zählt Requests gegen Allocatable, wie der Scheduler; die Nutzung kommt von metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: der Verlust eines beliebigen Knotens lässt keinen Pod Pending</string>
     <string name="capacity_n_plus_one_short">Der Verlust von %1$s lässt %2$s Pods Pending</string>

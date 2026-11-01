@@ -5049,6 +5049,7 @@
     <string name="kube_menu_explore">Explore</string>
     <string name="kube_menu_health">Health</string>
     <string name="kube_menu_installed">Installed here</string>
+    <string name="home_menu_app">App</string>
     <string name="capacity_intro">Free room counts requests against allocatable, as the scheduler does; usage comes from metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: losing any one node leaves no pod Pending</string>
     <string name="capacity_n_plus_one_short">Losing %1$s leaves %2$s pods Pending</string>

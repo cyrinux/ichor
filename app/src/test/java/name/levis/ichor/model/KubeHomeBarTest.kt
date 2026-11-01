@@ -24,17 +24,17 @@ import org.junit.Test
 class KubeHomeBarTest {
 
     @Test
-    fun defaultKeepsFourIconsWithGitOps() {
+    fun defaultKeepsTwoIconsAndEveryOtherActionInTheMenu() {
         val bar = KubeHomeAction.bar.default
-        assertEquals(listOf(WORKLOADS, RESOURCES, GITOPS, METRICS), bar.icons)
-        assertEquals(listOf(ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE, REPOSITORY), bar.menu)
+        assertEquals(listOf(WORKLOADS, RESOURCES), bar.icons)
+        assertEquals(listOf(GITOPS, METRICS, ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE, REPOSITORY), bar.menu)
         assertTrue(bar.isDefault)
     }
 
     @Test
     fun encodeRoundTrips() {
         val bar = KubeHomeAction.bar.default.toBar(DATA_SERVICES).toMenu(RESOURCES)
-        assertEquals("WORKLOADS,GITOPS,METRICS,DATA_SERVICES|RESOURCES,ALERTS,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS,CROSSPLANE,TAILSCALE,CLUSTER_LIFECYCLE,REPOSITORY", bar.encode())
+        assertEquals("WORKLOADS,DATA_SERVICES|RESOURCES,GITOPS,METRICS,ALERTS,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS,CROSSPLANE,TAILSCALE,CLUSTER_LIFECYCLE,REPOSITORY", bar.encode())
         assertEquals(bar, KubeHomeAction.bar.parse(bar.encode()))
         assertFalse(bar.isDefault)
     }
@@ -45,6 +45,13 @@ class KubeHomeBarTest {
         assertEquals(listOf(WORKLOADS, RESOURCES, METRICS), bar.icons)
         assertEquals(listOf(HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS, GITOPS, ALERTS, SEARCH, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE, REPOSITORY), bar.menu)
         assertFalse(bar.isDefault)
+    }
+
+    @Test
+    fun theMenuReadsInSectionsWithEveryAction() {
+        val sections = groupedHomeMenu(KubeHomeAction.bar.default.menu) { it.group }
+        assertEquals(HomeActionGroup.entries, sections.map { it.first })
+        assertEquals(KubeHomeAction.bar.default.menu.toSet(), sections.flatMap { it.second }.toSet())
     }
 
     @Test

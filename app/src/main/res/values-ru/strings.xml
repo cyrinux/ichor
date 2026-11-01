@@ -5287,6 +5287,7 @@
     <string name="kube_menu_explore">Обзор</string>
     <string name="kube_menu_health">Состояние</string>
     <string name="kube_menu_installed">Установлено здесь</string>
+    <string name="home_menu_app">Приложение</string>
     <string name="capacity_intro">Свободное место считается как requests относительно allocatable, как это делает планировщик; использование берётся из metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: потеря любого узла не оставит ни одного пода в Pending</string>
     <string name="capacity_n_plus_one_short">Потеря %1$s оставит подов в Pending: %2$s</string>

@@ -563,6 +563,7 @@ internal fun OverviewEditor(app: TalosApp, layout: OverviewLayout, bar: Overview
         look = overviewCardLook,
         bar = bar,
         barLook = overviewActionLook,
+        barGroups = overviewActionGroups,
         onBarChange = app.uiPreferences::setOverviewBar,
         modifier = modifier,
         absent = absent,

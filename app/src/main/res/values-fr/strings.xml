@@ -5043,6 +5043,7 @@
     <string name="kube_menu_explore">Explorer</string>
     <string name="kube_menu_health">Santé</string>
     <string name="kube_menu_installed">Installé ici</string>
+    <string name="home_menu_app">Application</string>
     <string name="capacity_intro">La place libre compte les requests face à l\'allouable, comme le scheduler ; l\'usage vient de metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1 : perdre n\'importe quel nœud ne laisse aucun pod Pending</string>
     <string name="capacity_n_plus_one_short">Perdre %1$s laisse %2$s pods Pending</string>
