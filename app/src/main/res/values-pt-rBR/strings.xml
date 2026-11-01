@@ -730,6 +730,8 @@
     <string name="import_name_as">Importar como</string>
     <string name="import_name_taken">Este nome já está em uso.</string>
     <string name="import_name_replace">Substituir %1$s (mesmo cluster)</string>
+    <string name="import_name_replace_a11y">Substituir o cluster salvo %1$s por este contexto</string>
+    <string name="import_include_context">Incluir %1$s</string>
     <string name="import_import">Importar</string>
     <string name="import_camera_needed">É preciso acesso à câmera para ler o QR code de uma configuração.</string>
     <string name="import_grant_camera">Permitir acesso à câmera</string>

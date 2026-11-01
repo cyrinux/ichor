@@ -794,6 +794,8 @@
     <string name="import_name_as">Імпортувати як</string>
     <string name="import_name_taken">Ця назва вже використовується.</string>
     <string name="import_name_replace">Замінити %1$s (той самий кластер)</string>
+    <string name="import_name_replace_a11y">Замінити збережений кластер %1$s цим контекстом</string>
+    <string name="import_include_context">Включити %1$s</string>
     <string name="import_import">Імпортувати</string>
     <string name="import_camera_needed">Щоб сканувати QR-код конфігурації, потрібен доступ до камери.</string>
     <string name="import_grant_camera">Надати доступ до камери</string>

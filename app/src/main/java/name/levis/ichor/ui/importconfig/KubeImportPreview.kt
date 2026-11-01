@@ -1,5 +1,11 @@
 package name.levis.ichor.ui.importconfig
 
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -115,8 +121,25 @@ private fun KubeContextRow(
     val cloud = parseCloudContext(ctx.name)
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = row.included, onCheckedChange = onInclude, enabled = row.importable)
+            // One target: tapping the name toggles too, and TalkBack hears the full context name
+            // (not the shortened one shown) with why it cannot be included, on one focus stop.
+            val label = stringResource(
+                R.string.import_include_context,
+                if (current) stringResource(R.string.import_context_current, ctx.name) else ctx.name,
+            )
+            val reason = if (row.importable) null else stringResource(kubeProblemText(ctx.problem))
+            Row(
+                Modifier.fillMaxWidth()
+                    .semantics {
+                        contentDescription = label
+                        reason?.let { stateDescription = it }
+                    }
+                    .toggleable(value = row.included, enabled = row.importable, role = Role.Checkbox, onValueChange = onInclude)
+                    .padding(start = 12.dp, top = 12.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Checkbox(checked = row.included, onCheckedChange = null, enabled = row.importable)
                 val shown = cloud?.cluster ?: ctx.name
                 val name = if (current) stringResource(R.string.import_context_current, shown) else shown
                 Text(name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -161,7 +184,13 @@ private fun authText(auth: String, detail: String): String {
 @Composable
 private fun Problem(problem: String, detail: String) {
     Column(Modifier.padding(top = 8.dp)) {
-        Text(stringResource(kubeProblemText(problem)), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)
+        // Already read on the row's checkbox, with the context it is about.
+        Text(
+            stringResource(kubeProblemText(problem)),
+            color = LocalStatusColors.current.warn,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
         if (detail.isNotEmpty()) {
             Text(
                 detail,
