@@ -1,6 +1,174 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A server at a cloud provider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Server bei einem Cloud-Anbieter" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Un servidor en un proveedor de nube" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un serveur chez un fournisseur cloud" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Un server presso un provider cloud" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラウドプロバイダーのサーバー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Um servidor em um provedor de nuvem" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сервер у облачного провайдера" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сервер у хмарного провайдера" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "云服务商的服务器" } }
+      }
+    },
+    "Pick your provider, and Ichor shows what it takes there." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle deinen Anbieter, und Ichor zeigt, was dafür nötig ist." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige tu proveedor e Ichor muestra lo que hace falta." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez votre fournisseur : Ichor indique la marche à suivre." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli il tuo provider e Ichor mostra cosa serve." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロバイダーを選ぶと、必要な手順を Ichor が表示します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolha seu provedor e o Ichor mostra o que é preciso." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выберите провайдера, и Ichor покажет, что для этого нужно." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виберіть провайдера, і Ichor покаже, що для цього потрібно." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择你的云服务商,Ichor 会显示所需操作。" } }
+      }
+    },
+    "Which provider?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Welcher Anbieter?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Qué proveedor?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Quel fournisseur ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Quale provider?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "どのプロバイダーですか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Qual provedor?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Какой провайдер?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Який провайдер?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "哪家云服务商?" } }
+      }
+    },
+    "Another provider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein anderer Anbieter" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Otro proveedor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un autre fournisseur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Un altro provider" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "その他のプロバイダー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Outro provedor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Другой провайдер" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Інший провайдер" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "其他云服务商" } }
+      }
+    },
+    "Where is the new machine?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wo ist die neue Maschine?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Dónde está la máquina nueva?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Où se trouve la nouvelle machine ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dove si trova la nuova macchina?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新しいマシンはどこにありますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Onde está a nova máquina?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Где находится новая машина?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Де нова машина?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新机器在哪里?" } }
+      }
+    },
+    "A machine of your own" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine eigene Maschine" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Una máquina propia" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Votre propre machine" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Una tua macchina" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "自分のマシン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Uma máquina sua" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Своя машина" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Власна машина" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你自己的机器" } }
+      }
+    },
+    "Boot it with the booter command, a USB stick or iPXE." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Starte sie mit dem booter-Befehl, einem USB-Stick oder iPXE." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Arráncala con el comando booter, una memoria USB o iPXE." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrez-la avec la commande booter, une clé USB ou iPXE." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avviala con il comando booter, una chiavetta USB o iPXE." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "booter コマンド、USB メモリ、または iPXE で起動します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Inicie-a com o comando booter, um pendrive ou iPXE." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузите её командой booter, с USB-накопителя или через iPXE." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажте її командою booter, з USB-накопичувача або через iPXE." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用 booter 命令、U 盘或 iPXE 启动它。" } }
+      }
+    },
+    "Already in maintenance mode? Start at step 1 below." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schon im Wartungsmodus? Beginne unten bei Schritt 1." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Ya está en modo de mantenimiento? Empieza por el paso 1 de abajo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Déjà en mode maintenance ? Commencez à l'étape 1 ci-dessous." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Già in modalità manutenzione? Inizia dal passaggio 1 qui sotto." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すでにメンテナンスモードですか?下のステップ 1 から始めてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Já em modo de manutenção? Comece pelo passo 1 abaixo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Уже в режиме обслуживания? Начните с шага 1 ниже." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Уже в режимі обслуговування? Почніть із кроку 1 нижче." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已处于维护模式?从下面的第 1 步开始。" } }
+      }
+    },
+    "Choose another way" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Anderen Weg wählen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elegir otra forma" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisir une autre méthode" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli un altro modo" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "別の方法を選ぶ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolher outra forma" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выбрать другой способ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вибрати інший спосіб" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择其他方式" } }
+      }
+    },
+    "The new node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der neue Knoten" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El nodo nuevo" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le nouveau nœud" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il nuovo nodo" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新しいノード" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O novo nó" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Новый узел" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Новий вузол" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新节点" } }
+      }
+    },
+    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add your project's Read & Write API token (Hetzner console: Security, API tokens).\n3. Pick a server type, a location and a Talos snapshot. No snapshot yet? Ichor can make one.\n4. Create the server: Ichor shows the cost first, then follows it until the node joins." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Wähle ein Mitglied zum Kopieren, dann den Hostnamen und die Installationsfestplatte des neuen Knotens.\n2. Füge das Read-&-Write-API-Token deines Projekts hinzu (Hetzner-Konsole: Security, API tokens).\n3. Wähle Servertyp, Standort und Talos-Snapshot. Noch kein Snapshot? Ichor kann einen erstellen.\n4. Erstelle den Server: Ichor zeigt zuerst die Kosten und verfolgt ihn dann, bis der Knoten beitritt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Elige un miembro que copiar y luego el nombre de host y el disco de instalación del nodo nuevo.\n2. Añade el token de API Read & Write de tu proyecto (consola de Hetzner: Security, API tokens).\n3. Elige un tipo de servidor, una ubicación y una instantánea de Talos. ¿Aún no tienes? Ichor puede crear una.\n4. Crea el servidor: Ichor muestra primero el coste y luego lo sigue hasta que el nodo se une." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Choisissez un membre à copier, puis le nom d'hôte et le disque d'installation du nouveau nœud.\n2. Ajoutez le jeton d'API Read & Write de votre projet (console Hetzner : Security, API tokens).\n3. Choisissez un type de serveur, un emplacement et un instantané Talos. Pas encore d'instantané ? Ichor peut en créer un.\n4. Créez le serveur : Ichor affiche d'abord le coût, puis le suit jusqu'à ce que le nœud rejoigne le cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi il token API Read & Write del tuo progetto (console Hetzner: Security, API tokens).\n3. Scegli un tipo di server, una posizione e uno snapshot Talos. Nessuno snapshot? Ichor può crearne uno.\n4. Crea il server: Ichor mostra prima il costo, poi lo segue finché il nodo non si unisce." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを指定します。\n2. プロジェクトの Read & Write API トークンを追加します(Hetzner コンソール: Security、API tokens)。\n3. サーバータイプ、ロケーション、Talos スナップショットを選びます。スナップショットがなければ Ichor が作成できます。\n4. サーバーを作成します。Ichor は先に費用を表示し、ノードが参加するまで追跡します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Escolha um membro para copiar e depois o nome de host e o disco de instalação do novo nó.\n2. Adicione o token de API Read & Write do seu projeto (console da Hetzner: Security, API tokens).\n3. Escolha um tipo de servidor, um local e um snapshot Talos. Ainda sem snapshot? O Ichor pode criar um.\n4. Crie o servidor: o Ichor mostra o custo primeiro e depois o acompanha até o nó entrar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Выберите участника для копирования, затем имя хоста и диск установки нового узла.\n2. Добавьте API-токен Read & Write вашего проекта (консоль Hetzner: Security, API tokens).\n3. Выберите тип сервера, расположение и снимок Talos. Снимка ещё нет? Ichor может его создать.\n4. Создайте сервер: Ichor сначала покажет стоимость, а затем будет следить, пока узел не присоединится." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Виберіть учасника для копіювання, потім ім'я хоста й диск встановлення нового вузла.\n2. Додайте API-токен Read & Write вашого проєкту (консоль Hetzner: Security, API tokens).\n3. Виберіть тип сервера, розташування та знімок Talos. Знімка ще немає? Ichor може його створити.\n4. Створіть сервер: Ichor спершу покаже вартість, а потім стежитиме, доки вузол не приєднається." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 选择要复制的成员,然后填写新节点的主机名和安装磁盘。\n2. 添加项目的 Read & Write API 令牌(Hetzner 控制台:Security、API tokens)。\n3. 选择服务器类型、位置和 Talos 快照。还没有快照?Ichor 可以创建。\n4. 创建服务器:Ichor 先显示费用,然后跟踪到节点加入为止。" } }
+      }
+    },
+    "1. Add your project's Read & Write API token (Hetzner console: Security, API tokens).\n2. Name the server, then pick a server type, a location and a Talos snapshot. No snapshot yet? Ichor can make one.\n3. Create the server: Ichor shows the cost first, then follows it until the machine appears in Omni.\n4. Allocate the machine to the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Füge das Read-&-Write-API-Token deines Projekts hinzu (Hetzner-Konsole: Security, API tokens).\n2. Benenne den Server und wähle Servertyp, Standort und Talos-Snapshot. Noch kein Snapshot? Ichor kann einen erstellen.\n3. Erstelle den Server: Ichor zeigt zuerst die Kosten und verfolgt ihn dann, bis die Maschine in Omni erscheint.\n4. Weise die Maschine dem Cluster zu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Añade el token de API Read & Write de tu proyecto (consola de Hetzner: Security, API tokens).\n2. Pon nombre al servidor y elige un tipo de servidor, una ubicación y una instantánea de Talos. ¿Aún no tienes? Ichor puede crear una.\n3. Crea el servidor: Ichor muestra primero el coste y luego lo sigue hasta que la máquina aparece en Omni.\n4. Asigna la máquina al clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Ajoutez le jeton d'API Read & Write de votre projet (console Hetzner : Security, API tokens).\n2. Nommez le serveur, puis choisissez un type de serveur, un emplacement et un instantané Talos. Pas encore d'instantané ? Ichor peut en créer un.\n3. Créez le serveur : Ichor affiche d'abord le coût, puis le suit jusqu'à ce que la machine apparaisse dans Omni.\n4. Allouez la machine au cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Aggiungi il token API Read & Write del tuo progetto (console Hetzner: Security, API tokens).\n2. Dai un nome al server, poi scegli un tipo di server, una posizione e uno snapshot Talos. Nessuno snapshot? Ichor può crearne uno.\n3. Crea il server: Ichor mostra prima il costo, poi lo segue finché la macchina non appare in Omni.\n4. Assegna la macchina al cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. プロジェクトの Read & Write API トークンを追加します(Hetzner コンソール: Security、API tokens)。\n2. サーバーに名前を付け、サーバータイプ、ロケーション、Talos スナップショットを選びます。スナップショットがなければ Ichor が作成できます。\n3. サーバーを作成します。Ichor は先に費用を表示し、マシンが Omni に表示されるまで追跡します。\n4. マシンをクラスターに割り当てます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Adicione o token de API Read & Write do seu projeto (console da Hetzner: Security, API tokens).\n2. Dê um nome ao servidor e escolha um tipo de servidor, um local e um snapshot Talos. Ainda sem snapshot? O Ichor pode criar um.\n3. Crie o servidor: o Ichor mostra o custo primeiro e depois o acompanha até a máquina aparecer no Omni.\n4. Aloque a máquina ao cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Добавьте API-токен Read & Write вашего проекта (консоль Hetzner: Security, API tokens).\n2. Назовите сервер, затем выберите тип сервера, расположение и снимок Talos. Снимка ещё нет? Ichor может его создать.\n3. Создайте сервер: Ichor сначала покажет стоимость, а затем будет следить, пока машина не появится в Omni.\n4. Назначьте машину кластеру." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Додайте API-токен Read & Write вашого проєкту (консоль Hetzner: Security, API tokens).\n2. Назвіть сервер, потім виберіть тип сервера, розташування та знімок Talos. Знімка ще немає? Ichor може його створити.\n3. Створіть сервер: Ichor спершу покаже вартість, а потім стежитиме, доки машина не з'явиться в Omni.\n4. Призначте машину кластеру." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 添加项目的 Read & Write API 令牌(Hetzner 控制台:Security、API tokens)。\n2. 为服务器命名,然后选择服务器类型、位置和 Talos 快照。还没有快照?Ichor 可以创建。\n3. 创建服务器:Ichor 先显示费用,然后跟踪到机器出现在 Omni 中。\n4. 将机器分配给集群。" } }
+      }
+    },
     "Allocate in Omni" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -337,34 +505,6 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать сервер в Hetzner" } },
         "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити сервер у Hetzner" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Hetzner 创建服务器" } }
-      }
-    },
-    "Ichor creates the server from a Talos snapshot of your project, with this user data, and follows it until the node joins." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor erstellt den Server aus einem Talos-Snapshot deines Projekts mit diesen Benutzerdaten und verfolgt ihn, bis der Knoten beitritt." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea el servidor a partir de una instantánea de Talos de tu proyecto, con estos datos de usuario, y lo sigue hasta que el nodo se une." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée le serveur à partir d'un instantané Talos de votre projet, avec ces données utilisateur, et le suit jusqu'à ce que le nœud rejoigne le cluster." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea il server da uno snapshot Talos del tuo progetto, con questi dati utente, e lo segue finché il nodo non si unisce." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はプロジェクトの Talos スナップショットからこのユーザーデータでサーバーを作成し、ノードが参加するまで追跡します。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria o servidor a partir de um snapshot Talos do seu projeto, com estes dados de usuário, e o acompanha até o nó entrar." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor создаёт сервер из снимка Talos вашего проекта с этими пользовательскими данными и следит за ним, пока узел не присоединится." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor створює сервер зі знімка Talos вашого проєкту з цими даними користувача й стежить за ним, доки вузол не приєднається." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 使用你项目中的 Talos 快照和此用户数据创建服务器，并跟踪到节点加入为止。" } }
-      }
-    },
-    "Ichor creates the server from a Talos snapshot of your project, with this join config, and follows it until the machine appears in Omni." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor erstellt den Server aus einem Talos-Snapshot deines Projekts mit dieser Join-Konfiguration und verfolgt ihn, bis die Maschine in Omni erscheint." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea el servidor a partir de una instantánea de Talos de tu proyecto, con esta configuración de unión, y lo sigue hasta que la máquina aparece en Omni." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée le serveur à partir d'un instantané Talos de votre projet, avec cette configuration d'adhésion, et le suit jusqu'à ce que la machine apparaisse dans Omni." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea il server da uno snapshot Talos del tuo progetto, con questa configurazione di join, e lo segue finché la macchina non appare in Omni." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はプロジェクトの Talos スナップショットからこの参加設定でサーバーを作成し、マシンが Omni に表示されるまで追跡します。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria o servidor a partir de um snapshot Talos do seu projeto, com esta configuração de entrada, e o acompanha até a máquina aparecer no Omni." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor создаёт сервер из снимка Talos вашего проекта с этой конфигурацией подключения и следит за ним, пока машина не появится в Omni." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor створює сервер зі знімка Talos вашого проєкту з цією конфігурацією приєднання й стежить за ним, доки машина не з'явиться в Omni." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 使用你项目中的 Talos 快照和此加入配置创建服务器，并跟踪到机器出现在 Omni 中为止。" } }
       }
     },
     "Demo cluster: these are samples, and nothing is created." : {
@@ -14063,124 +14203,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Экраны"
-          }
-        }
-      }
-    },
-    "No machine yet? Boot a new machine" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pas encore de machine ? Démarrer une nouvelle machine"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Aún sin máquina? Arrancar una máquina nueva"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch keine Maschine? Neue Maschine starten"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessuna macchina? Avvia una nuova macchina"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ще немає машини? Завантажити нову машину"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "还没有机器？启动新机器"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まだマシンがありませんか？新しいマシンを起動"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ainda sem máquina? Inicializar uma nova máquina"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ещё нет машины? Загрузить новую машину"
-          }
-        }
-      }
-    },
-    "The booter command, the ISO and the iPXE link; the machine then waits in maintenance mode" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La commande booter, l'ISO et le lien iPXE ; la machine attend ensuite en mode maintenance"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El comando booter, la ISO y el enlace iPXE; después la máquina espera en modo de mantenimiento"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Booter-Befehl, das ISO und der iPXE-Link; die Maschine wartet danach im Wartungsmodus"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il comando booter, la ISO e il link iPXE; poi la macchina attende in modalità manutenzione"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Команда booter, ISO і посилання iPXE; потім машина чекає в режимі обслуговування"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "booter 命令、ISO 和 iPXE 链接；之后机器在维护模式中等待"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "booter コマンド、ISO、iPXE リンク。その後マシンはメンテナンスモードで待機します"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O comando booter, a ISO e o link iPXE; depois a máquina aguarda em modo de manutenção"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Команда booter, ISO и ссылка iPXE; затем машина ждёт в режиме обслуживания"
           }
         }
       }

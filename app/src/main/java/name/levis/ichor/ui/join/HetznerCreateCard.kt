@@ -50,7 +50,6 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
-import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionCard
 import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
@@ -144,7 +143,7 @@ class HetznerCreateViewModel(private val lifecycle: NodeLifecycleRepository, pri
 }
 
 /**
- * "Create the server at Hetzner": under the user data, once it is made. [form] is the new member's
+ * "Create the server at Hetzner": the run makes the user data itself. [form] is the new member's
  * (null on Omni, which only needs a server name). The cost, the typed name and the app lock come
  * before the billable create; the run's timeline then replaces the card's form.
  */
@@ -173,7 +172,6 @@ fun HetznerCreateCard(
         if (current?.request?.hetzner != null) {
             JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss, onAllocate = onAllocate)
         } else {
-            MutedText(stringResource(if (form == null) R.string.hetzner_intro_omni else R.string.hetzner_intro))
             if (demo) {
                 InfoNotice(stringResource(R.string.hetzner_demo))
             } else {
@@ -313,7 +311,7 @@ private fun ServerForm(
     }
     IchorButton(
         onClick = { confirm = true },
-        enabled = !busy && hostname.isNotEmpty() && snapshot != null && price != null,
+        enabled = !busy && hostname.isNotEmpty() && form?.complete != false && snapshot != null && price != null,
         modifier = Modifier.fillMaxWidth(),
     ) { Text(stringResource(R.string.hetzner_create)) }
 

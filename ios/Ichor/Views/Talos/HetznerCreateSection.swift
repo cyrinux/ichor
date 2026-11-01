@@ -1,7 +1,7 @@
 import SwiftUI
 import IchorCore
 
-/// "Create the server at Hetzner": under the user data, once it is made. On Omni only a server name
+/// "Create the server at Hetzner": the run makes the user data itself. On Omni only a server name
 /// is asked; on plain Talos the card's new member is used. The cost, the typed name and the app lock
 /// come before the billable create; the run's timeline then replaces the form. Sections of
 /// BootMediaView's list.
@@ -51,18 +51,6 @@ struct HetznerCreateSection: View {
             runSections
         } else {
             Section {
-                Group {
-                    if omni {
-                        Text(
-                            "Ichor creates the server from a Talos snapshot of your project, with this join config, and follows it until the machine appears in Omni."
-                        )
-                    } else {
-                        Text(
-                            "Ichor creates the server from a Talos snapshot of your project, with this user data, and follows it until the node joins."
-                        )
-                    }
-                }
-                .font(.footnote).foregroundStyle(.secondary)
                 if demo {
                     Text("Demo cluster: these are samples, and nothing is created.")
                         .font(.footnote).foregroundStyle(.secondary)
@@ -173,7 +161,9 @@ struct HetznerCreateSection: View {
         }
         let chosen = snapshots.contains(where: { $0.id == snapshot?.id }) ? snapshot : nil
         Button("Create the server", role: .destructive) { confirming = true }
-            .disabled(name.isEmpty || chosen == nil || price == nil || job.isActive)
+            .disabled(
+                name.isEmpty || (!omni && (template.isEmpty || disk.isEmpty)) || chosen == nil || price == nil
+                    || job.isActive)
             .sheet(isPresented: $confirming) {
                 if let type, let chosen, let price {
                     let cost = "\(price.monthly) \(value.currency)"

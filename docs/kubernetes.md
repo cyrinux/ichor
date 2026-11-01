@@ -289,16 +289,17 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   - **Going back:** there is no undo; returning to the previous version is another upgrade.
 - **Adding a node from the phone (overview menu → Add a node…, os:admin):** boot the new machine
   from the Talos ISO and type the address its console shows. "Add a node…" is the one entry for
-  growing a Talos cluster; on an Omni cluster it opens the boot media directly, and Omni adds the
-  machine once it boots with the join arguments.
-  - **Booting it (Add a node… → No machine yet? Boot a new machine):** the phone cannot serve a network boot
+  growing a Talos cluster; on an Omni cluster it asks the same question, and Omni adds the
+  machine once it boots with the join arguments. It starts with **Where is the new machine?**: a
+  server at a cloud provider, then which one, or a machine of your own.
+  - **Booting it (Add a node… → A machine of your own):** the phone cannot serve a network boot
     itself (DHCP and TFTP need privileged ports), so it shows what does, for the cluster's Talos
     version and Image Factory schematic: the `siderolabs/booter` command (docker or podman) for a
     Linux laptop of the machine's network, the ISO, the iPXE URL, and the kernel, initramfs and
     command line for a PXE server of your own. Each has Copy, Share and a QR code. On an Omni
     cluster it adds the join kernel arguments, which carry the join token (hidden in privacy
     mode).
-  - **On a cloud host (Boot a new machine → Cloud host: user data):** Hetzner Cloud, OpenStack
+  - **On a cloud host (Add a node… → A server at a cloud provider → yours):** Hetzner Cloud, OpenStack
     (OVHcloud Public Cloud) and Scaleway create a server from an image plus a user data text, and
     Talos reads that text as its machine config at first boot. Create the server from the Talos
     cloud image the card lists for your Talos version and schematic (`hcloud`, `openstack`,
@@ -312,7 +313,7 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     disk layout, and some of its instance types need `apply-config` instead. Scaleway Elastic Metal
     and Dedibox cannot install a custom image without KVM or rescue mode, so they are not
     supported.
-  - **At Hetzner Cloud, from the phone (Cloud host card → Create the server at Hetzner):** add a
+  - **At Hetzner Cloud, from the phone (Add a node… → A server at a cloud provider → Hetzner):** add a
     project's Read & Write API token (Test tells a read-only one apart, which cannot be saved), then
     pick a server type, a location and a Talos snapshot the project holds; the price before tax
     shows before you type the host name to confirm. The app creates the server with the user data,

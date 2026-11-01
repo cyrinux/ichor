@@ -1,7 +1,8 @@
 import SwiftUI
 import IchorCore
 
-/// "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
+/// "Add a node…": first where the new machine comes from. A machine booted from the Talos ISO waits
+/// in maintenance mode; type the address
 /// its console shows and see its version, disks and interfaces; then make its config from a
 /// member's (JoinConfigSection); then send it and follow the node until it joins (JoinApplySection).
 struct JoinNodeView: View {
@@ -15,15 +16,13 @@ struct JoinNodeView: View {
     var body: some View {
         List {
             Section {
-                NavigationLink(value: Route.bootMedia) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("No machine yet? Boot a new machine")
-                        Text(
-                            "The booter command, the ISO and the iPXE link; the machine then waits in maintenance mode"
-                        )
-                        .font(.footnote).foregroundStyle(.secondary)
-                    }
+                ForEach(AddNodePath.allCases) { way in
+                    NavigationLink(value: Route.bootMedia(way)) { AddNodePathLabel(way: way) }
                 }
+                Text("Already in maintenance mode? Start at step 1 below.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            } header: {
+                Text("Where is the new machine?")
             }
             Section {
                 Text(

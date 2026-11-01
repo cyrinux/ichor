@@ -44,6 +44,7 @@ import name.levis.ichor.ui.machineconfig.MachineConfigScreen
 import name.levis.ichor.ui.nettools.NetToolsScreen
 import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
 import name.levis.ichor.ui.upgrade.K8sUpgradeScreen
+import name.levis.ichor.ui.join.AddNodePath
 import name.levis.ichor.ui.join.BootMediaScreen
 import name.levis.ichor.ui.join.JoinNodeScreen
 import name.levis.ichor.ui.join.OmniAllocateScreen
@@ -252,15 +253,16 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
                     nav.popBackStack()
                     nav.navigate(Routes.node(addr, hostname, role))
                 },
-                onBootMedia = { nav.navigate(Routes.BOOT_MEDIA) { launchSingleTop = true } },
+                onPath = { nav.navigate(Routes.bootMedia(it)) { launchSingleTop = true } },
             )
         }
     }
-    composable(Routes.BOOT_MEDIA) {
+    composable(Routes.BOOT_MEDIA, arguments = listOf(navArgument("path") { type = NavType.StringType; defaultValue = "" })) { entry ->
         // Add a node takes a machine in maintenance mode; Omni adds its machines itself.
         val active = app.configRepository.config.value?.activeSummary
         val omni = active?.omni == true
         BootMediaScreen(
+            initialPath = AddNodePath.fromRoute(entry.arguments?.getString("path")),
             // The demo shows its samples there too, and refuses to allocate.
             onAllocate = if (omni || active?.isDemo == true) {
                 { nav.navigate(Routes.OMNI_ALLOCATE) { launchSingleTop = true } }

@@ -12,12 +12,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
@@ -93,26 +90,9 @@ class JoinNodeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewMo
     }
 }
 
-/** Step 0: no machine in maintenance mode yet; opens the booter command, ISO and iPXE link. */
-@Composable
-private fun BootMachineCard(onClick: () -> Unit) {
-    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.join_node_boot_card_title),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                MutedText(stringResource(R.string.join_node_boot_card_body))
-            }
-            Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
 /**
- * "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
+ * "Add a node…": first where the new machine comes from ([onPath] opens that way). A machine booted
+ * from the Talos ISO waits in maintenance mode; type the address
  * its console shows and see its version, disks and links; then make its config from a member's;
  * then send it and follow the node until it joins ([onOpenNode] opens it afterwards).
  */
@@ -121,8 +101,8 @@ private fun BootMachineCard(onClick: () -> Unit) {
 fun JoinNodeScreen(
     onBack: () -> Unit,
     onOpenNode: (address: String, hostname: String, role: String) -> Unit,
-    /** "Boot a new machine…": the ISO, iPXE link and booter command that get it to maintenance mode. */
-    onBootMedia: () -> Unit,
+    /** A server to create at a cloud, or a machine to boot: what gets it there. */
+    onPath: (AddNodePath) -> Unit,
     vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.nodeLifecycleRepository) }),
     configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
 ) {
@@ -142,7 +122,8 @@ fun JoinNodeScreen(
             Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            BootMachineCard(onBootMedia)
+            AddNodeChooser(onPath)
+            MutedText(stringResource(R.string.add_node_ready))
             SectionTitle(stringResource(R.string.join_node_step_inspect))
             MutedText(stringResource(R.string.join_node_intro))
             if (config?.activeSummary?.isDemo == true) InfoNotice(stringResource(R.string.join_node_demo))
