@@ -10,6 +10,7 @@ import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.sensitive
+import name.levis.ichor.ui.join.AddNodePath
 import name.levis.ichor.ui.overview.NodeAction
 import name.levis.ichor.ui.resources.ResourceRef
 import name.levis.ichor.ui.settings.SettingsPage
@@ -41,6 +42,9 @@ internal object Routes {
 
     /** The Metrics screen on its panels, or on [tab] (ui.metrics.METRICS_TAB_MONITORING). */
     fun metrics(tab: Int = 0) = "metrics?tab=$tab"
+
+    /** The new machine's screen, on [path]; null asks for it. */
+    fun bootMedia(path: AddNodePath? = null) = "bootmedia?path=${path?.name.orEmpty()}"
     const val ALERTS = "alerts?silence={silence}"
 
     /** [silence]: the fingerprint of an alert whose silence form opens (1 h, from its notification). */
@@ -203,7 +207,7 @@ internal object Routes {
     const val CLUSTER_UPGRADE = "clusterupgrade?version={version}"
     const val K8S_UPGRADE = "k8supgrade"
     const val JOIN_NODE = "joinnode"
-    const val BOOT_MEDIA = "bootmedia"
+    const val BOOT_MEDIA = "bootmedia?path={path}"
     const val OMNI_ALLOCATE = "omniallocate"
     const val MAINTENANCE = "maintenance?addr={addr}&host={host}&drain={drain}"
     const val NODE_META = "nodemeta?addr={addr}&host={host}"

@@ -5,12 +5,16 @@ import UniformTypeIdentifiers
 /// "Cloud host: user data": the text to paste as user data when the server is created at a cloud
 /// provider, and the Talos cloud images to create it from. On Omni, Omni's join config, made on
 /// open; on plain Talos, the role, host name and install disk of the new member first (Add a
-/// node's fields, without the static address: clouds hand out addresses by DHCP). Sections of
-/// BootMediaView's list.
+/// node's fields, without the static address: clouds hand out addresses by DHCP). With `create`,
+/// Ichor creates the server at Hetzner and makes the text itself: only the new member's fields and
+/// the Hetzner section. Sections of BootMediaView's list.
 struct CloudUserDataCard: View {
     let omni: Bool
     /// On Omni, the labels to sign into the join token.
     let omniLabels: String
+    let create: Bool
+    /// The provider whose Talos image to list; nil lists them all.
+    let imagePlatform: String?
     @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
@@ -29,13 +33,34 @@ struct CloudUserDataCard: View {
     private enum Action { case copy, share }
 
     // Explicit: the private @State makes the memberwise init private.
-    init(omni: Bool, omniLabels: String, path: Binding<[Route]>) {
+    init(omni: Bool, omniLabels: String, create: Bool, imagePlatform: String?, path: Binding<[Route]>) {
         self.omni = omni
+        self.imagePlatform = imagePlatform
+        self.create = create
         self.omniLabels = omniLabels
         _path = path
     }
 
     var body: some View {
+        if create {
+            if !omni {
+                Section {
+                    form
+                } header: {
+                    Text("The new node")
+                }
+                .task { if case .loading = members { await loadMembers() } }
+            }
+            HetznerCreateSection(
+                omni: omni, template: template?.node ?? "", role: template.map { joinRole($0.role) } ?? "",
+                hostname: hostname.trimmingCharacters(in: .whitespaces),
+                disk: disk.trimmingCharacters(in: .whitespaces), path: $path)
+        } else {
+            pasteSections
+        }
+    }
+
+    @ViewBuilder private var pasteSections: some View {
         Section {
             Group {
                 if omni {
@@ -63,21 +88,15 @@ struct CloudUserDataCard: View {
         if let data {
             resultSection(data)
         }
-        if case .loaded(let value, _, _) = data, !value.images.isEmpty {
+        if case .loaded(let value, _, _) = data, !shownImages(value).isEmpty {
             BootMediaCard(
-                title: String(localized: "Talos cloud images"), values: value.imageValues,
+                title: String(localized: "Talos cloud images"),
+                values: shownImages(value).map { BootValue(label: $0.providerLabel, text: $0.url) },
                 hint: String(
                     localized:
-                        "Talos \(value.talosVersion), \(value.images[0].arch): create the server, or the snapshot it starts from, from your provider's image."
+                        "Talos \(value.talosVersion), \(shownImages(value)[0].arch): create the server, or the snapshot it starts from, from your provider's image."
                 )
             )
-        }
-        // Once the text is made, the app can also create the server with it.
-        if case .loaded(_, _, _) = data {
-            HetznerCreateSection(
-                omni: omni, template: template?.node ?? "", role: template.map { joinRole($0.role) } ?? "",
-                hostname: hostname.trimmingCharacters(in: .whitespaces),
-                disk: disk.trimmingCharacters(in: .whitespaces), path: $path)
         }
     }
 
@@ -112,8 +131,10 @@ struct CloudUserDataCard: View {
                     .font(.body.monospaced())
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                Button("Make the user data") { Task { await generate() } }
-                    .disabled(!complete || isLoading)
+                if !create {
+                    Button("Make the user data") { Task { await generate() } }
+                        .disabled(!complete || isLoading)
+                }
             }
         }
     }
@@ -213,6 +234,10 @@ struct CloudUserDataCard: View {
         case .share:
             sharing = true
         }
+    }
+
+    private func shownImages(_ value: CloudUserData) -> [CloudImage] {
+        value.images.filter { imagePlatform == nil || $0.platform == imagePlatform }
     }
 
     private var complete: Bool {

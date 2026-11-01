@@ -106,12 +106,17 @@ class CloudUserDataViewModel(private val lifecycle: NodeLifecycleRepository) : V
  * "Cloud host: user data": the text to paste as user data when the server is created at a cloud
  * provider, and the Talos cloud images to create it from. On Omni, Omni's join config, made on
  * open; on plain Talos, the role, host name and install disk of the new member first (Add a
- * node's fields, without the static address: clouds hand out addresses by DHCP).
+ * node's fields, without the static address: clouds hand out addresses by DHCP). With [create],
+ * Ichor creates the server at Hetzner and makes the text itself: only the new member's fields and
+ * the Hetzner card.
  */
 @Composable
 fun CloudUserDataCard(
     omni: Boolean,
     omniLabelsJson: String = "",
+    create: Boolean = false,
+    /** The provider whose Talos image to list; null lists them all. */
+    imagePlatform: String? = null,
     onAllocate: (() -> Unit)? = null,
     vm: CloudUserDataViewModel = viewModel(key = "cloud-user-data", factory = factory { CloudUserDataViewModel(app.nodeLifecycleRepository) }),
     configVm: JoinConfigViewModel = viewModel(key = "cloud-user-data-form", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
@@ -122,12 +127,12 @@ fun CloudUserDataCard(
     val made by vm.data.collectAsStateWithLifecycle()
     val form by configVm.form.collectAsStateWithLifecycle()
     val members by configVm.members.collectAsStateWithLifecycle()
-    LaunchedEffect(omni, omniLabelsJson) { if (omni) vm.generateOmni(omniLabelsJson) }
+    LaunchedEffect(omni, omniLabelsJson) { if (omni && !create) vm.generateOmni(omniLabelsJson) }
     // On plain Talos the shown text is the one of the form as it is now, else none.
-    val data = made.takeIf { omni || vm.madeFor == form }
+    val data = made.takeIf { !create && (omni || vm.madeFor == form) }
 
-    SectionCard(stringResource(R.string.cloud_user_data_title)) {
-        MutedText(stringResource(if (omni) R.string.cloud_user_data_omni_intro else R.string.cloud_user_data_intro))
+    if (!(omni && create)) SectionCard(stringResource(if (create) R.string.add_node_new_node else R.string.cloud_user_data_title)) {
+        if (!create) MutedText(stringResource(if (omni) R.string.cloud_user_data_omni_intro else R.string.cloud_user_data_intro))
         if (!omni) {
             when (val state = members) {
                 UiState.Loading -> LoadingBox()
@@ -136,11 +141,13 @@ fun CloudUserDataCard(
                     TemplatePicker(joinTemplates(state.data), form.template) { configVm.pick(it, state.data) }
                     if (form.template.isNotBlank()) {
                         ConfigFields(form, emptyList(), configVm, withAddress = false)
-                        IchorButton(
-                            onClick = { vm.generate(form) },
-                            enabled = form.complete && data != UiState.Loading,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) { Text(stringResource(R.string.cloud_user_data_make)) }
+                        if (!create) {
+                            IchorButton(
+                                onClick = { vm.generate(form) },
+                                enabled = form.complete && data != UiState.Loading,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text(stringResource(R.string.cloud_user_data_make)) }
+                        }
                     }
                 }
             }
@@ -152,15 +159,17 @@ fun CloudUserDataCard(
             is UiState.Loaded -> UserDataBody(state.data, vm)
         }
     }
-    (data as? UiState.Loaded)?.data?.takeIf { it.images.isNotEmpty() }?.let { loaded ->
-        BootMediaCard(
-            stringResource(R.string.cloud_user_data_images),
-            loaded.images.map { BootValue(it.providerLabel, it.url) },
-            hint = stringResource(R.string.cloud_user_data_images_hint, loaded.talosVersion, loaded.images.first().arch),
-        )
+    (data as? UiState.Loaded)?.data?.let { loaded ->
+        val images = loaded.images.filter { imagePlatform == null || it.platform == imagePlatform }
+        if (images.isNotEmpty()) {
+            BootMediaCard(
+                stringResource(R.string.cloud_user_data_images),
+                images.map { BootValue(it.providerLabel, it.url) },
+                hint = stringResource(R.string.cloud_user_data_images_hint, loaded.talosVersion, images.first().arch),
+            )
+        }
     }
-    // Once the text is made, the app can also create the server with it.
-    if (data is UiState.Loaded) HetznerCreateCard(form.takeUnless { omni }, demo, onAllocate)
+    if (create) HetznerCreateCard(form.takeUnless { omni }, demo, onAllocate)
 }
 
 /** The size, the warnings, the preview (secrets hidden) and Copy / Share of the full text. */

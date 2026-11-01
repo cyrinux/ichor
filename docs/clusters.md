@@ -293,7 +293,7 @@ proxies the Talos API to its machines and signs every call with a PGP key, as `t
   like any other talosconfig. It has no certificate: the app asks for the sign-in on first use.
 - **Enter details** (the form): the instance URL, the cluster name in Omni and who signs in.
 
-A machine booted with Omni's join config or arguments (Add a node, then Boot a new machine) appears
+A machine booted with Omni's join config or arguments (Add a node, then pick where the machine is) appears
 in Omni with no cluster. Pick its role and labels there first: they are signed into the join token.
 **Allocate in Omni** then lists these machines and the cluster's machine sets, and follows the
 chosen machine until it runs. What it does depends on the set. A set without a machine class gets

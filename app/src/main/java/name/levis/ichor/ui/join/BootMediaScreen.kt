@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,10 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import name.levis.ichor.ui.design.IchorTextButton
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +52,7 @@ import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionCard
+import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
@@ -106,17 +113,19 @@ class BootMediaViewModel(private val lifecycle: NodeLifecycleRepository) : ViewM
 /**
  * "Boot a new machine…": the phone cannot serve a network boot (privileged ports), so it hands
  * over what does: the booter command for a laptop of the machine's network, the ISO, the iPXE
- * URL, on Omni the join arguments, and for a cloud host the user data to paste. [onAddNode]
+ * URL, on Omni the join arguments, and for a cloud host the user data to paste, or the server
+ * Ichor creates where it can: only what the chosen path needs ([initialPath], null asks). [onAddNode]
  * continues with the machine in maintenance mode; null on Omni, which adds the machine itself
  * once it boots. [onAllocate] opens Allocate in Omni, where there is something to show (Omni, the
  * demo's samples). On Omni the role and labels chosen here are signed into the join token.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun BootMediaScreen(
     onBack: () -> Unit,
     onAddNode: (() -> Unit)?,
     onAllocate: (() -> Unit)? = null,
+    initialPath: AddNodePath? = null,
     vm: BootMediaViewModel = viewModel(key = "boot-media", factory = factory { BootMediaViewModel(app.nodeLifecycleRepository) }),
     labelsVm: OmniLabelsViewModel = viewModel(key = "omni-labels", factory = factory { OmniLabelsViewModel(app.nodeLifecycleRepository) }),
 ) {
@@ -125,11 +134,13 @@ fun BootMediaScreen(
     val secureBoot by vm.secureBoot.collectAsStateWithLifecycle()
     val omni = onAddNode == null
     val labelsJson by labelsVm.labelsJson.collectAsStateWithLifecycle()
+    var path by rememberSaveable { mutableStateOf(initialPath) }
+    var provider by rememberSaveable { mutableStateOf<CloudProvider?>(null) }
     LaunchedEffect(omni, labelsJson) { if (omni) vm.setOmniLabels(labelsJson) }
     IchorScaffold(
         topBar = {
             IchorTopAppBar(
-                title = { ClusterScreenTitle(stringResource(R.string.boot_media_title)) },
+                title = { ClusterScreenTitle(stringResource(if (path == AddNodePath.MACHINE) R.string.boot_media_title else R.string.join_node_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
         },
@@ -138,26 +149,55 @@ fun BootMediaScreen(
             Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            MutedText(stringResource(R.string.boot_media_intro))
-            if (omni) OmniLabelsCard(labelsVm)
-            when (val state = media) {
-                UiState.Loading -> LoadingBox()
-                is UiState.Failed -> ErrorBox(state.message, vm::load)
-                is UiState.Loaded -> {
-                    TargetCard(state.data, arch, secureBoot, vm::selectArch, vm::setSecureBoot)
-                    MediaCards(state.data)
+            when (path) {
+                null -> AddNodeChooser { path = it }
+                AddNodePath.CLOUD -> {
+                    SectionTitle(stringResource(R.string.add_node_provider))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CloudProvider.entries.forEach { p ->
+                            IchorFilterChip(
+                                selected = p == provider,
+                                onClick = { provider = p },
+                                label = { Text(p.label ?: stringResource(R.string.add_node_provider_other)) },
+                            )
+                        }
+                    }
+                    when (val chosen = provider) {
+                        null -> Unit
+                        // Ichor can call this provider's API: it creates the server itself.
+                        CloudProvider.HETZNER -> {
+                            Text(stringResource(if (omni) R.string.add_node_howto_hetzner_omni else R.string.add_node_howto_hetzner), style = MaterialTheme.typography.bodyMedium)
+                            CloudUserDataCard(omni = omni, create = true, onAllocate = onAllocate)
+                        }
+                        // A server at a cloud provider boots its own image and reads the config as user data.
+                        else -> {
+                            if (omni) OmniLabelsCard(labelsVm)
+                            CloudUserDataCard(omni = omni, omniLabelsJson = labelsJson, imagePlatform = chosen.platform, onAllocate = onAllocate)
+                        }
+                    }
                 }
-            }
-            // A server at a cloud provider boots its own image and reads the config as user data.
-            CloudUserDataCard(omni = omni, omniLabelsJson = labelsJson, onAllocate = onAllocate)
-            if (onAddNode != null) {
-                IchorButton(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
-            } else {
-                InfoNotice(stringResource(R.string.boot_media_omni_next))
+                AddNodePath.MACHINE -> {
+                    MutedText(stringResource(R.string.boot_media_intro))
+                    if (omni) OmniLabelsCard(labelsVm)
+                    when (val state = media) {
+                        UiState.Loading -> LoadingBox()
+                        is UiState.Failed -> ErrorBox(state.message, vm::load)
+                        is UiState.Loaded -> {
+                            TargetCard(state.data, arch, secureBoot, vm::selectArch, vm::setSecureBoot)
+                            MediaCards(state.data)
+                        }
+                    }
+                    if (onAddNode != null) {
+                        IchorButton(onClick = onAddNode, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.boot_media_machine_up)) }
+                    } else {
+                        InfoNotice(stringResource(R.string.boot_media_omni_next))
+                    }
+                }
             }
             onAllocate?.let {
                 IchorOutlinedButton(onClick = it, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.omni_allocate_title)) }
             }
+            if (path != null) IchorTextButton(onClick = { path = null }) { Text(stringResource(R.string.add_node_other_way)) }
         }
     }
 }
