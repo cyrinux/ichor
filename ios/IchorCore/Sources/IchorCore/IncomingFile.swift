@@ -18,6 +18,12 @@ public enum IncomingFile {
     /// config is far smaller (the import preview takes 1 MB).
     public static let maxBytes = 5 * 1024 * 1024
 
+    /// The largest config read, the import screen's bound too.
+    public static let maxConfigBytes = 1024 * 1024
+
+    /// How much `read` asks of a file at a time.
+    private static let readChunk = 64 * 1024
+
     /// The App Group folder the share extension writes to.
     public static let inboxFolder = "incoming"
 
@@ -126,5 +132,40 @@ public enum IncomingFile {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return Data() }
         defer { try? handle.close() }
         return (try? handle.read(upToCount: headLength)) ?? Data()
+    }
+
+    /// The most bytes kept of a file of this kind; nil when it is not ours to read.
+    public static func limit(for kind: IncomingFileKind) -> Int? {
+        switch kind {
+        case .config: return maxConfigBytes
+        case .backup: return maxBytes
+        case .unsupported: return nil
+        }
+    }
+
+    /// A file's bytes, nil when it cannot be read or holds more than `limit`.
+    public static func read(_ url: URL, limit: Int) -> Data? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? handle.close() }
+        let reported = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+        return read(limit: limit, reportedSize: reported) { try handle.read(upToCount: $0) }
+    }
+
+    /// Refuses a reported size over `limit` without reading, then reads at most `limit + 1` bytes
+    /// whatever was reported: a file provider can omit its size or serve more than it says. The
+    /// buffer is sized up front, so growing it never allocates past that either.
+    static func read(limit: Int, reportedSize: Int?, next: (Int) throws -> Data?) -> Data? {
+        if let reportedSize, reportedSize > limit { return nil }
+        var data = Data(capacity: limit + 1)
+        while data.count <= limit {
+            let wanted = min(readChunk, limit + 1 - data.count)
+            do {
+                guard let chunk = try next(wanted), !chunk.isEmpty else { return data }
+                data.append(chunk)
+            } catch {
+                return nil
+            }
+        }
+        return nil
     }
 }

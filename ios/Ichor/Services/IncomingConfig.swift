@@ -10,7 +10,7 @@ import UIKit
 @MainActor
 enum IncomingConfig {
     /// The largest config read, the import screen's bound too.
-    static let maxBytes = 1024 * 1024
+    static let maxBytes = IncomingFile.maxConfigBytes
 
     /// Takes a file URL; other URLs (share links) are not ours.
     static func receive(_ url: URL) {
@@ -18,16 +18,16 @@ enum IncomingConfig {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         let kind = IncomingFile.classify(name: url.lastPathComponent, head: IncomingFile.head(of: url))
-        let data = try? Data(contentsOf: url)
+        // Bounded: another app or a file provider decides how large this file is.
+        let data = IncomingFile.limit(for: kind).flatMap { IncomingFile.read(url, limit: $0) }
         // The copy iOS puts in the app's Inbox holds credentials: not kept.
         if url.pathComponents.contains("Inbox") { try? FileManager.default.removeItem(at: url) }
         guard let data else { return }
         switch kind {
         case .backup:
-            guard data.count <= IncomingFile.maxBytes else { return }
             NotificationRouter.shared.pendingBackup = data
         case .config:
-            guard data.count <= maxBytes, let text = String(data: data, encoding: .utf8) else { return }
+            guard let text = String(data: data, encoding: .utf8) else { return }
             NotificationRouter.shared.pendingImportText = text
         case .unsupported:
             return
