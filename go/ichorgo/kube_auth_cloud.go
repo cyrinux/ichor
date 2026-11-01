@@ -158,6 +158,11 @@ func parseServiceAccount(raw string) (gcpServiceAccount, *rsa.PrivateKey, error)
 		sa.TokenURI = "https://oauth2.googleapis.com/token"
 	}
 
+	// The key names where its signed assertion goes.
+	if err := checkOIDCEndpoint("token_uri", sa.TokenURI); err != nil {
+		return sa, nil, fmt.Errorf("service account key: %w", err)
+	}
+
 	return sa, rsaKey, nil
 }
 
