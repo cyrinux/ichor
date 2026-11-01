@@ -1900,6 +1900,11 @@
     <string name="insights_save_baseline">保存当前基线</string>
     <string name="insights_baseline_at">基线：%1$s</string>
     <string name="insights_delete_baseline">删除基线</string>
+    <string name="insights_replace_baseline">替换基线</string>
+    <string name="insights_replace_baseline_title">替换基线?</string>
+    <string name="insights_replace_baseline_body">用当前采样替换 %1$s 的基线。当前显示的差异将被清除。</string>
+    <string name="insights_delete_baseline_title">删除基线?</string>
+    <string name="insights_delete_baseline_body">删除 %1$s 的基线。漂移将重新与每个角色第一个可达的节点比较。</string>
     <string name="insights_peer_reference">参照：每种角色中第一个可访问的节点。保存基线以跟踪同一批节点上的变化。</string>
     <string name="insights_sample_at">采样：%1$s</string>
     <string name="insights_reference">参照：%1$s</string>

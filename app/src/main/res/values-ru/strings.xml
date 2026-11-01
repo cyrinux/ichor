@@ -2080,6 +2080,11 @@
     <string name="insights_save_baseline">Сохранить текущий эталон</string>
     <string name="insights_baseline_at">Эталон: %1$s</string>
     <string name="insights_delete_baseline">Удалить эталон</string>
+    <string name="insights_replace_baseline">Заменить базовую линию</string>
+    <string name="insights_replace_baseline_title">Заменить базовую линию?</string>
+    <string name="insights_replace_baseline_body">Заменяет базовую линию от %1$s текущим снимком. Показанные сейчас различия будут очищены.</string>
+    <string name="insights_delete_baseline_title">Удалить базовую линию?</string>
+    <string name="insights_delete_baseline_body">Удаляет базовую линию от %1$s. Дрейф снова измеряется относительно первого доступного узла каждой роли.</string>
     <string name="insights_peer_reference">Образец: первый доступный узел каждой роли. Сохраните эталон, чтобы отслеживать изменения на тех же узлах.</string>
     <string name="insights_sample_at">Замер: %1$s</string>
     <string name="insights_reference">Образец: %1$s</string>

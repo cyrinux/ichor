@@ -37,6 +37,7 @@ data class InsightsState(
     val baselineAt: Long? = null,
     val document: IncidentDocument? = null,
     val busy: Boolean = false,
+    val baselineBusy: Boolean = false,
     val recording: Boolean = false,
     val error: String? = null,
 )
@@ -77,21 +78,36 @@ class InsightsViewModel(private val talos: TalosRepository, private val store: I
         TalosJson.decodeFromString(ListSerializer(DriftChange.serializer()), Ichorgo.compareDrift(baseline.orEmpty(), current))
     }
 
-    fun saveBaseline() = viewModelScope.launch {
-        val raw = snapshotJSON ?: return@launch
-        try {
+    fun saveBaseline() {
+        val raw = snapshotJSON ?: return
+        baselineWrite {
+            // Compared before the write: a failure leaves the old baseline and its differences.
+            val changes = compare(raw, raw)
             withContext(Dispatchers.IO) { store.save("baseline", raw) }
             baselineJSON = raw
-            mutable.value = mutable.value.copy(baselineAt = mutable.value.snapshot?.at, changes = compare(raw, raw))
-        } catch (e: Exception) { if (e is CancellationException) throw e; mutable.value = mutable.value.copy(error = e.userMessage()) }
+            mutable.value.baselineSaved(mutable.value.snapshot?.at, changes)
+        }
     }
 
-    fun deleteBaseline() = viewModelScope.launch {
-        try {
-            withContext(Dispatchers.IO) { store.delete("baseline") }
-            baselineJSON = null
-            mutable.value = mutable.value.copy(baselineAt = null, changes = snapshotJSON?.let { compare(null, it) }.orEmpty())
-        } catch (e: Exception) { if (e is CancellationException) throw e; mutable.value = mutable.value.copy(error = e.userMessage()) }
+    fun deleteBaseline() = baselineWrite {
+        val changes = snapshotJSON?.let { compare(null, it) }.orEmpty()
+        withContext(Dispatchers.IO) { store.delete("baseline") }
+        baselineJSON = null
+        mutable.value.baselineDeleted(changes)
+    }
+
+    /** One write at a time; [write] returns the state to show, a failure keeps what is shown. */
+    private fun baselineWrite(write: suspend () -> InsightsState) {
+        if (mutable.value.baselineBusy) return
+        mutable.value = mutable.value.copy(baselineBusy = true)
+        viewModelScope.launch {
+            try {
+                mutable.value = write()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                mutable.value = mutable.value.baselineFailed(e.userMessage())
+            }
+        }
     }
 
     fun deleteRecording() = viewModelScope.launch {

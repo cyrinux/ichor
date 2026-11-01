@@ -1960,6 +1960,11 @@
     <string name="insights_save_baseline">Salvar a referência atual</string>
     <string name="insights_baseline_at">Referência: %1$s</string>
     <string name="insights_delete_baseline">Excluir referência</string>
+    <string name="insights_replace_baseline">Substituir a referência</string>
+    <string name="insights_replace_baseline_title">Substituir a referência?</string>
+    <string name="insights_replace_baseline_body">Substitui a referência de %1$s pela amostra atual. As diferenças mostradas agora serão apagadas.</string>
+    <string name="insights_delete_baseline_title">Excluir a referência?</string>
+    <string name="insights_delete_baseline_body">Exclui a referência de %1$s. O desvio volta a ser medido em relação ao primeiro nó acessível de cada função.</string>
     <string name="insights_peer_reference">Referência: primeiro nó acessível de cada papel. Salve uma referência para acompanhar mudanças nos mesmos nós.</string>
     <string name="insights_sample_at">Amostra: %1$s</string>
     <string name="insights_reference">Referência: %1$s</string>

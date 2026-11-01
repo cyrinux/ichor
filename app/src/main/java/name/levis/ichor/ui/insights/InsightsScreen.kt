@@ -30,6 +30,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.DriftFix
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InfoHint
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionHeader
@@ -41,6 +42,9 @@ import name.levis.ichor.ui.workloads.netPerfViewModel
 import java.text.DateFormat
 import name.levis.ichor.util.formatDateTime
 import name.levis.ichor.ui.components.pageContent
+
+/** What a confirmed baseline dialog does. */
+private enum class BaselineAction { Replace, Delete }
 
 /** Drift, Recorder and NetPerf. */
 private val INSIGHTS_TABS = listOf(0, 1, 2)
@@ -68,6 +72,8 @@ fun InsightsScreen(
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var metrics by remember { mutableStateOf(false) }
+    // A recreated ViewModel has its own baseline: the question does not carry over.
+    var confirming by remember(key) { mutableStateOf<BaselineAction?>(null) }
     LaunchedEffect(key) { vm.load() }
     DisposableEffect(vm, lifecycle) {
         val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) vm.stop() }
@@ -106,12 +112,18 @@ fun InsightsScreen(
                                 Column {
                                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                         IchorButton(onClick = { vm.refresh() }, enabled = !state.busy) { Text(stringResource(R.string.common_refresh)) }
-                                        IchorTextButton(onClick = { vm.saveBaseline() }, enabled = state.snapshot != null && !state.busy) { Text(stringResource(R.string.insights_save_baseline)) }
+                                        // The first baseline is one tap: there is nothing to lose yet.
+                                        IchorTextButton(
+                                            onClick = { if (state.baselineAt == null) vm.saveBaseline() else confirming = BaselineAction.Replace },
+                                            enabled = state.snapshot != null && !state.busy && !state.baselineBusy,
+                                        ) { Text(stringResource(if (state.baselineAt == null) R.string.insights_save_baseline else R.string.insights_replace_baseline)) }
                                     }
                                     state.baselineAt?.let { at ->
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             MutedText(stringResource(R.string.insights_baseline_at, time(at)), Modifier.weight(1f))
-                                            IchorTextButton(onClick = { vm.deleteBaseline() }) { Text(stringResource(R.string.insights_delete_baseline)) }
+                                            IchorTextButton(onClick = { confirming = BaselineAction.Delete }, enabled = !state.busy && !state.baselineBusy) {
+                                                Text(stringResource(R.string.insights_delete_baseline))
+                                            }
                                         }
                                     } ?: MutedText(stringResource(R.string.insights_peer_reference))
                                 }
@@ -145,5 +157,21 @@ fun InsightsScreen(
                 }
             }
         }
+    }
+    val at = state.baselineAt
+    val action = confirming
+    if (action != null && at != null) {
+        val replace = action == BaselineAction.Replace
+        ConfirmDialog(
+            title = stringResource(if (replace) R.string.insights_replace_baseline_title else R.string.insights_delete_baseline_title),
+            text = stringResource(if (replace) R.string.insights_replace_baseline_body else R.string.insights_delete_baseline_body, time(at)),
+            confirm = stringResource(if (replace) R.string.insights_replace_baseline else R.string.common_delete),
+            onConfirm = {
+                confirming = null
+                if (replace) vm.saveBaseline() else vm.deleteBaseline()
+            },
+            onDismiss = { confirming = null },
+            destructive = true,
+        )
     }
 }

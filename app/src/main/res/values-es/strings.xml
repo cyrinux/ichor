@@ -1966,6 +1966,11 @@
     <string name="insights_save_baseline">Guardar referencia actual</string>
     <string name="insights_baseline_at">Referencia: %1$s</string>
     <string name="insights_delete_baseline">Eliminar referencia</string>
+    <string name="insights_replace_baseline">Sustituir la referencia</string>
+    <string name="insights_replace_baseline_title">¿Sustituir la referencia?</string>
+    <string name="insights_replace_baseline_body">Sustituye la referencia del %1$s por la muestra actual. Las diferencias mostradas se borrarán.</string>
+    <string name="insights_delete_baseline_title">¿Eliminar la referencia?</string>
+    <string name="insights_delete_baseline_body">Elimina la referencia del %1$s. La deriva vuelve a medirse respecto al primer nodo accesible de cada rol.</string>
     <string name="insights_peer_reference">Referencia: primer nodo accesible de cada rol. Guarda una referencia para seguir los cambios en los mismos nodos.</string>
     <string name="insights_sample_at">Muestra: %1$s</string>
     <string name="insights_reference">Referencia: %1$s</string>

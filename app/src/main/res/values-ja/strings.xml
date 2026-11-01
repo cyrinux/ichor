@@ -1900,6 +1900,11 @@
     <string name="insights_save_baseline">現在のベースラインを保存</string>
     <string name="insights_baseline_at">ベースライン：%1$s</string>
     <string name="insights_delete_baseline">ベースラインを削除</string>
+    <string name="insights_replace_baseline">ベースラインを置き換え</string>
+    <string name="insights_replace_baseline_title">ベースラインを置き換えますか?</string>
+    <string name="insights_replace_baseline_body">%1$s のベースラインを現在のサンプルに置き換えます。表示中の差分は消去されます。</string>
+    <string name="insights_delete_baseline_title">ベースラインを削除しますか?</string>
+    <string name="insights_delete_baseline_body">%1$s のベースラインを削除します。ドリフトは再び各ロールで最初に到達可能なノードと比較されます。</string>
     <string name="insights_peer_reference">基準：各ロールで最初に到達可能なノード。同じノードの変化を追跡するにはベースラインを保存してください。</string>
     <string name="insights_sample_at">サンプル：%1$s</string>
     <string name="insights_reference">基準：%1$s</string>
