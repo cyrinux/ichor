@@ -1,7 +1,10 @@
 package name.levis.ichor.ui.metrics
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -23,16 +26,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
@@ -42,6 +57,7 @@ import java.text.DateFormat
 import kotlin.math.max
 import name.levis.ichor.ui.components.rememberChartHeight
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /** One line: [values] aligned on the chart's times, null for a gap. */
 data class TimeLine(val label: String, val values: List<Double?>)
@@ -51,6 +67,8 @@ data class TimeLine(val label: String, val values: List<Double?>)
  * lines broken at gaps. The first three lines get the chart colors in order (color follows
  * the series, not its rank); the others are muted, never a made-up hue. Below, every line
  * with its value at the scrubbed (or latest) time, so identity never rests on color alone.
+ * Without a drag: arrow keys step through the times, and TalkBack adjusts it like a slider, or
+ * through its actions, hearing the time and every line's value.
  */
 @Composable
 fun TimeSeriesChart(
@@ -73,6 +91,19 @@ fun TimeSeriesChart(
     val bottom = min(all.minOrNull() ?: 0.0, 0.0)
     val span = max((top - bottom) * 1.1, 1e-9)
     val description = stringResource(R.string.metrics_chart_description, title)
+    val noValue = stringResource(R.string.metrics_chart_no_value)
+    val previousLabel = stringResource(R.string.metrics_chart_previous_sample)
+    val nextLabel = stringResource(R.string.metrics_chart_next_sample)
+    val sample = shownAt?.let { sampleAnnouncement(formatTime(times[it], DateFormat.SHORT), lines, it, format, noValue) }
+    val latest = lastFilled(lines, count)
+    var focused by remember { mutableStateOf(false) }
+    val focusBorder = if (focused) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(0.dp, Color.Transparent)
+    fun step(delta: Int): Boolean {
+        val next = stepSample(selected, latest, count, delta) ?: return false
+        val moved = next != shownAt
+        selected = next
+        return moved
+    }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Box {
@@ -80,7 +111,32 @@ fun TimeSeriesChart(
                 Modifier
                     .fillMaxWidth()
                     .height(rememberChartHeight(140.dp))
-                    .semantics { contentDescription = description }
+                    .semantics {
+                        contentDescription = description
+                        sample?.let { stateDescription = it }
+                        if (count > 1) {
+                            progressBarRangeInfo = ProgressBarRangeInfo((shownAt ?: (count - 1)).toFloat(), 0f..(count - 1).toFloat(), steps = count - 2)
+                            setProgress { target ->
+                                selected = target.roundToInt().coerceIn(0, count - 1)
+                                true
+                            }
+                            customActions = listOf(
+                                CustomAccessibilityAction(previousLabel) { step(-1) },
+                                CustomAccessibilityAction(nextLabel) { step(1) },
+                            )
+                        }
+                    }
+                    .border(focusBorder)
+                    .onFocusChanged { focused = it.isFocused }
+                    .onKeyEvent { event ->
+                        when {
+                            event.type != KeyEventType.KeyDown -> false
+                            event.key == Key.DirectionLeft -> step(-1)
+                            event.key == Key.DirectionRight -> step(1)
+                            else -> false
+                        }
+                    }
+                    .focusable()
                     .pointerInput(count) { detectTapGestures { selected = indexAt(it.x, size.width.toFloat(), count) } }
                     .pointerInput(count) {
                         detectHorizontalDragGestures(onDragEnd = { selected = null }, onDragCancel = { selected = null }) { change, _ ->

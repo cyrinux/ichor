@@ -3157,6 +3157,10 @@
     <string name="metrics_range_1d">1 d</string>
     <string name="metrics_range_7d">7 d</string>
     <string name="metrics_chart_description">Gráfico de %1$s en el tiempo</string>
+    <string name="metrics_series_unnamed">Serie %1$d</string>
+    <string name="metrics_chart_no_value">sin valor</string>
+    <string name="metrics_chart_previous_sample">Muestra anterior</string>
+    <string name="metrics_chart_next_sample">Muestra siguiente</string>
     <string name="metrics_panel_title">Título</string>
     <string name="metrics_panel_query">Consulta PromQL</string>
     <string name="metrics_panel_legend">Leyenda</string>

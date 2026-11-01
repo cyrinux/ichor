@@ -59,7 +59,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.isPromRefused
-import name.levis.ichor.model.legend
+import name.levis.ichor.model.chartLabels
 import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
@@ -322,10 +322,13 @@ internal fun PromChart(panel: PromPanel, res: name.levis.ichor.model.PromResult)
     if (res.series.isEmpty()) {
         MutedText(stringResource(R.string.metrics_no_data))
     } else {
+        val title = panel.title.ifBlank { panel.query }
+        val numbered = res.series.indices.map { stringResource(R.string.metrics_series_unnamed, it + 1) }
+        val labels = res.series.chartLabels(panel.legend, title, numbered)
         TimeSeriesChart(
-            title = panel.title.ifBlank { panel.query },
+            title = title,
             times = res.times,
-            lines = res.series.map { TimeLine(it.legend(panel.legend), it.values) },
+            lines = res.series.mapIndexed { i, series -> TimeLine(labels[i], series.values) },
             format = { formatMetric(it, panel.unit) },
         )
     }

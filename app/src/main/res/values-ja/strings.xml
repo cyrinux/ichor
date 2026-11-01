@@ -3055,6 +3055,10 @@
     <string name="metrics_range_1d">1日</string>
     <string name="metrics_range_7d">7日</string>
     <string name="metrics_chart_description">%1$s の推移グラフ</string>
+    <string name="metrics_series_unnamed">系列 %1$d</string>
+    <string name="metrics_chart_no_value">値なし</string>
+    <string name="metrics_chart_previous_sample">前のサンプル</string>
+    <string name="metrics_chart_next_sample">次のサンプル</string>
     <string name="metrics_panel_title">タイトル</string>
     <string name="metrics_panel_query">PromQL クエリ</string>
     <string name="metrics_panel_legend">凡例</string>
