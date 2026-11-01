@@ -2116,7 +2116,7 @@
     <string name="pods_empty">没有 Pod。</string>
     <string name="pods_no_match">没有与“%1$s”匹配的 Pod。</string>
     <string name="pods_ready_count">%1$d/%2$d 就绪</string>
-    <string name="pods_delete">删除 %1$s</string>
+    <string name="pods_row_actions">%1$s 的操作</string>
     <string name="pods_delete_title">删除 Pod %1$s？</string>
     <string name="pods_delete_text_owned">它将在宽限期后从 %1$s 中移除；%2$s 会启动一个新的。</string>
     <string name="pods_delete_text_bare">它将在宽限期后从 %1$s 中移除。没有控制器管理它：它不会再回来。</string>
@@ -3024,7 +3024,6 @@
     <string name="flows_copy_json">复制原始流量</string>
     <string name="flows_copied">已复制流量</string>
     <string name="flows_policy_gone">%1$s 已不在集群中。</string>
-    <string name="pods_live_flows">%1$s 的实时流量</string>
     <plurals name="netpol_count">
         <item quantity="other">%1$d 个策略</item>
     </plurals>

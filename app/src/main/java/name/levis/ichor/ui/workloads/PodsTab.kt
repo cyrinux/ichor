@@ -10,6 +10,7 @@ import name.levis.ichor.model.TopSort
 import name.levis.ichor.model.KubeTopPod
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -22,8 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Stream
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.outlined.CleaningServices
 import name.levis.ichor.ui.design.IchorAssistChip
@@ -76,6 +76,8 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.RowAction
+import name.levis.ichor.ui.components.RowActionsMenu
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -276,7 +278,7 @@ fun PodsTab(
 /**
  * A pod: name, namespace and node (when asked), status, readiness, restarts, why its image
  * cannot be pulled (with [pullLinks] to act on it), CPU and memory in use ([usage], from
- * metrics-server); logs, flows and delete actions, as buttons and as swipes and a long-press
+ * metrics-server); a Logs button and a More menu for the rest, also as swipes and a long-press
  * menu ([PodQuickActions]). [background]: the colour of what the row is drawn on.
  */
 @Composable
@@ -292,8 +294,8 @@ internal fun PodRow(
     pullLinks: PodPullLinks? = null,
     background: Color = CardDefaults.cardColors().containerColor,
 ) {
-    PodQuickActions(pod, deleting, onLogs = onLogs, onDelete = onDelete, onFlows = onFlows, background = background) {
-        PodRowContent(pod, showNamespace, deleting, onDelete, onLogs, onFlows, showNode, usage, pullLinks)
+    PodQuickActions(pod, deleting, onLogs = onLogs, onDelete = onDelete, onFlows = onFlows, background = background) { more ->
+        PodRowContent(pod, showNamespace, deleting, onLogs, more, showNode, usage, pullLinks)
     }
 }
 
@@ -303,9 +305,8 @@ private fun PodRowContent(
     pod: KubePod,
     showNamespace: Boolean,
     deleting: Boolean,
-    onDelete: () -> Unit,
     onLogs: () -> Unit,
-    onFlows: (() -> Unit)?,
+    more: List<RowAction>,
     showNode: Boolean,
     usage: KubeTopPod?,
     pullLinks: PodPullLinks?,
@@ -313,7 +314,8 @@ private fun PodRowContent(
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(pod.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            // TalkBack reads the whole name; the row's menu shows it when even two lines cut it.
+            Text(pod.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
                 listOfNotNull(pod.namespace.takeIf { showNamespace }, pod.node.takeIf { showNode && it.isNotEmpty() }).joinToString("  ·  "),
                 style = MaterialTheme.typography.labelSmall,
@@ -341,17 +343,15 @@ private fun PodRowContent(
         IchorIconButton(onClick = onLogs) {
             Icon(Icons.AutoMirrored.Outlined.Article, stringResource(R.string.pod_logs_open, pod.name))
         }
-        if (onFlows != null) {
-            IchorIconButton(onClick = onFlows) {
-                Icon(Icons.Outlined.Stream, stringResource(R.string.pods_live_flows, pod.name))
-            }
-        }
         if (deleting) {
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
-            val denied = rememberKubeDenial(KubeAction.DELETE_POD, pod.namespace) != null
-            IchorIconButton(onClick = onDelete, enabled = pod.status != "Terminating" && !denied) {
-                Icon(Icons.Outlined.Delete, stringResource(R.string.pods_delete, pod.name))
+            var moreOpen by remember { mutableStateOf(false) }
+            Box {
+                IchorIconButton(onClick = { moreOpen = true }) {
+                    Icon(Icons.Outlined.MoreVert, stringResource(R.string.pods_row_actions, pod.name))
+                }
+                RowActionsMenu(moreOpen, more, onDismiss = { moreOpen = false }, header = pod.name)
             }
         }
     }

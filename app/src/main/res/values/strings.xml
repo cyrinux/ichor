@@ -2190,7 +2190,7 @@
     <string name="pods_empty">No pods.</string>
     <string name="pods_no_match">No pod matches “%1$s”.</string>
     <string name="pods_ready_count">%1$d/%2$d ready</string>
-    <string name="pods_delete">Delete %1$s</string>
+    <string name="pods_row_actions">Actions for %1$s</string>
     <string name="pods_delete_title">Delete pod %1$s?</string>
     <string name="pods_delete_text_owned">It is removed from %1$s after its grace period; %2$s starts a new one.</string>
     <string name="pods_delete_text_bare">It is removed from %1$s after its grace period. No controller owns it: it will not come back.</string>
@@ -3125,7 +3125,6 @@
     <string name="flows_copy_json">Copy the raw flow</string>
     <string name="flows_copied">Flow copied</string>
     <string name="flows_policy_gone">%1$s is no longer on the cluster.</string>
-    <string name="pods_live_flows">Live flows of %1$s</string>
     <plurals name="netpol_count">
         <item quantity="one">%1$d policy</item>
         <item quantity="other">%1$d policies</item>
