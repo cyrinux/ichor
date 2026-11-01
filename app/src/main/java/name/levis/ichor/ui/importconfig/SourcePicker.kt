@@ -48,11 +48,13 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.DiscoveryProvider
@@ -201,11 +203,11 @@ private fun DropZone(onFile: () -> Unit, onPaste: () -> Unit, onQr: () -> Unit, 
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SourceTile(stringResource(R.string.import_tab_file), Icons.Outlined.FileOpen, onFile, Modifier.weight(1f))
-            SourceTile(stringResource(R.string.import_tab_paste), Icons.Outlined.ContentPaste, onPaste, Modifier.weight(1f))
-            SourceTile(stringResource(R.string.import_tab_qr), Icons.Outlined.QrCodeScanner, onQr, Modifier.weight(1f))
-            SourceTile(stringResource(R.string.import_form_tab), Icons.Outlined.EditNote, onForm, Modifier.weight(1f))
+        SourceTileGrid(Modifier.fillMaxWidth()) {
+            SourceTile(stringResource(R.string.import_tab_file), Icons.Outlined.FileOpen, onFile)
+            SourceTile(stringResource(R.string.import_tab_paste), Icons.Outlined.ContentPaste, onPaste)
+            SourceTile(stringResource(R.string.import_tab_qr), Icons.Outlined.QrCodeScanner, onQr)
+            SourceTile(stringResource(R.string.import_form_tab), Icons.Outlined.EditNote, onForm)
         }
     }
 }
@@ -223,20 +225,44 @@ private fun FormatPill(text: String, container: Color, content: Color) {
 }
 
 @Composable
-private fun SourceTile(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun SourceTile(label: String, icon: ImageVector, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = modifier,
     ) {
         Column(
             Modifier.padding(vertical = 12.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Text(label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+/** Four across from this width at font scale 1: below, a label would wrap or be cut. */
+private const val FOUR_TILES_MIN_WIDTH_DP = 440f
+
+/** Tiles per row: two on a phone, four when the width (in scaled text) leaves each one room. */
+internal fun sourceTileColumns(widthDp: Float, fontScale: Float): Int =
+    if (widthDp / fontScale >= FOUR_TILES_MIN_WIDTH_DP) 4 else 2
+
+/** Lays [content] in rows ([sourceTileColumns]), every tile as wide and as tall as the tallest. */
+@Composable
+internal fun SourceTileGrid(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier) { tiles, constraints ->
+        val gap = 8.dp.roundToPx()
+        val columns = sourceTileColumns(constraints.maxWidth.toDp().value, fontScale)
+        val width = (constraints.maxWidth - gap * (columns - 1)) / columns
+        val height = tiles.maxOfOrNull { it.maxIntrinsicHeight(width) } ?: 0
+        val placeables = tiles.map { it.measure(Constraints.fixed(width, height)) }
+        val rows = (placeables.size + columns - 1) / columns
+        layout(constraints.maxWidth, rows * height + (rows - 1).coerceAtLeast(0) * gap) {
+            placeables.forEachIndexed { i, tile ->
+                tile.place((i % columns) * (width + gap), (i / columns) * (height + gap))
+            }
         }
     }
 }
