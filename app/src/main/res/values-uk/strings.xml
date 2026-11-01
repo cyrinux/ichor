@@ -1697,6 +1697,8 @@
     <string name="cluster_upgrade_all">Оновити всі</string>
     <string name="cluster_upgrade_intro">Кожен вузол оновлюється по черзі: спершу площини керування, лідер etcd останнім серед них, потім робочі вузли. Між вузлами застосунок перевіряє, що кластер знову справний.</string>
     <string name="cluster_upgrade_version">Версія</string>
+    <string name="cluster_upgrade_more_versions">Показати ще: %1$d</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s немає серед останніх випусків; версія залишається вибраною.</string>
     <string name="cluster_upgrade_drain">Спершу звільняти кожен вузол</string>
     <string name="cluster_upgrade_drain_desc">Ізолювати вузол і виселити його поди перед оновленням, щоб вони переїхали до перезавантаження.</string>
     <string name="cluster_upgrade_order">Вузли в порядку оновлення (готово %1$d з %2$d)</string>

@@ -1600,6 +1600,8 @@
     <string name="cluster_upgrade_all">Tout mettre à jour</string>
     <string name="cluster_upgrade_intro">Chaque nœud est mis à jour l\'un après l\'autre : les plans de contrôle d\'abord, le leader etcd en dernier parmi eux, puis les workers. Entre deux nœuds, l\'app vérifie que le cluster est de nouveau en bonne santé.</string>
     <string name="cluster_upgrade_version">Version</string>
+    <string name="cluster_upgrade_more_versions">Afficher %1$d de plus</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s ne fait pas partie des dernières versions ; elle reste sélectionnée.</string>
     <string name="cluster_upgrade_drain">Vider chaque nœud d\'abord</string>
     <string name="cluster_upgrade_drain_desc">Isoler le nœud et évincer ses pods avant sa mise à jour, pour qu\'ils partent avant le redémarrage.</string>
     <string name="cluster_upgrade_order">Nœuds, dans l\'ordre de mise à jour (%1$d sur %2$d faits)</string>

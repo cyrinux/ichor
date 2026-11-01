@@ -1593,6 +1593,8 @@
     <string name="cluster_upgrade_all">Alle aktualisieren</string>
     <string name="cluster_upgrade_intro">Jeder Node wird nacheinander aktualisiert: zuerst die Control Planes, der etcd-Leader als letzter davon, dann die Worker. Zwischen den Nodes prüft die App, dass der Cluster wieder gesund ist.</string>
     <string name="cluster_upgrade_version">Version</string>
+    <string name="cluster_upgrade_more_versions">%1$d weitere anzeigen</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s gehört nicht zu den neuesten Versionen; sie bleibt ausgewählt.</string>
     <string name="cluster_upgrade_drain">Jeden Node zuerst leeren</string>
     <string name="cluster_upgrade_drain_desc">Den Node absperren und seine Pods vor dem Update verdrängen, damit sie vor dem Neustart umziehen.</string>
     <string name="cluster_upgrade_order">Nodes in Update-Reihenfolge (%1$d von %2$d fertig)</string>

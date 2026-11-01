@@ -1543,6 +1543,8 @@
     <string name="cluster_upgrade_all">すべてアップグレード</string>
     <string name="cluster_upgrade_intro">ノードは1つずつ順にアップグレードされます：まずコントロールプレーン（etcd リーダーはその最後）、次にワーカーです。ノードの間で、アプリはクラスターが再び正常になったことを確認します。</string>
     <string name="cluster_upgrade_version">バージョン</string>
+    <string name="cluster_upgrade_more_versions">さらに %1$d 件を表示</string>
+    <string name="cluster_upgrade_version_unlisted">%1$s は最新リリースに含まれていませんが、選択されたままです。</string>
     <string name="cluster_upgrade_drain">各ノードを先にドレイン</string>
     <string name="cluster_upgrade_drain_desc">アップグレード前にノードをスケジュール停止して Pod を退避させ、再起動前に移動させます。</string>
     <string name="cluster_upgrade_order">ノード（アップグレード順、%2$d個中%1$d個完了）</string>
