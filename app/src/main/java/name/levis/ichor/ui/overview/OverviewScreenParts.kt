@@ -46,6 +46,7 @@ import name.levis.ichor.model.hasArgoCD
 import name.levis.ichor.model.hasFlux
 import name.levis.ichor.model.needsAttention
 import name.levis.ichor.model.outage
+import name.levis.ichor.model.outageRecovery
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.apps.AppsViewModel
 import name.levis.ichor.ui.argocd.ArgoViewModel
@@ -464,6 +465,8 @@ internal class UnreachableActions(
     val onShowNodes: () -> Unit,
     val onScan: () -> Unit,
     val onEditEndpoints: () -> Unit,
+    val onSignIn: () -> Unit,
+    val onReplaceConfig: () -> Unit,
 )
 
 /** The screen's state [NodeList] shows besides the overview. */
@@ -503,20 +506,28 @@ internal fun OverviewLoaded(
 ) {
     PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = onRefresh, modifier = modifier) {
         val down = s.data.outage
+        // Until the summary is known, nothing that needs a real cluster is offered.
+        val recovery = down?.let { outageRecovery(it, summary?.omni == true, summary?.demo != false, clusterLabels.masked) }
         // With nodes known from before, they stay listed under a banner instead.
-        if (down != null && !unreachable.showNodes && !s.data.hasLastKnown) ClusterUnreachableBox(
+        if (down != null && recovery != null && !unreachable.showNodes && !s.data.hasLastKnown) ClusterUnreachableBox(
             outage = down,
+            recovery = recovery,
             endpoints = summary?.endpoints.orEmpty(),
             onRetry = onRetry,
+            onSignIn = unreachable.onSignIn,
+            onReplaceConfig = unreachable.onReplaceConfig,
             onShowNodes = unreachable.onShowNodes,
-            onScan = unreachable.onScan.takeIf { summary?.demo == false },
-            onEditEndpoints = unreachable.onEditEndpoints.takeIf { summary?.demo == false && !clusterLabels.masked },
+            onScan = unreachable.onScan,
+            onEditEndpoints = unreachable.onEditEndpoints,
         ) else NodeList(
             overview = s.data,
             // In the map's order, site by site, once the KubeSpan map landed (or kept from before).
             topology = remember(s.data, topologyFetches) { topology() },
-            outage = down?.takeIf { s.data.hasLastKnown },
-            onRetry = onRetry,
+            outage = if (down != null && recovery != null && s.data.hasLastKnown) {
+                OutageBanner(down, recovery, onRetry, unreachable.onSignIn, unreachable.onReplaceConfig)
+            } else {
+                null
+            },
             clusterName = summary?.let(clusterLabels::of),
             fingerprint = summary?.fingerprint,
             time = list.time,

@@ -96,6 +96,9 @@
     <string name="overview_public_ip_detecting">Buscando IP públicas…</string>
     <string name="overview_unreachable_network">Ningún nodo respondió. Probablemente tu teléfono no está en la red del clúster: comprueba que la VPN esté conectada o que estés en la Wi-Fi correcta.</string>
     <string name="overview_unreachable_credentials">El clúster respondió pero rechazó este talosconfig: su certificado, CA o rol puede ser incorrecto o haber caducado.</string>
+    <string name="overview_unreachable_replace_config">Importar el talosconfig renovado</string>
+    <string name="overview_unreachable_credentials_omni">Es posible que tu sesión de Omni haya terminado. Volver a iniciar sesión deja este clúster como está.</string>
+    <string name="overview_unreachable_credentials_replace">Importa el talosconfig que renovaste con talosctl. Si es del mismo clúster y la misma CA, elige Reemplazar cuando la importación lo ofrezca: el clúster conserva su nombre, color, etiquetas e historial. La app no puede renovar un certificado por sí misma.</string>
     <string name="overview_unreachable_other">Ningún nodo respondió. Los detalles están abajo.</string>
     <string name="overview_unreachable_endpoints">Endpoints: %1$s</string>
     <string name="overview_unreachable_auto_retry">Se reintenta cada %1$d s y en cuanto cambia la red.</string>

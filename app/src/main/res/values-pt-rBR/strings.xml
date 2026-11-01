@@ -96,6 +96,9 @@
     <string name="overview_public_ip_detecting">Descobrindo IPs públicos…</string>
     <string name="overview_unreachable_network">Nenhum nó respondeu. Seu celular provavelmente não está na rede do cluster: verifique se sua VPN está conectada ou se você está no Wi-Fi certo.</string>
     <string name="overview_unreachable_credentials">O cluster respondeu, mas recusou este talosconfig: o certificado, a CA ou o papel podem estar errados ou expirados.</string>
+    <string name="overview_unreachable_replace_config">Importar o talosconfig renovado</string>
+    <string name="overview_unreachable_credentials_omni">Sua sessão do Omni pode ter terminado. Entrar novamente mantém este cluster como está.</string>
+    <string name="overview_unreachable_credentials_replace">Importe o talosconfig renovado com o talosctl. Se for do mesmo cluster e da mesma CA, escolha Substituir quando a importação oferecer: o cluster mantém nome, cor, tags e histórico. O app não pode renovar um certificado sozinho.</string>
     <string name="overview_unreachable_other">Nenhum nó respondeu. Os detalhes estão abaixo.</string>
     <string name="overview_unreachable_endpoints">Endpoints: %1$s</string>
     <string name="overview_unreachable_auto_retry">Tenta novamente a cada %1$d s e assim que a rede mudar.</string>

@@ -89,6 +89,9 @@
     <string name="overview_public_ip_detecting">パブリック IP を検出中…</string>
     <string name="overview_unreachable_network">どのノードも応答しませんでした。スマートフォンがクラスターのネットワークに接続されていない可能性があります。VPN が接続されているか、正しい Wi-Fi に接続しているか確認してください。</string>
     <string name="overview_unreachable_credentials">クラスターは応答しましたが、この talosconfig を拒否しました。証明書、CA、またはロールが誤っているか期限切れの可能性があります。</string>
+    <string name="overview_unreachable_replace_config">更新した talosconfig をインポート</string>
+    <string name="overview_unreachable_credentials_omni">Omni のセッションが終了した可能性があります。再度サインインしても、このクラスターは変わりません。</string>
+    <string name="overview_unreachable_credentials_replace">talosctl で更新した talosconfig をインポートしてください。同じクラスターと CA のものであれば、インポート時に表示される「置き換え」を選ぶと、クラスターの名前、色、タグ、履歴は保持されます。アプリ自体は証明書を更新できません。</string>
     <string name="overview_unreachable_other">どのノードも応答しませんでした。詳細は以下のとおりです。</string>
     <string name="overview_unreachable_endpoints">エンドポイント：%1$s</string>
     <string name="overview_unreachable_auto_retry">%1$d秒ごと、およびネットワークが変わるとすぐに再試行します。</string>
