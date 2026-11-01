@@ -3346,6 +3346,10 @@
     <string name="metrics_range_1d">1 д</string>
     <string name="metrics_range_7d">7 д</string>
     <string name="metrics_chart_description">График %1$s во времени</string>
+    <string name="metrics_series_unnamed">Ряд %1$d</string>
+    <string name="metrics_chart_no_value">нет значения</string>
+    <string name="metrics_chart_previous_sample">Предыдущее значение</string>
+    <string name="metrics_chart_next_sample">Следующее значение</string>
     <string name="metrics_panel_title">Заголовок</string>
     <string name="metrics_panel_query">Запрос PromQL</string>
     <string name="metrics_panel_legend">Легенда</string>

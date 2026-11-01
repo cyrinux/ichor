@@ -3055,6 +3055,10 @@
     <string name="metrics_range_1d">1 天</string>
     <string name="metrics_range_7d">7 天</string>
     <string name="metrics_chart_description">%1$s 随时间变化的图表</string>
+    <string name="metrics_series_unnamed">序列 %1$d</string>
+    <string name="metrics_chart_no_value">无数值</string>
+    <string name="metrics_chart_previous_sample">上一个样本</string>
+    <string name="metrics_chart_next_sample">下一个样本</string>
     <string name="metrics_panel_title">标题</string>
     <string name="metrics_panel_query">PromQL 查询</string>
     <string name="metrics_panel_legend">图例</string>

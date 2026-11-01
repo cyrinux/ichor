@@ -3149,6 +3149,10 @@
     <string name="metrics_range_1d">1 T.</string>
     <string name="metrics_range_7d">7 T.</string>
     <string name="metrics_chart_description">Diagramm von %1$s im Zeitverlauf</string>
+    <string name="metrics_series_unnamed">Reihe %1$d</string>
+    <string name="metrics_chart_no_value">kein Wert</string>
+    <string name="metrics_chart_previous_sample">Vorheriger Messwert</string>
+    <string name="metrics_chart_next_sample">Nächster Messwert</string>
     <string name="metrics_panel_title">Titel</string>
     <string name="metrics_panel_query">PromQL-Abfrage</string>
     <string name="metrics_panel_legend">Legende</string>

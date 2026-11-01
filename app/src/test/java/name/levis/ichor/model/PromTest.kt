@@ -23,6 +23,25 @@ class PromTest {
         assertEquals("x{a=\"1\"}", s.legend("{{missing}}"))
     }
 
+    @Test fun aLoneUnnamedSeriesTakesThePanelTitle() {
+        assertEquals(listOf("CPU"), listOf(PromSeries(name = "{}")).chartLabels("", "CPU", listOf("Series 1")))
+        assertEquals(listOf("CPU"), listOf(PromSeries(name = "")).chartLabels("", "CPU", listOf("Series 1")))
+        assertEquals(listOf("CPU"), listOf(PromSeries(name = "{}")).chartLabels("{{missing}}", "CPU", listOf("Series 1")))
+    }
+
+    @Test fun severalUnnamedSeriesStayDistinct() {
+        val series = listOf(PromSeries(name = "{}"), PromSeries(name = "up{job=\"a\"}"), PromSeries(name = "{}"))
+        assertEquals(
+            listOf("Series 1", "up{job=\"a\"}", "Series 3"),
+            series.chartLabels("", "CPU", listOf("Series 1", "Series 2", "Series 3")),
+        )
+    }
+
+    @Test fun namedSeriesKeepTheirLegend() {
+        val series = listOf(PromSeries(name = "x", labels = mapOf("pod" to "coredns")))
+        assertEquals(listOf("coredns"), series.chartLabels("{{pod}}", "CPU", listOf("Series 1")))
+    }
+
     @Test fun refusedQueryIsRecognised() {
         assertTrue(isPromRefused("https://m.example/prometheus: HTTP 401, refused (credentials or tenant): no org id"))
         assertFalse(isPromRefused("https://m.example/prometheus: HTTP 404 page not found: check the path prefix"))

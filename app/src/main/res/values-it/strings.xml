@@ -3157,6 +3157,10 @@
     <string name="metrics_range_1d">1 g</string>
     <string name="metrics_range_7d">7 g</string>
     <string name="metrics_chart_description">Grafico di %1$s nel tempo</string>
+    <string name="metrics_series_unnamed">Serie %1$d</string>
+    <string name="metrics_chart_no_value">nessun valore</string>
+    <string name="metrics_chart_previous_sample">Campione precedente</string>
+    <string name="metrics_chart_next_sample">Campione successivo</string>
     <string name="metrics_panel_title">Titolo</string>
     <string name="metrics_panel_query">Query PromQL</string>
     <string name="metrics_panel_legend">Legenda</string>
