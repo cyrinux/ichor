@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +12,8 @@ import name.levis.ichor.model.BootMedia
 import name.levis.ichor.model.CARotationPlan
 import name.levis.ichor.model.CARotationProgress
 import name.levis.ichor.model.CloudUserData
+import name.levis.ichor.model.ContextNodeRemoval
+import name.levis.ichor.model.NodeForgetCheck
 import name.levis.ichor.model.ClusterUpgradeCommand
 import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.CpReplacePlan
@@ -221,6 +224,29 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     suspend fun controlPlaneReplaceWait(membersBefore: Int, timeoutSec: Int): CpReplaceWait = call { cfg, ctx ->
         TalosJson.decodeFromString(CpReplaceWait.serializer(), Ichorgo.controlPlaneReplaceWait(cfg, ctx, membersBefore.toLong(), timeoutSec.toLong()))
     }
+
+    /** Whether [node] can leave the active context, and whether it is also an endpoint. No network. */
+    suspend fun removalPlan(node: String): ContextNodeRemoval = call { cfg, ctx ->
+        TalosJson.decodeFromString(ContextNodeRemoval.serializer(), Ichorgo.contextNodeRemovalPlan(cfg, ctx, node))
+    }
+
+    /** Whether [node] does not answer and the cluster no longer lists it. Read-only. */
+    suspend fun forgettable(node: String): Boolean = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeForgetCheck.serializer(), Ichorgo.nodeForgettable(cfg, ctx, node)).forgettable
+    }
+
+    /** Deletes the Node of a node being reset once its kubelet has stopped; waits up to [timeoutSeconds]. */
+    suspend fun deleteDepartedNode(hostname: String, node: String, timeoutSeconds: Long = 300) =
+        talosKubeCall { cfg, ctx, server -> Ichorgo.kubeDeleteDepartedNode(cfg, ctx, server, hostname, node, timeoutSeconds) }
+
+    /** Addresses and hostnames taken out of a context, per context, until the app restarts. */
+    private val forgotten = ConcurrentHashMap<String, Set<String>>()
+
+    fun noteForgotten(context: String, names: List<String>) {
+        forgotten.merge(context, names.filter { it.isNotBlank() }.toSet()) { known, added -> known + added }
+    }
+
+    fun forgottenNodes(context: String): Set<String> = forgotten[context].orEmpty()
 
     /** The cluster's members (Talos cluster discovery), flagged when the context already targets them. */
     suspend fun discoverNodes(): NodeDiscovery = call { cfg, ctx ->

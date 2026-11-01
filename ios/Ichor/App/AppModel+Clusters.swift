@@ -259,6 +259,22 @@ extension AppModel {
         dataGeneration += 1
     }
 
+    /// Takes `nodes` (addresses) out of the nodes of the active context; its endpoints stay and
+    /// the overview reloads without them. Refused for the last one.
+    func removeNodes(_ nodes: [String]) async throws {
+        try checkWritable()
+        guard let current = yaml else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
+        let context = activeContext
+        let updated = try await TalosClient.removeContextNodes(stored: current, context: context, nodes: nodes)
+        let generation = TalosClient.privacyGeneration()  // before parsing: see ConfigSummaryCache.store
+        let parsed = try await TalosClient.parse(updated)
+        try SecureConfigStore.save(Data(updated.utf8))
+        apply(
+            talos: updated, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context,
+            generation: generation)
+        dataGeneration += 1
+    }
+
     /// Replaces the endpoints of the context `name` (the addresses the app connects through),
     /// keeping the other contexts; screens reload with them.
     func setEndpoints(_ endpoints: [String], of name: String) async throws {

@@ -135,6 +135,17 @@ suspend fun TalosApp.addClusterNodes(name: String, nodes: List<String>) {
     launchSync(runNow = true)
 }
 
+/**
+ * Takes [nodes] out of the cluster [name]'s talosconfig context; screens and monitoring follow.
+ * Node discovery does not offer them again until the app restarts: a member lingers for a while.
+ */
+suspend fun TalosApp.removeClusterNodes(name: String, nodes: List<String>, hostnames: List<String> = emptyList()) {
+    configRepository.removeNodes(name, nodes)
+    nodeLifecycleRepository.noteForgotten(name, nodes + hostnames)
+    talosRepository.invalidate()
+    launchSync(runNow = true)
+}
+
 /** Replaces the endpoints of the cluster [name]'s talosconfig context; screens and monitoring follow. */
 suspend fun TalosApp.setClusterEndpoints(name: String, endpoints: List<String>) {
     configRepository.setEndpoints(name, endpoints)

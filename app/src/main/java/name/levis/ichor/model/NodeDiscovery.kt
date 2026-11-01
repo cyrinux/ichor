@@ -22,6 +22,18 @@ data class DiscoveredNode(
     val known: Boolean = false,
 )
 
-/** The [missing] members not set aside with [dismissed] (their addresses). */
+/** The [missing] members not set aside with [dismissed] (any of their addresses, or their hostname). */
 fun NodeDiscovery.toOffer(dismissed: Set<String>): List<DiscoveredNode> =
-    missing.filter { it.address !in dismissed }
+    missing.filter { node -> node.address !in dismissed && node.hostname !in dismissed && node.addresses.none { it in dismissed } }
+
+/** Whether a node can leave the talosconfig context; [endpoint]: the app also connects through it. */
+@Serializable
+data class ContextNodeRemoval(
+    val allowed: Boolean = false,
+    val reason: String = "",
+    val endpoint: Boolean = false,
+)
+
+/** Whether a node can be offered "Forget node": it does not answer and the cluster no longer lists it. */
+@Serializable
+data class NodeForgetCheck(val forgettable: Boolean = false)

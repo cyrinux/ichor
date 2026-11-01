@@ -46,11 +46,13 @@ import name.levis.ichor.ui.components.JumpSection
 import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.ContextNodeRemoval
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.NodeReachability
 import name.levis.ichor.model.down
 import name.levis.ichor.model.ResetRequest
+import name.levis.ichor.model.ResetWipe
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
 import name.levis.ichor.security.AuthResult
@@ -132,6 +134,9 @@ fun NodeDetailScreen(
     var confirmingReset by remember { mutableStateOf(false) }
     val reset: ResetViewModel = viewModel(key = "reset-$node", factory = factory { ResetViewModel(app.nodeLifecycleRepository, node) })
     val resetState by reset.state.collectAsStateWithLifecycle()
+    // What the reset in progress wipes; a node that keeps its system disk stays in the cluster.
+    var resetWipe by remember { mutableStateOf(ResetWipe.SYSTEM) }
+    var removalOffer by remember { mutableStateOf<ContextNodeRemoval?>(null) }
     var cordonBusy by remember { mutableStateOf(false) }
 
     LaunchedEffect(powerState) {
@@ -152,9 +157,19 @@ fun NodeDetailScreen(
     LaunchedEffect(resetState) {
         when (val s = resetState) {
             ResetState.Done -> {
-                snackbar.showSnackbar(context.getString(R.string.reset_requested, hostname))
-                reset.dismiss()
-                onBack()
+                val removal = if (resetWipe == ResetWipe.USER) {
+                    null
+                } else {
+                    runCatching { app.nodeLifecycleRepository.removalPlan(node) }.getOrNull()?.takeIf { it.allowed }
+                }
+                if (removal != null) {
+                    removalOffer = removal
+                    reset.dismiss()
+                } else {
+                    snackbar.showSnackbar(context.getString(R.string.reset_requested, hostname))
+                    reset.dismiss()
+                    onBack()
+                }
             }
             is ResetState.Failed -> {
                 snackbar.showSnackbar(s.message.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long)
@@ -167,6 +182,7 @@ fun NodeDetailScreen(
     // Like power actions: with the app lock on, a fresh fingerprint/PIN first.
     fun resetConfirmed(request: ResetRequest) {
         confirmingReset = false
+        resetWipe = request.wipe
         val activity = context.findFragmentActivity()
         if (!appLock.enabled.value || activity == null) {
             reset.run(request)
@@ -248,7 +264,13 @@ fun NodeDetailScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                item(key = "header") { NodeHeader(node, role, cordoned[node], reachability) }
+                // One item: the jump rail counts them.
+                item(key = "header") {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        NodeHeader(node, role, cordoned[node], reachability)
+                        ForgetNodeCard(app, node, hostname, reachability.down, onForgotten = onBack)
+                    }
+                }
                 nodeSections(
                     groups = groups,
                     features = features,
@@ -289,6 +311,22 @@ fun NodeDetailScreen(
 
     if (confirmingReset) {
         ResetConfirmDialog(vm = reset, hostname = hostname, onConfirm = ::resetConfirmed, onDismiss = { confirmingReset = false })
+    }
+
+    removalOffer?.let { removal ->
+        RemoveAfterResetDialog(
+            hostname = hostname,
+            removal = removal,
+            onRemove = {
+                removalOffer = null
+                app.removeNodeForGood(node, hostname, deleteKubeNode = true)
+                onBack()
+            },
+            onKeep = {
+                removalOffer = null
+                onBack()
+            },
+        )
     }
 
     confirming?.let { action ->

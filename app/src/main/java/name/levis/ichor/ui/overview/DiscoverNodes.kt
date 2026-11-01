@@ -60,14 +60,17 @@ class NodeDiscoveryViewModel(private val lifecycle: NodeLifecycleRepository) : V
             null
         }
         last = discovery
-        _offer.value = discovery?.toOffer(dismissed[discovery.context].orEmpty()).orEmpty()
+        _offer.value = discovery?.let { it.toOffer(setAside(it.context)) }.orEmpty()
     }
 
     fun dismiss(nodes: List<DiscoveredNode>) {
         val discovery = last ?: return
         dismissed[discovery.context] = dismissed[discovery.context].orEmpty() + nodes.map { it.address }
-        _offer.value = discovery.toOffer(dismissed[discovery.context].orEmpty())
+        _offer.value = discovery.toOffer(setAside(discovery.context))
     }
+
+    /** "Not now", and the nodes just taken out of the context: a member lingers for a while. */
+    private fun setAside(context: String) = dismissed[context].orEmpty() + lifecycle.forgottenNodes(context)
 
     fun clear() {
         last = null

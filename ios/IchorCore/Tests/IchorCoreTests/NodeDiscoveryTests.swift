@@ -21,6 +21,18 @@ final class NodeDiscoveryTests: XCTestCase {
         XCTAssertEqual(try discovery().offer(dismissed: ["10.0.0.11"]).map(\.address), ["10.0.0.12"])
     }
 
+    func testForgottenMembersAreNotOfferedByAnotherAddressOrTheirHostname() throws {
+        XCTAssertEqual(try discovery().offer(dismissed: ["fe80::1"]).map(\.address), ["10.0.0.12"])
+        XCTAssertEqual(try discovery().offer(dismissed: ["worker-b"]).map(\.address), ["10.0.0.11"])
+    }
+
+    func testRemovalDecodes() throws {
+        let removal = try TalosJSON.decode(ContextNodeRemoval.self, from: #"{"allowed":true,"endpoint":true}"#)
+        XCTAssertEqual(removal, ContextNodeRemoval(allowed: true, endpoint: true))
+        let check = try TalosJSON.decode(NodeForgetCheck.self, from: #"{"forgettable":true}"#)
+        XCTAssertTrue(check.forgettable)
+    }
+
     func testNullNodesDecodeAsNone() throws {
         let empty = try TalosJSON.decode(NodeDiscovery.self, from: #"{"context":"prod","nodes":null}"#)
         XCTAssertEqual(empty.offer(dismissed: []), [])
