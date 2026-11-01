@@ -5043,6 +5043,7 @@
     <string name="kube_menu_explore">Esplora</string>
     <string name="kube_menu_health">Salute</string>
     <string name="kube_menu_installed">Installato qui</string>
+    <string name="home_menu_app">App</string>
     <string name="capacity_intro">Lo spazio libero conta le request rispetto all\'allocabile, come lo scheduler; l\'uso viene da metrics-server.</string>
     <string name="capacity_n_plus_one_ok">N+1: perdere un qualsiasi nodo non lascia pod in Pending</string>
     <string name="capacity_n_plus_one_short">Perdere %1$s lascia %2$s pod in Pending</string>

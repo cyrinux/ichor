@@ -373,6 +373,7 @@ fun KubeHomeScreen(
             look = kubeHomeCardLook,
             bar = bar,
             barLook = kubeHomeActionLook,
+            barGroups = kubeHomeActionGroups,
             onBarChange = app.uiPreferences::setKubeHomeBar,
             modifier = Modifier.pageContent(padding),
             absent = absentCards,

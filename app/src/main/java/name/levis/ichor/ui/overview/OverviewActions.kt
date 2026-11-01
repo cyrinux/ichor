@@ -18,11 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
+import name.levis.ichor.model.HomeActionGroup
 import name.levis.ichor.model.OverviewAction
 import name.levis.ichor.model.OverviewBar
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.clusterSupport
+import name.levis.ichor.model.group
+import name.levis.ichor.model.groupedHomeMenu
 import name.levis.ichor.ui.components.ActionBarActions
+import name.levis.ichor.ui.components.ActionGroups
 import name.levis.ichor.ui.components.ActionLook
 import name.levis.ichor.ui.components.SMOKE_SETTINGS
 import name.levis.ichor.ui.components.rememberClusterFeatures
@@ -93,6 +97,22 @@ fun overviewActionLabel(action: OverviewAction): String = when (action) {
 /** How the overview's actions look, in its bar and its editor. */
 val overviewActionLook = ActionLook<OverviewAction>(::overviewActionIcon) { overviewActionLabel(it) }
 
+/** A home screen's menu sections, with their labels. */
+internal fun <A> homeActionGroups(group: (A) -> HomeActionGroup) = ActionGroups<A>(
+    label = { group(it).label() },
+    sections = { menu -> groupedHomeMenu(menu, group).map { (section, actions) -> section.label() to actions } },
+)
+
+private fun HomeActionGroup.label(): Int = when (this) {
+    HomeActionGroup.EXPLORE -> R.string.kube_menu_explore
+    HomeActionGroup.HEALTH -> R.string.kube_menu_health
+    HomeActionGroup.INSTALLED -> R.string.kube_menu_installed
+    HomeActionGroup.APP -> R.string.home_menu_app
+}
+
+/** The overview's menu in sections, in its bar and its editor. */
+val overviewActionGroups = homeActionGroups<OverviewAction> { it.group }
+
 /**
  * The overview's app-bar actions as arranged in [bar]: its icons, then the rest behind a menu,
  * so the cluster name keeps room on a phone. The menu also leads to arranging them.
@@ -137,6 +157,7 @@ fun OverviewActions(
             enabled = ::enabled,
             marker = { if (it == OverviewAction.SETTINGS) Modifier.tourAnchor(TourAnchor.Settings) else Modifier },
             testTag = { if (it == OverviewAction.SETTINGS) SMOKE_SETTINGS else null },
+            groups = overviewActionGroups,
         )
     }
 }

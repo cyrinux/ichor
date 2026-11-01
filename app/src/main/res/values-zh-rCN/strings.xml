@@ -4915,6 +4915,7 @@
     <string name="kube_menu_explore">浏览</string>
     <string name="kube_menu_health">健康状况</string>
     <string name="kube_menu_installed">已安装组件</string>
+    <string name="home_menu_app">应用</string>
     <string name="capacity_intro">剩余空间按 requests 相对可分配量计算，与调度器一致；用量来自 metrics-server。</string>
     <string name="capacity_n_plus_one_ok">N+1：失去任意一个节点都不会导致 Pod 处于 Pending</string>
     <string name="capacity_n_plus_one_short">失去 %1$s 会导致 %2$s 个 Pod 处于 Pending</string>

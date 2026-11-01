@@ -1,16 +1,16 @@
 package name.levis.ichor.model
 
 /**
- * The screens the overview's app bar leads to, in their default order: GitOps (Argo CD, else
- * Flux) and etcd one tap away when the cluster has them. Saved by name: a bar arranged before
- * keeps its order, an action it lacks goes last in its menu.
+ * The screens the overview's app bar leads to, in their default order: the first two are icons, so
+ * the cluster name keeps its room, the rest in sections of the menu. Saved by name: a bar arranged
+ * before keeps its order and its icons, an action it lacks goes last in its menu.
  */
 enum class OverviewAction { HEALTH, WORKLOADS, GITOPS, ETCD, EVENTS, METRICS, ALERTS, KUBESPAN, SEARCH, SETTINGS,
     /** The cluster's own Git repository, once one is saved; last, so the saved bars keep theirs. */
     REPOSITORY;
 
     companion object {
-        val bar = ActionBarKind(entries, defaultIcons = 4)
+        val bar = ActionBarKind(entries, defaultIcons = 2)
     }
 }
 
@@ -19,20 +19,49 @@ typealias OverviewBar = ActionBar<OverviewAction>
 
 /**
  * The screens the Kubernetes home's app bar leads to (a cluster added from a kubeconfig): the
- * Kubernetes screens that work with its credentials alone, no Talos one. GitOps (Argo CD, else
- * Flux) is one tap away when the cluster has it.
+ * Kubernetes screens that work with its credentials alone, no Talos one. As on the overview, the
+ * first two are icons and the rest in sections of the menu.
  */
 enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE,
     /** The cluster's own Git repository, once one is saved; last, so the saved bars keep theirs. */
     REPOSITORY;
 
     companion object {
-        val bar = ActionBarKind(entries, defaultIcons = 4)
+        val bar = ActionBarKind(entries, defaultIcons = 2)
     }
 }
 
 /** The Kubernetes home's app-bar actions; one bar for every cluster added from a kubeconfig. */
 typealias KubeHomeBar = ActionBar<KubeHomeAction>
+
+/** The sections of a home screen's menu, in their order. */
+enum class HomeActionGroup { EXPLORE, HEALTH, INSTALLED, APP }
+
+/** Which section of the overview's menu an action is in, whatever the saved bar. */
+val OverviewAction.group: HomeActionGroup
+    get() = when (this) {
+        OverviewAction.WORKLOADS, OverviewAction.GITOPS, OverviewAction.REPOSITORY -> HomeActionGroup.EXPLORE
+        OverviewAction.HEALTH, OverviewAction.ETCD, OverviewAction.EVENTS, OverviewAction.METRICS, OverviewAction.ALERTS,
+        OverviewAction.KUBESPAN,
+        -> HomeActionGroup.HEALTH
+        OverviewAction.SEARCH, OverviewAction.SETTINGS -> HomeActionGroup.APP
+    }
+
+/** Which section of the Kubernetes home's menu an action is in, whatever the saved bar. */
+val KubeHomeAction.group: HomeActionGroup
+    get() = when (this) {
+        KubeHomeAction.WORKLOADS, KubeHomeAction.RESOURCES, KubeHomeAction.HELM, KubeHomeAction.GITOPS, KubeHomeAction.REPOSITORY,
+        -> HomeActionGroup.EXPLORE
+        KubeHomeAction.METRICS, KubeHomeAction.ALERTS, KubeHomeAction.CHECKUP, KubeHomeAction.API_HEALTH, KubeHomeAction.NETWORK_POLICIES,
+        -> HomeActionGroup.HEALTH
+        KubeHomeAction.DATA_SERVICES, KubeHomeAction.CROSSPLANE, KubeHomeAction.TAILSCALE, KubeHomeAction.CLUSTER_LIFECYCLE,
+        -> HomeActionGroup.INSTALLED
+        KubeHomeAction.SEARCH, KubeHomeAction.SETTINGS -> HomeActionGroup.APP
+    }
+
+/** [menu] in sections, in section order; inside a section the saved order holds. Empty sections are left out. */
+fun <A> groupedHomeMenu(menu: List<A>, group: (A) -> HomeActionGroup): List<Pair<HomeActionGroup, List<A>>> =
+    HomeActionGroup.entries.mapNotNull { section -> menu.filter { group(it) == section }.takeIf { it.isNotEmpty() }?.let { section to it } }
 
 /**
  * What the Kubernetes screen's app bar offers: the screens it leads to and its share link. The

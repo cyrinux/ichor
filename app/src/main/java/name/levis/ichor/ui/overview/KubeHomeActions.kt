@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeHomeAction
 import name.levis.ichor.model.KubeHomeBar
+import name.levis.ichor.model.group
 import name.levis.ichor.ui.components.ActionBarActions
 import name.levis.ichor.ui.components.ActionLook
 
@@ -68,6 +69,9 @@ fun kubeHomeActionLabel(action: KubeHomeAction): String = when (action) {
 /** How the Kubernetes home's actions look, in its bar and its editor. */
 val kubeHomeActionLook = ActionLook<KubeHomeAction>(::kubeHomeActionIcon) { kubeHomeActionLabel(it) }
 
+/** The Kubernetes home's menu in sections, in its bar and its editor. */
+val kubeHomeActionGroups = homeActionGroups<KubeHomeAction> { it.group }
+
 /** Where the Kubernetes home's app-bar actions lead; GitOps to Flux when [flux], else Argo CD. */
 fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -> Unit = when (action) {
     KubeHomeAction.WORKLOADS -> onWorkloads
@@ -102,6 +106,7 @@ fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, fl
         onClick = { nav.open(it, flux = !argo)() },
         customizeLabel = stringResource(R.string.kube_home_edit_title),
         onCustomize = onCustomize,
+        groups = kubeHomeActionGroups,
         enabled = { it != KubeHomeAction.REPOSITORY || repository },
         offered = { (it != KubeHomeAction.GITOPS || argo || flux) && (it != KubeHomeAction.CROSSPLANE || crossplane) &&
             (it != KubeHomeAction.TAILSCALE || tailscale) && (it != KubeHomeAction.CLUSTER_LIFECYCLE || clusterLifecycle)

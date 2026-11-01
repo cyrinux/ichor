@@ -53,6 +53,7 @@ import name.levis.ichor.model.CardLayout
 import name.levis.ichor.model.HomeCard
 import name.levis.ichor.model.KubeHomeCard
 import name.levis.ichor.model.OverviewCard
+import name.levis.ichor.ui.components.ActionGroups
 import name.levis.ichor.ui.components.ActionLook
 import name.levis.ichor.ui.components.BarDragState
 import name.levis.ichor.ui.components.MutedText
@@ -188,6 +189,8 @@ fun <C, A : Enum<A>> HomeEditor(
     look: CardLook<C>,
     bar: ActionBar<A>,
     barLook: ActionLook<A>,
+    /** The menu's sections: each menu row says which it is in. */
+    barGroups: ActionGroups<A>? = null,
     onBarChange: (ActionBar<A>) -> Unit,
     modifier: Modifier = Modifier,
     absent: Set<C> = emptySet(),
@@ -231,7 +234,7 @@ fun <C, A : Enum<A>> HomeEditor(
         verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         modifier = modifier.fillMaxSize(),
     ) {
-        actionBarItems(bar, barLook, { currentBar }, { changeBar(it) }, barDrag, spacing)
+        actionBarItems(bar, barLook, { currentBar }, { changeBar(it) }, barDrag, spacing, barGroups)
         item(key = "hint") {
             SectionTitle(stringResource(R.string.overview_edit_cards), stringResource(R.string.overview_edit_hint), Modifier.padding(top = 16.dp))
         }
