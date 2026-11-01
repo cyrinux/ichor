@@ -163,7 +163,8 @@ struct HetznerCreateSection: View {
         Button("Create the server", role: .destructive) { confirming = true }
             .disabled(
                 name.isEmpty || (!omni && (template.isEmpty || disk.isEmpty)) || chosen == nil || price == nil
-                    || job.isActive)
+                    || job.isActive
+            )
             .sheet(isPresented: $confirming) {
                 if let type, let chosen, let price {
                     let cost = "\(price.monthly) \(value.currency)"
