@@ -698,6 +698,8 @@
     <string name="import_name_as">インポート名</string>
     <string name="import_name_taken">この名前はすでに使用されています。</string>
     <string name="import_name_replace">%1$s を置き換え（同じクラスター）</string>
+    <string name="import_name_replace_a11y">保存済みのクラスター %1$s をこのコンテキストで置き換える</string>
+    <string name="import_include_context">%1$s を含める</string>
     <string name="import_import">インポート</string>
     <string name="import_camera_needed">設定の QR コードをスキャンするにはカメラへのアクセスが必要です。</string>
     <string name="import_grant_camera">カメラへのアクセスを許可</string>

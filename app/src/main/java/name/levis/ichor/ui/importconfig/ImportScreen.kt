@@ -1,5 +1,9 @@
 package name.levis.ichor.ui.importconfig
 
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import name.levis.ichor.bringToFront
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
@@ -280,13 +284,19 @@ internal fun NameConflict(
             modifier = Modifier.fillMaxWidth(),
         )
         conflict.sameAs?.let { same ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            val label = stringResource(R.string.import_name_replace_a11y, same)
+            Row(
+                Modifier.fillMaxWidth()
+                    .semantics { contentDescription = label }
+                    .toggleable(value = choice.replace, role = Role.Switch, onValueChange = onReplace),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     stringResource(R.string.import_name_replace, same),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
                 )
-                IchorSwitch(checked = choice.replace, onCheckedChange = onReplace)
+                IchorSwitch(checked = choice.replace, onCheckedChange = null)
             }
         }
     }

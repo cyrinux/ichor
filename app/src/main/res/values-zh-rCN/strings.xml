@@ -698,6 +698,8 @@
     <string name="import_name_as">导入为</string>
     <string name="import_name_taken">此名称已被使用。</string>
     <string name="import_name_replace">替换 %1$s（同一集群）</string>
+    <string name="import_name_replace_a11y">用此上下文替换已存储的集群 %1$s</string>
+    <string name="import_include_context">包含 %1$s</string>
     <string name="import_import">导入</string>
     <string name="import_camera_needed">扫描配置二维码需要相机权限。</string>
     <string name="import_grant_camera">授予相机权限</string>
