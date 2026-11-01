@@ -1958,6 +1958,11 @@
     <string name="insights_save_baseline">Aktuellen Referenzstand speichern</string>
     <string name="insights_baseline_at">Referenzstand: %1$s</string>
     <string name="insights_delete_baseline">Referenzstand löschen</string>
+    <string name="insights_replace_baseline">Referenzstand ersetzen</string>
+    <string name="insights_replace_baseline_title">Referenzstand ersetzen?</string>
+    <string name="insights_replace_baseline_body">Ersetzt den Referenzstand vom %1$s durch die aktuelle Messung. Die angezeigten Unterschiede werden entfernt.</string>
+    <string name="insights_delete_baseline_title">Referenzstand löschen?</string>
+    <string name="insights_delete_baseline_body">Löscht den Referenzstand vom %1$s. Die Abweichung wird wieder am ersten erreichbaren Knoten jeder Rolle gemessen.</string>
     <string name="insights_peer_reference">Referenz: erster erreichbarer Knoten jeder Rolle. Speichern Sie einen Referenzstand, um Änderungen derselben Knoten zu verfolgen.</string>
     <string name="insights_sample_at">Messung: %1$s</string>
     <string name="insights_reference">Referenz: %1$s</string>

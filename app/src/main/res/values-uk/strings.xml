@@ -2078,6 +2078,11 @@
     <string name="insights_save_baseline">Зберегти поточний еталон</string>
     <string name="insights_baseline_at">Еталон: %1$s</string>
     <string name="insights_delete_baseline">Видалити еталон</string>
+    <string name="insights_replace_baseline">Замінити базову лінію</string>
+    <string name="insights_replace_baseline_title">Замінити базову лінію?</string>
+    <string name="insights_replace_baseline_body">Замінює базову лінію від %1$s поточним зразком. Показані зараз відмінності буде очищено.</string>
+    <string name="insights_delete_baseline_title">Видалити базову лінію?</string>
+    <string name="insights_delete_baseline_body">Видаляє базову лінію від %1$s. Дрейф знову вимірюється відносно першого доступного вузла кожної ролі.</string>
     <string name="insights_peer_reference">Еталон: перший доступний вузол кожної ролі. Збережіть еталон, щоб відстежувати зміни на тих самих вузлах.</string>
     <string name="insights_sample_at">Вимір: %1$s</string>
     <string name="insights_reference">Еталон: %1$s</string>

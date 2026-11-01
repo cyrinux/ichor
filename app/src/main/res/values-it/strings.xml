@@ -1966,6 +1966,11 @@
     <string name="insights_save_baseline">Salva riferimento attuale</string>
     <string name="insights_baseline_at">Riferimento: %1$s</string>
     <string name="insights_delete_baseline">Elimina riferimento</string>
+    <string name="insights_replace_baseline">Sostituisci il riferimento</string>
+    <string name="insights_replace_baseline_title">Sostituire il riferimento?</string>
+    <string name="insights_replace_baseline_body">Sostituisce il riferimento del %1$s con il campione attuale. Le differenze mostrate verranno cancellate.</string>
+    <string name="insights_delete_baseline_title">Eliminare il riferimento?</string>
+    <string name="insights_delete_baseline_body">Elimina il riferimento del %1$s. La deriva viene di nuovo misurata rispetto al primo nodo raggiungibile di ogni ruolo.</string>
     <string name="insights_peer_reference">Riferimento: primo nodo raggiungibile di ogni ruolo. Salva un riferimento per seguire le modifiche sugli stessi nodi.</string>
     <string name="insights_sample_at">Campione: %1$s</string>
     <string name="insights_reference">Riferimento: %1$s</string>

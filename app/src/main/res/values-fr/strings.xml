@@ -1966,6 +1966,11 @@
     <string name="insights_save_baseline">Enregistrer la référence actuelle</string>
     <string name="insights_baseline_at">Référence : %1$s</string>
     <string name="insights_delete_baseline">Supprimer la référence</string>
+    <string name="insights_replace_baseline">Remplacer la référence</string>
+    <string name="insights_replace_baseline_title">Remplacer la référence ?</string>
+    <string name="insights_replace_baseline_body">Remplace la référence du %1$s par l\'échantillon actuel. Les différences affichées seront effacées.</string>
+    <string name="insights_delete_baseline_title">Supprimer la référence ?</string>
+    <string name="insights_delete_baseline_body">Supprime la référence du %1$s. La dérive est de nouveau mesurée par rapport au premier nœud joignable de chaque rôle.</string>
     <string name="insights_peer_reference">Référence : premier nœud joignable de chaque rôle. Enregistrez une référence pour suivre les changements sur les mêmes nœuds.</string>
     <string name="insights_sample_at">Mesure : %1$s</string>
     <string name="insights_reference">Référence : %1$s</string>

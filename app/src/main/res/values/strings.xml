@@ -1965,6 +1965,11 @@
     <string name="insights_save_baseline">Save current baseline</string>
     <string name="insights_baseline_at">Baseline: %1$s</string>
     <string name="insights_delete_baseline">Delete baseline</string>
+    <string name="insights_replace_baseline">Replace baseline</string>
+    <string name="insights_replace_baseline_title">Replace the baseline?</string>
+    <string name="insights_replace_baseline_body">Replaces the baseline from %1$s with the current sample. The differences shown now will be cleared.</string>
+    <string name="insights_delete_baseline_title">Delete the baseline?</string>
+    <string name="insights_delete_baseline_body">Deletes the baseline from %1$s. Drift is measured against the first reachable node of each role again.</string>
     <string name="insights_peer_reference">Reference: first reachable node of each role. Save a baseline to track changes on the same nodes.</string>
     <string name="insights_sample_at">Sample: %1$s</string>
     <string name="insights_reference">Reference: %1$s</string>
