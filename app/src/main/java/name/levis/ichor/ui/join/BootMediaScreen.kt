@@ -164,10 +164,14 @@ fun BootMediaScreen(
                     }
                     when (val chosen = provider) {
                         null -> Unit
-                        // Ichor can call this provider's API: it creates the server itself.
+                        // Ichor can call these providers' APIs: it creates the machine itself.
                         CloudProvider.HETZNER -> {
                             Text(stringResource(if (omni) R.string.add_node_howto_hetzner_omni else R.string.add_node_howto_hetzner), style = MaterialTheme.typography.bodyMedium)
-                            CloudUserDataCard(omni = omni, create = true, onAllocate = onAllocate)
+                            CloudUserDataCard(omni = omni, create = chosen, onAllocate = onAllocate)
+                        }
+                        CloudProvider.OVHCLOUD -> {
+                            Text(stringResource(if (omni) R.string.ovh_howto_omni else R.string.ovh_howto), style = MaterialTheme.typography.bodyMedium)
+                            CloudUserDataCard(omni = omni, create = chosen, onAllocate = onAllocate)
                         }
                         // A server at a cloud provider boots its own image and reads the config as user data.
                         else -> {

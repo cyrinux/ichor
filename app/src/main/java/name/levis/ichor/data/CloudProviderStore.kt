@@ -49,5 +49,6 @@ class CloudProviderStore(private val file: SealedValue) {
         const val FILE = "cloudproviders.enc"
         const val KEY_ALIAS = "cloudproviders"
         const val HETZNER = "hetzner"
+        const val OVH = "ovh"
     }
 }

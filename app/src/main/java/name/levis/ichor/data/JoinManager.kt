@@ -17,6 +17,7 @@ import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.JoinPhase
 import name.levis.ichor.model.JoinProgress
+import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OmniAllocateSpec
 import name.levis.ichor.ui.FollowedRun
 
@@ -32,7 +33,9 @@ data class JoinRequest(
     val replacing: Boolean = false,
     /** A server to create at Hetzner for the node, with the config as its user data ([address] unused). */
     val hetzner: HetznerCreateSpec? = null,
-    /** The Hetzner server joins Omni, not the cluster directly. */
+    /** An instance to create at OVHcloud for the node, likewise. */
+    val ovh: OVHCreateSpec? = null,
+    /** The cloud machine joins Omni, not the cluster directly. */
     val omni: Boolean = false,
     /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
     val snapshot: HetznerSnapshotSpec? = null,
@@ -44,7 +47,7 @@ data class JoinRequest(
         get() = when {
             omniAllocate != null -> JoinPhase.omniAllocateRun
             snapshot != null -> JoinPhase.snapshotRun
-            hetzner == null -> JoinPhase.maintenanceRun
+            hetzner == null && ovh == null -> JoinPhase.maintenanceRun
             omni -> JoinPhase.cloudOmniRun
             else -> JoinPhase.cloudRun
         }
@@ -88,12 +91,12 @@ class JoinManager(
     private var stopRequested = MutableStateFlow(false)
 
     /**
-     * Starts the join unless one is already followed; returns false then. [hetznerToken] is the
-     * project's token for a request with a server to create: kept out of the request, which
-     * stays on screen.
+     * Starts the join unless one is already followed; returns false then. [providerToken] is the
+     * provider's credential for a request with a machine to create: kept out of the request,
+     * which stays on screen.
      */
     @Synchronized
-    fun start(request: JoinRequest, hetznerToken: String = ""): Boolean {
+    fun start(request: JoinRequest, providerToken: String = ""): Boolean {
         if (_current.value?.running == true) return false
         val context = configs.config.value?.activeContext.orEmpty()
         _current.value = JoinRunState(request, context)
@@ -101,8 +104,9 @@ class JoinManager(
         job = scope.launch {
             try {
                 val events = request.omniAllocate?.let { lifecycle.omniAllocate(it, stopped.filter { s -> s }) }
-                    ?: request.snapshot?.let { lifecycle.hetznerSnapshot(hetznerToken, it, stopped.filter { s -> s }) }
-                    ?: request.hetzner?.let { lifecycle.hetznerCreate(hetznerToken, it, stopped.filter { s -> s }) }
+                    ?: request.snapshot?.let { lifecycle.hetznerSnapshot(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.hetzner?.let { lifecycle.hetznerCreate(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.ovh?.let { lifecycle.ovhCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                 events
                     .collect { event ->

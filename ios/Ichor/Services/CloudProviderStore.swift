@@ -6,6 +6,7 @@ import IchorCore
 /// token can delete a whole project (SecureConfigStore.Item.cloudTokens).
 enum CloudProviderStore {
     static let hetzner = "hetzner"
+    static let ovh = "ovh"
 
     /// The projects with a token, sorted.
     static func projects(provider: String) -> [String] {

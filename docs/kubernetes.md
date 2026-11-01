@@ -326,7 +326,21 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     your Talos version and schematic, the way
     [`hcloud-upload-image`](https://github.com/apricote/hcloud-upload-image) does from a computer;
     see [safety](safety.md). The token can delete everything in its project and never expires: it
-    stays sealed on the device and is not in backups. Elsewhere the app calls no provider API.
+    stays sealed on the device and is not in backups.
+  - **At OVHcloud Public Cloud, from the phone (Add a node… → A server at a cloud provider →
+    OVHcloud):** add an IAM service account (client id and secret; the app prints the IAM policy to
+    give it, only the calls it makes on one project, and Test says whether it may create), then pick
+    a region, a flavor and a Talos image the project holds; the hourly price before tax shows when
+    the public catalog answers. The app creates the instance with the user data, follows it until it
+    is active, then follows the node until it joins, or until the machine appears in Omni. A failed
+    or stopped run deletes the instance it created, with the same control-plane exception as Hetzner;
+    a create that gets no clear answer deletes nothing and says to check the project, because
+    instances carry no label to find them by. The Talos image is uploaded once from a computer:
+    download the Image Factory's `openstack-<arch>.raw.xz`, unpack it, then
+    `openstack image create --disk-format raw --file openstack-amd64.raw talos`. The secret stays
+    sealed on the device and is not in backups. Other OpenStack hosts use **Another provider** and
+    paste the user data; Scaleway Elastic Metal and Dedibox are not supported. Elsewhere the app
+    calls no provider API.
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

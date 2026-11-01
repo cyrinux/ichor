@@ -271,7 +271,7 @@ struct HetznerCreateSection: View {
         let request = JoinRequest(
             address: "", template: spec.templateNode, role: "", hostname: "Talos \(spec.arch)", disk: "",
             staticAddress: "", snapshot: spec)
-        job.start(client: client, request: request, hetznerToken: token) { _ in }
+        job.start(client: client, request: request, providerToken: token) { _ in }
     }
 
     /// The project's snapshots again, with the new one selected.
@@ -299,7 +299,7 @@ struct HetznerCreateSection: View {
             staticAddress: "", hetzner: spec, omni: omni)
         // The cluster the node joins, even if another one is active when it has joined.
         let context = model.activeContext
-        job.start(client: client, request: request, hetznerToken: token) { address in
+        job.start(client: client, request: request, providerToken: token) { address in
             try await model.addNodes([address], to: context)
         }
     }

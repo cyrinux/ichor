@@ -51,7 +51,7 @@ extension TalosClient {
         }
     }
 
-    private func hetznerRun(
+    func hetznerRun(
         _ start: (JoinBridge) -> IchorgoJoinRun?
     ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
         let (stream, continuation) = AsyncStream.makeStream(of: JoinEvent.self)

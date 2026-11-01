@@ -16,28 +16,16 @@ import (
 	"time"
 )
 
-// Creating a billable server for a new node. The user data (Omni's join config, or a new
-// member's config) goes with POST /servers, so the node never sits in maintenance mode on a
-// public address. The run follows the server until it is running, then the node until it joins
-// (plain Talos) or appears in Omni. A run that fails or is stopped deletes the one server it
-// created, except a control plane that already answered as a cluster member: deleting it could
-// leave a dead etcd member behind, so the person decides.
+// Creating a Hetzner server for a new node: the provider's half of cloudCreateRun.
 
 const (
-	// hetznerCreateTimeout bounds the run: the server's start, then a join (joinTimeout).
-	hetznerCreateTimeout  = joinTimeout + 5*time.Minute
-	hetznerPollInterval   = 3 * time.Second
-	hetznerCleanupTimeout = 45 * time.Second
-	hetznerCleanupTries   = 3
-
 	hetznerStatusRunning = "running"
 	hetznerStatusError   = "error"
 
-	// Phases of the server, before the join's.
-	hetznerPhaseCreating = "creating"
-	hetznerPhaseStarting = "starting"
-	hetznerPhaseOmni     = "omni"
-	hetznerPhaseCleanup  = "cleanup"
+	// The run's phases, as the snapshot run names them too.
+	hetznerPhaseCreating = cloudPhaseCreating
+	hetznerPhaseStarting = cloudPhaseStarting
+	hetznerPhaseCleanup  = cloudPhaseCleanup
 )
 
 // hetznerCreateSpec is StartHetznerCreate's specJSON.
@@ -123,10 +111,10 @@ func StartHetznerCreate(configYAML, contextName, tokenJSON, specJSON string, lis
 			},
 			editsJSON: spec.ExtraEdits,
 		},
-		spec: spec, specErr: specErr, tokenJSON: tokenJSON, poll: hetznerPollInterval,
+		spec: spec, specErr: specErr, tokenJSON: tokenJSON, poll: cloudPollInterval,
 	}
 
-	return h.start(hetznerCreateTimeout)
+	return h.start(cloudCreateTimeout)
 }
 
 // hetznerCreate is one run of StartHetznerCreate.
@@ -140,37 +128,38 @@ type hetznerCreate struct {
 	omni      bool
 	runID     string
 	serverID  int64 // the server this run created, 0 before
+	action    hetznerAction
 	// omniHostnames lists the machines' host names (the Omni API; replaced in tests).
 	omniHostnames func(context.Context, *session) ([]string, error)
 }
 
-func (h *hetznerCreate) start(timeout time.Duration) *JoinRun {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+// run is the shared run, with this provider's half.
+func (h *hetznerCreate) run() *cloudCreateRun {
+	return &cloudCreateRun{provider: h, join: h.join, specErr: h.specErr, poll: h.poll, omni: &h.omni, omniHostnames: h.omniHostnames}
+}
 
-	go func() {
-		defer cancel()
-		defer onPanic(func(msg string) { h.join.listener.OnDone("", msg) })
-		defer holdCalls(h.join.config, h.join.context)()
+func (h *hetznerCreate) start(timeout time.Duration) *JoinRun { return h.run().start(timeout) }
 
-		err := recordedRun(h.join.config, h.join.context, h.auditAction, func() error { return h.run(ctx, timeout) })
-		if err != nil {
-			h.join.listener.OnDone("", errText(err))
+func (h *hetznerCreate) waitOmni(ctx context.Context, s *session) error {
+	return h.run().waitOmni(ctx, s)
+}
 
-			return
-		}
+func (h *hetznerCreate) label() string { return "Hetzner" }
 
-		if h.omni {
-			h.join.emit(joinPhaseDone, h.spec.Hostname+" appeared in Omni: allocate it there")
-			h.join.listener.OnDone("", "")
+func (h *hetznerCreate) machineWord() string { return "server" }
 
-			return
-		}
+func (h *hetznerCreate) transient(err error) bool { return hetznerTransient(err) }
 
-		h.join.emit(joinPhaseDone, h.spec.Hostname+" joined as "+h.join.node)
-		h.join.listener.OnDone(h.join.node, "")
-	}()
+func (h *hetznerCreate) machineID() string {
+	if h.serverID == 0 {
+		return ""
+	}
 
-	return &JoinRun{cancel: cancel}
+	return strconv.FormatInt(h.serverID, 10)
+}
+
+func (h *hetznerCreate) deleteMachine(ctx context.Context) error {
+	return h.client.do(ctx, http.MethodDelete, "/servers/"+h.machineID(), nil, nil)
 }
 
 func (h *hetznerCreate) auditAction() auditAction {
@@ -182,64 +171,8 @@ func (h *hetznerCreate) auditAction() auditAction {
 	return auditAction{Action: "hetzner-server-create", Node: h.join.node, Params: params}
 }
 
-func (h *hetznerCreate) run(ctx context.Context, timeout time.Duration) error {
-	if h.specErr != nil {
-		return h.specErr
-	}
-
-	if isTalosDemoContext(h.join.config, h.join.context) {
-		return errDemoUnavailable
-	}
-
-	_, cfgCtx, err := resolveContext(h.join.config, h.join.context)
-	if err != nil {
-		return err
-	}
-
-	h.omni = isOmni(cfgCtx)
-
-	userData, err := h.prepare(ctx)
-	if err != nil {
-		return err
-	}
-
-	s, release, err := acquireSession(h.join.config, h.join.context)
-	if err != nil {
-		return err
-	}
-
-	defer release()
-
-	if !h.omni {
-		if err := h.join.checkHostname(ctx, s); err != nil {
-			return err
-		}
-	}
-
-	action, err := h.create(ctx, userData)
-	if err != nil {
-		return h.cleanup(h.ended(ctx, err, timeout))
-	}
-
-	if err := h.waitRunning(ctx, action); err != nil {
-		return h.cleanup(h.ended(ctx, err, timeout))
-	}
-
-	if h.omni {
-		err = h.waitOmni(ctx, s)
-	} else {
-		err = h.join.followInstalled(ctx, s)
-	}
-
-	if err != nil {
-		return h.cleanup(h.ended(ctx, err, timeout))
-	}
-
-	return nil
-}
-
 // prepare checks everything that can be refused before a write and makes the user data.
-func (h *hetznerCreate) prepare(ctx context.Context) (string, error) {
+func (h *hetznerCreate) prepare(ctx context.Context, omni bool) (string, error) {
 	h.spec.Hostname = strings.TrimSpace(h.spec.Hostname)
 	h.join.req.hostname = h.spec.Hostname
 
@@ -271,7 +204,7 @@ func (h *hetznerCreate) prepare(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	data, err := h.userData()
+	data, err := cloudNodeUserData(h.join, omni, h.join.req, h.spec.ExtraEdits)
 	if err != nil {
 		return "", err
 	}
@@ -324,31 +257,12 @@ func (h *hetznerCreate) checkServerChoice(ctx context.Context) error {
 	return nil
 }
 
-// userData is the node's user data. No activity entry of its own: the run's says it all.
-func (h *hetznerCreate) userData() (cloudUserData, error) {
-	if !h.omni {
-		if privacy.isEnabled() {
-			return cloudUserData{}, errJoinPrivacy
-		}
-
-		return talosCloudUserData(h.join.config, h.join.context, h.spec.TemplateNode, h.spec.Role, h.spec.Hostname, h.spec.InstallDisk, h.spec.ExtraEdits)
-	}
-
-	if privacy.isEnabled() {
-		return cloudUserData{}, errCloudOmniPrivacy
-	}
-
-	return withSession(h.join.config, h.join.context, configPreviewTimeout, func(ctx context.Context, s *session) (cloudUserData, error) {
-		return omniCloudUserData(ctx, s, h.spec.TemplateNode, "", "", "", nil)
-	})
-}
-
 // create sends POST /servers, once. A server that may exist without an answer is found by
 // the run's label afterwards (cleanup).
-func (h *hetznerCreate) create(ctx context.Context, userData string) (hetznerAction, error) {
+func (h *hetznerCreate) create(ctx context.Context, userData string) error {
 	id := make([]byte, 8)
 	if _, err := rand.Read(id); err != nil {
-		return hetznerAction{}, err
+		return err
 	}
 
 	h.runID = hex.EncodeToString(id)
@@ -373,16 +287,17 @@ func (h *hetznerCreate) create(ctx context.Context, userData string) (hetznerAct
 	if err := h.client.do(ctx, http.MethodPost, "/servers", body, &resp); err != nil {
 		var e *hetznerError
 		if errors.As(err, &e) && e.status == http.StatusForbidden && e.code == hetznerCodeForbidden {
-			return hetznerAction{}, errHetznerReadOnly
+			return errHetznerReadOnly
 		}
 
-		return hetznerAction{}, err
+		return err
 	}
 
 	h.serverID = resp.Server.ID
+	h.action = resp.Action
 	h.join.applied = true
 
-	return resp.Action, nil
+	return nil
 }
 
 // hetznerClusterLabel names the cluster on the server without showing it to the provider.
@@ -394,7 +309,9 @@ func hetznerClusterLabel(contextName string) string {
 
 // waitRunning follows the create action, then the server until it runs and has an address. A
 // provider hiccup is polled through: only a failed action or the run's end stops it.
-func (h *hetznerCreate) waitRunning(ctx context.Context, action hetznerAction) error {
+func (h *hetznerCreate) waitRunning(ctx context.Context) error {
+	action := h.action
+
 	h.join.emit(hetznerPhaseStarting, "waiting for server "+strconv.FormatInt(h.serverID, 10)+" to start")
 
 	for done := action.ID == 0; ; {
@@ -453,86 +370,6 @@ func hetznerTransient(err error) bool {
 	}
 
 	return !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded)
-}
-
-// waitOmni polls Omni until a machine with the server's name appears: Talos's hcloud platform
-// takes its host name from the server, and Omni's machine status reports it.
-func (h *hetznerCreate) waitOmni(ctx context.Context, s *session) error {
-	h.join.emit(hetznerPhaseOmni, "waiting for "+h.spec.Hostname+" to appear in Omni")
-
-	list := h.omniHostnames
-	if list == nil {
-		list = omniMachineHostnames
-	}
-
-	for {
-		hostnames, err := list(ctx, s)
-		if err == nil && slices.ContainsFunc(hostnames, func(n string) bool { return strings.EqualFold(n, h.spec.Hostname) }) {
-			return nil
-		}
-
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(h.poll):
-		}
-	}
-}
-
-// ended turns the run's context ending into what happened to the server.
-func (h *hetznerCreate) ended(ctx context.Context, err error, timeout time.Duration) error {
-	switch {
-	case errors.Is(ctx.Err(), context.DeadlineExceeded):
-		return fmt.Errorf("%s did not come up within %s", h.spec.Hostname, timeout)
-	case ctx.Err() != nil:
-		return errors.New("stopped")
-	}
-
-	return err
-}
-
-// cleanup deletes what this run created and adds the outcome to why. The context is its own:
-// the run's has often ended.
-func (h *hetznerCreate) cleanup(why error) error {
-	ctx, cancel := context.WithTimeout(context.Background(), hetznerCleanupTimeout)
-	defer cancel()
-
-	if h.serverID == 0 {
-		h.findUnanswered(ctx, why)
-	}
-
-	if h.serverID == 0 {
-		return why
-	}
-
-	id := strconv.FormatInt(h.serverID, 10)
-
-	if h.spec.Role == joinRoleControlPlane && h.join.answered {
-		return fmt.Errorf("%w. Server %s is kept: it answered as a control plane and may already be an etcd member; remove the member before deleting it at Hetzner", why, id)
-	}
-
-	h.join.emit(hetznerPhaseCleanup, "deleting server "+id)
-
-	var err error
-
-	for try := range hetznerCleanupTries {
-		if err = h.client.do(ctx, http.MethodDelete, "/servers/"+id, nil, nil); err == nil || !hetznerTransient(err) {
-			break
-		}
-
-		if try < hetznerCleanupTries-1 {
-			select {
-			case <-ctx.Done():
-			case <-time.After(h.poll):
-			}
-		}
-	}
-
-	if err != nil {
-		return fmt.Errorf("%w. Server %s could not be deleted (%s) and is still billed: delete it at Hetzner", why, id, friendlyError(err))
-	}
-
-	return fmt.Errorf("%w. Server %s was deleted", why, id)
 }
 
 // findUnanswered looks for the server of a POST with no clear answer, by the run's label. A

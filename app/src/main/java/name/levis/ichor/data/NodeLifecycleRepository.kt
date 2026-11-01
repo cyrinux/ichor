@@ -22,6 +22,9 @@ import name.levis.ichor.model.HetznerOptions
 import name.levis.ichor.model.HetznerSnapshotCost
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.HetznerTokenCheck
+import name.levis.ichor.model.OVHCheck
+import name.levis.ichor.model.OVHCreateSpec
+import name.levis.ichor.model.OVHOptions
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.K8sUpgradePlan
 import name.levis.ichor.model.K8sVersionChoice
@@ -351,6 +354,23 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.hetznerSnapshot]. */
     fun hetznerSnapshot(token: String, spec: HetznerSnapshotSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.hetznerSnapshot(hetznerTokenJson(token), TalosJson.encodeToString(HetznerSnapshotSpec.serializer(), spec), stop)
+
+    /** What an OVHcloud service account sees and may do. Creates nothing. */
+    suspend fun ovhTest(credentialJson: String): OVHCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(OVHCheck.serializer(), Ichorgo.ovhTest(credentialJson))
+    }
+
+    /** Regions, flavors and images ([credentialJson] may be empty on the demo). */
+    suspend fun ovhOptions(credentialJson: String): OVHOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(OVHOptions.serializer(), Ichorgo.ovhOptions(cfg, ctx, credentialJson))
+    }
+
+    /** The IAM policy to give the service account, on [project] when known. */
+    suspend fun ovhPolicy(project: String): String = withContext(Dispatchers.IO) { Ichorgo.ovhServiceAccountPolicy(project) }
+
+    /** See [TalosStreams.ovhCreate]. */
+    fun ovhCreate(credentialJson: String, spec: OVHCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.ovhCreate(credentialJson, TalosJson.encodeToString(OVHCreateSpec.serializer(), spec), stop)
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

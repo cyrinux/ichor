@@ -96,7 +96,7 @@ func StartHetznerSnapshot(configYAML, contextName, tokenJSON, specJSON string, l
 	r := &hetznerSnapshotRun{
 		config: configYAML, context: contextName, tokenJSON: tokenJSON, spec: spec, specErr: specErr,
 		listener: listener,
-		poll:     hetznerPollInterval, offWait: hetznerOffWait, ssh: newHetznerSSH(),
+		poll:     cloudPollInterval, offWait: hetznerOffWait, ssh: newHetznerSSH(),
 	}
 
 	return r.start(hetznerSnapshotTimeout)
