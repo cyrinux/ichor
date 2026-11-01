@@ -384,7 +384,7 @@ struct KubeFieldsSection: View {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         // A service account key is a few kB.
-        guard let data = try? Data(contentsOf: url), data.count <= 64 * 1024,
+        guard let data = IncomingFile.read(url, limit: 64 * 1024),
             let text = String(data: data, encoding: .utf8)
         else {
             importError = String(localized: "This file cannot be read.")

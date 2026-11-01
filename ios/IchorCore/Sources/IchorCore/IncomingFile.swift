@@ -145,26 +145,32 @@ public enum IncomingFile {
 
     /// A file's bytes, nil when it cannot be read or holds more than `limit`.
     public static func read(_ url: URL, limit: Int) -> Data? {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        try? readOrThrow(url, limit: limit)
+    }
+
+    /// The same read for a screen that words the two failures differently: nil when the file
+    /// holds more than `limit`, a thrown error when it cannot be read.
+    public static func readOrThrow(_ url: URL, limit: Int) throws -> Data? {
+        let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         let reported = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize
-        return read(limit: limit, reportedSize: reported) { try handle.read(upToCount: $0) }
+        return try readOrThrow(limit: limit, reportedSize: reported) { try handle.read(upToCount: $0) }
+    }
+
+    static func read(limit: Int, reportedSize: Int?, next: (Int) throws -> Data?) -> Data? {
+        try? readOrThrow(limit: limit, reportedSize: reportedSize, next: next)
     }
 
     /// Refuses a reported size over `limit` without reading, then reads at most `limit + 1` bytes
     /// whatever was reported: a file provider can omit its size or serve more than it says. The
     /// buffer is sized up front, so growing it never allocates past that either.
-    static func read(limit: Int, reportedSize: Int?, next: (Int) throws -> Data?) -> Data? {
+    static func readOrThrow(limit: Int, reportedSize: Int?, next: (Int) throws -> Data?) throws -> Data? {
         if let reportedSize, reportedSize > limit { return nil }
         var data = Data(capacity: limit + 1)
         while data.count <= limit {
             let wanted = min(readChunk, limit + 1 - data.count)
-            do {
-                guard let chunk = try next(wanted), !chunk.isEmpty else { return data }
-                data.append(chunk)
-            } catch {
-                return nil
-            }
+            guard let chunk = try next(wanted), !chunk.isEmpty else { return data }
+            data.append(chunk)
         }
         return nil
     }

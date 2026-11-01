@@ -187,8 +187,9 @@ struct PluginImportSheet: View {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
-            let data = try Data(contentsOf: url)
-            guard data.count <= pluginMaxBytes, let text = String(data: data, encoding: .utf8) else {
+            guard let data = try IncomingFile.readOrThrow(url, limit: pluginMaxBytes),
+                let text = String(data: data, encoding: .utf8)
+            else {
                 failure = String(localized: "The file is larger than 1 MiB.")
                 return
             }
