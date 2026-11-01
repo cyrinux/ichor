@@ -1,7 +1,7 @@
 package name.levis.ichor
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.getBoundsInRoot
@@ -32,7 +32,8 @@ class SourceTileGridTest {
     private fun show(width: Dp) {
         compose.setContent {
             TalosTheme {
-                Box(Modifier.width(width)) {
+                // Required: the CI emulator's screen is narrower than the wide case.
+                Box(Modifier.requiredWidth(width)) {
                     SourceTileGrid {
                         Text(short)
                         Text("Paste")
