@@ -53,6 +53,7 @@ import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.kubeauth.SignInSheet
 import kotlinx.coroutines.launch
 import name.levis.ichor.ui.apps.AppsViewModel
 import name.levis.ichor.ui.plugins.PluginDetectViewModel
@@ -160,6 +161,7 @@ private fun TalosOverview(
     // No node answered (VPN off, another network): one notice instead of a list of red nodes.
     val outage = (state as? UiState.Loaded)?.data?.outage
     var showNodesAnyway by remember(config?.activeContext) { mutableStateOf(false) }
+    var signingIn by remember(config?.activeContext) { mutableStateOf(false) }
     OverviewRetryEffects(vm, app, outage, config?.activeContext, invalidations, onOutage = { showNodesAnyway = false })
 
     val liveEnabled by app.uiPreferences.liveClusterStats.collectAsStateWithLifecycle()
@@ -238,6 +240,16 @@ private fun TalosOverview(
                 scope = scope,
                 context = context,
             )
+            config?.activeContext?.takeIf { signingIn }?.let { name ->
+                SignInSheet(
+                    context = name,
+                    onDismiss = { signingIn = false },
+                    onSignedIn = {
+                        signingIn = false
+                        vm.refresh()
+                    },
+                )
+            }
             if (customizing) OverviewEditor(app, layout, bar, cards.absent, Modifier.pageContent(padding))
             else if (config?.activeSummary?.needsEndpoint == true) NoEndpointsBox(
                 onScan = { scanningEndpoints = true },
@@ -262,6 +274,10 @@ private fun TalosOverview(
                         onShowNodes = { showNodesAnyway = true },
                         onScan = { scanningEndpoints = true },
                         onEditEndpoints = { editingEndpoints = config?.activeContext },
+                        onSignIn = { signingIn = true },
+                        // A renewed talosconfig is offered as a replacement of this cluster (same CA). A
+                        // file whose current context is another cluster switches to it, as any import does.
+                        onReplaceConfig = nav.onAddCluster,
                     ),
                     list = OverviewListState(
                         time = timeState,

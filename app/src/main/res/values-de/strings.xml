@@ -96,6 +96,9 @@
     <string name="overview_public_ip_detecting">Öffentliche IPs werden gesucht…</string>
     <string name="overview_unreachable_network">Kein Node hat geantwortet. Dein Telefon ist wahrscheinlich nicht im Netzwerk des Clusters: Prüfe, ob dein VPN verbunden ist oder ob du im richtigen WLAN bist.</string>
     <string name="overview_unreachable_credentials">Der Cluster hat geantwortet, aber diese talosconfig abgelehnt: Zertifikat, CA oder Rolle sind möglicherweise falsch oder abgelaufen.</string>
+    <string name="overview_unreachable_replace_config">Erneuerte talosconfig importieren</string>
+    <string name="overview_unreachable_credentials_omni">Deine Omni-Sitzung ist möglicherweise abgelaufen. Eine erneute Anmeldung lässt diesen Cluster unverändert.</string>
+    <string name="overview_unreachable_credentials_replace">Importiere die mit talosctl erneuerte talosconfig. Gehört sie zum selben Cluster und zur selben CA, wähle Ersetzen, wenn der Import es anbietet: Der Cluster behält Name, Farbe, Tags und Verlauf. Die App kann ein Zertifikat nicht selbst erneuern.</string>
     <string name="overview_unreachable_other">Kein Node hat geantwortet. Details siehe unten.</string>
     <string name="overview_unreachable_endpoints">Endpunkte: %1$s</string>
     <string name="overview_unreachable_auto_retry">Neuer Versuch alle %1$d s und sobald sich das Netzwerk ändert.</string>

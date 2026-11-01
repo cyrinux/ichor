@@ -39,6 +39,7 @@ import name.levis.ichor.model.FLUX_CATALOG_ID
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.OutageRecovery
 import name.levis.ichor.model.OverviewCard
 import name.levis.ichor.model.OverviewLayout
 import name.levis.ichor.model.PluginDetectItem
@@ -88,6 +89,15 @@ internal class OverviewCardData(
 /** The reads the overview's GitOps and Alerts cards offer to run again. */
 internal class OverviewCardRetry(val argo: () -> Unit, val flux: () -> Unit, val alerts: () -> Unit)
 
+/** No node answers but some are known from before: why, over their list ([LastKnownBanner]). */
+internal class OutageBanner(
+    val outage: ClusterOutage,
+    val recovery: OutageRecovery,
+    val onRetry: () -> Unit,
+    val onSignIn: () -> Unit,
+    val onReplaceConfig: () -> Unit,
+)
+
 /** What the role may do on the overview's nodes. */
 internal class NodeListAccess(
     val canPower: Boolean,
@@ -101,8 +111,7 @@ internal class NodeListAccess(
 internal fun NodeList(
     overview: ClusterOverview,
     topology: ClusterTopology?,
-    outage: ClusterOutage?,
-    onRetry: () -> Unit,
+    outage: OutageBanner?,
     clusterName: String?,
     fingerprint: String?,
     time: UiState<ClusterTime>,
@@ -182,7 +191,7 @@ internal fun NodeList(
     val demoNotice = rememberDemoNotice(isDemo = certificate?.isDemo == true)
     val content: OverviewItems.() -> Unit = {
         if (offerAlerts) item(key = "alerts-offer", fullLine = true) { AlertsOfferCard() }
-        outage?.let { item(fullLine = true) { LastKnownBanner(it, onRetry) } }
+        outage?.let { item(fullLine = true) { LastKnownBanner(it.outage, it.recovery, it.onRetry, it.onSignIn, it.onReplaceConfig) } }
         if (demoNotice) item(fullLine = true) { DemoNoticeCard() }
         if (BuildConfig.SELF_UPDATE) item(fullLine = true) { UpdateBanner(onClick = nav.onSettings) } else item(fullLine = true) { StoreUpdateBanner() }
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item(fullLine = true) { SupportCard(nav.onFunding) }

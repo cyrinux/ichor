@@ -89,6 +89,9 @@
     <string name="overview_public_ip_detecting">正在查找公网 IP…</string>
     <string name="overview_unreachable_network">没有节点响应。你的手机可能不在集群所在网络中：请检查 VPN 是否已连接，或是否连接了正确的 Wi-Fi。</string>
     <string name="overview_unreachable_credentials">集群已响应，但拒绝了此 talosconfig：其证书、CA 或角色可能有误或已过期。</string>
+    <string name="overview_unreachable_replace_config">导入已续期的 talosconfig</string>
+    <string name="overview_unreachable_credentials_omni">你的 Omni 会话可能已结束。重新登录不会改变此集群。</string>
+    <string name="overview_unreachable_credentials_replace">请导入用 talosctl 续期的 talosconfig。如果它属于同一集群和同一 CA，请在导入提示时选择替换：集群会保留名称、颜色、标签和历史记录。应用本身无法续期证书。</string>
     <string name="overview_unreachable_other">没有节点响应。详情见下方。</string>
     <string name="overview_unreachable_endpoints">端点：%1$s</string>
     <string name="overview_unreachable_auto_retry">每 %1$d 秒重试一次，网络变化时也会立即重试。</string>

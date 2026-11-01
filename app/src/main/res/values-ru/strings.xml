@@ -110,6 +110,9 @@
     <string name="overview_public_ip_detecting">Поиск публичных IP…</string>
     <string name="overview_unreachable_network">Ни один узел не ответил. Скорее всего, телефон не в сети кластера: проверьте, что VPN подключён или что вы в нужной сети Wi-Fi.</string>
     <string name="overview_unreachable_credentials">Кластер ответил, но отклонил этот talosconfig: его сертификат, CA или роль, возможно, неверны или истекли.</string>
+    <string name="overview_unreachable_replace_config">Импортировать обновлённый talosconfig</string>
+    <string name="overview_unreachable_credentials_omni">Возможно, ваш сеанс Omni завершился. Повторный вход оставит этот кластер без изменений.</string>
+    <string name="overview_unreachable_credentials_replace">Импортируйте talosconfig, обновлённый с помощью talosctl. Если он для того же кластера и CA, выберите «Заменить», когда импорт это предложит: кластер сохранит имя, цвет, теги и историю. Приложение не может само обновить сертификат.</string>
     <string name="overview_unreachable_other">Ни один узел не ответил. Подробности ниже.</string>
     <string name="overview_unreachable_endpoints">Endpoints: %1$s</string>
     <string name="overview_unreachable_auto_retry">Повтор каждые %1$d с и сразу при смене сети.</string>
