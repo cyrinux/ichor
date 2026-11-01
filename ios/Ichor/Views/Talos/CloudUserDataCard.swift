@@ -6,13 +6,13 @@ import UniformTypeIdentifiers
 /// provider, and the Talos cloud images to create it from. On Omni, Omni's join config, made on
 /// open; on plain Talos, the role, host name and install disk of the new member first (Add a
 /// node's fields, without the static address: clouds hand out addresses by DHCP). With `create`,
-/// Ichor creates the server at Hetzner and makes the text itself: only the new member's fields and
-/// the Hetzner section. Sections of BootMediaView's list.
+/// Ichor creates the machine at that provider and makes the text itself: only the new member's
+/// fields and the provider's section. Sections of BootMediaView's list.
 struct CloudUserDataCard: View {
     let omni: Bool
     /// On Omni, the labels to sign into the join token.
     let omniLabels: String
-    let create: Bool
+    let create: CloudProvider?
     /// The provider whose Talos image to list; nil lists them all.
     let imagePlatform: String?
     @Binding var path: [Route]
@@ -33,7 +33,7 @@ struct CloudUserDataCard: View {
     private enum Action { case copy, share }
 
     // Explicit: the private @State makes the memberwise init private.
-    init(omni: Bool, omniLabels: String, create: Bool, imagePlatform: String?, path: Binding<[Route]>) {
+    init(omni: Bool, omniLabels: String, create: CloudProvider?, imagePlatform: String?, path: Binding<[Route]>) {
         self.omni = omni
         self.imagePlatform = imagePlatform
         self.create = create
@@ -42,7 +42,7 @@ struct CloudUserDataCard: View {
     }
 
     var body: some View {
-        if create {
+        if let create {
             if !omni {
                 Section {
                     form
@@ -51,10 +51,18 @@ struct CloudUserDataCard: View {
                 }
                 .task { if case .loading = members { await loadMembers() } }
             }
-            HetznerCreateSection(
-                omni: omni, template: template?.node ?? "", role: template.map { joinRole($0.role) } ?? "",
-                hostname: hostname.trimmingCharacters(in: .whitespaces),
-                disk: disk.trimmingCharacters(in: .whitespaces), path: $path)
+            let role = template.map { joinRole($0.role) } ?? ""
+            let name = hostname.trimmingCharacters(in: .whitespaces)
+            let installDisk = disk.trimmingCharacters(in: .whitespaces)
+            if create == .ovhcloud {
+                OVHCreateSection(
+                    omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
+                    path: $path)
+            } else {
+                HetznerCreateSection(
+                    omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
+                    path: $path)
+            }
         } else {
             pasteSections
         }
@@ -131,7 +139,7 @@ struct CloudUserDataCard: View {
                     .font(.body.monospaced())
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                if !create {
+                if create == nil {
                     Button("Make the user data") { Task { await generate() } }
                         .disabled(!complete || isLoading)
                 }

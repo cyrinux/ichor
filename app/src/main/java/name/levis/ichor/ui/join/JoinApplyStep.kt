@@ -150,7 +150,7 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
     val colors = LocalStatusColors.current
     var confirmStop by remember { mutableStateOf(false) }
     val steps = remember(run.events, run.finished, run.error) { joinTimeline(run.events, run.finished, run.error != null, run.request.phases) }
-    val cloud = run.request.hetzner != null
+    val cloud = run.request.hetzner != null || run.request.ovh != null
     val allocating = run.request.omniAllocate != null
     if (run.running) KeepScreenOn()
 
@@ -216,6 +216,7 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
             text = stringResource(
                 when {
                     allocating -> R.string.omni_allocate_stop_body
+                    run.request.ovh != null -> R.string.ovh_stop_body
                     cloud -> R.string.hetzner_stop_body
                     else -> R.string.join_run_stop_body
                 },

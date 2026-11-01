@@ -9,13 +9,13 @@ enum AddNodePath: String, CaseIterable, Identifiable, Hashable {
 
 /// A cloud provider, in alphabetical order; `platform` names its Talos image, nil lists them all.
 enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
-    case hetzner, openstack, scaleway, other
+    case hetzner, ovhcloud, scaleway, other
     var id: String { rawValue }
 
     var platform: String? {
         switch self {
         case .hetzner: "hcloud"
-        case .openstack: "openstack"
+        case .ovhcloud: "openstack"
         case .scaleway: "scaleway"
         case .other: nil
         }
@@ -24,7 +24,7 @@ enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
     @ViewBuilder var label: some View {
         switch self {
         case .hetzner: Text(verbatim: "Hetzner")
-        case .openstack: Text(verbatim: "OpenStack (OVHcloud)")
+        case .ovhcloud: Text(verbatim: "OVHcloud")
         case .scaleway: Text(verbatim: "Scaleway")
         case .other: Text("Another provider")
         }
@@ -130,13 +130,14 @@ struct BootMediaView: View {
         }
         switch provider {
         case nil: EmptyView()
-        // Ichor can call this provider's API: it creates the server itself.
+        // Ichor can call these providers' APIs: it creates the machine itself.
         case .hetzner: hetznerSections
+        case .ovhcloud: ovhSections
         // A server at a cloud provider boots its own image and reads the config as user data.
         case .some(let other):
             if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
             CloudUserDataCard(
-                omni: omni, omniLabels: omniLabels, create: false, imagePlatform: other.platform, path: $path)
+                omni: omni, omniLabels: omniLabels, create: nil, imagePlatform: other.platform, path: $path)
         }
     }
 
@@ -152,7 +153,22 @@ struct BootMediaView: View {
                 )
             }
         }
-        CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: true, imagePlatform: nil, path: $path)
+        CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .hetzner, imagePlatform: nil, path: $path)
+    }
+
+    @ViewBuilder private var ovhSections: some View {
+        Section {
+            if omni {
+                Text(
+                    "1. Add a service account with the IAM policy Ichor prints.\n2. Upload the Talos cloud image for OpenStack to the project once, from a computer.\n3. Name the instance, then pick a region, a flavor and the Talos image.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster."
+                )
+            } else {
+                Text(
+                    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add a service account with the IAM policy Ichor prints.\n3. Upload the Talos cloud image for OpenStack to the project once, from a computer.\n4. Pick a region, a flavor and the Talos image, then create it: Ichor shows the cost first and follows it until the node joins."
+                )
+            }
+        }
+        CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .ovhcloud, imagePlatform: nil, path: $path)
     }
 
     @ViewBuilder private var machineSections: some View {

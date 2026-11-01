@@ -53,6 +53,13 @@ Part of the [Ichor documentation](../README.md#documentation).
   stopped; the message names what was deleted. The one case that needs the Hetzner console is a
   cleanup that fails: the message names the server and the key to delete there, and they stay
   billed until then.
+- **Creating an instance at OVHcloud (Add a node… → A server at a cloud provider → OVHcloud):**
+  billable, so the hourly price shows first when the public catalog answers, and the host name is
+  typed to confirm. The service account's secret stays sealed on the device and out of backups; it
+  can do what its IAM policy allows, so give it only the policy the app prints. The run deletes only
+  the one instance it created, by id, when it fails or is stopped, except a control plane that
+  already answered. A create that gets no clear answer deletes nothing, because another instance may
+  carry the same name: the message says to check the project, where it may stay billed.
 - **Rotating the Talos CA (Settings → Clusters & backup → Rotate the cluster CA…, `os:admin`):**
   replaces the CA that signs every Talos API certificate, in the order of
   `talosctl rotate-ca --kubernetes=false`. Rotate it when a talosconfig leaked or a phone was

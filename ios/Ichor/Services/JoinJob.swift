@@ -46,11 +46,11 @@ final class JoinJob {
         }
     }
 
-    /// `register` adds the joined node's address to the stored talosconfig. `hetznerToken` is the
-    /// project's for a request with a server to create: kept out of the request, which stays on
-    /// screen.
+    /// `register` adds the joined node's address to the stored talosconfig. `providerToken` is the
+    /// provider's credential for a request with a machine to create: kept out of the request, which
+    /// stays on screen.
     func start(
-        client: TalosClient, request: JoinRequest, hetznerToken: String = "",
+        client: TalosClient, request: JoinRequest, providerToken: String = "",
         register: @escaping @MainActor (String) async throws -> Void
     ) {
         guard !isActive else { return }
@@ -67,8 +67,9 @@ final class JoinJob {
         Task { _ = await BackgroundMonitor.requestPermission() }
         let run =
             request.omniAllocate.map { client.startOmniAllocate($0) }
-            ?? request.snapshot.map { client.startHetznerSnapshot($0, token: hetznerToken) }
-            ?? request.hetzner.map { client.startHetznerCreate($0, token: hetznerToken) }
+            ?? request.snapshot.map { client.startHetznerSnapshot($0, token: providerToken) }
+            ?? request.hetzner.map { client.startHetznerCreate($0, token: providerToken) }
+            ?? request.ovh.map { client.startOVHCreate($0, credential: providerToken) }
             ?? client.startNodeJoin(request)
         stop = run.stop
         task = Task {

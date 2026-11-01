@@ -54,6 +54,7 @@ reads those roles and explains up front when a feature needs more.
 | **Allocate a machine in Omni** | On Omni's own API: `MachineStatuses`, `MachineSets`, `MachineClasses` and `ClusterMachineStatuses` to read (Omni's Reader role), then one create of a `MachineSetNode` or one update of the `MachineSet`'s count (Omni's Operator role). A set that takes every matching machine needs no write | Omni's role |
 | **Make a Talos snapshot at Hetzner** | The template's version and its machine config, for the schematic (refused when it cannot be read); nothing of the cluster is written. At Hetzner, a project token with Read & Write | **`os:admin`** |
 | **Create a Hetzner server for a new node** | The user data below (`os:admin` on plain Talos), `ClusterMember` and the node's own reads while following it; on Omni, `MachineStatuses` (Omni's Reader role). At Hetzner, a project token with Read & Write | **`os:admin`** |
+| **Create an OVHcloud instance for a new node** | As for a Hetzner server. At OVHcloud, a service account whose IAM policy allows the calls the app prints | **`os:admin`** |
 | **Cloud host user data for a new node** | Plain Talos: `Version` and COSI `MachineConfig` (sensitive) of the template member, as for its config; on Omni, `GetMachineJoinConfig` for the join config (Omni's Operator role) | **`os:admin`** |
 | **Rotate the Talos API CA (`talosctl rotate-ca --kubernetes=false`)** | COSI `OSRoot` and `MachineConfig` (sensitive), `ApplyConfiguration` (no reboot), `Version` on every node | **`os:admin`** |
 

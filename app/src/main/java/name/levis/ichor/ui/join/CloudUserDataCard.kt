@@ -107,14 +107,14 @@ class CloudUserDataViewModel(private val lifecycle: NodeLifecycleRepository) : V
  * provider, and the Talos cloud images to create it from. On Omni, Omni's join config, made on
  * open; on plain Talos, the role, host name and install disk of the new member first (Add a
  * node's fields, without the static address: clouds hand out addresses by DHCP). With [create],
- * Ichor creates the server at Hetzner and makes the text itself: only the new member's fields and
- * the Hetzner card.
+ * Ichor creates the machine at that provider and makes the text itself: only the new member's
+ * fields and the provider's card.
  */
 @Composable
 fun CloudUserDataCard(
     omni: Boolean,
     omniLabelsJson: String = "",
-    create: Boolean = false,
+    create: CloudProvider? = null,
     /** The provider whose Talos image to list; null lists them all. */
     imagePlatform: String? = null,
     onAllocate: (() -> Unit)? = null,
@@ -127,12 +127,12 @@ fun CloudUserDataCard(
     val made by vm.data.collectAsStateWithLifecycle()
     val form by configVm.form.collectAsStateWithLifecycle()
     val members by configVm.members.collectAsStateWithLifecycle()
-    LaunchedEffect(omni, omniLabelsJson) { if (omni && !create) vm.generateOmni(omniLabelsJson) }
+    LaunchedEffect(omni, omniLabelsJson) { if (omni && create == null) vm.generateOmni(omniLabelsJson) }
     // On plain Talos the shown text is the one of the form as it is now, else none.
-    val data = made.takeIf { !create && (omni || vm.madeFor == form) }
+    val data = made.takeIf { create == null && (omni || vm.madeFor == form) }
 
-    if (!(omni && create)) SectionCard(stringResource(if (create) R.string.add_node_new_node else R.string.cloud_user_data_title)) {
-        if (!create) MutedText(stringResource(if (omni) R.string.cloud_user_data_omni_intro else R.string.cloud_user_data_intro))
+    if (!omni || create == null) SectionCard(stringResource(if (create != null) R.string.add_node_new_node else R.string.cloud_user_data_title)) {
+        if (create == null) MutedText(stringResource(if (omni) R.string.cloud_user_data_omni_intro else R.string.cloud_user_data_intro))
         if (!omni) {
             when (val state = members) {
                 UiState.Loading -> LoadingBox()
@@ -141,7 +141,7 @@ fun CloudUserDataCard(
                     TemplatePicker(joinTemplates(state.data), form.template) { configVm.pick(it, state.data) }
                     if (form.template.isNotBlank()) {
                         ConfigFields(form, emptyList(), configVm, withAddress = false)
-                        if (!create) {
+                        if (create == null) {
                             IchorButton(
                                 onClick = { vm.generate(form) },
                                 enabled = form.complete && data != UiState.Loading,
@@ -169,7 +169,11 @@ fun CloudUserDataCard(
             )
         }
     }
-    if (create) HetznerCreateCard(form.takeUnless { omni }, demo, onAllocate)
+    when (create) {
+        CloudProvider.HETZNER -> HetznerCreateCard(form.takeUnless { omni }, demo, onAllocate)
+        CloudProvider.OVHCLOUD -> OVHCreateCard(form.takeUnless { omni }, demo, onAllocate)
+        else -> Unit
+    }
 }
 
 /** The size, the warnings, the preview (secrets hidden) and Copy / Share of the full text. */

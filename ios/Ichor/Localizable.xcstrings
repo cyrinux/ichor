@@ -1,6 +1,329 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Create the instance at OVHcloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Instanz bei OVHcloud erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la instancia en OVHcloud" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'instance chez OVHcloud" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea l'istanza su OVHcloud" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OVHcloud にインスタンスを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a instância na OVHcloud" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать экземпляр в OVHcloud" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити екземпляр в OVHcloud" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 OVHcloud 创建实例" } }
+      }
+    },
+    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add a service account with the IAM policy Ichor prints.\n3. Upload the Talos cloud image for OpenStack to the project once, from a computer.\n4. Pick a region, a flavor and the Talos image, then create it: Ichor shows the cost first and follows it until the node joins." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Wähle ein Mitglied zum Kopieren, dann den Hostnamen und die Installationsfestplatte des neuen Knotens.\n2. Füge ein Dienstkonto mit der von Ichor angezeigten IAM-Richtlinie hinzu.\n3. Lade das Talos-Cloud-Image für OpenStack einmalig von einem Computer in das Projekt hoch.\n4. Wähle Region, Flavor und Talos-Image und erstelle die Instanz: Ichor zeigt zuerst die Kosten und verfolgt sie, bis der Knoten beitritt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Elige un miembro que copiar y luego el nombre de host y el disco de instalación del nodo nuevo.\n2. Añade una cuenta de servicio con la política IAM que muestra Ichor.\n3. Sube una vez la imagen cloud de Talos para OpenStack al proyecto, desde un ordenador.\n4. Elige una región, un flavor y la imagen de Talos, y créala: Ichor muestra primero el coste y la sigue hasta que el nodo se une." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Choisissez un membre à copier, puis le nom d'hôte et le disque d'installation du nouveau nœud.\n2. Ajoutez un compte de service avec la politique IAM qu'Ichor affiche.\n3. Téléversez une fois l'image cloud Talos pour OpenStack dans le projet, depuis un ordinateur.\n4. Choisissez une région, un gabarit et l'image Talos, puis créez l'instance : Ichor affiche d'abord le coût et la suit jusqu'à ce que le nœud rejoigne le cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi un account di servizio con la policy IAM mostrata da Ichor.\n3. Carica una volta nel progetto l'immagine cloud Talos per OpenStack, da un computer.\n4. Scegli regione, flavor e immagine Talos, poi creala: Ichor mostra prima il costo e la segue finché il nodo non si unisce." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを指定します。\n2. Ichor が表示する IAM ポリシーを付けたサービスアカウントを追加します。\n3. OpenStack 用 Talos クラウドイメージをコンピューターからプロジェクトに一度アップロードします。\n4. リージョン、フレーバー、Talos イメージを選んで作成します。Ichor は先に費用を表示し、ノードが参加するまで追跡します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Escolha um membro para copiar e depois o nome de host e o disco de instalação do novo nó.\n2. Adicione uma conta de serviço com a política IAM que o Ichor mostra.\n3. Envie uma vez a imagem de nuvem Talos para OpenStack ao projeto, de um computador.\n4. Escolha região, flavor e imagem Talos e crie: o Ichor mostra o custo primeiro e a acompanha até o nó entrar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Выберите участника для копирования, затем имя хоста и диск установки нового узла.\n2. Добавьте сервисный аккаунт с политикой IAM, которую показывает Ichor.\n3. Один раз загрузите облачный образ Talos для OpenStack в проект с компьютера.\n4. Выберите регион, конфигурацию и образ Talos и создайте экземпляр: Ichor сначала покажет стоимость и будет следить, пока узел не присоединится." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Виберіть учасника для копіювання, потім ім'я хоста й диск встановлення нового вузла.\n2. Додайте сервісний обліковий запис із політикою IAM, яку показує Ichor.\n3. Один раз завантажте хмарний образ Talos для OpenStack у проєкт із комп'ютера.\n4. Виберіть регіон, конфігурацію та образ Talos і створіть екземпляр: Ichor спершу покаже вартість і стежитиме, доки вузол не приєднається." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 选择要复制的成员,然后填写新节点的主机名和安装磁盘。\n2. 添加带有 Ichor 显示的 IAM 策略的服务账号。\n3. 从电脑将适用于 OpenStack 的 Talos 云镜像上传到项目一次。\n4. 选择区域、规格和 Talos 镜像后创建:Ichor 先显示费用,然后跟踪到节点加入为止。" } }
+      }
+    },
+    "1. Add a service account with the IAM policy Ichor prints.\n2. Upload the Talos cloud image for OpenStack to the project once, from a computer.\n3. Name the instance, then pick a region, a flavor and the Talos image.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Füge ein Dienstkonto mit der von Ichor angezeigten IAM-Richtlinie hinzu.\n2. Lade das Talos-Cloud-Image für OpenStack einmalig von einem Computer in das Projekt hoch.\n3. Benenne die Instanz und wähle Region, Flavor und Talos-Image.\n4. Erstelle sie: Ichor zeigt zuerst die Kosten und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Añade una cuenta de servicio con la política IAM que muestra Ichor.\n2. Sube una vez la imagen cloud de Talos para OpenStack al proyecto, desde un ordenador.\n3. Pon nombre a la instancia y elige una región, un flavor y la imagen de Talos.\n4. Créala: Ichor muestra primero el coste y la sigue hasta que la máquina aparece en Omni. Asígnala al clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Ajoutez un compte de service avec la politique IAM qu'Ichor affiche.\n2. Téléversez une fois l'image cloud Talos pour OpenStack dans le projet, depuis un ordinateur.\n3. Nommez l'instance, puis choisissez une région, un gabarit et l'image Talos.\n4. Créez-la : Ichor affiche d'abord le coût, puis la suit jusqu'à ce que la machine apparaisse dans Omni. Allouez-la au cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Aggiungi un account di servizio con la policy IAM mostrata da Ichor.\n2. Carica una volta nel progetto l'immagine cloud Talos per OpenStack, da un computer.\n3. Dai un nome all'istanza, poi scegli regione, flavor e immagine Talos.\n4. Creala: Ichor mostra prima il costo e la segue finché la macchina non appare in Omni. Assegnala al cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. Ichor が表示する IAM ポリシーを付けたサービスアカウントを追加します。\n2. OpenStack 用 Talos クラウドイメージをコンピューターからプロジェクトに一度アップロードします。\n3. インスタンスに名前を付け、リージョン、フレーバー、Talos イメージを選びます。\n4. 作成します。Ichor は先に費用を表示し、マシンが Omni に表示されるまで追跡します。クラスターに割り当ててください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Adicione uma conta de serviço com a política IAM que o Ichor mostra.\n2. Envie uma vez a imagem de nuvem Talos para OpenStack ao projeto, de um computador.\n3. Dê um nome à instância e escolha região, flavor e imagem Talos.\n4. Crie: o Ichor mostra o custo primeiro e a acompanha até a máquina aparecer no Omni. Aloque-a ao cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Добавьте сервисный аккаунт с политикой IAM, которую показывает Ichor.\n2. Один раз загрузите облачный образ Talos для OpenStack в проект с компьютера.\n3. Назовите экземпляр, затем выберите регион, конфигурацию и образ Talos.\n4. Создайте его: Ichor сначала покажет стоимость и будет следить, пока машина не появится в Omni. Назначьте её кластеру." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Додайте сервісний обліковий запис із політикою IAM, яку показує Ichor.\n2. Один раз завантажте хмарний образ Talos для OpenStack у проєкт із комп'ютера.\n3. Назвіть екземпляр, потім виберіть регіон, конфігурацію та образ Talos.\n4. Створіть його: Ichor спершу покаже вартість і стежитиме, доки машина не з'явиться в Omni. Призначте її кластеру." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 添加带有 Ichor 显示的 IAM 策略的服务账号。\n2. 从电脑将适用于 OpenStack 的 Talos 云镜像上传到项目一次。\n3. 为实例命名,然后选择区域、规格和 Talos 镜像。\n4. 创建:Ichor 先显示费用,然后跟踪到机器出现在 Omni 中。将其分配给集群。" } }
+      }
+    },
+    "Add an OVHcloud service account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "OVHcloud-Dienstkonto hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una cuenta de servicio de OVHcloud" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un compte de service OVHcloud" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un account di servizio OVHcloud" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OVHcloud サービスアカウントを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma conta de serviço da OVHcloud" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить сервисный аккаунт OVHcloud" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати сервісний обліковий запис OVHcloud" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 OVHcloud 服务账号" } }
+      }
+    },
+    "Remove this account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieses Konto entfernen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar esta cuenta" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer ce compte" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi questo account" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このアカウントを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover esta conta" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить этот аккаунт" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалити цей обліковий запис" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除此账号" } }
+      }
+    },
+    "A service account's secret does not expire and can do what its IAM policy allows. It stays sealed on this device and is not in backups." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Secret eines Dienstkontos läuft nicht ab und kann, was seine IAM-Richtlinie erlaubt. Es bleibt auf diesem Gerät versiegelt und ist nicht in Backups enthalten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El secreto de una cuenta de servicio no caduca y puede hacer lo que permita su política IAM. Queda sellado en este dispositivo y no está en las copias de seguridad." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le secret d'un compte de service n'expire pas et permet ce que sa politique IAM autorise. Il reste scellé sur cet appareil et n'est pas dans les sauvegardes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il segreto di un account di servizio non scade e può fare ciò che la sua policy IAM consente. Resta sigillato su questo dispositivo e non è nei backup." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サービスアカウントのシークレットは失効せず、IAM ポリシーが許可する操作を実行できます。このデバイスに封印され、バックアップには含まれません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O segredo de uma conta de serviço não expira e pode fazer o que sua política IAM permite. Ele fica selado neste dispositivo e não entra nos backups." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Секрет сервисного аккаунта не истекает и позволяет то, что разрешает его политика IAM. Он запечатан на этом устройстве и не входит в резервные копии." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Секрет сервісного облікового запису не спливає й дозволяє те, що дозволяє його політика IAM. Він запечатаний на цьому пристрої й не входить до резервних копій." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务账号的密钥不会过期,可执行其 IAM 策略允许的操作。它封存在此设备上,不包含在备份中。" } }
+      }
+    },
+    "Give the service account this IAM policy at OVHcloud: only the calls Ichor makes, on one project." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gib dem Dienstkonto bei OVHcloud diese IAM-Richtlinie: nur die Aufrufe von Ichor, in einem Projekt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Da a la cuenta de servicio esta política IAM en OVHcloud: solo las llamadas de Ichor, en un proyecto." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Donnez à ce compte de service cette politique IAM chez OVHcloud : uniquement les appels d'Ichor, sur un seul projet." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Assegna all'account di servizio questa policy IAM su OVHcloud: solo le chiamate di Ichor, su un progetto." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OVHcloud でサービスアカウントにこの IAM ポリシーを付与してください。1 つのプロジェクトに対する Ichor の呼び出しのみです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Dê à conta de serviço esta política IAM na OVHcloud: apenas as chamadas do Ichor, em um projeto." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Назначьте сервисному аккаунту эту политику IAM в OVHcloud: только вызовы Ichor в одном проекте." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Надайте сервісному обліковому запису цю політику IAM в OVHcloud: лише виклики Ichor в одному проєкті." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 OVHcloud 为服务账号授予此 IAM 策略:仅包含 Ichor 在一个项目上的调用。" } }
+      }
+    },
+    "Copy the IAM policy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "IAM-Richtlinie kopieren" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Copiar la política IAM" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Copier la politique IAM" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Copia la policy IAM" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "IAM ポリシーをコピー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Copiar a política IAM" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скопировать политику IAM" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Скопіювати політику IAM" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制 IAM 策略" } }
+      }
+    },
+    "API region" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "API-Region" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Región de la API" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Région de l'API" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Regione API" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "API リージョン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Região da API" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Регион API" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Регіон API" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "API 区域" } }
+      }
+    },
+    "Client ID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Client-ID" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "ID de cliente" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ID client" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "ID client" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアント ID" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "ID do cliente" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ID клиента" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ID клієнта" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "客户端 ID" } }
+      }
+    },
+    "Client secret" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Client-Secret" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Secreto de cliente" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Secret client" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Segreto client" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアントシークレット" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Segredo do cliente" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Секрет клиента" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Секрет клієнта" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "客户端密钥" } }
+      }
+    },
+    "It may create instances in project %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Es darf Instanzen im Projekt %@ erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Puede crear instancias en el proyecto %@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Il peut créer des instances dans le projet %@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Può creare istanze nel progetto %@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロジェクト %@ にインスタンスを作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ela pode criar instâncias no projeto %@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Он может создавать экземпляры в проекте %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Він може створювати екземпляри в проєкті %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可以在项目 %@ 中创建实例。" } }
+      }
+    },
+    "It may not create instances: add the policy's actions." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Es darf keine Instanzen erstellen: Füge die Aktionen der Richtlinie hinzu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No puede crear instancias: añade las acciones de la política." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Il ne peut pas créer d'instances : ajoutez les actions de la politique." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non può creare istanze: aggiungi le azioni della policy." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "インスタンスを作成できません。ポリシーのアクションを追加してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ela não pode criar instâncias: adicione as ações da política." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Он не может создавать экземпляры: добавьте действия из политики." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Він не може створювати екземпляри: додайте дії з політики." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法创建实例:请添加策略中的操作。" } }
+      }
+    },
+    "Signed in to project %@. Whether it may create instances shows when it tries." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beim Projekt %@ angemeldet. Ob es Instanzen erstellen darf, zeigt sich beim Versuch." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conectado al proyecto %@. Si puede crear instancias se verá al intentarlo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecté au projet %@. Le droit de créer des instances se verra à la première tentative." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso al progetto %@ riuscito. Se può creare istanze si vedrà al primo tentativo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロジェクト %@ にサインインしました。インスタンスを作成できるかは実行時にわかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conectado ao projeto %@. Se pode criar instâncias aparece ao tentar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход в проект %@ выполнен. Может ли он создавать экземпляры, станет видно при попытке." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід до проєкту %@ виконано. Чи може він створювати екземпляри, стане видно під час спроби." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已登录项目 %@。能否创建实例要在尝试时才能确定。" } }
+      }
+    },
+    "Region" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Region" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Región" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Région" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Regione" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "リージョン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Região" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Регион" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Регіон" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "区域" } }
+      }
+    },
+    "Flavor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Flavor" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Flavor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Gabarit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Flavor" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フレーバー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Flavor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Конфигурация" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Конфігурація" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "规格" } }
+      }
+    },
+    "Talos image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-Image" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Imagen de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Image Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Immagine Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos イメージ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Imagem Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Образ Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Образ Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 镜像" } }
+      }
+    },
+    "No Talos image in %@: upload the Talos cloud image for OpenStack to this project once from a computer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Talos-Image in %@: Lade das Talos-Cloud-Image für OpenStack einmalig von einem Computer in dieses Projekt hoch." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay imagen de Talos en %@: sube una vez la imagen cloud de Talos para OpenStack a este proyecto, desde un ordenador." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune image Talos à %@ : téléversez une fois l'image cloud Talos pour OpenStack dans ce projet, depuis un ordinateur." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna immagine Talos in %@: carica una volta in questo progetto l'immagine cloud Talos per OpenStack, da un computer." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ に Talos イメージがありません。OpenStack 用 Talos クラウドイメージをコンピューターからこのプロジェクトに一度アップロードしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem imagem Talos em %@: envie uma vez a imagem de nuvem Talos para OpenStack a este projeto, de um computador." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В %@ нет образа Talos: один раз загрузите облачный образ Talos для OpenStack в этот проект с компьютера." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У %@ немає образу Talos: один раз завантажте хмарний образ Talos для OpenStack у цей проєкт із комп'ютера." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 中没有 Talos 镜像:请从电脑将适用于 OpenStack 的 Talos 云镜像上传到此项目一次。" } }
+      }
+    },
+    "About %@ per hour, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %@ pro Stunde, vor Steuern" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %@ por hora, sin impuestos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %@ par heure, hors taxes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %@ all'ora, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1 時間あたり約 %@(税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %@ por hora, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %@ в час, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %@ на годину, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每小时约 %@(税前)" } }
+      }
+    },
+    "Price unavailable: see OVHcloud's price list." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Preis nicht verfügbar: Siehe die Preisliste von OVHcloud." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Precio no disponible: consulta la lista de precios de OVHcloud." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prix indisponible : consultez la grille tarifaire d'OVHcloud." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prezzo non disponibile: consulta il listino di OVHcloud." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "価格を取得できません。OVHcloud の価格表をご確認ください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Preço indisponível: veja a tabela de preços da OVHcloud." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Цена недоступна: см. прайс-лист OVHcloud." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ціна недоступна: перегляньте прайс-лист OVHcloud." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "价格不可用:请查看 OVHcloud 的价格表。" } }
+      }
+    },
+    "Create %@ at OVHcloud?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bei OVHcloud erstellen?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Crear %@ en OVHcloud?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer %@ chez OVHcloud ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare %@ su OVHcloud?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OVHcloud に %@ を作成しますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar %@ na OVHcloud?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать %@ в OVHcloud?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити %@ в OVHcloud?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 OVHcloud 创建 %@?" } }
+      }
+    },
+    "This creates a billable instance (%@ in %@). Its user data goes to OVHcloud with the cluster's secrets or Omni's join token. A failed run deletes the instance." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This creates a billable instance (%1$@ in %2$@). Its user data goes to OVHcloud with the cluster's secrets or Omni's join token. A failed run deletes the instance." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das erstellt eine kostenpflichtige Instanz (%1$@ in %2$@). Ihre Benutzerdaten gehen mit den Secrets des Clusters oder dem Join-Token von Omni an OVHcloud. Ein fehlgeschlagener Lauf löscht die Instanz." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto crea una instancia de pago (%1$@ en %2$@). Sus datos de usuario van a OVHcloud con los secretos del clúster o el token de unión de Omni. Una ejecución fallida borra la instancia." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela crée une instance facturée (%1$@ à %2$@). Ses données utilisateur partent chez OVHcloud avec les secrets du cluster ou le jeton d'adhésion d'Omni. Une exécution échouée supprime l'instance." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un'istanza a pagamento (%1$@ in %2$@). I suoi dati utente vanno a OVHcloud con i segreti del cluster o il token di adesione di Omni. Un'esecuzione fallita elimina l'istanza." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "課金されるインスタンス(%2$@ の %1$@)を作成します。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに OVHcloud に送られます。実行に失敗するとインスタンスは削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isso cria uma instância paga (%1$@ em %2$@). Seus dados de usuário vão para a OVHcloud com os segredos do cluster ou o token de entrada do Omni. Uma execução com falha exclui a instância." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Это создаёт платный экземпляр (%1$@ в %2$@). Его пользовательские данные передаются в OVHcloud с секретами кластера или токеном присоединения Omni. При неудачном запуске экземпляр удаляется." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Це створює платний екземпляр (%1$@ у %2$@). Його дані користувача надходять до OVHcloud із секретами кластера або токеном приєднання Omni. Невдалий запуск видаляє екземпляр." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这将创建计费实例(%2$@ 的 %1$@)。其用户数据会连同集群的密钥或 Omni 的加入令牌发送到 OVHcloud。运行失败会删除该实例。" } }
+      }
+    },
+    "%@ is deleted at OVHcloud. A control plane that already answered is kept: its etcd member must go first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ wird bei OVHcloud gelöscht. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ se borra en OVHcloud. Un control plane que ya respondió se conserva: primero debe irse su miembro de etcd." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ est supprimé chez OVHcloud. Un control plane qui a déjà répondu est conservé : son membre etcd doit d'abord être retiré." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ viene eliminato su OVHcloud. Un control plane che ha già risposto viene mantenuto: prima va rimosso il suo membro etcd." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ は OVHcloud で削除されます。すでに応答したコントロールプレーンは保持されます。先に etcd メンバーを削除してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ é excluído na OVHcloud. Um control plane que já respondeu é mantido: primeiro o membro etcd dele precisa sair." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ удаляется в OVHcloud. Control plane, который уже ответил, сохраняется: сначала нужно убрать его участника etcd." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ видаляється в OVHcloud. Control plane, що вже відповів, залишається: спершу треба прибрати його учасника etcd." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将在 OVHcloud 上删除。已响应的控制平面会保留:必须先移除其 etcd 成员。" } }
+      }
+    },
     "A server at a cloud provider" : {
       "extractionState" : "manual",
       "localizations" : {

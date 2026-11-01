@@ -313,6 +313,10 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     fun hetznerCreate(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startHetznerCreate(yaml, context, tokenJson, specJson, listener) }
 
+    /** Creates an OVHcloud instance and follows it (StartOVHCreate). As for [hetznerCreate], only [stop] cancels. */
+    fun ovhCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startOVHCreate(yaml, context, credentialJson, specJson, listener) }
+
     /**
      * Makes a Talos snapshot with a throwaway server (StartHetznerSnapshot). Done's address is the
      * result JSON. As for [hetznerCreate], only [stop] cancels: it deletes what the run created.
