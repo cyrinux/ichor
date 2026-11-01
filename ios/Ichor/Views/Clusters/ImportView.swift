@@ -287,8 +287,9 @@ struct ImportView: View {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
-            let data = try Data(contentsOf: url)
-            guard data.count <= IncomingConfig.maxBytes, let text = String(data: data, encoding: .utf8) else {
+            guard let data = try IncomingFile.readOrThrow(url, limit: IncomingConfig.maxBytes),
+                let text = String(data: data, encoding: .utf8)
+            else {
                 error = String(localized: "This file is not a talosconfig or a kubeconfig.")
                 return
             }

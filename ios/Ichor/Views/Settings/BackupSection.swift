@@ -135,9 +135,10 @@ struct RestoreBackupButton: View {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
-            let data = try Data(contentsOf: url)
             // A backup is a few KB; anything much bigger is not one.
-            guard data.count <= 5 * 1024 * 1024 else { throw BackupError.notBackup }
+            guard let data = try IncomingFile.readOrThrow(url, limit: IncomingFile.maxBytes) else {
+                throw BackupError.notBackup
+            }
             Task { await offer(data) }
         } catch {
             onError(error.localizedDescription)

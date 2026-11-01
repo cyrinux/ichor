@@ -161,9 +161,10 @@ struct RunbookImportSheet: View {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
-            let data = try Data(contentsOf: url)
             // The core refuses more than 64 KiB; a larger file is not read at all.
-            guard data.count <= 64 * 1024, let text = String(data: data, encoding: .utf8) else {
+            guard let data = try IncomingFile.readOrThrow(url, limit: 64 * 1024),
+                let text = String(data: data, encoding: .utf8)
+            else {
                 failure = String(localized: "The file is larger than 64 KiB.")
                 return
             }

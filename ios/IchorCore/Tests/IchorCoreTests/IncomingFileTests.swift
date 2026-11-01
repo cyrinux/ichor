@@ -179,6 +179,18 @@ final class IncomingFileTests: XCTestCase {
         XCTAssertEqual(IncomingFile.read(url, limit: 100), Data())
     }
 
+    func testReadOrThrowTellsTooLargeFromUnreadable() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("bounded-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data(repeating: 0x41, count: 101).write(to: url)
+
+        XCTAssertNil(try IncomingFile.readOrThrow(url, limit: 100))
+        XCTAssertEqual(try IncomingFile.readOrThrow(url, limit: 101)?.count, 101)
+        XCTAssertThrowsError(try IncomingFile.readOrThrow(url.appendingPathExtension("missing"), limit: 100))
+        XCTAssertThrowsError(
+            try IncomingFile.readOrThrow(limit: 100, reportedSize: nil) { _ in throw CocoaError(.fileReadUnknown) })
+    }
+
     func testReadOfAMissingFileIsNil() {
         XCTAssertNil(IncomingFile.read(URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)"), limit: 100))
     }
