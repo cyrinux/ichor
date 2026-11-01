@@ -1,1 +1,1 @@
-Ichor：Talos Linux 集群管理
+Ichor：Kubernetes 和 Talos 管理
