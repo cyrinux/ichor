@@ -157,6 +157,95 @@ final class IncomingFileTests: XCTestCase {
         XCTAssertEqual(IncomingFile.head(of: url).count, IncomingFile.headLength)
         XCTAssertEqual(IncomingFile.head(of: url.appendingPathExtension("missing")), Data())
     }
+
+    func testLimitsFollowTheKind() {
+        XCTAssertEqual(IncomingFile.limit(for: .config), 1024 * 1024)
+        XCTAssertEqual(IncomingFile.limit(for: .backup), 5 * 1024 * 1024)
+        XCTAssertNil(IncomingFile.limit(for: .unsupported))
+    }
+
+    func testReadKeepsAFileAtTheLimit() throws {
+        let url = try fileOf(size: 100)
+        XCTAssertEqual(IncomingFile.read(url, limit: 100)?.count, 100)
+    }
+
+    func testReadRefusesAFileOverTheLimit() throws {
+        let url = try fileOf(size: 101)
+        XCTAssertNil(IncomingFile.read(url, limit: 100))
+    }
+
+    func testReadKeepsAnEmptyFile() throws {
+        let url = try fileOf(size: 0)
+        XCTAssertEqual(IncomingFile.read(url, limit: 100), Data())
+    }
+
+    func testReadOfAMissingFileIsNil() {
+        XCTAssertNil(IncomingFile.read(URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)"), limit: 100))
+    }
+
+    func testAReportedSizeOverTheLimitReadsNothing() {
+        let source = EndlessSource()
+        XCTAssertNil(IncomingFile.read(limit: 100, reportedSize: 101, next: source.next))
+        XCTAssertEqual(source.requested, 0)
+    }
+
+    func testAProviderServingMoreThanItReportsStopsOneByteOverTheLimit() {
+        let source = EndlessSource()
+        XCTAssertNil(IncomingFile.read(limit: 100_000, reportedSize: 10, next: source.next))
+        XCTAssertEqual(source.requested, 100_001)
+    }
+
+    func testAnUnknownSizeStillStopsOneByteOverTheLimit() {
+        let source = EndlessSource()
+        XCTAssertNil(IncomingFile.read(limit: 100_000, reportedSize: nil, next: source.next))
+        XCTAssertEqual(source.requested, 100_001)
+    }
+
+    func testAnUnknownSizeAtTheLimitIsKept() {
+        let source = EndlessSource(total: 100_000)
+        XCTAssertEqual(IncomingFile.read(limit: 100_000, reportedSize: nil, next: source.next)?.count, 100_000)
+    }
+
+    func testShortReadsAddUp() {
+        let source = EndlessSource(total: 1000, largestRead: 7)
+        XCTAssertEqual(IncomingFile.read(limit: 1000, reportedSize: nil, next: source.next)?.count, 1000)
+    }
+
+    func testAReadFailureIsNil() {
+        let source = EndlessSource(failAfter: 10)
+        XCTAssertNil(IncomingFile.read(limit: 100, reportedSize: nil, next: source.next))
+    }
+
+    private func fileOf(size: Int) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("read-\(UUID().uuidString)")
+        addTeardownBlock { try? FileManager.default.removeItem(at: url) }
+        try Data(repeating: 0x41, count: size).write(to: url)
+        return url
+    }
+}
+
+/// Stands in for a file provider, whatever size it reports: serves `total` bytes (without end by
+/// default), counting what was asked of it.
+private final class EndlessSource {
+    private let total: Int
+    private let largestRead: Int
+    private let failAfter: Int?
+    private(set) var requested = 0
+    private var served = 0
+
+    init(total: Int = .max, largestRead: Int = .max, failAfter: Int? = nil) {
+        self.total = total
+        self.largestRead = largestRead
+        self.failAfter = failAfter
+    }
+
+    func next(_ count: Int) throws -> Data? {
+        if let failAfter, served >= failAfter { throw CocoaError(.fileReadUnknown) }
+        requested += count
+        let size = min(count, largestRead, total - served)
+        served += size
+        return size > 0 ? Data(repeating: 0x41, count: size) : nil
+    }
 }
 
 /// Stands in for data protection, which only a device has: records the class set on each path and
