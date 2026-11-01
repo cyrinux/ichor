@@ -2323,7 +2323,7 @@
     <string name="pods_empty">Нет подов.</string>
     <string name="pods_no_match">Нет подов по запросу «%1$s».</string>
     <string name="pods_ready_count">%1$d/%2$d готовы</string>
-    <string name="pods_delete">Удалить %1$s</string>
+    <string name="pods_row_actions">Действия для %1$s</string>
     <string name="pods_delete_title">Удалить под %1$s?</string>
     <string name="pods_delete_text_owned">Он будет удалён из %1$s по истечении периода корректного завершения; %2$s запустит новый.</string>
     <string name="pods_delete_text_bare">Он будет удалён из %1$s по истечении периода корректного завершения. Им не управляет ни один контроллер: он не вернётся.</string>
@@ -3309,7 +3309,6 @@
     <string name="flows_copy_json">Копировать исходный поток</string>
     <string name="flows_copied">Поток скопирован</string>
     <string name="flows_policy_gone">%1$s больше нет в кластере.</string>
-    <string name="pods_live_flows">Потоки %1$s в реальном времени</string>
     <plurals name="netpol_count">
         <item quantity="one">%1$d политика</item>
         <item quantity="few">%1$d политики</item>

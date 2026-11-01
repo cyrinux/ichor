@@ -2191,7 +2191,7 @@
     <string name="pods_empty">No hay pods.</string>
     <string name="pods_no_match">Ningún pod coincide con «%1$s».</string>
     <string name="pods_ready_count">%1$d/%2$d listos</string>
-    <string name="pods_delete">Eliminar %1$s</string>
+    <string name="pods_row_actions">Acciones de %1$s</string>
     <string name="pods_delete_title">¿Eliminar el pod %1$s?</string>
     <string name="pods_delete_text_owned">Se retira de %1$s tras su periodo de gracia; %2$s inicia uno nuevo.</string>
     <string name="pods_delete_text_bare">Se retira de %1$s tras su periodo de gracia. Ningún controlador lo gestiona: no volverá.</string>
@@ -3124,7 +3124,6 @@
     <string name="flows_copy_json">Copiar el flujo en bruto</string>
     <string name="flows_copied">Flujo copiado</string>
     <string name="flows_policy_gone">%1$s ya no está en el clúster.</string>
-    <string name="pods_live_flows">Flujos en directo de %1$s</string>
     <plurals name="netpol_count">
         <item quantity="one">%1$d política</item>
         <item quantity="other">%1$d políticas</item>

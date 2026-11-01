@@ -34,8 +34,9 @@ import name.levis.ichor.ui.share.rememberShareAction
 
 /**
  * A pod row's quick actions: swipe right for its logs, left to delete it (the confirmation
- * first); a long press lists Logs, Live flows (with Hubble), Pin, Share and Delete. [background]
- * is the colour the row is drawn on, so the swipe's colour shows only beside it.
+ * first); a long press lists Logs, Live flows (with Hubble), Pin, Share and Delete, under the
+ * full name. [content] gets all but Logs, for its More button. [background] is the colour the
+ * row is drawn on, so the swipe's colour shows only beside it.
  */
 @Composable
 internal fun PodQuickActions(
@@ -45,7 +46,7 @@ internal fun PodQuickActions(
     onDelete: () -> Unit,
     onFlows: (() -> Unit)?,
     background: Color,
-    content: @Composable () -> Unit,
+    content: @Composable (more: List<RowAction>) -> Unit,
 ) {
     val denial = rememberKubeDenial(KubeAction.DELETE_POD, pod.namespace)
     val target = ShareTarget.pod(pod.namespace, pod.name)
@@ -60,8 +61,8 @@ internal fun PodQuickActions(
     )
     val flows = onFlows?.let { RowAction(Icons.Outlined.Stream, stringResource(R.string.flows_title), it) }
     val menu = listOfNotNull(logs, flows, rememberPinAction(target, pod.name), rememberShareAction(target), delete)
-    QuickActionRow(leading = logs, trailing = delete, menu = menu, onClick = null) {
-        Box(Modifier.background(background)) { content() }
+    QuickActionRow(leading = logs, trailing = delete, menu = menu, onClick = null, menuHeader = pod.name) {
+        Box(Modifier.background(background)) { content(menu - logs) }
     }
 }
 

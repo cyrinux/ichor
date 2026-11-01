@@ -113,6 +113,7 @@ fun QuickActionRow(
     swipeEnabled: Boolean = true,
     onClickLabel: String? = null,
     shape: Shape = RectangleShape,
+    menuHeader: String? = null,
     content: @Composable () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -145,7 +146,7 @@ fun QuickActionRow(
         enableDismissFromEndToStart = edges.fromEnd,
         backgroundContent = { SwipeBackground(state.dismissDirection, leading, trailing, shape) },
     ) {
-        RowForeground(leading, trailing, menu, swipeEnabled, onClick, onClickLabel, content)
+        RowForeground(leading, trailing, menu, menuHeader, swipeEnabled, onClick, onClickLabel, content)
     }
 }
 
@@ -155,6 +156,7 @@ private fun RowForeground(
     leading: RowAction?,
     trailing: RowAction?,
     menu: List<RowAction>,
+    menuHeader: String?,
     swipeEnabled: Boolean,
     onClick: (() -> Unit)?,
     onClickLabel: String?,
@@ -184,11 +186,23 @@ private fun RowForeground(
     }
     Box(Modifier.heightIn(min = 48.dp).then(clicks ?: Modifier).then(semantics ?: Modifier)) {
         content()
-        if (menu.isNotEmpty()) {
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                menu.forEach { action -> RowActionItem(action) { menuOpen = false } }
-            }
+        if (menu.isNotEmpty()) RowActionsMenu(menuOpen, menu, onDismiss = { menuOpen = false }, header = menuHeader)
+    }
+}
+
+/** A row's actions as a dropdown, under [header] when set (a full name the row may cut short). */
+@Composable
+internal fun RowActionsMenu(expanded: Boolean, actions: List<RowAction>, onDismiss: () -> Unit, header: String? = null) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        header?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
         }
+        actions.forEach { action -> RowActionItem(action, onDismiss) }
     }
 }
 
