@@ -504,13 +504,7 @@ struct MainNavigation: View {
         case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
         case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
         case .k8sUpgrade: K8sUpgradePlanView()
-        case .joinNode:
-            // Omni joins the machine itself: Add a node is only its boot media there.
-            if model.activeSummary?.omni == true {
-                BootMediaView(path: $path, chosen: nil)
-            } else {
-                JoinNodeView(path: $path)
-            }
+        case .joinNode: AddNodeEntryView(path: $path)
         case .bootMedia(let chosen): BootMediaView(path: $path, chosen: chosen)
         case .omniAllocate: OmniAllocateView()
         case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)

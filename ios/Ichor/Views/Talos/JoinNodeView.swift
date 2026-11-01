@@ -1,6 +1,20 @@
 import SwiftUI
 import IchorCore
 
+/// Omni joins the machine itself: Add a node is only its boot media there.
+struct AddNodeEntryView: View {
+    @Binding var path: [Route]
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.activeSummary?.omni == true {
+            BootMediaView(path: $path, chosen: nil)
+        } else {
+            JoinNodeView(path: $path)
+        }
+    }
+}
+
 /// "Add a node…": first where the new machine comes from. A machine booted from the Talos ISO waits
 /// in maintenance mode; type the address
 /// its console shows and see its version, disks and interfaces; then make its config from a
