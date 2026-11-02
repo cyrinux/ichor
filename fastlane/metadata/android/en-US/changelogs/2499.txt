@@ -1,0 +1,7 @@
+• Explain search and offer the cluster's screens before you type
+• Remove a node for good, after a reset or with Forget node
+• Two icons by default on the home toolbars, the rest in named menu sections
+• Simplify CronJob card actions and read its run history to TalkBack
+• Line up the iOS home summary card with Android's
+• Keep the selected Talos upgrade version visible in the picker
+• Give the tile grid test its full width on a small emulator
