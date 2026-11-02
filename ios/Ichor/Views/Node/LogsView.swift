@@ -204,7 +204,7 @@ private struct LogListRows: View {
     @Binding var expanded: Set<Int>
 
     var body: some View {
-        ForEach(content.rawItems) { LogRawLine(text: $0.entry.raw) }
+        ForEach(content.rawItems) { LogRawLine(entry: $0.entry) }
         ForEach(content.rows) { LogRowView(row: $0, texts: texts, expanded: $expanded) }
     }
 }

@@ -167,6 +167,7 @@ private struct MergedLog: View {
 private struct MergedLogRow: View {
     let line: WorkloadLogLine
     let slot: Int
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -181,7 +182,7 @@ private struct MergedLogRow: View {
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-            Text(verbatim: line.text)
+            Text(attributedLine(line.text, spans: line.spans, scheme: scheme))
                 .monoFont()
                 .foregroundStyle(textColor)
                 .frame(maxWidth: .infinity, alignment: .leading)

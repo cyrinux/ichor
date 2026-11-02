@@ -26,6 +26,52 @@ public struct LogField: Decodable, Equatable, Hashable, Sendable {
     public var isErrorKey: Bool { ["error", "err", "reason"].contains(k.lowercased()) }
 }
 
+/// A styled run of a log line: the SGR colours and styles the Go core parsed out of its ANSI
+/// escapes. `fg`/`bg` are a 16-colour index (0–15) or -1 for the default; `fgRgb`/`bgRgb`
+/// ("#rrggbb") are set instead for 256 and true colours. See ansiRuns.
+public struct LogSpan: Decodable, Equatable, Hashable, Sendable {
+    public let t: String
+    public let fg: Int
+    public let bg: Int
+    public let fgRgb: String
+    public let bgRgb: String
+    /// Bold, dim, italic, underline.
+    public let b: Bool
+    public let d: Bool
+    public let i: Bool
+    public let u: Bool
+
+    public init(
+        t: String, fg: Int = -1, bg: Int = -1, fgRgb: String = "", bgRgb: String = "",
+        b: Bool = false, d: Bool = false, i: Bool = false, u: Bool = false
+    ) {
+        self.t = t
+        self.fg = fg
+        self.bg = bg
+        self.fgRgb = fgRgb
+        self.bgRgb = bgRgb
+        self.b = b
+        self.d = d
+        self.i = i
+        self.u = u
+    }
+
+    private enum CodingKeys: String, CodingKey { case t, fg, bg, fgRgb, bgRgb, b, d, i, u }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        t = try c.field(.t, "")
+        fg = try c.field(.fg, -1)
+        bg = try c.field(.bg, -1)
+        fgRgb = try c.field(.fgRgb, "")
+        bgRgb = try c.field(.bgRgb, "")
+        b = try c.field(.b, false)
+        d = try c.field(.d, false)
+        i = try c.field(.i, false)
+        u = try c.field(.u, false)
+    }
+}
+
 /// One structured log line from the Go core (NodeLogs/dmesg `entries`, ParseLogLine).
 public struct LogEntry: Decodable, Equatable, Sendable {
     /// Unix milliseconds, 0 when unknown.
@@ -35,13 +81,16 @@ public struct LogEntry: Decodable, Equatable, Sendable {
     public let source: String
     public let msg: String
     public let fields: [LogField]
+    /// The line without its ANSI escapes.
     public let raw: String
+    /// `raw`'s colours, empty when the line had none.
+    public let spans: [LogSpan]
 
     public var logLevel: LogLevel { LogLevel(rawValue: level) ?? .none }
 
     public init(
         ts: Int64 = 0, level: String = "", source: String = "", msg: String,
-        fields: [LogField] = [], raw: String
+        fields: [LogField] = [], raw: String, spans: [LogSpan] = []
     ) {
         self.ts = ts
         self.level = level
@@ -49,6 +98,7 @@ public struct LogEntry: Decodable, Equatable, Sendable {
         self.msg = msg
         self.fields = fields
         self.raw = raw
+        self.spans = spans
     }
 
     /// An unparsed line: no level, the whole line as message.
@@ -56,7 +106,7 @@ public struct LogEntry: Decodable, Equatable, Sendable {
         self.init(msg: raw, raw: raw)
     }
 
-    private enum CodingKeys: String, CodingKey { case ts, level, source, msg, fields, raw }
+    private enum CodingKeys: String, CodingKey { case ts, level, source, msg, fields, raw, spans }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -66,6 +116,13 @@ public struct LogEntry: Decodable, Equatable, Sendable {
         raw = try c.field(.raw, "")
         msg = try c.field(.msg, raw)
         fields = try c.field(.fields, [])
+        spans = try c.field(.spans, [])
+    }
+
+    /// A coloured line the parsers found no structure in (no level, source nor fields): a
+    /// parsed row draws its styled raw line, the colours being what shows its structure.
+    public var isColouredPlainLine: Bool {
+        !spans.isEmpty && logLevel == .none && source.isEmpty && fields.isEmpty && msg == raw
     }
 
     /// Same level, source, message and fields (time aside).
@@ -80,7 +137,7 @@ public func parseLogEntry(json: String, line: String) -> LogEntry {
     if entry.raw.isEmpty {
         return LogEntry(
             ts: entry.ts, level: entry.level, source: entry.source, msg: entry.msg,
-            fields: entry.fields, raw: line)
+            fields: entry.fields, raw: line, spans: entry.spans)
     }
     return entry
 }

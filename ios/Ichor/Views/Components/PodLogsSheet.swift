@@ -19,7 +19,7 @@ struct PodLogsSheet: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @State private var state: LoadState<String> = .loading
+    @State private var state: LoadState<PodLogSnapshot> = .loading
     @State private var previous = false
     @State private var filter = LogFilter()
     /// "" lets Kubernetes pick the only container.
@@ -61,8 +61,8 @@ struct PodLogsSheet: View {
                     FollowList(follower: follower, display: $display)
                 } else {
                     LogFilterFields(filter: $filter).padding(.horizontal).padding(.vertical, 8)
-                    LoadStateView(state: state, retry: { refreshes += 1 }) { text in
-                        LogText(lines: podLogLines(text), previous: previous)
+                    LoadStateView(state: state, retry: { refreshes += 1 }) { log in
+                        LogText(entries: log.entries, previous: previous)
                     }
                 }
             }
@@ -90,13 +90,13 @@ struct PodLogsSheet: View {
                         Image(systemName: "bell.badge").accessibilityLabel(Text(verbatim: CheckupText.kubeEventsTitle))
                     }
                     Menu {
-                        if !following, case .loaded(let text, _, _) = state, !text.isEmpty {
+                        if !following, case .loaded(let log, _, _) = state, !log.plain.isEmpty {
                             Button {
-                                copy(text)
+                                copy(log.plain)
                             } label: {
                                 Label("Copy", systemImage: "doc.on.doc")
                             }
-                            ShareLink(item: text) { Label("Share", systemImage: "square.and.arrow.up") }
+                            ShareLink(item: log.plain) { Label("Share", systemImage: "square.and.arrow.up") }
                         }
                         if let logsBackend {
                             Button {
@@ -191,7 +191,12 @@ struct PodLogsSheet: View {
         do {
             let text = try await client.podLogs(pod, container: asked, previous: askedPrevious, filter: askedFilter)
             guard current() else { return }
-            state = .loaded(text, at: Date())
+            // One Go call for the whole snapshot, off the main actor: lines without escapes,
+            // their colours as spans.
+            let tail = try await client.parseLogText(text)
+            let plain = await offMainActor { TalosClient.stripLogEscapes(text) }
+            guard current() else { return }
+            state = .loaded(PodLogSnapshot(entries: tail.logEntries, plain: plain), at: Date())
         } catch {
             guard current() else { return }
             let choices = podLogContainerChoices(fromError: error.localizedDescription)
@@ -240,23 +245,31 @@ struct PodLogsSheet: View {
     }
 }
 
-/// The log lines, monospaced and selectable, scrolled to the newest.
+/// A pod log snapshot: its parsed lines (colours as spans) and the text without escapes, which
+/// Copy and Share hand out.
+private struct PodLogSnapshot: Sendable {
+    let entries: [LogEntry]
+    let plain: String
+}
+
+/// The log lines in their ANSI colours, monospaced and selectable, scrolled to the newest.
 private struct LogText: View {
-    let lines: [String]
+    let entries: [LogEntry]
     let previous: Bool
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        if lines.isEmpty && previous {
+        if entries.isEmpty && previous {
             ContentUnavailableView("No log from the previous run", systemImage: "doc.text")
-        } else if lines.isEmpty {
+        } else if entries.isEmpty {
             ContentUnavailableView("No log yet", systemImage: "doc.text")
         } else {
             // A List, not a LazyVStack under .defaultScrollAnchor(.bottom): the stack guesses the
             // height of the wrapped lines it has not drawn yet, and corrects the offset as they
             // appear, so scrolling back bounced up and down.
             ScrollViewReader { proxy in
-                List(lines.indices, id: \.self) { index in
-                    Text(verbatim: lines[index])
+                List(entries.indices, id: \.self) { index in
+                    Text(attributedLine(entries[index], scheme: scheme))
                         .monoFont()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
@@ -267,7 +280,7 @@ private struct LogText: View {
                 .listStyle(.plain)
                 .scalableMonoText(.logs)
                 .scrollContentBackground(.hidden)
-                .onAppear { proxy.scrollTo(lines.count - 1, anchor: .bottom) }
+                .onAppear { proxy.scrollTo(entries.count - 1, anchor: .bottom) }
             }
         }
     }

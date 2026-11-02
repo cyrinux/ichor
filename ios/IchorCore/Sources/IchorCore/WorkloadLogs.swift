@@ -52,17 +52,21 @@ public struct WorkloadLogLine: Decodable, Equatable, Sendable {
     public let pod: String
     /// Unix ms, 0 when unknown.
     public let time: Int64
+    /// Without ANSI escapes.
     public let text: String
     public let level: String
+    /// `text`'s colours, empty when it had none.
+    public let spans: [LogSpan]
 
-    public init(pod: String, time: Int64 = 0, text: String = "", level: String = "") {
+    public init(pod: String, time: Int64 = 0, text: String = "", level: String = "", spans: [LogSpan] = []) {
         self.pod = pod
         self.time = time
         self.text = text
         self.level = level
+        self.spans = spans
     }
 
-    private enum CodingKeys: String, CodingKey { case pod, time, text, level }
+    private enum CodingKeys: String, CodingKey { case pod, time, text, level, spans }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -70,6 +74,7 @@ public struct WorkloadLogLine: Decodable, Equatable, Sendable {
         time = try c.field(.time, 0)
         text = try c.field(.text, "")
         level = try c.field(.level, "")
+        spans = try c.field(.spans, [])
     }
 
     /// What tells the pods of a workload apart on a chip: "x2k4" for "api-7d9f-x2k4".

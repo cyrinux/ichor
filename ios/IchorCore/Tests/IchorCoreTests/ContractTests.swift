@@ -33,6 +33,7 @@ final class ContractTests: XCTestCase {
             XCTAssertFalse($0.items.isEmpty)
         },
         "kube-nodes": ContractTests.row(KubeNodesOverview.self),
+        "log-entry": ContractTests.row(LogEntry.self) { XCTAssertEqual($0.spans.first?.fgRgb, "#ff8700") },
         "argocd": ContractTests.row(ArgoStatus.self),
         "flux": ContractTests.row(FluxStatus.self),
         "alerts": ContractTests.row(AMAlerts.self),
