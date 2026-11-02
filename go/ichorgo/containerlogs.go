@@ -36,12 +36,7 @@ func ContainerLogs(configYAML, contextName, node, containerID string, tailLines 
 			return "", s.friendlyErr(node, err)
 		}
 
-		tail, err := drainStream(stream.Recv, n)
-		if err != nil {
-			return "", err
-		}
-
-		return toJSON(tail)
+		return logTailJSON(stream.Recv, n)
 	})
 }
 
