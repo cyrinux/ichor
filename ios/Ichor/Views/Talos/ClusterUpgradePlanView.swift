@@ -13,6 +13,7 @@ struct ClusterUpgradePlanView: View {
     @State private var releases: [TalosRelease] = []
     @State private var releasesError: String?
     @State private var version = ""
+    @State private var showAllVersions = false
     @State private var plan: LoadState<ClusterUpgradePlan>?
     @State private var drain = true
     @State private var confirming = false
@@ -65,10 +66,20 @@ struct ClusterUpgradePlanView: View {
                     "Every node is upgraded one after the other: control planes first, the etcd leader last of them, then the workers. Between nodes, the app checks the cluster is healthy again."
                 )
                 .font(.footnote).foregroundStyle(.secondary)
+                let offered = offeredVersions(
+                    releases.filter { !$0.prerelease }.map(\.version), selected: version, showAll: showAllVersions)
                 Picker("Version", selection: $version) {
-                    ForEach(offeredVersions, id: \.self) { Text(verbatim: $0).tag($0) }
+                    ForEach(offered.versions, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
                 .onChange(of: version) { _, _ in Task { await loadPlan() } }
+                if offered.hidden > 0 {
+                    Button("Show \(offered.hidden) more") { showAllVersions = true }
+                }
+                // Not before the list came: nothing says yet that it is absent.
+                if offered.selectedUnlisted, !releases.isEmpty {
+                    Text("\(version) is not among the latest releases; it stays selected.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 if let releasesError { LoadFailureRow(message: releasesError, retry: { await load() }, compact: true) }
             }
             if let plan {
@@ -168,12 +179,6 @@ struct ClusterUpgradePlanView: View {
             return String(localized: "A node maintenance is running: wait for it to end.")
         }
         return nil
-    }
-
-    private var offeredVersions: [String] {
-        var all = releases.filter { !$0.prerelease }.map(\.version)
-        if !version.isEmpty, !all.contains(version) { all.insert(version, at: 0) }
-        return Array(all.prefix(6))
     }
 
     private func load() async {

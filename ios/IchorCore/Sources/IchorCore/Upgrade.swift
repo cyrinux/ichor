@@ -148,6 +148,25 @@ public func upgradeSuggestions(_ releases: [TalosRelease], current: String, incl
     }
 }
 
+/// The picker's versions, how many releases are `hidden`, and whether the selection is no release at all.
+public struct OfferedVersions: Equatable, Sendable {
+    public let versions: [String]
+    public let hidden: Int
+    public let selectedUnlisted: Bool
+}
+
+/// The first `max` releases in their order (or all with `showAll`), always with `selected`: at
+/// its place when it is a release beyond the cutoff, last when it is none.
+public func offeredVersions(_ releases: [String], selected: String, showAll: Bool, max: Int = 6) -> OfferedVersions {
+    var listed: [String] = []
+    for v in releases where !v.isEmpty && !listed.contains(v) { listed.append(v) }
+    let kept =
+        showAll ? listed : listed.enumerated().filter { $0.offset < max || $0.element == selected }.map(\.element)
+    let unlisted = !selected.isEmpty && !listed.contains(selected)
+    return OfferedVersions(
+        versions: unlisted ? kept + [selected] : kept, hidden: listed.count - kept.count, selectedUnlisted: unlisted)
+}
+
 /// A blocker that `talosctl upgrade --force` skips (the etcd health and quorum checks).
 public func isEtcdBlocker(_ text: String) -> Bool {
     let lower = text.lowercased()
