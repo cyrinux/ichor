@@ -4895,6 +4895,9 @@
     <string name="search_refresh_failed">无法刷新当前集群：显示其上次的内容</string>
     <string name="search_last_seen">最后出现于 %1$s</string>
     <string name="search_offline_needed">在设置中开启“保留上次已知状态”，即可同时搜索你的其他集群</string>
+    <string name="search_first_use_body">输入即可查找你的集群上次显示的节点、Pod、工作负载、CronJob 和 GitOps 应用。输入时不会调用任何集群。</string>
+    <string name="search_first_use_refresh">右上角的“刷新”会重新读取当前集群。</string>
+    <string name="search_refreshed">已刷新当前集群</string>
     <string name="search_shown">显示 %2$d 个结果中的 %1$d 个</string>
     <string name="search_clear">清除</string>
     <string name="search_kind_node">节点</string>

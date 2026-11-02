@@ -4895,6 +4895,9 @@
     <string name="search_refresh_failed">アクティブなクラスターを更新できませんでした。最後に表示された内容を表示しています</string>
     <string name="search_last_seen">最終確認：%1$s</string>
     <string name="search_offline_needed">他のクラスターも検索するには、設定で「最後に確認した状態を保持」を有効にしてください</string>
+    <string name="search_first_use_body">入力すると、クラスターが最後に表示したノード、Pod、ワークロード、CronJob、GitOps アプリを検索できます。入力中にクラスターを呼び出すことはありません。</string>
+    <string name="search_first_use_refresh">右上の「更新」でアクティブなクラスターを読み直します。</string>
+    <string name="search_refreshed">アクティブなクラスターを更新しました</string>
     <string name="search_shown">%2$d件中%1$d件の結果を表示</string>
     <string name="search_clear">消去</string>
     <string name="search_kind_node">ノード</string>

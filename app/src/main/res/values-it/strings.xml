@@ -5023,6 +5023,9 @@
     <string name="search_refresh_failed">Impossibile aggiornare il cluster attivo: mostra l\'ultimo stato visto</string>
     <string name="search_last_seen">Visto %1$s</string>
     <string name="search_offline_needed">Attiva «Conserva l\'ultimo stato noto» nelle Impostazioni per cercare anche negli altri cluster</string>
+    <string name="search_first_use_body">Digita per trovare i nodi, i pod, i workload, i CronJob e le app GitOps che i tuoi cluster hanno mostrato per ultimi. La digitazione non chiama mai un cluster.</string>
+    <string name="search_first_use_refresh">Aggiorna, in alto a destra, rilegge il cluster attivo.</string>
+    <string name="search_refreshed">Cluster attivo aggiornato</string>
     <string name="search_shown">%1$d di %2$d risultati mostrati</string>
     <string name="search_clear">Cancella</string>
     <string name="search_kind_node">Nodo</string>

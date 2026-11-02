@@ -5029,6 +5029,9 @@
     <string name="search_refresh_failed">Could not refresh the active cluster: showing what it last showed</string>
     <string name="search_last_seen">Last seen %1$s</string>
     <string name="search_offline_needed">Turn on “Keep last known state” in Settings to search your other clusters too</string>
+    <string name="search_first_use_body">Type to find the nodes, pods, workloads, CronJobs and GitOps apps your clusters last showed. Typing never calls a cluster.</string>
+    <string name="search_first_use_refresh">Refresh, top right, reads the active cluster again.</string>
+    <string name="search_refreshed">Active cluster refreshed</string>
     <string name="search_shown">%1$d of %2$d results shown</string>
     <string name="search_clear">Clear</string>
     <string name="search_kind_node">Node</string>

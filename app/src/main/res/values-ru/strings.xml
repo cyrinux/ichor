@@ -5267,6 +5267,9 @@
     <string name="search_refresh_failed">Не удалось обновить активный кластер: показано его последнее состояние</string>
     <string name="search_last_seen">Последний раз: %1$s</string>
     <string name="search_offline_needed">Включите «Хранить последнее известное состояние» в настройках, чтобы искать и в других кластерах</string>
+    <string name="search_first_use_body">Начните вводить, чтобы найти узлы, поды, рабочие нагрузки, CronJob и приложения GitOps, которые ваши кластеры показывали последними. Ввод никогда не обращается к кластеру.</string>
+    <string name="search_first_use_refresh">«Обновить» справа вверху заново читает активный кластер.</string>
+    <string name="search_refreshed">Активный кластер обновлён</string>
     <string name="search_shown">Показано результатов: %1$d из %2$d</string>
     <string name="search_clear">Очистить</string>
     <string name="search_kind_node">Узел</string>

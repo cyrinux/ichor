@@ -79,6 +79,10 @@ class SearchViewModel(
     /** The last refresh read nothing: the cluster could not be reached or refused. */
     val refreshFailed: StateFlow<Boolean> = _refreshFailed.asStateFlow()
 
+    private val _refreshed = MutableStateFlow(false)
+    /** The last refresh read the active cluster: said once it lands, as a failure is. */
+    val refreshed: StateFlow<Boolean> = _refreshed.asStateFlow()
+
     private val catalog = MutableStateFlow<List<ScreenEntry>>(emptyList())
 
     val state: StateFlow<SearchState> = combine(snapshot.filterNotNull(), _query.debounce(DEBOUNCE_MS), catalog) { s, q, c -> Triple(s, q, c) }
@@ -114,9 +118,12 @@ class SearchViewModel(
         if (_refreshing.value) return
         viewModelScope.launch {
             _refreshing.value = true
+            _refreshed.value = false
+            _refreshFailed.value = false
             try {
                 val fresh = fetchActive()
                 _refreshFailed.value = fresh == null
+                _refreshed.value = fresh != null
                 snapshot.value = readSnapshot(fresh.orEmpty())
             } finally {
                 _refreshing.value = false

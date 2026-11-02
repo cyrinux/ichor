@@ -5019,6 +5019,9 @@
     <string name="search_refresh_failed">Não foi possível atualizar o cluster ativo: mostrando o último estado exibido</string>
     <string name="search_last_seen">Visto por último %1$s</string>
     <string name="search_offline_needed">Ative “Manter último estado conhecido” nas Configurações para pesquisar também nos outros clusters</string>
+    <string name="search_first_use_body">Digite para encontrar os nós, pods, workloads, CronJobs e apps GitOps que seus clusters mostraram por último. Digitar nunca chama um cluster.</string>
+    <string name="search_first_use_refresh">Atualizar, no canto superior direito, lê o cluster ativo de novo.</string>
+    <string name="search_refreshed">Cluster ativo atualizado</string>
     <string name="search_shown">%1$d de %2$d resultados exibidos</string>
     <string name="search_clear">Limpar</string>
     <string name="search_kind_node">Nó</string>
