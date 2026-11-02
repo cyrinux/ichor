@@ -61,6 +61,8 @@ struct StatTile: View {
         if let meter {
             VStack(alignment: .leading, spacing: 4) {
                 stat
+                // In a StatTileRow, at the bottom: level with the other tiles' meters.
+                Spacer(minLength: 0)
                 meter()
             }
         } else {
@@ -74,9 +76,10 @@ struct StatTile: View {
             if let icon {
                 StatIcon(systemName: icon)
             }
-            // Narrow phones and long translations wrap rather than cut the label short.
+            // Narrow phones and long translations wrap rather than cut the label short; the value
+            // ("153.2 GiB") shrinks instead, so every tile's number stays on one line.
             VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: value).font(.headline).monospacedDigit()
+                Text(verbatim: value).font(.headline).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
                 Text(verbatim: label).font(.caption2).foregroundStyle(.secondary).fixedSize(
                     horizontal: false, vertical: true)
             }
