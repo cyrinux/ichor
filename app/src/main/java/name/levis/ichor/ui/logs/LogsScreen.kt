@@ -84,6 +84,8 @@ class LogsViewModel(
     private val node: String,
     private val source: LogSource,
 ) : LoadingViewModel<LogTail>() {
+    // No tail read while following the stream.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override suspend fun fetch() = when (source) {
         is LogSource.Service -> talos.logs(node, source.name)

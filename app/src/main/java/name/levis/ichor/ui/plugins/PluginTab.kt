@@ -79,6 +79,8 @@ data class PluginView(val tree: PluginTree, val catalog: PluginCatalog = PluginC
 
 /** Which plugins the cluster runs, with their summary tiles; loaded on demand, never polled. */
 class PluginDetectViewModel(private val plugins: PluginRepository) : LoadingViewModel<PluginDetect>() {
+    // Read with its hints: load.
+    override val loadsOnOpen = false
     private var hints = ""
     private var source: Any? = null
 
@@ -106,6 +108,8 @@ class PluginTabViewModel(
     private val pluginId: String,
     dataServices: DataServicesRepository,
 ) : LoadingViewModel<PluginView>() {
+    // Read on each source: load.
+    override val loadsOnOpen = false
     private var source: Any? = null
 
     /** The buttons' actions: the tree is read again once one went through. */

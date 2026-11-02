@@ -47,6 +47,8 @@ import name.levis.ichor.ui.workloads.scopeError
 
 /** A list read for one [namespace] (null for every one); it loads again only when that changes. */
 abstract class NamespaceLoadingViewModel<T> : LoadingViewModel<T>() {
+    // Read once the namespace picker is ready: setNamespace.
+    override val loadsOnOpen = false
     protected var namespace: String? = null
         private set
     private var started = false

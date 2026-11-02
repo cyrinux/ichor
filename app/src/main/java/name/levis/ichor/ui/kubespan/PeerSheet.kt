@@ -37,6 +37,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** Every node's KubeSpan diagnosis, read once the peers tab shows (KubeSpanDiagnosticsAll). */
 class KubeSpanDiagViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanDiagAll>() {
+    // Read when its tab is open: load.
+    override val loadsOnOpen = false
     override suspend fun fetch() = talos.kubespanDiagnostics()
 
     fun load() {

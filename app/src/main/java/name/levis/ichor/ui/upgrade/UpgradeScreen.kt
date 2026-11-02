@@ -130,7 +130,6 @@ fun UpgradeScreen(
     var rollingBack by remember { mutableStateOf(false) }
     var prePullShown by remember { mutableStateOf(false) }
     val following = current?.takeIf { it.node == node }
-    LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
     // App lock first (a fresh fingerprint/PIN), then the typed-hostname confirmation.
     fun requestStart(choice: UpgradeChoice) {

@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,7 +79,6 @@ fun FundingScreen(
     val store by app.featureStore.state.collectAsStateWithLifecycle()
     val result by app.featureStore.result.collectAsStateWithLifecycle()
     val backed by app.fundingHistory.backed.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     result?.let { PurchaseResultDialog(it, app.featureStore::dismiss) }
     val buy: (String) -> Unit = { id -> context.findFragmentActivity()?.let { app.featureStore.buy(it, id) } }
 

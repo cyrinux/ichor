@@ -16,6 +16,8 @@ import name.levis.ichor.ui.workloads.WorkloadRestarts
  * the idle workloads the inventory names: only those are read, never a cluster-wide list.
  */
 class AppWorkloadsViewModel(private val kube: KubeRepository) : LoadingViewModel<List<KubeWorkload>>() {
+    // Read once an app is picked: load.
+    override val loadsOnOpen = false
     private var app: InventoryApp? = null
 
     /**

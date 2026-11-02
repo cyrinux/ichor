@@ -120,7 +120,6 @@ fun MachineConfigScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val editor by vm.editor.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var fixApplied by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state is UiState.Loaded) {
         if (fix != null && !fixApplied && state is UiState.Loaded) {

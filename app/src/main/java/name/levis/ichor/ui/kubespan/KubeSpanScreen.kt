@@ -62,6 +62,8 @@ import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.components.SwipeTabPager
 
 class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanOverview>() {
+    // Read when its tab is open.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<KubeSpanOverview>? = talos.cached(KUBESPAN)
     override val restores get() = talos.restores

@@ -19,7 +19,6 @@ import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -108,7 +107,6 @@ private fun InterfacesTab(
     vm: NetworkViewModel = viewModel(key = "network-$node", factory = factory { NetworkViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var showVirtual by rememberSaveable { mutableStateOf(false) }
 
     Loaded(state, vm::refresh, freshness = true) { data ->

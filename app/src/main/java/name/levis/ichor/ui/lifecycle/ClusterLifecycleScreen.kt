@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -65,7 +64,6 @@ fun ClusterLifecycleScreen(
     vm: ClusterLifecycleViewModel = viewModel(factory = factory { ClusterLifecycleViewModel(app.kubeBrowser) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     IchorScaffold(
         topBar = {

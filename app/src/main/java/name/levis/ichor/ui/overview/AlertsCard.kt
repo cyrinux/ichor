@@ -49,6 +49,8 @@ class AlertsCardViewModel(
     private val store: AlertmanagerStore,
     private val fingerprint: () -> String?,
 ) : LoadingViewModel<AlertsOverview?>() {
+    // Read only where the role can read Kubernetes: load.
+    override val loadsOnOpen = false
     private var key: Any? = null
 
     override suspend fun fetch(): AlertsOverview? {

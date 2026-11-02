@@ -197,7 +197,6 @@ fun EtcdScreen(
     val snapshot by snapshotVm.state.collectAsStateWithLifecycle()
     val fix by fixVm.state.collectAsStateWithLifecycle()
     val recover by recoverVm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     // The fix changed etcd (or stopped half-way): show what is true now.
     LaunchedEffect(fix.finished) { if (fix.finished) vm.refresh() }
     LaunchedEffect(recover.finished) { if (recover.finished) vm.refresh() }

@@ -30,6 +30,8 @@ abstract class PagedListViewModel<T>(
     protected val kube: KubeRepository,
     private val metered: () -> Boolean,
 ) : LoadingViewModel<PagedLoad<T>>() {
+    // Read once the scope is known: setScope.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override val restores get() = kube.restores
 

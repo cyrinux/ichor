@@ -65,10 +65,6 @@ internal fun ResourcesTab(
     val state by vm.state.collectAsStateWithLifecycle()
     val clockState by clock.state.collectAsStateWithLifecycle()
     val pressureState by pressure.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        if (state == UiState.Loading) vm.refresh()
-        if (clockState == UiState.Loading) clock.refresh()
-    }
     // Keyed on access: the config (and so the role) can arrive after the first frame.
     val showsPressure = onPressureDetails != null
     LaunchedEffect(showsPressure) {

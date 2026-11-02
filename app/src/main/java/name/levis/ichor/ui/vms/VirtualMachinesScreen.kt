@@ -97,7 +97,6 @@ fun VirtualMachinesScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.actions.busy.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     LaunchedEffect(Unit) {
         while (true) {
             delay(VirtualMachinesViewModel.POLL_MILLIS)

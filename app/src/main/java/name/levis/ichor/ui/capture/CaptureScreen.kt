@@ -98,10 +98,6 @@ fun CaptureScreen(
     var detail by remember { mutableStateOf<PacketSummary?>(null) }
     val save = rememberSaveCapture { message -> scope.launch { snackbar.showSnackbar(message.resolve(context)) } }
 
-    LaunchedEffect(Unit) {
-        if (links == UiState.Loading) linksVm.refresh()
-        if (peers == UiState.Loading) peersVm.refresh()
-    }
     LaunchedEffect(links) { (links as? UiState.Loaded)?.let { vm.linksLoaded(it.data) } }
 
     val running = session?.running == true

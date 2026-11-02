@@ -100,6 +100,8 @@ class KubeHomeViewModel(
     /** The last background check's nodes, when nothing is cached (see [LoadingViewModel.seed]). */
     private val monitorSeed: () -> TalosRepository.Timed<KubeNodesOverview>? = { null },
 ) : LoadingViewModel<KubeNodesOverview>() {
+    // Read on each context and invalidation by the screen.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<KubeNodesOverview>? = kube.cached(KUBE_NODES)
     override fun seed(): TalosRepository.Timed<KubeNodesOverview>? = monitorSeed()

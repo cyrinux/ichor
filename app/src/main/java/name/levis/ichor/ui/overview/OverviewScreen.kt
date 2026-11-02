@@ -73,6 +73,8 @@ class OverviewViewModel(
     /** The last background check's view of the cluster, when nothing is cached (see [LoadingViewModel.seed]). */
     private val monitorSeed: () -> TalosRepository.Timed<ClusterOverview>? = { null },
 ) : LoadingViewModel<ClusterOverview>() {
+    // Read on each context and invalidation by the screen (init collects state).
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<ClusterOverview>? =
         talos.cached<ClusterOverview>(OVERVIEW).also { StartupTrace.markOnce(if (it == null) "overview cached miss" else "overview cached hit") }

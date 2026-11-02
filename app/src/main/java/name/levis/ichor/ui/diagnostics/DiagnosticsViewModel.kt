@@ -31,6 +31,8 @@ sealed interface DiagExport {
 
 /** The OS's exit records and the core's diagnostics log, on this device; the zip made from them. */
 class DiagnosticsViewModel(private val context: Application) : LoadingViewModel<DiagnosticsView>() {
+    // The screen reads it again on each visit.
+    override val loadsOnOpen = false
     private val _export = MutableStateFlow<DiagExport?>(null)
     val export: StateFlow<DiagExport?> = _export.asStateFlow()
 

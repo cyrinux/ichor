@@ -23,7 +23,6 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -159,7 +158,6 @@ fun HelmReleaseScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val rollback by vm.rollback.state.collectAsStateWithLifecycle()
     val rollbackDenial = rememberKubeDenial(KubeAction.HELM_ROLLBACK, namespace)
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     HelmRollbackHost(vm.rollback, rollback)
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val detail = (state as? UiState.Loaded)?.data

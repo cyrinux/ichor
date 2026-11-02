@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,7 +74,6 @@ fun ResourceKindsScreen(
     vm: ResourceKindsViewModel = viewModel(factory = factory { ResourceKindsViewModel(app.kubeBrowser) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var query by rememberSaveable { mutableStateOf("") }
 
     IchorScaffold(

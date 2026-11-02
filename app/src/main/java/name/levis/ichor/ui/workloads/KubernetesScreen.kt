@@ -125,7 +125,6 @@ fun KubernetesScreen(
     val netPerf = netPerfViewModel()
     val cilium: CiliumViewModel = viewModel(factory = factory { CiliumViewModel(app.ciliumRepository) })
     val ciliumState by cilium.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (ciliumState == UiState.Loading) cilium.refresh() }
     // Unknown until read, or unreadable: no entry rather than one that fails.
     val hasFlows = (ciliumState as? UiState.Loaded)?.data?.installed == true
     // The operators' screens, offered like on the Kubernetes home: each read answers "not installed" quickly.
@@ -136,7 +135,6 @@ fun KubernetesScreen(
     val vms: VirtualMachinesViewModel = viewModel(factory = factory { VirtualMachinesViewModel(app.vmRepository) })
     val admission: PoliciesViewModel = viewModel(factory = factory { PoliciesViewModel(app.policyRepository) })
     val operators = listOf<LoadingViewModel<*>>(crossplane, tailscale, rollouts, lifecycle, vms, admission)
-    LaunchedEffect(Unit) { operators.filter { it.state.value == UiState.Loading }.forEach { it.refresh() } }
     val crossplaneState by crossplane.state.collectAsStateWithLifecycle()
     val tailscaleState by tailscale.state.collectAsStateWithLifecycle()
     val rolloutsState by rollouts.state.collectAsStateWithLifecycle()
@@ -290,7 +288,6 @@ internal fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, m
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val stored by app.kubeScopes.scopes.collectAsStateWithLifecycle()
     val listed by namespaces.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (listed == UiState.Loading) namespaces.refresh() }
     val cluster = config?.realFingerprint?.takeUnless { masked }
     var local by rememberSaveable { mutableStateOf<String?>(null) }
     var fromLink by rememberSaveable { mutableStateOf(linked.ifEmpty { null }) }

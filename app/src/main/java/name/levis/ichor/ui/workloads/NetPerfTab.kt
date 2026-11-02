@@ -60,7 +60,6 @@ fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {
     val session by vm.session.collectAsStateWithLifecycle()
     val history by vm.history.collectAsStateWithLifecycle()
     val viewing by vm.viewing.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirming by remember { mutableStateOf(false) }
 
     if (confirming) {

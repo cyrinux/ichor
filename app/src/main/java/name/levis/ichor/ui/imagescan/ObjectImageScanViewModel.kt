@@ -38,6 +38,8 @@ class ObjectImageScanViewModel(
     private val kube: KubeRepository,
     private val ref: KubeObjectRef,
 ) : LoadingViewModel<ObjectScanTarget>() {
+    // Read on each cluster: load.
+    override val loadsOnOpen = false
     val mode: ObjectScanMode? = ref.scanMode
 
     /** What the core keeps the report under. */

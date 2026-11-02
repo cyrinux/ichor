@@ -93,7 +93,6 @@ fun FlowsScreen(
     val status by vm.state.collectAsStateWithLifecycle()
     val filter by vm.filter.collectAsStateWithLifecycle()
     val flows by vm.flows.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (status == UiState.Loading) vm.refresh() }
     val ready = (status as? UiState.Loaded)?.data?.let { it.installed && it.hubble } == true
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // Stream only while visible: leaving, backgrounding or a new filter cancels it.

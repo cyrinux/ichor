@@ -34,6 +34,8 @@ import name.levis.ichor.util.formatPercent
 
 /** One read of the node's cgroups for the pressure card: loaded with the Resources tab. */
 class PressureViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<CgroupReport>() {
+    // Read only where the role can read cgroups.
+    override val loadsOnOpen = false
     override suspend fun fetch() = talos.cgroups(node)
 }
 
