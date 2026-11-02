@@ -70,16 +70,9 @@ func amMatch(s promService) (promCandidate, bool) {
 		return promCandidate{}, false
 	}
 
-	for _, p := range s.Spec.Ports {
-		if p.Protocol != "" && p.Protocol != "TCP" {
-			continue
-		}
-
-		if slices.Contains(ports, p.Port) || slices.Contains(names, p.Name) {
-			src.Port = p.Port
-
-			return promCandidate{src: src, score: score}, true
-		}
+	if port, ok := matchingServicePort(s, ports, names); ok {
+		src.Port = port
+		return promCandidate{src: src, score: score}, true
 	}
 
 	return promCandidate{}, false
