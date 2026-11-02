@@ -201,7 +201,7 @@ func TestParseLogLine(t *testing.T) {
 			got := parseLogLine(tc.line, logNow)
 
 			want := tc.want
-			want.Raw = tc.line
+			want.Raw, want.Spans = tc.line, []logSpan{}
 
 			if !equalJSON(t, got, want) {
 				t.Errorf("parseLogLine(%q) mismatch", tc.line)
@@ -215,6 +215,12 @@ func TestParseLogLineKeepsRawAndTrimsCR(t *testing.T) {
 	if got.Raw != "level=info msg=hi\r" || got.Msg != "hi" || got.Level != "info" {
 		t.Errorf("got %+v", got)
 	}
+
+	// Raw keeps the \r but not the colours.
+	got = parseLogLine("\x1b[36mlevel\x1b[0m=info msg=hi\r", logNow)
+	if got.Raw != "level=info msg=hi\r" || got.Msg != "hi" || got.Level != "info" || len(got.Spans) != 2 {
+		t.Errorf("got %+v", got)
+	}
 }
 
 func TestParseLogLineExportedJSON(t *testing.T) {
@@ -225,14 +231,16 @@ func TestParseLogLineExportedJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, k := range []string{"ts", "level", "source", "msg", "fields", "raw"} {
+	for _, k := range []string{"ts", "level", "source", "msg", "fields", "raw", "spans"} {
 		if _, ok := e[k]; !ok {
 			t.Errorf("missing %q in %v", k, e)
 		}
 	}
 
-	if fields, ok := e["fields"].([]any); !ok || len(fields) != 0 {
-		t.Errorf("fields must be an empty array, got %v", e["fields"])
+	for _, k := range []string{"fields", "spans"} {
+		if list, ok := e[k].([]any); !ok || len(list) != 0 {
+			t.Errorf("%s must be an empty array, got %v", k, e[k])
+		}
 	}
 }
 
@@ -278,11 +286,13 @@ func TestParseLogLineNeverPanicsOnPrefixes(t *testing.T) {
 		"2026/10/01 17:00:19.523686 machined OK [/cosi.resource.State/Get] 1µs",
 		`time="2026-10-01T16:00:00Z" level=info msg="x \\ y" k=v`,
 	}
+	lines = append(lines, ansiSampleLines...)
 
 	for _, l := range lines {
 		for i := range len(l) + 1 {
 			e := parseLogLine(l[:i], logNow)
-			if e.Raw != l[:i] || e.Fields == nil {
+			if plain, _ := stripANSI(l[:i]); e.Raw != plain || e.Fields == nil || e.Spans == nil ||
+				strings.IndexByte(e.Raw, ansiESC) >= 0 {
 				t.Fatalf("bad entry for %q: %+v", l[:i], e)
 			}
 		}
@@ -298,6 +308,7 @@ func BenchmarkParseLogLine(b *testing.B) {
 		`time="2026-10-01T16:00:00.5Z" level=warning msg="failed to pull image" image="registry.example.com/app:1" retry=2`,
 		"I1001 16:00:00.123456    1234 reflector.go:561] watch of *v1.Pod ended",
 		"/usr/lib/udev/rules.d/50-udev-default.rules:101 The line has no effect, ignoring.",
+		ansiSampleLines[0],
 	}
 
 	b.ReportAllocs()

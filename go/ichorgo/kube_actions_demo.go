@@ -12,7 +12,12 @@ func demoPodLog(pod string, previous bool) string {
 
 	var b strings.Builder
 
-	lines := []string{"starting " + pod, "listening on :8080", "connected to the database"}
+	// Two lines as logrus writes them with colours forced on: the apps draw them coloured.
+	lines := []string{
+		"starting " + pod, "listening on :8080", "connected to the database",
+		"\x1b[36mINFO\x1b[0m[0042] request done    \x1b[36mclient_ip\x1b[0m=10.0.0.7 \x1b[36mstatus\x1b[0m=200",
+		"\x1b[33mWARN\x1b[0m[0043] slow query       \x1b[33mtook\x1b[0m=2.1s",
+	}
 	if previous {
 		lines = append(lines, "panic: runtime error: invalid memory address or nil pointer dereference", "exit status 2")
 	}
