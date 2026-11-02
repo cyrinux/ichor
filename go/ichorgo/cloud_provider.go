@@ -228,10 +228,24 @@ func (c *cloudCreateRun) cleanup(why error) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("%w. %s could not be deleted (%s) and is still billed: delete it at %s", why, named, friendlyError(err), p.label())
+		// A delete the provider accepted but did not finish says so itself: friendlyError would
+		// call its deadline a network timeout.
+		reason := friendlyError(err)
+		if _, ok := errors.AsType[unfinishedDelete](err); ok {
+			reason = err.Error()
+		}
+
+		return fmt.Errorf("%w. %s could not be deleted (%s) and is still billed: delete it at %s", why, named, reason, p.label())
 	}
 
 	return fmt.Errorf("%w. %s was deleted", why, named)
+}
+
+// unfinishedDelete is a delete the provider accepted but had not finished in time
+// (azureUnfinishedDelete, gcpUnfinishedDelete).
+type unfinishedDelete interface {
+	error
+	unfinishedDelete()
 }
 
 // cloudNodeUserData is the node's user data. No activity entry of its own: the run's says it all.
