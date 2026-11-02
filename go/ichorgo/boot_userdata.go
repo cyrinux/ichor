@@ -27,6 +27,7 @@ const (
 	cloudPlatformOpenStack = "openstack"
 	cloudPlatformScaleway  = "scaleway"
 	cloudPlatformAWS       = "aws"
+	cloudPlatformAzure     = "azure"
 )
 
 var (
@@ -249,7 +250,7 @@ func (d *cloudUserData) withImages(media bootMedia) {
 }
 
 func cloudImages(t bootTarget) []cloudImage {
-	platforms := []string{cloudPlatformHetzner, cloudPlatformOpenStack, cloudPlatformScaleway, cloudPlatformAWS}
+	platforms := []string{cloudPlatformHetzner, cloudPlatformOpenStack, cloudPlatformScaleway, cloudPlatformAWS, cloudPlatformAzure}
 	images := make([]cloudImage, 0, len(platforms))
 
 	for _, p := range platforms {
