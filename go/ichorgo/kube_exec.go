@@ -160,6 +160,10 @@ func (k *kubeClient) dialStream(ctx context.Context, path string) (*websocket.Co
 // streamConfig is the WebSocket configuration of the stream at path (with its query) in
 // one of protocols: the API server's TLS and the credentials' bearer token.
 func (k *kubeClient) streamConfig(ctx context.Context, path string, protocols []string) (*websocket.Config, error) {
+	return k.streamConfigWithLabel(ctx, path, protocols, "stream URL")
+}
+
+func (k *kubeClient) streamConfigWithLabel(ctx context.Context, path string, protocols []string, urlErrorLabel string) (*websocket.Config, error) {
 	u, err := k.endpoint(path)
 	if err != nil {
 		return nil, err
@@ -169,7 +173,7 @@ func (k *kubeClient) streamConfig(ctx context.Context, path string, protocols []
 
 	cfg, err := websocket.NewConfig(u.String(), (&url.URL{Scheme: "https", Host: u.Host}).String())
 	if err != nil {
-		return nil, fmt.Errorf("stream URL: %w", err)
+		return nil, fmt.Errorf("%s: %w", urlErrorLabel, err)
 	}
 
 	cfg.Protocol = protocols
