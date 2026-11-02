@@ -111,6 +111,7 @@ private fun SnippetForm(snippet: ConfigSnippet, values: MutableMap<String, Strin
     MutedText(stringResource(snippetDescription(snippet.id)))
     if (snippet.staged) MutedText(stringResource(R.string.snippet_staged_note))
     snippet.params.forEach { param -> ParamField(param, values[param.name].orEmpty()) { values[param.name] = it } }
+    if (snippet.id == "watchdog") MutedText(stringResource(R.string.snippet_watchdog_note))
 }
 
 @Composable
@@ -157,6 +158,7 @@ private fun snippetLabel(id: String): Int = when (id) {
     "apiserver_arg" -> R.string.snippet_apiserver_arg
     "node_label" -> R.string.snippet_node_label
     "registry_mirror" -> R.string.snippet_registry_mirror
+    "watchdog" -> R.string.snippet_watchdog
     else -> R.string.snippet_kubespan
 }
 
@@ -171,6 +173,7 @@ private fun snippetDescription(id: String): Int = when (id) {
     "apiserver_arg" -> R.string.snippet_apiserver_arg_desc
     "node_label" -> R.string.snippet_node_label_desc
     "registry_mirror" -> R.string.snippet_registry_mirror_desc
+    "watchdog" -> R.string.snippet_watchdog_desc
     else -> R.string.snippet_kubespan_desc
 }
 
@@ -185,5 +188,7 @@ private fun snippetParam(name: String): Int = when (name) {
     "host" -> R.string.snippet_param_host
     "endpoint" -> R.string.snippet_param_endpoint
     "enabled" -> R.string.snippet_param_enabled
+    "device" -> R.string.snippet_param_device
+    "timeout" -> R.string.snippet_param_timeout
     else -> R.string.snippet_param_value
 }

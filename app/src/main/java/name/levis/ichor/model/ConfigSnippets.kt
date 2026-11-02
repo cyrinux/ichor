@@ -55,7 +55,7 @@ data class SnippetPrefill(val id: String, val params: Map<String, String> = empt
 }
 
 /** The drift keys a machine config change can undo (DriftFixEdits); the others come from elsewhere. */
-private val fixableDriftKeys = setOf("dns", "ntp", "mtu")
+private val fixableDriftKeys = setOf("dns", "ntp", "mtu", "watchdog")
 
 /** The fix of this difference, or null when no config change can undo it. */
 fun DriftChange.fix(): DriftFix? = DriftFix(key, before, after).takeIf { key in fixableDriftKeys && before.isNotBlank() }

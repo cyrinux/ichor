@@ -95,6 +95,12 @@ private struct SnippetForm: View {
             }
             Section {
                 ForEach(snippet.params, id: \.name) { param in field(param) }
+            } footer: {
+                if snippet.id == "watchdog" {
+                    Text(
+                        "Needs a watchdog device on the node: a physical server's chipset (iTCO, SP5100) or a virtual one (QEMU, Proxmox or libvirt i6300esb, Xen). Without one the node ignores the setting and nothing reboots."
+                    )
+                }
             }
         }
         .navigationTitle(snippetTitle(snippet.id))
@@ -164,6 +170,7 @@ private func snippetTitle(_ id: String) -> String {
     case "apiserver_arg": String(localized: "API server argument")
     case "node_label": String(localized: "Node label")
     case "registry_mirror": String(localized: "Registry mirror")
+    case "watchdog": String(localized: "Watchdog timer")
     default: String(localized: "KubeSpan")
     }
 }
@@ -179,6 +186,7 @@ private func snippetDescription(_ id: String) -> String {
     case "apiserver_arg": String(localized: "Set one extra argument of the API server (control planes only).")
     case "node_label": String(localized: "Set one label of the Kubernetes node.")
     case "registry_mirror": String(localized: "Pull a registry's images through a mirror.")
+    case "watchdog": String(localized: "Reset a node whose Talos stops answering, after the timeout.")
     default: String(localized: "Turn the WireGuard mesh between the nodes on or off.")
     }
 }
@@ -194,6 +202,8 @@ private func snippetParamTitle(_ name: String) -> String {
     case "host": String(localized: "Registry")
     case "endpoint": String(localized: "Mirror URL")
     case "enabled": String(localized: "Enabled")
+    case "device": String(localized: "Device")
+    case "timeout": String(localized: "Timeout (10s minimum)")
     default: String(localized: "Value")
     }
 }

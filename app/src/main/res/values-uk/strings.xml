@@ -1044,6 +1044,11 @@
     <string name="snippet_param_host">Реєстр</string>
     <string name="snippet_param_endpoint">URL дзеркала</string>
     <string name="snippet_param_enabled">Увімкнено</string>
+    <string name="snippet_watchdog">Сторожовий таймер</string>
+    <string name="snippet_watchdog_desc">Перезапускає вузол, чий Talos перестав відповідати, після тайм-ауту.</string>
+    <string name="snippet_param_device">Пристрій</string>
+    <string name="snippet_param_timeout">Тайм-аут (щонайменше 10 с)</string>
+    <string name="snippet_watchdog_note">Вузлу потрібен сторожовий пристрій: чипсет фізичного сервера (iTCO, SP5100) або віртуальний (i6300esb у QEMU, Proxmox чи libvirt, Xen). Без нього вузол ігнорує налаштування і ніщо не перезапускається.</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Значення завантаження, які Talos читає до конфігурації машини. Неправильне значення може завадити вузлу завантажитися: змінюйте їх лише щоб полагодити вузол, який не завантажується зі своєю конфігурацією.</string>
     <string name="meta_not_loaded">Вузол ще не прочитав свій розділ META.</string>

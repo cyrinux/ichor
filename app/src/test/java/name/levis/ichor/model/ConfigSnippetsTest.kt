@@ -30,10 +30,21 @@ class ConfigSnippetsTest {
     }
 
     @Test
+    fun decodesANewDocument() {
+        val got = TalosJson.decodeFromString(
+            SnippetEdits.serializer(),
+            """{"fixable":true,"edits":[{"doc":-1,"path":[],"op":"addDoc","key":"","type":"yaml","value":"{\"kind\":\"WatchdogTimerConfig\"}"}],"staged":false}""",
+        )
+        assertEquals(-1, got.edits.single().doc)
+        assertEquals("addDoc", got.edits.single().op)
+    }
+
+    @Test
     fun onlyConfigSettingsCanBeFixed() {
         fun change(key: String, before: String = "a") = DriftChange("192.0.2.11", "192.0.2.10", key, before, "b")
         assertEquals(DriftFix("ntp", "a", "b"), change("ntp").fix())
         assertEquals("mtu", change("mtu").fix()?.key)
+        assertEquals("watchdog", change("watchdog", before = "/dev/watchdog0 2m0s").fix()?.key)
         assertNull(change("version").fix())
         assertNull(change("dns", before = "").fix())
     }

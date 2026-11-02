@@ -973,6 +973,11 @@
     <string name="snippet_param_host">Registro</string>
     <string name="snippet_param_endpoint">URL de la réplica</string>
     <string name="snippet_param_enabled">Activado</string>
+    <string name="snippet_watchdog">Temporizador watchdog</string>
+    <string name="snippet_watchdog_desc">Reinicia un nodo cuyo Talos deja de responder, pasado el tiempo límite.</string>
+    <string name="snippet_param_device">Dispositivo</string>
+    <string name="snippet_param_timeout">Tiempo límite (mínimo 10 s)</string>
+    <string name="snippet_watchdog_note">El nodo necesita un dispositivo watchdog: el del chipset de un servidor físico (iTCO, SP5100) o uno virtual (i6300esb de QEMU, Proxmox o libvirt, Xen). Sin él, el nodo ignora el ajuste y nada se reinicia.</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Valores de arranque que Talos lee antes de la configuración de la máquina. Un valor incorrecto puede impedir que el nodo arranque: cámbialos solo para reparar un nodo que no arranca con su configuración.</string>
     <string name="meta_not_loaded">El nodo aún no ha leído su partición META.</string>

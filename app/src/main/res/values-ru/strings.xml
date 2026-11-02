@@ -1046,6 +1046,11 @@
     <string name="snippet_param_host">Реестр</string>
     <string name="snippet_param_endpoint">URL зеркала</string>
     <string name="snippet_param_enabled">Включено</string>
+    <string name="snippet_watchdog">Сторожевой таймер</string>
+    <string name="snippet_watchdog_desc">Перезапустить узел, чей Talos перестал отвечать, по истечении тайм-аута.</string>
+    <string name="snippet_param_device">Устройство</string>
+    <string name="snippet_param_timeout">Тайм-аут (не меньше 10 с)</string>
+    <string name="snippet_watchdog_note">Узлу нужно сторожевое устройство: чипсет физического сервера (iTCO, SP5100) или виртуальное (i6300esb в QEMU, Proxmox или libvirt, Xen). Без него узел игнорирует настройку и ничего не перезапускается.</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Загрузочные значения, которые Talos читает до конфигурации машины. Неверное значение может помешать узлу загрузиться: меняйте их только чтобы починить узел, который не загружается со своей конфигурацией.</string>
     <string name="meta_not_loaded">Узел ещё не прочитал свой раздел META.</string>

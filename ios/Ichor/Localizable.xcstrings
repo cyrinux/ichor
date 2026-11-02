@@ -204216,6 +204216,62 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } }
       }
     },
+    "Watchdog timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog matériel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Temporizador watchdog" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog-Timer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Timer watchdog" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сторожовий таймер" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "看门狗定时器" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ウォッチドッグタイマー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Temporizador watchdog" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сторожевой таймер" } }
+      }
+    },
+    "Reset a node whose Talos stops answering, after the timeout." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Redémarre un nœud dont Talos ne répond plus, une fois le délai écoulé." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reinicia un nodo cuyo Talos deja de responder, pasado el tiempo límite." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Setzt einen Node zurück, dessen Talos nicht mehr antwortet, sobald das Zeitlimit abläuft." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riavvia un nodo il cui Talos non risponde più, allo scadere del timeout." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перезапускає вузол, чий Talos перестав відповідати, після тайм-ауту." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 停止响应后，在超时后重置该节点。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos が応答しなくなったノードを、タイムアウト後にリセットします。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reiniciar um nó cujo Talos para de responder, após o tempo limite." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Перезапустить узел, чей Talos перестал отвечать, по истечении тайм-аута." } }
+      }
+    },
+    "Timeout (10s minimum)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Délai (10 s minimum)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tiempo límite (mínimo 10 s)" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeitlimit (mindestens 10 s)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Timeout (minimo 10 s)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тайм-аут (щонайменше 10 с)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时（至少 10 秒）" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タイムアウト（最短 10 秒）" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tempo limite (mínimo 10 s)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тайм-аут (не меньше 10 с)" } }
+      }
+    },
+    "Needs a watchdog device on the node: a physical server's chipset (iTCO, SP5100) or a virtual one (QEMU, Proxmox or libvirt i6300esb, Xen). Without one the node ignores the setting and nothing reboots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le nœud doit avoir un watchdog : celui du chipset d’un serveur physique (iTCO, SP5100) ou un virtuel (i6300esb de QEMU, Proxmox ou libvirt, Xen). Sans lui, le nœud ignore le réglage et rien ne redémarre." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El nodo necesita un dispositivo watchdog: el del chipset de un servidor físico (iTCO, SP5100) o uno virtual (i6300esb de QEMU, Proxmox o libvirt, Xen). Sin él, el nodo ignora el ajuste y nada se reinicia." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Node braucht ein Watchdog-Gerät: den Chipsatz eines physischen Servers (iTCO, SP5100) oder ein virtuelles (i6300esb von QEMU, Proxmox oder libvirt, Xen). Ohne eines ignoriert der Node die Einstellung und nichts startet neu." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il nodo deve avere un dispositivo watchdog: quello del chipset di un server fisico (iTCO, SP5100) o uno virtuale (i6300esb di QEMU, Proxmox o libvirt, Xen). Senza, il nodo ignora l’impostazione e nulla si riavvia." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вузлу потрібен сторожовий пристрій: чипсет фізичного сервера (iTCO, SP5100) або віртуальний (i6300esb у QEMU, Proxmox чи libvirt, Xen). Без нього вузол ігнорує налаштування і ніщо не перезапускається." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点需要看门狗设备：物理服务器的芯片组（iTCO、SP5100）或虚拟设备（QEMU、Proxmox 或 libvirt 的 i6300esb、Xen）。没有它，节点会忽略此设置，也不会重启。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノードにウォッチドッグデバイスが必要です。物理サーバーのチップセット（iTCO、SP5100）か仮想デバイス（QEMU、Proxmox、libvirt の i6300esb、Xen）です。ない場合、ノードは設定を無視し、何も再起動しません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O nó precisa de um dispositivo watchdog: o do chipset de um servidor físico (iTCO, SP5100) ou um virtual (i6300esb do QEMU, Proxmox ou libvirt, Xen). Sem ele, o nó ignora a configuração e nada reinicia." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Узлу нужно сторожевое устройство: чипсет физического сервера (iTCO, SP5100) или виртуальное (i6300esb в QEMU, Proxmox или libvirt, Xen). Без него узел игнорирует настройку и ничего не перезапускается." } }
+      }
+    },
     "Device" : {
       "extractionState" : "manual",
       "localizations" : {

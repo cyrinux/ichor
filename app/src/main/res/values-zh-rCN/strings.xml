@@ -929,6 +929,11 @@
     <string name="snippet_param_host">镜像仓库</string>
     <string name="snippet_param_endpoint">镜像站 URL</string>
     <string name="snippet_param_enabled">已启用</string>
+    <string name="snippet_watchdog">看门狗定时器</string>
+    <string name="snippet_watchdog_desc">Talos 停止响应后，在超时后重置该节点。</string>
+    <string name="snippet_param_device">设备</string>
+    <string name="snippet_param_timeout">超时（至少 10 秒）</string>
+    <string name="snippet_watchdog_note">节点需要看门狗设备：物理服务器的芯片组（iTCO、SP5100）或虚拟设备（QEMU、Proxmox 或 libvirt 的 i6300esb、Xen）。没有它，节点会忽略此设置，也不会重启。</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Talos 在读取机器配置之前读取的启动时值。错误的值可能导致节点无法启动：仅在修复无法使用其配置启动的节点时才更改它们。</string>
     <string name="meta_not_loaded">节点尚未读取其 META 分区。</string>
