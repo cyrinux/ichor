@@ -5263,6 +5263,9 @@
     <string name="search_refresh_failed">Не вдалося оновити активний кластер: показано останній відомий стан</string>
     <string name="search_last_seen">Бачено %1$s</string>
     <string name="search_offline_needed">Увімкніть «Зберігати останній відомий стан» у налаштуваннях, щоб шукати й в інших кластерах</string>
+    <string name="search_first_use_body">Почніть вводити, щоб знайти вузли, поди, робочі навантаження, CronJob і застосунки GitOps, які ваші кластери показували востаннє. Введення ніколи не звертається до кластера.</string>
+    <string name="search_first_use_refresh">«Оновити» вгорі праворуч знову читає активний кластер.</string>
+    <string name="search_refreshed">Активний кластер оновлено</string>
     <string name="search_shown">Показано %1$d з %2$d результатів</string>
     <string name="search_clear">Очистити</string>
     <string name="search_kind_node">Вузол</string>

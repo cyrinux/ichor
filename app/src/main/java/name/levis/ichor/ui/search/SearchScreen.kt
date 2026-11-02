@@ -3,6 +3,7 @@ package name.levis.ichor.ui.search
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +44,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -95,6 +99,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
     val recentTargets by vm.recentTargets.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val refreshFailed by vm.refreshFailed.collectAsStateWithLifecycle()
+    val refreshed by vm.refreshed.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val labels = rememberClusterLabels()
     val active = config?.activeSummary
@@ -148,8 +153,15 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
             if (snapshot?.othersNeedOfflineCache == true) {
                 MutedText(stringResource(R.string.search_offline_needed), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
-            if (refreshFailed) {
-                MutedText(stringResource(R.string.search_refresh_failed), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            // Read by TalkBack when it appears, without moving the focus off the search field.
+            val status = when {
+                refreshing -> null
+                refreshFailed -> R.string.search_refresh_failed
+                refreshed -> R.string.search_refreshed
+                else -> null
+            }
+            Box(Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+                status?.let { MutedText(stringResource(it), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
             }
             when {
                 snapshot == null -> Unit
@@ -157,18 +169,21 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
                     // A removed cluster's objects are not offered; the active one's show no cluster.
                     val contexts = config?.summary?.contexts.orEmpty()
                     val opened = RecentTargets.known(recentTargets, contexts.map { it.clusterId }.filter { it.isNotEmpty() }.toSet())
-                    RecentSearches(
-                        recent = recent,
-                        opened = opened,
-                        nothingKnown = snapshot.isEmpty,
-                        clusterOf = { cluster ->
-                            if (cluster == active?.clusterId) null else contexts.firstOrNull { it.clusterId == cluster }?.let(labels::of)
-                        },
-                        onPick = vm::setQuery,
-                        onForget = vm::forget,
-                        onOpen = onOpen,
-                        onForgetTarget = vm::forgetTarget,
-                    )
+                    when (blankBody(snapshot.isEmpty, recent, opened)) {
+                        BlankBody.NOTHING_KNOWN -> EmptyText(stringResource(R.string.search_nothing_known))
+                        BlankBody.FIRST_USE -> FirstUseState(specs, canRefresh, onOpenRoute)
+                        BlankBody.RECENTS -> RecentSearches(
+                            recent = recent,
+                            opened = opened,
+                            clusterOf = { cluster ->
+                                if (cluster == active?.clusterId) null else contexts.firstOrNull { it.clusterId == cluster }?.let(labels::of)
+                            },
+                            onPick = vm::setQuery,
+                            onForget = vm::forget,
+                            onOpen = onOpen,
+                            onForgetTarget = vm::forgetTarget,
+                        )
+                    }
                 }
                 // Typed but not yet ranked: the previous results stay until the new ones.
                 state.query.isBlank() -> Unit
@@ -201,17 +216,12 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute:
 private fun RecentSearches(
     recent: List<String>,
     opened: List<RecentTarget>,
-    nothingKnown: Boolean,
     clusterOf: (String) -> String?,
     onPick: (String) -> Unit,
     onForget: (String) -> Unit,
     onOpen: (ShareTarget) -> Unit,
     onForgetTarget: (ShareTarget) -> Unit,
 ) {
-    if (recent.isEmpty() && opened.isEmpty()) {
-        if (nothingKnown) EmptyText(stringResource(R.string.search_nothing_known))
-        return
-    }
     val removeLabel = stringResource(R.string.search_recent_remove)
     LazyColumn(Modifier.fillMaxSize()) {
         recentlyOpened(opened, clusterOf, onOpen, onForgetTarget)

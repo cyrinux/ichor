@@ -5023,6 +5023,9 @@
     <string name="search_refresh_failed">No se pudo actualizar el clúster activo: se muestra lo último que mostró</string>
     <string name="search_last_seen">Visto %1$s</string>
     <string name="search_offline_needed">Activa «Conservar el último estado conocido» en Ajustes para buscar también en tus otros clústeres</string>
+    <string name="search_first_use_body">Escribe para encontrar los nodos, pods, workloads, CronJobs y apps de GitOps que tus clústeres mostraron por última vez. Escribir nunca llama a un clúster.</string>
+    <string name="search_first_use_refresh">Actualizar, arriba a la derecha, vuelve a leer el clúster activo.</string>
+    <string name="search_refreshed">Clúster activo actualizado</string>
     <string name="search_shown">%1$d de %2$d resultados mostrados</string>
     <string name="search_clear">Borrar</string>
     <string name="search_kind_node">Nodo</string>

@@ -5015,6 +5015,9 @@
     <string name="search_refresh_failed">Aktiver Cluster konnte nicht aktualisiert werden: zuletzt Gezeigtes wird angezeigt</string>
     <string name="search_last_seen">Zuletzt gesehen %1$s</string>
     <string name="search_offline_needed">Aktiviere „Letzten bekannten Zustand behalten“ in den Einstellungen, um auch deine anderen Cluster zu durchsuchen</string>
+    <string name="search_first_use_body">Tippe, um die Nodes, Pods, Workloads, CronJobs und GitOps-Apps zu finden, die deine Cluster zuletzt gezeigt haben. Das Tippen ruft nie einen Cluster auf.</string>
+    <string name="search_first_use_refresh">Aktualisieren oben rechts liest den aktiven Cluster erneut.</string>
+    <string name="search_refreshed">Aktiver Cluster aktualisiert</string>
     <string name="search_shown">%1$d von %2$d Ergebnissen angezeigt</string>
     <string name="search_clear">Löschen</string>
     <string name="search_kind_node">Node</string>
