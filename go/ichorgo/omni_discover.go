@@ -36,16 +36,7 @@ func StartOmniAccountSignIn(endpoint, identity string, listener SignInListener) 
 
 			return signInOmniUser(ctx, cfgCtx, listener)
 		}()
-		if errors.Is(err, context.Canceled) {
-			err = nil
-		}
-
-		msg := ""
-		if err != nil {
-			msg = err.Error()
-		}
-
-		listener.OnDone(msg)
+		finishSignIn(listener, err)
 	}()
 
 	return run
