@@ -32,12 +32,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import name.levis.ichor.data.LogParser
 import name.levis.ichor.ui.logs.AnsiLine
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
@@ -46,13 +43,11 @@ import name.levis.ichor.data.StreamItem
 import name.levis.ichor.model.FollowBuffer
 import name.levis.ichor.model.POD_LOG_TAIL
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.logs.collectLogBatches
 import name.levis.ichor.ui.userMessage
 
 /** A followed pod log: its lines (the newest kept), whether it streams, the error it ended with. */
 data class PodFollowState(val buffer: FollowBuffer = FollowBuffer(), val streaming: Boolean = false, val error: String? = null)
-
-/** Pause between two applied batches of followed lines, so bursts redraw a few times only. */
-private const val FOLLOW_BATCH_MS = 100L
 
 /** Follows a container's log through the Kubernetes API (`kubectl logs -f`) while [follow] runs. */
 class PodLogFollowViewModel(private val browser: KubeBrowserRepository) : ViewModel() {
@@ -71,21 +66,7 @@ class PodLogFollowViewModel(private val browser: KubeBrowserRepository) : ViewMo
     private suspend fun followOnce(namespace: String, pod: String, container: String) {
         _state.value = PodFollowState(streaming = true)
         try {
-            coroutineScope {
-                val items = browser.followPodLogs(namespace, pod, container, POD_LOG_TAIL).produceIn(this)
-                while (true) {
-                    val next = items.receiveCatching()
-                    next.exceptionOrNull()?.let { throw it }
-                    val first = next.getOrNull() ?: break
-                    // Everything already queued joins the batch.
-                    val batch = buildList {
-                        add(first)
-                        while (true) add(items.tryReceive().getOrNull() ?: break)
-                    }
-                    apply(batch)
-                    delay(FOLLOW_BATCH_MS)
-                }
-            }
+            browser.followPodLogs(namespace, pod, container, POD_LOG_TAIL).collectLogBatches(::apply)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
