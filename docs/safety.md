@@ -73,6 +73,25 @@ Part of the [Ichor documentation](../README.md#documentation).
   and tag only on `RunInstances`. The one case that needs the AWS console is a terminate that
   fails: the message names the instance id and the region, and the instance stays billed until
   it is terminated there.
+- **Creating a VM at Azure (from the Go core and the probe for now):** billable, so the probe's
+  `azure create` runs only with `-yes`. The credential is a service principal; its token is asked
+  for Resource Manager's audience only and kept for the run. Before any write the run checks the
+  image's Hyper-V generation and architecture against the VM size, the subnet's virtual network
+  and the security group against the location, that no VM, NIC or public IP of the host's name is
+  in the resource group, the custom data against Azure's 48 KiB (64 KB once encoded), then reads
+  the principal's permissions on the resource group: Azure has no dry run, so a principal whose
+  roles lack a write or delete the run makes is refused there, naming the action and the role to
+  paste. The run creates at most three resources, all named after the host name and tagged `Name`,
+  `ichor-run` (the run's id) and `ichor-cluster` (a hash of the context name, not the name): the
+  public IP `<hostname>-ip` (when asked), the NIC `<hostname>-nic`, and the VM `<hostname>` with
+  its OS disk. The disk, the NIC and the address carry `deleteOption: Delete`, so one forced
+  delete of the VM removes all of it. The run deletes only what it made, when it fails or is
+  stopped, except a control plane that already answered: a VM create that gets no clear answer is
+  looked up by its name and kept only when its `ichor-run` tag is the run's; a NIC or address made
+  before a VM that never came is deleted by name. Azure cannot limit a delete to tagged resources,
+  so this is enforced in the app, not by the role. The one case that needs the Azure portal is a
+  delete that fails: the message names the resource (its id without the subscription) and the
+  resource group, and the VM stays billed until it is deleted there.
 - **Rotating the Talos CA (Settings → Clusters & backup → Rotate the cluster CA…, `os:admin`):**
   replaces the CA that signs every Talos API certificate, in the order of
   `talosctl rotate-ca --kubernetes=false`. Rotate it when a talosconfig leaked or a phone was

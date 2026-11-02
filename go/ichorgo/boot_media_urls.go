@@ -81,12 +81,16 @@ func bootMediaLinks(t bootTarget) bootLinks {
 }
 
 // cloudImageURL is the Image Factory disk image of t for a cloud platform (hcloud, openstack:
-// raw.xz; scaleway: raw.zst), to make the server or its snapshot from. Secure Boot is not
-// part of it: these platforms boot the plain image.
+// raw.xz; scaleway: raw.zst; azure: vhd.xz), to make the server or its snapshot from. Secure
+// Boot is not part of it: these platforms boot the plain image.
 func cloudImageURL(t bootTarget, platform string) string {
 	ext := ".raw.xz"
-	if platform == cloudPlatformScaleway {
+
+	switch platform {
+	case cloudPlatformScaleway:
 		ext = ".raw.zst"
+	case cloudPlatformAzure:
+		ext = ".vhd.xz"
 	}
 
 	return factoryImageURL + "/image/" + t.schematic + "/" + t.version + "/" + platform + "-" + t.arch + ext

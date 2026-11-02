@@ -13,7 +13,9 @@ import (
 
 // The token comes from HETZNER_TOKEN, the OVHcloud service account from OVH_ENDPOINT, OVH_CLIENT_ID,
 // OVH_CLIENT_SECRET and OVH_PROJECT, the AWS keys from AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
-// AWS_SESSION_TOKEN and AWS_REGION (never a flag: it would show in the shell history).
+// AWS_SESSION_TOKEN and AWS_REGION, the Azure service principal from AZURE_TENANT_ID,
+// AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID and AZURE_LOCATION (never a flag:
+// it would show in the shell history).
 var cloudCommands = []command{
 	{name: "hetzner", args: "test|options|estimate ARCH LOCATION|snapshot ARCH LOCATION -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE LOCATION SNAPSHOT_ID -yes", run: func(e env) (string, error) {
 		token := os.Getenv("HETZNER_TOKEN")
@@ -87,6 +89,57 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: aws test|options|policy|price TYPE|create …")
 	}},
+	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes", run: func(e env) (string, error) {
+		credJSON, err := json.Marshal(map[string]string{
+			"tenantId": os.Getenv("AZURE_TENANT_ID"), "clientId": os.Getenv("AZURE_CLIENT_ID"), "clientSecret": os.Getenv("AZURE_CLIENT_SECRET"),
+			"subscriptionId": os.Getenv("AZURE_SUBSCRIPTION_ID"), "location": os.Getenv("AZURE_LOCATION"),
+		})
+		if err != nil {
+			return "", err
+		}
+
+		switch flag.Arg(1) {
+		case "test":
+			return ichorgo.AzureTest(string(credJSON))
+		case "options":
+			return ichorgo.AzureOptions(e.cfg, e.context, string(credJSON))
+		case "role":
+			return ichorgo.AzureRoleDefinition(os.Getenv("AZURE_SUBSCRIPTION_ID"), flag.Arg(2)), nil
+		case "price":
+			return ichorgo.AzurePrice(string(credJSON), flag.Arg(2), flag.Arg(3))
+		case "create":
+			return azureCreate(e, string(credJSON))
+		}
+
+		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|create …")
+	}},
+}
+
+// azureCreate creates a billable VM (with a NIC and a public address): scratch subscriptions
+// only, and only with -yes. NSG_ID "-" for none.
+func azureCreate(e env, credJSON string) (string, error) {
+	if flag.NArg() != 13 || flag.Arg(12) != "-yes" {
+		return "", errors.New("usage: azure create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes (creates a billable VM)")
+	}
+
+	nsg := flag.Arg(11)
+	if nsg == "-" {
+		nsg = ""
+	}
+
+	spec, err := json.Marshal(map[string]any{
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5),
+		"resourceGroup": flag.Arg(6), "location": flag.Arg(7), "size": flag.Arg(8), "imageId": flag.Arg(9),
+		"subnetId": flag.Arg(10), "securityGroupId": nsg, "associatePublicIp": true,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartAzureCreate(e.cfg, e.context, credJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
 }
 
 // awsCreate runs a billable instance: scratch accounts only, and only with -yes.
