@@ -42,6 +42,7 @@ struct HardwareView: View {
                     disksSection(hw)
                     extensionsSection(hw)
                     securitySection(hw)
+                    if watchdogShown { watchdogSection(hw) }
                     if pciShown, case .loaded(let s, _, _) = sensors {
                         PCISection(sensors: s)
                     }
@@ -65,6 +66,9 @@ struct HardwareView: View {
         }
     }
 
+    /// Talos has watchdog timers from 1.7; shown while the node's features are unknown.
+    private var watchdogShown: Bool { nodes.support(.watchdog, node: node).supported }
+
     private var pciShown: Bool {
         if case .loaded(let s, _, _) = sensors { return !s.pci.isEmpty || s.errors["pci"] != nil }
         return false
@@ -79,8 +83,12 @@ struct HardwareView: View {
             JumpSection(id: "disks", label: String(localized: "Disks")),
             JumpSection(id: "extensions", label: String(localized: "System extensions")),
             JumpSection(id: "security", label: String(localized: "Security")),
+            JumpSection(id: "watchdog", label: String(localized: "Watchdog")),
             JumpSection(id: "pci", label: String(localized: "PCI devices")),
-        ].filter { ($0.id != "sensors" || sensorsShown) && ($0.id != "pci" || pciShown) }
+        ].filter {
+            ($0.id != "sensors" || sensorsShown) && ($0.id != "pci" || pciShown)
+                && ($0.id != "watchdog" || watchdogShown)
+        }
     }
 
     private func load() async {
@@ -239,6 +247,23 @@ struct HardwareView: View {
             }
         } header: {
             Text("Security").sectionTarget("security")
+        }
+    }
+
+    /// No watchdog is an answer, not an empty section: say what it means.
+    private func watchdogSection(_ hw: NodeHardware) -> some View {
+        Section {
+            SectionError(message: hw.errors["watchdog"])
+            if let watchdog = hw.watchdog {
+                InfoRow(label: String(localized: "Device"), value: watchdog.device, monospaced: true)
+                InfoRow(label: String(localized: "Resets after"), value: watchdogInterval(watchdog.timeoutSec))
+                InfoRow(label: String(localized: "Fed every"), value: watchdogInterval(watchdog.feedIntervalSec))
+            } else if hw.errors["watchdog"] == nil {
+                Text("No watchdog timer. A stuck node stays stuck until someone reboots it.")
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Watchdog").sectionTarget("watchdog")
         }
     }
 

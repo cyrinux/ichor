@@ -968,6 +968,11 @@
     <string name="snippet_param_host">Registry</string>
     <string name="snippet_param_endpoint">URL do espelho</string>
     <string name="snippet_param_enabled">Ativado</string>
+    <string name="snippet_watchdog">Temporizador watchdog</string>
+    <string name="snippet_watchdog_desc">Reiniciar um nó cujo Talos para de responder, após o tempo limite.</string>
+    <string name="snippet_param_device">Dispositivo</string>
+    <string name="snippet_param_timeout">Tempo limite (mínimo 10 s)</string>
+    <string name="snippet_watchdog_note">O nó precisa de um dispositivo watchdog: o do chipset de um servidor físico (iTCO, SP5100) ou um virtual (i6300esb do QEMU, Proxmox ou libvirt, Xen). Sem ele, o nó ignora a configuração e nada reinicia.</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Valores de boot que o Talos lê antes da configuração da máquina. Um valor errado pode impedir o boot do nó: altere-os somente para corrigir um nó que não consegue dar boot com sua configuração.</string>
     <string name="meta_not_loaded">O nó ainda não leu sua partição META.</string>
@@ -1377,6 +1382,11 @@
     <string name="hardware_enabled">Sim</string>
     <string name="hardware_disabled">Não</string>
     <string name="hardware_sensors">Sensores</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Dispositivo</string>
+    <string name="hardware_watchdog_timeout">Reinicia após</string>
+    <string name="hardware_watchdog_feed">Alimentado a cada</string>
+    <string name="hardware_watchdog_none">Sem watchdog. Um nó travado continua travado até alguém reiniciá-lo.</string>
     <string name="hardware_pci">Dispositivos PCI</string>
     <string name="hardware_throttled">Limitado</string>
     <string name="hardware_throttled_hint">Os núcleos rodam bem abaixo da velocidade máxima com o governor performance, ou um sensor está acima do máximo.</string>

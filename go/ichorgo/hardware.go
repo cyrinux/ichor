@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
+	"github.com/cosi-project/runtime/pkg/state"
 	"github.com/siderolabs/talos/pkg/machinery/api/storage"
 	"github.com/siderolabs/talos/pkg/machinery/resources/block"
 	"github.com/siderolabs/talos/pkg/machinery/resources/hardware"
@@ -14,13 +16,16 @@ import (
 )
 
 type nodeHardware struct {
-	System     *systemInfo       `json:"system"` // null when unavailable
-	Processors []processorInfo   `json:"processors"`
-	Memory     []memoryModule    `json:"memory"`
-	Disks      []diskInfo        `json:"disks"`
-	Extensions []extensionInfo   `json:"extensions"`
-	Security   *securityInfo     `json:"security"` // null when unavailable
-	Errors     map[string]string `json:"errors"`   // section -> error, for sections that failed
+	System     *systemInfo     `json:"system"` // null when unavailable
+	Processors []processorInfo `json:"processors"`
+	Memory     []memoryModule  `json:"memory"`
+	Disks      []diskInfo      `json:"disks"`
+	Extensions []extensionInfo `json:"extensions"`
+	Security   *securityInfo   `json:"security"` // null when unavailable
+	// Watchdog is the armed watchdog timer; null when none is configured (or when the read
+	// failed: errors["watchdog"] then says why).
+	Watchdog *watchdogInfo     `json:"watchdog"`
+	Errors   map[string]string `json:"errors"` // section -> error, for sections that failed
 }
 
 type systemInfo struct {
@@ -84,7 +89,15 @@ type securityInfo struct {
 	ModuleSignatureEnforced  bool   `json:"moduleSignatureEnforced"`
 }
 
-const hardwareSections = 6
+// watchdogInfo is the hardware watchdog Talos feeds (WatchdogTimerConfig): when machined stops
+// feeding it for TimeoutSec, the device resets the machine. Durations are whole seconds.
+type watchdogInfo struct {
+	Device          string `json:"device"`
+	TimeoutSec      int    `json:"timeoutSec"`
+	FeedIntervalSec int    `json:"feedIntervalSec"`
+}
+
+const hardwareSections = 7
 
 // NodeHardware returns node's SMBIOS system/CPU/memory info, disks, system extensions
 // and security state (os:reader). Each section is best-effort: a failure leaves it empty
@@ -146,6 +159,12 @@ func NodeHardware(configYAML, contextName, node string) (out string, err error) 
 			out.Errors["security"] = s.friendly(node, err)
 		} else {
 			out.Security = mapSecurity(sec.TypedSpec())
+		}
+
+		if wd, err := readWatchdog(ctx, st); err != nil {
+			out.Errors["watchdog"] = s.friendly(node, err)
+		} else {
+			out.Watchdog = wd
 		}
 
 		if len(out.Errors) == hardwareSections {
@@ -357,4 +376,40 @@ func mapSecurity(spec *runtime.SecurityStateSpec) *securityInfo {
 		FIPSState:                spec.FIPSState.String(),
 		ModuleSignatureEnforced:  spec.ModuleSignatureEnforced,
 	}
+}
+
+// readWatchdog lists the node's watchdog timer statuses. None at all is no watchdog
+// configured (nil), not a failure; a Talos older than 1.7 does not know the type (an error).
+func readWatchdog(ctx context.Context, st state.CoreStateReader) (*watchdogInfo, error) {
+	timers, err := safe.StateListAll[*runtime.WatchdogTimerStatus](ctx, st)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapWatchdog(safe.ToSlice(timers, identity)), nil
+}
+
+// mapWatchdog is the first armed timer (Talos arms one at most), nil without any.
+func mapWatchdog(in []*runtime.WatchdogTimerStatus) *watchdogInfo {
+	if len(in) == 0 {
+		return nil
+	}
+
+	sort.Slice(in, func(i, j int) bool { return in[i].Metadata().ID() < in[j].Metadata().ID() })
+	spec := in[0].TypedSpec()
+
+	return &watchdogInfo{
+		Device:          spec.Device,
+		TimeoutSec:      int(spec.Timeout.Seconds()),
+		FeedIntervalSec: int(spec.FeedInterval.Seconds()),
+	}
+}
+
+// watchdogSetting is a node's watchdog as a drift value: "/dev/watchdog0 2m0s", or "off".
+func watchdogSetting(w *watchdogInfo) string {
+	if w == nil {
+		return "off"
+	}
+
+	return fmt.Sprintf("%s %s", w.Device, time.Duration(w.TimeoutSec)*time.Second)
 }

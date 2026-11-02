@@ -6,8 +6,13 @@ import org.junit.Test
 class HardwarePartsTest {
     private val always = listOf(
         HardwarePart.SYSTEM, HardwarePart.PROCESSORS, HardwarePart.MEMORY, HardwarePart.DISKS,
-        HardwarePart.EXTENSIONS, HardwarePart.SECURITY,
+        HardwarePart.EXTENSIONS, HardwarePart.SECURITY, HardwarePart.WATCHDOG,
     )
+
+    @Test
+    fun aTalosWithoutWatchdogTimersHasNoWatchdogCard() {
+        assertEquals(always - HardwarePart.WATCHDOG, hardwareParts(sensors = false, pci = false, watchdog = false))
+    }
 
     @Test
     fun aVirtualMachineHasNeitherSensorsNorPci() {

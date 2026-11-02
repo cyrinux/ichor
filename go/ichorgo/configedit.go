@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,9 @@ const (
 	// configOpPut sets the value at path whatever is there, making the objects on the way:
 	// what a snippet does to a config that may not have the section yet.
 	configOpPut = "put"
+	// configOpAddDoc appends Value, a whole document (type yaml), after the last one; Doc and
+	// Path are not used (-1 and none). For the documents v1alpha1 has no field for.
+	configOpAddDoc = "addDoc"
 
 	// configTypeYAML is a whole YAML value (a list, an object): only snippets make it.
 	configTypeYAML = "yaml"
@@ -38,7 +42,8 @@ type configEdit struct {
 // draft YAML. editJSON is {"doc","path","op","key","type","value"}: doc and path as given by
 // MachineConfigDescribe; op is "set" (replace the scalar at path), "add" (a new "key" in the
 // object at path, or a new item at the end of the list at path), "remove" or "put" (the
-// value at path whatever is there, the objects on the way made); type is the
+// value at path whatever is there, the objects on the way made) or "addDoc" (value is a new
+// document, added last; refused when the draft has one of its kind and name); type is the
 // type of the new value (object and array start empty; "any" reads value as YAML). Hidden
 // secrets cannot be set. Nothing is sent to the node.
 func MachineConfigEdit(draftYAML, editJSON string) (out string, err error) {
@@ -54,6 +59,14 @@ func MachineConfigEdit(draftYAML, editJSON string) (out string, err error) {
 		return "", fmt.Errorf("the draft is not valid YAML: %w", err)
 	}
 
+	if edit.Op == configOpAddDoc {
+		if docs, err = addConfigDoc(docs, edit, false); err != nil {
+			return "", err
+		}
+
+		return encodeConfigDocs(docs)
+	}
+
 	if edit.Doc < 0 || edit.Doc >= len(docs) {
 		return "", fmt.Errorf("no document %d in this config", edit.Doc)
 	}
@@ -63,6 +76,36 @@ func MachineConfigEdit(draftYAML, editJSON string) (out string, err error) {
 	}
 
 	return encodeConfigDocs(docs)
+}
+
+// addConfigDoc returns docs with edit's document added last. One of the same kind and name
+// already there is refused, or replaced in place when replace is set (the same edits replayed
+// on a node that has it).
+func addConfigDoc(docs []*yaml.Node, edit configEdit, replace bool) ([]*yaml.Node, error) {
+	doc, err := newConfigValue(configTypeYAML, edit.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := configDocKind(doc)
+	if doc.Kind != yaml.MappingNode || kind == "" {
+		return nil, errors.New("a new document needs a kind")
+	}
+
+	name := yamlScalarAt(doc, []string{"name"})
+
+	if i := configDocs(docs).find(kind, name); i >= 0 && yamlScalarAt(docs[i], []string{"name"}) == name {
+		if !replace {
+			return nil, fmt.Errorf("this config already has a %s document", kind)
+		}
+
+		out := slices.Clone(docs)
+		out[i] = doc
+
+		return out, nil
+	}
+
+	return append(slices.Clone(docs), doc), nil
 }
 
 func applyConfigEdit(root *yaml.Node, edit configEdit) error {

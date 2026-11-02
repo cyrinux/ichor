@@ -929,6 +929,11 @@
     <string name="snippet_param_host">镜像仓库</string>
     <string name="snippet_param_endpoint">镜像站 URL</string>
     <string name="snippet_param_enabled">已启用</string>
+    <string name="snippet_watchdog">看门狗定时器</string>
+    <string name="snippet_watchdog_desc">Talos 停止响应后，在超时后重置该节点。</string>
+    <string name="snippet_param_device">设备</string>
+    <string name="snippet_param_timeout">超时（至少 10 秒）</string>
+    <string name="snippet_watchdog_note">节点需要看门狗设备：物理服务器的芯片组（iTCO、SP5100）或虚拟设备（QEMU、Proxmox 或 libvirt 的 i6300esb、Xen）。没有它，节点会忽略此设置，也不会重启。</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Talos 在读取机器配置之前读取的启动时值。错误的值可能导致节点无法启动：仅在修复无法使用其配置启动的节点时才更改它们。</string>
     <string name="meta_not_loaded">节点尚未读取其 META 分区。</string>
@@ -1330,6 +1335,11 @@
     <string name="hardware_enabled">是</string>
     <string name="hardware_disabled">否</string>
     <string name="hardware_sensors">传感器</string>
+    <string name="hardware_watchdog">看门狗</string>
+    <string name="hardware_watchdog_device">设备</string>
+    <string name="hardware_watchdog_timeout">超时后重置</string>
+    <string name="hardware_watchdog_feed">喂狗间隔</string>
+    <string name="hardware_watchdog_none">没有看门狗定时器。卡住的节点会一直卡住，直到有人重启它。</string>
     <string name="hardware_pci">PCI 设备</string>
     <string name="hardware_throttled">降频</string>
     <string name="hardware_throttled_hint">在 performance 调速器下，核心运行速度远低于其最高频率，或某个传感器超过其最大值。</string>

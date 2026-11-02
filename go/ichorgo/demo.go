@@ -285,6 +285,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			Memory:     []memoryModule{{Slot: "DIMM0", SizeMiB: uint32(n.MemTotal >> 20), Type: "DDR4", SpeedMTs: 3200}},
 			Disks:      []diskInfo{{Name: "nvme0n1", DevPath: "/dev/nvme0n1", Model: "Demo NVMe", Size: 120 << 30, Type: "nvme", SystemDisk: true}},
 			Extensions: []extensionInfo{}, Security: &securityInfo{SecureBoot: true, BootedWithUKI: true}, Errors: map[string]string{},
+			Watchdog: demoWatchdog(n.Hostname),
 		})
 	case "NodeSensors":
 		return toJSON(demoSensors(n))

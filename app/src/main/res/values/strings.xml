@@ -971,6 +971,11 @@
     <string name="snippet_param_host">Registry</string>
     <string name="snippet_param_endpoint">Mirror URL</string>
     <string name="snippet_param_enabled">Enabled</string>
+    <string name="snippet_watchdog">Watchdog timer</string>
+    <string name="snippet_watchdog_desc">Reset a node whose Talos stops answering, after the timeout.</string>
+    <string name="snippet_param_device">Device</string>
+    <string name="snippet_param_timeout">Timeout (10s minimum)</string>
+    <string name="snippet_watchdog_note">Needs a watchdog device on the node: a physical server\'s chipset (iTCO, SP5100) or a virtual one (QEMU, Proxmox or libvirt i6300esb, Xen). Without one the node ignores the setting and nothing reboots.</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Boot-time values Talos reads before the machine config. A wrong value can keep the node from booting: change them only to fix a node that cannot boot with its config.</string>
     <string name="meta_not_loaded">The node has not read its META partition yet.</string>
@@ -1381,6 +1386,11 @@
     <string name="hardware_enabled">Yes</string>
     <string name="hardware_disabled">No</string>
     <string name="hardware_sensors">Sensors</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Device</string>
+    <string name="hardware_watchdog_timeout">Resets after</string>
+    <string name="hardware_watchdog_feed">Fed every</string>
+    <string name="hardware_watchdog_none">No watchdog timer. A stuck node stays stuck until someone reboots it.</string>
     <string name="hardware_pci">PCI devices</string>
     <string name="hardware_throttled">Throttled</string>
     <string name="hardware_throttled_hint">Cores run well below their top speed under the performance governor, or a sensor is above its max.</string>

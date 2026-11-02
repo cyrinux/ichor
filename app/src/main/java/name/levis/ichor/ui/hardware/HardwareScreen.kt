@@ -42,8 +42,12 @@ import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.ProcessorInfo
 import name.levis.ichor.model.SecurityInfo
 import name.levis.ichor.model.SystemInfo
+import name.levis.ichor.model.TalosFeature
+import name.levis.ichor.model.WatchdogInfo
 import name.levis.ichor.model.sortedDisks
+import name.levis.ichor.model.support
 import name.levis.ichor.model.totalMemoryBytes
+import name.levis.ichor.model.watchdogInterval
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -57,6 +61,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.rememberNodeState
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
@@ -104,19 +109,21 @@ fun HardwareScreen(
             )
         },
     ) { padding ->
+        val (features, _) = rememberNodeState(node)
         Loaded(state, { vm.refresh(); sensorsVm.refresh() }, Modifier.pageContent(padding)) { data ->
-            HardwareContent(data, sensorsState)
+            HardwareContent(data, sensorsState, watchdog = features.support(TalosFeature.WATCHDOG).supported)
         }
     }
 }
 
 @Composable
-private fun HardwareContent(hw: NodeHardware, sensorsState: UiState<NodeSensors>) {
+private fun HardwareContent(hw: NodeHardware, sensorsState: UiState<NodeSensors>, watchdog: Boolean) {
     val sensors = (sensorsState as? UiState.Loaded)?.data
     val parts = hardwareParts(
         // Sensors first: a hot or throttled node is why one opens this screen. Hidden on a VM.
         sensors = sensors?.showsSensorsCard() == true || sensorsState is UiState.Failed,
         pci = sensors?.showsPciCard() == true,
+        watchdog = watchdog,
     )
     val labels = parts.map { stringResource(it.title) }
     val sections = remember(parts, labels) { parts.mapIndexed { i, part -> JumpSection(part.key, labels[i], i) } }
@@ -173,6 +180,10 @@ private fun HardwareCard(part: HardwarePart, hw: NodeHardware, sensors: NodeSens
         }
         HardwarePart.SECURITY -> Section(title, hw.errors[HardwareSection.SECURITY], hw.security == null) {
             hw.security?.let { SecurityRows(it) }
+        }
+        // No watchdog is an answer, not an empty section: say what it means.
+        HardwarePart.WATCHDOG -> Section(title, hw.errors[HardwareSection.WATCHDOG], empty = false) {
+            hw.watchdog?.let { WatchdogRows(it) } ?: MutedText(stringResource(R.string.hardware_watchdog_none))
         }
         HardwarePart.PCI -> sensors?.let { PciCard(it) }
     }
@@ -292,6 +303,13 @@ private fun SecurityRows(s: SecurityInfo) {
     OptionalRow("FIPS", s.fipsState)
     OptionalRow(stringResource(R.string.hardware_uki_key), s.ukiSigningKeyFingerprint, mono = true)
     OptionalRow(stringResource(R.string.hardware_pcr_key), s.pcrSigningKeyFingerprint, mono = true)
+}
+
+@Composable
+private fun WatchdogRows(w: WatchdogInfo) {
+    OptionalRow(stringResource(R.string.hardware_watchdog_device), w.device, mono = true)
+    InfoRow(stringResource(R.string.hardware_watchdog_timeout), watchdogInterval(w.timeoutSec))
+    InfoRow(stringResource(R.string.hardware_watchdog_feed), watchdogInterval(w.feedIntervalSec))
 }
 
 @Composable

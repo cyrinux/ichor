@@ -204201,6 +204201,132 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node do Kubernetes não excluído: %2$@" } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node в Kubernetes не удалён: %2$@" } }
       }
+    },
+    "Watchdog" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "看门狗" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ウォッチドッグ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } }
+      }
+    },
+    "Watchdog timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog matériel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Temporizador watchdog" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog-Timer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Timer watchdog" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сторожовий таймер" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "看门狗定时器" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ウォッチドッグタイマー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Temporizador watchdog" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сторожевой таймер" } }
+      }
+    },
+    "Reset a node whose Talos stops answering, after the timeout." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Redémarre un nœud dont Talos ne répond plus, une fois le délai écoulé." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reinicia un nodo cuyo Talos deja de responder, pasado el tiempo límite." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Setzt einen Node zurück, dessen Talos nicht mehr antwortet, sobald das Zeitlimit abläuft." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riavvia un nodo il cui Talos non risponde più, allo scadere del timeout." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перезапускає вузол, чий Talos перестав відповідати, після тайм-ауту." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 停止响应后，在超时后重置该节点。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos が応答しなくなったノードを、タイムアウト後にリセットします。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reiniciar um nó cujo Talos para de responder, após o tempo limite." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Перезапустить узел, чей Talos перестал отвечать, по истечении тайм-аута." } }
+      }
+    },
+    "Timeout (10s minimum)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Délai (10 s minimum)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tiempo límite (mínimo 10 s)" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeitlimit (mindestens 10 s)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Timeout (minimo 10 s)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тайм-аут (щонайменше 10 с)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时（至少 10 秒）" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タイムアウト（最短 10 秒）" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tempo limite (mínimo 10 s)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тайм-аут (не меньше 10 с)" } }
+      }
+    },
+    "Needs a watchdog device on the node: a physical server's chipset (iTCO, SP5100) or a virtual one (QEMU, Proxmox or libvirt i6300esb, Xen). Without one the node ignores the setting and nothing reboots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le nœud doit avoir un watchdog : celui du chipset d’un serveur physique (iTCO, SP5100) ou un virtuel (i6300esb de QEMU, Proxmox ou libvirt, Xen). Sans lui, le nœud ignore le réglage et rien ne redémarre." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El nodo necesita un dispositivo watchdog: el del chipset de un servidor físico (iTCO, SP5100) o uno virtual (i6300esb de QEMU, Proxmox o libvirt, Xen). Sin él, el nodo ignora el ajuste y nada se reinicia." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Node braucht ein Watchdog-Gerät: den Chipsatz eines physischen Servers (iTCO, SP5100) oder ein virtuelles (i6300esb von QEMU, Proxmox oder libvirt, Xen). Ohne eines ignoriert der Node die Einstellung und nichts startet neu." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il nodo deve avere un dispositivo watchdog: quello del chipset di un server fisico (iTCO, SP5100) o uno virtuale (i6300esb di QEMU, Proxmox o libvirt, Xen). Senza, il nodo ignora l’impostazione e nulla si riavvia." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вузлу потрібен сторожовий пристрій: чипсет фізичного сервера (iTCO, SP5100) або віртуальний (i6300esb у QEMU, Proxmox чи libvirt, Xen). Без нього вузол ігнорує налаштування і ніщо не перезапускається." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点需要看门狗设备：物理服务器的芯片组（iTCO、SP5100）或虚拟设备（QEMU、Proxmox 或 libvirt 的 i6300esb、Xen）。没有它，节点会忽略此设置，也不会重启。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノードにウォッチドッグデバイスが必要です。物理サーバーのチップセット（iTCO、SP5100）か仮想デバイス（QEMU、Proxmox、libvirt の i6300esb、Xen）です。ない場合、ノードは設定を無視し、何も再起動しません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O nó precisa de um dispositivo watchdog: o do chipset de um servidor físico (iTCO, SP5100) ou um virtual (i6300esb do QEMU, Proxmox ou libvirt, Xen). Sem ele, o nó ignora a configuração e nada reinicia." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Узлу нужно сторожевое устройство: чипсет физического сервера (iTCO, SP5100) или виртуальное (i6300esb в QEMU, Proxmox или libvirt, Xen). Без него узел игнорирует настройку и ничего не перезапускается." } }
+      }
+    },
+    "Device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Périphérique" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Dispositivo" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gerät" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dispositivo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Пристрій" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设备" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デバイス" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Dispositivo" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Устройство" } }
+      }
+    },
+    "Resets after" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Redémarre après" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reinicia tras" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Setzt zurück nach" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riavvia dopo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перезапускає через" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时后重置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "リセットまで" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reinicia após" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Перезапускает через" } }
+      }
+    },
+    "Fed every" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Alimenté toutes les" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Alimentado cada" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gefüttert alle" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Alimentato ogni" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Живиться кожні" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "喂狗间隔" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "給餌間隔" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alimentado a cada" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подпитка каждые" } }
+      }
+    },
+    "No watchdog timer. A stuck node stays stuck until someone reboots it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun watchdog. Un nœud bloqué le reste jusqu’à ce que quelqu’un le redémarre." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin watchdog. Un nodo colgado sigue así hasta que alguien lo reinicie." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Watchdog. Ein hängender Knoten bleibt hängen, bis ihn jemand neu startet." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun watchdog. Un nodo bloccato resta bloccato finché qualcuno non lo riavvia." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Немає watchdog-таймера. Завислий вузол залишається завислим, доки хтось його не перезапустить." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有看门狗定时器。卡住的节点会一直卡住，直到有人重启它。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ウォッチドッグタイマーがありません。停止したノードは誰かが再起動するまで止まったままです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem watchdog. Um nó travado continua travado até alguém reiniciá-lo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет watchdog-таймера. Зависший узел остаётся зависшим, пока его кто-нибудь не перезагрузит." } }
+      }
     }
   },
   "version" : "1.0"

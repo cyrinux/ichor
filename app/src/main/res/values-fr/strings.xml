@@ -973,6 +973,11 @@
     <string name="snippet_param_host">Registre</string>
     <string name="snippet_param_endpoint">URL du miroir</string>
     <string name="snippet_param_enabled">Activé</string>
+    <string name="snippet_watchdog">Watchdog matériel</string>
+    <string name="snippet_watchdog_desc">Redémarre un nœud dont Talos ne répond plus, une fois le délai écoulé.</string>
+    <string name="snippet_param_device">Périphérique</string>
+    <string name="snippet_param_timeout">Délai (10 s minimum)</string>
+    <string name="snippet_watchdog_note">Le nœud doit avoir un watchdog : celui du chipset d’un serveur physique (iTCO, SP5100) ou un virtuel (i6300esb de QEMU, Proxmox ou libvirt, Xen). Sans lui, le nœud ignore le réglage et rien ne redémarre.</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Des valeurs de démarrage que Talos lit avant la configuration machine. Une valeur fausse peut empêcher le nœud de démarrer : ne les changez que pour réparer un nœud qui ne démarre pas avec sa configuration.</string>
     <string name="meta_not_loaded">Le nœud n\'a pas encore lu sa partition META.</string>
@@ -1382,6 +1387,11 @@
     <string name="hardware_enabled">Oui</string>
     <string name="hardware_disabled">Non</string>
     <string name="hardware_sensors">Capteurs</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Périphérique</string>
+    <string name="hardware_watchdog_timeout">Redémarre après</string>
+    <string name="hardware_watchdog_feed">Alimenté toutes les</string>
+    <string name="hardware_watchdog_none">Aucun watchdog. Un nœud bloqué le reste jusqu’à ce que quelqu’un le redémarre.</string>
     <string name="hardware_pci">Périphériques PCI</string>
     <string name="hardware_throttled">Bridé</string>
     <string name="hardware_throttled_hint">Des cœurs tournent bien sous leur vitesse maximale avec le gouverneur performance, ou un capteur dépasse son maximum.</string>

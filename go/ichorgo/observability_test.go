@@ -131,8 +131,11 @@ func TestDemoDriftShowsSampleDifferences(t *testing.T) {
 	if mtu := keys["mtu"]; len(mtu.Added) != 1 || len(mtu.Removed) != 1 || len(mtu.Changed) != 0 {
 		t.Fatalf("mtu: %+v", mtu)
 	}
-	if sb := keys["secureBoot"]; sb.Before != "true" || sb.After != "false" || len(keys) != 3 {
-		t.Fatalf("secureBoot or extra keys: %+v", keys)
+	if sb := keys["secureBoot"]; sb.Before != "true" || sb.After != "false" {
+		t.Fatalf("secureBoot: %+v", sb)
+	}
+	if wd := keys["watchdog"]; wd.Before != "/dev/watchdog0 2m0s" || wd.After != "off" || len(keys) != 4 {
+		t.Fatalf("watchdog or extra keys: %+v", keys)
 	}
 }
 func TestIncidentBoundsDeduplicationAndIsolation(t *testing.T) {

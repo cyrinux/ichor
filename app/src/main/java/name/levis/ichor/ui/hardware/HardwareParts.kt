@@ -12,18 +12,21 @@ enum class HardwarePart(val key: String, @StringRes val title: Int) {
     DISKS("disks", R.string.hardware_disks),
     EXTENSIONS("extensions", R.string.hardware_extensions),
     SECURITY("security", R.string.hardware_security),
+    WATCHDOG("watchdog", R.string.hardware_watchdog),
     PCI("pci", R.string.hardware_pci),
 }
 
 /**
  * The cards shown, in order: sensors first when there are some (or their read failed), PCI last
- * when there are devices; the hardware cards always. One list drives both the `LazyColumn` items
- * and the section rail, so a card's position is its rail index.
+ * when there are devices, the watchdog when the node's Talos has watchdog timers (1.7); the
+ * other hardware cards always. One list drives both the `LazyColumn` items and the section
+ * rail, so a card's position is its rail index.
  */
-fun hardwareParts(sensors: Boolean, pci: Boolean): List<HardwarePart> = HardwarePart.entries.filter {
+fun hardwareParts(sensors: Boolean, pci: Boolean, watchdog: Boolean = true): List<HardwarePart> = HardwarePart.entries.filter {
     when (it) {
         HardwarePart.SENSORS -> sensors
         HardwarePart.PCI -> pci
+        HardwarePart.WATCHDOG -> watchdog
         else -> true
     }
 }

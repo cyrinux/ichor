@@ -95,6 +95,9 @@ var featureRules = []featureRule{
 	// zones, throttle counters): v1.0.0; PCIDevices.hardware.talos.dev is listed through the
 	// COSI API. NodeSensors reports a missing part in its "errors".
 	{name: "sensors", min: "v1.5"},
+	// WatchdogTimerStatuses.runtime.talos.dev and the WatchdogTimerConfig document: first in
+	// v1.7.0 (pkg/machinery/resources/runtime/watchdog_timer_status.go is absent from v1.6.0).
+	{name: "watchdog", min: "v1.7", hint: "watchdog timers"},
 	// rpc ImageList (machine.proto): first in v1.5.0; service ImageService (v1.13.0) is the
 	// fallback once ImageList is gone.
 	{name: "images", min: "v1.5"},
