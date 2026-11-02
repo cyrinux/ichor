@@ -1330,6 +1330,11 @@
     <string name="hardware_enabled">はい</string>
     <string name="hardware_disabled">いいえ</string>
     <string name="hardware_sensors">センサー</string>
+    <string name="hardware_watchdog">ウォッチドッグ</string>
+    <string name="hardware_watchdog_device">デバイス</string>
+    <string name="hardware_watchdog_timeout">リセットまで</string>
+    <string name="hardware_watchdog_feed">給餌間隔</string>
+    <string name="hardware_watchdog_none">ウォッチドッグタイマーがありません。停止したノードは誰かが再起動するまで止まったままです。</string>
     <string name="hardware_pci">PCI デバイス</string>
     <string name="hardware_throttled">スロットリング中</string>
     <string name="hardware_throttled_hint">performance ガバナー下でコアが最高速度を大きく下回って動作しているか、センサーが最大値を超えています。</string>

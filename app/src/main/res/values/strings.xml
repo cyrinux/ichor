@@ -1381,6 +1381,11 @@
     <string name="hardware_enabled">Yes</string>
     <string name="hardware_disabled">No</string>
     <string name="hardware_sensors">Sensors</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Device</string>
+    <string name="hardware_watchdog_timeout">Resets after</string>
+    <string name="hardware_watchdog_feed">Fed every</string>
+    <string name="hardware_watchdog_none">No watchdog timer. A stuck node stays stuck until someone reboots it.</string>
     <string name="hardware_pci">PCI devices</string>
     <string name="hardware_throttled">Throttled</string>
     <string name="hardware_throttled_hint">Cores run well below their top speed under the performance governor, or a sensor is above its max.</string>

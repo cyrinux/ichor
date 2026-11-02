@@ -1469,6 +1469,11 @@
     <string name="hardware_enabled">Так</string>
     <string name="hardware_disabled">Ні</string>
     <string name="hardware_sensors">Датчики</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Пристрій</string>
+    <string name="hardware_watchdog_timeout">Перезапускає через</string>
+    <string name="hardware_watchdog_feed">Живиться кожні</string>
+    <string name="hardware_watchdog_none">Немає watchdog-таймера. Завислий вузол залишається завислим, доки хтось його не перезапустить.</string>
     <string name="hardware_pci">Пристрої PCI</string>
     <string name="hardware_throttled">Троттлінг</string>
     <string name="hardware_throttled_hint">Ядра працюють значно нижче максимальної частоти з регулятором performance, або датчик перевищує свій максимум.</string>

@@ -1382,6 +1382,11 @@
     <string name="hardware_enabled">Sí</string>
     <string name="hardware_disabled">No</string>
     <string name="hardware_sensors">Sensores</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Dispositivo</string>
+    <string name="hardware_watchdog_timeout">Reinicia tras</string>
+    <string name="hardware_watchdog_feed">Alimentado cada</string>
+    <string name="hardware_watchdog_none">Sin watchdog. Un nodo colgado sigue así hasta que alguien lo reinicie.</string>
     <string name="hardware_pci">Dispositivos PCI</string>
     <string name="hardware_throttled">Limitado</string>
     <string name="hardware_throttled_hint">Hay núcleos muy por debajo de su velocidad máxima con el gobernador performance, o un sensor supera su máximo.</string>

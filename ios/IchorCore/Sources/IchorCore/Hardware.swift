@@ -12,10 +12,14 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
     public let security: SecurityInfo?
     public let errors: [String: String]
 
+    /// nil when no watchdog timer is configured (or its read failed: see `errors["watchdog"]`).
+    public let watchdog: WatchdogInfo?
+
     public init(
         system: SystemInfo? = nil, processors: [ProcessorInfo] = [], memory: [MemoryModule] = [],
         disks: [DiskInfo] = [],
-        extensions: [ExtensionInfo] = [], security: SecurityInfo? = nil, errors: [String: String] = [:]
+        extensions: [ExtensionInfo] = [], security: SecurityInfo? = nil, watchdog: WatchdogInfo? = nil,
+        errors: [String: String] = [:]
     ) {
         self.system = system
         self.processors = processors
@@ -23,10 +27,13 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
         self.disks = disks
         self.extensions = extensions
         self.security = security
+        self.watchdog = watchdog
         self.errors = errors
     }
 
-    private enum CodingKeys: String, CodingKey { case system, processors, memory, disks, extensions, security, errors }
+    private enum CodingKeys: String, CodingKey {
+        case system, processors, memory, disks, extensions, security, watchdog, errors
+    }
 
     // Go encodes empty (nil) slices and maps as null.
     public init(from decoder: Decoder) throws {
@@ -37,6 +44,7 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
         disks = try c.field(.disks, [])
         extensions = try c.field(.extensions, [])
         security = try c.decodeIfPresent(SecurityInfo.self, forKey: .security)
+        watchdog = try c.decodeIfPresent(WatchdogInfo.self, forKey: .watchdog)
         errors = try c.field(.errors, [:])
     }
 
@@ -217,6 +225,35 @@ public struct SecurityInfo: Decodable, Equatable, Sendable {
         self.fipsState = fipsState
         self.moduleSignatureEnforced = moduleSignatureEnforced
     }
+}
+
+/// The hardware watchdog Talos feeds; it resets the machine after `timeoutSec` without food.
+public struct WatchdogInfo: Decodable, Equatable, Sendable {
+    public let device: String
+    public let timeoutSec: Int
+    public let feedIntervalSec: Int
+
+    public init(device: String = "", timeoutSec: Int = 0, feedIntervalSec: Int = 0) {
+        self.device = device
+        self.timeoutSec = timeoutSec
+        self.feedIntervalSec = feedIntervalSec
+    }
+
+    private enum CodingKeys: String, CodingKey { case device, timeoutSec, feedIntervalSec }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        device = try c.field(.device, "")
+        timeoutSec = try c.field(.timeoutSec, 0)
+        feedIntervalSec = try c.field(.feedIntervalSec, 0)
+    }
+}
+
+/// A watchdog interval: "40s", "2m", "1m 30s".
+public func watchdogInterval(_ seconds: Int) -> String {
+    if seconds < 60 { return "\(seconds)s" }
+    if seconds % 60 == 0 { return "\(seconds / 60)m" }
+    return "\(seconds / 60)m \(seconds % 60)s"
 }
 
 /// Disks with the system (Talos install) disk first, then by name.

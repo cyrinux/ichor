@@ -1375,6 +1375,11 @@
     <string name="hardware_enabled">Ja</string>
     <string name="hardware_disabled">Nein</string>
     <string name="hardware_sensors">Sensoren</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Gerät</string>
+    <string name="hardware_watchdog_timeout">Setzt zurück nach</string>
+    <string name="hardware_watchdog_feed">Gefüttert alle</string>
+    <string name="hardware_watchdog_none">Kein Watchdog. Ein hängender Knoten bleibt hängen, bis ihn jemand neu startet.</string>
     <string name="hardware_pci">PCI-Geräte</string>
     <string name="hardware_throttled">Gedrosselt</string>
     <string name="hardware_throttled_hint">Kerne laufen unter dem Governor performance deutlich unter ihrem Höchsttakt, oder ein Sensor liegt über seinem Maximum.</string>

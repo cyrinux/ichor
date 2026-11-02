@@ -1330,6 +1330,11 @@
     <string name="hardware_enabled">是</string>
     <string name="hardware_disabled">否</string>
     <string name="hardware_sensors">传感器</string>
+    <string name="hardware_watchdog">看门狗</string>
+    <string name="hardware_watchdog_device">设备</string>
+    <string name="hardware_watchdog_timeout">超时后重置</string>
+    <string name="hardware_watchdog_feed">喂狗间隔</string>
+    <string name="hardware_watchdog_none">没有看门狗定时器。卡住的节点会一直卡住，直到有人重启它。</string>
     <string name="hardware_pci">PCI 设备</string>
     <string name="hardware_throttled">降频</string>
     <string name="hardware_throttled_hint">在 performance 调速器下，核心运行速度远低于其最高频率，或某个传感器超过其最大值。</string>

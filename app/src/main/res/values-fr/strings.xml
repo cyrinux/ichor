@@ -1382,6 +1382,11 @@
     <string name="hardware_enabled">Oui</string>
     <string name="hardware_disabled">Non</string>
     <string name="hardware_sensors">Capteurs</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Périphérique</string>
+    <string name="hardware_watchdog_timeout">Redémarre après</string>
+    <string name="hardware_watchdog_feed">Alimenté toutes les</string>
+    <string name="hardware_watchdog_none">Aucun watchdog. Un nœud bloqué le reste jusqu’à ce que quelqu’un le redémarre.</string>
     <string name="hardware_pci">Périphériques PCI</string>
     <string name="hardware_throttled">Bridé</string>
     <string name="hardware_throttled_hint">Des cœurs tournent bien sous leur vitesse maximale avec le gouverneur performance, ou un capteur dépasse son maximum.</string>

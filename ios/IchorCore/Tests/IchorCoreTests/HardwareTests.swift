@@ -33,5 +33,20 @@ final class HardwareTests: XCTestCase {
         XCTAssertEqual(hw.disks, [])
         XCTAssertEqual(hw.totalMemoryBytes, 0)
         XCTAssertEqual(hw.errors["security"], "unsupported")
+        XCTAssertNil(hw.watchdog)
+    }
+
+    func testWatchdogAndNoWatchdog() throws {
+        let armed = try TalosJSON.decode(
+            NodeHardware.self,
+            from: #"{"watchdog":{"device":"/dev/watchdog0","timeoutSec":120,"feedIntervalSec":40},"errors":{}}"#)
+        XCTAssertEqual(armed.watchdog, WatchdogInfo(device: "/dev/watchdog0", timeoutSec: 120, feedIntervalSec: 40))
+        let none = try TalosJSON.decode(NodeHardware.self, from: #"{"watchdog":null,"errors":{}}"#)
+        XCTAssertNil(none.watchdog)
+        XCTAssertNil(none.errors["watchdog"])
+    }
+
+    func testWatchdogIntervals() {
+        XCTAssertEqual([40, 120, 90].map(watchdogInterval), ["40s", "2m", "1m 30s"])
     }
 }

@@ -99,7 +99,7 @@ func ClusterDriftSnapshot(configYAML, contextName string) (out string, err error
 		if e := decodeObservation(raw, e, &hw); e != nil {
 			d.Errors["hardware"] = e.Error()
 		} else {
-			for _, k := range []string{"extensions", "security"} {
+			for _, k := range []string{"extensions", "security", "watchdog"} {
 				if hw.Errors[k] != "" {
 					d.Errors[k] = hw.Errors[k]
 				}
@@ -114,6 +114,9 @@ func ClusterDriftSnapshot(configYAML, contextName string) (out string, err error
 			if hw.Security != nil && hw.Errors["security"] == "" {
 				d.Values["secureBoot"] = fmt.Sprint(hw.Security.SecureBoot)
 				d.Values["uki"] = fmt.Sprint(hw.Security.BootedWithUKI)
+			}
+			if hw.Errors["watchdog"] == "" {
+				d.Values["watchdog"] = watchdogSetting(hw.Watchdog)
 			}
 		}
 		result.Nodes[i] = d

@@ -166,6 +166,8 @@ func driftKeyReason(key string) string {
 		return "extensions come with the installer image: upgrade to an image that has them"
 	case "secureBoot", "uki":
 		return "how the node boots is set by its installation"
+	case "watchdog":
+		return "turn it on from the machine config snippets"
 	}
 
 	return key

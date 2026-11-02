@@ -1382,6 +1382,11 @@
     <string name="hardware_enabled">Sì</string>
     <string name="hardware_disabled">No</string>
     <string name="hardware_sensors">Sensori</string>
+    <string name="hardware_watchdog">Watchdog</string>
+    <string name="hardware_watchdog_device">Dispositivo</string>
+    <string name="hardware_watchdog_timeout">Riavvia dopo</string>
+    <string name="hardware_watchdog_feed">Alimentato ogni</string>
+    <string name="hardware_watchdog_none">Nessun watchdog. Un nodo bloccato resta bloccato finché qualcuno non lo riavvia.</string>
     <string name="hardware_pci">Dispositivi PCI</string>
     <string name="hardware_throttled">Limitato</string>
     <string name="hardware_throttled_hint">Alcuni core girano ben sotto la velocità massima con il governor performance, o un sensore supera il suo massimo.</string>

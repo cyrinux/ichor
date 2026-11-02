@@ -72,7 +72,7 @@ func settingItems(value string) (map[string]bool, map[string]string) {
 
 // Demo drift: every node carries the reference extensions and interfaces, and the
 // second worker differs from the first (an extension bump, one added, one removed,
-// a new schematic, a renamed interface and Secure Boot off). Hashes are fake.
+// a new schematic, a renamed interface, Secure Boot off and no watchdog). Hashes are fake.
 const (
 	demoSchematic        = "0123abcd0123abcd0123abcd0123abcd0123abcd0123abcd0123abcd0123abcd"
 	demoDriftedSchematic = "4567cdef4567cdef4567cdef4567cdef4567cdef4567cdef4567cdef4567cdef"
@@ -87,13 +87,24 @@ func demoDriftNodes(nodes []driftNode) []driftNode {
 		}
 		values["extensions"] = sortedSetting([]string{"iscsi-tools=v0.2.0", "qemu-guest-agent=10.0.2", "schematic=" + demoSchematic, "util-linux-tools=2.41.1"})
 		values["mtu"] = sortedSetting([]string{"ens3=1500", "eth1=9000"})
+		values["watchdog"] = watchdogSetting(demoWatchdog("demo-cp-1"))
 		if n.Hostname == "demo-worker-2" {
 			values["extensions"] = sortedSetting([]string{"btrfs=v1.14.1", "iscsi-tools=v0.2.0", "schematic=" + demoDriftedSchematic, "util-linux-tools=2.41.2"})
 			values["mtu"] = sortedSetting([]string{"enp1s0=1500", "eth1=9000"})
 			values["secureBoot"] = "false"
+			values["watchdog"] = watchdogSetting(nil)
 		}
 		n.Values = values
 		out[i] = n
 	}
 	return out
+}
+
+// demoWatchdog is a demo node's watchdog: the first control plane has one armed and the
+// others none, so the Hardware screen shows both the rows and the "No watchdog timer" line.
+func demoWatchdog(hostname string) *watchdogInfo {
+	if hostname != "demo-cp-1" {
+		return nil
+	}
+	return &watchdogInfo{Device: "/dev/watchdog0", TimeoutSec: 120, FeedIntervalSec: 40}
 }

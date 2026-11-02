@@ -204201,6 +204201,76 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node do Kubernetes não excluído: %2$@" } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Node в Kubernetes не удалён: %2$@" } }
       }
+    },
+    "Watchdog" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "看门狗" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ウォッチドッグ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Watchdog" } }
+      }
+    },
+    "Device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Périphérique" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Dispositivo" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gerät" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dispositivo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Пристрій" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设备" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デバイス" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Dispositivo" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Устройство" } }
+      }
+    },
+    "Resets after" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Redémarre après" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reinicia tras" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Setzt zurück nach" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riavvia dopo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перезапускає через" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超时后重置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "リセットまで" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reinicia após" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Перезапускает через" } }
+      }
+    },
+    "Fed every" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Alimenté toutes les" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Alimentado cada" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gefüttert alle" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Alimentato ogni" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Живиться кожні" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "喂狗间隔" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "給餌間隔" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alimentado a cada" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подпитка каждые" } }
+      }
+    },
+    "No watchdog timer. A stuck node stays stuck until someone reboots it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun watchdog. Un nœud bloqué le reste jusqu’à ce que quelqu’un le redémarre." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin watchdog. Un nodo colgado sigue así hasta que alguien lo reinicie." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Watchdog. Ein hängender Knoten bleibt hängen, bis ihn jemand neu startet." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun watchdog. Un nodo bloccato resta bloccato finché qualcuno non lo riavvia." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Немає watchdog-таймера. Завислий вузол залишається завислим, доки хтось його не перезапустить." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有看门狗定时器。卡住的节点会一直卡住，直到有人重启它。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ウォッチドッグタイマーがありません。停止したノードは誰かが再起動するまで止まったままです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem watchdog. Um nó travado continua travado até alguém reiniciá-lo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет watchdog-таймера. Зависший узел остаётся зависшим, пока его кто-нибудь не перезагрузит." } }
+      }
     }
   },
   "version" : "1.0"
