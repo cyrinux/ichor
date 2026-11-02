@@ -21,7 +21,6 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -139,7 +138,6 @@ fun CapacityScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val loss by vm.loss.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     loss?.let { l ->
         NodeLossSheet(

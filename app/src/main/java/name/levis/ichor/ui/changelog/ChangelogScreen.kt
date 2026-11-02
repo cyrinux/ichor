@@ -12,7 +12,6 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,7 +53,6 @@ fun ChangelogScreen(
     vm: ChangelogViewModel = viewModel(factory = factory { ChangelogViewModel(app.changelogRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     IchorScaffold(
         topBar = {

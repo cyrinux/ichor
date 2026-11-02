@@ -47,13 +47,14 @@ internal fun rememberKubeOperators(active: Boolean, key: Any?): KubeOperators {
         vmsVm.refresh(reset = true)
         policiesVm.refresh(reset = true)
     }
+    if (!active) return KubeOperators()
+    // Collected only while shown: collecting starts a read (LoadingViewModel.loadsOnOpen).
     val crossplane by crossplaneVm.state.collectAsStateWithLifecycle()
     val tailscale by tailscaleVm.state.collectAsStateWithLifecycle()
     val lifecycle by lifecycleVm.state.collectAsStateWithLifecycle()
     val rollouts by rolloutsVm.state.collectAsStateWithLifecycle()
     val vms by vmsVm.state.collectAsStateWithLifecycle()
     val policies by policiesVm.state.collectAsStateWithLifecycle()
-    if (!active) return KubeOperators()
     return KubeOperators(
         crossplane = (crossplane as? UiState.Loaded)?.data?.installed == true,
         tailscale = (tailscale as? UiState.Loaded)?.data?.installed == true,

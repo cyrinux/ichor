@@ -130,7 +130,6 @@ fun CheckupScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.readProgress.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirmDelete by rememberSaveable { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current

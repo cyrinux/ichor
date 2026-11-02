@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -130,7 +129,6 @@ fun PoliciesScreen(
     vm: PoliciesViewModel = viewModel(factory = factory { PoliciesViewModel(app.policyRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var namespace by rememberSaveable { mutableStateOf<String?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
     var open by rememberSaveable { mutableStateOf<String?>(null) }

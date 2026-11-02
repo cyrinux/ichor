@@ -65,6 +65,8 @@ import name.levis.ichor.util.formatDateTime
 import name.levis.ichor.ui.components.pageContent
 
 class CapturesViewModel(private val captures: CaptureRepository) : LoadingViewModel<List<CaptureFile>>() {
+    // The screen reads it again on each resume.
+    override val loadsOnOpen = false
     override suspend fun fetch() = captures.list()
 
     fun delete(file: File) {

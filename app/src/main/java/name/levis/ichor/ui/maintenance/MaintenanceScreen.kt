@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -83,7 +82,6 @@ fun MaintenanceScreen(
     val draining = drainOnly || config?.activeIsKube == true
     // A cluster without Talos drains with its own credentials; a Talos one with its admin kubeconfig.
     val drainDenial = if (config?.activeIsKube == true) rememberKubeDenial(KubeAction.DRAIN_NODE, "") else null
-    LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
     fun start(choice: MaintenanceChoice, name: String) {
         val wasCordoned = (plan as? UiState.Loaded)?.data?.cordoned == true

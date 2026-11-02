@@ -60,6 +60,8 @@ import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.formatDateTime
 
 class TopologyViewModel(private val talos: TalosRepository) : LoadingViewModel<ClusterTopology>() {
+    // Read when its tab is open.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<ClusterTopology>? = talos.cached(TOPOLOGY)
     override val restores get() = talos.restores

@@ -19,6 +19,8 @@ import name.levis.ichor.ui.LoadingViewModel
  * demand, never polled.
  */
 class DataServicesViewModel(private val dataServices: DataServicesRepository) : LoadingViewModel<DataServices>() {
+    // Read with its hints: load.
+    override val loadsOnOpen = false
     override fun cached(): TalosRepository.Timed<DataServices>? = dataServices.cached(DATA_SERVICES)
     override val restores get() = dataServices.restores
     override suspend fun fetch() = dataServices.dataServices(hints)

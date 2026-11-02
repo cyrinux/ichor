@@ -10,6 +10,8 @@ import name.levis.ichor.ui.LoadingViewModel
  * containers is heavier than a stats sample: loaded on demand, never polled.
  */
 class AppsViewModel(private val talos: TalosRepository) : LoadingViewModel<Inventory>() {
+    // Read on each key: load.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<Inventory>? = talos.cached(INVENTORY)
     override val restores get() = talos.restores

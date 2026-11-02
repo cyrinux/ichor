@@ -26,6 +26,8 @@ val INTEGRATION_FORM_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new?
  * for a request (none at first: nothing is named unless chosen). Loaded on demand, never polled.
  */
 class IntegrationsViewModel(private val kube: KubeRepository) : LoadingViewModel<IntegrationReport>() {
+    // Read on each key: load.
+    override val loadsOnOpen = false
     private val _picked = MutableStateFlow<Set<String>>(emptySet())
     /** Names of the groups ticked, across families (a group belongs to one family). */
     val picked: StateFlow<Set<String>> = _picked.asStateFlow()

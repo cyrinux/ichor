@@ -68,6 +68,8 @@ import name.levis.ichor.util.formatDateTime
 
 /** The action audit log of [cluster] ("" for every cluster). */
 class ActivityViewModel(private val cluster: String) : LoadingViewModel<List<ActivityEntry>>() {
+    // The screen reads it again on each visit.
+    override val loadsOnOpen = false
     override suspend fun fetch() = ActivityLog.entries(cluster)
 
     suspend fun export(): String = ActivityLog.export(cluster)

@@ -55,6 +55,8 @@ private val AUDIT_WINDOWS = listOf(5, 15, 60)
 
 /** Reading the audit logs moves tens of MB: only when asked, never polled. */
 class AuditViewModel(private val talos: TalosRepository) : LoadingViewModel<AuditReport>() {
+    // A heavy read, only on the user's tap.
+    override val loadsOnOpen = false
     var minutes = 15
     override suspend fun fetch() = talos.auditAnalysis(minutes)
 }

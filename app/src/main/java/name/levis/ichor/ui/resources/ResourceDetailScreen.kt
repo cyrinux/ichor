@@ -61,6 +61,8 @@ import name.levis.ichor.ui.components.TooltipIconButton
 
 /** One resource as YAML. Never cached: a sensitive one holds secrets. */
 class ResourceDetailViewModel(private val talos: TalosRepository, private val ref: ResourceRef, private val id: String) : LoadingViewModel<String>() {
+    // A sensitive resource is read only once the user reveals it.
+    override val loadsOnOpen = false
     override suspend fun fetch() = talos.resourceGet(ref.node, ref.namespace, ref.type, id)
 }
 

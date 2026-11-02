@@ -88,7 +88,6 @@ fun ArgoRolloutsScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.actions.busy.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     ArgoRolloutPolling(vm)
     ArgoRolloutResultToasts(vm.actions.results)
     var open by rememberSaveable { mutableStateOf<String?>(null) }

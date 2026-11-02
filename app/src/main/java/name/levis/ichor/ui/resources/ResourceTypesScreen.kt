@@ -56,6 +56,8 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.pageContent
 
 class ResourceTypesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ResourceType>>() {
+    // Read once the node is known to serve the resource browser.
+    override val loadsOnOpen = false
     override fun cached(): TalosRepository.Timed<List<ResourceType>>? = talos.cached(resourceTypesKey(node))
     override val restores get() = talos.restores
     override suspend fun fetch() = talos.resourceTypes(node)

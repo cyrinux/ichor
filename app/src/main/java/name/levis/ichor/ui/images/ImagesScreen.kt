@@ -21,7 +21,6 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,7 +89,6 @@ fun ImagesScreen(
     ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var query by rememberSaveable { mutableStateOf("") }
     var sort by rememberSaveable { mutableStateOf(ImageSort.NAME) }
     var reportOpen by remember { mutableStateOf<Pair<ImageScanReport, String>?>(null) }
@@ -185,7 +183,6 @@ private fun systemImagesUi(node: String, vm: SystemImagesViewModel, onOpen: (Ima
     val state by vm.state.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
     val scanner by application.uiPreferences.imageScanner.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     val context = config?.activeContext
     val id = systemImagesScanId(node)
     return SystemImagesUi(

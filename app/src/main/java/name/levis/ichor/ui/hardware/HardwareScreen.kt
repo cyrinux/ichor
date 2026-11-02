@@ -18,7 +18,6 @@ import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -90,10 +89,6 @@ fun HardwareScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val sensorsState by sensorsVm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        if (state == UiState.Loading) vm.refresh()
-        if (sensorsState == UiState.Loading) sensorsVm.refresh()
-    }
 
     IchorScaffold(
         bottomBar = { DataFreshness(state) },

@@ -59,6 +59,8 @@ import name.levis.ichor.util.formatDateTime
 
 /** The scan reports the core keeps on the phone for [cluster], newest first. No cluster call. */
 class SavedScansViewModel(private val scans: ImageScanRepository, private val cluster: String) : LoadingViewModel<List<SavedScan>>() {
+    // The screen reads it again on each visit.
+    override val loadsOnOpen = false
     override suspend fun fetch() = scans.history(cluster)
 
     suspend fun open(id: String): Pair<ImageScanReport, String> = scans.saved(id)

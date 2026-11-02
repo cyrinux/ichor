@@ -105,7 +105,7 @@ class NetPerfManagerTest {
         assertFalse(m.start("lab-plain", NetPerfSetup()))
         assertNull(m.current.value)
 
-        val failing = NetPerfManager(startRun = { throw IllegalStateException("no cluster") }, save = { _, _ -> })
+        val failing = NetPerfManager(startRun = { throw IllegalStateException("no cluster") }, save = { _, _ -> }, scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined))
         assertEquals("no cluster", runCatching { failing.start("lab-plain", setup) }.exceptionOrNull()?.message)
         assertNull(failing.current.value)
     }

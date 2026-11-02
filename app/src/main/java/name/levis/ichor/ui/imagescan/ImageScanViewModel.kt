@@ -21,6 +21,8 @@ import name.levis.ichor.ui.LoadingViewModel
  * core keeps on the phone ([saved]).
  */
 class ImageScanViewModel(private val scans: ImageScanRepository) : LoadingViewModel<OperatorReports>() {
+    // Read once an app is picked: load.
+    override val loadsOnOpen = false
     private var app: InventoryApp? = null
 
     val session = scans.session
