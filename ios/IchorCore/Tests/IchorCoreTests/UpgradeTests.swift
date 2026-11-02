@@ -182,4 +182,38 @@ final class UpgradeTests: XCTestCase {
         XCTAssertEqual(early.first?.state, .failed)
         XCTAssertEqual(upgradeTimeline([]).map(\.state), Array(repeating: .pending, count: 6))
     }
+
+    private let tenReleases = (0...9).reversed().map { "v1.12.\($0)" }
+
+    func testOfferedVersionsKeepTheSelectedSeventh() {
+        let offered = offeredVersions(tenReleases, selected: "v1.12.3", showAll: false)
+        XCTAssertEqual(offered.versions, ["v1.12.9", "v1.12.8", "v1.12.7", "v1.12.6", "v1.12.5", "v1.12.4", "v1.12.3"])
+        XCTAssertEqual(offered.hidden, 3)
+        XCTAssertFalse(offered.selectedUnlisted)
+    }
+
+    func testOfferedVersionsShowAllAndFlagAnUnlistedChoice() {
+        let all = offeredVersions(tenReleases, selected: "v1.12.3", showAll: true)
+        XCTAssertEqual(all.versions, tenReleases)
+        XCTAssertEqual(all.hidden, 0)
+
+        let unlisted = offeredVersions(tenReleases, selected: "v1.11.0", showAll: false)
+        XCTAssertEqual(unlisted.versions, Array(tenReleases.prefix(6)) + ["v1.11.0"])
+        XCTAssertEqual(unlisted.hidden, 4)
+        XCTAssertTrue(unlisted.selectedUnlisted)
+
+        let nothingChosen = offeredVersions(tenReleases, selected: "", showAll: false)
+        XCTAssertEqual(nothingChosen.versions, Array(tenReleases.prefix(6)))
+        XCTAssertFalse(nothingChosen.selectedUnlisted)
+    }
+
+    func testOfferedVersionsWithoutAListKeepTheChoice() {
+        let offline = offeredVersions([], selected: "v1.12.3", showAll: false)
+        XCTAssertEqual(offline.versions, ["v1.12.3"])
+        XCTAssertEqual(offline.hidden, 0)
+        XCTAssertTrue(offline.selectedUnlisted)
+
+        let doubled = offeredVersions(["v1.12.1", "", "v1.12.1", "v1.12.0"], selected: "v1.12.0", showAll: false)
+        XCTAssertEqual(doubled.versions, ["v1.12.1", "v1.12.0"])
+    }
 }

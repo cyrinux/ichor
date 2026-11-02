@@ -133399,6 +133399,20 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Показать ещё %lld" } }
       }
     },
+    "%@ is not among the latest releases; it stays selected." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ ne fait pas partie des dernières versions ; elle reste sélectionnée." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ no está entre las últimas versiones; sigue seleccionada." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ gehört nicht zu den neuesten Versionen; sie bleibt ausgewählt." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ non è tra le ultime versioni; resta selezionata." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ немає серед останніх випусків; версія залишається вибраною." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 不在最新版本之列；仍保持选中。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ は最新リリースに含まれていませんが、選択されたままです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ não está entre as versões mais recentes; continua selecionada." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ нет среди последних выпусков; версия остаётся выбранной." } }
+      }
+    },
     "Show all" : {
       "extractionState" : "manual",
       "localizations" : {
