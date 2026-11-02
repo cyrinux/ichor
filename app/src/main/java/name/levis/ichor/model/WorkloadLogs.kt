@@ -31,8 +31,11 @@ data class WorkloadLogLine(
     val pod: String,
     /** Unix milliseconds, 0 when unknown. */
     val time: Long = 0,
+    /** Without its ANSI escapes. */
     val text: String = "",
     val level: String = "",
+    /** [text]'s coloured runs; empty when it had no colours. */
+    val spans: List<LogSpan> = emptyList(),
 )
 
 /** The logs of a workload's pods, merged by time: `KubeWorkloadLogs`. */

@@ -28,6 +28,7 @@ import name.levis.ichor.model.KubePodPage
 import name.levis.ichor.model.KubeSpanMeshHealth
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeWorkloadList
+import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.OnCallIncidents
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -61,6 +62,12 @@ class ContractTest {
         "update-proposal-plan" to Row(UpdateProposalPlan.serializer()) { assertEquals(2, it.files[0].changes.size) },
         "diag-entries" to Row(ListSerializer(DiagEntry.serializer())) { assertEquals("ClusterOverview", it[0].attrs.getValue("fn").content) },
         "fleet-summary" to Row(FleetSummary.serializer()) { assertEquals(FleetTone.BAD, it.worst); assertEquals("nodes", it.clusters[0].topFinding?.track) },
+        "log-entry" to Row(LogEntry.serializer()) {
+            assertEquals("upstream timeout", it.msg)
+            assertEquals("#ff8700", it.spans[0].fgRgb)
+            assertTrue(it.spans[0].b && it.spans[2].i && it.spans[2].u)
+            assertEquals(6, it.spans[2].fg)
+        },
         "plugin-index" to Row(PluginIndex.serializer()) { assertEquals(true, it.plugins[0].installed); assertEquals("kube-green", it.plugins[0].iconApp.icon) },
     )
 

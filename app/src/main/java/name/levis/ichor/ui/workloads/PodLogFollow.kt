@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,10 +25,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import name.levis.ichor.data.LogParser
+import name.levis.ichor.ui.logs.AnsiLine
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,10 +95,12 @@ class PodLogFollowViewModel(private val browser: KubeBrowserRepository) : ViewMo
         }
     }
 
-    private fun apply(batch: List<StreamItem<String>>) {
+    private suspend fun apply(batch: List<StreamItem<String>>) {
         val lines = batch.filterIsInstance<StreamItem.Item<String>>().map { it.value }
+        // Parsed off the main thread, as the Talos logs are: escapes out, colours kept as spans.
+        val entries = withContext(Dispatchers.Default) { lines.map(LogParser::line) }
         val done = batch.filterIsInstance<StreamItem.Done>().lastOrNull()
-        _state.update { it.copy(buffer = it.buffer.append(lines), streaming = it.streaming && done == null, error = done?.error ?: it.error) }
+        _state.update { it.copy(buffer = it.buffer.appendEntries(entries), streaming = it.streaming && done == null, error = done?.error ?: it.error) }
     }
 
     /** Forgets the lines once the sheet is gone. */
@@ -127,9 +131,7 @@ internal fun FollowedLog(buffer: FollowBuffer) {
     Box(Modifier.fillMaxSize()) {
         SelectionContainer {
             LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(horizontal = 16.dp)) {
-                items(lines, key = { it.seq }) { line ->
-                    Text(line.text, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                }
+                items(lines, key = { it.seq }) { line -> AnsiLine(line.text, line.spans, style = podLogTextStyle()) }
             }
         }
         if (!stickToEnd) {
