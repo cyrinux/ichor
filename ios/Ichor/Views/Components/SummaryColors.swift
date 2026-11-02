@@ -42,23 +42,55 @@ extension EnvironmentValues {
     }
 }
 
-/// The summary's identity area: its content in the on-container color on a rounded
-/// cluster-tinted surface.
+/// The summary's identity area, as Android's SummaryIdentityBand: its content in the
+/// on-container color on a cluster-tinted band edge to edge across the top of the list row
+/// (the section rounds its top corners, as Android's card does).
 private struct IdentityArea: ViewModifier {
     let colors: SummaryColors
 
     func body(content: Content) -> some View {
         content
             .foregroundStyle(colors.onIdentity)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(colors.identity, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            .background(colors.identity)
+    }
+}
+
+/// The summary under its band: the row's inset, and the row separator starting there.
+private struct SummaryBody: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 10)
+    }
+}
+
+/// Stat tiles side by side on one height, as Android's StatTileRow: the meters a tile pins
+/// to its bottom stay level whatever the labels above them wrap to.
+struct StatTileRow<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) { content }
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
 extension View {
     func identityArea(_ colors: SummaryColors) -> some View { modifier(IdentityArea(colors: colors)) }
+
+    /// The body of a home summary card, under its identity band.
+    func summaryBody() -> some View { modifier(SummaryBody()) }
+
+    /// A home summary card's list row: no inset, so the identity band reaches the row's edges.
+    func summaryRow() -> some View { listRowInsets(EdgeInsets()) }
+
+    /// One tile of a StatTileRow: an equal share of the width, the row's full height.
+    func statTileCell() -> some View { frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading) }
 }
 
 /// A StatTile's icon: in the cluster-tinted container on a home summary, else in the tint.

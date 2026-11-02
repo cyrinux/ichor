@@ -22,7 +22,7 @@ struct ClusterSummaryCard: View {
     var body: some View {
         // Read on every render from the observed seed and theme: a switch or hue edit shows at once.
         let colors = model.summaryColors(for: colorScheme)
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 0) {
             // The identity area in the cluster's color, as on Android: only the logo and the
             // name. The headline (its trouble counts in their status colours) and the status
             // stay below, on the neutral row.
@@ -36,6 +36,13 @@ struct ClusterSummaryCard: View {
                 Text(verbatim: name).font(.headline).lineLimit(1).accessibilityAddTraits(.isHeader)
             }
             .identityArea(colors)
+            details(colors).summaryBody()
+        }
+        .summaryRow()
+    }
+
+    private func details(_ colors: SummaryColors) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 8) {
                 headline.font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 Spacer()
@@ -53,17 +60,17 @@ struct ClusterSummaryCard: View {
             // A line of its own only when it says two things; one goes in the headline.
             if issues.count > 1 { Breakdown(parts: issues) }
             Divider()
-            HStack(alignment: .top, spacing: 12) {
+            StatTileRow {
                 StatTile(icon: "cube", value: "\(summary.ready)/\(summary.total)", label: String(localized: "Nodes"))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .statTileCell()
                 CpuStat(cpuCount: summary.cpuCount, live: live)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .statTileCell()
                 // Live memory only once it covers every node the overview reached, never fewer.
                 MemoryStat(
                     summary: summary,
                     live: live?.usage.flatMap { $0.nodes >= summary.total - summary.unreachable ? $0 : nil }
                 )
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .statTileCell()
             }
             // The stat icons in cluster-tinted containers; the values stay neutral.
             .environment(\.summaryColors, colors)
@@ -75,7 +82,6 @@ struct ClusterSummaryCard: View {
                     .monospacedDigit()
             }
         }
-        .padding(.vertical, 4)
     }
 
     /// "3 nodes  ·  v1.11.2", "v1.10.4 – v1.11.2" while the nodes run different versions, with
@@ -177,12 +183,10 @@ private struct CpuStat: View {
 
     var body: some View {
         if let used = live?.usage?.cpuFraction, let live {
-            VStack(alignment: .leading, spacing: 4) {
-                StatTile(
-                    icon: "cpu", value: percent(used),
-                    label: cpuCount > 0 ? String(localized: "of \(cpuCount) cores") : String(localized: "CPU in use"))
-                CpuSparkline(history: live.cpuHistory)
-            }
+            StatTile(
+                icon: "cpu", value: percent(used),
+                label: cpuCount > 0 ? String(localized: "of \(cpuCount) cores") : String(localized: "CPU in use"),
+                meter: { AnyView(CpuSparkline(history: live.cpuHistory)) })
         } else {
             StatTile(
                 icon: "cpu", value: cpuCount > 0 ? "\(cpuCount)" : unknownValue, label: String(localized: "CPU cores"))
@@ -197,15 +201,11 @@ private struct MemoryStat: View {
     var body: some View {
         let total = live.map(\.memTotal).flatMap { $0 > 0 ? $0 : nil } ?? summary.memTotal
         let used = live?.memUsedFraction ?? summary.memUsedFraction
-        VStack(alignment: .leading, spacing: 6) {
-            StatTile(
-                icon: "memorychip", value: total > 0 ? formatBytes(total) : unknownValue,
-                label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
-            if let used {
-                // Glide between samples rather than jump.
-                UsageBar(fraction: used).animation(.easeInOut, value: used)
-            }
-        }
+        StatTile(
+            icon: "memorychip", value: total > 0 ? formatBytes(total) : unknownValue,
+            label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"),
+            // Glide between samples rather than jump.
+            meter: used.map { used in { AnyView(UsageBar(fraction: used).animation(.easeInOut, value: used)) } })
     }
 }
 

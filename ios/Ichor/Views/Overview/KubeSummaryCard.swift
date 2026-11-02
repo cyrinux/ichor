@@ -20,7 +20,7 @@ struct KubeSummaryCard: View {
     var body: some View {
         let colors = model.summaryColors(for: colorScheme)
         let summary = listed ? overview.clusterSummary(usage: usage) : nil
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 8) {
                 BundledLogo(name: clusterLogo(context))
                     .frame(width: 22, height: 22)
@@ -28,6 +28,13 @@ struct KubeSummaryCard: View {
                 Text(verbatim: name).font(.headline).lineLimit(1).accessibilityAddTraits(.isHeader)
             }
             .identityArea(colors)
+            details(summary, colors).summaryBody()
+        }
+        .summaryRow()
+    }
+
+    private func details(_ summary: KubeClusterSummary?, _ colors: SummaryColors) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 8) {
                 headline(summary).font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 Spacer()
@@ -41,20 +48,19 @@ struct KubeSummaryCard: View {
                     .truncationMode(.middle)
             }
             Divider()
-            HStack(alignment: .top, spacing: 12) {
+            StatTileRow {
                 StatTile(
                     icon: "cube", value: summary.map { "\($0.ready)/\($0.total)" } ?? unknown,
                     label: String(localized: "Nodes")
                 )
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .statTileCell()
                 cpu(summary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .statTileCell()
                 memory(summary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .statTileCell()
             }
             .environment(\.summaryColors, colors)
         }
-        .padding(.vertical, 4)
     }
 
     private var listed: Bool { !overview.forbidden && !overview.nodes.isEmpty }
@@ -88,29 +94,22 @@ struct KubeSummaryCard: View {
     private func cpu(_ summary: KubeClusterSummary?) -> some View {
         let cores = summary?.cpuCount ?? 0
         if let used = summary?.cpuFraction {
-            VStack(alignment: .leading, spacing: 6) {
-                StatTile(
-                    icon: "cpu", value: percent(used),
-                    label: cores > 0 ? String(localized: "of \(cores) cores") : String(localized: "CPU in use"))
-                UsageBar(fraction: used).animation(.easeInOut, value: used)
-            }
+            StatTile(
+                icon: "cpu", value: percent(used),
+                label: cores > 0 ? String(localized: "of \(cores) cores") : String(localized: "CPU in use"),
+                meter: { AnyView(UsageBar(fraction: used).animation(.easeInOut, value: used)) })
         } else {
             StatTile(icon: "cpu", value: cores > 0 ? "\(cores)" : unknown, label: String(localized: "CPU cores"))
         }
     }
 
-    @ViewBuilder
     private func memory(_ summary: KubeClusterSummary?) -> some View {
         let total = summary?.memTotal ?? 0
         let used = summary?.memFraction
-        VStack(alignment: .leading, spacing: 6) {
-            StatTile(
-                icon: "memorychip", value: total > 0 ? formatBytes(total) : unknown,
-                label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
-            if let used {
-                UsageBar(fraction: used).animation(.easeInOut, value: used)
-            }
-        }
+        return StatTile(
+            icon: "memorychip", value: total > 0 ? formatBytes(total) : unknown,
+            label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"),
+            meter: used.map { used in { AnyView(UsageBar(fraction: used).animation(.easeInOut, value: used)) } })
     }
 }
 
