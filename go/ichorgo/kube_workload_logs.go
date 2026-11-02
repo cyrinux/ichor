@@ -38,10 +38,11 @@ type workloadLogPod struct {
 }
 
 type workloadLogLine struct {
-	Pod   string `json:"pod"`
-	Time  int64  `json:"time"` // unix ms, the kubelet's; 0 when unknown
-	Text  string `json:"text"`
-	Level string `json:"level"`
+	Pod   string    `json:"pod"`
+	Time  int64     `json:"time"` // unix ms, the kubelet's; 0 when unknown
+	Text  string    `json:"text"` // without ANSI escapes
+	Level string    `json:"level"`
+	Spans []logSpan `json:"spans"` // text's styled runs; empty when it had no colours
 }
 
 type workloadLogs struct {
@@ -145,7 +146,7 @@ func KubePodLogsFiltered(configYAML, contextName, kubeServer, namespace, pod, co
 	var b strings.Builder
 
 	for line := range strings.SplitSeq(log, "\n") {
-		if line != "" && match(line) {
+		if plain, _ := stripANSI(line); line != "" && match(plain) {
 			b.WriteString(line)
 			b.WriteByte('\n')
 		}
@@ -336,7 +337,8 @@ func timedLogLines(pod, log string, now time.Time) []workloadLogLine {
 			}
 		}
 
-		lines = append(lines, workloadLogLine{Pod: pod, Time: last, Text: text, Level: parseLogLine(text, now).Level})
+		e := parseLogLine(text, now)
+		lines = append(lines, workloadLogLine{Pod: pod, Time: last, Text: e.Raw, Level: e.Level, Spans: e.Spans})
 	}
 
 	return lines

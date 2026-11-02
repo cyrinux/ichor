@@ -119,12 +119,13 @@ struct LogEntryRow: View {
     let text: AttributedString?
     let expanded: Bool
     let toggle: () -> Void
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(line)
             if expanded {
-                Text(verbatim: group.entry.raw)
+                Text(attributedLine(group.entry, scheme: scheme))
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
             }
@@ -152,7 +153,12 @@ struct LogEntryRow: View {
             count.setStrong()
             result.append(count)
         }
-        result.append(text ?? LogStyle.text(group.entry))
+        // A coloured line with no structure found: its colours are its structure.
+        if group.entry.isColouredPlainLine {
+            result.append(attributedLine(group.entry, scheme: scheme))
+        } else {
+            result.append(text ?? LogStyle.text(group.entry))
+        }
         return result
     }
 }
@@ -170,12 +176,13 @@ struct LogDayHeader: View {
     }
 }
 
-/// An unparsed raw line ("Raw" mode).
+/// An unparsed raw line ("Raw" mode), in its ANSI colours.
 struct LogRawLine: View {
-    let text: String
+    let entry: LogEntry
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        Text(verbatim: text)
+        Text(attributedLine(entry, scheme: scheme))
             .monoFont()
             .textSelection(.enabled)
     }

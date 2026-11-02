@@ -12,6 +12,24 @@ import java.time.ZoneId
 @Serializable
 data class LogField(val k: String = "", val v: String = "")
 
+/**
+ * A styled run of a log line, from the ANSI (SGR) colours it was written with. [fg]/[bg] are
+ * the 16-colour index (0–15) or -1 for the default; [fgRgb]/[bgRgb] "#rrggbb" for 256 and true
+ * colours (then [fg]/[bg] are -1). [b] bold, [d] dim, [i] italic, [u] underline.
+ */
+@Serializable
+data class LogSpan(
+    val t: String = "",
+    val fg: Int = -1,
+    val bg: Int = -1,
+    val fgRgb: String = "",
+    val bgRgb: String = "",
+    val b: Boolean = false,
+    val d: Boolean = false,
+    val i: Boolean = false,
+    val u: Boolean = false,
+)
+
 @Serializable
 data class LogEntry(
     /** Unix millis; 0 when unknown. */
@@ -21,9 +39,12 @@ data class LogEntry(
     val source: String = "",
     val msg: String = "",
     val fields: List<LogField> = emptyList(),
+    /** The line as received, without its ANSI escapes. */
     val raw: String = "",
+    /** [raw]'s coloured runs; empty when the line had no colours. */
+    val spans: List<LogSpan> = emptyList(),
 ) {
-    /** The original line; older cores only send it. */
+    /** The original line (escapes stripped); older cores only send it. */
     val text: String get() = raw.ifEmpty { msg }
 
     /** Same content, ignoring the time: such consecutive entries collapse into one row. */

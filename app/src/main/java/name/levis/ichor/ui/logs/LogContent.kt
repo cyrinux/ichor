@@ -47,7 +47,6 @@ import java.time.ZoneId
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.MonoScreen
 import name.levis.ichor.ui.components.ScalableMonoText
-import name.levis.ichor.ui.components.monoTextStyle
 import name.levis.ichor.ui.components.monoTextActions
 
 /** How the log is shown: text [filter], [level] filter, or the [raw] lines as received. */
@@ -57,9 +56,8 @@ data class LogView(val filter: String, val level: LogLevelFilter, val raw: Boole
 fun LogContent(entries: List<SeqLogEntry>, truncated: Boolean, view: LogView, live: Boolean) {
     val matched = remember(entries, view.filter) { entries.matchingText(view.filter) }
     if (view.raw) {
-        val lines = remember(matched) { matched.map { it.entry.text } }
-        LogBody(lines.size, truncated && view.filter.isBlank(), lines, view, live) {
-            items(lines) { line -> Text(line, style = monoTextStyle(), modifier = Modifier.monoTextActions()) }
+        LogBody(matched.size, truncated && view.filter.isBlank(), matched, view, live) {
+            items(matched, key = { it.seq }) { line -> AnsiLine(line.entry, Modifier.monoTextActions()) }
         }
         return
     }

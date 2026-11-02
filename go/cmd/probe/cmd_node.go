@@ -161,6 +161,13 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "parse-log", args: "LINE", noConfig: true, run: func(env) (out string, err error) {
+		if flag.NArg() != 2 {
+			fail(fmt.Errorf("usage: probe parse-log LINE"))
+		}
+
+		return ichorgo.ParseLogLine(flag.Arg(1)), nil
+	}},
 	{name: "machineconfig", args: "NODE", run: func(e env) (out string, err error) {
 		// Redacted: never print secrets from the probe.
 		out, err = ichorgo.NodeMachineConfig(e.cfg, e.context, flag.Arg(1), false)

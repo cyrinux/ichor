@@ -52,6 +52,7 @@ import name.levis.ichor.model.SELECTED_PODS_PAGE
 import name.levis.ichor.model.SupportedIntegrations
 import name.levis.ichor.model.WorkloadRef
 import name.levis.ichor.model.LogFilter
+import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.WorkloadLogs
 import name.levis.ichor.model.toGoJson
 import name.levis.ichor.ui.goErrorText
@@ -226,6 +227,12 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     suspend fun podLogs(pod: KubePod, container: String, previous: Boolean, tailLines: Int, filter: LogFilter = LogFilter()): String = go.kube { cfg, ctx, server ->
         Ichorgo.kubePodLogsFiltered(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong(), filter.text, filter.regex, filter.sinceMinutes.toLong())
     }
+
+    /** A pod log snapshot ([podLogs]) as lines without escapes and coloured entries; parsed locally, off the main thread. */
+    suspend fun parseLogText(text: String): LogTail = withContext(Dispatchers.Default) { LogParser.text(text) }
+
+    /** [text] without its ANSI escapes, to copy or share; off the main thread. */
+    suspend fun stripLogEscapes(text: String): String = withContext(Dispatchers.Default) { LogParser.strip(text) }
 
     /** The logs of [workload]'s pods merged by time, `kubectl logs -l` through the Kubernetes API (os:admin). */
     suspend fun workloadLogs(workload: KubeWorkload, filter: LogFilter, tailLines: Int): WorkloadLogs = go.kube { cfg, ctx, server ->

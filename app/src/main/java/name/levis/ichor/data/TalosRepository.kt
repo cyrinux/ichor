@@ -300,11 +300,7 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
      * One followed log line as a structured entry (parsed locally by the Go core, no network);
      * the plain line if it cannot be decoded. Call off the main thread.
      */
-    fun parseLogLine(line: String): LogEntry =
-        runCatching { TalosJson.decodeFromString(LogEntry.serializer(), Ichorgo.parseLogLine(line)) }
-            .getOrNull()
-            ?.let { if (it.raw.isEmpty()) it.copy(raw = line) else it }
-            ?: LogEntry.plain(line)
+    fun parseLogLine(line: String): LogEntry = LogParser.line(line)
 
     /**
      * Admin kubeconfig (os:admin role), or for a cluster added from a kubeconfig its stored

@@ -68,7 +68,11 @@ import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.LogFilter
 import name.levis.ichor.model.POD_LOG_TAIL
 import name.levis.ichor.model.containersToChoose
-import name.levis.ichor.model.logLines
+import name.levis.ichor.model.LogEntry
+import name.levis.ichor.model.toEntries
+import name.levis.ichor.ui.logs.AnsiLine
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.runtime.rememberCoroutineScope
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.cancellableCatching
@@ -94,6 +98,9 @@ import name.levis.ichor.ui.uiText
 /** What the log sheet shows: the current or [previous] run of [container] ("" for the only one). */
 data class PodLogQuery(val container: String = "", val previous: Boolean = false, val filter: LogFilter = LogFilter())
 
+/** A pod log read once: [text] as received, [entries] its lines without escapes, with their colours. */
+data class PodLogSnapshot(val text: String, val entries: List<LogEntry>)
+
 /**
  * The log of the pod the sheet shows ([open]), through the Kubernetes API; for a pod with
  * several containers, the one picked. One for every pod: [close] drops the text.
@@ -115,8 +122,8 @@ class PodLogViewModel(private val kube: KubeRepository) : ViewModel() {
      */
     val detail: StateFlow<KubePod?> = _detail.asStateFlow()
 
-    private val _state = MutableStateFlow<UiState<String>>(UiState.Loading)
-    val state: StateFlow<UiState<String>> = _state.asStateFlow()
+    private val _state = MutableStateFlow<UiState<PodLogSnapshot>>(UiState.Loading)
+    val state: StateFlow<UiState<PodLogSnapshot>> = _state.asStateFlow()
     private var job: Job? = null
 
     /** Shows [pod]'s current log; with several containers, the first one until another is picked. */
@@ -164,9 +171,16 @@ class PodLogViewModel(private val kube: KubeRepository) : ViewModel() {
                 load(query.copy(container = choices.first()))
                 return@launch
             }
-            _state.value = outcome.fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            _state.value = outcome.fold(
+                // Parsed off the main thread, in one core call: escapes out, colours kept as spans.
+                onSuccess = { UiState.Loaded(PodLogSnapshot(it, kube.parseLogText(it).toEntries())) },
+                onFailure = { UiState.Failed(it.uiText()) },
+            )
         }
     }
+
+    /** [text] without its ANSI escapes: what Copy and Share hand out. */
+    suspend fun plainText(text: String): String = kube.stripLogEscapes(text)
 }
 
 /**
@@ -198,9 +212,12 @@ fun PodLogSheet(
     // New lines as they are written (`kubectl logs -f`), in place of the last ones read once.
     var follow by rememberSaveable(pod.key) { mutableStateOf(false) }
     val snapshot = (state as? UiState.Loaded)?.data
-    val hasText = if (follow) followState.buffer.lines.isNotEmpty() else !snapshot.isNullOrEmpty()
+    val hasText = if (follow) followState.buffer.lines.isNotEmpty() else !snapshot?.text.isNullOrEmpty()
     // The followed lines joined only when asked: up to MAX_FOLLOW_LINES of them.
-    val text = { if (follow) followState.buffer.text else snapshot.orEmpty() }
+    val text = { if (follow) followState.buffer.text else snapshot?.text.orEmpty() }
+    // Copied and shared without the ANSI escapes the container wrote.
+    val scope = rememberCoroutineScope()
+    val withPlainText = { use: (String) -> Unit -> scope.launch { use(vm.plainText(text())) } }
     LaunchedEffect(pod.key) { vm.open(pod) }
     DisposableEffect(vm) {
         onDispose {
@@ -226,11 +243,13 @@ fun PodLogSheet(
                 ShareLinkButton(ShareTarget.pod(pod.namespace, pod.name), icon = Icons.Outlined.Link)
                 AddToHomeButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
                 TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = hasText, onClick = {
-                    copyLog(context, pod, text())
-                    Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()
+                    withPlainText {
+                        copyLog(context, pod, it)
+                        Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()
+                    }
                 })
                 TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.pod_logs_share), enabled = hasText, onClick = {
-                    shareLog(context, pod.name, text())
+                    withPlainText { shareLog(context, pod.name, it) }
                 })
             }
             // CPU and memory now, against its limit or request (metrics-server, when there is one).
@@ -328,7 +347,7 @@ fun PodLogSheet(
                     when (val s = state) {
                         UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)
                         is UiState.Failed -> ErrorBox(s.message, { vm.load() })
-                        is UiState.Loaded -> LogText(s.data)
+                        is UiState.Loaded -> LogText(s.data.entries)
                     }
                 }
             }
@@ -337,21 +356,25 @@ fun PodLogSheet(
 }
 
 @Composable
-private fun LogText(text: String) {
-    val lines = logLines(text)
+private fun LogText(lines: List<LogEntry>) {
     if (lines.isEmpty()) {
         EmptyText(stringResource(R.string.pod_logs_empty))
         return
     }
     val list = rememberLazyListState()
     // The newest lines are at the end, as in a terminal.
-    LaunchedEffect(text) { list.scrollToItem(lines.lastIndex) }
-    LazyColumn(Modifier.fillMaxWidth(), state = list, contentPadding = PaddingValues(horizontal = 16.dp)) {
-        items(lines.size) { i ->
-            Text(lines[i], style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+    LaunchedEffect(lines) { list.scrollToItem(lines.lastIndex) }
+    SelectionContainer {
+        LazyColumn(Modifier.fillMaxWidth(), state = list, contentPadding = PaddingValues(horizontal = 16.dp)) {
+            // One styled string per line, laid out only when visible.
+            items(lines.size) { i -> AnsiLine(lines[i], style = podLogTextStyle()) }
         }
     }
 }
+
+/** The pod log's monospace text, snapshot and follow alike. */
+@Composable
+internal fun podLogTextStyle() = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
 
 // Logs may hold secrets: kept out of the clipboard preview (honoured from Android 13).
 private fun copyLog(context: Context, pod: KubePod, text: String) = copyToClipboard(context, pod.name, text, sensitive = true)

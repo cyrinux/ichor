@@ -56,7 +56,8 @@ tour** shows it again.
   catalog with their digest verified.
 - **Troubleshooting:** cluster checkup, configuration drift, incident recorder, node pressure,
   bottleneck metrics, search Loki or VictoriaLogs, network tests between nodes, node network tools, image vulnerability
-  scans, thirty days of history and an optional AI diagnosis.
+  scans, thirty days of history and an optional AI diagnosis. Colours in a log (ANSI) are
+  drawn, never shown as escape codes.
 - **Operating safely:** read-only by default, typed confirmations, dry runs, an encrypted audit
   log, runbooks with parameters and a confirmation per destructive step, a security key or biometric lock,
   a panic-app response (lock, or delete the saved configs; Android),

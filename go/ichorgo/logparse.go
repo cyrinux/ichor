@@ -22,11 +22,12 @@ type logEntry struct {
 	Source string     `json:"source"`
 	Msg    string     `json:"msg"`
 	Fields []logField `json:"fields"`
-	Raw    string     `json:"raw"`
+	Raw    string     `json:"raw"`   // the line without ANSI escapes
+	Spans  []logSpan  `json:"spans"` // raw's styled runs; empty when the line had no colours
 }
 
 // ParseLogLine parses one log line (as received by LogListener.OnLine) into a JSON entry
-// {"ts","level","source","msg","fields":[{"k","v"}],"raw"}.
+// {"ts","level","source","msg","fields":[{"k","v"}],"raw","spans":[{"t","fg","bg",…}]}.
 func ParseLogLine(line string) (out string) {
 	var err error
 
@@ -50,8 +51,10 @@ func parseLogLines(lines []string, now time.Time) []logEntry {
 }
 
 // parseLogLine picks the format from the first bytes; each parser rejects lines that do
-// not fully match it, falling through to the next one.
+// not fully match it, falling through to the next one. ANSI escapes are stripped first, so
+// no parser, field or message sees them; their colours stay in Spans.
 func parseLogLine(line string, now time.Time) logEntry {
+	line, spans := stripANSI(line)
 	s := strings.TrimRight(line, " \t\r\n")
 
 	var (
@@ -82,7 +85,11 @@ func parseLogLine(line string, now time.Time) logEntry {
 		e.Fields = []logField{}
 	}
 
-	e.Raw = line
+	if spans == nil {
+		spans = []logSpan{}
+	}
+
+	e.Raw, e.Spans = line, spans
 
 	return e
 }

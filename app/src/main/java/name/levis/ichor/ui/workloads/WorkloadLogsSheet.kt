@@ -79,6 +79,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.components.upwardScrollStaysInSheet
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.logs.AnsiLine
 import name.levis.ichor.ui.logs.rememberLogPalette
 import name.levis.ichor.ui.uiText
 
@@ -224,7 +225,8 @@ private fun MergedLogLine(line: WorkloadLogLine, color: Int) {
         if (line.time > 0) {
             Text(TimeFormat.format(Instant.ofEpochMilli(line.time)), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = palette.dim)
         }
-        Text(line.text, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = textColor)
+        // Its own colours when the container wrote some; else tinted by its level.
+        AnsiLine(line.text, line.spans, style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = textColor)
     }
 }
 

@@ -72,6 +72,17 @@ extension TalosClient {
         }
     }
 
+    /// A pod log snapshot parsed in one Go call (ParseLogText): its lines without ANSI escapes
+    /// and their entries with the colours as spans. Off the main actor.
+    func parseLogText(_ text: String) async throws -> LogTail {
+        try await Self.json { IchorgoParseLogText(text, $0) }
+    }
+
+    /// `text` without ANSI escapes, line by line: what Copy and Share hand out. Blocking.
+    static func stripLogEscapes(_ text: String) -> String {
+        IchorgoStripLogEscapes(text)
+    }
+
     /// The logs of `workload`'s pods merged by time, `kubectl logs -l` through the Kubernetes API.
     func workloadLogs(_ workload: KubeWorkload, filter: LogFilter, tailLines: Int) async throws -> WorkloadLogs {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in

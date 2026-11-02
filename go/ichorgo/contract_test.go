@@ -59,6 +59,10 @@ var contractFixtures = []struct {
 	}},
 	{"update-proposal-plan", contractUpdatePlan},
 	{"diag-entries", contractDiagEntries},
+	// A coloured logfmt line: clean fields and its spans.
+	{"log-entry", func() any {
+		return parseLogLine("\x1b[1;38;5;208mlevel\x1b[0m=error \x1b[3;4;36mmsg\x1b[0m=\"upstream timeout\" \x1b[2;41mpeer\x1b[0m=10.0.0.7", contractNow)
+	}},
 	{"oncall-incidents", func() any {
 		alerts := demoAMAlerts(contractNow)
 		inputs := make([]onCallAmAlert, 0, len(alerts))
