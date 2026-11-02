@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,6 +84,7 @@ fun CrossplaneScreen(
     vm: CrossplaneViewModel = viewModel(factory = factory { CrossplaneViewModel(app.kubeBrowser) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(CrossplaneFilter.ALL) }
     var pending by remember { mutableStateOf<PendingAction?>(null) }
