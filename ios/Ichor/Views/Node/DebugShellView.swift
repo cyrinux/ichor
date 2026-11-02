@@ -47,19 +47,7 @@ struct DebugShellView: View {
                         .disabled(image.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             default:
-                VStack(spacing: 0) {
-                    if let status = shell.statusLine {
-                        HStack {
-                            Text(status).font(.footnote)
-                            Spacer()
-                            if case .exited = shell.state { Button("New shell") { shell.reset() } }
-                        }
-                        .padding(.horizontal).padding(.vertical, 6)
-                        .background(.bar)
-                    }
-                    TerminalHost(shell: shell)
-                }
-                .background(Color(red: 0.04, green: 0.07, blue: 0.13))
+                ShellTerminalContent(shell: shell)
             }
         }
         .navigationTitle("Debug shell")
@@ -164,6 +152,27 @@ private struct DebugSnippetsSheet: View {
         case "throughput": String(localized: "Throughput")
         default: group
         }
+    }
+}
+
+/// Shared terminal panel for node and pod shell sessions.
+struct ShellTerminalContent: View {
+    let shell: DebugShell
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let status = shell.statusLine {
+                HStack {
+                    Text(status).font(.footnote)
+                    Spacer()
+                    if case .exited = shell.state { Button("New shell") { shell.reset() } }
+                }
+                .padding(.horizontal).padding(.vertical, 6)
+                .background(.bar)
+            }
+            TerminalHost(shell: shell)
+        }
+        .background(Color(red: 0.04, green: 0.07, blue: 0.13))
     }
 }
 
