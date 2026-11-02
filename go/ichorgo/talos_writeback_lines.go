@@ -202,24 +202,7 @@ func renderIdentity(ident map[string]any) (string, error) {
 
 // newNodeFile is a node file holding leaves, the v1alpha1 document naming the node.
 func newNodeFile(leaves []talosLeaf, hostname string) (talosWriteBack, error) {
-	byDoc := map[string]map[string]any{}
-
-	var order []string
-
-	for _, l := range leaves {
-		doc := byDoc[l.doc]
-		if doc == nil {
-			doc = map[string]any{}
-			for k, v := range l.ident {
-				doc[k] = v
-			}
-
-			byDoc[l.doc] = doc
-			order = append(order, l.doc)
-		}
-
-		setYAMLPath(doc, l.path, l.value)
-	}
+	byDoc, order := leavesByDocument(leaves)
 
 	if hostname != "" {
 		if byDoc[talosV1Alpha1] == nil {
