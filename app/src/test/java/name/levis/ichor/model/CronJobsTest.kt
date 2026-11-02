@@ -9,6 +9,19 @@ import org.junit.Test
 
 class CronJobsTest {
 
+    @Test
+    fun historyCountsSayHowTheKeptRunsWent() {
+        val runs = listOf("succeeded", "failed", "running", "succeeded", "succeeded").mapIndexed { i, s -> KubeJobRun("run-$i", s) }
+        assertEquals(RunHistoryCounts(total = 5, succeeded = 3, failed = 1, running = 1), runs.historyCounts())
+        assertEquals(RunHistoryCounts(0, 0, 0, 0), emptyList<KubeJobRun>().historyCounts())
+    }
+
+    @Test
+    fun aRunWithoutAKnownStateCountsInTheTotalOnly() {
+        val runs = listOf(KubeJobRun("a", "succeeded"), KubeJobRun("b", ""))
+        assertEquals(RunHistoryCounts(total = 2, succeeded = 1, failed = 0, running = 0), runs.historyCounts())
+    }
+
     private val jobs = listOf(
         KubeCronJob("shop", "db-backup", title = "Database backup", state = "succeeded", schedule = "0 3 * * *", images = listOf("postgres:17")),
         KubeCronJob("shop", "mailer", state = "failed", description = "Weekly report"),

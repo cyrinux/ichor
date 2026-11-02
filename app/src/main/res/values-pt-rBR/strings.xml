@@ -2189,6 +2189,11 @@
     <string name="cronjobs_no_runs">Nenhuma execução mantida.</string>
     <string name="cronjobs_runs">Execuções recentes</string>
     <string name="cronjobs_manual">manual</string>
+    <plurals name="cronjobs_history_summary">
+        <item quantity="one">Última %1$d execução: %2$s</item>
+        <item quantity="many">Últimas %1$d execuções: %2$s</item>
+        <item quantity="other">Últimas %1$d execuções: %2$s</item>
+    </plurals>
     <string name="cronjobs_run_now">Executar agora</string>
     <string name="cronjobs_schedule_only">Só o agendamento</string>
     <string name="cronjobs_run_title">Executar %1$s agora?</string>
@@ -2211,6 +2216,7 @@
     <string name="pods_no_match">Nenhum pod corresponde a “%1$s”.</string>
     <string name="pods_ready_count">%1$d/%2$d prontos</string>
     <string name="pods_row_actions">Ações de %1$s</string>
+    <string name="cronjobs_row_actions">Ações de %1$s</string>
     <string name="pods_delete_title">Excluir o pod %1$s?</string>
     <string name="pods_delete_text_owned">Ele é removido de %1$s após o período de carência; %2$s inicia um novo.</string>
     <string name="pods_delete_text_bare">Ele é removido de %1$s após o período de carência. Nenhum controlador é dono dele: ele não vai voltar.</string>

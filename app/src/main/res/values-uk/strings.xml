@@ -2325,6 +2325,12 @@
     <string name="cronjobs_no_runs">Запусків не збережено.</string>
     <string name="cronjobs_runs">Останні запуски</string>
     <string name="cronjobs_manual">вручну</string>
+    <plurals name="cronjobs_history_summary">
+        <item quantity="one">Останній %1$d запуск: %2$s</item>
+        <item quantity="few">Останні %1$d запуски: %2$s</item>
+        <item quantity="many">Останні %1$d запусків: %2$s</item>
+        <item quantity="other">Останні %1$d запуску: %2$s</item>
+    </plurals>
     <string name="cronjobs_run_now">Запустити</string>
     <string name="cronjobs_schedule_only">Лише за розкладом</string>
     <string name="cronjobs_run_title">Запустити %1$s зараз?</string>
@@ -2347,6 +2353,7 @@
     <string name="pods_no_match">Немає подів, що відповідають «%1$s».</string>
     <string name="pods_ready_count">%1$d/%2$d готові</string>
     <string name="pods_row_actions">Дії для %1$s</string>
+    <string name="cronjobs_row_actions">Дії для %1$s</string>
     <string name="pods_delete_title">Видалити под %1$s?</string>
     <string name="pods_delete_text_owned">Його буде видалено з %1$s після пільгового періоду; %2$s запустить новий.</string>
     <string name="pods_delete_text_bare">Його буде видалено з %1$s після пільгового періоду. Жоден контролер ним не керує: він не повернеться.</string>

@@ -77,6 +77,16 @@ data class KubeJobRun(
     val durationMillis: Long? get() = (finished - started).takeIf { finished > 0 && started > 0 && it >= 0 }
 }
 
+/** How the kept runs went, for a summary in words: a never-run state counts in [total] only. */
+data class RunHistoryCounts(val total: Int, val succeeded: Int, val failed: Int, val running: Int)
+
+fun List<KubeJobRun>.historyCounts(): RunHistoryCounts = RunHistoryCounts(
+    total = size,
+    succeeded = count { it.runState == JobRunState.SUCCEEDED },
+    failed = count { it.runState == JobRunState.FAILED },
+    running = count { it.runState == JobRunState.RUNNING },
+)
+
 enum class JobRunState(val wire: String) {
     RUNNING("running"),
     SUCCEEDED("succeeded"),

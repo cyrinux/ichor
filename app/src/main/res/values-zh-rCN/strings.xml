@@ -2120,6 +2120,9 @@
     <string name="cronjobs_no_runs">没有保留的运行记录。</string>
     <string name="cronjobs_runs">最近运行</string>
     <string name="cronjobs_manual">手动</string>
+    <plurals name="cronjobs_history_summary">
+        <item quantity="other">最近 %1$d 次运行：%2$s</item>
+    </plurals>
     <string name="cronjobs_run_now">立即运行</string>
     <string name="cronjobs_schedule_only">仅按调度</string>
     <string name="cronjobs_run_title">立即运行 %1$s？</string>
@@ -2142,6 +2145,7 @@
     <string name="pods_no_match">没有与“%1$s”匹配的 Pod。</string>
     <string name="pods_ready_count">%1$d/%2$d 就绪</string>
     <string name="pods_row_actions">%1$s 的操作</string>
+    <string name="cronjobs_row_actions">%1$s 的操作</string>
     <string name="pods_delete_title">删除 Pod %1$s？</string>
     <string name="pods_delete_text_owned">它将在宽限期后从 %1$s 中移除；%2$s 会启动一个新的。</string>
     <string name="pods_delete_text_bare">它将在宽限期后从 %1$s 中移除。没有控制器管理它：它不会再回来。</string>

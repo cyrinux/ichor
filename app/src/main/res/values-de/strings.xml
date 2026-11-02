@@ -2187,6 +2187,10 @@
     <string name="cronjobs_no_runs">Keine Läufe gespeichert.</string>
     <string name="cronjobs_runs">Letzte Läufe</string>
     <string name="cronjobs_manual">manuell</string>
+    <plurals name="cronjobs_history_summary">
+        <item quantity="one">Letzter %1$d Lauf: %2$s</item>
+        <item quantity="other">Letzte %1$d Läufe: %2$s</item>
+    </plurals>
     <string name="cronjobs_run_now">Jetzt ausführen</string>
     <string name="cronjobs_schedule_only">Nur nach Zeitplan</string>
     <string name="cronjobs_run_title">%1$s jetzt ausführen?</string>
@@ -2209,6 +2213,7 @@
     <string name="pods_no_match">Kein Pod passt zu „%1$s“.</string>
     <string name="pods_ready_count">%1$d/%2$d bereit</string>
     <string name="pods_row_actions">Aktionen für %1$s</string>
+    <string name="cronjobs_row_actions">Aktionen für %1$s</string>
     <string name="pods_delete_title">Pod %1$s löschen?</string>
     <string name="pods_delete_text_owned">Er wird nach seiner Schonfrist aus %1$s entfernt; %2$s startet einen neuen.</string>
     <string name="pods_delete_text_bare">Er wird nach seiner Schonfrist aus %1$s entfernt. Kein Controller verwaltet ihn: Er kommt nicht zurück.</string>
