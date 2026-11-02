@@ -9,8 +9,8 @@ import (
 )
 
 // S8 step 4: the user data of a new node on a cloud host. Hetzner, OpenStack (OVHcloud Public
-// Cloud) and Scaleway create a server from an image plus a user_data text, and Talos's cloud
-// platforms read that text as the machine config. For an Omni context it is Omni's join config
+// Cloud), Scaleway and AWS EC2 create a server from an image plus a user_data text, and
+// Talos's cloud platforms read that text as the machine config. For an Omni context it is Omni's join config
 // (the machine registers over SideroLink and appears unallocated in Omni); for a plain Talos
 // context it is the full config of a new member, made from a template member's
 // (JoinNodeConfigSealed). Nothing is sent to a provider here: the person pastes the text.
@@ -26,6 +26,7 @@ const (
 	cloudPlatformHetzner   = "hcloud"
 	cloudPlatformOpenStack = "openstack"
 	cloudPlatformScaleway  = "scaleway"
+	cloudPlatformAWS       = "aws"
 )
 
 var (
@@ -61,9 +62,9 @@ type cloudImage struct {
 
 // NodeCloudUserData returns the user data of a new node on a cloud host, to paste when the
 // server is created, and the Image Factory cloud images of the cluster's Talos version and
-// schematic (hcloud, openstack, scaleway, the template's architecture). On an Omni context it
-// is Omni's join config (role, hostname and installDisk are not used: Omni picks the role when
-// the machine is allocated). On a plain Talos context it is the full config of a new member
+// schematic (hcloud, openstack, scaleway, aws, the template's architecture). On an Omni
+// context it is Omni's join config (role, hostname and installDisk are not used: Omni picks the
+// role when the machine is allocated). On a plain Talos context it is the full config of a new member
 // made from templateNode's (os:admin, as JoinNodeConfigSealed: role worker or controlplane,
 // hostname and installDisk required, extraEditsJSON as there), recorded in the activity log.
 // Both carry a credential: refused in privacy mode. JSON: {"kind","userData","size","limit",
@@ -248,7 +249,7 @@ func (d *cloudUserData) withImages(media bootMedia) {
 }
 
 func cloudImages(t bootTarget) []cloudImage {
-	platforms := []string{cloudPlatformHetzner, cloudPlatformOpenStack, cloudPlatformScaleway}
+	platforms := []string{cloudPlatformHetzner, cloudPlatformOpenStack, cloudPlatformScaleway, cloudPlatformAWS}
 	images := make([]cloudImage, 0, len(platforms))
 
 	for _, p := range platforms {

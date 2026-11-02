@@ -55,6 +55,7 @@ reads those roles and explains up front when a feature needs more.
 | **Make a Talos snapshot at Hetzner** | The template's version and its machine config, for the schematic (refused when it cannot be read); nothing of the cluster is written. At Hetzner, a project token with Read & Write | **`os:admin`** |
 | **Create a Hetzner server for a new node** | The user data below (`os:admin` on plain Talos), `ClusterMember` and the node's own reads while following it; on Omni, `MachineStatuses` (Omni's Reader role). At Hetzner, a project token with Read & Write | **`os:admin`** |
 | **Create an OVHcloud instance for a new node** | As for a Hetzner server. At OVHcloud, a service account whose IAM policy allows the calls the app prints | **`os:admin`** |
+| **Create an AWS EC2 instance for a new node** | As for a Hetzner server. At AWS, access keys (and a session token, if any) of an IAM user or role with the policy the app prints: EC2 reads, `RunInstances`, `CreateTags` on that call only, `TerminateInstances` on `ichor-run`-tagged instances only, `pricing:GetProducts` | **`os:admin`** |
 | **Cloud host user data for a new node** | Plain Talos: `Version` and COSI `MachineConfig` (sensitive) of the template member, as for its config; on Omni, `GetMachineJoinConfig` for the join config (Omni's Operator role) | **`os:admin`** |
 | **Rotate the Talos API CA (`talosctl rotate-ca --kubernetes=false`)** | COSI `OSRoot` and `MachineConfig` (sensitive), `ApplyConfiguration` (no reboot), `Version` on every node | **`os:admin`** |
 

@@ -60,6 +60,19 @@ Part of the [Ichor documentation](../README.md#documentation).
   the one instance it created, by id, when it fails or is stopped, except a control plane that
   already answered. A create that gets no clear answer deletes nothing, because another instance may
   carry the same name: the message says to check the project, where it may stay billed.
+- **Creating an instance at AWS EC2 (from the Go core and the probe for now):** billable, so the
+  probe's `aws create` runs only with `-yes`. Before any billable call the run checks the keys
+  (`GetCallerIdentity`), the AMI's architecture against the instance type, the security groups
+  against the subnet's VPC, the user data against EC2's 16 KB, then sends `RunInstances` as a dry
+  run with every parameter: keys that may not run it are refused, naming the policy to add. The
+  run creates one instance, tagged `Name`, `ichor-run` (the run's id) and `ichor-cluster` (a hash
+  of the context name, not the name), with a client token of `ichor-` and the run's id. It
+  terminates only that instance, by id, when it fails or is stopped, except a control plane that
+  already answered. A `RunInstances` that gets no clear answer is looked up by its client token
+  and terminated. The printed policy lets the keys terminate only `ichor-run`-tagged instances,
+  and tag only on `RunInstances`. The one case that needs the AWS console is a terminate that
+  fails: the message names the instance id and the region, and the instance stays billed until
+  it is terminated there.
 - **Rotating the Talos CA (Settings → Clusters & backup → Rotate the cluster CA…, `os:admin`):**
   replaces the CA that signs every Talos API certificate, in the order of
   `talosctl rotate-ca --kubernetes=false`. Rotate it when a talosconfig leaked or a phone was

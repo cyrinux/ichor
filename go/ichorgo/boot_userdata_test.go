@@ -15,8 +15,8 @@ func TestCloudImages(t *testing.T) {
 		arch string
 		want []string
 	}{
-		{"amd64", []string{"hcloud-amd64.raw.xz", "openstack-amd64.raw.xz", "scaleway-amd64.raw.zst"}},
-		{"arm64", []string{"hcloud-arm64.raw.xz", "openstack-arm64.raw.xz", "scaleway-arm64.raw.zst"}},
+		{"amd64", []string{"hcloud-amd64.raw.xz", "openstack-amd64.raw.xz", "scaleway-amd64.raw.zst", "aws-amd64.raw.xz"}},
+		{"arm64", []string{"hcloud-arm64.raw.xz", "openstack-arm64.raw.xz", "scaleway-arm64.raw.zst", "aws-arm64.raw.xz"}},
 	}
 
 	for _, c := range cases {
@@ -82,8 +82,9 @@ func TestNodeCloudUserDataDemo(t *testing.T) {
 		t.Errorf("preview/role = %s %s %s", d.Role, d.Hostname, d.TemplateNode)
 	}
 
-	if d.TalosVersion != demoTalosVersion || d.Schematic != demoBootSchematic || len(d.Images) != 3 ||
-		d.Images[0].URL != "https://factory.talos.dev/image/"+demoBootSchematic+"/"+demoTalosVersion+"/hcloud-amd64.raw.xz" {
+	if d.TalosVersion != demoTalosVersion || d.Schematic != demoBootSchematic || len(d.Images) != 4 ||
+		d.Images[0].URL != "https://factory.talos.dev/image/"+demoBootSchematic+"/"+demoTalosVersion+"/hcloud-amd64.raw.xz" ||
+		d.Images[3].Platform != cloudPlatformAWS || d.Images[3].URL != "https://factory.talos.dev/image/"+demoBootSchematic+"/"+demoTalosVersion+"/aws-amd64.raw.xz" {
 		t.Errorf("images = %+v", d.Images)
 	}
 
