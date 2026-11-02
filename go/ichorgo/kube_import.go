@@ -510,27 +510,9 @@ func clusterOf(doc *kubeconfigDoc, name string) *kubeStoreCluster {
 
 // kubeMergedName is mergedName for a kubeconfig context.
 func kubeMergedName(stored *kubeconfigDoc, taken, reserved map[string]bool, name string, cluster *kubeStoreCluster, choice importChoice) (string, error) {
-	if !taken[name] {
-		return name, nil
-	}
-
-	switch {
-	case choice.Replace:
-		same := sameKubeClusterName(stored, name, cluster)
-		if same == "" {
-			return "", fmt.Errorf("context %q is another cluster than the stored one: it cannot replace it", name)
-		}
-
-		return same, nil
-	case choice.Name != "":
-		if taken[choice.Name] || (reserved[choice.Name] && choice.Name != name) {
-			return "", fmt.Errorf("a cluster named %q is already imported", choice.Name)
-		}
-
-		return choice.Name, nil
-	default:
-		return freeName(taken, reserved, name), nil
-	}
+	return mergedChoiceName(taken, reserved, name, choice, func() string {
+		return sameKubeClusterName(stored, name, cluster)
+	})
 }
 
 // sameKubeClusterName is the stored context named name, or name-N, of the same cluster.
