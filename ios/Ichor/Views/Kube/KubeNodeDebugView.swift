@@ -43,19 +43,7 @@ struct KubeNodeDebugView: View {
                         .kubeGated(.debugNode, in: namespace)
                 }
             default:
-                VStack(spacing: 0) {
-                    if let status = shell.statusLine {
-                        HStack {
-                            Text(status).font(.footnote)
-                            Spacer()
-                            if case .exited = shell.state { Button("New shell") { shell.reset() } }
-                        }
-                        .padding(.horizontal).padding(.vertical, 6)
-                        .background(.bar)
-                    }
-                    TerminalHost(shell: shell)
-                }
-                .background(Color(red: 0.04, green: 0.07, blue: 0.13))
+                ShellTerminalContent(shell: shell)
             }
         }
         .navigationTitle(Text(verbatim: node))
