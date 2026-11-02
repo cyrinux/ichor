@@ -184,20 +184,7 @@ type serviceObject struct {
 
 // servicesOfPods finds the Services whose selector matches the labels of one of pods.
 func servicesOfPods(ctx context.Context, k *kubeClient, pods []routePod) (map[serviceRef]bool, error) {
-	wanted := map[string]map[string]bool{} // namespace -> pod names
-
-	for _, p := range pods {
-		if validateKubeName("pod", p.Namespace, p.Pod) != nil {
-			continue
-		}
-
-		if wanted[p.Namespace] == nil {
-			wanted[p.Namespace] = map[string]bool{}
-		}
-
-		wanted[p.Namespace][p.Pod] = true
-	}
-
+	wanted := wantedRoutePods(pods)
 	found := map[serviceRef]bool{}
 
 	for _, ns := range slices.Sorted(maps.Keys(wanted)) {

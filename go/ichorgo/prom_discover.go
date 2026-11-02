@@ -56,6 +56,16 @@ type promCandidate struct {
 	score int
 }
 
+// matchingServicePort picks the first TCP port with an expected number or name.
+func matchingServicePort(s promService, ports []int, names []string) (int, bool) {
+	for _, p := range s.Spec.Ports {
+		if (p.Protocol == "" || p.Protocol == "TCP") && (slices.Contains(ports, p.Port) || slices.Contains(names, p.Name)) {
+			return p.Port, true
+		}
+	}
+	return 0, false
+}
+
 func promCandidates(services []promService) []promSource {
 	return rankSources(services, promMatch)
 }
@@ -128,16 +138,9 @@ func promMatch(s promService) (promCandidate, bool) {
 		return promCandidate{}, false
 	}
 
-	for _, p := range s.Spec.Ports {
-		if p.Protocol != "" && p.Protocol != "TCP" {
-			continue
-		}
-
-		if slices.Contains(ports, p.Port) || slices.Contains(names, p.Name) {
-			src.Port = p.Port
-
-			return promCandidate{src: src, score: score}, true
-		}
+	if port, ok := matchingServicePort(s, ports, names); ok {
+		src.Port = port
+		return promCandidate{src: src, score: score}, true
 	}
 
 	return promCandidate{}, false

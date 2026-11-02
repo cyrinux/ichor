@@ -122,8 +122,22 @@ func holdsLeaf(content string, l talosLeaf) bool {
 
 // leavesPatch writes leaves back as a patch, a document per document key.
 func leavesPatch(leaves []talosLeaf) (string, error) {
-	byDoc := map[string]map[string]any{}
+	byDoc, order := leavesByDocument(leaves)
+	docs := make([]map[string]any, 0, len(order))
+	for _, k := range order {
+		docs = append(docs, byDoc[k])
+	}
 
+	if len(docs) == 0 {
+		return "", nil
+	}
+
+	return encodeYAMLDocs(docs)
+}
+
+// leavesByDocument groups leaves in their original document order, preserving identity fields.
+func leavesByDocument(leaves []talosLeaf) (map[string]map[string]any, []string) {
+	byDoc := map[string]map[string]any{}
 	var order []string
 
 	for _, l := range leaves {
@@ -140,17 +154,7 @@ func leavesPatch(leaves []talosLeaf) (string, error) {
 
 		setYAMLPath(doc, l.path, l.value)
 	}
-
-	docs := make([]map[string]any, 0, len(order))
-	for _, k := range order {
-		docs = append(docs, byDoc[k])
-	}
-
-	if len(docs) == 0 {
-		return "", nil
-	}
-
-	return encodeYAMLDocs(docs)
+	return byDoc, order
 }
 
 // shortOr is a hostname's first label, the hostname when it has none (an address).

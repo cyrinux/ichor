@@ -41,12 +41,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
@@ -101,9 +98,6 @@ data class FollowState(
     val nextSeq: Long = 0,
 )
 
-/** Pause between two applied batches of followed lines, so bursts redraw a few times only. */
-private const val FOLLOW_BATCH_MS = 100L
-
 /** Follows the log (`talosctl logs -f`) while [follow] is collected. */
 class LogFollowViewModel(
     private val talos: TalosRepository,
@@ -124,25 +118,11 @@ class LogFollowViewModel(
     private suspend fun followOnce() {
         _state.value = FollowState(streaming = true)
         try {
-            coroutineScope {
-                val lines = when (source) {
-                    is LogSource.Service -> talos.followLogs(node, source.name, FOLLOW_TAIL_LINES)
-                    is LogSource.Container -> talos.followContainerLogs(node, source.id, FOLLOW_TAIL_LINES)
-                }
-                val items = lines.produceIn(this)
-                while (true) {
-                    val next = items.receiveCatching()
-                    next.exceptionOrNull()?.let { throw it }
-                    val first = next.getOrNull() ?: break
-                    // Everything already queued joins the batch.
-                    val batch = buildList {
-                        add(first)
-                        while (true) add(items.tryReceive().getOrNull() ?: break)
-                    }
-                    apply(batch)
-                    delay(FOLLOW_BATCH_MS)
-                }
+            val lines = when (source) {
+                is LogSource.Service -> talos.followLogs(node, source.name, FOLLOW_TAIL_LINES)
+                is LogSource.Container -> talos.followContainerLogs(node, source.id, FOLLOW_TAIL_LINES)
             }
+            lines.collectLogBatches(::apply)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {

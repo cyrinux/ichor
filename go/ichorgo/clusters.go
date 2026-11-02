@@ -213,13 +213,20 @@ func takenNames(cfg *clientconfig.Config) map[string]bool {
 // name the user chose, or the first free name-N. A taken name (stored, or given to another
 // imported context) is refused rather than overwritten; reserved holds the imported names.
 func mergedName(stored *clientconfig.Config, taken, reserved map[string]bool, name string, ctx *clientconfig.Context, choice importChoice) (string, error) {
+	return mergedChoiceName(taken, reserved, name, choice, func() string {
+		return sameClusterName(stored.Contexts, name, ctx)
+	})
+}
+
+// mergedChoiceName applies the same collision policy to Talos and Kubernetes imports.
+func mergedChoiceName(taken, reserved map[string]bool, name string, choice importChoice, sameClusterName func() string) (string, error) {
 	if !taken[name] {
 		return name, nil
 	}
 
 	switch {
 	case choice.Replace:
-		same := sameClusterName(stored.Contexts, name, ctx)
+		same := sameClusterName()
 		if same == "" {
 			return "", fmt.Errorf("context %q is another cluster than the stored one: it cannot replace it", name)
 		}

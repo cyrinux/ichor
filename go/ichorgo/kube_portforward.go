@@ -179,33 +179,8 @@ func forwardConn(ctx context.Context, k *kubeClient, namespace, pod string, port
 }
 
 func (k *kubeClient) portForwardConfig(ctx context.Context, namespace, pod string, port int) (*websocket.Config, error) {
-	u, err := k.endpoint(podPath(namespace, pod) + "/portforward?" + url.Values{"ports": {strconv.Itoa(port)}}.Encode())
-	if err != nil {
-		return nil, err
-	}
-
-	u.Scheme = "wss"
-
-	cfg, err := websocket.NewConfig(u.String(), (&url.URL{Scheme: "https", Host: u.Host}).String())
-	if err != nil {
-		return nil, fmt.Errorf("port-forward URL: %w", err)
-	}
-
-	cfg.Protocol = []string{kubePortForwardProtocol}
-	cfg.TlsConfig = k.tls.Clone()
-	cfg.Dialer = &net.Dialer{Timeout: kubeProbeTimeout}
-	cfg.Header.Set("User-Agent", "ichor")
-
-	token, err := k.bearer(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if token != "" {
-		cfg.Header.Set("Authorization", "Bearer "+token)
-	}
-
-	return cfg, nil
+	path := podPath(namespace, pod) + "/portforward?" + url.Values{"ports": {strconv.Itoa(port)}}.Encode()
+	return k.streamConfigWithLabel(ctx, path, []string{kubePortForwardProtocol}, "port-forward URL")
 }
 
 // pumpToPod sends what the local client writes on the data channel.

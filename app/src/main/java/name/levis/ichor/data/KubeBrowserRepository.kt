@@ -41,7 +41,6 @@ import name.levis.ichor.model.ResourceWatchRows
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.HelmRollbackListener
 import name.levis.ichorgo.Ichorgo
-import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.PortForwardListener
 
 /** What a port-forward reports, in order: [Ready] once listening, [ConnectionError] per failed connection, then [Done]. */
@@ -271,9 +270,9 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
      * last [tailLines] lines, then each new one, until the collector cancels or the container
      * stops ([StreamItem.Done]).
      */
-    fun followPodLogs(namespace: String, pod: String, container: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+    fun followPodLogs(namespace: String, pod: String, container: String, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
         val target = target()
-        val run = Ichorgo.startPodLogFollow(
+        Ichorgo.startPodLogFollow(
             target.yaml,
             target.context,
             target.server,
@@ -281,19 +280,9 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
             pod,
             container,
             tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
+            listener,
         )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    }
 
     /**
      * Forwards a loopback port of the phone to [remotePort] of [pod] while collected:

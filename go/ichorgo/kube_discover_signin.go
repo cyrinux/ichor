@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"maps"
 	"strings"
@@ -43,16 +42,7 @@ func StartDiscoverSignIn(provider, secretsJSON string, listener SignInListener) 
 		defer onPanic(listener.OnDone)
 
 		err := runDiscoverSignIn(ctx, provider, secretsJSON, listener, run.callbacks)
-		if errors.Is(err, context.Canceled) {
-			err = nil
-		}
-
-		msg := ""
-		if err != nil {
-			msg = err.Error()
-		}
-
-		listener.OnDone(msg)
+		finishSignIn(listener, err)
 	}()
 
 	return run

@@ -8,7 +8,6 @@ import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.ImagePullListener
 import name.levis.ichorgo.JoinListener
 import name.levis.ichorgo.JoinRun
-import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.NetToolListener
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
@@ -101,49 +100,29 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED)
 
-    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
         val stored = configs.forCall()
-        val run = Ichorgo.startLogFollow(
+        Ichorgo.startLogFollow(
             stored.yaml,
             stored.activeContext,
             node,
             service.orEmpty(),
             tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
+            listener,
         )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    }
 
-    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
         val stored = configs.forCall()
-        val run = Ichorgo.startContainerLogFollow(
+        Ichorgo.startContainerLogFollow(
             stored.yaml,
             stored.activeContext,
             node,
             containerId,
             tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
+            listener,
         )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    }
 
     /**
      * StartNodeNetTool: [tool] against [target] from [node], in a privileged netshoot container
