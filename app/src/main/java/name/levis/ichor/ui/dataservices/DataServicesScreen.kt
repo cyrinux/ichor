@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.dataservices
 
-import name.levis.ichor.setKubeServer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +58,6 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.workloads.KubeServerDialog
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.SearchField
@@ -75,8 +72,7 @@ import name.levis.ichor.ui.plugins.nativePluginRoute
 /**
  * Longhorn volumes, Garage clusters and CloudNativePG clusters, one tab per system the cluster
  * runs, through the Kubernetes API with the admin kubeconfig Talos issues (os:admin). A node
- * that is not ready and explains the problems is named above the tabs. Like the Kubernetes
- * screen, the top bar sets the API address (not in demo or screenshot mode).
+ * that is not ready and explains the problems is named above the tabs.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +96,6 @@ fun DataServicesScreen(
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
-    val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
     // The CRD plugins of the data-services category: one tab each, after the native systems.
     val pluginsVm: PluginDetectViewModel = viewModel(key = "data-services-plugins", factory = factory { PluginDetectViewModel(app.pluginRepository) })
     val plugins by pluginsVm.state.collectAsStateWithLifecycle()
@@ -133,28 +128,22 @@ fun DataServicesScreen(
     CnpgLifecycleToasts(vm.cnpg.lifecycleResults)
     VeleroResultToasts(vm.velero.results)
 
-    val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
-    var editing by remember { mutableStateOf(false) }
+    // The API address, set from the cluster's row in Manage clusters: a new one (also set while
+    // this screen was in the back stack) reads every tab again through it.
+    val server = config?.realFingerprint?.let { servers[it] }.orEmpty()
+    var listedThrough by rememberSaveable { mutableStateOf(server) }
+    LaunchedEffect(server) {
+        if (server != listedThrough) {
+            listedThrough = server
+            vm.refresh(reset = true)
+            pluginsVm.refresh(reset = true)
+            refreshes++
+        }
+    }
     // The top bar's search: for now it filters the Longhorn volumes.
     var searching by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     val searchable = state.let { it is UiState.Loaded && it.data.longhorn != null }
-    LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
-    if (editing && fingerprint != null) {
-        KubeServerDialog(
-            saved = servers[fingerprint].orEmpty(),
-            onSave = { server ->
-                editing = false
-                if (server != servers[fingerprint].orEmpty()) {
-                    app.setKubeServer(fingerprint, server)
-                    vm.refresh(reset = true)
-                    pluginsVm.refresh(reset = true)
-                    refreshes++
-                }
-            },
-            onDismiss = { editing = false },
-        )
-    }
 
     IchorScaffold(
         topBar = {
@@ -169,9 +158,6 @@ fun DataServicesScreen(
                         })
                     }
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh), onClick = refreshAll)
-                    if (fingerprint != null) {
-                        TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })
-                    }
                 },
             )
         },
