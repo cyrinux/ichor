@@ -929,6 +929,11 @@
     <string name="snippet_param_host">レジストリ</string>
     <string name="snippet_param_endpoint">ミラー URL</string>
     <string name="snippet_param_enabled">有効</string>
+    <string name="snippet_watchdog">ウォッチドッグタイマー</string>
+    <string name="snippet_watchdog_desc">Talos が応答しなくなったノードを、タイムアウト後にリセットします。</string>
+    <string name="snippet_param_device">デバイス</string>
+    <string name="snippet_param_timeout">タイムアウト（最短 10 秒）</string>
+    <string name="snippet_watchdog_note">ノードにウォッチドッグデバイスが必要です。物理サーバーのチップセット（iTCO、SP5100）か仮想デバイス（QEMU、Proxmox、libvirt の i6300esb、Xen）です。ない場合、ノードは設定を無視し、何も再起動しません。</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Talos がマシン構成より先に読み取る起動時の値です。値が誤っているとノードが起動できなくなる可能性があります。構成では起動できないノードを修復する場合にのみ変更してください。</string>
     <string name="meta_not_loaded">ノードはまだ META パーティションを読み取っていません。</string>

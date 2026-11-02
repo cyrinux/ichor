@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.yaml.in/yaml/v4"
 )
@@ -57,6 +58,7 @@ var configSnippets = []configSnippet{
 	{ID: "node_label", Group: snippetGroupKubernetes, Params: []snippetParam{{"key", snippetParamText, "example.test/rack"}, {"value", snippetParamText, "r1"}}, build: buildNodeLabel},
 	{ID: "registry_mirror", Group: snippetGroupCluster, Params: []snippetParam{{"host", snippetParamText, "docker.io"}, {"endpoint", snippetParamText, "https://mirror.example.test"}}, build: buildRegistryMirror},
 	{ID: "kubespan", Group: snippetGroupCluster, Params: []snippetParam{{"enabled", snippetParamBool, "true"}}, build: buildKubeSpan},
+	{ID: "watchdog", Group: snippetGroupKernel, Params: []snippetParam{{"device", snippetParamText, "/dev/watchdog0"}, {"timeout", snippetParamText, "2m"}}, build: buildWatchdog},
 }
 
 // ConfigSnippets lists the snippets: {"snippets":[{id,group,params:[{name,type,hint}],staged}]}.
@@ -114,8 +116,8 @@ func ConfigSnippetEdits(draftYAML, id, paramsJSON string) (out string, err error
 }
 
 // DriftFixEdits are the edits of draftYAML that give the node the reference's value of a
-// drift key (Insights): before is the reference's value, after the node's. Only dns, ntp and
-// mtu are config settings; the others are {"fixable":false,"reason":…}.
+// drift key (Insights): before is the reference's value, after the node's. Only dns, ntp, mtu
+// and watchdog are config settings; the others are {"fixable":false,"reason":…}.
 func DriftFixEdits(draftYAML, key, before, after string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -143,6 +145,17 @@ func DriftFixEdits(draftYAML, key, before, after string) (out string, err error)
 		edits, err = build(snippetValues{values: map[string]string{name: before}}, docs)
 	case "mtu":
 		edits, err = mtuFixEdits(docs, before, after)
+	case "watchdog":
+		if before == "off" {
+			return toJSON(snippetResult{Reason: "the reference has none: remove the WatchdogTimerConfig document in the editor if it should go"})
+		}
+
+		device, timeout, ok := strings.Cut(before, " ")
+		if !ok {
+			return toJSON(snippetResult{Reason: "not a watchdog setting: " + before})
+		}
+
+		edits, err = buildWatchdog(snippetValues{values: map[string]string{"device": device, "timeout": timeout}}, docs)
 	default:
 		return toJSON(snippetResult{Reason: "not a machine config setting: " + driftKeyReason(key)})
 	}
@@ -166,8 +179,6 @@ func driftKeyReason(key string) string {
 		return "extensions come with the installer image: upgrade to an image that has them"
 	case "secureBoot", "uki":
 		return "how the node boots is set by its installation"
-	case "watchdog":
-		return "turn it on from the machine config snippets"
 	}
 
 	return key
@@ -368,6 +379,60 @@ func buildKubeSpan(p snippetValues, d configDocs) ([]configEdit, error) {
 	enabled := p.text("enabled") == "true"
 
 	return putIn(d, "KubeSpanConfig", []string{"enabled"}, []string{"machine", "network", "kubespan", "enabled"}, enabled)
+}
+
+const (
+	watchdogTimerKind = "WatchdogTimerConfig"
+	// minWatchdogTimeout is Talos' own minimum (MinWatchdogTimeout): a shorter one is refused
+	// at validation.
+	minWatchdogTimeout = 10 * time.Second
+)
+
+// buildWatchdog sets the device and timeout of the WatchdogTimerConfig document, added when
+// the draft has none (v1alpha1 has no such field).
+func buildWatchdog(p snippetValues, d configDocs) ([]configEdit, error) {
+	device := p.text("device")
+	if !strings.HasPrefix(device, "/dev/") || len(device) == len("/dev/") {
+		return nil, fmt.Errorf("%q is not a device under /dev/", device)
+	}
+
+	timeout, err := time.ParseDuration(p.text("timeout"))
+	if err != nil {
+		return nil, fmt.Errorf("%q is not a duration (2m, 90s)", p.text("timeout"))
+	}
+
+	if timeout < minWatchdogTimeout {
+		return nil, errors.New("watchdog timeout: minimum value is 10s")
+	}
+
+	if doc := d.find(watchdogTimerKind, ""); doc >= 0 {
+		edits := make([]configEdit, 0, 2)
+
+		for _, field := range [][2]string{{"device", device}, {"timeout", timeout.String()}} {
+			edit, err := put(doc, []string{field[0]}, field[1])
+			if err != nil {
+				return nil, err
+			}
+
+			edits = append(edits, edit)
+		}
+
+		return edits, nil
+	}
+
+	// A struct, not a map: the fields in the order Talos writes them.
+	value, err := json.Marshal(struct {
+		APIVersion string `json:"apiVersion"`
+		Kind       string `json:"kind"`
+		Device     string `json:"device"`
+		Timeout    string `json:"timeout"`
+	}{"v1alpha1", watchdogTimerKind, device, timeout.String()})
+	if err != nil {
+		return nil, err
+	}
+
+	// path [] and not null: the apps decode it as a list.
+	return []configEdit{{Doc: -1, Path: []string{}, Op: configOpAddDoc, Type: configTypeYAML, Value: string(value)}}, nil
 }
 
 func buildMTU(p snippetValues, d configDocs) ([]configEdit, error) {

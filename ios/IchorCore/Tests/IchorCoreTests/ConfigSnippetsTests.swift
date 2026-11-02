@@ -27,6 +27,16 @@ final class ConfigSnippetsTests: XCTestCase {
         XCTAssertTrue(result.edits.first?.json().contains("\"op\":\"put\"") ?? false)
     }
 
+    func testNewDocumentEditDecodes() throws {
+        let result = try TalosJSON.decode(
+            SnippetEdits.self,
+            from: """
+                {"fixable":true,"edits":[{"doc":-1,"path":[],"op":"addDoc","key":"","type":"yaml","value":"{\\"kind\\":\\"WatchdogTimerConfig\\"}"}],"staged":false}
+                """)
+        XCTAssertEqual(result.edits.first?.doc, -1)
+        XCTAssertTrue(result.edits.first?.json().contains("\"op\":\"addDoc\"") ?? false)
+    }
+
     func testOnlyConfigSettingsCanBeFixed() throws {
         func change(_ key: String, before: String = "a") throws -> DriftChange {
             try TalosJSON.decode(
@@ -37,6 +47,7 @@ final class ConfigSnippetsTests: XCTestCase {
         }
         XCTAssertEqual(try change("ntp").fix, DriftFix(key: "ntp", before: "a", after: "b"))
         XCTAssertNotNil(try change("mtu").fix)
+        XCTAssertNotNil(try change("watchdog", before: "/dev/watchdog0 2m0s").fix)
         XCTAssertNil(try change("version").fix)
         XCTAssertNil(try change("dns", before: "").fix)
     }

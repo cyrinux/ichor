@@ -94,6 +94,7 @@ var snippetCases = []struct {
 	{"node_label", map[string]string{"key": "example.test/rack", "value": "r1"}, "example.test/rack: r1", "example.test/rack: r1"},
 	{"registry_mirror", map[string]string{"host": "docker.io", "endpoint": "https://mirror.example.test"}, "- https://mirror.example.test", "- https://mirror.example.test"},
 	{"kubespan", map[string]string{"enabled": "true"}, "kubespan:\n            enabled: true", "kubespan:\n            enabled: true"},
+	{"watchdog", map[string]string{"device": "/dev/watchdog0", "timeout": "2m"}, "kind: WatchdogTimerConfig\ndevice: /dev/watchdog0\ntimeout: 2m0s", "kind: WatchdogTimerConfig\ndevice: /dev/watchdog0\ntimeout: 2m0s"},
 }
 
 func TestEverySnippetMakesAValidConfig(t *testing.T) {
@@ -174,6 +175,15 @@ func TestSnippetsUseTheDocumentsOfTheDraft(t *testing.T) {
 	if e := r.Edits[0]; e.Doc != 0 || strings.Join(e.Path, ".") != "machine.kubelet.extraArgs.max-pods" {
 		t.Errorf("kubelet edit = %+v", e)
 	}
+
+	// A watchdog already there is edited, not added twice.
+	withWatchdog := modern + "---\napiVersion: v1alpha1\nkind: WatchdogTimerConfig\ndevice: /dev/watchdog0\ntimeout: 1m0s\n"
+	out, err = ConfigSnippetEdits(withWatchdog, "watchdog", `{"device":"/dev/watchdog1","timeout":"3m"}`)
+	edited, _ = applySnippet(t, withWatchdog, out, err)
+
+	if strings.Count(edited, "kind: WatchdogTimerConfig") != 1 || !strings.Contains(edited, "device: /dev/watchdog1\ntimeout: 3m0s") {
+		t.Errorf("watchdog:\n%s", edited)
+	}
 }
 
 func TestSnippetRefusals(t *testing.T) {
@@ -187,6 +197,9 @@ func TestSnippetRefusals(t *testing.T) {
 		{legacyDraft, "registry_mirror", `{"host":"docker.io","endpoint":"mirror.example.test"}`, "not a URL"},
 		{worker, "apiserver_arg", `{"key":"a","value":"b"}`, "only a control plane"},
 		{"key: [", "ntp", `{"servers":"a"}`, "not valid YAML"},
+		{legacyDraft, "watchdog", `{"device":"/dev/watchdog0","timeout":"5s"}`, "watchdog timeout: minimum value is 10s"},
+		{legacyDraft, "watchdog", `{"device":"/dev/watchdog0","timeout":"soon"}`, "not a duration"},
+		{legacyDraft, "watchdog", `{"device":"watchdog0","timeout":"2m"}`, "not a device under /dev/"},
 	} {
 		if _, err := ConfigSnippetEdits(tc.draft, tc.id, tc.params); err == nil || !strings.Contains(err.Error(), tc.want) {
 			t.Errorf("%s %s: %v", tc.id, tc.params, err)
@@ -222,10 +235,25 @@ func TestDriftFixEdits(t *testing.T) {
 		t.Errorf("mtu fix = %+v\n%s", r.Edits, edited)
 	}
 
+	// Watchdog: the reference's device and timeout, in a new document.
+	out, err = DriftFixEdits(legacyDraft, "watchdog", "/dev/watchdog0 2m0s", "off")
+	edited, r = applySnippet(t, legacyDraft, out, err)
+
+	if !r.Fixable || !strings.Contains(edited, "kind: WatchdogTimerConfig\ndevice: /dev/watchdog0\ntimeout: 2m0s") {
+		t.Errorf("watchdog fix = %+v\n%s", r, edited)
+	}
+
+	// The apps decode path as a list: never null.
+	if !strings.Contains(out, `"doc":-1,"path":[],"op":"addDoc"`) {
+		t.Errorf("watchdog edit JSON: %s", out)
+	}
+
 	for _, tc := range []struct{ key, before, want string }{
 		{"version", "v1.14.0", "upgrade the node"},
 		{"extensions", "a=1", "installer image"},
 		{"dns", "", "the reference has none"},
+		{"watchdog", "off", "remove the WatchdogTimerConfig document"},
+		{"watchdog", "/dev/watchdog0", "not a watchdog setting"},
 	} {
 		out, err := DriftFixEdits(legacyDraft, tc.key, tc.before, "x")
 		if r := decodeJSON[snippetResult](t, out, err); r.Fixable || !strings.Contains(r.Reason, tc.want) {

@@ -973,6 +973,11 @@
     <string name="snippet_param_host">Registro</string>
     <string name="snippet_param_endpoint">URL del mirror</string>
     <string name="snippet_param_enabled">Attivato</string>
+    <string name="snippet_watchdog">Timer watchdog</string>
+    <string name="snippet_watchdog_desc">Riavvia un nodo il cui Talos non risponde più, allo scadere del timeout.</string>
+    <string name="snippet_param_device">Dispositivo</string>
+    <string name="snippet_param_timeout">Timeout (minimo 10 s)</string>
+    <string name="snippet_watchdog_note">Il nodo deve avere un dispositivo watchdog: quello del chipset di un server fisico (iTCO, SP5100) o uno virtuale (i6300esb di QEMU, Proxmox o libvirt, Xen). Senza, il nodo ignora l’impostazione e nulla si riavvia.</string>
     <string name="machine_config_view_meta">META</string>
     <string name="meta_banner">Valori di avvio che Talos legge prima della configurazione della macchina. Un valore sbagliato può impedire l\'avvio del nodo: cambiali solo per riparare un nodo che non si avvia con la sua configurazione.</string>
     <string name="meta_not_loaded">Il nodo non ha ancora letto la sua partizione META.</string>

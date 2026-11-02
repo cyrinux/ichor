@@ -130,6 +130,7 @@ class MachineConfigRepository(go: GoCall) : GoRepository(go) {
                 }
 
                 override fun onDone(errMessage: String) {
+                    forgetHardware(listOf(node))
                     trySend(ConfigApplyEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
@@ -165,6 +166,7 @@ class MachineConfigRepository(go: GoCall) : GoRepository(go) {
                 }
 
                 override fun onDone(errMessage: String) {
+                    forgetHardware(nodes)
                     trySend(MultiConfigEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
@@ -194,6 +196,7 @@ class MachineConfigRepository(go: GoCall) : GoRepository(go) {
                 }
 
                 override fun onDone(outcome: String, errMessage: String) {
+                    forgetHardware(listOf(node))
                     trySend(ConfigTryEvent.Done(outcome, errMessage))
                     close()
                 }
@@ -209,6 +212,9 @@ class MachineConfigRepository(go: GoCall) : GoRepository(go) {
         }
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED)
+
+    /** A config change can arm or disarm the watchdog: the Hardware screen reads it again. */
+    private fun forgetHardware(nodes: List<String>) = nodes.forEach { go.results.forget(hardwareKey(it)) }
 
     private suspend fun <T> call(block: (config: String, context: String) -> T): T = go.talos(block)
 }

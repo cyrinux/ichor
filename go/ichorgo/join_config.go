@@ -232,14 +232,8 @@ func buildJoinConfig(templateText string, req joinConfigRequest) (string, []stri
 		warnings = append(warnings, "the new node is a control plane: it joins etcd, and the quorum then counts one more member")
 	}
 
-	for _, edit := range req.edits {
-		if edit.Doc < 0 || edit.Doc >= len(docs) {
-			return "", nil, fmt.Errorf("no document %d in this config", edit.Doc)
-		}
-
-		if err := applyConfigEdit(docs[edit.Doc], edit); err != nil {
-			return "", nil, fmt.Errorf("%s: %w", strings.Join(edit.Path, "."), err)
-		}
+	if docs, err = applyConfigEdits(docs, req.edits); err != nil {
+		return "", nil, err
 	}
 
 	text, err := encodeConfigDocs(docs)

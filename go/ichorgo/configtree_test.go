@@ -228,3 +228,43 @@ func TestEditRefusals(t *testing.T) {
 		t.Error("an invalid draft must be refused")
 	}
 }
+
+func TestEditAddDocument(t *testing.T) {
+	watchdog := `{"doc":-1,"op":"addDoc","type":"yaml","value":"{\"apiVersion\":\"v1alpha1\",\"kind\":\"WatchdogTimerConfig\",\"device\":\"/dev/watchdog0\",\"timeout\":\"2m\"}"}`
+
+	out := edit(t, testMachineConfig, watchdog)
+	if !strings.HasSuffix(out, "---\napiVersion: v1alpha1\nkind: WatchdogTimerConfig\ndevice: /dev/watchdog0\ntimeout: 2m\n") {
+		t.Errorf("the document must come last, in block style:\n%s", out)
+	}
+
+	if tree := describeConfig(out, nil); tree.Error != nil || len(tree.Documents) != 3 {
+		t.Errorf("%+v\n%s", tree.Error, out)
+	}
+
+	// A second one of the same kind is refused: the snippet edits the existing one instead.
+	if _, err := MachineConfigEdit(out, watchdog); err == nil || !strings.Contains(err.Error(), "already has a WatchdogTimerConfig document") {
+		t.Errorf("second document: %v", err)
+	}
+
+	// Replayed on a node that already has one (several nodes at once), it replaces it.
+	edits := []configEdit{{Doc: -1, Op: configOpAddDoc, Type: configTypeYAML, Value: `{"apiVersion":"v1alpha1","kind":"WatchdogTimerConfig","device":"/dev/watchdog1","timeout":"5m"}`}}
+
+	replayed, err := replayEdits(out, edits)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Count(replayed, "kind: WatchdogTimerConfig") != 1 || !strings.Contains(replayed, "device: /dev/watchdog1\ntimeout: 5m") {
+		t.Errorf("replay:\n%s", replayed)
+	}
+
+	for name, e := range map[string]string{
+		"no kind":       `{"doc":-1,"op":"addDoc","type":"yaml","value":"{\"device\":\"/dev/watchdog0\"}"}`,
+		"not an object": `{"doc":-1,"op":"addDoc","type":"yaml","value":"[1, 2]"}`,
+		"v1alpha1":      `{"doc":-1,"op":"addDoc","type":"yaml","value":"{\"version\":\"v1alpha1\"}"}`,
+	} {
+		if out, err := MachineConfigEdit(testMachineConfig, e); err == nil {
+			t.Errorf("%s must be refused, got:\n%s", name, out)
+		}
+	}
+}

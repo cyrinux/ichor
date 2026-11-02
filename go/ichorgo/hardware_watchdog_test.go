@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -78,11 +77,5 @@ func TestWatchdogSetting(t *testing.T) {
 
 	if got := mapWatchdog(nil); got != nil {
 		t.Errorf("empty list: %+v", got)
-	}
-}
-
-func TestWatchdogDriftIsNotFixable(t *testing.T) {
-	if reason := driftKeyReason("watchdog"); !strings.Contains(reason, "snippets") {
-		t.Errorf("reason %q", reason)
 	}
 }
