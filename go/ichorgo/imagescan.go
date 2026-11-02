@@ -207,27 +207,9 @@ func startImageScan(ctx context.Context, target kubeTarget, pods, options string
 // runImageScanWith runs a scan with target's client. A refusal is returned as is, outside
 // withKubeContext, which would take it for a failed call.
 func runImageScanWith(ctx context.Context, target kubeTarget, refs []routePod, opts imageScanOptions, emit func(imageScanProgress)) (imageScanReport, error) {
-	var (
-		report  imageScanReport
-		refusal error
-	)
-
-	_, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		var runErr error
-		report, runErr = runImageScan(ctx, k, refs, opts, emit)
-
-		var r *netPerfRefusal
-		if errors.As(runErr, &r) {
-			refusal, runErr = runErr, nil
-		}
-
-		return struct{}{}, runErr
+	return withKubeRefusal(ctx, target, func(ctx context.Context, k *kubeClient) (imageScanReport, error) {
+		return runImageScan(ctx, k, refs, opts, emit)
 	})
-	if refusal != nil {
-		err = refusal
-	}
-
-	return report, err
 }
 
 // imageScanDone is what OnDone gets for a scan that returned report and err.
