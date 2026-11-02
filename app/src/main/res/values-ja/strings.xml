@@ -2120,6 +2120,9 @@
     <string name="cronjobs_no_runs">保持されている実行はありません。</string>
     <string name="cronjobs_runs">最近の実行</string>
     <string name="cronjobs_manual">手動</string>
+    <plurals name="cronjobs_history_summary">
+        <item quantity="other">直近 %1$d 回の実行：%2$s</item>
+    </plurals>
     <string name="cronjobs_run_now">今すぐ実行</string>
     <string name="cronjobs_schedule_only">スケジュールのみ</string>
     <string name="cronjobs_run_title">%1$s を今すぐ実行しますか？</string>
@@ -2142,6 +2145,7 @@
     <string name="pods_no_match">「%1$s」に一致する Pod はありません。</string>
     <string name="pods_ready_count">%1$d/%2$d 準備完了</string>
     <string name="pods_row_actions">%1$s の操作</string>
+    <string name="cronjobs_row_actions">%1$s の操作</string>
     <string name="pods_delete_title">Pod %1$s を削除しますか？</string>
     <string name="pods_delete_text_owned">猶予期間の後に %1$s から削除され、%2$s が新しい Pod を起動します。</string>
     <string name="pods_delete_text_bare">猶予期間の後に %1$s から削除されます。管理するコントローラーがないため、再作成されません。</string>

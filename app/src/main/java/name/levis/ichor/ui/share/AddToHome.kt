@@ -20,6 +20,7 @@ import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.shortcuts.ScreenShortcuts
 import name.levis.ichor.shortcuts.screenGlyph
+import name.levis.ichor.ui.components.RowAction
 import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
@@ -64,6 +65,13 @@ fun rememberAddToHome(): ((ShareTarget, String) -> Unit)? {
 fun AddToHomeButton(target: ShareTarget, label: String) {
     val add = rememberAddToHome() ?: return
     TooltipIconButton(Icons.Outlined.AddToHomeScreen, stringResource(R.string.shortcut_add_home), onClick = { add(target, label) })
+}
+
+/** Add to home screen as a row action (a More or long-press menu); null when the feature is off. */
+@Composable
+fun rememberAddToHomeAction(target: ShareTarget, label: String): RowAction? {
+    val add = rememberAddToHome() ?: return null
+    return RowAction(Icons.Outlined.AddToHomeScreen, stringResource(R.string.shortcut_add_home), { add(target, label) })
 }
 
 /** A menu entry adding [target] (named [label]) to the home screen; [onClick] closes the menu. */

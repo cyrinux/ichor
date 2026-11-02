@@ -2327,6 +2327,12 @@
     <string name="cronjobs_no_runs">Нет сохранённых запусков.</string>
     <string name="cronjobs_runs">Недавние запуски</string>
     <string name="cronjobs_manual">вручную</string>
+    <plurals name="cronjobs_history_summary">
+        <item quantity="one">Последний %1$d запуск: %2$s</item>
+        <item quantity="few">Последние %1$d запуска: %2$s</item>
+        <item quantity="many">Последние %1$d запусков: %2$s</item>
+        <item quantity="other">Последние %1$d запуска: %2$s</item>
+    </plurals>
     <string name="cronjobs_run_now">Запустить сейчас</string>
     <string name="cronjobs_schedule_only">Только по расписанию</string>
     <string name="cronjobs_run_title">Запустить %1$s сейчас?</string>
@@ -2349,6 +2355,7 @@
     <string name="pods_no_match">Нет подов по запросу «%1$s».</string>
     <string name="pods_ready_count">%1$d/%2$d готовы</string>
     <string name="pods_row_actions">Действия для %1$s</string>
+    <string name="cronjobs_row_actions">Действия для %1$s</string>
     <string name="pods_delete_title">Удалить под %1$s?</string>
     <string name="pods_delete_text_owned">Он будет удалён из %1$s по истечении периода корректного завершения; %2$s запустит новый.</string>
     <string name="pods_delete_text_bare">Он будет удалён из %1$s по истечении периода корректного завершения. Им не управляет ни один контроллер: он не вернётся.</string>

@@ -2194,6 +2194,10 @@
     <string name="cronjobs_no_runs">No run kept.</string>
     <string name="cronjobs_runs">Recent runs</string>
     <string name="cronjobs_manual">manual</string>
+    <plurals name="cronjobs_history_summary">
+        <item quantity="one">Last %1$d run: %2$s</item>
+        <item quantity="other">Last %1$d runs: %2$s</item>
+    </plurals>
     <string name="cronjobs_run_now">Run now</string>
     <string name="cronjobs_schedule_only">Schedule only</string>
     <string name="cronjobs_run_title">Run %1$s now?</string>
@@ -2216,6 +2220,7 @@
     <string name="pods_no_match">No pod matches “%1$s”.</string>
     <string name="pods_ready_count">%1$d/%2$d ready</string>
     <string name="pods_row_actions">Actions for %1$s</string>
+    <string name="cronjobs_row_actions">Actions for %1$s</string>
     <string name="pods_delete_title">Delete pod %1$s?</string>
     <string name="pods_delete_text_owned">It is removed from %1$s after its grace period; %2$s starts a new one.</string>
     <string name="pods_delete_text_bare">It is removed from %1$s after its grace period. No controller owns it: it will not come back.</string>

@@ -29,6 +29,7 @@ import name.levis.ichor.ui.components.QuickActionRow
 import name.levis.ichor.ui.components.RowAction
 import name.levis.ichor.ui.components.denialReason
 import name.levis.ichor.ui.components.rememberKubeDenial
+import name.levis.ichor.ui.share.rememberAddToHomeAction
 import name.levis.ichor.ui.share.rememberPinAction
 import name.levis.ichor.ui.share.rememberShareAction
 
@@ -103,7 +104,8 @@ internal fun WorkloadQuickActions(
 /**
  * A CronJob card's quick actions: swipe right to run it now, left to suspend or resume it, each
  * through its confirmation ([onRun], [onSuspend]: the Argo CD freeze-first path stays there);
- * a long press lists the two, Pin and Share. A tap still expands its runs ([onToggle]).
+ * a long press lists the two, Pin, Share and Add to home. [content] gets all but Run now, for
+ * its More button. A tap still expands or collapses its runs ([onToggle], [expanded]).
  */
 @Composable
 internal fun CronJobQuickActions(
@@ -112,10 +114,11 @@ internal fun CronJobQuickActions(
     suspending: Boolean,
     runDenial: KubePermission?,
     suspendDenial: KubePermission?,
+    expanded: Boolean,
     onToggle: () -> Unit,
     onRun: () -> Unit,
     onSuspend: () -> Unit,
-    content: @Composable () -> Unit,
+    content: @Composable (more: List<RowAction>) -> Unit,
 ) {
     val target = ShareTarget.cronJob(cronJob.namespace, cronJob.name)
     val run = RowAction(
@@ -132,7 +135,13 @@ internal fun CronJobQuickActions(
         enabled = !suspending && suspendDenial == null,
         disabledReason = suspendDenial.denialReason(),
     )
-    val menu = listOfNotNull(run, suspend, rememberPinAction(target, cronJob.name), rememberShareAction(target))
+    val menu = listOfNotNull(
+        run,
+        suspend,
+        rememberPinAction(target, cronJob.name),
+        rememberShareAction(target),
+        rememberAddToHomeAction(target, cronJob.name),
+    )
     val shape = CardDefaults.shape
     QuickActionRow(
         leading = run,
@@ -140,7 +149,10 @@ internal fun CronJobQuickActions(
         menu = menu,
         onClick = onToggle,
         modifier = Modifier.clip(shape),
+        onClickLabel = stringResource(if (expanded) R.string.common_collapse else R.string.common_expand),
         shape = shape,
-        content = content,
-    )
+        menuHeader = cronJob.name,
+    ) {
+        content(menu - run)
+    }
 }
