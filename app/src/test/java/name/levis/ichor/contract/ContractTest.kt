@@ -28,6 +28,7 @@ import name.levis.ichor.model.KubePodPage
 import name.levis.ichor.model.KubeSpanMeshHealth
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeWorkloadList
+import name.levis.ichor.model.NetMap
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.OnCallIncidents
 import org.junit.Assert.assertEquals
@@ -57,6 +58,7 @@ class ContractTest {
         "inventory" to Row(Inventory.serializer()),
         "kubespan" to Row(KubeSpanOverview.serializer()) { assertTrue(it.nodes.isNotEmpty()) },
         "topology" to Row(ClusterTopology.serializer()),
+        "netmap" to Row(NetMap.serializer()) { assertEquals("Node", it.problem?.kind); assertTrue(it.edges.isNotEmpty()) },
         "kubespan-mesh" to Row(KubeSpanMeshHealth.serializer()) { assertEquals(it.broken, it.issues.size) },
         "cluster-updates" to Row(ClusterUpdates.serializer()) { assertTrue(updateSections(it).images.isNotEmpty()) },
         "update-proposal-plan" to Row(UpdateProposalPlan.serializer()) { assertEquals(2, it.files[0].changes.size) },

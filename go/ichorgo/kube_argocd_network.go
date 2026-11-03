@@ -4,12 +4,12 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/cyrinux/ichor/go/kube/netmap"
 )
 
 // The network view of an Argo CD app, like the Network tab of Argo CD's own UI, with one more
@@ -21,50 +21,14 @@ import (
 // elsewhere that send traffic to its Services (a shared Gateway's HTTPRoute), the pods those
 // Services select and the nodes those pods run on.
 
-// Layers of the graph, left to right.
+// The Argo layers in front of the Services, left to right; netmap draws Service → Pod → node
+// behind them.
 const (
 	argoLayerHost = iota
 	argoLayerGateway
 	argoLayerRoute
-	argoLayerService
-	argoLayerPod
-	argoLayerNode
+	argoNetFront // the number of Argo layers
 )
-
-type argoNetwork struct {
-	Nodes []argoNetNode `json:"nodes"`
-	Edges []argoNetEdge `json:"edges"`
-	// Problem is null when every box is fine.
-	Problem *argoNetProblem `json:"problem"`
-}
-
-// argoNetProblem is the deepest broken box, the likely root cause (a node down before the
-// pods it stopped, before the Service left without endpoints), for the app to word.
-type argoNetProblem struct {
-	Kind      string `json:"kind"` // Node|Pod|Service|Ingress|Gateway
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	Detail    string `json:"detail"`
-}
-
-type argoNetNode struct {
-	ID        string `json:"id"`
-	Layer     int    `json:"layer"`
-	Kind      string `json:"kind"` // Host|LoadBalancer|Gateway|Ingress|HTTPRoute|GRPCRoute|TLSRoute|IngressRoute|IngressRouteTCP|Service|Pod|Node
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	Detail    string `json:"detail"` // "ClusterIP 10.96.0.12 · 80→8080", a pod's status, an address
-	Health    string `json:"health"` // critical|warning|ok|idle
-	URL       string `json:"url"`    // what a host opens, "" otherwise
-	// Managed: the app's own resource (false for a shared Gateway or route, pods, nodes).
-	Managed bool `json:"managed"`
-}
-
-type argoNetEdge struct {
-	From   string `json:"from"`
-	To     string `json:"to"`
-	Health string `json:"health"` // that of the hop's target: traffic stops where it is red
-}
 
 // KubeArgoNetwork draws how traffic reaches the Argo CD Application namespace/name (os:admin):
 // {"nodes":[{id,layer,kind,namespace,name,detail,health,url,managed}],"edges":[{from,to,health}],
@@ -79,88 +43,42 @@ func KubeArgoNetwork(configYAML, contextName, kubeServer, namespace, name string
 		return "", err
 	}
 
-	demo := func() argoNetwork { return demoArgoNetwork(name) }
+	demo := func() netmap.Map { return demoArgoNetwork(name) }
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demo, func(ctx context.Context, k *kubeClient) (argoNetwork, error) {
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demo, func(ctx context.Context, k *kubeClient) (netmap.Map, error) {
 		return readArgoNetwork(ctx, k, namespace, name)
 	})
-}
-
-type netService struct {
-	Metadata struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
-	} `json:"metadata"`
-	Spec struct {
-		Type      string            `json:"type"`
-		ClusterIP string            `json:"clusterIP"`
-		Selector  map[string]string `json:"selector"`
-		Ports     []struct {
-			Name       string          `json:"name"`
-			Port       int32           `json:"port"`
-			NodePort   int32           `json:"nodePort"`
-			TargetPort json.RawMessage `json:"targetPort"`
-		} `json:"ports"`
-	} `json:"spec"`
-	Status struct {
-		LoadBalancer struct {
-			Ingress []struct {
-				IP       string `json:"ip"`
-				Hostname string `json:"hostname"`
-			} `json:"ingress"`
-		} `json:"loadBalancer"`
-	} `json:"status"`
-}
-
-type netPod struct {
-	kubePod
-	labels map[string]string
-}
-
-type netNodeObject struct {
-	Metadata struct {
-		Name string `json:"name"`
-	} `json:"metadata"`
-	Spec struct {
-		Unschedulable bool `json:"unschedulable"`
-	} `json:"spec"`
-	Status struct {
-		Conditions []struct {
-			Type   string `json:"type"`
-			Status string `json:"status"`
-		} `json:"conditions"`
-	} `json:"status"`
 }
 
 // argoNetInput is what the graph is built from, read from the API server.
 type argoNetInput struct {
 	app            argoObject
-	services       []netService
-	pods           []netPod
+	services       []netmap.Service
+	pods           []netmap.Pod
 	ingresses      []ingressObject
 	gatewayRoutes  []gatewayRouteObject // HTTPRoutes, GRPCRoutes and TLSRoutes
 	gateways       []gatewayObject
 	gatewayClasses []gatewayClassObject
 	traefik        traefikRouteSet
-	nodes          []netNodeObject
+	nodes          []netmap.NodeObject
 }
 
-func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string) (argoNetwork, error) {
+func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string) (netmap.Map, error) {
 	groups, err := readAPIGroups(ctx, k)
 	if err != nil {
-		return argoNetwork{}, err
+		return netmap.Map{}, err
 	}
 
 	version, ok := groups[groupArgo]
 	if !ok {
-		return argoNetwork{}, &kubeAPIError{Code: 404, Reason: "NotFound", Message: "Argo CD is not installed"}
+		return netmap.Map{}, &kubeAPIError{Code: 404, Reason: "NotFound", Message: "Argo CD is not installed"}
 	}
 
 	in := argoNetInput{}
 
 	path := "/apis/" + groupArgo + "/" + version + "/namespaces/" + url.PathEscape(namespace) + "/applications/" + url.PathEscape(name)
 	if err := k.get(ctx, path, &in.app); err != nil {
-		return argoNetwork{}, err
+		return netmap.Map{}, err
 	}
 
 	namespaces := argoNetNamespaces(in.app)
@@ -183,7 +101,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		base := "/api/v1/namespaces/" + url.PathEscape(ns)
 
 		tasks = append(tasks, func() {
-			var list kubeList[netService]
+			var list kubeList[netmap.Service]
 			if err := getList(ctx, k, base+"/services", &list); err != nil {
 				fail(err)
 
@@ -208,7 +126,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		gwRoutes       []gatewayRouteObject
 		gateways       kubeList[gatewayObject]
 		gatewayClasses kubeList[gatewayClassObject]
-		nodes          kubeList[netNodeObject]
+		nodes          kubeList[netmap.NodeObject]
 	)
 
 	tasks = append(tasks,
@@ -243,7 +161,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	forEachNode(tasks, func(_ int, read func()) { read() })
 
 	if len(errs) > 0 {
-		return argoNetwork{}, errs[0]
+		return netmap.Map{}, errs[0]
 	}
 
 	in.ingresses, in.gatewayRoutes, in.gateways, in.nodes = ingresses.Items, gwRoutes, gateways.Items, nodes.Items
@@ -256,13 +174,13 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 }
 
 // readNetPods lists pods with their labels (podObject leaves them out).
-func readNetPods(ctx context.Context, k *kubeClient, path string) ([]netPod, error) {
+func readNetPods(ctx context.Context, k *kubeClient, path string) ([]netmap.Pod, error) {
 	var list kubeList[json.RawMessage]
 	if err := getList(ctx, k, path, &list); err != nil {
 		return nil, err
 	}
 
-	pods := make([]netPod, 0, len(list.Items))
+	pods := make([]netmap.Pod, 0, len(list.Items))
 
 	for _, raw := range list.Items {
 		var (
@@ -274,7 +192,7 @@ func readNetPods(ctx context.Context, k *kubeClient, path string) ([]netPod, err
 			continue
 		}
 
-		pods = append(pods, netPod{kubePod: mapPod(obj), labels: labels.Metadata.Labels})
+		pods = append(pods, netmap.Pod{Pod: mapPod(obj), Labels: labels.Metadata.Labels})
 	}
 
 	return pods, nil
@@ -299,51 +217,16 @@ func argoNetNamespaces(app argoObject) []string {
 	return slices.Compact(out)
 }
 
-// argoNetGraph collects nodes and edges, each once.
-type argoNetGraph struct {
-	index map[string]int // node id -> position in out.Nodes
-	edges map[[2]string]bool
-	out   argoNetwork
-}
-
-func (g *argoNetGraph) add(n argoNetNode) string {
-	if i, ok := g.index[n.ID]; ok {
-		g.out.Nodes[i].Managed = g.out.Nodes[i].Managed || n.Managed
-
-		return n.ID
-	}
-
-	g.index[n.ID] = len(g.out.Nodes)
-	g.out.Nodes = append(g.out.Nodes, n)
-
-	return n.ID
-}
-
-func (g *argoNetGraph) node(id string) *argoNetNode {
-	if i, ok := g.index[id]; ok {
-		return &g.out.Nodes[i]
-	}
-
-	return nil
-}
-
-func (g *argoNetGraph) link(from, to string) {
-	if from != "" && to != "" && !g.edges[[2]string{from, to}] {
-		g.edges[[2]string{from, to}] = true
-		g.out.Edges = append(g.out.Edges, argoNetEdge{From: from, To: to})
-	}
-}
-
-func buildArgoNetwork(in argoNetInput) argoNetwork {
-	g := &argoNetGraph{index: map[string]int{}, edges: map[[2]string]bool{}}
-	g.out = argoNetwork{Nodes: []argoNetNode{}, Edges: []argoNetEdge{}}
+func buildArgoNetwork(in argoNetInput) netmap.Map {
+	g := netmap.NewGraph(argoNetFront)
 
 	managed := map[string]bool{} // kind/namespace/name of the app's resources
 	for _, r := range in.app.Status.Resources {
 		managed[r.Kind+"/"+r.Namespace+"/"+r.Name] = true
 	}
 
-	// The app's Services, and the pods each selects.
+	// The app's Services, the pods each selects and their nodes, and the load balancer
+	// addresses in front of them.
 	services := map[serviceRef]bool{}
 
 	for _, svc := range in.services {
@@ -353,49 +236,30 @@ func buildArgoNetwork(in argoNetInput) argoNetwork {
 		}
 
 		services[serviceRef{ns, name}] = true
-		sid := g.add(argoNetNode{ID: "svc/" + ns + "/" + name, Layer: argoLayerService, Kind: "Service", Namespace: ns, Name: name, Detail: serviceDetail(svc), Managed: true})
-		if len(svc.Spec.Selector) == 0 {
-			// Endpoints managed by hand (or ExternalName): no pods to judge it by.
-			g.node(sid).Health = healthIdle
-		}
+		sid := netmap.AddBackend(g, svc, in.pods)
+		g.Node(sid).Managed = true
 
 		for _, lb := range svc.Status.LoadBalancer.Ingress {
 			addr := cmp.Or(lb.Hostname, lb.IP)
-			lid := g.add(argoNetNode{ID: "lb/" + addr, Layer: argoLayerHost, Kind: "LoadBalancer", Name: addr, Detail: svc.Spec.Type})
-			g.link(lid, sid)
-		}
-
-		for _, p := range in.pods {
-			if p.Namespace != ns || !selects(svc.Spec.Selector, p.labels) {
-				continue
-			}
-
-			pid := g.add(argoNetNode{ID: "pod/" + ns + "/" + p.Name, Layer: argoLayerPod, Kind: "Pod", Namespace: ns, Name: p.Name, Detail: podDetail(p.kubePod), Health: podHealth(p.kubePod)})
-			g.link(sid, pid)
-
-			if p.Node != "" {
-				nid := g.add(argoNetNode{ID: "node/" + p.Node, Layer: argoLayerNode, Kind: "Node", Name: p.Node})
-				g.link(pid, nid)
-			}
+			lid := g.Add(netmap.Node{ID: "lb/" + addr, Layer: argoLayerHost, Kind: "LoadBalancer", Name: addr, Detail: svc.Spec.Type})
+			g.Link(lid, sid)
 		}
 	}
 
 	argoNetRoutes(g, in, services, managed)
-	argoNetHealth(g, in)
-	argoNetSort(g)
 
-	return g.out
+	return netmap.Finish(g, in.nodes)
 }
 
 // argoNetRoutes adds the Ingresses, Gateway API routes and Traefik routes sending traffic to
 // the app's Services, their hosts, and the Gateways the Gateway routes attach to.
-func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]bool, managed map[string]bool) {
+func argoNetRoutes(g *netmap.Graph, in argoNetInput, services map[serviceRef]bool, managed map[string]bool) {
 	for _, r := range ingressRoutes(in.ingresses, services) {
-		rid := g.add(argoNetNode{ID: "ing/" + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: "Ingress", Namespace: r.Namespace, Name: r.Name,
+		rid := g.Add(netmap.Node{ID: "ing/" + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: "Ingress", Namespace: r.Namespace, Name: r.Name,
 			Detail: ingressAddress(in.ingresses, r.Namespace, r.Name), Managed: managed["Ingress/"+r.Namespace+"/"+r.Name]})
-		hid := g.add(argoNetNode{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
-		g.link(hid, rid)
-		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)
+		hid := g.Add(netmap.Node{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
+		g.Link(hid, rid)
+		g.Link(rid, netmap.ServiceID(r.Namespace, r.Service))
 	}
 
 	for _, r := range traefikRoutes(in.traefik, services) {
@@ -404,11 +268,11 @@ func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]boo
 			prefix = "irtcp/"
 		}
 
-		rid := g.add(argoNetNode{ID: prefix + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: r.Kind, Namespace: r.Namespace, Name: r.Name,
+		rid := g.Add(netmap.Node{ID: prefix + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: r.Kind, Namespace: r.Namespace, Name: r.Name,
 			Detail: traefikAddress(in.traefik, r.Kind, r.Namespace, r.Name), Managed: managed[r.Kind+"/"+r.Namespace+"/"+r.Name]})
-		hid := g.add(argoNetNode{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
-		g.link(hid, rid)
-		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)
+		hid := g.Add(netmap.Node{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
+		g.Link(hid, rid)
+		g.Link(rid, netmap.ServiceID(r.Namespace, r.Service))
 	}
 
 	argoNetGatewayRoutes(g, in, services, managed)
@@ -416,27 +280,27 @@ func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]boo
 
 // argoNetGatewayRoutes adds the Gateway API routes sending traffic to the app's Services and
 // the Gateways they attach to, with a node id prefix per kind (hr, gr, tr).
-func argoNetGatewayRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]bool, managed map[string]bool) {
+func argoNetGatewayRoutes(g *netmap.Graph, in argoNetInput, services map[serviceRef]bool, managed map[string]bool) {
 	prefixes := map[string]string{"HTTPRoute": "hr/", "GRPCRoute": "gr/", "TLSRoute": "tr/"}
 
 	for _, r := range gatewayRoutes(in.gatewayRoutes, in.gateways, services) {
 		prefix := prefixes[r.Kind]
 
-		rid := g.add(argoNetNode{ID: prefix + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: r.Kind, Namespace: r.Namespace, Name: r.Name,
+		rid := g.Add(netmap.Node{ID: prefix + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: r.Kind, Namespace: r.Namespace, Name: r.Name,
 			Managed: managed[r.Kind+"/"+r.Namespace+"/"+r.Name]})
-		hid := g.add(argoNetNode{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
-		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)
+		hid := g.Add(netmap.Node{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
+		g.Link(rid, netmap.ServiceID(r.Namespace, r.Service))
 
 		parents := gatewayRouteParents(in.gatewayRoutes, in.gateways, r.Kind, r.Namespace, r.Name)
 		if len(parents) == 0 {
-			g.link(hid, rid)
+			g.Link(hid, rid)
 		}
 
 		for _, gw := range parents {
-			gid := g.add(argoNetNode{ID: "gw/" + gw.Metadata.Namespace + "/" + gw.Metadata.Name, Layer: argoLayerGateway, Kind: "Gateway",
+			gid := g.Add(netmap.Node{ID: "gw/" + gw.Metadata.Namespace + "/" + gw.Metadata.Name, Layer: argoLayerGateway, Kind: "Gateway",
 				Namespace: gw.Metadata.Namespace, Name: gw.Metadata.Name, Detail: gatewayDetail(gw, in.gatewayClasses), Managed: managed["Gateway/"+gw.Metadata.Namespace+"/"+gw.Metadata.Name]})
-			g.link(hid, gid)
-			g.link(gid, rid)
+			g.Link(hid, gid)
+			g.Link(gid, rid)
 		}
 	}
 }
@@ -508,52 +372,4 @@ func gatewayDetail(gw gatewayObject, classes []gatewayClassObject) string {
 	default:
 		return controller + " · " + address
 	}
-}
-
-// serviceDetail is "ClusterIP 10.96.0.12 · 80→8080, 443→https".
-func serviceDetail(svc netService) string {
-	ports := make([]string, 0, len(svc.Spec.Ports))
-
-	for _, p := range svc.Spec.Ports {
-		port := strconv.Itoa(int(p.Port))
-
-		var target string
-		if json.Unmarshal(p.TargetPort, &target) != nil {
-			var n int
-			if json.Unmarshal(p.TargetPort, &n) == nil && n != 0 {
-				target = strconv.Itoa(n)
-			}
-		}
-
-		if target != "" && target != port {
-			port += "→" + target
-		}
-
-		if p.NodePort != 0 {
-			port += fmt.Sprintf(" (node %d)", p.NodePort)
-		}
-
-		ports = append(ports, port)
-	}
-
-	head := strings.TrimSpace(cmp.Or(svc.Spec.Type, "ClusterIP") + " " + strings.ReplaceAll(svc.Spec.ClusterIP, "None", "headless"))
-
-	if len(ports) == 0 {
-		return head
-	}
-
-	return head + " · " + strings.Join(ports, ", ")
-}
-
-// podDetail is the pod's status, with its ready containers when not all are.
-func podDetail(p kubePod) string {
-	if p.Status == "Running" && p.Ready < p.Containers {
-		return fmt.Sprintf("Running · %d/%d ready", p.Ready, p.Containers)
-	}
-
-	if p.Restarts > 0 {
-		return fmt.Sprintf("%s · %d restarts", p.Status, p.Restarts)
-	}
-
-	return p.Status
 }

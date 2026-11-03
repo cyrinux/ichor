@@ -31,12 +31,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
-import name.levis.ichor.model.ArgoNetNode
+import name.levis.ichor.model.NetMapNode
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.components.label
+import name.levis.ichor.ui.components.netmap.kindIcon
+import name.levis.ichor.ui.components.netmap.kindLabel
 import name.levis.ichor.ui.dataservices.label
 
 /** What the details panel can do with the box it shows; a null action is not offered. */
@@ -55,7 +57,7 @@ data class ArgoNetActions(
  * logs) or is deleted, a node opens its detail screen.
  */
 @Composable
-fun ArgoNetDetails(node: ArgoNetNode, podNode: String?, actions: ArgoNetActions, onClose: () -> Unit, modifier: Modifier = Modifier) {
+fun ArgoNetDetails(node: NetMapNode, podNode: String?, actions: ArgoNetActions, onClose: () -> Unit, modifier: Modifier = Modifier) {
     val accent = node.healthState.color()
     Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 12.dp)) {
@@ -87,7 +89,7 @@ fun ArgoNetDetails(node: ArgoNetNode, podNode: String?, actions: ArgoNetActions,
     }
 }
 
-private fun ownership(node: ArgoNetNode): Int? = when {
+private fun ownership(node: NetMapNode): Int? = when {
     node.managed -> R.string.argo_net_managed
     node.shared -> R.string.argo_net_shared
     else -> null
@@ -95,21 +97,21 @@ private fun ownership(node: ArgoNetNode): Int? = when {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DetailActions(node: ArgoNetNode, actions: ArgoNetActions) {
+private fun DetailActions(node: NetMapNode, actions: ArgoNetActions) {
     val uri = LocalUriHandler.current
     val target = actions.node
     val onNode = actions.onNode
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (node.kind == ArgoNetNode.HOST && node.url.isNotEmpty()) {
+        if (node.kind == NetMapNode.HOST && node.url.isNotEmpty()) {
             Action(Icons.Outlined.OpenInBrowser, stringResource(R.string.argo_net_open)) { runCatching { uri.openUri(node.url) } }
         }
-        if (node.kind == ArgoNetNode.POD && target != null && onNode != null) {
+        if (node.kind == NetMapNode.POD && target != null && onNode != null) {
             Action(Icons.AutoMirrored.Outlined.ListAlt, stringResource(R.string.argo_net_pod_containers, target.hostname)) { onNode(target, NODE_PODS_TAB) }
         }
-        if (node.kind == ArgoNetNode.NODE && target != null && onNode != null) {
+        if (node.kind == NetMapNode.NODE && target != null && onNode != null) {
             Action(Icons.Outlined.Computer, stringResource(R.string.argo_net_open_node)) { onNode(target, 0) }
         }
-        if (node.kind == ArgoNetNode.POD) {
+        if (node.kind == NetMapNode.POD) {
             IchorOutlinedButton(onClick = { actions.onDeletePod?.invoke() }, enabled = actions.onDeletePod != null) {
                 Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.common_delete), modifier = Modifier.padding(start = 6.dp))

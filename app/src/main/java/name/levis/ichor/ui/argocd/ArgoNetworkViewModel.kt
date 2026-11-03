@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.ArgoApp
-import name.levis.ichor.model.ArgoNetwork
+import name.levis.ichor.model.NetMap
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.refreshFailed
@@ -28,8 +28,8 @@ import name.levis.ichor.ui.workloads.DeleteResult
  * interrupts one in flight, so a slow cluster still gets an answer between two polls.
  */
 class ArgoNetworkViewModel(private val gitOps: GitOpsRepository, private val kube: KubeRepository) : ViewModel() {
-    private val _state = MutableStateFlow<UiState<ArgoNetwork>>(UiState.Loading)
-    val state: StateFlow<UiState<ArgoNetwork>> = _state.asStateFlow()
+    private val _state = MutableStateFlow<UiState<NetMap>>(UiState.Loading)
+    val state: StateFlow<UiState<NetMap>> = _state.asStateFlow()
     private var job: Job? = null
     private var source: Any? = null
 

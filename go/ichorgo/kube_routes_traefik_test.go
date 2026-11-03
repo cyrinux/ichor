@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/kube/netmap"
 )
 
 func TestTraefikMatch(t *testing.T) {
@@ -188,7 +190,7 @@ func TestArgoNetworkIngressRoute(t *testing.T) {
 	in := argoNetInput{traefik: traefikRouteSet{tcp: []ingressRouteTCPObject{demoNetObject[ingressRouteTCPObject](`{"metadata":{"name":"edge","namespace":"web"},
 	  "spec":{"routes":[{"match":"HostSNI(` + "`tls.example`" + `)","services":[{"name":"web"}]}]}}`)}}}
 	in.app.Status.Resources = []argoResourceStatus{{Kind: "Service", Namespace: "web", Name: "web"}}
-	in.services = []netService{demoNetObject[netService](`{"metadata":{"name":"web","namespace":"web"},"spec":{"type":"ClusterIP","selector":{"app":"web"},"ports":[{"port":443}]}}`)}
+	in.services = []netmap.Service{demoNetObject[netmap.Service](`{"metadata":{"name":"web","namespace":"web"},"spec":{"type":"ClusterIP","selector":{"app":"web"},"ports":[{"port":443}]}}`)}
 
 	shared := netNode(t, buildArgoNetwork(in), "irtcp/web/edge")
 	if shared.Managed || shared.Kind != "IngressRouteTCP" {

@@ -6,7 +6,7 @@ import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoFreezeOptions
-import name.levis.ichor.model.ArgoNetwork
+import name.levis.ichor.model.NetMap
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ClusterRepo
 import name.levis.ichor.model.DEMO_CLUSTER_REPO
@@ -114,8 +114,8 @@ class GitOpsRepository(
      * How traffic reaches [app] (os:admin): hosts, Gateways, routes, Services, pods and nodes.
      * Never cached: the app detail asks again whenever it reloads the app.
      */
-    suspend fun argoNetwork(app: ArgoApp): ArgoNetwork = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(ArgoNetwork.serializer(), Ichorgo.kubeArgoNetwork(cfg, ctx, server, app.namespace, app.name))
+    suspend fun argoNetwork(app: ArgoApp): NetMap = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(NetMap.serializer(), Ichorgo.kubeArgoNetwork(cfg, ctx, server, app.namespace, app.name))
     }
 
     /**

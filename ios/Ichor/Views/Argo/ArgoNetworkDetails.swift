@@ -5,7 +5,7 @@ import IchorCore
 /// detail and health, then what can be done from there. A host opens in the browser, a node
 /// opens its screen, a pod can be deleted so its controller starts a fresh one.
 struct ArgoNetDetails: View {
-    let node: ArgoNetNode
+    let node: NetMapNode
     /// The Talos node a Node box stands for, nil when unknown or unreachable.
     let nodeRef: NodeRef?
     /// The pod a Pod box stands for.

@@ -44,6 +44,8 @@ var contractFixtures = []struct {
 	{"inventory", func() any { return demoInventory(contractNow.UnixMilli()) }},
 	{"kubespan", func() any { return demoKubeSpan() }},
 	{"topology", func() any { return demoTopology() }},
+	// The network map (netmap.Map) every map view draws; the demo app with a root cause.
+	{"netmap", func() any { return demoArgoNetwork("demo-worker") }},
 	// Written out: the demo's since is its clock's, inside a string the fixture cannot freeze.
 	{"kubespan-mesh", func() any {
 		return kubespanMeshHealth{

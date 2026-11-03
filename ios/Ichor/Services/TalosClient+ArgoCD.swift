@@ -13,7 +13,7 @@ extension TalosClient {
 
     /// How traffic reaches the Application namespace/name (os:admin): hosts, Gateways, routes,
     /// Services, pods and the nodes they run on, with the likely root cause.
-    func argoNetwork(namespace: String, name: String) async throws -> ArgoNetwork {
+    func argoNetwork(namespace: String, name: String) async throws -> NetMap {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeArgoNetwork(config, context, kubeServer, namespace, name, $0)
         }

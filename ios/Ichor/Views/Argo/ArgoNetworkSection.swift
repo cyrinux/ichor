@@ -8,7 +8,7 @@ import IchorCore
 @Observable
 @MainActor
 final class ArgoNetworkModel {
-    private(set) var state: LoadState<ArgoNetwork> = .loading
+    private(set) var state: LoadState<NetMap> = .loading
     /// Reachable Talos nodes by hostname, which Kubernetes names them by.
     private(set) var nodeRefs: [String: NodeRef] = [:]
     private var key = ""
@@ -27,7 +27,7 @@ final class ArgoNetworkModel {
         }
         started += 1
         let ticket = started
-        let loaded: LoadState<ArgoNetwork> = await .from {
+        let loaded: LoadState<NetMap> = await .from {
             try await client.argoNetwork(namespace: namespace, name: name)
         }
         guard key == self.key, ticket == started else { return }
@@ -72,7 +72,7 @@ struct ArgoNetworkSection: View {
         Section {
             switch model.state {
             case .loading:
-                graph(ArgoNetwork.placeholder)
+                graph(NetMap.placeholder)
                     .redacted(reason: .placeholder)
                     .allowsHitTesting(false)
                     .listRowInsets(EdgeInsets())
@@ -100,8 +100,8 @@ struct ArgoNetworkSection: View {
         }
     }
 
-    private func graph(_ network: ArgoNetwork) -> some View {
-        ArgoNetworkGraph(
+    private func graph(_ network: NetMap) -> some View {
+        NetMapGraph(
             network: network, selected: selected, presented: $presented, expanded: $expanded,
             tap: tap, clear: clear
         ) { node in
@@ -116,7 +116,7 @@ struct ArgoNetworkSection: View {
         }
     }
 
-    private func tap(_ node: ArgoNetNode) {
+    private func tap(_ node: NetMapNode) {
         withAnimation(.snappy) {
             if selected == node.id {
                 clear()
@@ -135,7 +135,7 @@ struct ArgoNetworkSection: View {
     }
 
     /// The pod a box stands for, with its owner when the app knows it.
-    private func pod(_ node: ArgoNetNode) -> KubePod {
+    private func pod(_ node: NetMapNode) -> KubePod {
         pods.first { $0.namespace == node.namespace && $0.name == node.name }
             ?? KubePod(namespace: node.namespace, name: node.name)
     }
@@ -155,7 +155,7 @@ struct ArgoNetworkSection: View {
     }
 
     /// The likely root cause, in the likely-cause style of the conditions section.
-    private func banner(_ problem: ArgoNetProblem, in network: ArgoNetwork) -> some View {
+    private func banner(_ problem: NetMapProblem, in network: NetMap) -> some View {
         let health = network.nodes.first { $0.kind == problem.kind && $0.name == problem.name }?.health ?? .critical
         return Label {
             Text(verbatim: problem.reason.text).font(.callout).textSelection(.enabled)
@@ -202,21 +202,21 @@ extension ArgoNetReason {
     }
 }
 
-extension ArgoNetwork {
+extension NetMap {
     /// What the section shows, redacted, while the first answer comes.
-    static let placeholder: ArgoNetwork = {
-        let host = ArgoNetNode(
-            id: "h", layer: .entry, kind: .host, name: "app.example.com", detail: "https://app.example.com")
-        let route = ArgoNetNode(id: "r", layer: .route, kind: .ingress, name: "app-ingress", detail: "10.0.0.1")
-        let service = ArgoNetNode(
-            id: "s", layer: .service, kind: .service, name: "app-service", detail: "ClusterIP 10.96.0.1")
+    static let placeholder: NetMap = {
+        let host = NetMapNode(
+            id: "h", layer: 0, kind: .host, name: "app.example.com", detail: "https://app.example.com")
+        let route = NetMapNode(id: "r", layer: 2, kind: .ingress, name: "app-ingress", detail: "10.0.0.1")
+        let service = NetMapNode(
+            id: "s", layer: 3, kind: .service, name: "app-service", detail: "ClusterIP 10.96.0.1")
         let pods = (1...2).map {
-            ArgoNetNode(id: "p\($0)", layer: .pod, kind: .pod, name: "app-pod-\($0)", detail: "Running")
+            NetMapNode(id: "p\($0)", layer: 4, kind: .pod, name: "app-pod-\($0)", detail: "Running")
         }
-        let node = ArgoNetNode(id: "n", layer: .node, kind: .node, name: "worker-node")
+        let node = NetMapNode(id: "n", layer: 5, kind: .node, name: "worker-node")
         let edges =
-            [ArgoNetEdge(from: "h", to: "r"), ArgoNetEdge(from: "r", to: "s")]
-            + pods.flatMap { [ArgoNetEdge(from: "s", to: $0.id), ArgoNetEdge(from: $0.id, to: "n")] }
-        return ArgoNetwork(nodes: [host, route, service] + pods + [node], edges: edges)
+            [NetMapEdge(from: "h", to: "r"), NetMapEdge(from: "r", to: "s")]
+            + pods.flatMap { [NetMapEdge(from: "s", to: $0.id), NetMapEdge(from: $0.id, to: "n")] }
+        return NetMap(nodes: [host, route, service] + pods + [node], edges: edges)
     }()
 }

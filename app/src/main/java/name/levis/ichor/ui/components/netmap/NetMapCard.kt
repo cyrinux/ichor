@@ -1,4 +1,4 @@
-package name.levis.ichor.ui.argocd
+package name.levis.ichor.ui.components.netmap
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
-import name.levis.ichor.model.ArgoNetNode
+import name.levis.ichor.model.NetMapNode
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.components.color
 
@@ -47,7 +47,7 @@ import name.levis.ichor.ui.components.color
  * own resources carry a small dot.
  */
 @Composable
-fun ArgoNetCard(node: ArgoNetNode, selected: Boolean, dimmed: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun NetMapCard(node: NetMapNode, selected: Boolean, dimmed: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val accent = node.healthState.color()
     val scheme = MaterialTheme.colorScheme
     val border = when {
@@ -96,10 +96,10 @@ fun ArgoNetCard(node: ArgoNetNode, selected: Boolean, dimmed: Boolean, onClick: 
     }
 }
 
-/** "Pods · 3" above a column. */
+/** "Pods · 3" above a column of [kind] boxes. */
 @Composable
-fun ArgoNetColumnHeader(layer: Int, count: Int, modifier: Modifier = Modifier) {
-    val label = stringResource(layerLabel(layer))
+fun NetMapColumnHeader(kind: String, count: Int, modifier: Modifier = Modifier) {
+    val label = columnTitle(kind)?.let { stringResource(it) } ?: kind
     Text(
         if (count > 1) "$label · $count" else label,
         style = MaterialTheme.typography.labelMedium,
@@ -112,7 +112,7 @@ fun ArgoNetColumnHeader(layer: Int, count: Int, modifier: Modifier = Modifier) {
 
 /** "+5 more" under a folded column, "Show less" once unfolded. */
 @Composable
-fun ArgoNetMoreChip(hidden: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun NetMapMoreChip(hidden: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
         modifier = modifier.heightIn(min = 28.dp),
@@ -130,7 +130,7 @@ fun ArgoNetMoreChip(hidden: Int, onClick: () -> Unit, modifier: Modifier = Modif
 
 /** The three edge colours and what they mean. */
 @Composable
-fun ArgoNetLegend(modifier: Modifier = Modifier) {
+fun NetMapLegend(modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
         LegendChip(ServiceHealth.OK.color(), stringResource(R.string.argo_net_legend_ok))
         LegendChip(ServiceHealth.WARNING.color(), stringResource(R.string.argo_net_legend_warning))
@@ -146,27 +146,31 @@ private fun LegendChip(color: Color, label: String) {
     }
 }
 
-/** Column title of a layer: Internet, Gateway, Routes, Services, Pods, Nodes. */
-fun layerLabel(layer: Int): Int = when (layer) {
-    ArgoNetNode.LAYER_HOST -> R.string.argo_net_layer_internet
-    ArgoNetNode.LAYER_GATEWAY -> R.string.argo_net_layer_gateway
-    ArgoNetNode.LAYER_ROUTE -> R.string.argo_net_layer_routes
-    ArgoNetNode.LAYER_SERVICE -> R.string.argo_net_layer_services
-    ArgoNetNode.LAYER_POD -> R.string.argo_net_layer_pods
-    else -> R.string.argo_net_layer_nodes
+/**
+ * The column title of a [kind] of box: Internet, Gateway, Routes, Services, Pods, Nodes; null
+ * for a kind this table does not know (its column is then titled with the kind itself).
+ */
+fun columnTitle(kind: String): Int? = when (kind) {
+    NetMapNode.HOST, NetMapNode.LOAD_BALANCER -> R.string.argo_net_layer_internet
+    NetMapNode.GATEWAY -> R.string.argo_net_layer_gateway
+    in NetMapNode.ROUTE_KINDS -> R.string.argo_net_layer_routes
+    NetMapNode.SERVICE -> R.string.argo_net_layer_services
+    NetMapNode.POD -> R.string.argo_net_layer_pods
+    NetMapNode.NODE -> R.string.argo_net_layer_nodes
+    else -> null
 }
 
-val ArgoNetNode.kindIcon: ImageVector
+val NetMapNode.kindIcon: ImageVector
     get() = when (kind) {
-        ArgoNetNode.HOST -> Icons.Outlined.Public
-        ArgoNetNode.LOAD_BALANCER -> Icons.Outlined.Router
-        ArgoNetNode.GATEWAY -> Icons.Outlined.Hub
-        in ArgoNetNode.ROUTE_KINDS -> Icons.AutoMirrored.Outlined.AltRoute
-        ArgoNetNode.SERVICE -> Icons.Outlined.Lan
-        ArgoNetNode.POD -> Icons.Outlined.ViewInAr
+        NetMapNode.HOST -> Icons.Outlined.Public
+        NetMapNode.LOAD_BALANCER -> Icons.Outlined.Router
+        NetMapNode.GATEWAY -> Icons.Outlined.Hub
+        in NetMapNode.ROUTE_KINDS -> Icons.AutoMirrored.Outlined.AltRoute
+        NetMapNode.SERVICE -> Icons.Outlined.Lan
+        NetMapNode.POD -> Icons.Outlined.ViewInAr
         else -> Icons.Outlined.Computer
     }
 
 /** Kubernetes kinds keep their name; a host is ours to translate. */
 @Composable
-fun ArgoNetNode.kindLabel(): String = if (kind == ArgoNetNode.HOST) stringResource(R.string.argo_net_kind_host) else kind
+fun NetMapNode.kindLabel(): String = if (kind == NetMapNode.HOST) stringResource(R.string.argo_net_kind_host) else kind
