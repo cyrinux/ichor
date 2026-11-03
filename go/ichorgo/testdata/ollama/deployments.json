@@ -1,0 +1,61 @@
+{
+  "items": [
+    {
+      "metadata": { "name": "ollama", "namespace": "ai" },
+      "spec": {
+        "replicas": 1,
+        "selector": { "matchLabels": { "app.kubernetes.io/name": "ollama", "app.kubernetes.io/instance": "ollama" } },
+        "template": {
+          "metadata": { "labels": { "app.kubernetes.io/name": "ollama", "app.kubernetes.io/instance": "ollama" } },
+          "spec": {
+            "containers": [
+              {
+                "name": "ollama",
+                "image": "ollama/ollama:0.12.6",
+                "ports": [{ "name": "http", "containerPort": 11434 }],
+                "resources": { "limits": { "nvidia.com/gpu": "1", "memory": "16Gi" } }
+              }
+            ]
+          }
+        }
+      },
+      "status": { "replicas": 1, "readyReplicas": 1 }
+    },
+    {
+      "metadata": { "name": "ollama-cpu", "namespace": "lab" },
+      "spec": {
+        "replicas": 1,
+        "selector": { "matchLabels": { "app": "ollama-cpu" } },
+        "template": {
+          "metadata": { "labels": { "app": "ollama-cpu" } },
+          "spec": { "containers": [{ "name": "ollama", "image": "docker.io/ollama/ollama:latest" }] }
+        }
+      },
+      "status": { "replicas": 1, "readyReplicas": 1 }
+    },
+    {
+      "metadata": { "name": "ollama-standby", "namespace": "ai" },
+      "spec": {
+        "replicas": 2,
+        "selector": { "matchLabels": { "app": "ollama-standby" } },
+        "template": {
+          "metadata": { "labels": { "app": "ollama-standby" } },
+          "spec": { "containers": [{ "name": "ollama", "image": "ollama/ollama:0.12.6" }] }
+        }
+      },
+      "status": { "replicas": 2, "readyReplicas": 0 }
+    },
+    {
+      "metadata": { "name": "open-webui", "namespace": "ai" },
+      "spec": {
+        "replicas": 1,
+        "selector": { "matchLabels": { "app": "open-webui" } },
+        "template": {
+          "metadata": { "labels": { "app": "open-webui" } },
+          "spec": { "containers": [{ "name": "webui", "image": "ghcr.io/open-webui/open-webui:main" }] }
+        }
+      },
+      "status": { "replicas": 1, "readyReplicas": 1 }
+    }
+  ]
+}

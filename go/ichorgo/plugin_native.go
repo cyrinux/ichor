@@ -32,6 +32,11 @@ var pluginNativeSources = map[string]pluginNativeSource{
 	"mariadb-backups": readMariaDBBackups,
 	// A Percona XtraDB cluster's latest backup success and failure, over its backup runs.
 	"percona-backups": readPerconaBackups,
+	// Ollama's servers (the Deployments and StatefulSets running its image, with their API's
+	// version and totals) and their models on disk joined with the loaded ones, read through
+	// the API server's Service proxy (plugin_native_ollama.go).
+	"ollama-servers": readOllamaServers,
+	"ollama-models":  readOllamaModels,
 }
 
 // readNativeSource runs the reader source names (native:<id>).
