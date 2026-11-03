@@ -5612,6 +5612,11 @@
     <string name="tailscale_used_by">verwendet von %1$d</string>
     <string name="tailscale_nameserver">Nameserver %1$s</string>
     <string name="tailscale_some_running">einige Proxys laufen</string>
+    <string name="tailscale_exposed">Im Tailnet erreichbar</string>
+    <string name="tailscale_via">über %1$s</string>
+    <string name="tailscale_to">zu %1$s</string>
+    <string name="tailscale_serves">bedient %1$d</string>
+    <string name="tailscale_more_devices">%1$d weitere Geräte</string>
     <string name="longhorn_snapshot_csi">VolumeSnapshot %1$s</string>
     <string name="longhorn_snapshot_delete_csi">Er enthält den VolumeSnapshot %1$s: löschen Sie stattdessen diesen.</string>
     <string name="longhorn_snapshot_delete_csi_unknown">Ihr Konto kann die VolumeSnapshots nicht lesen: Wurde einer aus diesem Snapshot erstellt, lässt er sich nicht mehr wiederherstellen. Prüfen Sie zuerst mit kubectl get volumesnapshots -A.</string>

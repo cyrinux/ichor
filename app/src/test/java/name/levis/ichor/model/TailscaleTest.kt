@@ -12,6 +12,13 @@ class TailscaleTest {
     private val json = """
         {"installed":true,"version":"v1alpha1","truncated":false,
          "operator":{"namespace":"tailscale","name":"operator","ready":1,"desired":1,"image":"tailscale/k8s-operator:v1.90.0","health":"ok"},
+         "exposed":[
+          {"kind":"Service","namespace":"payments","name":"legacy","direction":"egress","tailnetNames":["100.64.0.77"],"ports":["53/UDP"],
+           "proxyGroup":"","tags":["tag:k8s"],"ready":false,"reason":"ProxyFailed","message":"error provisioning proxy","health":"critical"},
+          {"kind":"Ingress","namespace":"docs","name":"wiki","direction":"ingress","tailnetNames":["wiki.example-tailnet.ts.net"],"ports":["443"],
+           "proxyGroup":"","tags":["tag:k8s"],"ready":true,"reason":"","message":"","health":"ok"},
+          {"kind":"Service","namespace":"shop","name":"storefront","direction":"ingress","tailnetNames":["storefront.example-tailnet.ts.net","100.64.0.51"],
+           "ports":["443","80"],"proxyGroup":"ingress-proxies","tags":["tag:k8s"],"ready":true,"reason":"","message":"","health":"ok"}],
          "connectors":[
           {"name":"saas-connector","hostname":"saas-connector","tailnetIPs":[],"subnetRoutes":"","advertisedRoutes":[],"exitNode":false,
            "appConnector":true,"appConnectorRoutes":["203.0.113.0/24"],"tags":["tag:k8s"],"proxyClass":"saas","replicas":1,"devices":[],
@@ -27,7 +34,7 @@ class TailscaleTest {
           {"name":"api-proxies","type":"kube-apiserver","replicas":2,"proxyClass":"","tags":["tag:k8s"],"url":"https://api-proxies.example.ts.net",
            "devices":[{"hostname":"api-proxies-0","tailnetIPs":["100.64.0.41"],"staticEndpoints":[]},{"hostname":"api-proxies-1","tailnetIPs":["100.64.0.42"],"staticEndpoints":[]}],
            "available":true,"ready":true,"reason":"","message":"","health":"ok"},
-          {"name":"ingress-proxies","type":"ingress","replicas":2,"proxyClass":"prod","tags":["tag:k8s"],"url":"",
+          {"name":"ingress-proxies","type":"ingress","replicas":2,"proxyClass":"prod","tags":["tag:k8s"],"url":"","hostnamePrefix":"ingress","serves":1,
            "devices":[{"hostname":"ingress-proxies-0","tailnetIPs":["100.64.0.31"],"staticEndpoints":[]},{"hostname":"ingress-proxies-1","tailnetIPs":["100.64.0.32"],"staticEndpoints":[]}],
            "available":true,"ready":true,"reason":"","message":"","health":"ok"}],
          "proxyClasses":[
@@ -57,6 +64,33 @@ class TailscaleTest {
         assertEquals("ProxyClassMissing", app.reason)
         assertTrue(app.appConnector)
         assertEquals(ServiceHealth.WARNING, ts.proxyClasses.first().serviceHealth)
+    }
+
+    @Test
+    fun exposedRowsDecodeProblemsFirst() {
+        assertEquals(3, ts.exposed.size)
+        val legacy = ts.exposed.first()
+        assertTrue(legacy.isEgress)
+        assertEquals(ServiceHealth.CRITICAL, legacy.serviceHealth)
+        assertEquals(listOf("53/UDP"), legacy.ports)
+        val storefront = ts.exposed.single { it.name == "storefront" }
+        assertFalse(storefront.isEgress)
+        assertEquals("ingress-proxies", storefront.proxyGroup)
+        assertEquals(listOf("storefront.example-tailnet.ts.net", "100.64.0.51"), storefront.tailnetNames)
+        val group = ts.proxyGroups.single { it.name == "ingress-proxies" }
+        assertEquals(1, group.serves)
+        assertEquals("ingress", group.hostnamePrefix)
+        assertEquals(0, ts.proxyGroups.single { it.name == "api-proxies" }.serves)
+    }
+
+    @Test
+    fun exposedRefsOpenTheServiceOrIngress() {
+        assertEquals(KubeObjectRef.service("payments", "legacy"), ts.exposed[0].ref)
+        assertEquals(
+            KubeObjectRef("networking.k8s.io", "v1", "ingresses", "Ingress", "docs", "wiki", editable = true),
+            ts.exposed[1].ref,
+        )
+        assertFalse(Tailscale(installed = true, exposed = ts.exposed).isEmpty)
     }
 
     @Test

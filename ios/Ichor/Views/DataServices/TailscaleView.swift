@@ -1,9 +1,10 @@
 import SwiftUI
 import IchorCore
 
-/// Tailscale (os:admin): the operator, its connectors (subnet routers, exit nodes, app
-/// connectors), proxy groups, proxy classes and the tailnet nameserver, problems first in each
-/// section. A tap opens the object's summary; nothing is changed here.
+/// Tailscale (os:admin): the operator, what it exposes on the tailnet (and reaches on it), its
+/// connectors (subnet routers, exit nodes, app connectors), proxy groups, proxy classes and the
+/// tailnet nameserver, problems first in each section. A tap opens the object's summary;
+/// nothing is changed here.
 struct TailscaleView: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<Tailscale> = .loading
@@ -34,6 +35,11 @@ struct TailscaleView: View {
                         .secondary)
                 }
             } else {
+                if !ts.exposed.isEmpty {
+                    Section("Exposed on the tailnet") {
+                        ForEach(ts.exposed) { ExposedRow(exposed: $0) }
+                    }
+                }
                 if !ts.connectors.isEmpty {
                     Section("Connectors") {
                         ForEach(ts.connectors) { ConnectorRow(connector: $0, version: ts.apiVersion) }
@@ -105,32 +111,47 @@ struct TailscaleView: View {
     }
 }
 
-/// One row: health dot and name, the details that matter, then (for a problem) the operator's
-/// reason and message in full; pushes the object summary.
+/// How many devices a row lists before folding the rest into a count.
+private let devicesShown = 3
+
+/// The object summary's resource for a cluster-scoped tailscale.com kind.
+private func tailscaleResource(_ kind: TailscaleKind, _ version: String) -> KubeAPIResource {
+    KubeAPIResource(
+        group: TailscaleKind.group, version: version, resource: kind.resource, kind: kind.kind, namespaced: false)
+}
+
+/// One row: health dot and title, the details that matter, the devices it runs, then (for a
+/// problem) the operator's reason and message in full; pushes the object summary.
 private struct RowShell: View {
-    let kind: TailscaleKind
-    let version: String
+    let resource: KubeAPIResource
+    var namespace = ""
     let name: String
+    var title: String?
     let state: TailscaleState
     let line: [String?]
+    var devices: [TailnetDevice] = []
 
     var body: some View {
         NavigationLink {
-            KubeObjectView(
-                resource: KubeAPIResource(
-                    group: TailscaleKind.group, version: version, resource: kind.resource, kind: kind.kind,
-                    namespaced: false),
-                namespace: "",
-                name: name,
-            )
+            KubeObjectView(resource: resource, namespace: namespace, name: name)
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 HealthDot(health: state.health).padding(.top, 5)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: name).font(.subheadline.monospaced()).lineLimit(1)
+                    Text(verbatim: title ?? name).font(.subheadline.monospaced()).lineLimit(1)
                     let details = line.compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
                     if !details.isEmpty {
                         Text(verbatim: details).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                    }
+                    ForEach(Array(devices.prefix(devicesShown).enumerated()), id: \.offset) { _, d in
+                        let ips = d.tailnetIPs.joined(separator: ", ")
+                        Text(verbatim: [d.hostname, ips].filter { !$0.isEmpty }.joined(separator: "  "))
+                            .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                    if devices.count > devicesShown {
+                        let more = devices.count - devicesShown
+                        Text(verbatim: String(localized: "\(more) more devices")).font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                     let problem = [state.reason, state.message].filter { !$0.isEmpty }.joined(separator: ": ")
                     if state.health.needsAttention && !problem.isEmpty {
@@ -147,6 +168,32 @@ private func readiness(_ ready: Bool) -> String {
     ready ? String(localized: "Ready") : String(localized: "Not ready")
 }
 
+/// A Service or Ingress on the tailnet: its tailnet name as the title, then where it lives, its
+/// ports, the ProxyGroup serving it and its tags. An egress row is titled by the Service and says
+/// which tailnet target it reaches.
+private struct ExposedRow: View {
+    let exposed: TailscaleExposed
+
+    var body: some View {
+        let e = exposed
+        let objectName = "\(e.namespace)/\(e.name)"
+        let title = e.isEgress ? objectName : (e.tailnetNames.first ?? objectName)
+        let target = e.tailnetNames.first ?? ""
+        let group = e.proxyGroup
+        RowShell(
+            resource: e.resource, namespace: e.namespace, name: e.name, title: title, state: e.state,
+            line: [
+                e.isEgress && !target.isEmpty ? String(localized: "to \(target)") : nil,
+                objectName == title ? nil : objectName,
+                e.isIngress ? e.kind : nil,
+                e.isEgress ? nil : e.tailnetNames.dropFirst().joined(separator: ", "),
+                e.ports.joined(separator: ", "),
+                group.isEmpty ? nil : String(localized: "via \(group)"),
+                e.tags.joined(separator: ", "),
+            ])
+    }
+}
+
 /// A subnet router, exit node or app connector: what it does, its tailnet IPs and devices.
 private struct ConnectorRow: View {
     let connector: TailscaleConnector
@@ -155,7 +202,7 @@ private struct ConnectorRow: View {
     var body: some View {
         let c = connector
         RowShell(
-            kind: .connector, version: version, name: c.name, state: c.state,
+            resource: tailscaleResource(.connector, version), name: c.name, state: c.state,
             line: [
                 c.hostname == c.name ? nil : c.hostname,
                 c.routes.isEmpty ? nil : String(localized: "subnet router \(c.routes.joined(separator: ", "))"),
@@ -165,7 +212,8 @@ private struct ConnectorRow: View {
                 c.tailnetIPs.joined(separator: ", "),
                 String(localized: "\(c.devices.count) devices"),
                 c.proxyClass.isEmpty ? nil : String(localized: "proxy class \(c.proxyClass)"),
-            ])
+            ],
+            devices: c.devices)
     }
 }
 
@@ -177,16 +225,18 @@ private struct ProxyGroupRow: View {
     var body: some View {
         let g = group
         RowShell(
-            kind: .proxyGroup, version: version, name: g.name, state: g.state,
+            resource: tailscaleResource(.proxyGroup, version), name: g.name, state: g.state,
             line: [
                 g.type,
                 String(localized: "\(g.replicas) replicas"),
                 String(localized: "\(g.devices.count) devices"),
+                g.serves > 0 ? String(localized: "serves \(g.serves)") : nil,
                 g.url,
                 g.proxyClass.isEmpty ? nil : String(localized: "proxy class \(g.proxyClass)"),
                 readiness(g.state.ready),
                 !g.state.ready && g.available ? String(localized: "some proxies running") : nil,
-            ])
+            ],
+            devices: g.devices)
     }
 }
 
@@ -197,7 +247,7 @@ private struct ProxyClassRow: View {
 
     var body: some View {
         RowShell(
-            kind: .proxyClass, version: version, name: proxyClass.name, state: proxyClass.state,
+            resource: tailscaleResource(.proxyClass, version), name: proxyClass.name, state: proxyClass.state,
             line: [
                 readiness(proxyClass.state.ready),
                 String(localized: "used by \(proxyClass.usedBy)"),
@@ -212,7 +262,7 @@ private struct DNSConfigRow: View {
 
     var body: some View {
         RowShell(
-            kind: .dnsConfig, version: version, name: dns.name, state: dns.state,
+            resource: tailscaleResource(.dnsConfig, version), name: dns.name, state: dns.state,
             line: [
                 dns.nameserverIP.isEmpty ? nil : String(localized: "nameserver \(dns.nameserverIP)"),
                 readiness(dns.state.ready),
