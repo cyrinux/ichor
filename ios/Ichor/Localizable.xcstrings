@@ -1,6 +1,133 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Pull a model…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell herunterladen…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descargar un modelo…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Télécharger un modèle…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scarica un modello…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "モデルを取得…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Baixar um modelo…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузить модель…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажити модель…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拉取模型…" } }
+      }
+    },
+    "Pull a model onto %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell auf %@ herunterladen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descargar un modelo en %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Télécharger un modèle sur %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scarica un modello su %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ にモデルを取得" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Baixar um modelo em %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузить модель на %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажити модель на %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将模型拉取到 %@" } }
+      }
+    },
+    "name:tag from the library" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Name:Tag aus der Bibliothek" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "nombre:etiqueta de la biblioteca" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "nom:tag de la bibliothèque" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nome:tag dalla libreria" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ライブラリの 名前:タグ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "nome:tag da biblioteca" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "имя:тег из библиотеки" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "назва:тег з бібліотеки" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "库中的 名称:标签" } }
+      }
+    },
+    "Browse the Ollama library" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ollama-Bibliothek durchsuchen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Explorar la biblioteca de Ollama" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Parcourir la bibliothèque Ollama" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sfoglia la libreria di Ollama" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ollama ライブラリを見る" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Explorar a biblioteca do Ollama" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть библиотеку Ollama" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Переглянути бібліотеку Ollama" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浏览 Ollama 模型库" } }
+      }
+    },
+    "Starting the pull…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Download wird gestartet…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciando la descarga…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrage du téléchargement…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvio del download…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "取得を開始しています…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Iniciando o download…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запуск загрузки…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запуск завантаження…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在开始拉取…" } }
+      }
+    },
+    "%@ · %@ of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ of %3$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ von %3$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ de %3$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ sur %3$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ di %3$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ / %3$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ de %3$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ из %3$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ з %3$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@ / %3$@" } }
+      }
+    },
+    "Pulled: the model is on the server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heruntergeladen: Das Modell ist auf dem Server" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descargado: el modelo está en el servidor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Téléchargé : le modèle est sur le serveur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scaricato: il modello è sul server" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "取得完了:モデルはサーバー上にあります" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Baixado: o modelo está no servidor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загружено: модель на сервере" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажено: модель на сервері" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已拉取:模型已在服务器上" } }
+      }
+    },
+    "Stop the download" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Download stoppen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener la descarga" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter le téléchargement" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Interrompi il download" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ダウンロードを停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar o download" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановить загрузку" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинити завантаження" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止下载" } }
+      }
+    },
+    "The download goes on while Ichor stays open, also in the background. If the system closes Ichor it stops; pulling again resumes it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Download läuft weiter, solange Ichor geöffnet bleibt, auch im Hintergrund. Schließt das System Ichor, stoppt er; erneutes Herunterladen setzt ihn fort." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La descarga continúa mientras Ichor siga abierto, también en segundo plano. Si el sistema cierra Ichor, se detiene; volver a descargar la reanuda." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le téléchargement continue tant qu'Ichor reste ouvert, aussi en arrière-plan. Si le système ferme Ichor, il s'arrête ; le relancer le reprend." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il download continua finché Ichor resta aperto, anche in background. Se il sistema chiude Ichor si interrompe; scaricare di nuovo lo riprende." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor が開いている間(バックグラウンドを含む)ダウンロードは続きます。システムが Ichor を閉じると停止し、再度取得すると再開します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O download continua enquanto o Ichor estiver aberto, também em segundo plano. Se o sistema fechar o Ichor, ele para; baixar de novo retoma." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузка продолжается, пока Ichor открыт, в том числе в фоне. Если система закроет Ichor, она остановится; повторная загрузка продолжит её." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантаження триває, доки Ichor відкритий, також у фоні. Якщо система закриє Ichor, воно зупиниться; повторне завантаження продовжить його." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "只要 Ichor 保持打开(包括在后台),下载就会继续。如果系统关闭 Ichor,下载会停止;再次拉取会继续下载。" } }
+      }
+    },
     "Create the instance at OVHcloud" : {
       "extractionState" : "manual",
       "localizations" : {

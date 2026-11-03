@@ -111,9 +111,21 @@ func ollamaActionServer(ctx context.Context, k *kubeClient, target map[string]an
 		return ollamaServer{}, "", errPluginActionInvalid(errors.New("the model names no server"))
 	}
 
-	workloads, err := listOllamaWorkloads(ctx, k, namespace)
+	s, err := ollamaServerNamed(ctx, k, namespace, name)
 	if err != nil {
 		return ollamaServer{}, "", err
+	}
+
+	return s, model, nil
+}
+
+// ollamaServerNamed is the Ollama workload namespace/name, located as the readers locate it
+// (a Service selecting its pods, else a ready pod): a 404 when there is none, a 503 (403 when
+// refused) when its API cannot be reached.
+func ollamaServerNamed(ctx context.Context, k *kubeClient, namespace, name string) (ollamaServer, error) {
+	workloads, err := listOllamaWorkloads(ctx, k, namespace)
+	if err != nil {
+		return ollamaServer{}, err
 	}
 
 	at := -1
@@ -127,7 +139,7 @@ func ollamaActionServer(ctx context.Context, k *kubeClient, target map[string]an
 	}
 
 	if at < 0 {
-		return ollamaServer{}, "", &kubeAPIError{Code: http.StatusNotFound, Reason: "NotFound", Message: fmt.Sprintf("no Ollama server %s in %s", name, namespace)}
+		return ollamaServer{}, &kubeAPIError{Code: http.StatusNotFound, Reason: "NotFound", Message: fmt.Sprintf("no Ollama server %s in %s", name, namespace)}
 	}
 
 	s := workloads[at]
@@ -143,10 +155,10 @@ func ollamaActionServer(ctx context.Context, k *kubeClient, target map[string]an
 			code = http.StatusForbidden
 		}
 
-		return ollamaServer{}, "", &kubeAPIError{Code: code, Reason: "Unavailable", Message: fmt.Sprintf("Ollama server %s: %s", name, s.err)}
+		return ollamaServer{}, &kubeAPIError{Code: code, Reason: "Unavailable", Message: fmt.Sprintf("Ollama server %s: %s", name, s.err)}
 	}
 
-	return s, model, nil
+	return s, nil
 }
 
 // ollamaAnswered: err is Ollama's own answer (not the API server's) with that code.

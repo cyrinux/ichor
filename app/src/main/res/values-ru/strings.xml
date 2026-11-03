@@ -6604,4 +6604,15 @@
     <string name="omni_labels_apply">Применить метки</string>
     <string name="omni_role_worker">Worker</string>
     <string name="omni_role_controlplane">Плоскость управления</string>
+    <string name="ollama_pull_action">Загрузить модель…</string>
+    <string name="ollama_pull_title">Загрузить модель на %1$s</string>
+    <string name="ollama_pull_model_label">Модель</string>
+    <string name="ollama_pull_model_hint">имя:тег из библиотеки</string>
+    <string name="ollama_pull_library">Открыть библиотеку Ollama</string>
+    <string name="ollama_pull_start">Загрузить</string>
+    <string name="ollama_pull_starting">Запуск загрузки…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s из %3$s</string>
+    <string name="ollama_pull_done">Загружено: модель на сервере</string>
+    <string name="ollama_pull_cancel">Остановить загрузку</string>
+    <string name="ollama_pull_background_hint">Загрузка продолжается, пока Ichor открыт, в том числе в фоне. Если система закроет Ichor, она остановится; повторная загрузка продолжит её.</string>
 </resources>

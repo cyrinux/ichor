@@ -27,7 +27,6 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.model.PluginRef
-import name.levis.ichor.model.PluginRow
 import name.levis.ichor.model.PluginTool
 import name.levis.ichor.model.PluginToolResult
 import name.levis.ichor.ui.UiText
@@ -112,7 +111,7 @@ internal fun LazyListScope.pluginTools(
             val result = run.result
             item(key = "tool-title") { PluginToolTitle(result) }
             if (resultCards.isEmpty()) item(key = "tool-empty") { EmptyText(stringResource(R.string.plugin_tool_result_empty)) }
-            val noExtra: (PluginRow) -> (@Composable () -> Unit)? = { null }
+            val noExtra: PluginRowExtra = { _, _ -> null }
             resultCards.forEach { layout -> pluginCard(layout, expanded, onToggle, onObject, noExtra, runner) }
         }
     }

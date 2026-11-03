@@ -6600,4 +6600,15 @@
     <string name="omni_labels_apply">Застосувати мітки</string>
     <string name="omni_role_worker">Worker</string>
     <string name="omni_role_controlplane">Площина керування</string>
+    <string name="ollama_pull_action">Завантажити модель…</string>
+    <string name="ollama_pull_title">Завантажити модель на %1$s</string>
+    <string name="ollama_pull_model_label">Модель</string>
+    <string name="ollama_pull_model_hint">назва:тег з бібліотеки</string>
+    <string name="ollama_pull_library">Переглянути бібліотеку Ollama</string>
+    <string name="ollama_pull_start">Завантажити</string>
+    <string name="ollama_pull_starting">Запуск завантаження…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s з %3$s</string>
+    <string name="ollama_pull_done">Завантажено: модель на сервері</string>
+    <string name="ollama_pull_cancel">Зупинити завантаження</string>
+    <string name="ollama_pull_background_hint">Завантаження триває, доки Ichor відкритий, також у фоні. Якщо система закриє Ichor, воно зупиниться; повторне завантаження продовжить його.</string>
 </resources>

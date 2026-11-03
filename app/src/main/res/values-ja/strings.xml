@@ -6202,4 +6202,15 @@
     <string name="omni_labels_apply">ラベルを適用</string>
     <string name="omni_role_worker">ワーカー</string>
     <string name="omni_role_controlplane">コントロールプレーン</string>
+    <string name="ollama_pull_action">モデルを取得…</string>
+    <string name="ollama_pull_title">%1$s にモデルを取得</string>
+    <string name="ollama_pull_model_label">モデル</string>
+    <string name="ollama_pull_model_hint">ライブラリの 名前:タグ</string>
+    <string name="ollama_pull_library">Ollama ライブラリを見る</string>
+    <string name="ollama_pull_start">取得</string>
+    <string name="ollama_pull_starting">取得を開始しています…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s / %3$s</string>
+    <string name="ollama_pull_done">取得完了:モデルはサーバー上にあります</string>
+    <string name="ollama_pull_cancel">ダウンロードを停止</string>
+    <string name="ollama_pull_background_hint">Ichor が開いている間(バックグラウンドを含む)ダウンロードは続きます。システムが Ichor を閉じると停止し、再度取得すると再開します。</string>
 </resources>

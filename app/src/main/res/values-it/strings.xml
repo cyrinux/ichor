@@ -6342,4 +6342,15 @@
     <string name="omni_labels_apply">Applica le etichette</string>
     <string name="omni_role_worker">Worker</string>
     <string name="omni_role_controlplane">Control plane</string>
+    <string name="ollama_pull_action">Scarica un modello…</string>
+    <string name="ollama_pull_title">Scarica un modello su %1$s</string>
+    <string name="ollama_pull_model_label">Modello</string>
+    <string name="ollama_pull_model_hint">nome:tag dalla libreria</string>
+    <string name="ollama_pull_library">Sfoglia la libreria di Ollama</string>
+    <string name="ollama_pull_start">Scarica</string>
+    <string name="ollama_pull_starting">Avvio del download…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s di %3$s</string>
+    <string name="ollama_pull_done">Scaricato: il modello è sul server</string>
+    <string name="ollama_pull_cancel">Interrompi il download</string>
+    <string name="ollama_pull_background_hint">Il download continua finché Ichor resta aperto, anche in background. Se il sistema chiude Ichor si interrompe; scaricare di nuovo lo riprende.</string>
 </resources>

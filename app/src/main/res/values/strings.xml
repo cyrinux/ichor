@@ -6349,4 +6349,15 @@
     <string name="omni_labels_apply">Apply the labels</string>
     <string name="omni_role_worker">Worker</string>
     <string name="omni_role_controlplane">Control plane</string>
+    <string name="ollama_pull_action">Pull a model…</string>
+    <string name="ollama_pull_title">Pull a model onto %1$s</string>
+    <string name="ollama_pull_model_label">Model</string>
+    <string name="ollama_pull_model_hint">name:tag from the library</string>
+    <string name="ollama_pull_library">Browse the Ollama library</string>
+    <string name="ollama_pull_start">Pull</string>
+    <string name="ollama_pull_starting">Starting the pull…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s of %3$s</string>
+    <string name="ollama_pull_done">Pulled: the model is on the server</string>
+    <string name="ollama_pull_cancel">Stop the download</string>
+    <string name="ollama_pull_background_hint">The download goes on while Ichor stays open, also in the background. If the system closes Ichor it stops; pulling again resumes it.</string>
 </resources>

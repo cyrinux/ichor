@@ -108,10 +108,17 @@ struct PluginList: View {
     }
 
     /// The native "Edit schedule" under a kube-green plugin row of a SleepInfo, until plugin
-    /// actions can carry a form; nil for any other row.
-    private func rowExtra(_ row: PluginRow) -> AnyView? {
-        guard pluginID == kubeGreenPluginID, let ref = row.ref, ref.isKubeGreenSleepInfo else { return nil }
-        return AnyView(KubeGreenPluginEdit(ref: ref) { changes += 1 })
+    /// actions can carry a form, and "Pull a model…" under an Ollama server row; nil for any
+    /// other row.
+    private func rowExtra(_ cardID: String, _ row: PluginRow) -> AnyView? {
+        guard let ref = row.ref else { return nil }
+        if pluginID == kubeGreenPluginID, ref.isKubeGreenSleepInfo {
+            return AnyView(KubeGreenPluginEdit(ref: ref) { changes += 1 })
+        }
+        if pluginID == ollamaPluginID, cardID == ollamaServersCardID, !ref.namespace.isEmpty, !ref.name.isEmpty {
+            return AnyView(OllamaPullButton(namespace: ref.namespace, server: ref.name) { changes += 1 })
+        }
+        return nil
     }
 
     /// Reads for `next`: from scratch when its scope changed, nothing was read, or nothing is
@@ -146,13 +153,13 @@ struct PluginList: View {
 }
 
 /// A card as one section, or one per namespace (its header) when its rows span several: the
-/// tree's cards and a tool's result alike. `rowExtra` adds a native control under a row.
+/// tree's cards and a tool's result alike. `rowExtra` adds a native control under a row of a card.
 struct PluginCardSections: View {
     let card: PluginCard
     @Binding var expanded: Set<String>
     /// The kind of an object a row opens, from the ref or the plugin catalog.
     let kindOf: (PluginRef) -> String
-    var rowExtra: (PluginRow) -> AnyView? = { _ in nil }
+    var rowExtra: (_ cardID: String, _ row: PluginRow) -> AnyView? = { _, _ in nil }
 
     var body: some View {
         if card.rows.isEmpty {
@@ -169,7 +176,7 @@ struct PluginCardSections: View {
                             showSubtitle: !grouped || item.row.subtitle != item.row.ref?.namespace,
                             expanded: expandedBinding(item.expandKey(card: card.id)),
                             kindOf: kindOf,
-                            extra: rowExtra(item.row)
+                            extra: rowExtra(card.id, item.row)
                         )
                     }
                 } header: {
