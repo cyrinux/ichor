@@ -351,6 +351,23 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     sealed on the device and is not in backups. Other OpenStack hosts use **Another provider** and
     paste the user data; Scaleway Elastic Metal and Dedibox are not supported. Elsewhere the app
     calls no provider API.
+  - **At AWS EC2, from the phone (Add a node… → A server at a cloud provider → AWS):** add access
+    keys (and a session token, from `aws sts get-session-token` or the SSO portal, if they are
+    temporary) and their region; the app prints the IAM policy to give their user, only the calls
+    it makes, and Test says whether they may run instances (a `RunInstances` dry run, which creates
+    nothing). Then pick an instance type (grouped by architecture), the Talos AMI, a subnet and its
+    security groups, and whether the instance gets a public address (the subnet's setting by
+    default). The official Talos AMI of the cluster's version and of the type's architecture is
+    listed for the region; AMIs of your own are listed by name when the account has them, and
+    making one from the phone is the next step. Only existing subnets and security groups are
+    listed: a group that allows traffic from itself is enough for Omni, while a plain Talos node
+    must be reachable from the phone on port 50000 of the address the app follows. The user data
+    must fit EC2's 16 KB. The hourly price in USD before tax comes from the AWS Price List, or
+    says "price unavailable". The app creates the instance with the user data, follows it until it
+    runs, then follows the node until it joins, or until the machine appears in Omni. A failed or
+    stopped run terminates the instance it created, with the same control-plane exception as
+    Hetzner; a create that gets no clear answer is looked up by its client token and terminated.
+    The keys stay sealed on the device, under their account id, and are not in backups.
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

@@ -70,6 +70,7 @@ final class JoinJob {
             ?? request.snapshot.map { client.startHetznerSnapshot($0, token: providerToken) }
             ?? request.hetzner.map { client.startHetznerCreate($0, token: providerToken) }
             ?? request.ovh.map { client.startOVHCreate($0, credential: providerToken) }
+            ?? request.aws.map { client.startAWSCreate($0, credential: providerToken) }
             ?? client.startNodeJoin(request)
         stop = run.stop
         task = Task {

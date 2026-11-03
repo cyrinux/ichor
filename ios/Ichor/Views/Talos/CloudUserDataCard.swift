@@ -54,11 +54,16 @@ struct CloudUserDataCard: View {
             let role = template.map { joinRole($0.role) } ?? ""
             let name = hostname.trimmingCharacters(in: .whitespaces)
             let installDisk = disk.trimmingCharacters(in: .whitespaces)
-            if create == .ovhcloud {
+            switch create {
+            case .aws:
+                AWSCreateSection(
+                    omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
+                    path: $path)
+            case .ovhcloud:
                 OVHCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
                     path: $path)
-            } else {
+            default:
                 HetznerCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
                     path: $path)

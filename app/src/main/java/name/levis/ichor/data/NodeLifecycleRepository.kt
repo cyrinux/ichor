@@ -25,6 +25,10 @@ import name.levis.ichor.model.HetznerOptions
 import name.levis.ichor.model.HetznerSnapshotCost
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.HetznerTokenCheck
+import name.levis.ichor.model.AWSCheck
+import name.levis.ichor.model.AWSCreateSpec
+import name.levis.ichor.model.AWSOptions
+import name.levis.ichor.model.AWSPrice
 import name.levis.ichor.model.OVHCheck
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
@@ -397,6 +401,28 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.ovhCreate]. */
     fun ovhCreate(credentialJson: String, spec: OVHCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.ovhCreate(credentialJson, TalosJson.encodeToString(OVHCreateSpec.serializer(), spec), stop)
+
+    /** Whose AWS keys these are and whether they may run instances (a dry run). Creates nothing. */
+    suspend fun awsTest(credentialJson: String): AWSCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSCheck.serializer(), Ichorgo.awsTest(credentialJson))
+    }
+
+    /** Regions, instance types, subnets, security groups and images ([credentialJson] may be empty on the demo). */
+    suspend fun awsOptions(credentialJson: String): AWSOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(AWSOptions.serializer(), Ichorgo.awsOptions(cfg, ctx, credentialJson))
+    }
+
+    /** The IAM policy to give the keys' user: only the calls Ichor makes. */
+    suspend fun awsPolicy(): String = withContext(Dispatchers.IO) { Ichorgo.awsiamPolicy() }
+
+    /** The hourly price of [instanceType] in the keys' region; an empty hourly when unknown. */
+    suspend fun awsPrice(credentialJson: String, instanceType: String): AWSPrice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSPrice.serializer(), Ichorgo.awsPrice(credentialJson, instanceType))
+    }
+
+    /** See [TalosStreams.awsCreate]. */
+    fun awsCreate(credentialJson: String, spec: AWSCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.awsCreate(credentialJson, TalosJson.encodeToString(AWSCreateSpec.serializer(), spec), stop)
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

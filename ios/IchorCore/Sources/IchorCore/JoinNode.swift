@@ -125,6 +125,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let hetzner: HetznerCreateSpec?
     /// An instance to create at OVHcloud for the node, likewise.
     public let ovh: OVHCreateSpec?
+    /// An instance to create at AWS EC2 for the node, likewise.
+    public let aws: AWSCreateSpec?
     /// The cloud machine joins Omni, not the cluster directly.
     public let omni: Bool
     /// No node at all: a throwaway server becomes a Talos snapshot (`hostname` only labels the run).
@@ -134,7 +136,8 @@ public struct JoinRequest: Equatable, Sendable {
 
     public init(
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
-        replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil, omni: Bool = false,
+        replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil,
+        aws: AWSCreateSpec? = nil, omni: Bool = false,
         snapshot: HetznerSnapshotSpec? = nil, omniAllocate: OmniAllocateSpec? = nil
     ) {
         self.omniAllocate = omniAllocate
@@ -148,6 +151,7 @@ public struct JoinRequest: Equatable, Sendable {
         self.replacing = replacing
         self.hetzner = hetzner
         self.ovh = ovh
+        self.aws = aws
         self.omni = omni
     }
 
@@ -155,16 +159,19 @@ public struct JoinRequest: Equatable, Sendable {
     public var phases: [JoinPhase] {
         if omniAllocate != nil { return JoinPhase.omniAllocateRun }
         if snapshot != nil { return JoinPhase.snapshotRun }
-        guard hetzner != nil || ovh != nil else { return JoinPhase.maintenanceRun }
+        guard cloud else { return JoinPhase.maintenanceRun }
         return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
     }
+
+    /// A machine to create at a cloud provider.
+    public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil }
 
     /// The same request, replacing (or not) the member already named `hostname`.
     public func withReplacing(_ on: Bool) -> JoinRequest {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
-            staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, omni: omni, snapshot: snapshot,
-            omniAllocate: omniAllocate)
+            staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, omni: omni,
+            snapshot: snapshot, omniAllocate: omniAllocate)
     }
 }
 

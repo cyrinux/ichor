@@ -60,8 +60,11 @@ Part of the [Ichor documentation](../README.md#documentation).
   the one instance it created, by id, when it fails or is stopped, except a control plane that
   already answered. A create that gets no clear answer deletes nothing, because another instance may
   carry the same name: the message says to check the project, where it may stay billed.
-- **Creating an instance at AWS EC2 (from the Go core and the probe for now):** billable, so the
-  probe's `aws create` runs only with `-yes`. Before any billable call the run checks the keys
+- **Creating an instance at AWS EC2 (Add a node… → A server at a cloud provider → AWS):**
+  billable, so the hourly price shows first when the Price List answers, the host name is typed to
+  confirm, and Stop asks once more (the instance is billed until it is terminated); the probe's
+  `aws create` runs only with `-yes`. The access keys stay sealed on the device and out of backups;
+  they can do what their IAM policy allows, so give their user only the policy the app prints. Before any billable call the run checks the keys
   (`GetCallerIdentity`), the AMI's architecture against the instance type, the security groups
   against the subnet's VPC, the user data against EC2's 16 KB, then sends `RunInstances` as a dry
   run with every parameter: keys that may not run it are refused, naming the policy to add. The

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.AWSCreateSpec
 import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.JoinPhase
@@ -35,6 +36,8 @@ data class JoinRequest(
     val hetzner: HetznerCreateSpec? = null,
     /** An instance to create at OVHcloud for the node, likewise. */
     val ovh: OVHCreateSpec? = null,
+    /** An instance to create at AWS EC2 for the node, likewise. */
+    val aws: AWSCreateSpec? = null,
     /** The cloud machine joins Omni, not the cluster directly. */
     val omni: Boolean = false,
     /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
@@ -47,10 +50,14 @@ data class JoinRequest(
         get() = when {
             omniAllocate != null -> JoinPhase.omniAllocateRun
             snapshot != null -> JoinPhase.snapshotRun
-            hetzner == null && ovh == null -> JoinPhase.maintenanceRun
+            !cloud -> JoinPhase.maintenanceRun
             omni -> JoinPhase.cloudOmniRun
             else -> JoinPhase.cloudRun
         }
+
+    /** A machine to create at a cloud provider. */
+    val cloud: Boolean
+        get() = hetzner != null || ovh != null || aws != null
 }
 
 /** The node join the app follows: at most one at a time. */
@@ -107,6 +114,7 @@ class JoinManager(
                     ?: request.snapshot?.let { lifecycle.hetznerSnapshot(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.hetzner?.let { lifecycle.hetznerCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.ovh?.let { lifecycle.ovhCreate(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.aws?.let { lifecycle.awsCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                 events
                     .collect { event ->
