@@ -1,24 +1,27 @@
 import SwiftUI
 import IchorCore
 
-// The network graph of an Argo CD app, left to right: one column per layer with a box per host,
-// Gateway, route, Service, pod and node, joined by curves where traffic flows (dashes run along
-// the healthy hops, a broken hop stands still). Tapping a box lights its path.
+// A network map, left to right: one column per layer with a box per host, Gateway, route,
+// Service, pod and node (or any kind a caller draws in front), joined by curves where traffic
+// flows (dashes run along the healthy hops, a broken hop stands still). Tapping a box lights its
+// path. The Argo CD app's Network section draws one.
 
-extension ArgoNetLayer {
+extension NetMapColumn {
+    /// The column's title, by the kind of its boxes; a kind this table does not know is its own.
     var title: String {
-        switch self {
-        case .entry: String(localized: "Internet")
+        switch kind {
+        case .host, .loadBalancer: String(localized: "Internet")
         case .gateway: String(localized: "Gateway")
-        case .route: String(localized: "Routes")
+        case .ingress, .httpRoute, .grpcRoute, .tlsRoute, .ingressRoute, .ingressRouteTCP: String(localized: "Routes")
         case .service: String(localized: "Services")
         case .pod: String(localized: "Pods")
         case .node: String(localized: "Nodes")
+        case .unknown: kindName
         }
     }
 }
 
-extension ArgoNetKind {
+extension NetMapKind {
     var symbol: String {
         switch self {
         case .host: "globe"
@@ -33,14 +36,14 @@ extension ArgoNetKind {
     }
 }
 
-private enum ArgoNetMetrics {
+private enum NetMapMetrics {
     static let cardWidth: CGFloat = 136
     static let cardHeight: CGFloat = 52
     static let rowSpacing: CGFloat = 10
 }
 
 /// Each box's frame, by id, for the curves drawn behind them.
-private struct ArgoNetAnchors: PreferenceKey {
+private struct NetMapAnchors: PreferenceKey {
     static var defaultValue: [String: Anchor<CGRect>] { [:] }
 
     static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
@@ -48,45 +51,44 @@ private struct ArgoNetAnchors: PreferenceKey {
     }
 }
 
-struct ArgoNetworkGraph<Details: View>: View {
-    let network: ArgoNetwork
+struct NetMapGraph<Details: View>: View {
+    let network: NetMap
     /// The tapped box, whose path stays lit; presented: the one showing its details.
     let selected: String?
     @Binding var presented: String?
     @Binding var expanded: Bool
-    let tap: (ArgoNetNode) -> Void
+    let tap: (NetMapNode) -> Void
     /// A tap beside the boxes.
     let clear: () -> Void
-    @ViewBuilder let details: (ArgoNetNode) -> Details
+    @ViewBuilder let details: (NetMapNode) -> Details
 
     var body: some View {
         let columns = network.columns(expanded: expanded)
         let hidden = Set(columns.flatMap(\.hidden).map(\.id))
         let path = current.map { network.path(through: $0, hiding: hidden) }
-        let foldable = network.nodes.filter { $0.kind == .pod }.count > ArgoNetwork.podLimit
-        let rows = columns.map { $0.nodes.count + ($0.layer == .pod && foldable ? 1 : 0) }.max() ?? 1
-        let height = CGFloat(rows) * ArgoNetMetrics.cardHeight + CGFloat(max(rows - 1, 0)) * ArgoNetMetrics.rowSpacing
+        let rows = columns.map { $0.nodes.count + ($0.folds ? 1 : 0) }.max() ?? 1
+        let height = CGFloat(rows) * NetMapMetrics.cardHeight + CGFloat(max(rows - 1, 0)) * NetMapMetrics.rowSpacing
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(alignment: .top, spacing: 40) {
                 ForEach(columns) { column in
                     VStack(spacing: 10) {
-                        Text(verbatim: column.layer.title)
+                        Text(verbatim: column.title)
                             .font(.caption2.weight(.semibold))
                             .textCase(.uppercase)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
-                        VStack(spacing: ArgoNetMetrics.rowSpacing) {
+                        VStack(spacing: NetMapMetrics.rowSpacing) {
                             ForEach(column.nodes) { node in card(node, path: path) }
-                            if column.layer == .pod && foldable { foldCard(column.hidden, path: path) }
+                            if column.folds { foldCard(column, path: path) }
                         }
                         .frame(height: height)
                     }
-                    .frame(width: ArgoNetMetrics.cardWidth)
+                    .frame(width: NetMapMetrics.cardWidth)
                 }
             }
-            .backgroundPreferenceValue(ArgoNetAnchors.self) { anchors in
+            .backgroundPreferenceValue(NetMapAnchors.self) { anchors in
                 GeometryReader { proxy in
-                    ArgoNetEdges(
+                    NetMapEdges(
                         edges: network.edges(hiding: hidden), rects: anchors.mapValues { proxy[$0] }, path: path)
                 }
             }
@@ -107,18 +109,18 @@ struct ArgoNetworkGraph<Details: View>: View {
         selected.flatMap { network.node($0) == nil ? nil : $0 }
     }
 
-    private func card(_ node: ArgoNetNode, path: ArgoNetPath?) -> some View {
+    private func card(_ node: NetMapNode, path: NetMapPath?) -> some View {
         Button {
             tap(node)
         } label: {
-            ArgoNetCard(
+            NetMapCard(
                 symbol: node.kind.symbol, title: node.name,
                 detail: node.detail.isEmpty ? node.kind.rawValue : node.detail,
                 health: node.health, shared: node.shared, selected: current == node.id)
         }
         .buttonStyle(.plain)
         .opacity(lit(node.id, on: path) ? 1 : 0.25)
-        .anchorPreference(key: ArgoNetAnchors.self, value: .bounds) { [node.id: $0] }
+        .anchorPreference(key: NetMapAnchors.self, value: .bounds) { [node.id: $0] }
         .popover(
             isPresented: Binding(get: { presented == node.id }, set: { if !$0 { presented = nil } }),
             arrowEdge: .bottom
@@ -132,37 +134,40 @@ struct ArgoNetworkGraph<Details: View>: View {
     }
 
     /// On the lit path, or nothing is selected.
-    private func lit(_ id: String, on path: ArgoNetPath?) -> Bool {
+    private func lit(_ id: String, on path: NetMapPath?) -> Bool {
         path?.contains(node: id) ?? true
     }
 
-    /// "+N more" while pods are folded (it stands for them in the curves), "Show less" once open.
-    private func foldCard(_ hidden: [ArgoNetNode], path: ArgoNetPath?) -> some View {
-        Button {
+    /// "+N more" while a column is folded (it stands for its hidden boxes in the curves), "Show
+    /// less" once open.
+    private func foldCard(_ column: NetMapColumn, path: NetMapPath?) -> some View {
+        let hidden = column.hidden
+        let more = NetMap.moreID(layer: column.layer)
+        return Button {
             withAnimation(.snappy) { expanded.toggle() }
         } label: {
             if hidden.isEmpty {
-                ArgoNetCard(
+                NetMapCard(
                     symbol: "chevron.up", title: String(localized: "Show less"), detail: "", health: .idle,
                     shared: true, selected: false)
             } else {
-                ArgoNetCard(
+                NetMapCard(
                     symbol: "ellipsis", title: String(localized: "+\(hidden.count) more"),
-                    detail: ArgoNetKind.pod.rawValue,
+                    detail: column.kindName,
                     health: ServiceHealth.worst(hidden.map(\.health)), shared: true, selected: false)
             }
         }
         .buttonStyle(.plain)
-        .opacity(hidden.isEmpty || lit(ArgoNetwork.morePodsID, on: path) ? 1 : 0.25)
-        .anchorPreference(key: ArgoNetAnchors.self, value: .bounds) {
-            hidden.isEmpty ? [:] : [ArgoNetwork.morePodsID: $0]
+        .opacity(hidden.isEmpty || lit(more, on: path) ? 1 : 0.25)
+        .anchorPreference(key: NetMapAnchors.self, value: .bounds) {
+            hidden.isEmpty ? [:] : [more: $0]
         }
     }
 }
 
 /// One box: a 3 pt bar in its health colour, a glyph, its name and a detail line. A shared
 /// Gateway or route (not the app's own) has a dashed outline.
-struct ArgoNetCard: View {
+struct NetMapCard: View {
     let symbol: String
     let title: String
     let detail: String
@@ -189,7 +194,7 @@ struct ArgoNetCard: View {
         }
         .padding(.leading, 11)
         .padding(.trailing, 8)
-        .frame(width: ArgoNetMetrics.cardWidth, height: ArgoNetMetrics.cardHeight)
+        .frame(width: NetMapMetrics.cardWidth, height: NetMapMetrics.cardHeight)
         .background {
             shape.fill(Color(.tertiarySystemGroupedBackground))
             if health.needsAttention { shape.fill(health.color.opacity(0.08)) }
@@ -229,10 +234,10 @@ extension ServiceHealth {
 
 /// The curves, from each source's trailing middle to its target's leading middle, with dashes
 /// running along them (still when Reduce Motion is on).
-private struct ArgoNetEdges: View {
-    let edges: [ArgoNetEdge]
+private struct NetMapEdges: View {
+    let edges: [NetMapEdge]
     let rects: [String: CGRect]
-    let path: ArgoNetPath?
+    let path: NetMapPath?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -264,7 +269,7 @@ private struct ArgoNetEdges: View {
         return curve
     }
 
-    private func draw(_ edge: ArgoNetEdge, curve: Path, phase: Double, in canvas: inout GraphicsContext) {
+    private func draw(_ edge: NetMapEdge, curve: Path, phase: Double, in canvas: inout GraphicsContext) {
         let lit = path?.contains(edge: edge.id)
         canvas.opacity = lit == false ? 0.25 : 1
         let width: CGFloat = lit == true ? 2.5 : 2
