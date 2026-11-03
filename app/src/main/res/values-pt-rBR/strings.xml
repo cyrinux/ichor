@@ -6337,4 +6337,15 @@
     <string name="omni_labels_apply">Aplicar os rótulos</string>
     <string name="omni_role_worker">Worker</string>
     <string name="omni_role_controlplane">Plano de controle</string>
+    <string name="ollama_pull_action">Baixar um modelo…</string>
+    <string name="ollama_pull_title">Baixar um modelo em %1$s</string>
+    <string name="ollama_pull_model_label">Modelo</string>
+    <string name="ollama_pull_model_hint">nome:tag da biblioteca</string>
+    <string name="ollama_pull_library">Explorar a biblioteca do Ollama</string>
+    <string name="ollama_pull_start">Baixar</string>
+    <string name="ollama_pull_starting">Iniciando o download…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s de %3$s</string>
+    <string name="ollama_pull_done">Baixado: o modelo está no servidor</string>
+    <string name="ollama_pull_cancel">Parar o download</string>
+    <string name="ollama_pull_background_hint">O download continua enquanto o Ichor estiver aberto, também em segundo plano. Se o sistema fechar o Ichor, ele para; baixar de novo retoma.</string>
 </resources>

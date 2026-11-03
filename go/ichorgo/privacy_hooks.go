@@ -440,6 +440,14 @@ func (l maskedImagePullListener) OnDone(errMessage string) {
 	l.ImagePullListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+// maskedOllamaPullListener masks a model pull's error (the namespace and server it names);
+// the steps are Ollama's own words and digests.
+type maskedOllamaPullListener struct{ OllamaPullListener }
+
+func (l maskedOllamaPullListener) OnDone(errMessage string) {
+	l.OllamaPullListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 // maskedK8sUpgradeListener masks a Kubernetes upgrade's progress and error.
 type maskedK8sUpgradeListener struct{ K8sUpgradeListener }
 

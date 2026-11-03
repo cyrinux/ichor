@@ -1,8 +1,17 @@
 package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import name.levis.ichor.model.BackupPlugins
+import name.levis.ichor.model.OllamaPullEvent
+import name.levis.ichor.model.OllamaPullProgress
+import name.levis.ichor.ui.goErrorText
+import name.levis.ichorgo.OllamaPullListener
 import name.levis.ichor.model.PLUGIN_QR_URL
 import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.PluginIndex
@@ -78,6 +87,34 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
     suspend fun tool(pluginId: String, toolId: String, scope: String, locale: String): PluginToolResult = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(PluginToolResult.serializer(), Ichorgo.kubePluginTool(cfg, ctx, server, pluginId, toolId, scope, locale))
     }
+
+    /**
+     * StartOllamaPull: pulls [model] onto the Ollama server [namespace]/[server] (its workload, as
+     * the plugin's server rows name it). Cancelling the collector cancels the pull; the layers
+     * already downloaded stay on the server and a new pull resumes from them.
+     */
+    fun ollamaPull(namespace: String, server: String, model: String): Flow<OllamaPullEvent> = callbackFlow {
+        val t = go.kubeTarget()
+        val run = Ichorgo.startOllamaPull(
+            t.yaml,
+            t.context,
+            t.server,
+            namespace,
+            server,
+            model,
+            object : OllamaPullListener {
+                override fun onProgress(status: String, completed: Long, total: Long) {
+                    trySend(OllamaPullEvent.Progress(OllamaPullProgress(status, completed, total)))
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(if (errMessage.isEmpty()) OllamaPullEvent.Done else OllamaPullEvent.Failed(goErrorText(errMessage)))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.CONFLATED)
 
     /** The plugins the user imported, kept on this phone by the core (no cluster call). */
     suspend fun userPlugins(): PluginUserList = withContext(Dispatchers.IO) {

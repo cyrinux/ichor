@@ -8,6 +8,7 @@ import (
 	"io"
 	"maps"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -75,7 +76,51 @@ var pluginCommands = []command{
 
 		return "done", nil
 	}},
+	{name: "ollama-pull", args: "NAMESPACE SERVER MODEL", run: func(e env) (string, error) {
+		// ollama-pull NAMESPACE SERVER MODEL, e.g. "ai ollama qwen2.5:0.5b": StartOllamaPull, one
+		// progress line on stderr per callback (with its time, to see whether the proxy streams);
+		// Ctrl-C cancels. It changes the server's disk.
+		if flag.NArg() != 4 {
+			return "", errors.New("usage: ollama-pull NAMESPACE SERVER MODEL")
+		}
+
+		p := &ollamaPullProbe{done: make(chan string, 1), start: time.Now()}
+		run := ichorgo.StartOllamaPull(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), p)
+
+		interrupt := make(chan os.Signal, 1)
+		signal.Notify(interrupt, os.Interrupt)
+
+		defer signal.Stop(interrupt)
+
+		var msg string
+
+		select {
+		case msg = <-p.done:
+		case <-interrupt:
+			run.Cancel()
+
+			msg = <-p.done
+		}
+
+		if msg != "" {
+			return "", errors.New(msg)
+		}
+
+		return "done", nil
+	}},
 }
+
+// ollamaPullProbe prints a pull's progress to stderr.
+type ollamaPullProbe struct {
+	done  chan string
+	start time.Time
+}
+
+func (p *ollamaPullProbe) OnProgress(status string, completed, total int64) {
+	fmt.Fprintf(os.Stderr, "%6.1fs %s %d/%d\n", time.Since(p.start).Seconds(), status, completed, total)
+}
+
+func (p *ollamaPullProbe) OnDone(errMessage string) { p.done <- errMessage }
 
 // pluginReport is plugin-validate's line for a plugin that passes.
 type pluginReport struct {

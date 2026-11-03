@@ -6202,4 +6202,15 @@
     <string name="omni_labels_apply">应用标签</string>
     <string name="omni_role_worker">工作节点</string>
     <string name="omni_role_controlplane">控制平面</string>
+    <string name="ollama_pull_action">拉取模型…</string>
+    <string name="ollama_pull_title">将模型拉取到 %1$s</string>
+    <string name="ollama_pull_model_label">模型</string>
+    <string name="ollama_pull_model_hint">库中的 名称:标签</string>
+    <string name="ollama_pull_library">浏览 Ollama 模型库</string>
+    <string name="ollama_pull_start">拉取</string>
+    <string name="ollama_pull_starting">正在开始拉取…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s / %3$s</string>
+    <string name="ollama_pull_done">已拉取:模型已在服务器上</string>
+    <string name="ollama_pull_cancel">停止下载</string>
+    <string name="ollama_pull_background_hint">只要 Ichor 保持打开(包括在后台),下载就会继续。如果系统关闭 Ichor,下载会停止;再次拉取会继续下载。</string>
 </resources>

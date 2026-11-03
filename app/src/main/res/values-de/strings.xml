@@ -6332,4 +6332,15 @@
     <string name="omni_labels_apply">Labels anwenden</string>
     <string name="omni_role_worker">Worker</string>
     <string name="omni_role_controlplane">Control Plane</string>
+    <string name="ollama_pull_action">Modell herunterladen…</string>
+    <string name="ollama_pull_title">Modell auf %1$s herunterladen</string>
+    <string name="ollama_pull_model_label">Modell</string>
+    <string name="ollama_pull_model_hint">Name:Tag aus der Bibliothek</string>
+    <string name="ollama_pull_library">Ollama-Bibliothek durchsuchen</string>
+    <string name="ollama_pull_start">Herunterladen</string>
+    <string name="ollama_pull_starting">Download wird gestartet…</string>
+    <string name="ollama_pull_progress">%1$s · %2$s von %3$s</string>
+    <string name="ollama_pull_done">Heruntergeladen: Das Modell ist auf dem Server</string>
+    <string name="ollama_pull_cancel">Download stoppen</string>
+    <string name="ollama_pull_background_hint">Der Download läuft weiter, solange Ichor geöffnet bleibt, auch im Hintergrund. Schließt das System Ichor, stoppt er; erneutes Herunterladen setzt ihn fort.</string>
 </resources>

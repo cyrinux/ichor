@@ -36,6 +36,7 @@ import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.pluginDataKey
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.OLLAMA_PLUGIN
 import name.levis.ichor.model.PluginCard
 import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.PluginDetect
@@ -64,6 +65,9 @@ import name.levis.ichor.ui.dataservices.WarnBanner
 import name.levis.ichor.ui.dataservices.kubeGreenRowExtra
 import name.levis.ichor.ui.factory
 import java.util.Locale
+
+/** A native control under a row of card cardId, null for none (kube-green's schedule, Ollama's pull). */
+typealias PluginRowExtra = (cardId: String, row: PluginRow) -> (@Composable () -> Unit)?
 
 /** The labels' language Go translates the tree into. */
 fun pluginLocale(): String = Locale.getDefault().language
@@ -122,6 +126,12 @@ class PluginTabViewModel(
     /** The plugin's tool buttons' runs (docs/plugins.md "Tools"). */
     val tools = PluginToolRuns(viewModelScope, plugins, pluginId)
 
+    /** Ollama's model pull, from its server rows; null for any other plugin. */
+    val ollama: OllamaPulls? = OllamaPulls(viewModelScope, plugins, onPulled = { refresh() }).takeIf { pluginId == OLLAMA_PLUGIN }
+
+    /** "Pull a model…" under an Ollama server row; null for any other row or plugin. */
+    fun ollamaExtra(cardId: String, row: PluginRow): (@Composable () -> Unit)? = ollama?.let { ollamaRowExtra(cardId, row, it) }
+
     override fun cached(): TalosRepository.Timed<PluginView>? =
         plugins.cached<PluginTree>(pluginDataKey(pluginId, "", pluginLocale()))?.let { t ->
             TalosRepository.Timed(PluginView(t.value, plugins.cached<PluginCatalog>(PLUGIN_CATALOG)?.value ?: PluginCatalog()), t.at)
@@ -176,7 +186,7 @@ fun PluginTab(
     pluginId: String,
     reload: PluginReload,
     onObject: (KubeObjectRef) -> Unit,
-    rowExtra: (PluginRow) -> (@Composable () -> Unit)? = { null },
+    rowExtra: PluginRowExtra = { _, _ -> null },
 ) {
     val vm = pluginTabViewModel(pluginId)
     val state by vm.state.collectAsStateWithLifecycle()
@@ -186,7 +196,7 @@ fun PluginTab(
     when (val s = state) {
         UiState.Loading -> LoadingBox(Modifier.fillMaxSize())
         is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, Modifier.fillMaxSize())
-        is UiState.Loaded -> PluginBody(s.data, onObject, rowExtra, runner, vm.tools)
+        is UiState.Loaded -> PluginBody(s.data, onObject, { card, row -> rowExtra(card, row) ?: vm.ollamaExtra(card, row) }, runner, vm.tools)
     }
 }
 
@@ -220,7 +230,7 @@ fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef)
             UiState.Loading -> LoadingBox(rest)
             is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, rest)
             is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                PluginBody(s.data, onObject, rowExtra = { row -> vm.kubeGreen?.let { kubeGreenRowExtra(row, it) } }, runner, vm.tools)
+                PluginBody(s.data, onObject, rowExtra = { card, row -> vm.kubeGreen?.let { kubeGreenRowExtra(row, it) } ?: vm.ollamaExtra(card, row) }, runner, vm.tools)
             }
         }
     }
@@ -237,7 +247,7 @@ private fun rememberActionRunner(actions: PluginActions): PluginActionRunner {
 private fun PluginBody(
     view: PluginView,
     onObject: (KubeObjectRef) -> Unit,
-    rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
+    rowExtra: PluginRowExtra,
     runner: PluginActionRunner,
     tools: PluginToolRuns,
 ) {
@@ -299,7 +309,7 @@ internal fun LazyListScope.pluginCard(
     expanded: Set<String>,
     onToggle: (String) -> Unit,
     onObject: (PluginRef) -> Unit,
-    rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
+    rowExtra: PluginRowExtra,
     runner: PluginActionRunner,
 ) {
     val card = layout.card
@@ -321,7 +331,7 @@ internal fun LazyListScope.pluginCard(
                 onObject = onObject,
                 // The namespace is the card's title when grouped.
                 showSubtitle = !layout.grouped || row.subtitle != row.ref?.namespace,
-                extra = rowExtra(row),
+                extra = rowExtra(card.id, row),
                 actions = runner,
             )
         }

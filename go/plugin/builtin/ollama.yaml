@@ -10,7 +10,8 @@
 # Each row opens the server's workload (ref: $.source). A refused or silent proxy is the
 # server's own row, never a failed plugin.
 # RBAC: list deployments and statefulsets (apps), services and pods; get services/proxy
-# (pods/proxy for the fallback); the actions create (load, unload) and delete (delete) on it.
+# (pods/proxy for the fallback); the actions create (load, unload) and delete (delete) on it,
+# and the apps' "Pull a model…" under a server row (StartOllamaPull, plugin_ollama_pull.go) create.
 # go/ichorgo/plugin_ollama_test.go holds the readers, plugin_ollama_action_test.go the actions.
 schemaVersion: ichor.dev/plugin/v1alpha1
 id: ollama
