@@ -8,9 +8,10 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class ArgoNetworkTest {
+class NetMapTest {
     // Shaped like KubeArgoNetwork's answer for the demo app "demo-worker" (kube_argocd_network_demo.go),
-    // plus a host and an Ingress so every kind of hop is there.
+    // a NetMap whose caller draws three layers in front, plus a host and an Ingress so every kind
+    // of hop is there.
     private val json = """
         {"nodes":[
           {"id":"host/https://worker.lan","layer":0,"kind":"Host","name":"worker.lan","detail":"https://worker.lan","health":"ok","url":"https://worker.lan","managed":false},
@@ -30,7 +31,14 @@ class ArgoNetworkTest {
          "problem":{"kind":"Node","namespace":"","name":"demo-worker-3","detail":"NotReady"}}
     """.trimIndent()
 
-    private val network = TalosJson.decodeFromString(ArgoNetwork.serializer(), json)
+    private val network = TalosJson.decodeFromString(NetMap.serializer(), json)
+
+    private companion object {
+        // The Argo map's layout: host, Gateway and route in front.
+        const val SERVICE_LAYER = 3
+        const val POD_LAYER = 4
+        val MORE_PODS = NetMap.moreId(POD_LAYER)
+    }
 
     @Test
     fun decodesTheGoAnswer() {
@@ -43,11 +51,11 @@ class ArgoNetworkTest {
 
     @Test
     fun anEmptyGraphTakesNoTraffic() {
-        val empty = TalosJson.decodeFromString(ArgoNetwork.serializer(), """{"nodes":[],"edges":[],"problem":null}""")
+        val empty = TalosJson.decodeFromString(NetMap.serializer(), """{"nodes":[],"edges":[],"problem":null}""")
         assertTrue(empty.takesNoTraffic)
         assertTrue(empty.layers.isEmpty())
         assertNull(empty.problem)
-        assertTrue(TalosJson.decodeFromString(ArgoNetwork.serializer(), "{}").takesNoTraffic)
+        assertTrue(TalosJson.decodeFromString(NetMap.serializer(), "{}").takesNoTraffic)
     }
 
     @Test
@@ -84,23 +92,23 @@ class ArgoNetworkTest {
 
     @Test
     fun foldsLongColumns() {
-        val pods = (1..11).map { ArgoNetNode(id = "pod/ns/p$it", layer = ArgoNetNode.LAYER_POD, kind = ArgoNetNode.POD, name = "p$it") }
-        val big = ArgoNetwork(nodes = pods)
-        val folded = big.column(ArgoNetNode.LAYER_POD, expanded = false)
+        val pods = (1..11).map { NetMapNode(id = "pod/ns/p$it", layer = POD_LAYER, kind = NetMapNode.POD, name = "p$it") }
+        val big = NetMap(nodes = pods)
+        val folded = big.column(POD_LAYER, expanded = false)
         assertEquals(8, folded.nodes.size)
         assertEquals(3, folded.hidden)
         assertEquals("p1", folded.nodes.first().name)
-        val open = big.column(ArgoNetNode.LAYER_POD, expanded = true)
+        val open = big.column(POD_LAYER, expanded = true)
         assertEquals(11, open.nodes.size)
         assertEquals(0, open.hidden)
-        assertEquals(0, network.column(ArgoNetNode.LAYER_POD, expanded = false).hidden)
+        assertEquals(0, network.column(POD_LAYER, expanded = false).hidden)
     }
 
     @Test
     fun findsThePodsNode() {
         val pod = network.node("pod/demo/worker-6f4b8-pqrst")!!
         assertEquals("demo-worker-2", network.nodeOf(pod)?.name)
-        assertNull(network.nodeOf(ArgoNetNode(id = "pod/demo/pending", kind = ArgoNetNode.POD)))
+        assertNull(network.nodeOf(NetMapNode(id = "pod/demo/pending", kind = NetMapNode.POD)))
     }
 
     @Test
@@ -110,7 +118,7 @@ class ArgoNetworkTest {
         assertEquals(ServiceHealth.CRITICAL, joined.node("node/demo-worker-2")?.healthState)
         assertEquals(ServiceHealth.CRITICAL, joined.edges.first { it.to == "node/demo-worker-2" }.healthState)
         assertEquals("NotReady", joined.node("node/demo-worker-2")?.detail)
-        assertEquals(ArgoNetProblem(kind = "Node", name = "demo-worker-2", detail = "NotReady"), joined.problem)
+        assertEquals(NetMapProblem(kind = "Node", name = "demo-worker-2", detail = "NotReady"), joined.problem)
         // A problem the core found stays the one shown.
         assertEquals("demo-worker-3", network.withDownNodes(setOf("demo-worker-2")).problem?.name)
         // Nothing down among its nodes: the same graph.
@@ -119,47 +127,53 @@ class ArgoNetworkTest {
 
     @Test
     fun aDownNodeOutranksACordonedOneAndAPodWarning() {
-        val cordoned = ArgoNetwork(
+        val cordoned = NetMap(
             nodes = listOf(
-                ArgoNetNode(id = "pod/ns/p", layer = 4, kind = "Pod", namespace = "ns", name = "p", detail = "ContainerCreating", health = "warning"),
-                ArgoNetNode(id = "node/w3", layer = 5, kind = "Node", name = "w3", detail = "SchedulingDisabled", health = "warning"),
+                NetMapNode(id = "pod/ns/p", layer = 4, kind = "Pod", namespace = "ns", name = "p", detail = "ContainerCreating", health = "warning"),
+                NetMapNode(id = "node/w3", layer = 5, kind = "Node", name = "w3", detail = "SchedulingDisabled", health = "warning"),
             ),
-            edges = listOf(ArgoNetEdge("pod/ns/p", "node/w3", "warning")),
-            problem = ArgoNetProblem(kind = "Pod", namespace = "ns", name = "p", detail = "ContainerCreating"),
+            edges = listOf(NetMapEdge("pod/ns/p", "node/w3", "warning")),
+            problem = NetMapProblem(kind = "Pod", namespace = "ns", name = "p", detail = "ContainerCreating"),
         )
         val joined = cordoned.withDownNodes(setOf("w3"))
-        assertEquals(ArgoNetProblem(kind = "Node", name = "w3", detail = "NotReady"), joined.problem)
+        assertEquals(NetMapProblem(kind = "Node", name = "w3", detail = "NotReady"), joined.problem)
         assertEquals(ArgoNetWording.NODE_NOT_READY, joined.problem?.wording)
-        assertEquals(ArgoNetNode(id = "node/w3", layer = 5, kind = "Node", name = "w3", detail = "NotReady", health = "critical"), joined.node("node/w3"))
+        assertEquals(NetMapNode(id = "node/w3", layer = 5, kind = "Node", name = "w3", detail = "NotReady", health = "critical"), joined.node("node/w3"))
         // The core named the cordon: Talos saying the node is down replaces it too.
-        val named = cordoned.copy(problem = ArgoNetProblem(kind = "Node", name = "w3", detail = "SchedulingDisabled"))
+        val named = cordoned.copy(problem = NetMapProblem(kind = "Node", name = "w3", detail = "SchedulingDisabled"))
         assertEquals("NotReady", named.withDownNodes(setOf("w3")).problem?.detail)
     }
 
     @Test
-    fun onlyPodsFold() {
-        val services = (1..10).map { ArgoNetNode(id = "svc/ns/s$it", layer = ArgoNetNode.LAYER_SERVICE, kind = ArgoNetNode.SERVICE, name = "s$it") }
-        val column = ArgoNetwork(nodes = services).column(ArgoNetNode.LAYER_SERVICE, expanded = false)
-        assertEquals(10, column.nodes.size)
-        assertEquals(0, column.hidden)
+    fun anyLongColumnFolds() {
+        val services = (1..10).map { NetMapNode(id = "svc/ns/s$it", layer = SERVICE_LAYER, kind = NetMapNode.SERVICE, name = "s$it") }
+        val map = NetMap(nodes = services)
+        val column = map.column(SERVICE_LAYER, expanded = false)
+        assertEquals(8, column.nodes.size)
+        assertEquals(2, column.hidden)
+        assertTrue(map.folds(SERVICE_LAYER))
+        assertFalse(network.folds(POD_LAYER))
+        // Each column folds behind its own box.
+        assertEquals(setOf("svc/ns/s9", "svc/ns/s10"), map.hiddenIds(expanded = false))
+        assertEquals("more/$SERVICE_LAYER", NetMap.moreId(SERVICE_LAYER))
     }
 
     /** One Service in front of 10 pods on 2 nodes: p9 and p10 fold, one critical, one fine. */
-    private val crowded: ArgoNetwork = run {
+    private val crowded: NetMap = run {
         val pods = (1..10).map {
-            ArgoNetNode(id = "pod/ns/p$it", layer = 4, kind = "Pod", namespace = "ns", name = "p$it", health = if (it == 9) "critical" else "ok")
+            NetMapNode(id = "pod/ns/p$it", layer = 4, kind = "Pod", namespace = "ns", name = "p$it", health = if (it == 9) "critical" else "ok")
         }
         val nodes = listOf(
-            ArgoNetNode(id = "svc/ns/s", layer = 3, kind = "Service", namespace = "ns", name = "s", health = "warning"),
+            NetMapNode(id = "svc/ns/s", layer = 3, kind = "Service", namespace = "ns", name = "s", health = "warning"),
         ) + pods + listOf(
-            ArgoNetNode(id = "node/a", layer = 5, kind = "Node", name = "a", health = "ok"),
-            ArgoNetNode(id = "node/b", layer = 5, kind = "Node", name = "b", health = "ok"),
+            NetMapNode(id = "node/a", layer = 5, kind = "Node", name = "a", health = "ok"),
+            NetMapNode(id = "node/b", layer = 5, kind = "Node", name = "b", health = "ok"),
         )
         val edges = pods.flatMap { p ->
             val n = if (p.name == "p10") "node/b" else "node/a"
-            listOf(ArgoNetEdge("svc/ns/s", p.id, p.health), ArgoNetEdge(p.id, n, "ok"))
+            listOf(NetMapEdge("svc/ns/s", p.id, p.health), NetMapEdge(p.id, n, "ok"))
         }
-        ArgoNetwork(nodes = nodes, edges = edges)
+        NetMap(nodes = nodes, edges = edges)
     }
 
     @Test
@@ -168,11 +182,11 @@ class ArgoNetworkTest {
         assertEquals(setOf("pod/ns/p9", "pod/ns/p10"), hidden)
         assertTrue(crowded.hiddenIds(expanded = true).isEmpty())
         val hops = crowded.edgesHiding(hidden)
-        val intoMore = hops.filter { it.to == ArgoNetwork.MORE_PODS }
-        assertEquals(listOf(ArgoNetEdge("svc/ns/s", ArgoNetwork.MORE_PODS, "critical")), intoMore)
+        val intoMore = hops.filter { it.to == MORE_PODS }
+        assertEquals(listOf(NetMapEdge("svc/ns/s", MORE_PODS, "critical")), intoMore)
         assertEquals(
-            setOf(ArgoNetEdge(ArgoNetwork.MORE_PODS, "node/a", "ok"), ArgoNetEdge(ArgoNetwork.MORE_PODS, "node/b", "ok")),
-            hops.filter { it.from == ArgoNetwork.MORE_PODS }.toSet(),
+            setOf(NetMapEdge(MORE_PODS, "node/a", "ok"), NetMapEdge(MORE_PODS, "node/b", "ok")),
+            hops.filter { it.from == MORE_PODS }.toSet(),
         )
         assertTrue(hops.none { it.from in hidden || it.to in hidden })
         // 8 shown pods × 2 hops, plus 3 through the box.
@@ -184,34 +198,34 @@ class ArgoNetworkTest {
     fun aPathThroughFoldedPodsLightsTheMoreBox() {
         val hidden = crowded.hiddenIds(expanded = false)
         val viaNodeB = crowded.pathThrough("node/b", hidden)
-        assertTrue(viaNodeB.contains(ArgoNetwork.MORE_PODS))
-        assertTrue(viaNodeB.contains(ArgoNetEdge(ArgoNetwork.MORE_PODS, "node/b")))
-        assertTrue(viaNodeB.contains(ArgoNetEdge("svc/ns/s", ArgoNetwork.MORE_PODS)))
-        assertFalse(viaNodeB.contains(ArgoNetEdge(ArgoNetwork.MORE_PODS, "node/a")))
+        assertTrue(viaNodeB.contains(MORE_PODS))
+        assertTrue(viaNodeB.contains(NetMapEdge(MORE_PODS, "node/b")))
+        assertTrue(viaNodeB.contains(NetMapEdge("svc/ns/s", MORE_PODS)))
+        assertFalse(viaNodeB.contains(NetMapEdge(MORE_PODS, "node/a")))
         // A shown pod's path stays clear of the box.
         val viaP1 = crowded.pathThrough("pod/ns/p1", hidden)
-        assertFalse(viaP1.contains(ArgoNetwork.MORE_PODS))
-        assertTrue(viaP1.contains(ArgoNetEdge("svc/ns/s", "pod/ns/p1")))
+        assertFalse(viaP1.contains(MORE_PODS))
+        assertTrue(viaP1.contains(NetMapEdge("svc/ns/s", "pod/ns/p1")))
     }
 
     @Test
     fun wordsTheProblemByKind() {
-        assertEquals(ArgoNetWording.POD_STATUS, ArgoNetProblem(kind = "Pod").wording)
-        assertEquals(ArgoNetWording.NO_READY_PODS, ArgoNetProblem(kind = "Service").wording)
-        assertEquals(ArgoNetWording.NODE_CORDONED, ArgoNetProblem(kind = "Node", detail = "SchedulingDisabled").wording)
-        assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, ArgoNetProblem(kind = "Ingress").wording)
-        assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, ArgoNetProblem(kind = "Gateway").wording)
-        assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, ArgoNetProblem(kind = "IngressRoute").wording)
+        assertEquals(ArgoNetWording.POD_STATUS, NetMapProblem(kind = "Pod").wording)
+        assertEquals(ArgoNetWording.NO_READY_PODS, NetMapProblem(kind = "Service").wording)
+        assertEquals(ArgoNetWording.NODE_CORDONED, NetMapProblem(kind = "Node", detail = "SchedulingDisabled").wording)
+        assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, NetMapProblem(kind = "Ingress").wording)
+        assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, NetMapProblem(kind = "Gateway").wording)
+        assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, NetMapProblem(kind = "IngressRoute").wording)
     }
 
     @Test
     fun sharedRoutesAreTheOnesTheAppDoesNotManage() {
-        assertTrue(ArgoNetNode(id = "gw/traefik/homelab", kind = ArgoNetNode.GATEWAY, managed = false).shared)
-        assertTrue(ArgoNetNode(id = "ir/edge/web", kind = ArgoNetNode.INGRESS_ROUTE, managed = false).shared)
-        assertTrue(ArgoNetNode(id = "irtcp/edge/web", kind = ArgoNetNode.INGRESS_ROUTE_TCP, managed = false).shared)
-        assertTrue(ArgoNetNode(id = "gr/edge/api", kind = ArgoNetNode.GRPC_ROUTE, managed = false).shared)
-        assertTrue(ArgoNetNode(id = "tr/edge/tls", kind = ArgoNetNode.TLS_ROUTE, managed = false).shared)
-        assertFalse(ArgoNetNode(id = "ir/edge/web", kind = ArgoNetNode.INGRESS_ROUTE, managed = true).shared)
+        assertTrue(NetMapNode(id = "gw/traefik/homelab", kind = NetMapNode.GATEWAY, managed = false).shared)
+        assertTrue(NetMapNode(id = "ir/edge/web", kind = NetMapNode.INGRESS_ROUTE, managed = false).shared)
+        assertTrue(NetMapNode(id = "irtcp/edge/web", kind = NetMapNode.INGRESS_ROUTE_TCP, managed = false).shared)
+        assertTrue(NetMapNode(id = "gr/edge/api", kind = NetMapNode.GRPC_ROUTE, managed = false).shared)
+        assertTrue(NetMapNode(id = "tr/edge/tls", kind = NetMapNode.TLS_ROUTE, managed = false).shared)
+        assertFalse(NetMapNode(id = "ir/edge/web", kind = NetMapNode.INGRESS_ROUTE, managed = true).shared)
         assertFalse(network.node("ing/demo/worker")!!.shared)
         assertFalse(network.node("pod/demo/worker-6f4b8-pqrst")!!.shared)
     }

@@ -1,4 +1,4 @@
-package name.levis.ichor.ui.argocd
+package name.levis.ichor.ui.components.netmap
 
 import android.provider.Settings
 import androidx.compose.animation.core.LinearEasing
@@ -36,9 +36,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import name.levis.ichor.model.ArgoNetEdge
-import name.levis.ichor.model.ArgoNetNode
-import name.levis.ichor.model.ArgoNetwork
+import name.levis.ichor.model.NetMap
+import name.levis.ichor.model.NetMapEdge
+import name.levis.ichor.model.NetMapNode
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -50,29 +50,30 @@ private val HEADER_HEIGHT = 26.dp
 private val CHIP_HEIGHT = 28.dp
 
 /** Where one box sits on the canvas, its top-left corner. */
-private data class CardSlot(val node: ArgoNetNode, val x: Dp, val y: Dp)
+private data class CardSlot(val node: NetMapNode, val x: Dp, val y: Dp)
 
 /** A folded column's "+N more" chip; [hidden] is 0 once unfolded (it then folds back). */
-private data class ChipSlot(val hidden: Int, val x: Dp, val y: Dp)
+private data class ChipSlot(val layer: Int, val hidden: Int, val x: Dp, val y: Dp)
 
-private data class HeaderSlot(val layer: Int, val count: Int, val x: Dp)
+/** A column's title, from the [kind] of its first box, and how many boxes it has. */
+private data class HeaderSlot(val kind: String, val count: Int, val x: Dp)
 
-/** Where a hop can end: a card, or the "+N more" chip standing for the folded pods. */
+/** Where a hop can end: a card, or the "+N more" chip standing for its column's folded boxes. */
 private data class Anchor(val x: Dp, val y: Dp, val height: Dp)
 
 private data class GraphLayout(val width: Dp, val height: Dp, val cards: List<CardSlot>, val chips: List<ChipSlot>, val headers: List<HeaderSlot>) {
     val anchors: Map<String, Anchor> = cards.associate { it.node.id to Anchor(it.x, it.y, CARD_HEIGHT) } +
-        chips.filter { it.hidden > 0 }.associate { ArgoNetwork.MORE_PODS to Anchor(it.x, it.y, CHIP_HEIGHT) }
+        chips.filter { it.hidden > 0 }.associate { NetMap.moreId(it.layer) to Anchor(it.x, it.y, CHIP_HEIGHT) }
 }
 
 /**
  * Lays the graph out in columns, one per layer that has boxes, each centred vertically under
  * its header. Fixed card sizes keep it a pure computation: the edges need no measuring.
  */
-private fun layoutGraph(network: ArgoNetwork, expanded: Boolean): GraphLayout {
+private fun layoutGraph(network: NetMap, expanded: Boolean): GraphLayout {
     val columns = network.layers.map { network.column(it, expanded) }
-    // Only the pods fold; their chip stays once unfolded, to fold them back.
-    val foldable = columns.map { it.layer == ArgoNetNode.LAYER_POD && network.nodesIn(it.layer).size > ArgoNetwork.COLUMN_LIMIT }
+    // A long column folds; its chip stays once unfolded, to fold it back.
+    val foldable = columns.map { network.folds(it.layer) }
     val heights = columns.mapIndexed { i, c ->
         CARD_HEIGHT * c.nodes.size + ROW_GAP * (c.nodes.size - 1).coerceAtLeast(0) + if (foldable[i]) ROW_GAP + CHIP_HEIGHT else 0.dp
     }
@@ -83,21 +84,24 @@ private fun layoutGraph(network: ArgoNetwork, expanded: Boolean): GraphLayout {
         val x = (CARD_WIDTH + COLUMN_GAP) * i
         val top = HEADER_HEIGHT + (body - heights[i]) / 2
         c.nodes.forEachIndexed { row, node -> cards += CardSlot(node, x, top + (CARD_HEIGHT + ROW_GAP) * row) }
-        if (foldable[i]) chips += ChipSlot(c.hidden, x, top + heights[i] - CHIP_HEIGHT)
+        if (foldable[i]) chips += ChipSlot(c.layer, c.hidden, x, top + heights[i] - CHIP_HEIGHT)
     }
     val width = CARD_WIDTH * columns.size + COLUMN_GAP * (columns.size - 1).coerceAtLeast(0)
-    val headers = columns.mapIndexed { i, c -> HeaderSlot(c.layer, network.layerCounts[c.layer] ?: 0, (CARD_WIDTH + COLUMN_GAP) * i) }
+    val headers = columns.mapIndexed { i, c ->
+        HeaderSlot(c.nodes.firstOrNull()?.kind.orEmpty(), network.layerCounts[c.layer] ?: 0, (CARD_WIDTH + COLUMN_GAP) * i)
+    }
     return GraphLayout(width, HEADER_HEIGHT + body, cards, chips, headers)
 }
 
 /**
- * The app's network as a left-to-right layered graph on a horizontally scrolling canvas:
- * hosts, Gateways, routes, Services, pods and nodes, joined by Bézier hops coloured by health,
+ * A network map as a left-to-right layered graph on a horizontally scrolling canvas: the
+ * caller's entry boxes (hosts, Gateways, routes…), then Services, pods and nodes, joined by
+ * Bézier hops coloured by health,
  * with traffic flowing along the ones that serve. Tapping a box highlights everything its
  * traffic crosses ([selected]); tapping it again or the background clears it.
  */
 @Composable
-fun ArgoNetworkGraph(network: ArgoNetwork, selected: String?, onSelect: (String?) -> Unit, modifier: Modifier = Modifier) {
+fun NetMapGraph(network: NetMap, selected: String?, onSelect: (String?) -> Unit, modifier: Modifier = Modifier) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val layout = remember(network, expanded) { layoutGraph(network, expanded) }
     val hidden = remember(network, expanded) { network.hiddenIds(expanded) }
@@ -119,10 +123,10 @@ fun ArgoNetworkGraph(network: ArgoNetwork, selected: String?, onSelect: (String?
                 }
             }
             layout.headers.forEach { h ->
-                ArgoNetColumnHeader(h.layer, h.count, Modifier.offset(x = h.x).width(CARD_WIDTH))
+                NetMapColumnHeader(h.kind, h.count, Modifier.offset(x = h.x).width(CARD_WIDTH))
             }
             layout.cards.forEach { slot ->
-                ArgoNetCard(
+                NetMapCard(
                     slot.node,
                     selected = slot.node.id == selected,
                     dimmed = path != null && !path.contains(slot.node.id),
@@ -131,8 +135,8 @@ fun ArgoNetworkGraph(network: ArgoNetwork, selected: String?, onSelect: (String?
                 )
             }
             layout.chips.forEach { chip ->
-                val dimmed = path != null && !path.contains(ArgoNetwork.MORE_PODS)
-                ArgoNetMoreChip(
+                val dimmed = path != null && !path.contains(NetMap.moreId(chip.layer))
+                NetMapMoreChip(
                     chip.hidden,
                     onClick = { expanded = !expanded },
                     modifier = Modifier.offset(chip.x, chip.y).width(CARD_WIDTH).alpha(if (dimmed && chip.hidden > 0) DIM_ALPHA else 1f),
@@ -182,7 +186,7 @@ private fun flowPhase(animate: Boolean): State<Float>? {
  * One hop, a cubic Bézier from the source card's right middle to the target's left middle:
  * a faint track with dots flowing along it while it serves, red dashes standing still when broken.
  */
-private fun DrawScope.drawHop(edge: ArgoNetEdge, from: Anchor, to: Anchor, palette: EdgePalette, phase: Float?, alpha: Float) {
+private fun DrawScope.drawHop(edge: NetMapEdge, from: Anchor, to: Anchor, palette: EdgePalette, phase: Float?, alpha: Float) {
     val start = Offset((from.x + CARD_WIDTH).toPx(), (from.y + from.height / 2).toPx())
     val end = Offset(to.x.toPx(), (to.y + to.height / 2).toPx())
     val bend = (end.x - start.x) / 2
