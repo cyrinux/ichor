@@ -101,7 +101,8 @@ final class NetMapTests: XCTestCase {
         let hidden = Set(column.hidden.map(\.id))
         let shown = net.edges(hiding: hidden)
         XCTAssertEqual(shown.count, 16 + 2, "the folded pods share one hop in, one hop out")
-        XCTAssertEqual(shown.first { $0.from == NetMap.moreID(layer: 4) }?.health, .critical, "the worst they stand for")
+        let more = NetMap.moreID(layer: 4)
+        XCTAssertEqual(shown.first { $0.from == more }?.health, .critical, "the worst they stand for")
 
         let path = net.path(through: "pod/ns/p9", hiding: hidden)
         XCTAssertTrue(path.contains(node: NetMap.moreID(layer: 4)))
