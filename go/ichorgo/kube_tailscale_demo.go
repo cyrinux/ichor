@@ -1,9 +1,11 @@
 package ichorgo
 
-// demoTailscale is what the demo cluster's Tailscale operator answers: a subnet router, an
-// exit node and an app connector whose ProxyClass is missing, an ingress and a kube-apiserver
-// proxy group, a ProxyClass that does not validate, and the tailnet nameserver. Everything
-// invented; nothing readable as a real tailnet.
+// demoTailscale is what the demo cluster's Tailscale operator answers: Services and an
+// Ingress on the tailnet (one naming a missing ProxyGroup), egress to a tailnet database and
+// to a host whose proxy failed, a subnet router, an exit node and an app connector whose
+// ProxyClass is missing, an ingress and a kube-apiserver proxy group, a ProxyClass that does
+// not validate, and the tailnet nameserver. Everything invented; nothing readable as a real
+// tailnet.
 func demoTailscale() tsReport {
 	ok := tsState{Ready: true, Health: tsHealthOK}
 	device := func(host, ip string) tsDevice {
@@ -16,6 +18,7 @@ func demoTailscale() tsReport {
 			Namespace: "tailscale", Name: "operator", Ready: 1, Desired: 1,
 			Image: "tailscale/k8s-operator:v1.90.0", Health: tsHealthOK,
 		},
+		Exposed: demoTailscaleExposed(ok),
 		Connectors: []tsConnector{
 			{
 				Name: "office-router", Hostname: "office-router", TailnetIPs: []string{"100.64.0.11", "fd7a:115c:a1e0::b"},
@@ -41,8 +44,9 @@ func demoTailscale() tsReport {
 		ProxyGroups: []tsProxyGroup{
 			{
 				Name: "ingress-proxies", Type: "ingress", Replicas: 2, ProxyClass: "prod", Tags: []string{"tag:k8s"},
-				Devices:   []tsDevice{device("ingress-proxies-0", "100.64.0.31"), device("ingress-proxies-1", "100.64.0.32")},
-				Available: true, tsState: ok,
+				HostnamePrefix: "ingress",
+				Devices:        []tsDevice{device("ingress-proxies-0", "100.64.0.31"), device("ingress-proxies-1", "100.64.0.32")},
+				Available:      true, tsState: ok,
 			},
 			{
 				Name: "api-proxies", Type: "kube-apiserver", Replicas: 2, Tags: []string{"tag:k8s"},
@@ -61,7 +65,32 @@ func demoTailscale() tsReport {
 	}
 
 	linkProxyClasses(&r, true)
+	linkProxyGroups(&r, true)
 	finishTailscale(&r)
 
 	return r
+}
+
+// demoTailscaleExposed is the demo's exposed rows; linkProxyGroups flags the missing group.
+func demoTailscaleExposed(ok tsState) []tsExposed {
+	row := func(kind, ns, name, direction, group string, names, ports []string, s tsState) tsExposed {
+		return tsExposed{
+			Kind: kind, Namespace: ns, Name: name, Direction: direction, TailnetNames: names, Ports: ports,
+			ProxyGroup: group, Tags: []string{"tag:k8s"}, tsState: s,
+		}
+	}
+
+	return []tsExposed{
+		row(tsKindService, "shop", "storefront", tsDirectionIngress, "ingress-proxies",
+			[]string{"storefront.example-tailnet.ts.net", "100.64.0.51"}, []string{"443", "80"}, ok),
+		row(tsKindService, "media", "player", tsDirectionIngress, "web-proxies",
+			[]string{"player.example-tailnet.ts.net"}, []string{"8096"}, ok),
+		row(tsKindService, "ops", "grafana", tsDirectionIngress, "", []string{"grafana"}, []string{"3000"}, ok),
+		row(tsKindIngress, "docs", "wiki", tsDirectionIngress, "", []string{"wiki.example-tailnet.ts.net"}, []string{"443"}, ok),
+		row(tsKindService, "payments", "ledger-db", tsDirectionEgress, "",
+			[]string{"ledger-db.example-tailnet.ts.net"}, []string{"5432"}, ok),
+		row(tsKindService, "payments", "legacy", tsDirectionEgress, "", []string{"100.64.0.77"}, []string{"53/UDP"}, tsState{
+			Reason: "ProxyFailed", Message: "error provisioning proxy: the tailnet refused the auth key", Health: tsHealthCritical,
+		}),
+	}
 }

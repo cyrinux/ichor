@@ -35,7 +35,7 @@ func checkupTailscale(ctx context.Context, k *kubeClient, in checkupInput) check
 		return absentSection(checkTailscale)
 	}
 
-	r := readTailscaleWithin(ctx, k, in.groups)
+	r := readTailscaleWithin(ctx, k, in.groups, false)
 
 	var err error
 	if r.Error != "" {
