@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,6 +71,7 @@ import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorFilterChip
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorSwitch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -350,7 +350,7 @@ private fun InstanceForm(
         if (groupIds.isEmpty()) MutedText(stringResource(R.string.aws_security_groups_none))
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.aws_public_ip), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(end = 8.dp))
-            Switch(checked = publicIp, onCheckedChange = { publicIp = it })
+            IchorSwitch(checked = publicIp, onCheckedChange = { publicIp = it })
         }
     }
 
