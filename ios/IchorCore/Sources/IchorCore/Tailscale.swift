@@ -14,6 +14,8 @@ public struct Tailscale: Decodable, Equatable, Sendable {
     public let truncated: Bool
     /// Nil when no operator Deployment was found.
     public let `operator`: TailscaleOperator?
+    /// What the operator serves on the tailnet, or reaches on it.
+    public let exposed: [TailscaleExposed]
     public let connectors: [TailscaleConnector]
     public let proxyGroups: [TailscaleProxyGroup]
     public let proxyClasses: [TailscaleProxyClass]
@@ -27,6 +29,7 @@ public struct Tailscale: Decodable, Equatable, Sendable {
         error = try c.field(.error, "")
         truncated = try c.field(.truncated, false)
         `operator` = try c.decodeIfPresent(TailscaleOperator.self, forKey: .operator)
+        exposed = try c.field(.exposed, [])
         connectors = try c.field(.connectors, [])
         proxyGroups = try c.field(.proxyGroups, [])
         proxyClasses = try c.field(.proxyClasses, [])
@@ -35,11 +38,14 @@ public struct Tailscale: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case installed, version, error, truncated, `operator`, connectors, proxyGroups, proxyClasses, dnsConfig, counts
+        case installed, version, error, truncated, `operator`, exposed, connectors, proxyGroups, proxyClasses
+        case dnsConfig, counts
     }
 
-    /// Nothing to list: no connector, proxy group, proxy class or DNS config.
-    public var isEmpty: Bool { connectors.isEmpty && proxyGroups.isEmpty && proxyClasses.isEmpty && dnsConfig == nil }
+    /// Nothing to list: nothing exposed, no connector, proxy group, proxy class or DNS config.
+    public var isEmpty: Bool {
+        exposed.isEmpty && connectors.isEmpty && proxyGroups.isEmpty && proxyClasses.isEmpty && dnsConfig == nil
+    }
 
     /// The API version the object summary reads, the reader's own when it named none.
     public var apiVersion: String { version.isEmpty ? TailscaleKind.defaultVersion : version }
@@ -86,6 +92,53 @@ public struct TailscaleOperator: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey { case namespace, name, ready, desired, image, health }
+}
+
+/// A Service or Ingress the operator serves: reachable on the tailnet under `tailnetNames`
+/// (direction ingress), or a tailnet target the cluster reaches through it (egress).
+public struct TailscaleExposed: Decodable, Equatable, Identifiable, Sendable {
+    /// Service or Ingress.
+    public let kind: String
+    public let namespace: String
+    public let name: String
+    /// ingress or egress.
+    public let direction: String
+    /// The name and IPs on the tailnet (ingress), or the target (egress).
+    public let tailnetNames: [String]
+    /// "443", "53/UDP".
+    public let ports: [String]
+    /// "" when the object has a proxy of its own.
+    public let proxyGroup: String
+    public let tags: [String]
+    public let state: TailscaleState
+
+    public var id: String { "\(kind)/\(namespace)/\(name)" }
+    public var isEgress: Bool { direction == "egress" }
+    public var isIngress: Bool { kind == "Ingress" }
+
+    /// What the object summary reads: the Ingress, or the Service.
+    public var resource: KubeAPIResource {
+        isIngress
+            ? KubeAPIResource(group: "networking.k8s.io", resource: "ingresses", kind: "Ingress")
+            : KubeAPIResource(resource: "services", kind: "Service")
+    }
+
+    public init(from decoder: Decoder) throws {
+        state = try TailscaleState(from: decoder)
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.field(.kind, "")
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        direction = try c.field(.direction, "")
+        tailnetNames = try c.field(.tailnetNames, [])
+        ports = try c.field(.ports, [])
+        proxyGroup = try c.field(.proxyGroup, "")
+        tags = try c.field(.tags, [])
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, namespace, name, direction, tailnetNames, ports, proxyGroup, tags
+    }
 }
 
 /// One tailnet device a Connector or ProxyGroup runs.
@@ -180,7 +233,11 @@ public struct TailscaleProxyGroup: Decodable, Equatable, Identifiable, Sendable 
     public let tags: [String]
     /// Set for kube-apiserver groups.
     public let url: String
+    /// spec.hostnamePrefix: its devices are named <prefix>-<n>.
+    public let hostnamePrefix: String
     public let devices: [TailnetDevice]
+    /// How many exposed Services and Ingresses name it.
+    public let serves: Int
     /// At least one proxy runs (ready: all of them).
     public let available: Bool
     public let state: TailscaleState
@@ -196,11 +253,15 @@ public struct TailscaleProxyGroup: Decodable, Equatable, Identifiable, Sendable 
         proxyClass = try c.field(.proxyClass, "")
         tags = try c.field(.tags, [])
         url = try c.field(.url, "")
+        hostnamePrefix = try c.field(.hostnamePrefix, "")
         devices = try c.field(.devices, [])
+        serves = try c.field(.serves, 0)
         available = try c.field(.available, false)
     }
 
-    private enum CodingKeys: String, CodingKey { case name, type, replicas, proxyClass, tags, url, devices, available }
+    private enum CodingKeys: String, CodingKey {
+        case name, type, replicas, proxyClass, tags, url, hostnamePrefix, devices, serves, available
+    }
 }
 
 /// A ProxyClass, and how many Connectors and ProxyGroups name it.

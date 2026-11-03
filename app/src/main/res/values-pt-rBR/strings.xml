@@ -5617,6 +5617,11 @@
     <string name="tailscale_used_by">usada por %1$d</string>
     <string name="tailscale_nameserver">servidor de nomes %1$s</string>
     <string name="tailscale_some_running">alguns proxies em execução</string>
+    <string name="tailscale_exposed">Exposto no tailnet</string>
+    <string name="tailscale_via">via %1$s</string>
+    <string name="tailscale_to">para %1$s</string>
+    <string name="tailscale_serves">serve %1$d</string>
+    <string name="tailscale_more_devices">mais %1$d dispositivos</string>
     <string name="longhorn_snapshot_csi">VolumeSnapshot %1$s</string>
     <string name="longhorn_snapshot_delete_csi">Ele mantém o VolumeSnapshot %1$s: exclua esse em vez deste.</string>
     <string name="longhorn_snapshot_delete_csi_unknown">Sua conta não pode ler os VolumeSnapshots: se algum foi criado a partir deste snapshot, ele não poderá mais ser restaurado. Verifique antes com kubectl get volumesnapshots -A.</string>

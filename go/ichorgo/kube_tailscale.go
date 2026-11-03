@@ -31,9 +31,11 @@ type tsReport struct {
 	Installed bool   `json:"installed"`
 	Version   string `json:"version"` // the served tailscale.com version, "" when not installed
 	// Error is a list that failed; what could be read still shows.
-	Error        string         `json:"error,omitempty"`
-	Truncated    bool           `json:"truncated"` // a kind had more than tsListMax objects
-	Operator     *tsOperator    `json:"operator"`  // nil when no operator Deployment was found
+	Error     string      `json:"error,omitempty"`
+	Truncated bool        `json:"truncated"` // a kind had more than tsListMax objects
+	Operator  *tsOperator `json:"operator"`  // nil when no operator Deployment was found
+	// Exposed is what the operator serves on the tailnet or reaches on it, problems first.
+	Exposed      []tsExposed    `json:"exposed"`
 	Connectors   []tsConnector  `json:"connectors"`
 	ProxyGroups  []tsProxyGroup `json:"proxyGroups"`
 	ProxyClasses []tsProxyClass `json:"proxyClasses"`
@@ -86,13 +88,17 @@ type tsConnector struct {
 
 // tsProxyGroup is a ProxyGroup: a pool of egress, ingress or kube-apiserver proxies.
 type tsProxyGroup struct {
-	Name       string     `json:"name"`
-	Type       string     `json:"type"`
-	Replicas   int        `json:"replicas"`
-	ProxyClass string     `json:"proxyClass"`
-	Tags       []string   `json:"tags"`
-	URL        string     `json:"url"` // set for kube-apiserver groups
-	Devices    []tsDevice `json:"devices"`
+	Name       string   `json:"name"`
+	Type       string   `json:"type"`
+	Replicas   int      `json:"replicas"`
+	ProxyClass string   `json:"proxyClass"`
+	Tags       []string `json:"tags"`
+	URL        string   `json:"url"` // set for kube-apiserver groups
+	// HostnamePrefix is spec.hostnamePrefix: its devices are named <prefix>-<n>.
+	HostnamePrefix string     `json:"hostnamePrefix"`
+	Devices        []tsDevice `json:"devices"`
+	// Serves is how many exposed Services and Ingresses name it.
+	Serves int `json:"serves"`
 	// Available is ProxyGroupAvailable: at least one proxy runs (Ready: all of them).
 	Available bool `json:"available"`
 	tsState
@@ -119,8 +125,8 @@ type tsCounts struct {
 }
 
 // KubeTailscale reads the Tailscale Kubernetes operator (os:admin): {"installed","version",
-// "error","truncated","operator","connectors","proxyGroups","proxyClasses","dnsConfig","counts"}
-// (see tsReport), problems first in every list. A cluster without the operator answers
+// "error","truncated","operator","exposed","connectors","proxyGroups","proxyClasses",
+// "dnsConfig","counts"} (see tsReport), problems first in every list. A cluster without the operator answers
 // {"installed":false} and no error. kubeServer: see KubePods.
 func KubeTailscale(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)

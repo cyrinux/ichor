@@ -17,13 +17,14 @@ data class Tailscale(
     /** Null when no operator Deployment was found. */
     val operator: TailscaleOperator? = null,
     /** Problems first in every list. */
+    val exposed: List<TailscaleExposed> = emptyList(),
     val connectors: List<TailscaleConnector> = emptyList(),
     val proxyGroups: List<TailscaleProxyGroup> = emptyList(),
     val proxyClasses: List<TailscaleProxyClass> = emptyList(),
     val dnsConfig: TailscaleDNSConfig? = null,
     val counts: TailscaleCounts = TailscaleCounts(),
 ) {
-    val isEmpty: Boolean get() = connectors.isEmpty() && proxyGroups.isEmpty() && proxyClasses.isEmpty() && dnsConfig == null
+    val isEmpty: Boolean get() = exposed.isEmpty() && connectors.isEmpty() && proxyGroups.isEmpty() && proxyClasses.isEmpty() && dnsConfig == null
 
     /** The object screen for a row of [kind]: every Tailscale kind is cluster-scoped. */
     fun ref(kind: TailscaleKind, name: String) =
@@ -44,6 +45,47 @@ data class TailscaleOperator(
     val health: String = "",
 ) {
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+}
+
+/**
+ * A Service or Ingress the operator serves: reachable on the tailnet under [tailnetNames]
+ * ([direction] ingress), or a tailnet target the cluster reaches through it (egress).
+ */
+@Serializable
+data class TailscaleExposed(
+    /** Service or Ingress. */
+    val kind: String = "",
+    val namespace: String = "",
+    val name: String = "",
+    /** ingress or egress. */
+    val direction: String = "",
+    /** The name and IPs on the tailnet (ingress), or the target (egress). */
+    val tailnetNames: List<String> = emptyList(),
+    /** "443", "53/UDP". */
+    val ports: List<String> = emptyList(),
+    /** "" when the object has a proxy of its own. */
+    val proxyGroup: String = "",
+    val tags: List<String> = emptyList(),
+    val ready: Boolean = false,
+    val reason: String = "",
+    val message: String = "",
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val isEgress: Boolean get() = direction == EGRESS
+
+    /** The object summary of the Service or Ingress. */
+    val ref: KubeObjectRef
+        get() = if (kind == INGRESS) {
+            KubeObjectRef("networking.k8s.io", "v1", "ingresses", INGRESS, namespace, name, editable = true)
+        } else {
+            KubeObjectRef.service(namespace, name)
+        }
+
+    companion object {
+        const val INGRESS = "Ingress"
+        const val EGRESS = "egress"
+    }
 }
 
 /** One tailnet device a Connector or ProxyGroup runs. */
@@ -93,7 +135,11 @@ data class TailscaleProxyGroup(
     val tags: List<String> = emptyList(),
     /** Set for kube-apiserver groups. */
     val url: String = "",
+    /** spec.hostnamePrefix: its devices are named <prefix>-<n>. */
+    val hostnamePrefix: String = "",
     val devices: List<TailnetDevice> = emptyList(),
+    /** How many exposed Services and Ingresses name it. */
+    val serves: Int = 0,
     /** At least one proxy runs ([ready]: all of them). */
     val available: Boolean = false,
     val ready: Boolean = false,

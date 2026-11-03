@@ -6,6 +6,13 @@ final class TailscaleTests: XCTestCase {
     private let json = #"""
         {"installed":true,"version":"v1alpha1","truncated":false,
          "operator":{"namespace":"tailscale","name":"operator","ready":1,"desired":1,"image":"tailscale/k8s-operator:v1.90.0","health":"ok"},
+         "exposed":[
+          {"kind":"Service","namespace":"payments","name":"legacy","direction":"egress","tailnetNames":["100.64.0.77"],"ports":["53/UDP"],
+           "proxyGroup":"","tags":["tag:k8s"],"ready":false,"reason":"ProxyFailed","message":"error provisioning proxy","health":"critical"},
+          {"kind":"Ingress","namespace":"docs","name":"wiki","direction":"ingress","tailnetNames":["wiki.example-tailnet.ts.net"],"ports":["443"],
+           "proxyGroup":"","tags":["tag:k8s"],"ready":true,"reason":"","message":"","health":"ok"},
+          {"kind":"Service","namespace":"shop","name":"storefront","direction":"ingress","tailnetNames":["storefront.example-tailnet.ts.net","100.64.0.51"],
+           "ports":["443","80"],"proxyGroup":"ingress-proxies","tags":["tag:k8s"],"ready":true,"reason":"","message":"","health":"ok"}],
          "connectors":[
           {"name":"saas-connector","hostname":"saas-connector","tailnetIPs":[],"subnetRoutes":"","advertisedRoutes":[],"exitNode":false,
            "appConnector":true,"appConnectorRoutes":["203.0.113.0/24"],"tags":["tag:k8s"],"proxyClass":"saas","replicas":1,"devices":[],
@@ -21,7 +28,7 @@ final class TailscaleTests: XCTestCase {
           {"name":"api-proxies","type":"kube-apiserver","replicas":2,"proxyClass":"","tags":["tag:k8s"],"url":"https://api-proxies.example.ts.net",
            "devices":[{"hostname":"api-proxies-0","tailnetIPs":["100.64.0.41"],"staticEndpoints":[]},{"hostname":"api-proxies-1","tailnetIPs":["100.64.0.42"],"staticEndpoints":[]}],
            "available":true,"ready":true,"reason":"","message":"","health":"ok"},
-          {"name":"ingress-proxies","type":"ingress","replicas":2,"proxyClass":"prod","tags":["tag:k8s"],"url":"",
+          {"name":"ingress-proxies","type":"ingress","replicas":2,"proxyClass":"prod","tags":["tag:k8s"],"url":"","hostnamePrefix":"ingress","serves":1,
            "devices":[{"hostname":"ingress-proxies-0","tailnetIPs":["100.64.0.31"],"staticEndpoints":[]},{"hostname":"ingress-proxies-1","tailnetIPs":["100.64.0.32"],"staticEndpoints":[]}],
            "available":true,"ready":true,"reason":"","message":"","health":"ok"}],
          "proxyClasses":[
@@ -54,6 +61,26 @@ final class TailscaleTests: XCTestCase {
         XCTAssertEqual(app.state.reason, "ProxyClassMissing")
         XCTAssertTrue(app.appConnector)
         XCTAssertEqual(ts.proxyClasses.first?.state.health, .warning)
+    }
+
+    func testExposedRowsDecodeProblemsFirst() throws {
+        let ts = try decode(json)
+        XCTAssertEqual(ts.exposed.count, 3)
+        let legacy = try XCTUnwrap(ts.exposed.first)
+        XCTAssertTrue(legacy.isEgress)
+        XCTAssertEqual(legacy.state.health, .critical)
+        XCTAssertEqual(legacy.ports, ["53/UDP"])
+        XCTAssertEqual(legacy.resource.resource, "services")
+        let wiki = ts.exposed[1]
+        XCTAssertTrue(wiki.isIngress)
+        XCTAssertEqual(wiki.resource.group, "networking.k8s.io")
+        XCTAssertEqual(ts.exposed[2].proxyGroup, "ingress-proxies")
+        XCTAssertEqual(ts.exposed[2].tailnetNames, ["storefront.example-tailnet.ts.net", "100.64.0.51"])
+        let group = try XCTUnwrap(ts.proxyGroups.first { $0.name == "ingress-proxies" })
+        XCTAssertEqual(group.serves, 1)
+        XCTAssertEqual(group.hostnamePrefix, "ingress")
+        XCTAssertEqual(ts.proxyGroups.first?.serves, 0)
+        XCTAssertFalse(ts.isEmpty)
     }
 
     func testRoutesFallBackToTheStatus() throws {

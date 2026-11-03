@@ -5487,6 +5487,11 @@
     <string name="tailscale_used_by">被 %1$d 个使用</string>
     <string name="tailscale_nameserver">域名服务器 %1$s</string>
     <string name="tailscale_some_running">部分代理正在运行</string>
+    <string name="tailscale_exposed">在 tailnet 上公开</string>
+    <string name="tailscale_via">经由 %1$s</string>
+    <string name="tailscale_to">到 %1$s</string>
+    <string name="tailscale_serves">服务 %1$d 个</string>
+    <string name="tailscale_more_devices">另外 %1$d 台设备</string>
     <string name="longhorn_snapshot_csi">VolumeSnapshot %1$s</string>
     <string name="longhorn_snapshot_delete_csi">它承载着 VolumeSnapshot %1$s：请改为删除该对象。</string>
     <string name="longhorn_snapshot_delete_csi_unknown">你的账号无法读取 VolumeSnapshot：如果有基于此快照创建的 VolumeSnapshot，它将无法再被恢复。请先用 kubectl get volumesnapshots -A 检查。</string>

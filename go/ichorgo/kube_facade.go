@@ -392,6 +392,12 @@ func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
 		return openKubeClient(context.Background(), kubeconfig, nil, target.server)
 	}
 
+	// What a preview method gets is not a bearer token (Teleport's is a client certificate
+	// and its key): never send it as one.
+	if previewSignIns[sc.method.name()] {
+		return nil, fmt.Errorf("reaching Kubernetes with a %s sign-in comes in a later version", sc.method.name())
+	}
+
 	tokens := kubeAuth.source(sc.key, sc.method)
 
 	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)

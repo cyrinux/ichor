@@ -212,7 +212,7 @@ func TestParseKubeconfigPreview(t *testing.T) {
 		"rancher":        {authRancher, "rancher.example.org", cloudProblem(authRancher)},
 		"legacy-oidc":    {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
 		"custom":         {authExec, "my-auth", KubeProblemExec},
-		"teleport":       {authExec, "tsh", KubeProblemExec},
+		"teleport":       {authTeleport, "prod", KubeProblemSignInLater}, // until the client presents its certificate
 		"vault":          {authExec, "vault", KubeProblemExec},
 		"aws-vault":      {authExec, "aws-vault", KubeProblemExec},
 		"kubelogin-bare": {authExec, "kubelogin", KubeProblemExec},
@@ -229,7 +229,6 @@ func TestParseKubeconfigPreview(t *testing.T) {
 
 	hints := map[string]string{
 		"custom":         ExecHintUnknown,
-		"teleport":       ExecHintTeleport,
 		"vault":          ExecHintTokenWrapper,
 		"aws-vault":      ExecHintTokenWrapper,
 		"kubelogin-bare": ExecHintOIDCNoIssuer,

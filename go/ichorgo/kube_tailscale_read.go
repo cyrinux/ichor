@@ -61,10 +61,11 @@ type tsConnectorObject struct {
 type tsProxyGroupObject struct {
 	Metadata tsMeta `json:"metadata"`
 	Spec     struct {
-		Type       string   `json:"type"`
-		Tags       []string `json:"tags"`
-		Replicas   *int     `json:"replicas"`
-		ProxyClass string   `json:"proxyClass"`
+		Type           string   `json:"type"`
+		Tags           []string `json:"tags"`
+		Replicas       *int     `json:"replicas"`
+		ProxyClass     string   `json:"proxyClass"`
+		HostnamePrefix string   `json:"hostnamePrefix"`
 	} `json:"spec"`
 	Status struct {
 		Conditions []tsCondition    `json:"conditions"`
@@ -114,15 +115,19 @@ type tsDeploymentObject struct {
 }
 
 // tsRaw is what the reads brought back; each goroutine writes its own fields only.
-// classesRead is false when the ProxyClass list failed: no missing-ProxyClass check then.
+// classesRead (groupsRead) is false when the ProxyClass (ProxyGroup) list failed: no
+// missing-ProxyClass (missing-ProxyGroup) check then.
 type tsRaw struct {
 	connectors   []tsConnectorObject
 	proxyGroups  []tsProxyGroupObject
 	proxyClasses []tsProxyClassObject
 	dnsConfigs   []tsDNSConfigObject
 	operator     *tsDeploymentObject
+	services     []tsServiceObject
+	ingresses    []ingressObject
 	classesRead  bool
-	errs         [5]error
+	groupsRead   bool
+	errs         [7]error
 }
 
 // readTailscale lists the operator's four kinds and finds its Deployment, in parallel. A kind
@@ -134,12 +139,13 @@ func readTailscale(ctx context.Context, k *kubeClient) (tsReport, error) {
 		return tsReport{}, err
 	}
 
-	return readTailscaleWithin(ctx, k, groups), nil
+	return readTailscaleWithin(ctx, k, groups, true), nil
 }
 
 // readTailscaleWithin reads the operator through the API groups already read (the checkup's):
-// not installed without tailscale.com. A list that fails is the report's Error.
-func readTailscaleWithin(ctx context.Context, k *kubeClient, groups map[string]string) tsReport {
+// not installed without tailscale.com. A list that fails is the report's Error. exposed also
+// lists every Service and Ingress for what the operator serves (the checkup does without).
+func readTailscaleWithin(ctx context.Context, k *kubeClient, groups map[string]string, exposed bool) tsReport {
 	version := groups[groupTailscale]
 	if version == "" {
 		return emptyTailscale()
@@ -160,7 +166,7 @@ func readTailscaleWithin(ctx context.Context, k *kubeClient, groups map[string]s
 	wg.Go(func() {
 		var list kubeList[tsProxyGroupObject]
 		raw.errs[1] = ignoreNotFound(getList(ctx, k, base+"/proxygroups", &list))
-		raw.proxyGroups = list.Items
+		raw.proxyGroups, raw.groupsRead = list.Items, raw.errs[1] == nil
 	})
 	wg.Go(func() {
 		var list kubeList[tsProxyClassObject]
@@ -174,6 +180,14 @@ func readTailscaleWithin(ctx context.Context, k *kubeClient, groups map[string]s
 	})
 	wg.Go(func() { raw.operator, raw.errs[4] = findTailscaleOperator(ctx, k) })
 
+	if exposed {
+		wg.Go(func() { raw.services, raw.errs[5] = listObjects[tsServiceObject](ctx, k, "/api/v1/services") })
+		wg.Go(func() {
+			raw.ingresses, raw.errs[6] = listObjects[ingressObject](ctx, k, "/apis/networking.k8s.io/v1/ingresses")
+			raw.errs[6] = ignoreNotFound(raw.errs[6])
+		})
+	}
+
 	wg.Wait()
 
 	r := buildTailscale(raw)
@@ -184,7 +198,7 @@ func readTailscaleWithin(ctx context.Context, k *kubeClient, groups map[string]s
 
 func emptyTailscale() tsReport {
 	return tsReport{
-		Connectors: []tsConnector{}, ProxyGroups: []tsProxyGroup{}, ProxyClasses: []tsProxyClass{},
+		Exposed: []tsExposed{}, Connectors: []tsConnector{}, ProxyGroups: []tsProxyGroup{}, ProxyClasses: []tsProxyClass{},
 	}
 }
 
@@ -270,7 +284,10 @@ func buildTailscale(raw tsRaw) tsReport {
 		}
 	}
 
+	r.Exposed = tsExposedRows(raw.services, raw.ingresses)
+
 	linkProxyClasses(&r, raw.classesRead)
+	linkProxyGroups(&r, raw.groupsRead)
 	finishTailscale(&r)
 
 	return r
@@ -279,11 +296,13 @@ func buildTailscale(raw tsRaw) tsReport {
 // finishTailscale sorts every list problems first, caps it at tsListMax and counts the rows.
 // The demo report goes through it too.
 func finishTailscale(r *tsReport) {
+	sortTS(r.Exposed, func(e tsExposed) (string, string) { return e.Health, e.Namespace + "/" + e.Name + "/" + e.Kind })
 	sortTS(r.Connectors, func(c tsConnector) (string, string) { return c.Health, c.Name })
 	sortTS(r.ProxyGroups, func(g tsProxyGroup) (string, string) { return g.Health, g.Name })
 	sortTS(r.ProxyClasses, func(c tsProxyClass) (string, string) { return c.Health, c.Name })
 
-	r.Truncated = len(r.Connectors) > tsListMax || len(r.ProxyGroups) > tsListMax || len(r.ProxyClasses) > tsListMax
+	r.Truncated = len(r.Exposed) > tsListMax || len(r.Connectors) > tsListMax || len(r.ProxyGroups) > tsListMax || len(r.ProxyClasses) > tsListMax
+	r.Exposed = r.Exposed[:min(len(r.Exposed), tsListMax)]
 	r.Connectors = r.Connectors[:min(len(r.Connectors), tsListMax)]
 	r.ProxyGroups = r.ProxyGroups[:min(len(r.ProxyGroups), tsListMax)]
 	r.ProxyClasses = r.ProxyClasses[:min(len(r.ProxyClasses), tsListMax)]
@@ -291,6 +310,9 @@ func finishTailscale(r *tsReport) {
 	var healths []string
 	if r.Operator != nil {
 		healths = append(healths, r.Operator.Health)
+	}
+	for _, e := range r.Exposed {
+		healths = append(healths, e.Health)
 	}
 	for _, c := range r.Connectors {
 		healths = append(healths, c.Health)
@@ -419,14 +441,15 @@ func tsConnectorRow(c tsConnectorObject) tsConnector {
 // ProxyGroupReady alone.
 func tsProxyGroupRow(g tsProxyGroupObject) tsProxyGroup {
 	row := tsProxyGroup{
-		Name:       g.Metadata.Name,
-		Type:       g.Spec.Type,
-		Replicas:   2,
-		ProxyClass: g.Spec.ProxyClass,
-		Tags:       nonNil(g.Spec.Tags),
-		URL:        g.Status.URL,
-		Devices:    tsDevices(g.Status.Devices),
-		tsState:    tsStateOf(g.Status.Conditions, "ProxyGroupReady", g.Metadata.Generation, tsHealthCritical),
+		Name:           g.Metadata.Name,
+		Type:           g.Spec.Type,
+		Replicas:       2,
+		ProxyClass:     g.Spec.ProxyClass,
+		Tags:           nonNil(g.Spec.Tags),
+		URL:            g.Status.URL,
+		HostnamePrefix: g.Spec.HostnamePrefix,
+		Devices:        tsDevices(g.Status.Devices),
+		tsState:        tsStateOf(g.Status.Conditions, "ProxyGroupReady", g.Metadata.Generation, tsHealthCritical),
 	}
 
 	if g.Spec.Replicas != nil {
