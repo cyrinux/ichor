@@ -172,6 +172,7 @@ fun CloudUserDataCard(
     when (create) {
         CloudProvider.HETZNER -> HetznerCreateCard(form.takeUnless { omni }, demo, onAllocate)
         CloudProvider.OVHCLOUD -> OVHCreateCard(form.takeUnless { omni }, demo, onAllocate)
+        CloudProvider.AWS -> AWSCreateCard(form.takeUnless { omni }, demo, onAllocate)
         else -> Unit
     }
 }

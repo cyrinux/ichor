@@ -50,5 +50,8 @@ class CloudProviderStore(private val file: SealedValue) {
         const val KEY_ALIAS = "cloudproviders"
         const val HETZNER = "hetzner"
         const val OVH = "ovh"
+
+        /** Keyed by the account id AWSTest names; the value is the keys' credential JSON, region included. */
+        const val AWS = "aws"
     }
 }

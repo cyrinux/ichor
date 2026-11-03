@@ -9,11 +9,12 @@ enum AddNodePath: String, CaseIterable, Identifiable, Hashable {
 
 /// A cloud provider, in alphabetical order; `platform` names its Talos image, nil lists them all.
 enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
-    case hetzner, ovhcloud, scaleway, other
+    case aws, hetzner, ovhcloud, scaleway, other
     var id: String { rawValue }
 
     var platform: String? {
         switch self {
+        case .aws: "aws"
         case .hetzner: "hcloud"
         case .ovhcloud: "openstack"
         case .scaleway: "scaleway"
@@ -23,6 +24,7 @@ enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
 
     @ViewBuilder var label: some View {
         switch self {
+        case .aws: Text(verbatim: "AWS")
         case .hetzner: Text(verbatim: "Hetzner")
         case .ovhcloud: Text(verbatim: "OVHcloud")
         case .scaleway: Text(verbatim: "Scaleway")
@@ -131,6 +133,7 @@ struct BootMediaView: View {
         switch provider {
         case nil: EmptyView()
         // Ichor can call these providers' APIs: it creates the machine itself.
+        case .aws: awsSections
         case .hetzner: hetznerSections
         case .ovhcloud: ovhSections
         // A server at a cloud provider boots its own image and reads the config as user data.
@@ -154,6 +157,21 @@ struct BootMediaView: View {
             }
         }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .hetzner, imagePlatform: nil, path: $path)
+    }
+
+    @ViewBuilder private var awsSections: some View {
+        Section {
+            if omni {
+                Text(
+                    "1. Add access keys whose IAM user has the policy Ichor prints.\n2. Name the instance, then pick an instance type, the Talos AMI, a subnet and its security groups.\n3. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster."
+                )
+            } else {
+                Text(
+                    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add access keys whose IAM user has the policy Ichor prints.\n3. Pick an instance type, the Talos AMI (the official one of the cluster's version is listed), a subnet and its security groups.\n4. Create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the instance."
+                )
+            }
+        }
+        CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .aws, imagePlatform: nil, path: $path)
     }
 
     @ViewBuilder private var ovhSections: some View {

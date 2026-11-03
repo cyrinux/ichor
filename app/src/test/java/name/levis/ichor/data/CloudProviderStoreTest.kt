@@ -31,6 +31,18 @@ class CloudProviderStoreTest {
     }
 
     @Test
+    fun awsKeysAreKeptPerAccountApartFromTheOtherProviders() {
+        val store = CloudProviderStore(MemoryValue())
+        val keys = """{"accessKeyId":"AKIAEXAMPLE","secretAccessKey":"secret","region":"eu-west-1"}"""
+        store.save(CloudProviderStore.AWS, "000000000000", keys)
+        store.save(CloudProviderStore.OVH, "scratch", "{}")
+
+        assertEquals(listOf("000000000000"), store.projects(CloudProviderStore.AWS))
+        assertEquals(keys, store.token(CloudProviderStore.AWS, "000000000000"))
+        assertEquals(listOf("scratch"), store.projects(CloudProviderStore.OVH))
+    }
+
+    @Test
     fun aBlankTokenRemovesTheProjectAndTheLastOneTheFile() {
         val file = MemoryValue()
         val store = CloudProviderStore(file)

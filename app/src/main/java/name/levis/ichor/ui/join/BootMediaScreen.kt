@@ -169,6 +169,10 @@ fun BootMediaScreen(
                             Text(stringResource(if (omni) R.string.add_node_howto_hetzner_omni else R.string.add_node_howto_hetzner), style = MaterialTheme.typography.bodyMedium)
                             CloudUserDataCard(omni = omni, create = chosen, onAllocate = onAllocate)
                         }
+                        CloudProvider.AWS -> {
+                            Text(stringResource(if (omni) R.string.aws_howto_omni else R.string.aws_howto), style = MaterialTheme.typography.bodyMedium)
+                            CloudUserDataCard(omni = omni, create = chosen, onAllocate = onAllocate)
+                        }
                         CloudProvider.OVHCLOUD -> {
                             Text(stringResource(if (omni) R.string.ovh_howto_omni else R.string.ovh_howto), style = MaterialTheme.typography.bodyMedium)
                             CloudUserDataCard(omni = omni, create = chosen, onAllocate = onAllocate)

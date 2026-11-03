@@ -801,6 +801,430 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将在 OVHcloud 上删除。已响应的控制平面会保留:必须先移除其 etcd 成员。" } }
       }
     },
+    "Create the instance at AWS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Instanz bei AWS erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la instancia en AWS" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'instance chez AWS" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea l'istanza su AWS" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AWS でインスタンスを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a instância na AWS" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать экземпляр в AWS" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити екземпляр в AWS" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 AWS 创建实例" } }
+      }
+    },
+    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add access keys whose IAM user has the policy Ichor prints.\n3. Pick an instance type, the Talos AMI (the official one of the cluster's version is listed), a subnet and its security groups.\n4. Create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the instance." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Wähle ein Mitglied als Vorlage, dann Hostname und Installationsdatenträger des neuen Knotens.\n2. Füge Zugriffsschlüssel hinzu, deren IAM-Benutzer die Richtlinie hat, die Ichor ausgibt.\n3. Wähle einen Instanztyp, das Talos-AMI (das offizielle der Clusterversion ist aufgeführt), ein Subnetz und seine Sicherheitsgruppen.\n4. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis der Knoten beitritt. Das Telefon muss Port 50000 der Instanz erreichen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Elige un miembro para copiar y luego el nombre de host y el disco de instalación del nuevo nodo.\n2. Añade claves de acceso cuyo usuario IAM tenga la política que muestra Ichor.\n3. Elige un tipo de instancia, la AMI de Talos (aparece la oficial de la versión del clúster), una subred y sus grupos de seguridad.\n4. Créala: Ichor muestra primero el precio y la sigue hasta que el nodo se une. El teléfono debe llegar al puerto 50000 de la instancia." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Choisissez un membre à copier, puis le nom d'hôte et le disque d'installation du nouveau nœud.\n2. Ajoutez des clés d'accès dont l'utilisateur IAM a la politique qu'Ichor affiche.\n3. Choisissez un type d'instance, l'AMI Talos (l'officielle de la version du cluster est listée), un sous-réseau et ses groupes de sécurité.\n4. Créez-la : Ichor affiche d'abord le prix et la suit jusqu'à ce que le nœud rejoigne. Le téléphone doit joindre le port 50000 de l'instance." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi chiavi di accesso il cui utente IAM ha la policy che Ichor mostra.\n3. Scegli un tipo di istanza, l'AMI di Talos (è elencata quella ufficiale della versione del cluster), una subnet e i suoi gruppi di sicurezza.\n4. Creala: Ichor mostra prima il prezzo e la segue finché il nodo si unisce. Il telefono deve raggiungere la porta 50000 dell'istanza." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを選びます。\n2. Ichor が表示するポリシーを持つ IAM ユーザーのアクセスキーを追加します。\n3. インスタンスタイプ、Talos AMI(クラスターのバージョンの公式 AMI が表示されます)、サブネットとそのセキュリティグループを選びます。\n4. 作成します。Ichor は先に料金を表示し、ノードが参加するまで追跡します。スマートフォンからインスタンスのポート 50000 に到達できる必要があります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Escolha um membro para copiar e depois o nome de host e o disco de instalação do novo nó.\n2. Adicione chaves de acesso cujo usuário IAM tenha a política que o Ichor mostra.\n3. Escolha um tipo de instância, a AMI do Talos (a oficial da versão do cluster é listada), uma sub-rede e seus grupos de segurança.\n4. Crie-a: o Ichor mostra o preço primeiro e a acompanha até o nó entrar. O telefone precisa alcançar a porta 50000 da instância." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Выберите участника для копирования, затем имя хоста и установочный диск нового узла.\n2. Добавьте ключи доступа, у IAM-пользователя которых есть политика, которую показывает Ichor.\n3. Выберите тип экземпляра, AMI Talos (официальный AMI версии кластера уже в списке), подсеть и её группы безопасности.\n4. Создайте его: Ichor сначала покажет цену и будет следить, пока узел не присоединится. Телефон должен достучаться до порта 50000 экземпляра." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Виберіть учасника для копіювання, потім ім'я хоста та інсталяційний диск нового вузла.\n2. Додайте ключі доступу, IAM-користувач яких має політику, яку показує Ichor.\n3. Виберіть тип екземпляра, AMI Talos (офіційний AMI версії кластера вже в списку), підмережу та її групи безпеки.\n4. Створіть його: Ichor спершу покаже ціну й стежитиме, доки вузол не приєднається. Телефон має досягати порту 50000 екземпляра." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 选择要复制的成员,然后选择新节点的主机名和安装磁盘。\n2. 添加访问密钥,其 IAM 用户需拥有 Ichor 显示的策略。\n3. 选择实例类型、Talos AMI(会列出集群版本的官方 AMI)、子网及其安全组。\n4. 创建:Ichor 先显示价格,然后跟踪直到节点加入。手机必须能访问实例的 50000 端口。" } }
+      }
+    },
+    "1. Add access keys whose IAM user has the policy Ichor prints.\n2. Name the instance, then pick an instance type, the Talos AMI, a subnet and its security groups.\n3. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Füge Zugriffsschlüssel hinzu, deren IAM-Benutzer die Richtlinie hat, die Ichor ausgibt.\n2. Benenne die Instanz, dann wähle einen Instanztyp, das Talos-AMI, ein Subnetz und seine Sicherheitsgruppen.\n3. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Añade claves de acceso cuyo usuario IAM tenga la política que muestra Ichor.\n2. Nombra la instancia y luego elige un tipo de instancia, la AMI de Talos, una subred y sus grupos de seguridad.\n3. Créala: Ichor muestra primero el precio y la sigue hasta que la máquina aparece en Omni. Asígnala al clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Ajoutez des clés d'accès dont l'utilisateur IAM a la politique qu'Ichor affiche.\n2. Nommez l'instance, puis choisissez un type d'instance, l'AMI Talos, un sous-réseau et ses groupes de sécurité.\n3. Créez-la : Ichor affiche d'abord le prix, puis la suit jusqu'à ce que la machine apparaisse dans Omni. Allouez-la au cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Aggiungi chiavi di accesso il cui utente IAM ha la policy che Ichor mostra.\n2. Dai un nome all'istanza, poi scegli un tipo di istanza, l'AMI di Talos, una subnet e i suoi gruppi di sicurezza.\n3. Creala: Ichor mostra prima il prezzo, poi la segue finché la macchina compare in Omni. Assegnala al cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. Ichor が表示するポリシーを持つ IAM ユーザーのアクセスキーを追加します。\n2. インスタンスに名前を付け、インスタンスタイプ、Talos AMI、サブネットとそのセキュリティグループを選びます。\n3. 作成します。Ichor は先に料金を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Adicione chaves de acesso cujo usuário IAM tenha a política que o Ichor mostra.\n2. Dê um nome à instância e escolha um tipo de instância, a AMI do Talos, uma sub-rede e seus grupos de segurança.\n3. Crie-a: o Ichor mostra o preço primeiro e a acompanha até a máquina aparecer no Omni. Aloque-a ao cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Добавьте ключи доступа, у IAM-пользователя которых есть политика, которую показывает Ichor.\n2. Назовите экземпляр, затем выберите тип экземпляра, AMI Talos, подсеть и её группы безопасности.\n3. Создайте его: Ichor сначала покажет цену, затем будет следить, пока машина не появится в Omni. Выделите её кластеру." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Додайте ключі доступу, IAM-користувач яких має політику, яку показує Ichor.\n2. Назвіть екземпляр, потім виберіть тип екземпляра, AMI Talos, підмережу та її групи безпеки.\n3. Створіть його: Ichor спершу покаже ціну, потім стежитиме, доки машина не з'явиться в Omni. Виділіть її кластеру." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 添加访问密钥,其 IAM 用户需拥有 Ichor 显示的策略。\n2. 为实例命名,然后选择实例类型、Talos AMI、子网及其安全组。\n3. 创建:Ichor 先显示价格,然后跟踪直到机器出现在 Omni 中。将其分配给集群。" } }
+      }
+    },
+    "Add AWS access keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "AWS-Zugriffsschlüssel hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir claves de acceso de AWS" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter des clés d'accès AWS" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi chiavi di accesso AWS" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AWS アクセスキーを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar chaves de acesso da AWS" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить ключи доступа AWS" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати ключі доступу AWS" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 AWS 访问密钥" } }
+      }
+    },
+    "Remove these keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Schlüssel entfernen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar estas claves" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer ces clés" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi queste chiavi" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このキーを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover estas chaves" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить эти ключи" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вилучити ці ключі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除这些密钥" } }
+      }
+    },
+    "Access keys do not expire unless you rotate them and can do what their IAM policy allows. They stay sealed on this device and are not in backups." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zugriffsschlüssel laufen nicht ab, solange du sie nicht rotierst, und dürfen, was ihre IAM-Richtlinie erlaubt. Sie bleiben versiegelt auf diesem Gerät und sind nicht in Backups." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las claves de acceso no caducan salvo que las rotes y pueden hacer lo que su política IAM permita. Quedan selladas en este dispositivo y no están en las copias de seguridad." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les clés d'accès n'expirent pas tant que vous ne les renouvelez pas et peuvent faire ce que leur politique IAM permet. Elles restent scellées sur cet appareil et ne sont pas dans les sauvegardes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le chiavi di accesso non scadono finché non le ruoti e possono fare ciò che la loro policy IAM consente. Restano sigillate su questo dispositivo e non sono nei backup." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アクセスキーはローテーションしない限り失効せず、IAM ポリシーで許可された操作ができます。この端末に封印して保存され、バックアップには含まれません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Chaves de acesso não expiram a menos que você as rotacione e podem fazer o que a política IAM permite. Elas ficam seladas neste dispositivo e não entram nos backups." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключи доступа не истекают, пока вы их не смените, и могут делать то, что разрешает их политика IAM. Они хранятся запечатанными на этом устройстве и не попадают в резервные копии." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ключі доступу не спливають, доки ви їх не зміните, і можуть робити те, що дозволяє їхня політика IAM. Вони зберігаються запечатаними на цьому пристрої й не потрапляють у резервні копії." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "访问密钥除非轮换否则不会过期,并可执行其 IAM 策略允许的操作。它们密封保存在本设备上,不会进入备份。" } }
+      }
+    },
+    "Give the keys' IAM user this policy: only the calls Ichor makes, and it may terminate only the instances Ichor tagged." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gib dem IAM-Benutzer der Schlüssel diese Richtlinie: nur die Aufrufe, die Ichor macht, und beenden darf er nur die Instanzen, die Ichor markiert hat." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Da esta política al usuario IAM de las claves: solo las llamadas que hace Ichor, y solo puede terminar las instancias que Ichor etiquetó." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Donnez cette politique à l'utilisateur IAM des clés : seulement les appels qu'Ichor fait, et il ne peut résilier que les instances qu'Ichor a étiquetées." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dai questa policy all'utente IAM delle chiavi: solo le chiamate che Ichor fa, e può terminare solo le istanze che Ichor ha etichettato." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーの IAM ユーザーにこのポリシーを付与してください。Ichor が行う呼び出しだけで、終了できるのは Ichor がタグ付けしたインスタンスだけです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Dê esta política ao usuário IAM das chaves: só as chamadas que o Ichor faz, e ele só pode encerrar as instâncias que o Ichor marcou." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Назначьте IAM-пользователю ключей эту политику: только вызовы, которые делает Ichor, и завершать он может только экземпляры с меткой Ichor." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Призначте IAM-користувачу ключів цю політику: лише виклики, які робить Ichor, і завершувати він може лише екземпляри з міткою Ichor." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为密钥的 IAM 用户授予此策略:仅包含 Ichor 发出的调用,且只能终止 Ichor 打过标签的实例。" } }
+      }
+    },
+    "Access key ID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zugriffsschlüssel-ID" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "ID de clave de acceso" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ID de clé d'accès" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "ID chiave di accesso" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アクセスキー ID" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "ID da chave de acesso" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ID ключа доступа" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ID ключа доступу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "访问密钥 ID" } }
+      }
+    },
+    "Secret access key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Geheimer Zugriffsschlüssel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clave de acceso secreta" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clé d'accès secrète" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Chiave di accesso segreta" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "シークレットアクセスキー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Chave de acesso secreta" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Секретный ключ доступа" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Секретний ключ доступу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "秘密访问密钥" } }
+      }
+    },
+    "Session token (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sitzungstoken (optional)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Token de sesión (opcional)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Jeton de session (facultatif)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Token di sessione (facoltativo)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セッショントークン(任意)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Token de sessão (opcional)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Токен сессии (необязательно)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Токен сесії (необов'язково)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "会话令牌(可选)" } }
+      }
+    },
+    "From aws sts get-session-token or the SSO portal. It expires: add the keys again then." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aus aws sts get-session-token oder dem SSO-Portal. Es läuft ab: Füge die Schlüssel dann erneut hinzu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "De aws sts get-session-token o del portal SSO. Caduca: entonces vuelve a añadir las claves." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Issu de aws sts get-session-token ou du portail SSO. Il expire : ajoutez alors les clés à nouveau." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Da aws sts get-session-token o dal portale SSO. Scade: allora aggiungi di nuovo le chiavi." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "aws sts get-session-token または SSO ポータルから取得します。有効期限があるので、切れたらキーを追加し直してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Do aws sts get-session-token ou do portal SSO. Ele expira: adicione as chaves de novo então." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Из aws sts get-session-token или портала SSO. Он истекает: тогда добавьте ключи заново." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "З aws sts get-session-token або порталу SSO. Він спливає: тоді додайте ключі знову." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来自 aws sts get-session-token 或 SSO 门户。它会过期:届时请重新添加密钥。" } }
+      }
+    },
+    "Keys of account %@ may run instances in %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keys of account %1$@ may run instances in %2$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Schlüssel von Konto %1$@ dürfen Instanzen in %2$@ starten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las claves de la cuenta %1$@ pueden lanzar instancias en %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les clés du compte %1$@ peuvent lancer des instances dans %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le chiavi dell'account %1$@ possono avviare istanze in %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アカウント %1$@ のキーは %2$@ でインスタンスを起動できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "As chaves da conta %1$@ podem executar instâncias em %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключи аккаунта %1$@ могут запускать экземпляры в %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ключі облікового запису %1$@ можуть запускати екземпляри в %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "账户 %1$@ 的密钥可以在 %2$@ 中运行实例。" } }
+      }
+    },
+    "Keys of account %@ may not run instances in %@: give their IAM user the policy (ec2:RunInstances)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keys of account %1$@ may not run instances in %2$@: give their IAM user the policy (ec2:RunInstances)." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Schlüssel von Konto %1$@ dürfen keine Instanzen in %2$@ starten: Gib ihrem IAM-Benutzer die Richtlinie (ec2:RunInstances)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las claves de la cuenta %1$@ no pueden lanzar instancias en %2$@: da la política a su usuario IAM (ec2:RunInstances)." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les clés du compte %1$@ ne peuvent pas lancer d'instances dans %2$@ : donnez la politique à leur utilisateur IAM (ec2:RunInstances)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le chiavi dell'account %1$@ non possono avviare istanze in %2$@: dai la policy al loro utente IAM (ec2:RunInstances)." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アカウント %1$@ のキーは %2$@ でインスタンスを起動できません。IAM ユーザーにポリシーを付与してください(ec2:RunInstances)。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "As chaves da conta %1$@ não podem executar instâncias em %2$@: dê a política ao usuário IAM delas (ec2:RunInstances)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключи аккаунта %1$@ не могут запускать экземпляры в %2$@: назначьте их IAM-пользователю политику (ec2:RunInstances)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ключі облікового запису %1$@ не можуть запускати екземпляри в %2$@: призначте їхньому IAM-користувачу політику (ec2:RunInstances)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "账户 %1$@ 的密钥不能在 %2$@ 中运行实例:请为其 IAM 用户授予该策略(ec2:RunInstances)。" } }
+      }
+    },
+    "Keys of account %@, in %@. Whether they may run instances shows when they try." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keys of account %1$@, in %2$@. Whether they may run instances shows when they try." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schlüssel von Konto %1$@, in %2$@. Ob sie Instanzen starten dürfen, zeigt sich beim Versuch." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Claves de la cuenta %1$@, en %2$@. Si pueden lanzar instancias se verá cuando lo intenten." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clés du compte %1$@, dans %2$@. Leur droit de lancer des instances se verra à l'essai." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Chiavi dell'account %1$@, in %2$@. Se possono avviare istanze si vedrà al primo tentativo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アカウント %1$@ のキー(%2$@)。インスタンスを起動できるかは実行時にわかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Chaves da conta %1$@, em %2$@. Se podem executar instâncias aparece quando tentarem." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключи аккаунта %1$@, в %2$@. Могут ли они запускать экземпляры, станет ясно при попытке." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ключі облікового запису %1$@, у %2$@. Чи можуть вони запускати екземпляри, стане зрозуміло під час спроби." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "账户 %1$@ 的密钥,位于 %2$@。能否运行实例会在尝试时显示。" } }
+      }
+    },
+    "Instance type" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Instanztyp" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tipo de instancia" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Type d'instance" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tipo di istanza" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "インスタンスタイプ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tipo de instância" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тип экземпляра" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тип екземпляра" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实例类型" } }
+      }
+    },
+    "burstable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "burstfähig" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "ampliable" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "extensible" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "burstable" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "バースト可能" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "expansível" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "с накоплением" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "з накопиченням" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "突发性能" } }
+      }
+    },
+    "Talos AMI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-AMI" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "AMI de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "AMI Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "AMI di Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos AMI" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "AMI do Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "AMI Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "AMI Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos AMI" } }
+      }
+    },
+    "No Talos AMI for %@ here: pick another region, or an AMI of your own." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hier gibt es kein Talos-AMI für %@: Wähle eine andere Region oder ein eigenes AMI." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay AMI de Talos para %@ aquí: elige otra región o una AMI propia." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune AMI Talos pour %@ ici : choisissez une autre région, ou une AMI à vous." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna AMI di Talos per %@ qui: scegli un'altra regione o una tua AMI." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ここには %@ 用の Talos AMI がありません。別のリージョンか、独自の AMI を選んでください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma AMI do Talos para %@ aqui: escolha outra região ou uma AMI sua." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Здесь нет AMI Talos для %@: выберите другой регион или свой AMI." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тут немає AMI Talos для %@: виберіть інший регіон або власний AMI." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此处没有 %@ 的 Talos AMI:请选择其他区域或你自己的 AMI。" } }
+      }
+    },
+    "Make a Talos AMI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Talos-AMI erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear una AMI de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer une AMI Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un'AMI di Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos AMI を作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar uma AMI do Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать AMI Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити AMI Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 Talos AMI" } }
+      }
+    },
+    "Coming next: an AMI of the cluster's image, made from the phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demnächst: ein AMI aus dem Image des Clusters, vom Telefon aus erstellt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximamente: una AMI de la imagen del clúster, creada desde el teléfono." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bientôt : une AMI de l'image du cluster, créée depuis le téléphone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In arrivo: un'AMI dell'immagine del cluster, creata dal telefono." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "近日対応:クラスターのイメージの AMI をスマートフォンから作成。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Em breve: uma AMI da imagem do cluster, criada pelo telefone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скоро: AMI из образа кластера, созданный с телефона." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Незабаром: AMI з образу кластера, створений з телефона." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即将推出:在手机上用集群的镜像制作 AMI。" } }
+      }
+    },
+    "Subnet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Subnetz" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Subred" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sous-réseau" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Subnet" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サブネット" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sub-rede" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подсеть" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підмережа" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "子网" } }
+      }
+    },
+    "assigns a public IP" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "vergibt eine öffentliche IP" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "asigna una IP pública" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "attribue une IP publique" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "assegna un IP pubblico" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "パブリック IP を割り当て" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "atribui um IP público" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "назначает публичный IP" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "призначає публічну IP" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分配公网 IP" } }
+      }
+    },
+    "Security groups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sicherheitsgruppen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupos de seguridad" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupes de sécurité" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppi di sicurezza" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セキュリティグループ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Grupos de segurança" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группы безопасности" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Групи безпеки" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安全组" } }
+      }
+    },
+    "None picked: the VPC's default group applies." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine gewählt: Es gilt die Standardgruppe der VPC." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ninguno elegido: se aplica el grupo predeterminado de la VPC." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun choisi : le groupe par défaut du VPC s'applique." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuno scelto: vale il gruppo predefinito del VPC." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未選択:VPC のデフォルトグループが適用されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhum escolhido: vale o grupo padrão da VPC." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ничего не выбрано: применяется группа VPC по умолчанию." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Нічого не вибрано: застосовується типова група VPC." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未选择:将使用 VPC 的默认安全组。" } }
+      }
+    },
+    "Give it a public IP address" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine öffentliche IP-Adresse geben" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Darle una dirección IP pública" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lui donner une adresse IP publique" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Assegnale un indirizzo IP pubblico" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "パブリック IP アドレスを付与" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Dar um endereço IP público" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выдать публичный IP-адрес" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Надати публічну IP-адресу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分配公网 IP 地址" } }
+      }
+    },
+    "≈ $%@/h, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "≈ %@ $/h, vor Steuern" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "≈ %@ $/h, sin impuestos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "≈ %@ $/h, hors taxes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "≈ %@ $/h, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "≈ $%@/時(税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "≈ US$ %@/h, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "≈ $%@/ч, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "≈ $%@/год, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "≈ $%@/小时(税前)" } }
+      }
+    },
+    "Price unavailable: see AWS's EC2 pricing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Preis nicht verfügbar: Siehe die EC2-Preise von AWS." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Precio no disponible: consulta los precios de EC2 de AWS." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prix indisponible : voir les tarifs EC2 d'AWS." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prezzo non disponibile: vedi i prezzi EC2 di AWS." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "料金は取得できません。AWS の EC2 料金ページを参照してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Preço indisponível: veja os preços do EC2 da AWS." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Цена недоступна: см. цены EC2 на сайте AWS." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ціна недоступна: див. ціни EC2 на сайті AWS." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "价格不可用:请查看 AWS 的 EC2 定价。" } }
+      }
+    },
+    "Create %@ at AWS?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bei AWS erstellen?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Crear %@ en AWS?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer %@ chez AWS ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare %@ su AWS?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AWS で %@ を作成しますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar %@ na AWS?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать %@ в AWS?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити %@ в AWS?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 AWS 创建 %@?" } }
+      }
+    },
+    "This creates a billable instance (%@ in %@), billed until it is terminated. Its user data goes to AWS with the cluster's secrets or Omni's join token. A failed run terminates the instance." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This creates a billable instance (%1$@ in %2$@), billed until it is terminated. Its user data goes to AWS with the cluster's secrets or Omni's join token. A failed run terminates the instance." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das erstellt eine kostenpflichtige Instanz (%1$@ in %2$@), die bis zu ihrer Beendigung berechnet wird. Ihre Benutzerdaten gehen mit den Secrets des Clusters oder dem Join-Token von Omni an AWS. Ein fehlgeschlagener Lauf beendet die Instanz." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto crea una instancia de pago (%1$@ en %2$@), que se cobra hasta que se termina. Sus datos de usuario van a AWS con los secretos del clúster o el token de unión de Omni. Una ejecución fallida termina la instancia." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela crée une instance facturée (%1$@ dans %2$@), jusqu'à sa résiliation. Ses données utilisateur partent chez AWS avec les secrets du cluster ou le jeton d'adhésion d'Omni. Une exécution échouée résilie l'instance." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un'istanza a pagamento (%1$@ in %2$@), addebitata finché non viene terminata. I suoi dati utente vanno ad AWS con i segreti del cluster o il token di adesione di Omni. Un'esecuzione fallita termina l'istanza." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "課金されるインスタンス(%2$@ の %1$@)を作成します。終了するまで課金されます。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに AWS に送られます。実行に失敗するとインスタンスは終了されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isso cria uma instância paga (%1$@ em %2$@), cobrada até ser encerrada. Seus dados de usuário vão para a AWS com os segredos do cluster ou o token de entrada do Omni. Uma execução com falha encerra a instância." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Это создаёт платный экземпляр (%1$@ в %2$@), который оплачивается до его завершения. Его пользовательские данные передаются в AWS с секретами кластера или токеном присоединения Omni. При неудачном запуске экземпляр завершается." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Це створює платний екземпляр (%1$@ у %2$@), який оплачується до його завершення. Його дані користувача надходять до AWS із секретами кластера або токеном приєднання Omni. Невдалий запуск завершує екземпляр." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这将创建计费实例(%2$@ 的 %1$@),在终止前持续计费。其用户数据会连同集群的密钥或 Omni 的加入令牌发送到 AWS。运行失败会终止该实例。" } }
+      }
+    },
+    "%@ is terminated at AWS, which ends its billing. A control plane that already answered is kept: its etcd member must go first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ wird bei AWS beendet, damit endet die Abrechnung. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ se termina en AWS, lo que pone fin a su cobro. Un control plane que ya respondió se conserva: primero debe irse su miembro de etcd." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ est résilié chez AWS, ce qui arrête sa facturation. Un control plane qui a déjà répondu est conservé : son membre etcd doit d'abord être retiré." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ viene terminato su AWS, il che ne chiude l'addebito. Un control plane che ha già risposto viene mantenuto: prima va rimosso il suo membro etcd." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ は AWS で終了され、課金も止まります。すでに応答したコントロールプレーンは保持されます。先に etcd メンバーを削除してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ é encerrado na AWS, o que encerra a cobrança. Um control plane que já respondeu é mantido: primeiro o membro etcd dele precisa sair." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ завершается в AWS, и оплата прекращается. Control plane, который уже ответил, сохраняется: сначала нужно убрать его участника etcd." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ завершується в AWS, і оплата припиняється. Control plane, що вже відповів, залишається: спершу треба прибрати його учасника etcd." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将在 AWS 上终止,计费随之停止。已响应的控制平面会保留:必须先移除其 etcd 成员。" } }
+      }
+    },
     "A server at a cloud provider" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -13,6 +13,10 @@ Part of the [Ichor documentation](../README.md#documentation).
   in which every node trusts both CAs until all of them trust the new one, and the phone's own
   talosconfig is replaced on the way. Every talosconfig issued before stops working at the end,
   so it is the way to cut off a lost phone or a leaked config. See [Safety](safety.md).
+- **Add a node at a cloud provider:** create the server for a new Talos or Omni node at Hetzner
+  Cloud, OVHcloud or AWS EC2 from the phone, with the price shown first and the host name typed to
+  confirm, then follow it until it joins (or appears in Omni). See
+  [Kubernetes](kubernetes.md) and [Safety](safety.md).
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`), then follow it live with its
   old and new pods (`kubectl rollout status`); list pods with their
