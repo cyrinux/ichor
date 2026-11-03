@@ -35,6 +35,7 @@ var kubeCommands = []command{
 
 		return ichorgo.KubeRenewSignIns("", e.cfg)
 	}},
+	{name: "kube-signin", args: "[CONTEXT]", run: probeKubeSignIn},
 	{name: "discover", args: "PROVIDER SECRETS_JSON", noConfig: true, run: probeDiscover},
 	{name: "oncall-incidents", args: "ONCALL_JSON_FILE [AM_ALERTS_JSON_FILE]", run: probeOnCallIncidents},
 	{name: "oncall-test", args: "ONCALL_JSON_FILE", noConfig: true, run: probeOnCallTest},

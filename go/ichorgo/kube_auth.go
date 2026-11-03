@@ -361,6 +361,11 @@ func newSignInMethod(method string, user *kubeStoreUser, cluster *kubeStoreClust
 // extraSignInMethods are the cloud methods, registered by their files.
 var extraSignInMethods = map[string]func(*kubeStoreUser, *kubeStoreCluster) (signInMethod, error){}
 
+// previewSignIns are registered methods the import does not offer yet: they sign in (the
+// probe drives them) but the Kubernetes client cannot use what they get. Teleport's
+// certificate waits for the client to present it.
+var previewSignIns = map[string]bool{}
+
 // supportedSignIn reports whether the app can sign in with method.
 func supportedSignIn(method string) bool {
 	if method == authOIDC {
@@ -369,7 +374,7 @@ func supportedSignIn(method string) bool {
 
 	_, ok := extraSignInMethods[method]
 
-	return ok
+	return ok && !previewSignIns[method]
 }
 
 // kubeSignInKind is what the app shows to sign in with a method: "browser" (OIDC, device
@@ -397,6 +402,11 @@ type kubeSignInKind struct {
 // signInFields lets a credentials method say what it asks for.
 type signInFields interface {
 	fieldSets() [][]string
+}
+
+// signInDescribes lets a method say where it signs in (a proxy, a cluster): no secret.
+type signInDescribes interface {
+	describe(state kubeAuthState) map[string]string
 }
 
 // signInRemembers lets a credentials method name the fields that are not secrets: the app
@@ -434,6 +444,14 @@ func KubeSignInInfo(storedYAML, contextName string) (out string, err error) {
 
 	if r, ok := sc.method.(signInRemembers); ok && state.Method == sc.method.name() {
 		info.Values = pick(state.Secrets, r.rememberedFields()...)
+	}
+
+	if d, ok := sc.method.(signInDescribes); ok {
+		if state.Method != sc.method.name() {
+			state = kubeAuthState{}
+		}
+
+		info.Values = d.describe(state)
 	}
 
 	if _, ok := sc.method.(*eksMethod); ok && state.Method == sc.method.name() {
