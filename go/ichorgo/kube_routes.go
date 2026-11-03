@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/netmap"
 )
 
 // kubeRoute is an address an app is reachable at from outside the cluster: a host of an
@@ -248,21 +250,8 @@ func readLabeledPods(ctx context.Context, k *kubeClient, namespace string, names
 	return list, nil
 }
 
-// selects tells whether a Service selector matches labels; an empty one selects nothing
-// (its endpoints are managed by hand).
-func selects(selector, labels map[string]string) bool {
-	if len(selector) == 0 {
-		return false
-	}
-
-	for key, value := range selector {
-		if labels[key] != value {
-			return false
-		}
-	}
-
-	return true
-}
+// selects tells whether a Service selector matches labels (netmap.Selects).
+func selects(selector, labels map[string]string) bool { return netmap.Selects(selector, labels) }
 
 // routeURL is scheme://host[:port][path], the path left out when it is the root.
 func routeURL(scheme, host string, port int32, path string) string {

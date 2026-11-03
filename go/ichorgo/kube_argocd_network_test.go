@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/kube/netmap"
 )
 
-func netNode(t *testing.T, n argoNetwork, id string) argoNetNode {
+func netNode(t *testing.T, n netmap.Map, id string) netmap.Node {
 	t.Helper()
 
 	for _, node := range n.Nodes {
@@ -18,10 +20,10 @@ func netNode(t *testing.T, n argoNetwork, id string) argoNetNode {
 
 	t.Fatalf("no node %q in %+v", id, n.Nodes)
 
-	return argoNetNode{}
+	return netmap.Node{}
 }
 
-func netEdges(n argoNetwork) string {
+func netEdges(n netmap.Map) string {
 	var out []string
 	for _, e := range n.Edges {
 		out = append(out, e.From+">"+e.To+":"+e.Health)
@@ -69,7 +71,7 @@ func TestArgoNetworkIngressHealthy(t *testing.T) {
 
 func TestArgoNetworkTailscaleIngressURL(t *testing.T) {
 	in := argoNetInput{
-		services: []netService{demoNetObject[netService](`{"metadata":{"name":"web","namespace":"shop"},"spec":{"type":"ClusterIP"}}`)},
+		services: []netmap.Service{demoNetObject[netmap.Service](`{"metadata":{"name":"web","namespace":"shop"},"spec":{"type":"ClusterIP"}}`)},
 		ingresses: []ingressObject{demoNetObject[ingressObject](`{"metadata":{"name":"web","namespace":"shop"},
 			"spec":{"ingressClassName":"tailscale","tls":[{"hosts":["web"]}],"defaultBackend":{"service":{"name":"web"}}},
 			"status":{"loadBalancer":{"ingress":[{"hostname":"web.tail123.ts.net"}]}}}`)},
@@ -222,10 +224,10 @@ func TestArgoNetworkLoadBalancerAndWarnings(t *testing.T) {
 func TestArgoNetworkServiceWithoutPods(t *testing.T) {
 	in := argoNetInput{}
 	in.app.Status.Resources = []argoResourceStatus{{Kind: "Service", Namespace: "web", Name: "web"}, {Kind: "Service", Namespace: "web", Name: "external"}}
-	in.services = []netService{
-		demoNetObject[netService](`{"metadata":{"name":"web","namespace":"web"},"spec":{"selector":{"app":"web"},"ports":[{"port":80,"nodePort":30080,"targetPort":80}]}}`),
-		demoNetObject[netService](`{"metadata":{"name":"external","namespace":"web"},"spec":{"type":"ExternalName"}}`),
-		demoNetObject[netService](`{"metadata":{"name":"other","namespace":"web"},"spec":{"selector":{"app":"x"}}}`), // not the app's
+	in.services = []netmap.Service{
+		demoNetObject[netmap.Service](`{"metadata":{"name":"web","namespace":"web"},"spec":{"selector":{"app":"web"},"ports":[{"port":80,"nodePort":30080,"targetPort":80}]}}`),
+		demoNetObject[netmap.Service](`{"metadata":{"name":"external","namespace":"web"},"spec":{"type":"ExternalName"}}`),
+		demoNetObject[netmap.Service](`{"metadata":{"name":"other","namespace":"web"},"spec":{"selector":{"app":"x"}}}`), // not the app's
 	}
 
 	n := buildArgoNetwork(in)
@@ -244,23 +246,6 @@ func TestArgoNetworkServiceWithoutPods(t *testing.T) {
 
 	if n.Problem == nil || n.Problem.Kind != "Service" || n.Problem.Name != "web" {
 		t.Fatalf("problem %+v", n.Problem)
-	}
-}
-
-func TestPodHealth(t *testing.T) {
-	cases := map[string]string{
-		"Running": healthWarning, "Pending": healthWarning, "Init:0/1": healthWarning, "Completed": healthIdle,
-		"CrashLoopBackOff": healthCritical, "ImagePullBackOff": healthCritical, "Init:CrashLoopBackOff": healthCritical, "Error": healthCritical,
-	}
-
-	for status, want := range cases {
-		if got := podHealth(kubePod{Status: status}); got != want {
-			t.Errorf("%s: %s, want %s", status, got, want)
-		}
-	}
-
-	if podHealth(kubePod{Status: "Running", Healthy: true}) != healthOK {
-		t.Error("healthy pod")
 	}
 }
 
@@ -310,7 +295,7 @@ func TestKubeArgoNetworkDemoAndValidation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var n argoNetwork
+	var n netmap.Map
 	if err := json.Unmarshal([]byte(out), &n); err != nil || len(n.Nodes) == 0 {
 		t.Fatalf("demo: %v %s", err, out)
 	}

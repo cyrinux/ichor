@@ -3,27 +3,29 @@ package ichorgo
 import (
 	"encoding/json"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/kube/netmap"
 )
 
 // demoArgoNetwork is the network view of a demo Argo CD app, built by the same code as a real
 // one from demo objects: an Ingress with TLS, an HTTPRoute and a TLSRoute behind a shared
 // Gateway, a Traefik IngressRoute, a LoadBalancer Service, a Service whose pods crash-loop,
 // and a cordoned node.
-func demoArgoNetwork(app string) argoNetwork {
+func demoArgoNetwork(app string) netmap.Map {
 	in := argoNetInput{nodes: demoNetNodes()}
 
 	var resources []argoResourceStatus
 
 	svc := func(ns, name, typ, ip, selector, ports, lb string) {
 		resources = append(resources, argoResourceStatus{Kind: "Service", Namespace: ns, Name: name})
-		in.services = append(in.services, demoNetObject[netService](`{"metadata":{"name":"`+name+`","namespace":"`+ns+`"},
+		in.services = append(in.services, demoNetObject[netmap.Service](`{"metadata":{"name":"`+name+`","namespace":"`+ns+`"},
 		  "spec":{"type":"`+typ+`","clusterIP":"`+ip+`","selector":{"app":"`+selector+`"},"ports":[`+ports+`]},
 		  "status":{"loadBalancer":{"ingress":[`+lb+`]}}}`))
 	}
 	pod := func(ns, name, app, node, status string, ready, restarts int) {
 		p := kubePod{Namespace: ns, Name: name, Node: node, Status: status, Ready: ready, Containers: 1, Restarts: restarts}
 		p.Healthy = status == "Running" && ready == 1
-		in.pods = append(in.pods, netPod{kubePod: p, labels: map[string]string{"app": app}})
+		in.pods = append(in.pods, netmap.Pod{Pod: p, Labels: map[string]string{"app": app}})
 	}
 
 	switch app {
@@ -79,8 +81,8 @@ func demoArgoNetwork(app string) argoNetwork {
 }
 
 // demoNetNodes: demo-worker-3 is cordoned and not ready, as in the rest of the demo.
-func demoNetNodes() []netNodeObject {
-	var nodes []netNodeObject
+func demoNetNodes() []netmap.NodeObject {
+	var nodes []netmap.NodeObject
 
 	for _, n := range []string{"demo-worker-1", "demo-worker-2", "demo-worker-3"} {
 		ready, cordoned := "True", "false"
@@ -88,7 +90,7 @@ func demoNetNodes() []netNodeObject {
 			ready, cordoned = "False", "true"
 		}
 
-		nodes = append(nodes, demoNetObject[netNodeObject](`{"metadata":{"name":"`+n+`"},"spec":{"unschedulable":`+cordoned+`},
+		nodes = append(nodes, demoNetObject[netmap.NodeObject](`{"metadata":{"name":"`+n+`"},"spec":{"unschedulable":`+cordoned+`},
 		  "status":{"conditions":[{"type":"Ready","status":"`+ready+`"}]}}`))
 	}
 

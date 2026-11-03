@@ -1,0 +1,60 @@
+{
+  "edges": [
+    {
+      "from": "svc/demo/worker",
+      "health": "critical",
+      "to": "pod/demo/worker-6f4b8-uvwxy"
+    },
+    {
+      "from": "svc/demo/worker",
+      "health": "ok",
+      "to": "pod/demo/worker-6f4b8-pqrst"
+    },
+    {
+      "from": "pod/demo/worker-6f4b8-uvwxy",
+      "health": "critical",
+      "to": "node/demo-worker-3"
+    }
+  ],
+  "nodes": [
+    {
+      "detail": "ClusterIP 10.96.31.7 · 9090→metrics",
+      "health": "warning",
+      "id": "svc/demo/worker",
+      "kind": "Service",
+      "layer": 3,
+      "managed": true,
+      "name": "worker",
+      "namespace": "demo",
+      "url": ""
+    },
+    {
+      "detail": "CrashLoopBackOff · 14 restarts",
+      "health": "critical",
+      "id": "pod/demo/worker-6f4b8-uvwxy",
+      "kind": "Pod",
+      "layer": 4,
+      "managed": false,
+      "name": "worker-6f4b8-uvwxy",
+      "namespace": "demo",
+      "url": ""
+    },
+    {
+      "detail": "Running",
+      "health": "ok",
+      "id": "pod/demo/worker-6f4b8-pqrst",
+      "kind": "Pod",
+      "layer": 4,
+      "managed": false,
+      "name": "worker-6f4b8-pqrst",
+      "namespace": "demo",
+      "url": ""
+    }
+  ],
+  "problem": {
+    "detail": "NotReady",
+    "kind": "Node",
+    "name": "demo-worker-3",
+    "namespace": ""
+  }
+}
