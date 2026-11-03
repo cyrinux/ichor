@@ -35,6 +35,7 @@ const (
 	reasonEntraUnused     = "Microsoft Entra ended this sign-in: it was not used for 90 days."
 	reasonEntraPassword   = "Microsoft Entra ended this sign-in: the account's password changed or its sessions were revoked."
 	reasonEntra           = "Microsoft Entra ended this sign-in (its session policy is set by your administrator)."
+	reasonTeleportSession = "Your Teleport certificate expired. Its length (12 hours by default) is set by your Teleport administrator."
 )
 
 // sessionEndedReason is why the provider refused to renew a sign-in: source is the method

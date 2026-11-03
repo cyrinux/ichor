@@ -64,7 +64,7 @@ const (
 
 // What to do instead of an exec plugin the phone cannot run. The apps map the codes to localized text.
 const (
-	ExecHintTeleport     = "teleport"       // tsh: Teleport sign-in is planned, a certificate kubeconfig works now
+	ExecHintTeleport     = "teleport"       // tsh before its sign-in: kept for the apps' tables until they drop it
 	ExecHintTokenWrapper = "token-wrapper"  // vault, aws-vault, az: paste the token they print
 	ExecHintOIDCNoIssuer = "oidc-no-issuer" // kubelogin without an issuer: re-export with one
 	ExecHintUnknown      = "unknown"
@@ -127,6 +127,11 @@ func summarizeKubeContext(doc *kubeconfigDoc, name string) kubeContextSummary {
 	if hasUser {
 		s.Auth, s.AuthDetail = kubeAuthMethod(user)
 		s.describeCredentials(user)
+
+		// tsh --insecure skips the proxy's certificate check, and so does the sign-in.
+		if s.Auth == authTeleport && slices.Contains(user.User.Exec.Args, "--insecure") {
+			s.Insecure = true
+		}
 	}
 
 	s.Problem, s.ProblemDetail = kubeContextProblem(doc, name, cluster, user)
@@ -156,6 +161,7 @@ const (
 	authAzure        = "azure"
 	authDigitalOcean = "digitalocean"
 	authRancher      = "rancher"
+	authTeleport     = "teleport"
 )
 
 // kubeAuthMethod names how a user signs in. Static credentials win, as in parseKubeconfig.
@@ -197,6 +203,8 @@ func execAuthMethod(e *kubeStoreExec) (method, detail string) {
 		return authDigitalOcean, ""
 	case cmd == "rancher":
 		return authRancher, flagValue(e.Args, "--server")
+	case cmd == "tsh" && slices.Contains(e.Args, "kube") && slices.Contains(e.Args, "credentials"):
+		return authTeleport, flagValue(e.Args, "--kube-cluster")
 	}
 
 	return authExec, cmd
@@ -217,8 +225,6 @@ func isAzureKubelogin(args []string) bool {
 // execPluginHint is what to do instead of an exec plugin execAuthMethod has no sign-in for.
 func execPluginHint(e *kubeStoreExec) string {
 	switch execCommandName(e) {
-	case "tsh":
-		return ExecHintTeleport
 	case "vault", "aws-vault", "az":
 		return ExecHintTokenWrapper
 	case "kubelogin":
