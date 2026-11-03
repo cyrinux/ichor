@@ -6225,4 +6225,18 @@
     <string name="ai_cluster_model_default">空欄：サーバー上の最新モデル</string>
     <string name="ollama_pull_cancel">ダウンロードを停止</string>
     <string name="ollama_pull_background_hint">Ichor が開いている間(バックグラウンドを含む)ダウンロードは続きます。システムが Ichor を閉じると停止し、再度取得すると再開します。</string>
+    <string name="image_report_title">イメージレポート</string>
+    <string name="image_report_unpinned">未固定</string>
+    <string name="image_report_unpinned_hint">:latest またはタグなしで実行中:再起動で別のバージョンが取得されることがあります。</string>
+    <string name="image_report_multitag">複数のタグ</string>
+    <string name="image_report_multitag_hint">1つのリポジトリが同時に複数のタグで動いています。</string>
+    <string name="image_report_registries">レジストリ</string>
+    <string name="image_report_registries_hint">Docker Hub は匿名の pull を制限しています:%1$s 件のイメージがそこから来ています。</string>
+    <string name="image_report_images">%1$s 件のイメージ</string>
+    <string name="image_report_apps">%1$s 件のアプリ</string>
+    <string name="image_report_docker_hub">Docker Hub</string>
+    <string name="image_report_unused">ノード上で未使用</string>
+    <string name="image_report_unused_hint">ノードのディスクにあり、そこでどのコンテナも使っていません:合計 %1$s。</string>
+    <string name="image_report_unused_talos_only">ノードに保存されたイメージを一覧できるのは Talos クラスターだけです。</string>
+    <string name="image_report_nothing">報告することはありません。</string>
 </resources>

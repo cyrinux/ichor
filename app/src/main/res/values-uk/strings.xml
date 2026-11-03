@@ -6623,4 +6623,18 @@
     <string name="ai_cluster_model_default">Порожньо: найновіша модель на сервері</string>
     <string name="ollama_pull_cancel">Зупинити завантаження</string>
     <string name="ollama_pull_background_hint">Завантаження триває, доки Ichor відкритий, також у фоні. Якщо система закриє Ichor, воно зупиниться; повторне завантаження продовжить його.</string>
+    <string name="image_report_title">Звіт про образи</string>
+    <string name="image_report_unpinned">Без фіксації</string>
+    <string name="image_report_unpinned_hint">Запущені як :latest або без тегу: перезапуск може завантажити іншу версію.</string>
+    <string name="image_report_multitag">Кілька тегів</string>
+    <string name="image_report_multitag_hint">Один репозиторій працює з кількома тегами одночасно.</string>
+    <string name="image_report_registries">Реєстри</string>
+    <string name="image_report_registries_hint">Docker Hub обмежує анонімні завантаження: звідти образів: %1$s.</string>
+    <string name="image_report_images">Образів: %1$s</string>
+    <string name="image_report_apps">Застосунків: %1$s</string>
+    <string name="image_report_docker_hub">Docker Hub</string>
+    <string name="image_report_unused">Невикористані на вузлах</string>
+    <string name="image_report_unused_hint">Лежать на диску вузла, жоден контейнер там їх не запускає: усього %1$s.</string>
+    <string name="image_report_unused_talos_only">Лише кластер Talos показує образи, що зберігаються на його вузлах.</string>
+    <string name="image_report_nothing">Нічого повідомити.</string>
 </resources>

@@ -42,6 +42,7 @@ var contractFixtures = []struct {
 	{"alerts", func() any { return groupAMAlerts(demoAMAlerts(contractNow)) }},
 	{"checkup", func() any { return demoCheckup(contractNow, "en") }},
 	{"inventory", func() any { return demoInventory(contractNow.UnixMilli()) }},
+	{"image-report", func() any { return demoImageReport(contractNow.UnixMilli()) }},
 	{"kubespan", func() any { return demoKubeSpan() }},
 	{"topology", func() any { return demoTopology() }},
 	// The network map (netmap.Map) every map view draws; the demo app with a root cause.

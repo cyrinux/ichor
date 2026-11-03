@@ -258,10 +258,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "TalosSystemImages":
 		return toJSON(demoSystemImages(n.Role == "controlplane"))
 	case "NodeImages":
-		return toJSON([]imageInfo{
-			{Name: "registry.k8s.io/coredns/coredns:v1.12.0", Digest: "sha256:abc123demo", Size: 20 << 20, Created: demoBoot.UnixMilli()},
-			{Name: "nginx:1.27", Digest: "sha256:def456demo", Size: 64 << 20, Created: demoBoot.UnixMilli()},
-		})
+		return toJSON(demoNodeImages())
 	case "NodeMounts":
 		return toJSON(mountList{Mounts: []mountInfo{{Filesystem: "/dev/nvme0n1p4", MountedOn: "/var", Size: 100 << 30, Available: 72 << 30, Used: 28 << 30, UsedPercent: 28}}})
 	case "NodeVolumes":

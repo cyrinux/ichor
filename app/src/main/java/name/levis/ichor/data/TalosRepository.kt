@@ -38,6 +38,8 @@ import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
 import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.ImageReport
+import name.levis.ichor.model.reportNodes
 import name.levis.ichor.model.NodeHardware
 import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.NodeNetwork
@@ -68,6 +70,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
 import name.levis.ichor.model.withLastKnown
 import name.levis.ichor.model.OverviewPart
 import name.levis.ichor.model.NodeOverview
@@ -410,6 +413,25 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
                 TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx, kube.yaml, kube.context, kube.server))
             }
         }
+    }
+
+    /**
+     * The images report of [inventory], what the Apps screen holds: no second listing. On a Talos
+     * cluster each node's CRI images (as the Images screen reads them, cached alike) say which
+     * images no container uses; a node that does not answer is left out of that part.
+     */
+    suspend fun imageReport(inventory: Inventory): ImageReport {
+        val inventoryJson = TalosJson.encodeToString(Inventory.serializer(), inventory)
+        val out = if (configs.config.value?.activeSummary?.isKube == true) {
+            withContext(Dispatchers.IO) { Ichorgo.imageReport(inventoryJson) }
+        } else {
+            val byNode = coroutineScope {
+                inventory.reportNodes.map { node -> async { runCatching { node to images(node) }.getOrNull() } }.awaitAll()
+            }.filterNotNull().toMap()
+            val nodesJson = TalosJson.encodeToString(MapSerializer(String.serializer(), ListSerializer(ImageInfo.serializer())), byNode)
+            withContext(Dispatchers.IO) { Ichorgo.imageReportWithNodeImages(inventoryJson, nodesJson) }
+        }
+        return TalosJson.decodeFromString(ImageReport.serializer(), out)
     }
 
     /**

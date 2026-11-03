@@ -25,6 +25,7 @@ var kubeCommands = []command{
 		return out, err
 	}},
 	{name: "search", args: "QUERY", run: probeSearch},
+	{name: "image-report", args: "[kube]", run: probeImageReport},
 	{name: "renew-signins", args: "", run: func(e env) (string, error) {
 		// renew-signins: renews every signed-in context like the apps on foreground and before a
 		// background check. The probe's sign-ins live for one run: a kubeconfig reports the

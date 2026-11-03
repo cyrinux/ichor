@@ -32,6 +32,16 @@ VictoriaLogs** on the same screen, with the pod's or workload's selector over 24
 selector uses the labels `namespace` and `pod`, so a shipper labelling them otherwise needs the
 query edited by hand.
 
+## Images report
+
+The **Images report** button of the **Apps** screen opens a report of the images the inventory already
+lists, with no other cluster read: the images run as `:latest` or with no tag (a digest pins
+one), the repositories running several tags at once and on which nodes, the registries pulled
+from with the Docker Hub count (anonymous pulls are rate limited; `nginx`, `docker.io/library/nginx`
+and `index.docker.io/library/nginx` are one image), and on a Talos cluster the images a node
+keeps that none of its containers runs (the pod sandbox image aside). A row opens the app's
+sheet, or the node's Images screen. `just probe image-report [kube]` prints the same report.
+
 ## Image vulnerability scan
 
 **Scan images** on an app's sheet (and on a Talos node's Images screen, and on the Summary of a

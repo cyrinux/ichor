@@ -55,7 +55,8 @@ tour** shows it again.
   [plugins](docs/plugins.md) for any CRD of your own, imported from a file, a QR code or a
   catalog with their digest verified.
 - **Troubleshooting:** cluster checkup, configuration drift, incident recorder, node pressure,
-  bottleneck metrics, search Loki or VictoriaLogs, network tests between nodes, node network tools, image vulnerability
+  bottleneck metrics, search Loki or VictoriaLogs, network tests between nodes, node network tools, an images report
+  (unpinned, several tags per repository, Docker Hub count, unused images per node), image vulnerability
   scans, thirty days of history and an optional AI diagnosis. Colours in a log (ANSI) are
   drawn, never shown as escape codes.
 - **Operating safely:** read-only by default, typed confirmations, dry runs, an encrypted audit

@@ -136,6 +136,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onFlux = { nav.navigate(Routes.FLUX) },
             onObject = kubeLinks.onObject,
             onScanReports = { cluster -> nav.navigate(Routes.scanReports(cluster)) },
+            onNodeImages = { addr, host -> nav.navigate(Routes.images(addr, host)) },
         )
     }
     composable(

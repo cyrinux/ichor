@@ -22,6 +22,7 @@ import name.levis.ichor.model.UpdateProposalPlan
 import name.levis.ichor.model.updateSections
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.ImageReport
 import name.levis.ichor.model.KubeCronJobList
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePodPage
@@ -56,6 +57,7 @@ class ContractTest {
         "oncall-incidents" to Row(OnCallIncidents.serializer()) { assertEquals("PDEMO01", it.incidentOf("a1c3e5f7a9b1c3d5")?.id) },
         "checkup" to Row(CheckupReport.serializer()),
         "inventory" to Row(Inventory.serializer()),
+        "image-report" to Row(ImageReport.serializer()) { assertEquals(2, it.summary.unpinned); assertEquals("quay.io/cilium/cilium", it.multiTag[0].repository) },
         "kubespan" to Row(KubeSpanOverview.serializer()) { assertTrue(it.nodes.isNotEmpty()) },
         "topology" to Row(ClusterTopology.serializer()),
         "netmap" to Row(NetMap.serializer()) { assertEquals("Node", it.problem?.kind); assertTrue(it.edges.isNotEmpty()) },

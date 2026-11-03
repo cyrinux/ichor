@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.ARGO_CD
 import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ARGO_CD_CATALOG_ID
 import name.levis.ichor.model.ArgoAction
@@ -79,7 +81,8 @@ import name.levis.ichor.ui.workloads.rememberRolloutFollow
  * opens its details. [onNode] opens a node's pods (address, hostname, role); [onArgoCD] the Argo
  * CD screen and [onArgoApp] one of its apps (namespace, name); [onFlux] the Flux screen.
  * [onObject] a route of an app's Web access section, on its object screen.
- * [attention] opens it on the "needs attention" chip.
+ * [attention] opens it on the "needs attention" chip. [onNodeImages] opens a node's Images
+ * screen (address, hostname) from the images report, on a Talos cluster.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,12 +96,14 @@ fun AppsScreen(
     onObject: (KubeObjectRef) -> Unit,
     /** The vulnerability scan reports kept for a cluster (its context name). */
     onScanReports: (String) -> Unit = {},
+    onNodeImages: (addr: String, host: String) -> Unit = { _, _ -> },
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
     workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.kubeRepository) }),
     routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.kubeRepository) }),
     argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "apps-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     scanVm: ImageScanViewModel = viewModel(factory = factory { ImageScanViewModel(app.imageScanRepository) }),
+    reportVm: ImageReportViewModel = viewModel(factory = factory { ImageReportViewModel(app.talosRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
@@ -113,6 +118,7 @@ fun AppsScreen(
         application.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes.orEmpty().associateBy { it.node }
     }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    var imagesReportShown by rememberSaveable { mutableStateOf(false) }
     // Rollout restarts and routes go through the Kubernetes API: only for a role that can reach it.
     val canRestart = config?.activeSummary?.allows(Feature.WORKLOADS) == true
     val workloads by workloadsVm.state.collectAsStateWithLifecycle()
@@ -187,6 +193,9 @@ fun AppsScreen(
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     val busy = state == UiState.Loading || (state as? UiState.Loaded)?.refreshing == true
+                    if (state is UiState.Loaded) {
+                        TooltipIconButton(Icons.Outlined.Layers, stringResource(R.string.image_report_title), onClick = { imagesReportShown = true })
+                    }
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }, enabled = !busy)
                 },
             )
@@ -194,6 +203,20 @@ fun AppsScreen(
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding)) { data ->
             AppsGrid(data, onOpen = { selected = it.id }, argoBadges = argoBadges, attention = attention)
+            if (imagesReportShown) {
+                ImageReportOpen(
+                    inventory = data,
+                    isTalos = config?.activeIsKube == false,
+                    nodes = nodes,
+                    vm = reportVm,
+                    onApp = {
+                        imagesReportShown = false
+                        selected = it
+                    },
+                    onNodeImages = { addr -> onNodeImages(addr, nodes[addr]?.hostname ?: addr) },
+                    onDismiss = { imagesReportShown = false },
+                )
+            }
             data.apps.firstOrNull { it.id == selected }?.let { detail ->
                 if (canRestart) {
                     LaunchedEffect(detail) {
@@ -298,4 +321,28 @@ private fun screenSubtitle(inventory: Inventory): String {
         pluralStringResource(R.plurals.apps_containers, containers, containers),
         nodes,
     ).joinToString(" · ")
+}
+
+/** The images report sheet of [inventory], loaded when it opens. */
+@Composable
+private fun ImageReportOpen(
+    inventory: Inventory,
+    isTalos: Boolean,
+    nodes: Map<String, NodeOverview>,
+    vm: ImageReportViewModel,
+    onApp: (String) -> Unit,
+    onNodeImages: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    LaunchedEffect(inventory) { vm.load(inventory) }
+    val report by vm.state.collectAsStateWithLifecycle()
+    ImageReportSheet(
+        state = report,
+        talos = isTalos,
+        nodes = nodes,
+        onApp = onApp,
+        onNodeImages = if (isTalos) onNodeImages else null,
+        onRetry = vm::refresh,
+        onDismiss = onDismiss,
+    )
 }
