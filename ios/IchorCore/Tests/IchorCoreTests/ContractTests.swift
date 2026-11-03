@@ -42,6 +42,10 @@ final class ContractTests: XCTestCase {
         },
         "checkup": ContractTests.row(CheckupReport.self),
         "inventory": ContractTests.row(ClusterInventory.self),
+        "image-report": ContractTests.row(ImageReport.self) {
+            XCTAssertEqual($0.summary.unpinned, 2)
+            XCTAssertEqual($0.multiTag.first?.repository, "quay.io/cilium/cilium")
+        },
         "kubespan": ContractTests.row(KubeSpanOverview.self),
         "topology": ContractTests.row(ClusterTopology.self),
         "netmap": ContractTests.row(NetMap.self) {

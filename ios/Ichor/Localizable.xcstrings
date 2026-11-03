@@ -1,6 +1,188 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Images report" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Image-Bericht" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Informe de imágenes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rapport des images" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Report delle immagini" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イメージレポート" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Relatório de imagens" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отчёт об образах" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Звіт про образи" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "镜像报告" } }
+      }
+    },
+    "Unpinned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht fixiert" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin fijar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non épinglées" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non fissate" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未固定" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem fixar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Без фиксации" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Без фіксації" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未固定" } }
+      }
+    },
+    "Run as :latest or with no tag: a restart can pull another version." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Laufen als :latest oder ohne Tag: ein Neustart kann eine andere Version ziehen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se ejecutan como :latest o sin etiqueta: un reinicio puede descargar otra versión." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lancées en :latest ou sans tag : un redémarrage peut tirer une autre version." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Eseguite come :latest o senza tag: un riavvio può scaricare un'altra versione." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : ":latest またはタグなしで実行中:再起動で別のバージョンが取得されることがあります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Executadas como :latest ou sem tag: um reinício pode baixar outra versão." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запущены как :latest или без тега: перезапуск может скачать другую версию." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запущені як :latest або без тегу: перезапуск може завантажити іншу версію." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "以 :latest 或无标签运行:重启可能拉取另一个版本。" } }
+      }
+    },
+    "Several tags" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mehrere Tags" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Varias etiquetas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Plusieurs tags" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Più tag" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "複数のタグ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Várias tags" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Несколько тегов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кілька тегів" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "多个标签" } }
+      }
+    },
+    "One repository runs with more than one tag at once." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Repository läuft gleichzeitig mit mehr als einem Tag." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Un mismo repositorio se ejecuta con más de una etiqueta a la vez." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un même dépôt tourne avec plusieurs tags à la fois." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Uno stesso repository gira con più di un tag insieme." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1つのリポジトリが同時に複数のタグで動いています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Um mesmo repositório roda com mais de uma tag ao mesmo tempo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Один репозиторий работает сразу с несколькими тегами." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Один репозиторій працює з кількома тегами одночасно." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同一仓库同时以多个标签运行。" } }
+      }
+    },
+    "Docker Hub limits anonymous pulls: %@ images come from it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub begrenzt anonyme Pulls: %@ Images kommen von dort." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub limita las descargas anónimas: %@ imágenes vienen de allí." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub limite les pulls anonymes : %@ images en viennent." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub limita i pull anonimi: %@ immagini arrivano da lì." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub は匿名の pull を制限しています:%@ 件のイメージがそこから来ています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Docker Hub limita pulls anônimos: %@ imagens vêm dele." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub ограничивает анонимные загрузки: оттуда образов: %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub обмежує анонімні завантаження: звідти образів: %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub 限制匿名拉取:%@ 个镜像来自那里。" } }
+      }
+    },
+    "%@ images" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ Images" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ imágenes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ images" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ immagini" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ 件のイメージ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ imagens" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Образов: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Образів: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 个镜像" } }
+      }
+    },
+    "%@ apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ Apps" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ apps" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ apps" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ app" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ 件のアプリ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ apps" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Приложений: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Застосунків: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 个应用" } }
+      }
+    },
+    "Docker Hub" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Docker Hub" } }
+      }
+    },
+    "Unused on nodes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ungenutzt auf Nodes" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin usar en los nodos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Inutilisées sur les nœuds" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Inutilizzate sui nodi" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノード上で未使用" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem uso nos nós" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не используются на узлах" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Невикористані на вузлах" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点上未使用" } }
+      }
+    },
+    "Kept on a node's disk, run by no container there: %@ in all." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf der Platte eines Nodes, von keinem Container dort genutzt: %@ insgesamt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardadas en el disco de un nodo, sin ningún contenedor que las use: %@ en total." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Gardées sur le disque d'un nœud, lancées par aucun conteneur : %@ au total." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tenute sul disco di un nodo, senza alcun container che le usi: %@ in tutto." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノードのディスクにあり、そこでどのコンテナも使っていません:合計 %@。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Guardadas no disco de um nó, sem nenhum contêiner usando-as lá: %@ no total." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Хранятся на диске узла, ни один контейнер там их не запускает: всего %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Лежать на диску вузла, жоден контейнер там їх не запускає: усього %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存在节点磁盘上,那里没有容器使用:共 %@。" } }
+      }
+    },
+    "Only a Talos cluster lists the images kept on its nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur ein Talos-Cluster listet die Images auf seinen Nodes." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo un clúster Talos lista las imágenes guardadas en sus nodos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Seul un cluster Talos liste les images gardées sur ses nœuds." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Solo un cluster Talos elenca le immagini tenute sui suoi nodi." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノードに保存されたイメージを一覧できるのは Talos クラスターだけです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Só um cluster Talos lista as imagens guardadas nos seus nós." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Только кластер Talos показывает образы, хранящиеся на его узлах." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Лише кластер Talos показує образи, що зберігаються на його вузлах." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "只有 Talos 集群会列出其节点上保存的镜像。" } }
+      }
+    },
+    "Nothing to report." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nichts zu melden." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nada que señalar." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rien à signaler." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Niente da segnalare." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "報告することはありません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nada a relatar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сообщать не о чем." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Нічого повідомити." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有需要报告的内容。" } }
+      }
+    },
     "Use for AI diagnosis" : {
       "extractionState" : "manual",
       "localizations" : {

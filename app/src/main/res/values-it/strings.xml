@@ -6360,4 +6360,18 @@
     <string name="ai_cluster_model_default">Vuoto: il modello più recente sul server</string>
     <string name="ollama_pull_cancel">Interrompi il download</string>
     <string name="ollama_pull_background_hint">Il download continua finché Ichor resta aperto, anche in background. Se il sistema chiude Ichor si interrompe; scaricare di nuovo lo riprende.</string>
+    <string name="image_report_title">Report delle immagini</string>
+    <string name="image_report_unpinned">Non fissate</string>
+    <string name="image_report_unpinned_hint">Eseguite come :latest o senza tag: un riavvio può scaricare un\'altra versione.</string>
+    <string name="image_report_multitag">Più tag</string>
+    <string name="image_report_multitag_hint">Uno stesso repository gira con più di un tag insieme.</string>
+    <string name="image_report_registries">Registri</string>
+    <string name="image_report_registries_hint">Docker Hub limita i pull anonimi: %1$s immagini arrivano da lì.</string>
+    <string name="image_report_images">%1$s immagini</string>
+    <string name="image_report_apps">%1$s app</string>
+    <string name="image_report_docker_hub">Docker Hub</string>
+    <string name="image_report_unused">Inutilizzate sui nodi</string>
+    <string name="image_report_unused_hint">Tenute sul disco di un nodo, senza alcun container che le usi: %1$s in tutto.</string>
+    <string name="image_report_unused_talos_only">Solo un cluster Talos elenca le immagini tenute sui suoi nodi.</string>
+    <string name="image_report_nothing">Niente da segnalare.</string>
 </resources>

@@ -24,6 +24,9 @@ struct AppsView: View {
     @State private var showSystem = false
     @State private var showUnrecognised = false
     @State private var selected: InventoryApp?
+    @State private var reportShown = false
+    /// The app a row of the images report asked for: its sheet opens once the report's closed.
+    @State private var reportApp: String?
     /// The route's hostnames were named before a screenshot mode change: then pods show addresses.
     @State private var hostnamesStale = false
 
@@ -76,6 +79,15 @@ struct AppsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
+                    reportShown = true
+                } label: {
+                    Image(systemName: "square.stack.3d.up")
+                }
+                .accessibilityLabel(Text("Images report"))
+                .disabled(loadedInventory == nil)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
                     Task { await load() }
                 } label: {
                     Image(systemName: "arrow.clockwise")
@@ -86,12 +98,20 @@ struct AppsView: View {
         // A search or a chip may match apps of the collapsed groups: show them.
         .onChange(of: query) { _, text in if !text.isEmpty { expandGroups() } }
         .onChange(of: filter) { _, chip in if chip != .all { expandGroups() } }
+        .sheet(isPresented: $reportShown, onDismiss: openReportApp) {
+            if let inventory = loadedInventory {
+                ImageReportView(inventory: inventory, hostnames: hostnamesStale ? [:] : hostnames) { id in
+                    reportApp = id
+                }
+            }
+        }
         .sheet(item: $selected) { app in
             AppDetailSheet(app: app, hostnames: hostnamesStale ? [:] : hostnames, argoCD: argoCDShown)
         }
         // Screenshot mode toggled: nothing loaded before (names, logos) stays on screen.
         .onChange(of: model.dataGeneration) {
             selected = nil
+            reportShown = false
             hostnamesStale = true
             state = .loading
         }
@@ -157,6 +177,17 @@ struct AppsView: View {
         case .attention: apps.contains(where: \.needsAttention) ? .attention : .all
         case .category(let category): apps.contains(where: { $0.category == category }) ? filter : .all
         }
+    }
+
+    private var loadedInventory: ClusterInventory? {
+        if case .loaded(let inventory, _, _) = state { inventory } else { nil }
+    }
+
+    /// The app a report row named, once the report sheet is gone (one sheet at a time).
+    private func openReportApp() {
+        guard let id = reportApp, let inventory = loadedInventory else { return }
+        reportApp = nil
+        selected = inventory.apps.first { $0.id == id }
     }
 
     private func expandGroups() {
