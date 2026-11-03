@@ -589,7 +589,8 @@ func (e *azureUnfinishedDelete) Error() string {
 	return fmt.Sprintf("azure accepted the delete of %s but had not finished it after %s: check that it is gone", e.name, azureDeleteWait)
 }
 
-func (e *azureUnfinishedDelete) Unwrap() error { return context.DeadlineExceeded }
+func (e *azureUnfinishedDelete) Unwrap() error     { return context.DeadlineExceeded }
+func (e *azureUnfinishedDelete) unfinishedDelete() {}
 
 // nameOnly drops the query of a resource path, if any.
 func nameOnly(p string) string {

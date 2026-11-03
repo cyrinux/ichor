@@ -127,6 +127,8 @@ type gcpServiceAccount struct {
 	PrivateKey  string `json:"private_key"`
 	KeyID       string `json:"private_key_id"`
 	TokenURI    string `json:"token_uri"`
+	// ProjectID is the project the key belongs to: Compute Engine's default (cloud_gcp.go).
+	ProjectID string `json:"project_id"`
 }
 
 func parseServiceAccount(raw string) (gcpServiceAccount, *rsa.PrivateKey, error) {

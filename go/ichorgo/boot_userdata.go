@@ -28,6 +28,7 @@ const (
 	cloudPlatformScaleway  = "scaleway"
 	cloudPlatformAWS       = "aws"
 	cloudPlatformAzure     = "azure"
+	cloudPlatformGCP       = "gcp"
 )
 
 var (
@@ -63,7 +64,7 @@ type cloudImage struct {
 
 // NodeCloudUserData returns the user data of a new node on a cloud host, to paste when the
 // server is created, and the Image Factory cloud images of the cluster's Talos version and
-// schematic (hcloud, openstack, scaleway, aws, the template's architecture). On an Omni
+// schematic (hcloud, openstack, scaleway, aws, azure, gcp, the template's architecture). On an Omni
 // context it is Omni's join config (role, hostname and installDisk are not used: Omni picks the
 // role when the machine is allocated). On a plain Talos context it is the full config of a new member
 // made from templateNode's (os:admin, as JoinNodeConfigSealed: role worker or controlplane,
@@ -250,7 +251,7 @@ func (d *cloudUserData) withImages(media bootMedia) {
 }
 
 func cloudImages(t bootTarget) []cloudImage {
-	platforms := []string{cloudPlatformHetzner, cloudPlatformOpenStack, cloudPlatformScaleway, cloudPlatformAWS, cloudPlatformAzure}
+	platforms := []string{cloudPlatformHetzner, cloudPlatformOpenStack, cloudPlatformScaleway, cloudPlatformAWS, cloudPlatformAzure, cloudPlatformGCP}
 	images := make([]cloudImage, 0, len(platforms))
 
 	for _, p := range platforms {

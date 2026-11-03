@@ -14,8 +14,10 @@ import (
 // The token comes from HETZNER_TOKEN, the OVHcloud service account from OVH_ENDPOINT, OVH_CLIENT_ID,
 // OVH_CLIENT_SECRET and OVH_PROJECT, the AWS keys from AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
 // AWS_SESSION_TOKEN and AWS_REGION, the Azure service principal from AZURE_TENANT_ID,
-// AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID and AZURE_LOCATION (never a flag:
-// it would show in the shell history).
+// AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID and AZURE_LOCATION, the Google
+// service account key from GOOGLE_APPLICATION_CREDENTIALS (the key file's path) or
+// GCP_SERVICE_ACCOUNT_JSON, with GCP_PROJECT and GCP_ZONE (never a flag: it would show in the
+// shell history).
 var cloudCommands = []command{
 	{name: "hetzner", args: "test|options|estimate ARCH LOCATION|snapshot ARCH LOCATION -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE LOCATION SNAPSHOT_ID -yes", run: func(e env) (string, error) {
 		token := os.Getenv("HETZNER_TOKEN")
@@ -113,6 +115,74 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|create …")
 	}},
+	{name: "gcp", args: "test|options|role|price ZONE TYPE|create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes", run: func(e env) (string, error) {
+		if flag.Arg(1) == "role" {
+			return ichorgo.GCPRoleDefinition(os.Getenv("GCP_PROJECT")), nil
+		}
+
+		credJSON, err := gcpCredential()
+		if err != nil {
+			return "", err
+		}
+
+		switch flag.Arg(1) {
+		case "test":
+			return ichorgo.GCPTest(credJSON)
+		case "options":
+			return ichorgo.GCPOptions(e.cfg, e.context, credJSON)
+		case "price":
+			return ichorgo.GCPPrice(credJSON, flag.Arg(2), flag.Arg(3))
+		case "create":
+			return gcpCreate(e, credJSON)
+		}
+
+		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|create …")
+	}},
+}
+
+// gcpCredential is the GCP credential JSON: the key file GOOGLE_APPLICATION_CREDENTIALS names,
+// else GCP_SERVICE_ACCOUNT_JSON's text.
+func gcpCredential() (string, error) {
+	key := os.Getenv("GCP_SERVICE_ACCOUNT_JSON")
+
+	if path := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); path != "" {
+		data, err := os.ReadFile(path) //nolint:gosec // the person's own key file
+		if err != nil {
+			return "", errors.New("GOOGLE_APPLICATION_CREDENTIALS names no readable key file")
+		}
+
+		key = string(data)
+	}
+
+	if key == "" {
+		return "", errors.New("set GOOGLE_APPLICATION_CREDENTIALS to a scratch project's service account key file")
+	}
+
+	credJSON, err := json.Marshal(map[string]string{"serviceAccountJson": key, "project": os.Getenv("GCP_PROJECT"), "zone": os.Getenv("GCP_ZONE")})
+
+	return string(credJSON), err
+}
+
+// gcpCreate creates a billable VM (with its boot disk and an external address): scratch
+// projects only, and only with -yes.
+func gcpCreate(e env, credJSON string) (string, error) {
+	if flag.NArg() != 12 || flag.Arg(11) != "-yes" {
+		return "", errors.New("usage: gcp create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes (creates a billable VM)")
+	}
+
+	spec, err := json.Marshal(map[string]any{
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5),
+		"project": flag.Arg(6), "zone": flag.Arg(7), "machineType": flag.Arg(8), "image": flag.Arg(9),
+		"subnetwork": flag.Arg(10), "associatePublicIp": true,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartGCPCreate(e.cfg, e.context, credJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
 }
 
 // azureCreate creates a billable VM (with a NIC and a public address): scratch subscriptions

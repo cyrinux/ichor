@@ -31,6 +31,7 @@ var delegatedRuns = map[string]string{
 	"StartOVHCreate":             "cloudCreateRun.start",
 	"StartAWSCreate":             "cloudCreateRun.start",
 	"StartAzureCreate":           "cloudCreateRun.start",
+	"StartGCPCreate":             "cloudCreateRun.start",
 	"StartHetznerSnapshot":       "hetznerSnapshotRun.start",
 	"StartNodeJoin":              "nodeJoin.start",
 	"StartOmniAllocate":          "omniAllocate.start",

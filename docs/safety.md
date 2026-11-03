@@ -92,6 +92,26 @@ Part of the [Ichor documentation](../README.md#documentation).
   so this is enforced in the app, not by the role. The one case that needs the Azure portal is a
   delete that fails: the message names the resource (its id without the subscription) and the
   resource group, and the VM stays billed until it is deleted there.
+- **Creating a VM at Google Cloud (from the Go core and the probe for now):** billable, so the
+  probe's `gcp create` runs only with `-yes`. The credential is a service account key; the token
+  it mints (the cloud-platform scope) is kept for the run only, and the key, the token, the key's
+  email and id and the project number never appear in a message or the activity log. A key that
+  signs in to GKE may still be refused by Compute Engine, so before any write the run checks the
+  image (ready, the machine type's architecture, `UEFI_COMPATIBLE` for Arm), the subnet against
+  the zone's region, that no instance of the host's name is in the zone, the user data against
+  Compute Engine's 256 KiB, then asks `testIamPermissions` on the project: Google has no dry
+  run, so a key that lacks a permission the run uses (or whose check cannot be made) is refused
+  there, naming the permissions and the role to grant. The run creates one instance named after
+  the host name (Talos takes its host name from it), labelled `ichor-run` (the run's id) and
+  `ichor-cluster` (a hash of the context name, not the name), with its boot disk set to
+  `autoDelete`. It sends one insert with a `requestId`, so a retry after a lost answer is a no-op;
+  an insert that gets no clear answer is looked up by name and kept only when its `ichor-run`
+  label is the run's. The run deletes only that instance when it fails or is stopped, except a
+  control plane that already answered; GCP IAM cannot limit a delete to labelled instances, so
+  this is enforced in the app. A delete Google accepted but had not finished within five minutes
+  is reported as still billed, never as done. The one case that needs the Google Cloud console is
+  a delete that fails: the message names the instance and the zone, and it stays billed until it
+  is deleted there.
 - **Rotating the Talos CA (Settings → Clusters & backup → Rotate the cluster CA…, `os:admin`):**
   replaces the CA that signs every Talos API certificate, in the order of
   `talosctl rotate-ca --kubernetes=false`. Rotate it when a talosconfig leaked or a phone was
