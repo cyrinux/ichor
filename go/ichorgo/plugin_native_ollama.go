@@ -183,15 +183,16 @@ func (s ollamaServer) source() map[string]any {
 // ollamaGet reads path (such as /api/tags) from the server behind target and decodes the
 // JSON answer into out (nil to drop it).
 func ollamaGet(ctx context.Context, k *kubeClient, target, path string, out any) error {
-	return ollamaCall(ctx, k, http.MethodGet, target, path, nil, out)
+	return ollamaCall(ctx, k, ollamaCallTimeout, http.MethodGet, target, path, nil, out)
 }
 
 // ollamaCall makes one request to an Ollama API through the API server's proxy: target is the
 // proxy prefix (".../services/<svc>:<port>/proxy" or ".../pods/<pod>:<port>/proxy"), body is
-// sent as JSON when not nil. Each call is bounded by ollamaCallTimeout and its answer by
-// ollamaMaxBody; a non-2xx answer is a *kubeAPIError (a 403 the proxy's RBAC refusal).
-func ollamaCall(ctx context.Context, k *kubeClient, method, target, path string, body, out any) error {
-	ctx, cancel := context.WithTimeout(ctx, ollamaCallTimeout)
+// sent as JSON when not nil. Each call is bounded by timeout and its answer by ollamaMaxBody;
+// a non-2xx answer is a *kubeAPIError: the API server's (a 403 the proxy's RBAC refusal), or
+// Ollama's own ({"error": "…"}), whose Reason is ollamaReason.
+func ollamaCall(ctx context.Context, k *kubeClient, timeout time.Duration, method, target, path string, body, out any) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	var (
@@ -224,7 +225,7 @@ func ollamaCall(ctx context.Context, k *kubeClient, method, target, path string,
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return kubeStatusError(resp.StatusCode, answer)
+		return ollamaStatusError(resp.StatusCode, answer)
 	}
 
 	if out == nil {
@@ -242,6 +243,32 @@ func ollamaCall(ctx context.Context, k *kubeClient, method, target, path string,
 // refused: a 403 is the RBAC refusal of resource, anything else the API server's or the
 // backend's message, with the proxy path prefix (when one was asked) cut out of it: the
 // apps never show a proxy URL.
+// ollamaReason is the Reason of a *kubeAPIError Ollama answered itself, not the API server.
+const ollamaReason = "Ollama"
+
+// ollamaStatusError is a non-2xx answer: the API server's Status, or Ollama's {"error"} (its
+// message kept, the body's first 200 bytes when it has none).
+func ollamaStatusError(code int, answer []byte) error {
+	if isKubeStatus(answer) {
+		return kubeStatusError(code, answer)
+	}
+
+	var body struct {
+		Error string `json:"error"`
+	}
+
+	msg := strings.TrimSpace(string(answer))
+	if json.Unmarshal(answer, &body) == nil && body.Error != "" {
+		msg = body.Error
+	}
+
+	if len(msg) > 200 {
+		msg = msg[:200]
+	}
+
+	return &kubeAPIError{Code: code, Reason: ollamaReason, Message: msg}
+}
+
 func ollamaError(err error, resource, prefix string) (string, bool) {
 	if isForbidden(err) {
 		return "the credentials may not read " + resource, true

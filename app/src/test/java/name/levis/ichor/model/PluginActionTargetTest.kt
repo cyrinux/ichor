@@ -31,6 +31,25 @@ class PluginActionTargetTest {
     }
 
     @Test
+    fun anActionWithItsOwnTargetRunsOnIt() {
+        // An Ollama model row opens its server's Deployment; Load runs on the model.
+        val row = PluginRef(group = "apps", version = "v1", resource = "deployments", kind = "Deployment", namespace = "ai", name = "ollama")
+        val model = PluginRef(group = "ichor.dev", version = "v1alpha1", resource = "ollamamodels", kind = "OllamaModel", namespace = "ai", name = "llama3.2:3b")
+        val load = PluginAction(id = "load", label = "Load", enabled = true, target = model)
+
+        assertEquals(model, load.targetOn(row))
+        assertEquals(row, resize.targetOn(row))
+        assertEquals(model, load.targetOn(null))
+
+        val pending = PluginActionPending(model, "load")
+        assertEquals(load, pendingAction(pending, row, listOf(load)))
+        // A reload that put another model in the row closes the dialog.
+        assertNull(pendingAction(pending, row, listOf(load.copy(target = model.copy(name = "qwen2.5:14b")))))
+        // Bound to the row's object, a pending run does not move to the action's own target.
+        assertNull(pendingAction(PluginActionPending(row, "load"), row, listOf(load)))
+    }
+
+    @Test
     fun anActionNoLongerUsableClosesIt() {
         val here = ref("team-a", "alpha")
         assertNull(pendingAction(opened, here, listOf(resize.copy(enabled = false))))

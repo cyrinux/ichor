@@ -65,7 +65,15 @@ func KubePluginAction(configYAML, contextName, kubeServer, pluginID, actionID, n
 	}
 
 	decl := c.Plugin.Resources[a.On]
-	if err := validatePluginTarget(decl, namespace, name); err != nil {
+
+	native := a.Verb == "native"
+	if native {
+		err = validateNativeTarget(decl, namespace, name)
+	} else {
+		err = validatePluginTarget(decl, namespace, name)
+	}
+
+	if err != nil {
 		return err
 	}
 
@@ -86,6 +94,10 @@ func KubePluginAction(configYAML, contextName, kubeServer, pluginID, actionID, n
 	}
 
 	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+		if native {
+			return runNativePluginAction(ctx, k, c, actionID, namespace, name, params)
+		}
+
 		return runPluginAction(ctx, k, c, actionID, namespace, name, params)
 	})
 }
@@ -326,8 +338,8 @@ func pluginActionInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, r
 }
 
 // pluginActionChecks are the can-I rows of the plugins' actions, key plugin:<id>:<action>:
-// each verb of the action's rbac, and the get of the object it reads first, namespaced as
-// the action's resource is.
+// each verb of the action's rbac, and the get of the object it reads first (not for a
+// resource of a native source), namespaced as the action's resource is.
 func pluginActionChecks(compiled []*plugin.Compiled) map[string][]accessNeed {
 	out := map[string][]accessNeed{}
 
@@ -346,7 +358,11 @@ func pluginActionChecks(compiled []*plugin.Compiled) map[string][]accessNeed {
 				needs = append(needs, accessNeed{ssarAttributes{Verb: verb, Group: a.RBAC.Group, Resource: resource, Subresource: subresource}, namespaced})
 			}
 
-			needs = append(needs, accessNeed{ssarAttributes{Verb: "get", Group: decl.Group, Resource: decl.Resource}, namespaced})
+			// A resource a Go reader builds is not served: its get would always answer no.
+			if decl.Source == "" {
+				needs = append(needs, accessNeed{ssarAttributes{Verb: "get", Group: decl.Group, Resource: decl.Resource}, namespaced})
+			}
+
 			out[pluginActionKey(c.Plugin.ID, a.Name)] = needs
 		}
 	}

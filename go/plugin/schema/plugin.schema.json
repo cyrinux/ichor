@@ -76,20 +76,26 @@
           ],
           "description": "RBAC is what the account needs; it becomes a can-I check."
         },
+        "run": {
+          "description": "Run is verb native's Go function, native:<id>.",
+          "pattern": "^native:[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
         "subresource": {
           "description": "Subresource is the subresource of verb subresource (start, scale…).",
           "pattern": "^[a-z][a-z0-9-]*$",
           "type": "string"
         },
         "verb": {
-          "description": "Verb is how the object is changed.",
+          "description": "Verb is how the object is changed; native runs the Go function Run names (built-in plugins only: an imported plugin that declares it is refused).",
           "enum": [
             "mergePatch",
             "jsonPatch",
             "subresource",
             "delete",
             "annotate",
-            "create"
+            "create",
+            "native"
           ],
           "type": "string"
         }

@@ -248,6 +248,10 @@ func (c *Compiled) ActionBody(id string, target ActionTarget, in Input, params m
 		return ActionRequest{}, err
 	}
 
+	if a.Verb == "native" {
+		return ActionRequest{}, fmt.Errorf("actions.%s: verb native sends no request of its own (NativeActionObject)", id)
+	}
+
 	decl := c.Plugin.Resources[a.On]
 
 	collection, err := collectionPath(decl, target)
@@ -291,6 +295,75 @@ func (c *Compiled) ActionBody(id string, target ActionTarget, in Input, params m
 	}
 
 	return pinned(req, o.raw)
+}
+
+// NativeActionObject is the object a verb native action id runs on: namespace/name among
+// in's objects of its resource (read by the plugin, its native source included), as the
+// plugin lists it, after enabledWhen held on it (else an *ActionDisabledError with the
+// disabledReason). Two objects of that name in the namespace (one model on two servers) are
+// an *ActionAmbiguousError: the caller cannot say which.
+func (c *Compiled) NativeActionObject(id, namespace, name string, in Input, now time.Time) (map[string]any, error) {
+	a, err := c.action(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if a.Verb != "native" {
+		return nil, fmt.Errorf("actions.%s: verb %s is not native", id, a.Verb)
+	}
+
+	r := newRenderer(c, in, now)
+	r.indexObjects()
+	r.evalObjects()
+	r.evalDataServices()
+
+	decl := c.Plugin.Resources[a.On]
+	target := ActionTarget{Namespace: namespace, Name: name}
+
+	if n := r.count(a.On, namespace, name); n > 1 {
+		return nil, &ActionAmbiguousError{Kind: decl.Kind, Name: objectName(target), Count: n}
+	}
+
+	o := r.find(a.On, namespace, name)
+	if o == nil {
+		return nil, fmt.Errorf("%s %s %w", decl.Kind, objectName(target), ErrNotRead)
+	}
+
+	if err := r.checkEnabled(id, a, o); err != nil {
+		return nil, err
+	}
+
+	return o.raw, nil
+}
+
+// ErrNotRead is a target the plugin did not list (gone, or never there).
+var ErrNotRead = errors.New("was not read")
+
+// ActionAmbiguousError is a target name that more than one listed object carries.
+type ActionAmbiguousError struct {
+	Kind, Name string
+	Count      int
+}
+
+func (e *ActionAmbiguousError) Error() string {
+	return fmt.Sprintf("%d objects are %s %s: the action cannot tell which one to run on", e.Count, e.Kind, e.Name)
+}
+
+// count is how many objects of res are named namespace/name.
+func (r *renderer) count(res, namespace, name string) int {
+	n := 0
+
+	for _, o := range r.objects[res] {
+		meta, _ := o.raw["metadata"].(map[string]any)
+		ns, _ := meta["namespace"].(string)
+		nm, _ := meta["name"].(string)
+
+		if nm == name && ns == namespace {
+			n++
+		}
+	}
+
+	return n
 }
 
 func objectName(t ActionTarget) string {

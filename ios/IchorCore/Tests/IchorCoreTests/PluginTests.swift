@@ -169,6 +169,26 @@ final class PluginTests: XCTestCase {
         XCTAssertEqual(items[0].params.first?.values, ["x", "y"])
     }
 
+    func testActionCarriesItsTargetWhenTheRowOpensAnotherObject() throws {
+        let tree = try golden("native-action-fr")
+        let row = try XCTUnwrap(tree.cards[0].rows.first { $0.title == "pages:v2" })
+        XCTAssertEqual(row.ref?.resource, "deployments")
+        var found: PluginActionItem?
+        for section in row.detail { if case .actions(let items) = section { found = items.first } }
+        let evict = try XCTUnwrap(found)
+        XCTAssertEqual(evict.label, "Évincer")
+        let model = PluginRef(
+            group: "ichor.dev", version: "v1alpha1", resource: "democacheentries", namespace: "demo-shop",
+            name: "pages:v2", kind: "DemoCacheEntry")
+        XCTAssertEqual(evict.target, model)
+        XCTAssertEqual(evict.target(on: row.ref), model)
+        // Without one, the action runs on the row's object.
+        let plain = try sections(#"[{"type":"actions","items":[{"id":"a","label":"A","enabled":true}]}]"#)
+        guard case .actions(let items) = plain[0] else { return XCTFail("not actions") }
+        XCTAssertNil(items[0].target)
+        XCTAssertEqual(items[0].target(on: row.ref), row.ref)
+    }
+
     // MARK: - Tolerant sections
 
     func testUnknownSectionTypeIsSkipped() throws {

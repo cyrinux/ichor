@@ -35,6 +35,18 @@ class PluginTest {
     }
 
     @Test
+    fun anActionCarriesItsTargetWhenTheRowOpensAnotherObject() {
+        val tree = decode(golden("native-action-fr.json"))
+        val row = tree.cards.first { it.id == "entries" }.rows.first { it.title == "pages:v2" }
+        assertEquals("deployments", row.ref?.resource)
+
+        val evict = row.detail.filterIsInstance<PluginSection.Actions>().single().items.single()
+        assertEquals("Évincer", evict.label)
+        assertEquals(PluginRef("ichor.dev", "v1alpha1", "democacheentries", "demo-shop", "pages:v2", "DemoCacheEntry"), evict.target)
+        assertEquals(evict.target, evict.targetOn(row.ref))
+    }
+
+    @Test
     fun kubeGreenSamples() {
         val tree = decode(golden("kube-green-samples.json"))
         assertEquals("kube-green", tree.plugin.id)

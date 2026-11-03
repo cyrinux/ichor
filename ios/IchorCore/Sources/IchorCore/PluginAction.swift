@@ -16,6 +16,13 @@ public struct PluginActionItem: Decodable, Equatable, Sendable {
     /// The can-I answer; nil when it is unknown.
     public let allowed: Bool?
     public let params: [PluginParam]
+    /// The object the action runs on when it is not the row's ref (an Ollama model row opens its
+    /// server's Deployment); nil for the row's object.
+    public let target: PluginRef?
+
+    /// The object the action runs on in a row showing `row`: its own target when the tree gives
+    /// one, else the row's object.
+    public func target(on row: PluginRef?) -> PluginRef? { target ?? row }
 
     /// Whether the button may be pressed, as far as the tree says: enabled, and not refused by
     /// the can-I answer (nil, unknown, keeps it on: the API server still decides).
@@ -36,7 +43,9 @@ public struct PluginActionItem: Decodable, Equatable, Sendable {
         params.first { $0.name == name }?.label ?? name
     }
 
-    private enum CodingKeys: String, CodingKey { case id, label, enabled, confirm, disabledReason, allowed, params }
+    private enum CodingKeys: String, CodingKey {
+        case id, label, enabled, confirm, disabledReason, allowed, params, target
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -48,6 +57,7 @@ public struct PluginActionItem: Decodable, Equatable, Sendable {
         disabledReason = try c.field(.disabledReason, "")
         allowed = try c.decodeIfPresent(Bool.self, forKey: .allowed)
         params = try c.field(.params, [])
+        target = try c.decodeIfPresent(PluginRef.self, forKey: .target)
     }
 }
 

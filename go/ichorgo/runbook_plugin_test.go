@@ -330,3 +330,22 @@ func TestRunbookPluginStepDemoPlansAndRefusesTheRun(t *testing.T) {
 		t.Error("a demo step ran")
 	}
 }
+
+// A native action's step names its target as its reader does (an Ollama model), not as a
+// Kubernetes name; a name no model can have is still refused.
+func TestRunbookNativePluginStepTarget(t *testing.T) {
+	for step, want := range map[string]string{
+		`{id: s, action: plugin/ollama/unload, target: {namespace: demo-ai, name: "llama3.2:3b"}}`: "",
+		`{id: s, action: plugin/ollama/unload, target: {namespace: demo-ai, name: "llama 3"}}`:     `step s: invalid OllamaModel name "llama 3"`,
+		`{id: s, action: plugin/ollama/load, target: {name: "llama3.2:3b"}}`:                       "step s: OllamaModel is namespaced",
+	} {
+		_, err := loadRunbook(pluginStepRunbook("  - " + step + "\n"))
+
+		switch {
+		case want == "" && err != nil:
+			t.Errorf("%s: err = %v", step, err)
+		case want != "" && (err == nil || !strings.Contains(err.Error(), want)):
+			t.Errorf("%s: err = %v, want %q", step, err, want)
+		}
+	}
+}

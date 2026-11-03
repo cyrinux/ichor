@@ -51,7 +51,7 @@ func (r *renderer) section(where string, s Section, el element) (TreeSection, bo
 		out.Tone = r.tone(where+".tone", s.Tone, el.env, "")
 		out.Mono = s.Mono
 	case "actions":
-		out.Items = r.actionItems(s.Items, el.env)
+		out.Items = r.actionItems(s.Items, el)
 	}
 
 	return out, true
@@ -211,8 +211,12 @@ func (r *renderer) source(from string) (res, ds string) {
 }
 
 // actionItems are the buttons: enabled by enabledWhen, with the reason when not. Whether the
-// account may run them is set afterwards (Tree.SetAllowed).
-func (r *renderer) actionItems(items []Item, env expr.Env) []TreeAction {
+// account may run them is set afterwards (Tree.SetAllowed). A row whose resource's ref opens
+// another object gives each button the row's own object as its target: the apps run the
+// action on it, not on the object the row opens.
+func (r *renderer) actionItems(items []Item, el element) []TreeAction {
+	env := el.env
+	target := r.ownRef(el.obj)
 	out := make([]TreeAction, 0, len(items))
 
 	for _, it := range items {
@@ -223,6 +227,9 @@ func (r *renderer) actionItems(items []Item, env expr.Env) []TreeAction {
 
 		at := "actions." + it.Action
 		ta := TreeAction{ID: it.Action, Label: r.tr(a.Label), Enabled: true, Confirm: cmp.Or(a.Confirm, "plain")}
+		if target != nil && el.obj.res == a.On {
+			ta.Target = target
+		}
 
 		if !a.EnabledWhen.IsZero() {
 			ta.Enabled = expr.Truthy(r.eval(at+".enabledWhen", a.EnabledWhen, env))
@@ -240,6 +247,26 @@ func (r *renderer) actionItems(items []Item, env expr.Env) []TreeAction {
 	}
 
 	return out
+}
+
+// ownRef is o's own identity when its resource's ref opens another object, nil otherwise (the
+// row's ref is then o itself).
+func (r *renderer) ownRef(o *object) *Ref {
+	if o == nil {
+		return nil
+	}
+
+	decl := r.c.Plugin.Resources[o.res]
+	if decl.Ref.IsZero() {
+		return nil
+	}
+
+	meta, _ := o.raw["metadata"].(map[string]any)
+	ref := &Ref{Group: decl.Group, Version: r.version(o.res), Resource: decl.Resource, Kind: decl.Kind}
+	ref.Namespace, _ = meta["namespace"].(string)
+	ref.Name, _ = meta["name"].(string)
+
+	return ref
 }
 
 // findings are one per object a finding's when holds for, in file order.

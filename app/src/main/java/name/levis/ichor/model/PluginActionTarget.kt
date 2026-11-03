@@ -13,9 +13,16 @@ data class PluginActionPending(val ref: PluginRef, val actionId: String)
  * gone, or when it may not run any more (see [PluginAction.usable]).
  */
 fun pendingAction(pending: PluginActionPending?, ref: PluginRef?, items: List<PluginAction>): PluginAction? {
-    if (pending == null || ref == null || ref.key != pending.ref.key) return null
-    return items.firstOrNull { it.id == pending.actionId && it.usable }
+    if (pending == null) return null
+    return items.firstOrNull { it.id == pending.actionId && it.usable && it.targetOn(ref)?.key == pending.ref.key }
 }
+
+/**
+ * The object this action runs on in a row showing [ref]: the action's own [PluginAction.target]
+ * when the tree gives one (the row opens another object, as an Ollama model row opens its
+ * server), else the row's object.
+ */
+fun PluginAction.targetOn(ref: PluginRef?): PluginRef? = target ?: ref
 
 /** The label of param [name] as the form shows it, the raw name when it has none (or is unknown). */
 fun PluginAction.paramLabel(name: String): String =

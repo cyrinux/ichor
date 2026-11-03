@@ -50,7 +50,7 @@ tour** shows it again.
   configuration when it has none, and the images and charts with a newer version, one tap from
   the pull request that bumps them (or select several and propose them as one pull request).
 - **Operators:** Longhorn, CloudNativePG, Garage, Rook Ceph, Velero, cert-manager, External
-  Secrets, Sealed Secrets, ExternalDNS, Ollama (servers, models on disk and loaded), Crossplane,
+  Secrets, Sealed Secrets, ExternalDNS, Ollama (servers, models on disk and loaded; load, unload or delete a model), Crossplane,
   Tailscale, Cluster API, Kyverno, Gatekeeper, KubeVirt, CAST AI and more, each with its findings in the cluster checkup, and
   [plugins](docs/plugins.md) for any CRD of your own, imported from a file, a QR code or a
   catalog with their digest verified.

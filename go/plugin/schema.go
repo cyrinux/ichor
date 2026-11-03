@@ -243,8 +243,11 @@ type Action struct {
 	Label string `yaml:"label" json:"label" schema:"required"`
 	// On is the resource the action applies to.
 	On string `yaml:"on" json:"on" schema:"required"`
-	// Verb is how the object is changed.
-	Verb string `yaml:"verb" json:"verb" schema:"required,enum=mergePatch|jsonPatch|subresource|delete|annotate|create"`
+	// Verb is how the object is changed; native runs the Go function Run names (built-in
+	// plugins only: an imported plugin that declares it is refused).
+	Verb string `yaml:"verb" json:"verb" schema:"required,enum=mergePatch|jsonPatch|subresource|delete|annotate|create|native"`
+	// Run is verb native's Go function, native:<id>.
+	Run string `yaml:"run,omitempty" json:"run,omitempty" schema:"pattern=^native:[A-Za-z0-9_-]+$"`
 	// Body is the patch or object; its strings are templates (now, name, namespace, params.*).
 	Body any `yaml:"body,omitempty" json:"body,omitempty"`
 	// Subresource is the subresource of verb subresource (start, scale…).

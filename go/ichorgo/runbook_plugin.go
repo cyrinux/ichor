@@ -61,7 +61,7 @@ func (s *runbookStep) bindPlugin(params *yaml.Node, open map[string]bool, draft 
 		return err
 	}
 
-	if err := bindPluginTarget(&s.Target, c.Plugin.Resources[a.On], draft); err != nil {
+	if err := bindPluginTarget(&s.Target, c.Plugin.Resources[a.On], a.Verb == "native", draft); err != nil {
 		return err
 	}
 
@@ -79,8 +79,9 @@ func (s *runbookStep) bindPlugin(params *yaml.Node, open map[string]bool, draft 
 	return nil
 }
 
-// bindPluginTarget checks t against the action's resource, and fills in its one kind.
-func bindPluginTarget(t *runbookTarget, decl plugin.Resource, draft bool) error {
+// bindPluginTarget checks t against the action's resource, and fills in its one kind. A
+// native action's target name is its reader's (an Ollama model), not a Kubernetes name.
+func bindPluginTarget(t *runbookTarget, decl plugin.Resource, native, draft bool) error {
 	t.Kind, t.Namespace, t.Name, t.Node = strings.TrimSpace(t.Kind), strings.TrimSpace(t.Namespace), strings.TrimSpace(t.Name), strings.TrimSpace(t.Node)
 	open := func(value string) bool { return draft && strings.Contains(value, "${") }
 
@@ -97,6 +98,10 @@ func bindPluginTarget(t *runbookTarget, decl plugin.Resource, draft bool) error 
 
 	if open(t.Namespace) || open(t.Name) {
 		return nil
+	}
+
+	if native {
+		return validateNativeTarget(decl, t.Namespace, t.Name)
 	}
 
 	return validatePluginTarget(decl, t.Namespace, t.Name)

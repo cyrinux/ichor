@@ -392,6 +392,8 @@ func (v *validator) actions() {
 			v.errorf(path+".subresource", "only applies with verb subresource")
 		}
 
+		v.nativeRun(path, a)
+
 		v.rbac(path+".rbac", a.RBAC)
 		v.enum(path+".confirm", a.Confirm, Action{}, "Confirm")
 		v.actionRequest(path, a, onOK)
