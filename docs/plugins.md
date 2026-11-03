@@ -227,7 +227,7 @@ Loading is strict:
 | `dataServices.<name>` | no | map | see "Data services" below |
 | `cards.summary` | yes | card | `title` (an expression, or `{count, one, other}` with `%d`), `health`, `badges[]`. It sees `dataServices` and `now` only |
 | `cards.<name>` | no | card | `from` (a resource or `dataServices.<name>`), `sort[]` (expressions, each optionally followed by `asc` or `desc`), `empty`, `row{title, subtitle, status{tone, text}, trailing{text}, detail[]}` |
-| `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `body`, `subresource` and `method` (with `verb: subresource`), `propagationPolicy` (with `verb: delete`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate` or `create`; `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum`. See "Actions" below |
+| `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `run` (with `verb: native`), `body`, `subresource` and `method` (with `verb: subresource`), `propagationPolicy` (with `verb: delete`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate`, `create` or `native` (with `run: native:<id>`, built-in plugins only); `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum`. See "Actions" below |
 | `findings[]` | no | list | `{id, from, when, severity, title, detail, opens}`. `severity` is `info`, `warning` or `critical`; `opens` names a card |
 | `tools.<id>` | no | map | `label` (required), `hint`, `run: native:<id>` (required), `texts` (the English words the Go function shows in its result, translated through `i18n`): a button of the plugin screen run by Go. See "Tools" below |
 | `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop`. A string `now`, `now-6h` or `now+2d` (units `s`, `m`, `h`, `d`; at most a century) becomes that time, so that the demo stays consistent with the clock |
@@ -299,6 +299,18 @@ built-in ones): a plugin file only previewed (`KubePluginPreview`, `plugin-rende
 | `subresource` | `PUT …/<name>/<subresource>` (`method: PUT`, the default, as virtctl does), `POST`, or `PATCH` as a merge patch (`method: PATCH`, as kubectl scale does) | a map, or none (`{}` is sent) |
 | `delete` | `DELETE …/<resource>/<name>` with `DeleteOptions`: `propagationPolicy` (`Foreground`, `Background` or `Orphan`) when set, and the uid of the object just read as a precondition | none |
 | `create` | `POST …/<resource>` (the collection, in the object's namespace), `application/json` | a map: the new object. Its `apiVersion`, `kind` and `metadata.namespace`, when written, must be the resource's and the object's (else the call is refused before any request); absent, `apiVersion` and `kind` are filled in |
+| `native` | none of its own: the Go function `run: native:<id>` names makes the call (Ollama's load, unload and delete through the Service proxy, `go/ichorgo/plugin_ollama_actions.go`). Built-in plugins only: an imported plugin that declares one is refused at import ("verb native runs code built into Ichor") | none |
+
+A `native` action keeps the rest: the params checked, the demo refusal, `enabledWhen` checked
+on the object as read now (the plugin's resources are read in the namespace, native sources
+included, and the object is found among them by namespace and name; two objects of that name
+are refused as ambiguous), the can-I row of its `rbac` (no `get` of a resource a native
+source builds: it is not served), and the audit entry. Its target's name is the object's own
+(an Ollama model, `llama3.2:3b`): printable, at most 253 bytes, not a Kubernetes name. `rbac`
+names what the function calls (`{verbs: [create], group: "", resource: services/proxy}` for a
+POST through the Service proxy); it is not matched against a request. The core's ids are the
+keys of `pluginNativeActions` (`go/ichorgo/plugin_action_native.go`); a built-in naming
+another fails the Go tests.
 
 Each call:
 1. checks the plugin, the action, the namespace and the name (Kubernetes names: no `/`, no
@@ -458,7 +470,7 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
   | `relations` | `items[{label, ref, text?}]`; an absent object is left out, and so is the section when none is left |
   | `table` | `columns[{label}]`, `rows[[cell]]` |
   | `text` | `{text, tone?, mono?}`; left out when the text is empty, so `'{{ fields.x ? "words" : "" }}'` shows only when it holds |
-  | `actions` | `items[{id, label, enabled, confirm, disabledReason?, allowed?, params[]}]`; `allowed` is the can-I answer (see "Actions") |
+  | `actions` | `items[{id, label, enabled, confirm, disabledReason?, allowed?, params[], target?}]`; `allowed` is the can-I answer (see "Actions"); `target` (a ref) is the object the action runs on when the row's `ref` opens another one: the apps send its namespace and name, not the row's |
 
 * `i18n`: the locale's map (`pt-BR` falls back to `pt`) translates labels, `empty`, the
   summary's `one`/`other`, action labels, templates (health messages, finding texts,

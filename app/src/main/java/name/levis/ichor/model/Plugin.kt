@@ -248,6 +248,8 @@ data class PluginAction(
     /** The can-I answer; null when unknown (the API server still decides). */
     val allowed: Boolean? = null,
     val params: List<PluginParam> = emptyList(),
+    /** The object the action runs on when it is not the row's ref; null for the row's object. */
+    val target: PluginRef? = null,
 ) {
     /** Whether the button may be pressed, as far as the tree says. */
     val usable: Boolean get() = enabled && allowed != false

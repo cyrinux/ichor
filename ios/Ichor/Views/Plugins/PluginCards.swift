@@ -161,9 +161,10 @@ struct PluginSectionView: View {
                 .foregroundStyle(text.tone.isEmpty ? Color.primary : pluginToneColor(text.tone))
                 .textSelection(.enabled)
         case .actions(let items):
-            // By action: a button's pending run stays with its action.
+            // By action: a button's pending run stays with its action, on the action's own
+            // target when the row opens another object.
             ForEach(items, id: \.id) { action in
-                PluginActionButton(action: action, target: target)
+                PluginActionButton(action: action, target: action.target(on: target))
             }
         case .unknown:
             EmptyView()

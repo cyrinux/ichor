@@ -10,7 +10,8 @@
 # Each row opens the server's workload (ref: $.source). A refused or silent proxy is the
 # server's own row, never a failed plugin.
 # RBAC: list deployments and statefulsets (apps), services and pods; get services/proxy
-# (pods/proxy for the fallback). go/ichorgo/plugin_ollama_test.go holds the readers.
+# (pods/proxy for the fallback); the actions create (load, unload) and delete (delete) on it.
+# go/ichorgo/plugin_ollama_test.go holds the readers, plugin_ollama_action_test.go the actions.
 schemaVersion: ichor.dev/plugin/v1alpha1
 id: ollama
 name: Ollama
@@ -166,6 +167,48 @@ cards:
             - { label: "Loaded size", value: 'fields.loaded ? bytes($.status.size) : ""' }
             - { label: "VRAM", value: 'fields.loaded ? bytes($.status.sizeVRAM) : ""' }
             - { label: "Unloads", value: 'fields.loaded && !fields.pinned ? relativeTime(fields.expiresAt) : ""' }
+        - type: actions
+          items: [load, unload, delete]
+
+# Each action is one call to the model's server through the API server's proxy, made by Go
+# (verb native, go/ichorgo/plugin_ollama_actions.go): load is POST /api/generate with an empty
+# prompt (keep_alive -1 when pinned), unload the same with keep_alive 0, delete DELETE
+# /api/delete. The proxy maps POST to create and DELETE to delete on services/proxy (a server
+# reached through the pod proxy needs pods/proxy: the API server decides there). An unload
+# waits for the requests in flight: the row can still read loaded on the next refresh.
+actions:
+  load:
+    label: "Load"
+    on: model
+    verb: native
+    run: native:ollama-load
+    rbac: { verbs: [create], group: "", resource: services/proxy }
+    confirm: plain
+    audit: ollama.load
+    enabledWhen: "!fields.loaded"
+    disabledReason: "already loaded"
+    params:
+      - { name: pin, label: "Keep loaded until unloaded", type: bool, default: false }
+  unload:
+    label: "Unload"
+    on: model
+    verb: native
+    run: native:ollama-unload
+    rbac: { verbs: [create], group: "", resource: services/proxy }
+    confirm: plain
+    audit: ollama.unload
+    enabledWhen: fields.loaded
+    disabledReason: "not loaded"
+  delete:
+    label: "Delete from disk"
+    on: model
+    verb: native
+    run: native:ollama-delete
+    rbac: { verbs: [delete], group: "", resource: services/proxy }
+    confirm: typedName
+    audit: ollama.delete
+    enabledWhen: "!fields.orphan"
+    disabledReason: "already deleted from disk"
 
 # Invented servers in demo-ai: ollama-gpu (one GPU) with five models on disk, two of them
 # loaded (one pinned, one spilled to CPU), and a model deleted while loaded; ollama-cpu,
@@ -212,6 +255,13 @@ samples:
 
 i18n:
   fr:
+    "Load": "Charger"
+    "Unload": "Décharger"
+    "Delete from disk": "Supprimer du disque"
+    "Keep loaded until unloaded": "Garder chargé jusqu'au déchargement"
+    "already loaded": "déjà chargé"
+    "not loaded": "non chargé"
+    "already deleted from disk": "déjà supprimé du disque"
     "%d Ollama server": "%d serveur Ollama"
     "%d Ollama servers": "%d serveurs Ollama"
     "not ready": "pas prêt"
@@ -255,6 +305,13 @@ i18n:
     "partly on CPU although the server has a GPU": "en partie sur CPU alors que le serveur a un GPU"
     "on disk, not loaded": "sur disque, non chargé"
   de:
+    "Load": "Laden"
+    "Unload": "Entladen"
+    "Delete from disk": "Von der Festplatte löschen"
+    "Keep loaded until unloaded": "Geladen lassen, bis es entladen wird"
+    "already loaded": "bereits geladen"
+    "not loaded": "nicht geladen"
+    "already deleted from disk": "bereits von der Festplatte gelöscht"
     "%d Ollama server": "%d Ollama-Server"
     "%d Ollama servers": "%d Ollama-Server"
     "not ready": "nicht bereit"
@@ -298,6 +355,13 @@ i18n:
     "partly on CPU although the server has a GPU": "teilweise auf der CPU, obwohl der Server eine GPU hat"
     "on disk, not loaded": "auf der Festplatte, nicht geladen"
   es:
+    "Load": "Cargar"
+    "Unload": "Descargar"
+    "Delete from disk": "Eliminar del disco"
+    "Keep loaded until unloaded": "Mantener cargado hasta descargarlo"
+    "already loaded": "ya cargado"
+    "not loaded": "no cargado"
+    "already deleted from disk": "ya eliminado del disco"
     "%d Ollama server": "%d servidor Ollama"
     "%d Ollama servers": "%d servidores Ollama"
     "not ready": "no listo"
@@ -341,6 +405,13 @@ i18n:
     "partly on CPU although the server has a GPU": "en parte en CPU aunque el servidor tiene una GPU"
     "on disk, not loaded": "en disco, no cargado"
   it:
+    "Load": "Carica"
+    "Unload": "Scarica"
+    "Delete from disk": "Elimina dal disco"
+    "Keep loaded until unloaded": "Mantieni caricato fino allo scaricamento"
+    "already loaded": "già caricato"
+    "not loaded": "non caricato"
+    "already deleted from disk": "già eliminato dal disco"
     "%d Ollama server": "%d server Ollama"
     "%d Ollama servers": "%d server Ollama"
     "not ready": "non pronto"
@@ -384,6 +455,13 @@ i18n:
     "partly on CPU although the server has a GPU": "in parte su CPU anche se il server ha una GPU"
     "on disk, not loaded": "su disco, non caricato"
   uk:
+    "Load": "Завантажити"
+    "Unload": "Вивантажити"
+    "Delete from disk": "Видалити з диска"
+    "Keep loaded until unloaded": "Тримати завантаженою до вивантаження"
+    "already loaded": "уже завантажено"
+    "not loaded": "не завантажено"
+    "already deleted from disk": "уже видалено з диска"
     "%d Ollama server": "%d сервер Ollama"
     "%d Ollama servers": "%d серверів Ollama"
     "not ready": "не готовий"

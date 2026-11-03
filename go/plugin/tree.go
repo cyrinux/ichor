@@ -170,6 +170,9 @@ type TreeAction struct {
 	DisabledReason string      `json:"disabledReason,omitempty"`
 	Allowed        *bool       `json:"allowed,omitempty"`
 	Params         []TreeParam `json:"params,omitempty"`
+	// Target is the object the action runs on when it is not the row's ref (a resource whose
+	// ref opens another object, as an Ollama model row opens its server's Deployment).
+	Target *Ref `json:"target,omitempty"`
 }
 
 // TreeParam is an action's typed input.

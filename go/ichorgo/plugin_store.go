@@ -178,6 +178,10 @@ func checkUserPluginLocked(src []byte) (*plugin.Compiled, int, error) {
 		return nil, 0, err
 	}
 
+	if problem := userNativeActionProblem(c); problem != "" {
+		return nil, 0, errors.New(problem)
+	}
+
 	id := c.Plugin.ID
 	if builtinIDs()[id] {
 		return nil, 0, fmt.Errorf("the id %q is a built-in plugin's: give the plugin another id", id)
@@ -431,7 +435,7 @@ func userPluginProblem(src []byte, builtin map[string]bool) string {
 		return fmt.Sprintf("a built-in plugin now has the id %q", c.Plugin.ID)
 	}
 
-	return ""
+	return userNativeActionProblem(c)
 }
 
 // compileUserPlugin loads, validates and compiles a user's file; a panic of hostile input is

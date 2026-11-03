@@ -55,11 +55,26 @@ func (v *validator) actionRequest(path string, a Action, onOK bool) {
 			}
 		}
 
-		// A tag error is already reported by the verb's own enum check.
+		// A tag error is already reported by the verb's own enum check. A native action's
+		// request is its Go function's: its rbac is what that function calls.
 		verbs, _ := tagEnum(Action{}, "Verb")
-		if onOK && a.RBAC.Resource != "" && slices.Contains(verbs, a.Verb) {
+		if onOK && a.RBAC.Resource != "" && a.Verb != "native" && slices.Contains(verbs, a.Verb) {
 			v.rbacMatches(path+".rbac", a, v.p.Resources[a.On])
 		}
+	}
+}
+
+// nativeRun: verb native names its Go function (run: native:<id>), and run goes with no
+// other verb. Which ids exist is the core's to say (a built-in naming an unknown one fails
+// its tests; an imported plugin with verb native is refused at import).
+func (v *validator) nativeRun(path string, a Action) {
+	switch {
+	case a.Verb == "native" && a.Run == "":
+		v.errorf(path+".run", "is missing: verb native names the Go function (native:<id>)")
+	case a.Verb == "native" && !nativeRef.MatchString(a.Run):
+		v.errorf(path+".run", "%q: use native:<id>", a.Run)
+	case a.Verb != "native" && a.Run != "":
+		v.errorf(path+".run", "only applies with verb native")
 	}
 }
 
@@ -98,7 +113,8 @@ func requestRBAC(a Action, decl Resource) (verb, resource string) {
 }
 
 // bodyShape: mergePatch, annotate and create take a map, jsonPatch a list of operations,
-// subresource a map or nothing, delete nothing (its options are propagationPolicy).
+// subresource a map or nothing, delete nothing (its options are propagationPolicy), native
+// nothing.
 func (v *validator) bodyShape(path, verb string, body any) {
 	switch verb {
 	case "mergePatch", "create":
@@ -116,6 +132,10 @@ func (v *validator) bodyShape(path, verb string, body any) {
 	case "delete":
 		if body != nil {
 			v.errorf(path, "verb delete takes no body (propagationPolicy sets its options)")
+		}
+	case "native":
+		if body != nil {
+			v.errorf(path, "verb native takes no body: its Go function builds the request from the object and params")
 		}
 	}
 }

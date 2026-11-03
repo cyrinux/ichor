@@ -48,6 +48,7 @@ import name.levis.ichor.model.encodeParams
 import name.levis.ichor.model.initialParamValues
 import name.levis.ichor.model.paramProblems
 import name.levis.ichor.model.pendingAction
+import name.levis.ichor.model.targetOn
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -70,7 +71,7 @@ fun PluginActionButtons(items: List<PluginAction>, ref: PluginRef?, runner: Plug
     var pending by remember { mutableStateOf<PluginActionPending?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         items.forEach { a ->
-            val target = if (runner != null && a.usable) ref else null
+            val target = if (runner != null && a.usable) a.targetOn(ref) else null
             val busy = target != null && runner != null && pluginActionKey(target, a.id) in runner.busy
             IchorOutlinedButton(
                 onClick = {
