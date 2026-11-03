@@ -8,6 +8,8 @@ import SwiftUI
 enum SmokeID {
     /// An overview node row.
     static let node = "smoke-node"
+    /// The node hub's list (its header and rows), once it shows.
+    static let nodeScreen = "smoke-node-screen"
     /// The node hub's "Kernel log" entry.
     static let kernelLog = "smoke-node-kernel-log"
     /// The node hub's "Containers" entry.

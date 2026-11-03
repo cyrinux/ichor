@@ -8,6 +8,7 @@ final class DemoSmokeTests: XCTestCase {
     // The app's SmokeID (Ichor/App/UITestLaunch.swift): a UI test cannot import the app.
     private enum ID {
         static let node = "smoke-node"
+        static let nodeScreen = "smoke-node-screen"
         static let kernelLog = "smoke-node-kernel-log"
         static let containers = "smoke-node-containers"
         static let containerRow = "smoke-container-row"
@@ -21,14 +22,21 @@ final class DemoSmokeTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// The overview is a lazy list, the nodes may be below the fold; and a tap that lands while
+    /// the overview is still rebuilding opens nothing: tap again until the node hub shows, so the
+    /// next swipes run on the hub, not on the overview.
+    @MainActor
+    private func openANode(in app: XCUIApplication) {
+        tap(element: scrollTo(ID.node, in: app), until: ID.nodeScreen, in: app)
+    }
+
     @MainActor
     func testTheTalosDemoOpensANodeAndItsKernelLog() {
         let app = launch("demo")
 
-        // The overview is a lazy list: the nodes may be below the fold.
-        scrollTo(ID.node, in: app).tap()
-        // The node hub's list, once it shows.
-        scrollTo(ID.kernelLog, in: app).tap()
+        openANode(in: app)
+        // The hub's list is longer than the overview's: Kernel log can be well below the fold.
+        scrollTo(ID.kernelLog, in: app, swipes: 12).tap()
 
         waitFor(ID.logLines, in: app)
     }
@@ -37,7 +45,7 @@ final class DemoSmokeTests: XCTestCase {
     func testTheTalosDemoListsANodesContainersAndOpensALog() {
         let app = launch("demo")
 
-        scrollTo(ID.node, in: app).tap()
+        openANode(in: app)
         scrollTo(ID.containers, in: app).tap()
         // Wait on the rows, not on the list's loading state.
         waitFor(ID.containerRow, in: app).tap()

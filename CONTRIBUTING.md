@@ -21,8 +21,9 @@ an issue first so we can agree on the approach before you spend time on it.
   only icon, since iOS folds a phone's toolbar into an overflow without identifiers); the
   Kubernetes demo's home. A moved anchor
   moves its tag (`ui/components/SmokeTags.kt`), not the test. The iOS twin
-  (`IchorUITests/DemoSmokeTests`) runs on macOS CI after the simulator build; its anchors are
-  accessibility identifiers (`SmokeID` in `ios/Ichor/App/UITestLaunch.swift`), never labels.
+  (`IchorUITests/DemoSmokeTests`) runs on macOS CI after the simulator build, a failed test
+  retried once (a busy runner can stall the simulator); its anchors are accessibility
+  identifiers (`SmokeID` in `ios/Ichor/App/UITestLaunch.swift`), never labels.
 - A govulncheck finding (`just vuln`) means a known vulnerability is reachable from the Go
   core: bump the module (or the Go toolchain for a standard library one). If the call path
   is not reachable in practice, say why in the PR with `govulncheck -show verbose ./...`.

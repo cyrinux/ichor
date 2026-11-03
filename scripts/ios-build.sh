@@ -5,7 +5,8 @@
 #   2. the core Swift package tests;
 #   3. the Xcode project (XcodeGen) and the app.
 #
-#   scripts/ios-build.sh test   # core tests + simulator build (CI on every push)
+#   scripts/ios-build.sh test   # core tests + simulator build + demo smoke walk, a stalled
+#                               # test retried once (CI on every push)
 #   scripts/ios-build.sh screenshots  # the demo walk in both appearances (scripts/ios-screenshots.sh next)
 #   scripts/ios-build.sh ipa    # unsigned Release build packaged as an IPA (default)
 #   scripts/ios-build.sh appstore  # App Store build, signed and uploaded to App Store Connect
@@ -157,13 +158,17 @@ case "$MODE" in
     # entitlement in the simulator, so storing the demo's config fails
     # (errSecMissingEntitlement, -34018); the simulator needs no team or profile for it. The
     # unsigned build stays checked by `ipa`. The result bundle is build/ui-tests.xcresult
-    # (uploaded by ios.yml on failure).
+    # (uploaded by ios.yml on failure). No parallel testing, and a test is retried once, as in
+    # `screenshots`: a busy runner can stall the simulator ("Timed out while acquiring background
+    # assertion"), and one stall would fail the push run that the daily release waits for; a
+    # test that fails twice still fails the run.
     sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')
     [[ -n "$sim" ]] || { echo "no iPhone simulator available" >&2; exit 1; }
     adhoc=(CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=)
     xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" build-for-testing
     rm -rf build/ui-tests.xcresult
     xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" \
+      -parallel-testing-enabled NO -retry-tests-on-failure -test-iterations 2 \
       -only-testing:IchorUITests -resultBundlePath build/ui-tests.xcresult test-without-building
     ;;
   screenshots)
