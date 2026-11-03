@@ -16,8 +16,14 @@ final class OllamaForwardTests: XCTestCase {
     }
 
     func testTheCoreAnswerDecodes() throws {
-        let json = #"{"baseUrl":"http://127.0.0.1:41234/v1","namespace":"ai","server":"ollama","#
-            + #""pod":"ollama-7d9f-x2k4q","port":11434}"#
+        let fields = [
+            #""baseUrl":"http://127.0.0.1:41234/v1""#,
+            #""namespace":"ai""#,
+            #""server":"ollama""#,
+            #""pod":"ollama-7d9f-x2k4q""#,
+            #""port":11434"#,
+        ]
+        let json = "{" + fields.joined(separator: ",") + "}"
         let forward = try JSONDecoder().decode(OllamaForward.self, from: Data(json.utf8))
         XCTAssertEqual(forward.baseUrl, "http://127.0.0.1:41234/v1")
         XCTAssertEqual(forward.target, "ai/ollama-7d9f-x2k4q")
