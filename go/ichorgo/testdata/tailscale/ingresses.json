@@ -1,0 +1,11 @@
+{"kind":"IngressList","apiVersion":"networking.k8s.io/v1","metadata":{},"items":[
+ {"metadata":{"name":"wiki","namespace":"docs","annotations":{"tailscale.com/tags":"tag:docs"}},
+  "spec":{"ingressClassName":"tailscale","tls":[{"hosts":["wiki"]}],"defaultBackend":{"service":{"name":"wiki"}}},
+  "status":{"loadBalancer":{"ingress":[{"hostname":"wiki.example-tailnet.ts.net"}]}}},
+ {"metadata":{"name":"drafts","namespace":"docs"},
+  "spec":{"ingressClassName":"tailscale","tls":[{"hosts":["drafts"]}],"defaultBackend":{"service":{"name":"drafts"}}},
+  "status":{"loadBalancer":{}}},
+ {"metadata":{"name":"site","namespace":"web"},
+  "spec":{"ingressClassName":"nginx","rules":[{"host":"site.example.com"}]},
+  "status":{"loadBalancer":{"ingress":[{"ip":"192.0.2.10"}]}}}
+]}

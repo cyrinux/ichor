@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Exposed on the tailnet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Exposé sur le tailnet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Expuesto en el tailnet" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Доступне в tailnet" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Im Tailnet erreichbar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esposto sul tailnet" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 tailnet 上公开" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "tailnet に公開" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Exposto no tailnet" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Доступно в tailnet" } }
+      }
+    },
+    "via %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "via %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "vía %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "через %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "über %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "tramite %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "经由 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ 経由" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "via %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "через %@" } }
+      }
+    },
+    "to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "vers %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "hacia %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "до %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "zu %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "verso %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "到 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "宛先 %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "para %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "к %@" } }
+      }
+    },
+    "serves %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "sert %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "sirve %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "обслуговує %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "bedient %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "serve %lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务 %lld 个" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 件を提供" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "serve %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "обслуживает %lld" } }
+      }
+    },
+    "%lld more devices" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld autres appareils" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld dispositivos más" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ще %lld пристроїв" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld weitere Geräte" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "altri %lld dispositivi" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "另外 %lld 台设备" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "他 %lld 台のデバイス" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "mais %lld dispositivos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ещё %lld устройств" } }
+      }
+    },
     "Use for AI diagnosis" : {
       "extractionState" : "manual",
       "localizations" : {

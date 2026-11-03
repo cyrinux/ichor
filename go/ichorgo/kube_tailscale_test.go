@@ -30,6 +30,8 @@ func tailscaleAnswers(t *testing.T) map[string]string {
 		"GET /apis/tailscale.com/v1alpha1/proxyclasses": tailscaleFixture(t, "proxyclasses.json"),
 		"GET /apis/tailscale.com/v1alpha1/dnsconfigs":   tailscaleFixture(t, "dnsconfigs.json"),
 		"GET /apis/apps/v1/deployments":                 tailscaleFixture(t, "deployments.json"),
+		"GET /api/v1/services":                          tailscaleFixture(t, "services.json"),
+		"GET /apis/networking.k8s.io/v1/ingresses":      tailscaleFixture(t, "ingresses.json"),
 	}
 }
 
@@ -107,7 +109,7 @@ func TestTailscaleRead(t *testing.T) {
 		t.Errorf("proxy group order %v", names)
 	}
 
-	if want := (tsCounts{OK: 6, Warning: 5, Critical: 3}); r.Counts != want {
+	if want := (tsCounts{OK: 10, Warning: 8, Critical: 5}); r.Counts != want {
 		t.Errorf("counts %+v", r.Counts)
 	}
 
@@ -247,7 +249,7 @@ func TestTailscaleOperator(t *testing.T) {
 
 	// No operator Deployment: null, and the counts are the objects' only.
 	r := tailscaleReadFrom(t, newFakeKubeAPI(t, answers))
-	if r.Operator != nil || r.Error != "" || r.Counts != (tsCounts{OK: 5, Warning: 5, Critical: 3}) {
+	if r.Operator != nil || r.Error != "" || r.Counts != (tsCounts{OK: 9, Warning: 8, Critical: 5}) {
 		t.Errorf("no operator %+v %+v", r.Operator, r.Counts)
 	}
 
@@ -322,7 +324,15 @@ func TestTailscaleDemo(t *testing.T) {
 	if r.ProxyClasses[0].Name != "metrics" || r.ProxyClasses[1].UsedBy != 2 {
 		t.Errorf("demo proxy classes %+v", r.ProxyClasses)
 	}
-	if want := (tsCounts{OK: 7, Warning: 1, Critical: 1}); r.Counts != want {
+	if want := (tsCounts{OK: 11, Warning: 2, Critical: 2}); r.Counts != want {
 		t.Errorf("demo counts %+v", r.Counts)
+	}
+
+	// Ingress and egress rows, the broken one first, the missing ProxyGroup flagged.
+	if len(r.Exposed) != 6 || r.Exposed[0].Name != "legacy" || r.Exposed[1].Reason != tsReasonGroupMissing {
+		t.Errorf("demo exposed %+v", r.Exposed)
+	}
+	if g := r.ProxyGroups[len(r.ProxyGroups)-1]; g.Name != "ingress-proxies" || g.Serves != 1 {
+		t.Errorf("demo ingress-proxies %+v", g)
 	}
 }

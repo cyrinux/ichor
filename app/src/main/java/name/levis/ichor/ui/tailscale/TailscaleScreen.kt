@@ -42,15 +42,15 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
 
-/** One read of the cluster's Tailscale operator: connectors, proxy groups, proxy classes, DNS. */
+/** One read of the cluster's Tailscale operator: what it exposes, connectors, proxy groups, proxy classes, DNS. */
 class TailscaleViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<Tailscale>() {
     override suspend fun fetch() = browser.tailscale()
 }
 
 /**
- * Tailscale (os:admin): the operator, its connectors (subnet routers, exit nodes, app
- * connectors), proxy groups, proxy classes and the tailnet nameserver, problems first in each
- * section. A tap opens the object's summary ([onObject]); nothing is changed here.
+ * Tailscale (os:admin): the operator, what it exposes on the tailnet (and reaches on it), its
+ * connectors (subnet routers, exit nodes, app connectors), proxy groups, proxy classes and the
+ * tailnet nameserver, problems first in each section. A tap opens the object's summary ([onObject]); nothing is changed here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,6 +88,9 @@ private fun TailscaleList(ts: Tailscale, onObject: (KubeObjectRef) -> Unit) {
         if (!ts.installed || ts.isEmpty) {
             item(key = "empty") { EmptyText(stringResource(R.string.tailscale_empty)) }
             return@LazyColumn
+        }
+        section("exposed", R.string.tailscale_exposed, ts.exposed) { e ->
+            ExposedRow(e, onClick = { onObject(e.ref) })
         }
         section("connectors", R.string.tailscale_connectors, ts.connectors) { c ->
             ConnectorRow(c, onClick = { onObject(ts.ref(TailscaleKind.CONNECTOR, c.name)) })

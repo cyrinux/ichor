@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.TailscaleConnector
+import name.levis.ichor.model.TailnetDevice
 import name.levis.ichor.model.TailscaleDNSConfig
+import name.levis.ichor.model.TailscaleExposed
 import name.levis.ichor.model.TailscaleOperator
 import name.levis.ichor.model.TailscaleProxyClass
 import name.levis.ichor.model.TailscaleProxyGroup
@@ -54,6 +56,47 @@ internal fun OperatorLine(op: TailscaleOperator) {
     }
 }
 
+/**
+ * A Service or Ingress on the tailnet: its tailnet name as the title, then where it lives, its
+ * ports, the ProxyGroup serving it and its tags. An egress row is titled by the Service and says
+ * which tailnet target it reaches.
+ */
+@Composable
+fun ExposedRow(e: TailscaleExposed, onClick: () -> Unit) {
+    val objectName = "${e.namespace}/${e.name}"
+    val title = if (e.isEgress) objectName else e.tailnetNames.firstOrNull() ?: objectName
+    val line = listOfNotNull(
+        e.tailnetNames.firstOrNull()?.takeIf { e.isEgress }?.let { stringResource(R.string.tailscale_to, it) },
+        objectName.takeIf { it != title },
+        e.kind.takeIf { it == TailscaleExposed.INGRESS },
+        e.tailnetNames.drop(1).takeIf { !e.isEgress && it.isNotEmpty() }?.joinToString(", "),
+        e.ports.takeIf { it.isNotEmpty() }?.joinToString(", "),
+        e.proxyGroup.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.tailscale_via, it) },
+        e.tags.takeIf { it.isNotEmpty() }?.joinToString(", "),
+    ).joinToString(" · ")
+    ResourceRow(e.serviceHealth, title, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
+        ResourceDetails(line, e.serviceHealth, reasonMessage(e.reason, e.message))
+    }
+}
+
+/** The devices of a Connector or ProxyGroup, one "hostname  IPs" line each, folded after [DEVICES_SHOWN]. */
+@Composable
+internal fun DeviceLines(devices: List<TailnetDevice>) {
+    devices.take(DEVICES_SHOWN).forEach { d ->
+        Text(
+            listOf(d.hostname, d.tailnetIPs.joinToString(", ")).filter { it.isNotEmpty() }.joinToString("  "),
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    if (devices.size > DEVICES_SHOWN) MutedText(stringResource(R.string.tailscale_more_devices, devices.size - DEVICES_SHOWN))
+}
+
+/** How many devices a row lists before folding the rest into a count. */
+private const val DEVICES_SHOWN = 3
+
 /** A subnet router, exit node or app connector: what it does, its tailnet IPs and devices. */
 @Composable
 fun ConnectorRow(c: TailscaleConnector, onClick: () -> Unit) {
@@ -70,6 +113,7 @@ fun ConnectorRow(c: TailscaleConnector, onClick: () -> Unit) {
     ).joinToString(" · ")
     ResourceRow(c.serviceHealth, c.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
         ResourceDetails(line, c.serviceHealth, reasonMessage(c.reason, c.message))
+        DeviceLines(c.devices)
     }
 }
 
@@ -80,6 +124,7 @@ fun ProxyGroupRow(g: TailscaleProxyGroup, onClick: () -> Unit) {
         g.type.takeIf { it.isNotEmpty() },
         stringResource(R.string.tailscale_replicas, g.replicas),
         stringResource(R.string.tailscale_devices, g.devices.size),
+        stringResource(R.string.tailscale_serves, g.serves).takeIf { g.serves > 0 },
         g.url.takeIf { it.isNotEmpty() },
         g.proxyClass.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.tailscale_proxy_class, it) },
         readiness(g.ready),
@@ -87,6 +132,7 @@ fun ProxyGroupRow(g: TailscaleProxyGroup, onClick: () -> Unit) {
     ).joinToString(" · ")
     ResourceRow(g.serviceHealth, g.name, Modifier.padding(horizontal = 16.dp), onClick = onClick) {
         ResourceDetails(line, g.serviceHealth, reasonMessage(g.reason, g.message))
+        DeviceLines(g.devices)
     }
 }
 

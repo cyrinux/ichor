@@ -5487,6 +5487,11 @@
     <string name="tailscale_used_by">%1$d個で使用中</string>
     <string name="tailscale_nameserver">ネームサーバー %1$s</string>
     <string name="tailscale_some_running">一部のプロキシが実行中</string>
+    <string name="tailscale_exposed">tailnet に公開</string>
+    <string name="tailscale_via">%1$s 経由</string>
+    <string name="tailscale_to">宛先 %1$s</string>
+    <string name="tailscale_serves">%1$d 件を提供</string>
+    <string name="tailscale_more_devices">他 %1$d 台のデバイス</string>
     <string name="longhorn_snapshot_csi">VolumeSnapshot %1$s</string>
     <string name="longhorn_snapshot_delete_csi">VolumeSnapshot %1$s がこのスナップショットを保持しています。代わりにそちらを削除してください。</string>
     <string name="longhorn_snapshot_delete_csi_unknown">このアカウントでは VolumeSnapshot を読み取れません。このスナップショットから作成されたものがあると、復元できなくなります。先に kubectl get volumesnapshots -A で確認してください。</string>
