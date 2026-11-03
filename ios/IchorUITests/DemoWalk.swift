@@ -19,6 +19,11 @@ extension XCTestCase {
         if alone { app.launchEnvironment["ICHOR_UI_TEST_ALONE"] = "1" }
         app.launchArguments += arguments
         app.launch()
+        // A busy runner can stall the simulator before the app shows ("Timed out while acquiring
+        // background assertion"): say so, to tell it from a regression once the retry is spent.
+        if !app.wait(for: .runningForeground, timeout: demoWalkTimeout) {
+            XCTFail("simulator stall: the app did not reach the foreground in \(Int(demoWalkTimeout)) s")
+        }
         return app
     }
 
@@ -42,23 +47,35 @@ extension XCTestCase {
     /// rebuilding opens nothing. Fails with the screen's element tree when `target` never shows.
     @MainActor
     func tap(_ id: String, until target: String, in app: XCUIApplication) {
-        let button = waitFor(id, in: app)
+        tap(element: waitFor(id, in: app), until: target, in: app)
+    }
+
+    /// The same, on an element already found (by `scrollTo`, for a row below the fold). Labelled
+    /// `element:`: both are Objective-C methods of XCTestCase and need their own selector.
+    @MainActor
+    func tap(element button: XCUIElement, until target: String, in app: XCUIApplication) {
         let shown = element(target, in: app)
         for _ in 0..<3 {
             if button.isHittable { button.tap() }
             if shown.waitForExistence(timeout: demoWalkTimeout / 3) { return }
         }
-        XCTFail("\(target) not shown after tapping \(id); on screen:\n\(app.debugDescription)")
+        XCTFail("\(target) not shown after tapping \(button.identifier); on screen:\n\(app.debugDescription)")
     }
 
-    /// Waits up to `settle` for the first screen, then swipes up until `id` is on screen: a List
-    /// only holds the rows that show.
+    /// Waits up to `settle` for the first screen, then swipes up (at most `swipes` times) until
+    /// `id` is on screen: a List only holds the rows that show. A row left under the bar after
+    /// the last swipe gets one slow swipe more.
     @MainActor
-    func scrollTo(_ id: String, in app: XCUIApplication, settle: TimeInterval = demoWalkTimeout) -> XCUIElement {
+    func scrollTo(
+        _ id: String, in app: XCUIApplication, settle: TimeInterval = demoWalkTimeout, swipes: Int = 8
+    ) -> XCUIElement {
         let found = element(id, in: app)
         if found.waitForExistence(timeout: settle), found.isHittable { return found }
-        for _ in 0..<8 where !(found.exists && found.isHittable) {
+        for _ in 0..<swipes where !(found.exists && found.isHittable) {
             app.swipeUp()
+        }
+        if found.exists, !found.isHittable {
+            app.swipeUp(velocity: .slow)
         }
         if !(found.exists && found.isHittable) {
             XCTFail("\(id) not reachable; on screen:\n\(app.debugDescription)")

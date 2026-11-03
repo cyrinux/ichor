@@ -47,6 +47,7 @@ struct NodeDetailView: View {
                 showingReset: $showingReset, showingCordon: $showingCordon)
             NodePowerSection(node: ref.address, powerAction: $powerAction)
         }
+        .accessibilityIdentifier(SmokeID.nodeScreen)
         .themedBackground()
         .navigationTitle(ref.hostname)
         .navigationBarTitleDisplayMode(.inline)
