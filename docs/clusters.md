@@ -185,6 +185,16 @@ when no such label is set, as on bare metal.
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
 
+Any other `exec:` plugin cannot run on the phone, and the context cannot be imported. The import
+preview names the plugin and says what to do instead:
+
+| Plugin | What to do instead |
+|---|---|
+| `tsh` (Teleport) | Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate |
+| `vault`, `aws-vault`, `az` | They only print a token: paste that token, or use a client certificate |
+| kubelogin without `--oidc-issuer-url` | Export it again with the issuer URL, and the built-in OIDC sign-in takes over |
+| Anything else | Use a client certificate or a token |
+
 **GKE credentials by QR:** scan a gcloud ADC file from the import screen or tap
 **Scan credentials QR code** in GKE discovery. It opens discovery with the credential
 filled in; choose projects if needed, then tap **Find clusters**. Google user,

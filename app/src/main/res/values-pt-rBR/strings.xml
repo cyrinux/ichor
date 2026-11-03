@@ -4110,6 +4110,11 @@
     <string name="kube_problem_basic_auth">O login com usuário e senha não é compatível.</string>
     <string name="kube_problem_sign_in_later">Este login ainda não é compatível: chega em uma versão futura.</string>
     <string name="kube_problem_exec">Este plugin exec não é compatível. Use um certificado de cliente ou um token.</string>
+    <string name="kube_problem_exec_named">O plugin de credenciais %1$s não pode ser executado em um celular.</string>
+    <string name="kube_exec_hint_teleport">O login do Teleport pelo celular está planejado; até lá, exporte um kubeconfig com um certificado de cliente.</string>
+    <string name="kube_exec_hint_token_wrapper">Ele só imprime um token: cole esse token ou use um certificado de cliente.</string>
+    <string name="kube_exec_hint_oidc_no_issuer">Exporte de novo com --oidc-issuer-url para que o login OIDC integrado assuma.</string>
+    <string name="kube_exec_hint_unknown">Use um certificado de cliente ou um token.</string>
     <string name="kube_problem_no_credentials">Não tem credenciais: adicione um certificado de cliente ou um token.</string>
     <string name="kube_problem_invalid">Não é possível ler este contexto.</string>
     <string name="help_qr_compressed">Grande demais para um QR code (um kubeconfig com certificado)? Compacte-o primeiro:</string>

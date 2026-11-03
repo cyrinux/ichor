@@ -4114,6 +4114,11 @@
     <string name="kube_problem_basic_auth">El inicio de sesión con usuario y contraseña no está soportado.</string>
     <string name="kube_problem_sign_in_later">Este inicio de sesión aún no está soportado: llegará en una versión futura.</string>
     <string name="kube_problem_exec">Este plugin exec no está soportado. Usa un certificado de cliente o un token.</string>
+    <string name="kube_problem_exec_named">El plugin de credenciales %1$s no puede ejecutarse en un teléfono.</string>
+    <string name="kube_exec_hint_teleport">El inicio de sesión de Teleport desde el teléfono está previsto; mientras tanto, exporta un kubeconfig con un certificado de cliente.</string>
+    <string name="kube_exec_hint_token_wrapper">Solo imprime un token: pega ese token o usa un certificado de cliente.</string>
+    <string name="kube_exec_hint_oidc_no_issuer">Vuelve a exportarlo con --oidc-issuer-url para que el inicio de sesión OIDC integrado tome el relevo.</string>
+    <string name="kube_exec_hint_unknown">Usa un certificado de cliente o un token.</string>
     <string name="kube_problem_no_credentials">No tiene credenciales: añade un certificado de cliente o un token.</string>
     <string name="kube_problem_invalid">No se puede leer este contexto.</string>
     <string name="help_qr_compressed">¿Demasiado grande para un solo código QR (un kubeconfig con certificado)? Comprímelo primero:</string>

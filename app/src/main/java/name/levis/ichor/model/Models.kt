@@ -46,6 +46,11 @@ data class ContextSummary(
     /** Why the context cannot be added (a kube-* code), "" when it can. */
     val problem: String = "",
     val problemDetail: String = "",
+    /**
+     * What to do instead of an exec plugin the phone cannot run (teleport, token-wrapper,
+     * oidc-no-issuer, unknown); [problemDetail] is then the plugin's name.
+     */
+    val execHint: String = "",
     /** The method the app signs in with (oidc, eks, gke, azure, digitalocean, rancher; omni, omni-service-account for a Talos context through Omni), "" for static credentials. */
     val signIn: String = "",
     /** The kubeconfig's proxy-url as scheme://host:port (no credentials), "" without one. */

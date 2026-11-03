@@ -80,6 +80,9 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     public let insecure: Bool
     public let problem: String?
     public let problemDetail: String?
+    /// What to do instead of an exec plugin the phone cannot run (teleport, token-wrapper,
+    /// oidc-no-issuer, unknown) with kube-exec-unsupported; problemDetail is the plugin's name.
+    public let execHint: String?
     /// The method the app signs this kubeconfig context in with (oidc, eks, gke, azure,
     /// digitalocean, rancher), nil for static credentials (see KubeSignInInfo).
     public let signIn: String?
@@ -115,9 +118,10 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
         demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
         user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
         signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil,
-        authKey: String? = nil, proxyURL: String? = nil
+        authKey: String? = nil, proxyURL: String? = nil, execHint: String? = nil
     ) {
         self.proxyURL = proxyURL
+        self.execHint = execHint
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -144,6 +148,7 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
         case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn, proxyURL
+        case execHint
         case omni, identity, cluster, authKey
         case clusterID = "clusterId"
     }
@@ -169,6 +174,7 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
         problemDetail = try c.decodeIfPresent(String.self, forKey: .problemDetail)
         signIn = try c.decodeIfPresent(String.self, forKey: .signIn).flatMap { $0.isEmpty ? nil : $0 }
         proxyURL = try c.decodeIfPresent(String.self, forKey: .proxyURL)
+        execHint = try c.decodeIfPresent(String.self, forKey: .execHint)
         omni = try c.field(.omni, false)
         identity = try c.decodeIfPresent(String.self, forKey: .identity)
         cluster = try c.decodeIfPresent(String.self, forKey: .cluster)
