@@ -27,7 +27,7 @@ final class DemoSmokeTests: XCTestCase {
     /// next swipes run on the hub, not on the overview.
     @MainActor
     private func openANode(in app: XCUIApplication) {
-        tap(scrollTo(ID.node, in: app), until: ID.nodeScreen, in: app)
+        tap(element: scrollTo(ID.node, in: app), until: ID.nodeScreen, in: app)
     }
 
     @MainActor

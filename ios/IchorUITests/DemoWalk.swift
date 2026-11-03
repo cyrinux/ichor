@@ -47,12 +47,13 @@ extension XCTestCase {
     /// rebuilding opens nothing. Fails with the screen's element tree when `target` never shows.
     @MainActor
     func tap(_ id: String, until target: String, in app: XCUIApplication) {
-        tap(waitFor(id, in: app), until: target, in: app)
+        tap(element: waitFor(id, in: app), until: target, in: app)
     }
 
-    /// The same, on an element already found (by `scrollTo`, for a row below the fold).
+    /// The same, on an element already found (by `scrollTo`, for a row below the fold). Labelled
+    /// `element:`: both are Objective-C methods of XCTestCase and need their own selector.
     @MainActor
-    func tap(_ button: XCUIElement, until target: String, in app: XCUIApplication) {
+    func tap(element button: XCUIElement, until target: String, in app: XCUIApplication) {
         let shown = element(target, in: app)
         for _ in 0..<3 {
             if button.isHittable { button.tap() }
