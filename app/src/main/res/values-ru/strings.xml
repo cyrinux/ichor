@@ -4325,6 +4325,11 @@
     <string name="kube_problem_basic_auth">Вход по имени пользователя и паролю не поддерживается.</string>
     <string name="kube_problem_sign_in_later">Этот способ входа пока не поддерживается: он появится в одной из следующих версий.</string>
     <string name="kube_problem_exec">Этот exec-плагин не поддерживается. Используйте клиентский сертификат или токен.</string>
+    <string name="kube_problem_exec_named">Плагин учётных данных %1$s не может работать на телефоне.</string>
+    <string name="kube_exec_hint_teleport">Вход через Teleport с телефона запланирован; пока экспортируйте kubeconfig с клиентским сертификатом.</string>
+    <string name="kube_exec_hint_token_wrapper">Он только выводит токен: вставьте этот токен или используйте клиентский сертификат.</string>
+    <string name="kube_exec_hint_oidc_no_issuer">Экспортируйте его заново с --oidc-issuer-url, чтобы встроенный вход OIDC мог его заменить.</string>
+    <string name="kube_exec_hint_unknown">Используйте клиентский сертификат или токен.</string>
     <string name="kube_problem_no_credentials">У него нет учётных данных: добавьте клиентский сертификат или токен.</string>
     <string name="kube_problem_invalid">Не удаётся прочитать этот контекст.</string>
     <string name="help_qr_compressed">Слишком большой для одного QR-кода (kubeconfig с сертификатом)? Сначала сожмите его:</string>

@@ -5,7 +5,8 @@ final class KubeClustersTests: XCTestCase {
     private let kubeJSON = """
         {"current":"prod","contexts":[
           {"name":"broken","kind":"kube","fingerprint":"k1","clusterId":"c1","endpoints":["http://x"],"nodes":[],"roles":[],
-           "certNotAfter":0,"auth":"exec","problem":"kube-exec-unsupported","problemDetail":"some-plugin"},
+           "certNotAfter":0,"auth":"exec","problem":"kube-exec-unsupported","problemDetail":"some-plugin",
+           "execHint":"unknown"},
           {"name":"prod","kind":"kube","fingerprint":"k2","clusterId":"c2","endpoints":["https://k8s.example:6443"],
            "nodes":null,"roles":null,"certNotAfter":1796385050,"namespace":"apps","auth":"token","user":"system:serviceaccount:apps:ichor"}
         ]}
@@ -24,6 +25,7 @@ final class KubeClustersTests: XCTestCase {
         XCTAssertFalse(prod.insecure)
         XCTAssertEqual(summary.contexts[0].problem, "kube-exec-unsupported")
         XCTAssertEqual(summary.contexts[0].problemDetail, "some-plugin")
+        XCTAssertEqual(summary.contexts[0].execHint, "unknown")
         XCTAssertEqual(summary.importableIndices, [1])
     }
 

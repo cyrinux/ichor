@@ -4001,6 +4001,11 @@
     <string name="kube_problem_basic_auth">ユーザー名とパスワードによるサインインはサポートしていません。</string>
     <string name="kube_problem_sign_in_later">このサインイン方法はまだサポートしていません。今後のバージョンで対応予定です。</string>
     <string name="kube_problem_exec">この exec プラグインはサポートしていません。クライアント証明書またはトークンを使用してください。</string>
+    <string name="kube_problem_exec_named">認証情報プラグイン %1$s はスマートフォンでは実行できません。</string>
+    <string name="kube_exec_hint_teleport">スマートフォンからの Teleport サインインは予定されています。それまではクライアント証明書付きの kubeconfig をエクスポートしてください。</string>
+    <string name="kube_exec_hint_token_wrapper">トークンを出力するだけです。そのトークンを貼り付けるか、クライアント証明書を使用してください。</string>
+    <string name="kube_exec_hint_oidc_no_issuer">組み込みの OIDC サインインが引き継げるよう、--oidc-issuer-url を付けて再度エクスポートしてください。</string>
+    <string name="kube_exec_hint_unknown">クライアント証明書またはトークンを使用してください。</string>
     <string name="kube_problem_no_credentials">認証情報がありません。クライアント証明書またはトークンを追加してください。</string>
     <string name="kube_problem_invalid">このコンテキストを読み取れません。</string>
     <string name="help_qr_compressed">1つの QR コードに収まらない場合（証明書入りの kubeconfig など）は、先に圧縮してください：</string>

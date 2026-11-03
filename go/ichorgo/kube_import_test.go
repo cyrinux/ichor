@@ -94,6 +94,10 @@ users:
 - {name: rancher, user: {exec: {command: rancher, args: [token, --server, rancher.example.org]}}}
 - {name: legacy-oidc, user: {auth-provider: {name: oidc, config: {idp-issuer-url: "https://old.example.org"}}}}
 - {name: custom, user: {exec: {command: /usr/local/bin/my-auth}}}
+- {name: teleport, user: {exec: {command: /opt/teleport/tsh, args: [kube, credentials, --kube-cluster=prod, --teleport-cluster=tele.example.org, --proxy=tele.example.org:443]}}}
+- {name: vault, user: {exec: {command: vault, args: [read, -field=token, kubernetes/creds/ops]}}}
+- {name: aws-vault, user: {exec: {command: aws-vault.exe, args: [exec, ops, --, aws, sts, get-caller-identity]}}}
+- {name: kubelogin-bare, user: {exec: {command: kubelogin, args: [get-token, --oidc-client-id=k8s]}}}
 - {name: basic, user: {username: u, password: p}}
 - {name: token-file, user: {tokenFile: /var/run/token}}
 - {name: empty, user: {}}
@@ -108,6 +112,10 @@ contexts:
 - {name: rancher, context: {cluster: c, user: rancher}}
 - {name: legacy-oidc, context: {cluster: c, user: legacy-oidc}}
 - {name: custom, context: {cluster: c, user: custom}}
+- {name: teleport, context: {cluster: c, user: teleport}}
+- {name: vault, context: {cluster: c, user: vault}}
+- {name: aws-vault, context: {cluster: c, user: aws-vault}}
+- {name: kubelogin-bare, context: {cluster: c, user: kubelogin-bare}}
 - {name: basic, context: {cluster: c, user: basic}}
 - {name: token-file, context: {cluster: c, user: token-file}}
 - {name: empty, context: {cluster: c, user: empty}}
@@ -194,25 +202,37 @@ func TestParseKubeconfigPreview(t *testing.T) {
 	type row struct{ auth, detail, problem string }
 
 	want := map[string]row{
-		"cert":        {authCert, "", ""},
-		"sa":          {authToken, "", ""},
-		"eks":         {authEKS, "prod", cloudProblem(authEKS)},
-		"gke":         {authGKE, "", cloudProblem(authGKE)},
-		"oidc":        {authOIDC, "https://id.example.org", ""},
-		"azure":       {authAzure, "t1", cloudProblem(authAzure)},
-		"do":          {authDigitalOcean, "", cloudProblem(authDigitalOcean)},
-		"rancher":     {authRancher, "rancher.example.org", cloudProblem(authRancher)},
-		"legacy-oidc": {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
-		"custom":      {authExec, "my-auth", KubeProblemExec},
-		"basic":       {authBasic, "", KubeProblemBasicAuth},
-		"token-file":  {authToken, "", KubeProblemFilePath},
-		"empty":       {authNone, "", KubeProblemNoCredentials},
-		"plain":       {authToken, "", KubeProblemNotHTTPS},
-		"proxied":     {authToken, "", ""},
-		"bad-proxy":   {authToken, "", KubeProblemProxy},
-		"ca-file":     {authToken, "", KubeProblemFilePath},
-		"no-user":     {authNone, "", KubeProblemUserMissing},
-		"no-cluster":  {authToken, "", KubeProblemClusterMissing},
+		"cert":           {authCert, "", ""},
+		"sa":             {authToken, "", ""},
+		"eks":            {authEKS, "prod", cloudProblem(authEKS)},
+		"gke":            {authGKE, "", cloudProblem(authGKE)},
+		"oidc":           {authOIDC, "https://id.example.org", ""},
+		"azure":          {authAzure, "t1", cloudProblem(authAzure)},
+		"do":             {authDigitalOcean, "", cloudProblem(authDigitalOcean)},
+		"rancher":        {authRancher, "rancher.example.org", cloudProblem(authRancher)},
+		"legacy-oidc":    {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
+		"custom":         {authExec, "my-auth", KubeProblemExec},
+		"teleport":       {authExec, "tsh", KubeProblemExec},
+		"vault":          {authExec, "vault", KubeProblemExec},
+		"aws-vault":      {authExec, "aws-vault", KubeProblemExec},
+		"kubelogin-bare": {authExec, "kubelogin", KubeProblemExec},
+		"basic":          {authBasic, "", KubeProblemBasicAuth},
+		"token-file":     {authToken, "", KubeProblemFilePath},
+		"empty":          {authNone, "", KubeProblemNoCredentials},
+		"plain":          {authToken, "", KubeProblemNotHTTPS},
+		"proxied":        {authToken, "", ""},
+		"bad-proxy":      {authToken, "", KubeProblemProxy},
+		"ca-file":        {authToken, "", KubeProblemFilePath},
+		"no-user":        {authNone, "", KubeProblemUserMissing},
+		"no-cluster":     {authToken, "", KubeProblemClusterMissing},
+	}
+
+	hints := map[string]string{
+		"custom":         ExecHintUnknown,
+		"teleport":       ExecHintTeleport,
+		"vault":          ExecHintTokenWrapper,
+		"aws-vault":      ExecHintTokenWrapper,
+		"kubelogin-bare": ExecHintOIDCNoIssuer,
 	}
 
 	if len(s.Contexts) != len(want) {
@@ -234,6 +254,11 @@ func TestParseKubeconfigPreview(t *testing.T) {
 		if c.Kind != kindKube || c.Auth != w.auth || c.AuthDetail != w.detail || c.Problem != w.problem {
 			t.Errorf("%s: kind %q auth %q detail %q problem %q, want auth %q detail %q problem %q",
 				c.Name, c.Kind, c.Auth, c.AuthDetail, c.Problem, w.auth, w.detail, w.problem)
+		}
+
+		if hint := hints[c.Name]; c.ExecHint != hint || (hint != "" && c.ProblemDetail != w.detail) {
+			t.Errorf("%s: exec hint %q problem detail %q, want hint %q detail %q",
+				c.Name, c.ExecHint, c.ProblemDetail, hint, w.detail)
 		}
 
 		if len(c.Fingerprint) != fingerprintLength || len(c.ClusterID) != fingerprintLength {

@@ -4114,6 +4114,11 @@
     <string name="kube_problem_basic_auth">La connexion par nom d’utilisateur et mot de passe n’est pas prise en charge.</string>
     <string name="kube_problem_sign_in_later">Cette connexion n’est pas encore prise en charge : elle arrive dans une prochaine version.</string>
     <string name="kube_problem_exec">Ce plugin exec n’est pas pris en charge. Utilisez un certificat client ou un jeton.</string>
+    <string name="kube_problem_exec_named">Le plugin d’identifiants %1$s ne peut pas tourner sur un téléphone.</string>
+    <string name="kube_exec_hint_teleport">La connexion Teleport depuis le téléphone est prévue ; d’ici là, exportez un kubeconfig avec un certificat client.</string>
+    <string name="kube_exec_hint_token_wrapper">Il ne fait qu’afficher un jeton : collez ce jeton ou utilisez un certificat client.</string>
+    <string name="kube_exec_hint_oidc_no_issuer">Exportez-le de nouveau avec --oidc-issuer-url pour que la connexion OIDC intégrée prenne le relais.</string>
+    <string name="kube_exec_hint_unknown">Utilisez un certificat client ou un jeton.</string>
     <string name="kube_problem_no_credentials">Il n’a aucun identifiant : ajoutez un certificat client ou un jeton.</string>
     <string name="kube_problem_invalid">Ce contexte est illisible.</string>
     <string name="help_qr_compressed">Trop gros pour un seul QR code (un kubeconfig avec certificat) ? Compressez-le d’abord :</string>

@@ -4105,6 +4105,11 @@
     <string name="kube_problem_basic_auth">Anmeldung mit Benutzername und Passwort wird nicht unterstützt.</string>
     <string name="kube_problem_sign_in_later">Diese Anmeldung wird noch nicht unterstützt: Sie kommt in einer späteren Version.</string>
     <string name="kube_problem_exec">Dieses Exec-Plugin wird nicht unterstützt. Nutze ein Client-Zertifikat oder ein Token.</string>
+    <string name="kube_problem_exec_named">Das Credential-Plugin %1$s kann nicht auf einem Telefon laufen.</string>
+    <string name="kube_exec_hint_teleport">Die Teleport-Anmeldung vom Telefon ist geplant; exportiere bis dahin eine kubeconfig mit Client-Zertifikat.</string>
+    <string name="kube_exec_hint_token_wrapper">Es gibt nur ein Token aus: Füge dieses Token ein oder nutze ein Client-Zertifikat.</string>
+    <string name="kube_exec_hint_oidc_no_issuer">Exportiere sie erneut mit --oidc-issuer-url, damit die eingebaute OIDC-Anmeldung übernehmen kann.</string>
+    <string name="kube_exec_hint_unknown">Nutze ein Client-Zertifikat oder ein Token.</string>
     <string name="kube_problem_no_credentials">Er hat keine Zugangsdaten: Füge ein Client-Zertifikat oder ein Token hinzu.</string>
     <string name="kube_problem_invalid">Dieser Kontext kann nicht gelesen werden.</string>
     <string name="help_qr_compressed">Zu groß für einen QR-Code (eine kubeconfig mit Zertifikat)? Erst komprimieren:</string>

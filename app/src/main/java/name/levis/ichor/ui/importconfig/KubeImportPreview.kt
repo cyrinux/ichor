@@ -36,8 +36,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.KUBE_AUTH_TOKEN
+import name.levis.ichor.model.KUBE_PROBLEM_EXEC
 import name.levis.ichor.model.KubeImportRow
 import name.levis.ichor.model.kubeAuthLabel
+import name.levis.ichor.model.kubeExecHintText
 import name.levis.ichor.model.kubeImportRows
 import name.levis.ichor.model.kubeProblemText
 import name.levis.ichor.model.parseCloudContext
@@ -127,7 +129,7 @@ private fun KubeContextRow(
                 R.string.import_include_context,
                 if (current) stringResource(R.string.import_context_current, ctx.name) else ctx.name,
             )
-            val reason = if (row.importable) null else stringResource(kubeProblemText(ctx.problem))
+            val reason = if (row.importable) null else problemSentence(ctx.problem, ctx.problemDetail)
             Row(
                 Modifier.fillMaxWidth()
                     .semantics {
@@ -157,7 +159,7 @@ private fun KubeContextRow(
                 if (row.importable && ctx.signIn.isNotEmpty()) {
                     MutedText(stringResource(R.string.import_kube_signin_follows, signInMethodText(ctx.signIn)))
                 }
-                if (!row.importable) Problem(ctx.problem, ctx.problemDetail)
+                if (!row.importable) Problem(ctx.problem, ctx.problemDetail, ctx.execHint)
                 row.conflict?.let { conflict ->
                     NameConflict(
                         name = ctx.name,
@@ -180,18 +182,33 @@ private fun authText(auth: String, detail: String): String {
     return if (detail.isEmpty()) label else "$label · $detail"
 }
 
-/** Why the context cannot be added, with the raw detail (a file path, a plugin) under it. */
+/** Why the context cannot be added, in one sentence: an exec plugin by its name. */
 @Composable
-private fun Problem(problem: String, detail: String) {
+private fun problemSentence(problem: String, detail: String): String =
+    if (problem == KUBE_PROBLEM_EXEC && detail.isNotEmpty()) {
+        stringResource(R.string.kube_problem_exec_named, detail)
+    } else {
+        stringResource(kubeProblemText(problem))
+    }
+
+/**
+ * Why the context cannot be added, with the raw detail (a file path) under it. An exec plugin
+ * is named in the sentence, with what to do instead under it.
+ */
+@Composable
+private fun Problem(problem: String, detail: String, execHint: String) {
+    val namedPlugin = problem == KUBE_PROBLEM_EXEC && detail.isNotEmpty()
     Column(Modifier.padding(top = 8.dp)) {
         // Already read on the row's checkbox, with the context it is about.
         Text(
-            stringResource(kubeProblemText(problem)),
+            problemSentence(problem, detail),
             color = LocalStatusColors.current.warn,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.clearAndSetSemantics {},
         )
-        if (detail.isNotEmpty()) {
+        if (namedPlugin) {
+            MutedText(stringResource(kubeExecHintText(execHint)))
+        } else if (detail.isNotEmpty()) {
             Text(
                 detail,
                 fontFamily = FontFamily.Monospace,

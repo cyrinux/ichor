@@ -4001,6 +4001,11 @@
     <string name="kube_problem_basic_auth">不支持使用用户名和密码登录。</string>
     <string name="kube_problem_sign_in_later">暂不支持此登录方式：将在后续版本中提供。</string>
     <string name="kube_problem_exec">不支持此 exec 插件。使用客户端证书或令牌。</string>
+    <string name="kube_problem_exec_named">凭据插件 %1$s 无法在手机上运行。</string>
+    <string name="kube_exec_hint_teleport">计划支持从手机登录 Teleport；在此之前，请导出带客户端证书的 kubeconfig。</string>
+    <string name="kube_exec_hint_token_wrapper">它只输出一个令牌：粘贴该令牌，或使用客户端证书。</string>
+    <string name="kube_exec_hint_oidc_no_issuer">请使用 --oidc-issuer-url 重新导出，以便内置的 OIDC 登录接管。</string>
+    <string name="kube_exec_hint_unknown">使用客户端证书或令牌。</string>
     <string name="kube_problem_no_credentials">它没有凭据：添加客户端证书或令牌。</string>
     <string name="kube_problem_invalid">无法读取此上下文。</string>
     <string name="help_qr_compressed">单个 QR 码放不下（包含证书的 kubeconfig）？先压缩：</string>

@@ -173088,43 +173088,75 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Этот exec-плагин не может работать на телефоне." } }
       }
     },
-    "This exec plugin cannot run on a phone: %@" : {
+    "The %@ credential plugin cannot run on a phone." : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce plugin exec ne peut pas tourner sur un téléphone : %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Este plugin exec no puede ejecutarse en un teléfono: %@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Цей плагін exec не може працювати на телефоні: %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieses Exec-Plugin kann nicht auf einem Telefon laufen: %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Questo plugin exec non può essere eseguito su un telefono: %@"
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此 exec 插件无法在手机上运行：%@" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この Exec プラグインはスマートフォンでは実行できません：%@" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este plugin exec não pode ser executado em um celular: %@" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Этот exec-плагин не может работать на телефоне: %@" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The %@ credential plugin cannot run on a phone." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Credential-Plugin %@ kann nicht auf einem Telefon laufen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El plugin de credenciales %@ no puede ejecutarse en un teléfono." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le plugin d’identifiants %@ ne peut pas tourner sur un téléphone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il plugin di credenziali %@ non può essere eseguito su un telefono." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "認証情報プラグイン %@ はスマートフォンでは実行できません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O plugin de credenciais %@ não pode ser executado em um celular." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Плагин учётных данных %@ не может работать на телефоне." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Плагін облікових даних %@ не може працювати на телефоні." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "凭据插件 %@ 无法在手机上运行。" } }
+      }
+    },
+    "Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Teleport-Anmeldung vom Telefon ist geplant; exportiere bis dahin eine kubeconfig mit Client-Zertifikat." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El inicio de sesión de Teleport desde el teléfono está previsto; mientras tanto, exporta un kubeconfig con un certificado de cliente." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La connexion Teleport depuis le téléphone est prévue ; d’ici là, exportez un kubeconfig avec un certificat client." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’accesso Teleport dal telefono è in programma; nel frattempo esporta un kubeconfig con un certificato client." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スマートフォンからの Teleport サインインは予定されています。それまではクライアント証明書付きの kubeconfig をエクスポートしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O login do Teleport pelo celular está planejado; até lá, exporte um kubeconfig com um certificado de cliente." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход через Teleport с телефона запланирован; пока экспортируйте kubeconfig с клиентским сертификатом." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід через Teleport з телефона заплановано; доти експортуйте kubeconfig із клієнтським сертифікатом." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "计划支持从手机登录 Teleport；在此之前，请导出带客户端证书的 kubeconfig。" } }
+      }
+    },
+    "It only prints a token: paste that token, or use a client certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Es gibt nur ein Token aus: Füge dieses Token ein oder nutze ein Client-Zertifikat." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo imprime un token: pega ese token o usa un certificado de cliente." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Il ne fait qu’afficher un jeton : collez ce jeton ou utilisez un certificat client." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Stampa solo un token: incolla quel token o usa un certificato client." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "トークンを出力するだけです。そのトークンを貼り付けるか、クライアント証明書を使用してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ele só imprime um token: cole esse token ou use um certificado de cliente." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Он только выводит токен: вставьте этот токен или используйте клиентский сертификат." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Він лише виводить токен: вставте цей токен або використайте клієнтський сертифікат." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "它只输出一个令牌：粘贴该令牌，或使用客户端证书。" } }
+      }
+    },
+    "Export it again with --oidc-issuer-url so the built-in OIDC sign-in can take over." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Exportiere sie erneut mit --oidc-issuer-url, damit die eingebaute OIDC-Anmeldung übernehmen kann." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vuelve a exportarlo con --oidc-issuer-url para que el inicio de sesión OIDC integrado tome el relevo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Exportez-le de nouveau avec --oidc-issuer-url pour que la connexion OIDC intégrée prenne le relais." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esportalo di nuovo con --oidc-issuer-url così l’accesso OIDC integrato può subentrare." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "組み込みの OIDC サインインが引き継げるよう、--oidc-issuer-url を付けて再度エクスポートしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Exporte de novo com --oidc-issuer-url para que o login OIDC integrado assuma." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Экспортируйте его заново с --oidc-issuer-url, чтобы встроенный вход OIDC мог его заменить." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Експортуйте його знову з --oidc-issuer-url, щоб вбудований вхід OIDC міг його замінити." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请使用 --oidc-issuer-url 重新导出，以便内置的 OIDC 登录接管。" } }
+      }
+    },
+    "Use a client certificate or a token." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nutze ein Client-Zertifikat oder ein Token." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usa un certificado de cliente o un token." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utilisez un certificat client ou un jeton." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Usa un certificato client o un token." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアント証明書またはトークンを使用してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Use um certificado de cliente ou um token." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Используйте клиентский сертификат или токен." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Використайте клієнтський сертифікат або токен." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用客户端证书或令牌。" } }
       }
     },
     "The user has no credentials: no client certificate and no token." : {
