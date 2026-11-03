@@ -6341,6 +6341,13 @@
     <string name="ollama_pull_starting">Download wird gestartet…</string>
     <string name="ollama_pull_progress">%1$s · %2$s von %3$s</string>
     <string name="ollama_pull_done">Heruntergeladen: Das Modell ist auf dem Server</string>
+    <string name="ai_cluster_server_use">Für die KI-Diagnose verwenden</string>
+    <string name="ai_cluster_server_pick">Wähle einen Server unter Datendienste, Ollama: „Für die KI-Diagnose verwenden“ in seiner Zeile. Der Bericht wird wie bisher maskiert und verlässt das Netz des Clusters nicht.</string>
+    <string name="ai_cluster_server_active">Per Port-Forward zu %1$s</string>
+    <string name="ai_cluster_server_lost">Der Port-Forward zum Server läuft nicht: tippen, um neu zu verbinden</string>
+    <string name="ai_cluster_server">Server: %1$s</string>
+    <string name="ai_cluster_server_done">Die KI-Diagnose fragt jetzt %1$s</string>
+    <string name="ai_cluster_model_default">Leer: das neueste Modell auf dem Server</string>
     <string name="ollama_pull_cancel">Download stoppen</string>
     <string name="ollama_pull_background_hint">Der Download läuft weiter, solange Ichor geöffnet bleibt, auch im Hintergrund. Schließt das System Ichor, stoppt er; erneutes Herunterladen setzt ihn fort.</string>
 </resources>

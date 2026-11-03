@@ -6609,6 +6609,13 @@
     <string name="ollama_pull_starting">Запуск завантаження…</string>
     <string name="ollama_pull_progress">%1$s · %2$s з %3$s</string>
     <string name="ollama_pull_done">Завантажено: модель на сервері</string>
+    <string name="ai_cluster_server_use">Використати для діагностики ШІ</string>
+    <string name="ai_cluster_server_pick">Виберіть сервер у розділі «Сервіси даних», Ollama: «Використати для діагностики ШІ» в його рядку. Звіт маскується як раніше й не залишає мережу кластера.</string>
+    <string name="ai_cluster_server_active">Через port-forward до %1$s</string>
+    <string name="ai_cluster_server_lost">Port-forward до сервера не працює: торкніться, щоб перепідключитися</string>
+    <string name="ai_cluster_server">Сервер: %1$s</string>
+    <string name="ai_cluster_server_done">Діагностика ШІ тепер звертається до %1$s</string>
+    <string name="ai_cluster_model_default">Порожньо: найновіша модель на сервері</string>
     <string name="ollama_pull_cancel">Зупинити завантаження</string>
     <string name="ollama_pull_background_hint">Завантаження триває, доки Ichor відкритий, також у фоні. Якщо система закриє Ichor, воно зупиниться; повторне завантаження продовжить його.</string>
 </resources>

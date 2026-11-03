@@ -6351,6 +6351,13 @@
     <string name="ollama_pull_starting">Avvio del download…</string>
     <string name="ollama_pull_progress">%1$s · %2$s di %3$s</string>
     <string name="ollama_pull_done">Scaricato: il modello è sul server</string>
+    <string name="ai_cluster_server_use">Usa per la diagnosi IA</string>
+    <string name="ai_cluster_server_pick">Scegli un server in Servizi dati, Ollama: Usa per la diagnosi IA nella sua riga. Il rapporto è mascherato come prima e non lascia la rete del cluster.</string>
+    <string name="ai_cluster_server_active">Tramite port-forward verso %1$s</string>
+    <string name="ai_cluster_server_lost">Il port-forward verso il server non è attivo: tocca per riconnettere</string>
+    <string name="ai_cluster_server">Server: %1$s</string>
+    <string name="ai_cluster_server_done">La diagnosi IA ora interroga %1$s</string>
+    <string name="ai_cluster_model_default">Vuoto: il modello più recente sul server</string>
     <string name="ollama_pull_cancel">Interrompi il download</string>
     <string name="ollama_pull_background_hint">Il download continua finché Ichor resta aperto, anche in background. Se il sistema chiude Ichor si interrompe; scaricare di nuovo lo riprende.</string>
 </resources>

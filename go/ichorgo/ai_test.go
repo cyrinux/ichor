@@ -259,12 +259,13 @@ func TestAIProvidersListsDefaults(t *testing.T) {
 	}
 
 	var got []aiProvider
-	if err := json.Unmarshal([]byte(out), &got); err != nil || len(got) != 3 {
+	if err := json.Unmarshal([]byte(out), &got); err != nil || len(got) != 4 {
 		t.Fatalf("providers: %s, %v", out, err)
 	}
 
 	if got[0].ID != "anthropic" || got[0].DefaultModel != "claude-opus-5-5" || got[1].ID != "openai" || got[1].KeyURL == "" ||
-		got[2].ID != "device" || got[2].KeyURL != "" || got[2].DefaultModel != defaultLocalModel() {
+		got[2].ID != "device" || got[2].KeyURL != "" || got[2].DefaultModel != defaultLocalModel() ||
+		got[3].ID != aiOllamaCluster || got[3].DefaultModel != "" {
 		t.Fatalf("unexpected providers: %+v", got)
 	}
 }

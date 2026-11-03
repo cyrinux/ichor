@@ -2,6 +2,7 @@ package name.levis.ichor.data
 
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.goErrorText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -33,7 +34,12 @@ sealed interface AnswerEvent {
  * The optional AI diagnosis, through the Go core: a report about the cluster, shown to the
  * user, then sent to the model they chose only when they ask.
  */
-class DiagnosisRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
+class DiagnosisRepository(
+    private val configs: ConfigRepository,
+    private val kubeServers: KubeServers,
+    /** The base URL the calls get (the cluster's Ollama: its forward's, opened first; see [AiForwardRepository]). */
+    private val baseUrlOf: suspend (AiSettings) -> String = { it.baseUrl },
+) {
 
     /**
      * Providers and their default models, the same on Android and iOS; "This phone" only in a
@@ -78,11 +84,21 @@ class DiagnosisRepository(private val configs: ConfigRepository, private val kub
      */
     fun ask(diagnosis: Diagnosis, settings: AiSettings, apiKey: String, language: String, note: String): Flow<AnswerEvent> =
         callbackFlow {
+            // The cluster's Ollama: a forward that could not open is the answer's error.
+            val baseUrl = try {
+                baseUrlOf(settings)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                send(AnswerEvent.Done(goErrorText(e.message.orEmpty())))
+                close()
+                return@callbackFlow
+            }
             val run = diagnosis.ask(
                 settings.provider,
                 apiKey,
                 settings.model,
-                settings.baseUrl,
+                baseUrl,
                 language,
                 note,
                 settings.allowTools,

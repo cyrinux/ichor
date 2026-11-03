@@ -39,6 +39,18 @@ final class DiagnosisReport: Sendable {
     func ask(
         provider: String, settings: AIProviderSettings, language: String, note: String, allowTools: Bool
     ) -> AsyncStream<DiagnosisEvent> {
+        // The cluster's Ollama: its forward opens first.
+        guard provider != ollamaClusterProvider else {
+            return askThroughForward(settings, failed: { .done(error: $0) }) { [self] resolved in
+                askNow(provider: provider, settings: resolved, language: language, note: note, allowTools: allowTools)
+            }
+        }
+        return askNow(provider: provider, settings: settings, language: language, note: note, allowTools: allowTools)
+    }
+
+    private func askNow(
+        provider: String, settings: AIProviderSettings, language: String, note: String, allowTools: Bool
+    ) -> AsyncStream<DiagnosisEvent> {
         TalosClient.bridged { continuation in
             let bridge = DiagnosisBridge(
                 answer: { continuation.yield(.answer($0)) },

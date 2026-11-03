@@ -45,6 +45,8 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.AiModel
 import name.levis.ichor.data.AiProvider
 import name.levis.ichor.data.AiSettings
+import name.levis.ichor.model.OLLAMA_BRAND
+import name.levis.ichor.model.OLLAMA_CLUSTER_PROVIDER
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -101,7 +103,10 @@ private fun SwitchRow(title: String, description: String, checked: Boolean, onCh
 @Composable
 private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
     val prefs = app.aiPreferences
-    val providers = app.diagnosisRepository.providers
+    // The cluster's Ollama shows once a server was picked from its row (Data services).
+    val providers = app.diagnosisRepository.providers.filter {
+        it.id != OLLAMA_CLUSTER_PROVIDER || settings.provider == it.id || settings.baseUrls[it.id] != null
+    }
     val provider = providers.firstOrNull { it.id == settings.provider } ?: return
     val uriHandler = LocalUriHandler.current
     // Per provider: the stored key is read once, then edits are written through.
@@ -120,6 +125,10 @@ private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
     }
     if (provider.id == AiSettings.DEVICE_PROVIDER) {
         LocalModelSection(app, settings)
+        return
+    }
+    if (provider.id == OLLAMA_CLUSTER_PROVIDER) {
+        ClusterServerSettings(app, settings, provider)
         return
     }
     OutlinedTextField(
@@ -158,7 +167,7 @@ private fun ProviderSettings(app: TalosApp, settings: AiSettings) {
 
 /** The model id, typed or picked from the list the provider returns for this key. */
 @Composable
-private fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider, apiKey: String) {
+internal fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider, apiKey: String) {
     val prefs = app.aiPreferences
     val scope = rememberCoroutineScope()
     var models by remember(provider.id) { mutableStateOf<List<AiModel>?>(null) }
@@ -170,7 +179,11 @@ private fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider
         onValueChange = { prefs.update(settings.withModel(it)) },
         label = { Text(stringResource(R.string.ai_model)) },
         placeholder = { Text(provider.defaultModel) },
-        supportingText = { Text(stringResource(R.string.ai_model_default, provider.defaultModel)) },
+        supportingText = {
+            // No default for a server of the cluster: its newest model answers.
+            val hint = provider.defaultModel.takeIf { it.isNotEmpty() }
+            Text(if (hint == null) stringResource(R.string.ai_cluster_model_default) else stringResource(R.string.ai_model_default, hint))
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
         modifier = Modifier.fillMaxWidth(),
@@ -182,7 +195,7 @@ private fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider
                 loading = true
                 error = null
                 scope.launch {
-                    runCatching { app.diagnosisRepository.models(provider.id, apiKey, settings.baseUrl) }
+                    runCatching { app.diagnosisRepository.models(provider.id, apiKey, app.aiForward.baseUrl(settings)) }
                         .onSuccess { models = it }
                         .onFailure { error = it.userMessage() }
                     loading = false
@@ -207,7 +220,10 @@ private fun ModelField(app: TalosApp, settings: AiSettings, provider: AiProvider
     error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
 }
 
-/** A provider's name as the settings show it: "This phone" is translated, brands are not. */
+/** A provider's name as the settings show it: "This phone" is translated, brands are not; the cluster's server is "Ollama". */
 @Composable
-fun providerLabel(provider: AiProvider): String =
-    if (provider.id == AiSettings.DEVICE_PROVIDER) stringResource(R.string.ai_provider_device) else provider.name
+fun providerLabel(provider: AiProvider): String = when (provider.id) {
+    AiSettings.DEVICE_PROVIDER -> stringResource(R.string.ai_provider_device)
+    OLLAMA_CLUSTER_PROVIDER -> OLLAMA_BRAND
+    else -> provider.name
+}

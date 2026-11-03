@@ -9,6 +9,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import name.levis.ichor.data.AiForwardRepository
 import name.levis.ichor.data.KubePermissions
 import name.levis.ichor.data.UpdateLookupConsent
 import name.levis.ichor.data.UpdatesRepository
@@ -489,11 +490,11 @@ class TalosApp : Application() {
     /** The secret an alert's in-app button carries, so no other app can ask for its confirmation. */
     val alertActionToken by lazy { AlertActionToken(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
 
-    /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
-    val diagnosisRepository by lazy { DiagnosisRepository(configRepository, kubeServers) }
-    /** The panel assistant of the Metrics screen, with the same providers and keys. */
-    val metricsChatRepository by lazy { MetricsChatRepository(configRepository, kubeServers) }
-    val aiPreferences by lazy {
+    /** The optional AI diagnosis (off until enabled), the Metrics assistant on the same settings, [aiForward] to the cluster's Ollama. */
+    val diagnosisRepository: DiagnosisRepository by lazy { DiagnosisRepository(configRepository, kubeServers) { aiForward.baseUrl(it) } }
+    val metricsChatRepository: MetricsChatRepository by lazy { MetricsChatRepository(configRepository, kubeServers) { aiForward.baseUrl(it) } }
+    val aiForward: AiForwardRepository by lazy { AiForwardRepository(configRepository, kubeServers, { aiPreferences }, ProcessLifecycleOwner.get().lifecycleScope) }
+    val aiPreferences: AiPreferences by lazy {
         AiPreferences(
             getSharedPreferences(AiPreferences.FILE, Context.MODE_PRIVATE),
             diagnosisRepository.providers.map { it.id },

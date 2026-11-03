@@ -15,9 +15,11 @@ struct AISection: View {
             Toggle("AI diagnosis", isOn: $ai.enabled)
             if ai.enabled, let provider = ai.provider {
                 Picker("Provider", selection: Binding(get: { provider.id }, set: { ai.select($0) })) {
-                    ForEach(ai.providers) { item in
+                    ForEach(ai.visibleProviders) { item in
                         if item.id == AISettings.deviceProvider {
                             Text("This phone").tag(item.id)
+                        } else if item.id == ollamaClusterProvider {
+                            Text(verbatim: ollamaBrand).tag(item.id)
                         } else {
                             Text(verbatim: item.name).tag(item.id)
                         }
@@ -25,6 +27,9 @@ struct AISection: View {
                 }
                 if ai.onPhone {
                     LocalModelSection()
+                } else if ai.inCluster {
+                    AIClusterServerRows()
+                    modelRows(provider)
                 } else {
                     keyRows(provider)
                 }
@@ -88,7 +93,9 @@ struct AISection: View {
     private func modelRows(_ provider: AIProvider) -> some View {
         TextField(
             "Model", text: Binding(get: { ai.current.model }, set: { ai.setModel($0) }),
-            prompt: Text("Default: \(provider.defaultModel)")
+            // No default for a server of the cluster: its newest model answers.
+            prompt: provider.defaultModel.isEmpty
+                ? Text("Empty: the newest model on the server") : Text("Default: \(provider.defaultModel)")
         )
         .textInputAutocapitalization(.never)
         .autocorrectionDisabled()
@@ -114,7 +121,10 @@ struct AISection: View {
         defer { listing = false }
         modelsMessage = nil
         do {
-            let listed = try await TalosClient.aiModels(provider: provider.id, settings: ai.current)
+            // The cluster's Ollama answers through its forward, opened first.
+            var settings = ai.current
+            if ai.inCluster { settings = try await AIForward.shared.resolved(settings) }
+            let listed = try await TalosClient.aiModels(provider: provider.id, settings: settings)
             // The settings changed while the list was loading: it is another provider's.
             guard provider.id == ai.provider?.id else { return }
             models = listed

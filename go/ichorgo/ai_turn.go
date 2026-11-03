@@ -60,8 +60,32 @@ func streamTurn(ctx context.Context, req aiRequest, emit func(string)) (aiTurn, 
 	case aiAnthropic:
 		return streamAnthropic(ctx, req, emit)
 	default:
+		if req.model == "" {
+			model, err := firstServerModel(ctx, req)
+			if err != nil {
+				return aiTurn{}, err
+			}
+
+			req.model = model
+		}
+
 		return streamOpenAI(ctx, req, emit)
 	}
+}
+
+// firstServerModel is the model a server with no model chosen answers with: the first of its
+// /v1/models (newest first), as the settings' picker lists them.
+func firstServerModel(ctx context.Context, req aiRequest) (string, error) {
+	models, err := openAIModels(ctx, req)
+	if err != nil {
+		return "", err
+	}
+
+	if len(models) == 0 {
+		return "", errors.New(req.provider.Name + " has no model yet: pull one first")
+	}
+
+	return models[0].ID, nil
 }
 
 // aiStatusError is a provider's refusal with its HTTP status, worded for the UI by Error.

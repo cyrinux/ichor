@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -32,7 +33,12 @@ sealed interface ChatEvent {
  * model the user chose, which checks every proposed PromQL query against the cluster's
  * metrics source before showing it. Uses the AI diagnosis settings and keys.
  */
-class MetricsChatRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
+class MetricsChatRepository(
+    private val configs: ConfigRepository,
+    private val kubeServers: KubeServers,
+    /** As [DiagnosisRepository]'s: the cluster's Ollama gets its forward's URL. */
+    private val baseUrlOf: suspend (AiSettings) -> String = { it.baseUrl },
+) {
 
     /** The metric names [source] knows, for the model to use metrics that exist. */
     suspend fun metricNames(source: PromSource): List<String> = kubeCall { cfg, ctx, server ->
@@ -51,11 +57,20 @@ class MetricsChatRepository(private val configs: ConfigRepository, private val k
      */
     fun ask(chat: PromChat, settings: AiSettings, apiKey: String, language: String, message: String): Flow<ChatEvent> =
         callbackFlow {
+            val baseUrl = try {
+                baseUrlOf(settings)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                send(ChatEvent.Done(null, goErrorText(e.message.orEmpty())))
+                close()
+                return@callbackFlow
+            }
             val run = chat.ask(
                 settings.provider,
                 apiKey,
                 settings.model,
-                settings.baseUrl,
+                baseUrl,
                 language,
                 message,
                 object : PromChatListener {

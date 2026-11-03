@@ -49,6 +49,16 @@ and never contacts a model provider.
   Plain HTTP is refused unless the server needs no key and is on your own network: a loopback,
   link-local or private address (RFC 1918, IPv6 ULA) or a name ending in `.local`, `.internal` or
   `.lan`. The report then crosses that network in clear.
+- **Or the Ollama in your cluster:** one tap in Data services → Ollama → a server's row → *Use
+  for AI diagnosis*. The app opens a port-forward from the phone's loopback (`127.0.0.1`, a
+  random port) to a ready pod of that server, through the Kubernetes API, and asks Ollama's
+  OpenAI-compatible `/v1` there: no key, and the report does not leave the cluster's network
+  (it is masked exactly as for any other provider). The provider shows as *Ollama* in Settings →
+  AI diagnosis, with the server, the pod the forward goes to, the models picker (empty: the
+  server's newest model) and a reconnect button. The forward opens again on its own before a
+  question when it ended or its pod was replaced, and stops when you leave the cluster or pick
+  another provider. It needs `create` on `pods/portforward` in the server's namespace; the
+  demo cluster refuses it.
 - **This phone:** the third provider runs a model on the phone itself, with
   [llama.cpp](https://github.com/ggml-org/llama.cpp): no key, no server, and nothing leaves the
   phone. Pick a model in Settings → AI diagnosis → This phone and tap *Download*; the size is

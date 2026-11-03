@@ -123,26 +123,10 @@ func ollamaActionServer(ctx context.Context, k *kubeClient, target map[string]an
 // (a Service selecting its pods, else a ready pod): a 404 when there is none, a 503 (403 when
 // refused) when its API cannot be reached.
 func ollamaServerNamed(ctx context.Context, k *kubeClient, namespace, name string) (ollamaServer, error) {
-	workloads, err := listOllamaWorkloads(ctx, k, namespace)
+	s, err := ollamaWorkloadNamed(ctx, k, namespace, name)
 	if err != nil {
 		return ollamaServer{}, err
 	}
-
-	at := -1
-
-	for i, w := range workloads {
-		if w.name == name {
-			at = i
-
-			break
-		}
-	}
-
-	if at < 0 {
-		return ollamaServer{}, &kubeAPIError{Code: http.StatusNotFound, Reason: "NotFound", Message: fmt.Sprintf("no Ollama server %s in %s", name, namespace)}
-	}
-
-	s := workloads[at]
 
 	var services kubeList[ollamaServiceObject]
 	servicesErr := getList(ctx, k, scopedPath("/api/v1", namespace, "services"), &services)
@@ -159,6 +143,23 @@ func ollamaServerNamed(ctx context.Context, k *kubeClient, namespace, name strin
 	}
 
 	return s, nil
+}
+
+// ollamaWorkloadNamed is the Ollama workload namespace/name, not located yet: a 404 when there
+// is none.
+func ollamaWorkloadNamed(ctx context.Context, k *kubeClient, namespace, name string) (ollamaServer, error) {
+	workloads, err := listOllamaWorkloads(ctx, k, namespace)
+	if err != nil {
+		return ollamaServer{}, err
+	}
+
+	for _, w := range workloads {
+		if w.name == name {
+			return w, nil
+		}
+	}
+
+	return ollamaServer{}, &kubeAPIError{Code: http.StatusNotFound, Reason: "NotFound", Message: fmt.Sprintf("no Ollama server %s in %s", name, namespace)}
 }
 
 // ollamaAnswered: err is Ollama's own answer (not the API server's) with that code.
