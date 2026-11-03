@@ -4321,6 +4321,11 @@
     <string name="kube_problem_basic_auth">Вхід за ім’ям користувача та паролем не підтримується.</string>
     <string name="kube_problem_sign_in_later">Цей спосіб входу ще не підтримується: він з’явиться в наступній версії.</string>
     <string name="kube_problem_exec">Цей плагін exec не підтримується. Використайте клієнтський сертифікат або токен.</string>
+    <string name="kube_problem_exec_named">Плагін облікових даних %1$s не може працювати на телефоні.</string>
+    <string name="kube_exec_hint_teleport">Вхід через Teleport з телефона заплановано; доти експортуйте kubeconfig із клієнтським сертифікатом.</string>
+    <string name="kube_exec_hint_token_wrapper">Він лише виводить токен: вставте цей токен або використайте клієнтський сертифікат.</string>
+    <string name="kube_exec_hint_oidc_no_issuer">Експортуйте його знову з --oidc-issuer-url, щоб вбудований вхід OIDC міг його замінити.</string>
+    <string name="kube_exec_hint_unknown">Використайте клієнтський сертифікат або токен.</string>
     <string name="kube_problem_no_credentials">Немає облікових даних: додайте клієнтський сертифікат або токен.</string>
     <string name="kube_problem_invalid">Цей контекст не вдається прочитати.</string>
     <string name="help_qr_compressed">Завеликий для одного QR-коду (kubeconfig із сертифікатом)? Спершу стисніть його:</string>

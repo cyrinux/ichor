@@ -77,6 +77,17 @@ class KubeImportTest {
         // A code from a newer core still says something.
         assertEquals(R.string.kube_problem_invalid, kubeProblemText("kube-something-new"))
         assertEquals(R.string.kube_problem_proxy, kubeProblemText("kube-proxy-url"))
+        assertEquals(R.string.kube_problem_exec, kubeProblemText(KUBE_PROBLEM_EXEC))
+    }
+
+    @Test
+    fun execHintsForKnownCodes() {
+        assertEquals(R.string.kube_exec_hint_teleport, kubeExecHintText("teleport"))
+        assertEquals(R.string.kube_exec_hint_token_wrapper, kubeExecHintText("token-wrapper"))
+        assertEquals(R.string.kube_exec_hint_oidc_no_issuer, kubeExecHintText("oidc-no-issuer"))
+        // An older core sends no hint, a newer one may send one this app does not know.
+        assertEquals(R.string.kube_exec_hint_unknown, kubeExecHintText(""))
+        assertEquals(R.string.kube_exec_hint_unknown, kubeExecHintText("something-new"))
     }
 
     @Test

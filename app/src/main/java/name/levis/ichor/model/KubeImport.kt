@@ -68,7 +68,19 @@ fun kubeProblemText(problem: String): Int = when (problem) {
     "kube-proxy-url" -> R.string.kube_problem_proxy
     "kube-basic-auth" -> R.string.kube_problem_basic_auth
     "kube-sign-in-later" -> R.string.kube_problem_sign_in_later
-    "kube-exec-unsupported" -> R.string.kube_problem_exec
+    KUBE_PROBLEM_EXEC -> R.string.kube_problem_exec
     "kube-no-credentials" -> R.string.kube_problem_no_credentials
     else -> R.string.kube_problem_invalid
+}
+
+/** The ParseKubeconfig problem code for an exec plugin the phone cannot run. */
+const val KUBE_PROBLEM_EXEC = "kube-exec-unsupported"
+
+/** What to do instead of an exec plugin the phone cannot run (ParseKubeconfig's execHint). */
+@StringRes
+fun kubeExecHintText(hint: String): Int = when (hint) {
+    "teleport" -> R.string.kube_exec_hint_teleport
+    "token-wrapper" -> R.string.kube_exec_hint_token_wrapper
+    "oidc-no-issuer" -> R.string.kube_exec_hint_oidc_no_issuer
+    else -> R.string.kube_exec_hint_unknown
 }

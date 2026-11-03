@@ -4114,6 +4114,11 @@
     <string name="kube_problem_basic_auth">L\'accesso con nome utente e password non è supportato.</string>
     <string name="kube_problem_sign_in_later">Questo accesso non è ancora supportato: arriverà in una versione futura.</string>
     <string name="kube_problem_exec">Questo plugin exec non è supportato. Usa un certificato client o un token.</string>
+    <string name="kube_problem_exec_named">Il plugin di credenziali %1$s non può essere eseguito su un telefono.</string>
+    <string name="kube_exec_hint_teleport">L’accesso Teleport dal telefono è in programma; nel frattempo esporta un kubeconfig con un certificato client.</string>
+    <string name="kube_exec_hint_token_wrapper">Stampa solo un token: incolla quel token o usa un certificato client.</string>
+    <string name="kube_exec_hint_oidc_no_issuer">Esportalo di nuovo con --oidc-issuer-url così l’accesso OIDC integrato può subentrare.</string>
+    <string name="kube_exec_hint_unknown">Usa un certificato client o un token.</string>
     <string name="kube_problem_no_credentials">Non ha credenziali: aggiungi un certificato client o un token.</string>
     <string name="kube_problem_invalid">Impossibile leggere questo contesto.</string>
     <string name="help_qr_compressed">Troppo grande per un solo codice QR (un kubeconfig con certificato)? Comprimilo prima:</string>

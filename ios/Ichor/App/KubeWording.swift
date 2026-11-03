@@ -27,6 +27,25 @@ extension ContextSummary {
         return "\(method) · \(detail)"
     }
 
+    /// What to do instead of the exec plugin the phone cannot run.
+    private var localizedExecHint: String {
+        switch execHint {
+        case "teleport":
+            return String(
+                localized:
+                    "Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate."
+            )
+        case "token-wrapper":
+            return String(localized: "It only prints a token: paste that token, or use a client certificate.")
+        case "oidc-no-issuer":
+            return String(
+                localized: "Export it again with --oidc-issuer-url so the built-in OIDC sign-in can take over."
+            )
+        default:
+            return String(localized: "Use a client certificate or a token.")
+        }
+    }
+
     /// Why the context cannot be added, nil when it can.
     var localizedKubeProblem: String? {
         guard let problem else { return nil }
@@ -50,9 +69,9 @@ extension ContextSummary {
         case "kube-sign-in-later":
             return String(localized: "Signing in with \(localizedAuthLabel) comes in a later version.")
         case "kube-exec-unsupported":
-            return detail.isEmpty
-                ? String(localized: "This exec plugin cannot run on a phone.")
-                : String(localized: "This exec plugin cannot run on a phone: \(detail)")
+            guard !detail.isEmpty else { return String(localized: "This exec plugin cannot run on a phone.") }
+            let named = String(localized: "The \(detail) credential plugin cannot run on a phone.")
+            return "\(named) \(localizedExecHint)"
         case "kube-no-credentials":
             return String(localized: "The user has no credentials: no client certificate and no token.")
         case "kube-invalid":
