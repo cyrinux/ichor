@@ -60,6 +60,9 @@ var aiProviders = []aiProvider{
 	{ID: aiOpenAI, Name: "OpenAI", DefaultModel: defaultOpenAIModel, KeyURL: "https://platform.openai.com/api-keys"},
 	// No key, no server: DefaultModel is filled in from the catalog (AIProviders).
 	{ID: aiDevice, Name: "This phone"},
+	// OpenAI's protocol through a port-forward to the cluster's Ollama (KubeOllamaForward):
+	// no key, and no default model, the server's first one answers.
+	{ID: aiOllamaCluster, Name: "Ollama in the cluster"},
 }
 
 type aiModel struct {
@@ -190,6 +193,16 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 	}
 
 	baseURL = strings.TrimSpace(baseURL)
+
+	if req.provider.ID == aiOllamaCluster {
+		// Ollama ignores a key, and none may travel over the forward's plain http.
+		req.apiKey = ""
+
+		if baseURL == "" {
+			return aiRequest{}, errors.New("no Ollama server chosen: tap Use for AI diagnosis on a server in Data services, Ollama")
+		}
+	}
+
 	if baseURL != "" {
 		u, err := url.Parse(baseURL)
 		if err != nil || u.Host == "" || u.Scheme != "http" && u.Scheme != "https" {
@@ -212,6 +225,8 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 		return aiRequest{}, errors.New("no API key set for " + req.provider.Name)
 	}
 
+	// Still empty for a provider with no default (the cluster's Ollama): streamTurn asks the
+	// server for its models and uses the first.
 	if req.model == "" {
 		req.model = req.provider.DefaultModel
 	}

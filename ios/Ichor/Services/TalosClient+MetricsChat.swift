@@ -50,6 +50,18 @@ final class PromChatSession: Sendable {
     func ask(provider: String, settings: AIProviderSettings, language: String, message: String) -> AsyncStream<
         PromChatEvent
     > {
+        // The cluster's Ollama: its forward opens first.
+        guard provider != ollamaClusterProvider else {
+            return askThroughForward(settings, failed: { .done(panel: nil, error: $0) }) { [self] resolved in
+                askNow(provider: provider, settings: resolved, language: language, message: message)
+            }
+        }
+        return askNow(provider: provider, settings: settings, language: language, message: message)
+    }
+
+    private func askNow(provider: String, settings: AIProviderSettings, language: String, message: String)
+        -> AsyncStream<PromChatEvent>
+    {
         TalosClient.bridged { continuation in
             let bridge = PromChatBridge(
                 answer: { continuation.yield(.answer($0)) },

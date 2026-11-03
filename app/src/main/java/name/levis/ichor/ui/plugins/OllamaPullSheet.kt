@@ -2,6 +2,7 @@ package name.levis.ichor.ui.plugins
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -44,12 +45,18 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 
 /**
- * "Pull a model…" under an Ollama server row (card [OLLAMA_SERVERS_CARD], whose rows open the
- * server's workload: its namespace and name are the server's); null for any other row.
+ * "Pull a model…" and "Use for AI diagnosis" under an Ollama server row (card
+ * [OLLAMA_SERVERS_CARD], whose rows open the server's workload: its namespace and name are the
+ * server's); null for any other row.
  */
 fun ollamaRowExtra(cardId: String, row: PluginRow, pulls: OllamaPulls): (@Composable () -> Unit)? {
     val ref = row.ref?.takeIf { cardId == OLLAMA_SERVERS_CARD && it.namespace.isNotEmpty() && it.name.isNotEmpty() } ?: return null
-    return { OllamaPullButton(ref.namespace, ref.name, pulls) }
+    return {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OllamaPullButton(ref.namespace, ref.name, pulls)
+            OllamaAiButton(ref.namespace, ref.name)
+        }
+    }
 }
 
 @Composable

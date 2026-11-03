@@ -67,6 +67,8 @@ struct IchorApp: App {
                 .environment(gitHosts)
                 .environment(stagedEdits)
                 .task { support.onLaunch() }
+                // The AI's port-forward to the cluster's Ollama opens on the cluster on screen.
+                .task { AIForward.shared.model = model }
                 // Files sent with "Send to Ichor" while the app was closed (scenePhase's first
                 // .active may come before the root's onChange is attached).
                 .task { IncomingConfig.receivePending() }

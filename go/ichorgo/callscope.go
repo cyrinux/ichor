@@ -112,7 +112,8 @@ func scopedResult[T any](parent context.Context, out T, err error) (T, error) {
 }
 
 // CancelCalls ends the in-flight reads of the cluster the app just left, so they stop holding
-// its threads and the network. Mutations and followed runs go on; while a run is under way on
+// its threads and the network, and the AI's port-forward to its Ollama (KubeOllamaForward).
+// Mutations and followed runs go on; while a run is under way on
 // the cluster, this does nothing and its reads finish as usual. Never an error.
 func CancelCalls(configYAML, contextName string) (err error) {
 	defer maskErr(&err)
@@ -120,6 +121,7 @@ func CancelCalls(configYAML, contextName string) (err error) {
 	contextName = unmaskContext(configYAML, contextName)
 
 	cancelCalls(configYAML, contextName)
+	stopOllamaForwardOf(contextName)
 
 	return nil
 }

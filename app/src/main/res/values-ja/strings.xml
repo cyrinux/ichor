@@ -6211,6 +6211,13 @@
     <string name="ollama_pull_starting">取得を開始しています…</string>
     <string name="ollama_pull_progress">%1$s · %2$s / %3$s</string>
     <string name="ollama_pull_done">取得完了:モデルはサーバー上にあります</string>
+    <string name="ai_cluster_server_use">AI 診断に使う</string>
+    <string name="ai_cluster_server_pick">データサービス › Ollama で、サーバーの行の「AI 診断に使う」を選んでください。レポートはこれまでどおりマスクされ、クラスターのネットワークの外に出ません。</string>
+    <string name="ai_cluster_server_active">%1$s へのポートフォワード経由</string>
+    <string name="ai_cluster_server_lost">サーバーへのポートフォワードが動いていません：タップして再接続</string>
+    <string name="ai_cluster_server">サーバー：%1$s</string>
+    <string name="ai_cluster_server_done">AI 診断は %1$s に問い合わせます</string>
+    <string name="ai_cluster_model_default">空欄：サーバー上の最新モデル</string>
     <string name="ollama_pull_cancel">ダウンロードを停止</string>
     <string name="ollama_pull_background_hint">Ichor が開いている間(バックグラウンドを含む)ダウンロードは続きます。システムが Ichor を閉じると停止し、再度取得すると再開します。</string>
 </resources>

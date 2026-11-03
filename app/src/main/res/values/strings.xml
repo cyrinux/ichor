@@ -6358,6 +6358,13 @@
     <string name="ollama_pull_starting">Starting the pull…</string>
     <string name="ollama_pull_progress">%1$s · %2$s of %3$s</string>
     <string name="ollama_pull_done">Pulled: the model is on the server</string>
+    <string name="ai_cluster_server_use">Use for AI diagnosis</string>
+    <string name="ai_cluster_server_pick">Pick a server in Data services, Ollama: Use for AI diagnosis on its row. The report is masked as before and does not leave the cluster\'s network.</string>
+    <string name="ai_cluster_server_active">Via port-forward to %1$s</string>
+    <string name="ai_cluster_server_lost">The forward to the server is not running: tap to reconnect</string>
+    <string name="ai_cluster_server">Server: %1$s</string>
+    <string name="ai_cluster_server_done">The AI diagnosis now asks %1$s</string>
+    <string name="ai_cluster_model_default">Empty: the newest model on the server</string>
     <string name="ollama_pull_cancel">Stop the download</string>
     <string name="ollama_pull_background_hint">The download goes on while Ichor stays open, also in the background. If the system closes Ichor it stops; pulling again resumes it.</string>
 </resources>

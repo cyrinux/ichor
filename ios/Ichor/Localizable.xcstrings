@@ -1,6 +1,104 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Use for AI diagnosis" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Für die KI-Diagnose verwenden" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usar para el diagnóstico con IA" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser pour le diagnostic IA" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Usa per la diagnosi IA" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AI 診断に使う" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Usar no diagnóstico por IA" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Использовать для ИИ-диагностики" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Використати для діагностики ШІ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用于 AI 诊断" } }
+      }
+    },
+    "Pick a server in Data services, Ollama: Use for AI diagnosis on its row. The report is masked as before and does not leave the cluster's network." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle einen Server unter Datendienste, Ollama: „Für die KI-Diagnose verwenden“ in seiner Zeile. Der Bericht wird wie bisher maskiert und verlässt das Netz des Clusters nicht." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige un servidor en Servicios de datos, Ollama: Usar para el diagnóstico con IA en su fila. El informe se enmascara como antes y no sale de la red del clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez un serveur dans Services de données, Ollama : Utiliser pour le diagnostic IA sur sa ligne. Le rapport est masqué comme avant et ne quitte pas le réseau du cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli un server in Servizi dati, Ollama: Usa per la diagnosi IA nella sua riga. Il rapporto è mascherato come prima e non lascia la rete del cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "データサービス › Ollama で、サーバーの行の「AI 診断に使う」を選んでください。レポートはこれまでどおりマスクされ、クラスターのネットワークの外に出ません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolha um servidor em Serviços de dados, Ollama: Usar no diagnóstico por IA na linha dele. O relatório é mascarado como antes e não sai da rede do cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выберите сервер в разделе «Сервисы данных», Ollama: «Использовать для ИИ-диагностики» в его строке. Отчёт маскируется как прежде и не покидает сеть кластера." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виберіть сервер у розділі «Сервіси даних», Ollama: «Використати для діагностики ШІ» в його рядку. Звіт маскується як раніше й не залишає мережу кластера." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 数据服务 › Ollama 中，点击服务器行上的“用于 AI 诊断”。报告仍照常脱敏，且不会离开集群网络。" } }
+      }
+    },
+    "Via port-forward to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Per Port-Forward zu %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Por port-forward a %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Via port-forward vers %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tramite port-forward verso %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ へのポートフォワード経由" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Via port-forward para %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Через port-forward к %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Через port-forward до %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通过端口转发到 %@" } }
+      }
+    },
+    "The forward to the server is not running: tap to reconnect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Port-Forward zum Server läuft nicht: tippen, um neu zu verbinden" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El port-forward al servidor no está activo: toca para reconectar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le port-forward vers le serveur ne tourne pas : touchez pour reconnecter" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il port-forward verso il server non è attivo: tocca per riconnettere" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバーへのポートフォワードが動いていません：タップして再接続" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O port-forward para o servidor não está ativo: toque para reconectar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Port-forward к серверу не работает: нажмите, чтобы переподключиться" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Port-forward до сервера не працює: торкніться, щоб перепідключитися" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "到服务器的端口转发未运行：轻点以重新连接" } }
+      }
+    },
+    "Server: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Server: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Servidor: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Serveur : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Server: %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバー：%@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Servidor: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сервер: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сервер: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器：%@" } }
+      }
+    },
+    "The AI diagnosis now asks %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die KI-Diagnose fragt jetzt %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El diagnóstico con IA ahora pregunta a %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le diagnostic IA interroge maintenant %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La diagnosi IA ora interroga %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AI 診断は %@ に問い合わせます" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O diagnóstico por IA agora consulta %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ИИ-диагностика теперь обращается к %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Діагностика ШІ тепер звертається до %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AI 诊断现在会询问 %@" } }
+      }
+    },
+    "Empty: the newest model on the server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Leer: das neueste Modell auf dem Server" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vacío: el modelo más reciente del servidor" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vide : le modèle le plus récent du serveur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Vuoto: il modello più recente sul server" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "空欄：サーバー上の最新モデル" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Vazio: o modelo mais recente do servidor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Пусто: самая новая модель на сервере" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Порожньо: найновіша модель на сервері" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "留空：使用服务器上最新的模型" } }
+      }
+    },
     "Pull a model…" : {
       "extractionState" : "manual",
       "localizations" : {

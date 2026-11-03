@@ -6211,6 +6211,13 @@
     <string name="ollama_pull_starting">正在开始拉取…</string>
     <string name="ollama_pull_progress">%1$s · %2$s / %3$s</string>
     <string name="ollama_pull_done">已拉取:模型已在服务器上</string>
+    <string name="ai_cluster_server_use">用于 AI 诊断</string>
+    <string name="ai_cluster_server_pick">在 数据服务 › Ollama 中，点击服务器行上的“用于 AI 诊断”。报告仍照常脱敏，且不会离开集群网络。</string>
+    <string name="ai_cluster_server_active">通过端口转发到 %1$s</string>
+    <string name="ai_cluster_server_lost">到服务器的端口转发未运行：轻点以重新连接</string>
+    <string name="ai_cluster_server">服务器：%1$s</string>
+    <string name="ai_cluster_server_done">AI 诊断现在会询问 %1$s</string>
+    <string name="ai_cluster_model_default">留空：使用服务器上最新的模型</string>
     <string name="ollama_pull_cancel">停止下载</string>
     <string name="ollama_pull_background_hint">只要 Ichor 保持打开(包括在后台),下载就会继续。如果系统关闭 Ichor,下载会停止;再次拉取会继续下载。</string>
 </resources>

@@ -629,15 +629,19 @@ func ollamaReadyPod(ctx context.Context, k *kubeClient, s *ollamaServer) (string
 	slices.SortFunc(pods.Items, func(a, b ollamaPodObject) int { return strings.Compare(a.Metadata.Name, b.Metadata.Name) })
 
 	for _, p := range pods.Items {
-		ready := slices.ContainsFunc(p.Status.Conditions, func(c ollamaPodCondition) bool {
-			return c.Type == "Ready" && c.Status == "True"
-		})
-		if p.Status.Phase == "Running" && ready {
+		if ollamaPodReady(p) {
 			return p.Metadata.Name, nil
 		}
 	}
 
 	return "", nil
+}
+
+// ollamaPodReady: the pod runs and its Ready condition is true.
+func ollamaPodReady(p ollamaPodObject) bool {
+	return p.Status.Phase == "Running" && slices.ContainsFunc(p.Status.Conditions, func(c ollamaPodCondition) bool {
+		return c.Type == "Ready" && c.Status == "True"
+	})
 }
 
 // readOllamaAPI reads s's version, models on disk and loaded models. The version answering

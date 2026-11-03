@@ -62,9 +62,37 @@ final class AISettings {
         return LocalModelStore.shared.file(for: effectiveModel) != nil
     }
 
+    /// The selected provider is the cluster's Ollama, through a port-forward.
+    var inCluster: Bool { provider?.id == ollamaClusterProvider }
+
     /// Who answers, as the AI screens name it ("Ask %@", "Waiting for %@…").
     var providerName: String {
-        onPhone ? String(localized: "the model on this phone") : provider?.name ?? ""
+        if onPhone { return String(localized: "the model on this phone") }
+        return inCluster ? ollamaBrand : provider?.name ?? ""
+    }
+
+    /// The providers the picker offers: the cluster's Ollama once a server was picked from its
+    /// row (Data services), or while it is the one selected.
+    var visibleProviders: [AIProvider] {
+        providers.filter { item in
+            item.id != ollamaClusterProvider || item.id == provider?.id
+                || !(perProvider[item.id]?.baseURL.isEmpty ?? true)
+        }
+    }
+
+    /// Points the AI diagnosis at `ref`, a server of the cluster's Ollama: no model (its newest
+    /// answers until one is picked) when the server changed.
+    func useClusterServer(_ ref: OllamaServerRef) {
+        let id = ollamaClusterProvider
+        let same = (perProvider[id] ?? Self.stored(id)).baseURL == ref.text
+        enabled = true
+        select(id)
+        perProvider[id, default: AIProviderSettings()].baseURL = ref.text
+        UserDefaults.standard.set(ref.text, forKey: AIKeys.baseURL(id))
+        if !same {
+            perProvider[id, default: AIProviderSettings()].model = ""
+            UserDefaults.standard.set("", forKey: AIKeys.model(id))
+        }
     }
 
     /// The list comes from Go (no network); asked once.
@@ -79,6 +107,8 @@ final class AISettings {
     func select(_ id: String) {
         savedProvider = id
         UserDefaults.standard.set(id, forKey: AIKeys.provider)
+        // The cluster's Ollama no longer asked: its port-forward goes.
+        if id != ollamaClusterProvider { AIForward.shared.stop() }
     }
 
     /// An empty key removes it from the Keychain.
