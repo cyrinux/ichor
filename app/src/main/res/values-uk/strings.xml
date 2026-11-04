@@ -3089,6 +3089,10 @@
     <string name="argo_net_layer_services">Сервіси</string>
     <string name="argo_net_layer_pods">Поди</string>
     <string name="argo_net_layer_nodes">Вузли</string>
+    <string name="argo_net_layer_external_names">Зовнішні імена</string>
+    <string name="argo_net_layer_proxy_groups">Групи проксі</string>
+    <string name="argo_net_layer_proxies">Проксі</string>
+    <string name="tailscale_net_empty">Оператор більше не обслуговує цей об’єкт.</string>
     <string name="argo_net_kind_host">Хост</string>
     <string name="argo_net_more">ще +%1$d</string>
     <string name="argo_net_less">Показати менше</string>

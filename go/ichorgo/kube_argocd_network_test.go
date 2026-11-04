@@ -77,6 +77,8 @@ func TestArgoNetworkTailscaleIngressURL(t *testing.T) {
 			"status":{"loadBalancer":{"ingress":[{"hostname":"web.tail123.ts.net"}]}}}`)},
 	}
 	in.app.Status.Resources = []argoResourceStatus{{Kind: "Service", Namespace: "shop", Name: "web"}, {Kind: "Ingress", Namespace: "shop", Name: "web"}}
+
+	// Without the operator's API group, no matcher runs: a plain host box.
 	n := buildArgoNetwork(in)
 	host := netNode(t, n, "host/https://web.tail123.ts.net")
 	if host.URL != "https://web.tail123.ts.net" || host.Name != "web.tail123.ts.net" {
@@ -84,6 +86,60 @@ func TestArgoNetworkTailscaleIngressURL(t *testing.T) {
 	}
 	if got := netEdges(n); !strings.Contains(got, "host/https://web.tail123.ts.net>ing/shop/web") || !strings.Contains(got, "ing/shop/web>svc/shop/web") {
 		t.Fatalf("edges %s", got)
+	}
+
+	// With it, the tailnet name is the entry, through the same helper as the Tailscale map.
+	raw, _ := json.Marshal(in.ingresses[0])
+	in.addExternal(tsKindIngress, "shop", "web", raw, map[string]string{groupTailscale: "v1alpha1"})
+	n = buildArgoNetwork(in)
+
+	name := netNode(t, n, "ext/Tailscale/web.tail123.ts.net")
+	if name.Kind != netKindExternalName || name.URL != "https://web.tail123.ts.net" || name.Layer != argoLayerHost || name.Detail != "Tailscale" {
+		t.Fatalf("name %+v", name)
+	}
+	if got := netEdges(n); strings.Contains(got, "host/") || !strings.Contains(got, "ext/Tailscale/web.tail123.ts.net>ing/shop/web") {
+		t.Fatalf("edges %s", got)
+	}
+}
+
+// The demo grafana app's Service is also on the tailnet: its name box sends traffic to it; the
+// other demo apps have none.
+func TestArgoNetworkTailnetService(t *testing.T) {
+	n := demoArgoNetwork("grafana")
+
+	if name := netNode(t, n, "ext/Tailscale/grafana"); name.Layer != argoLayerHost || name.Health != healthOK || name.Detail != "Tailscale" {
+		t.Fatalf("name %+v", name)
+	}
+	if got := netEdges(n); !strings.Contains(got, "ext/Tailscale/grafana>svc/monitoring/grafana:ok") {
+		t.Fatalf("edges %s", got)
+	}
+
+	for _, app := range []string{"hello-ichor", "demo-worker", "traefik", "longhorn"} {
+		for _, node := range demoArgoNetwork(app).Nodes {
+			if node.Kind == netKindExternalName {
+				t.Errorf("%s has %+v", app, node)
+			}
+		}
+	}
+}
+
+// A tailnet LoadBalancer Service: its address is drawn once, as the tailnet name.
+func TestArgoNetworkTailnetLoadBalancer(t *testing.T) {
+	raw := `{"metadata":{"name":"web","namespace":"shop"},"spec":{"type":"LoadBalancer","loadBalancerClass":"tailscale"},
+	  "status":{"loadBalancer":{"ingress":[{"hostname":"web.example-tailnet.ts.net","ip":"100.64.0.9"}]},"conditions":[{"type":"TailscaleProxyReady","status":"False","reason":"ProxyFailed"}]}}`
+	in := argoNetInput{services: []netmap.Service{demoNetObject[netmap.Service](raw)}}
+	in.app.Status.Resources = []argoResourceStatus{{Kind: "Service", Namespace: "shop", Name: "web"}}
+	in.addExternal(tsKindService, "shop", "web", json.RawMessage(raw), map[string]string{groupTailscale: "v1alpha1"})
+
+	n := buildArgoNetwork(in)
+	for _, node := range n.Nodes {
+		if node.Kind == "LoadBalancer" {
+			t.Fatalf("load balancer box %+v", node)
+		}
+	}
+
+	if name := netNode(t, n, "ext/Tailscale/web.example-tailnet.ts.net"); name.Health != healthCritical || name.Detail != "Tailscale · ProxyFailed" {
+		t.Fatalf("name %+v", name)
 	}
 }
 

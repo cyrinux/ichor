@@ -16,6 +16,9 @@ extension NetMapColumn {
         case .service: String(localized: "Services")
         case .pod: String(localized: "Pods")
         case .node: String(localized: "Nodes")
+        case .externalName: String(localized: "External names")
+        case .proxyGroup: String(localized: "Proxy groups")
+        case .proxy: String(localized: "Proxies")
         case .unknown: kindName
         }
     }
@@ -31,6 +34,9 @@ extension NetMapKind {
         case .service: "square.stack.3d.up"
         case .pod: "shippingbox"
         case .node: "cpu"
+        case .externalName: "cloud"
+        case .proxyGroup: "rectangle.stack"
+        case .proxy: "network"
         case .unknown: "questionmark.square.dashed"
         }
     }

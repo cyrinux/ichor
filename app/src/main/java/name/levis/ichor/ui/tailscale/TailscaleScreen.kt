@@ -28,6 +28,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.Tailscale
+import name.levis.ichor.model.TailscaleExposed
 import name.levis.ichor.model.TailscaleKind
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -50,13 +51,15 @@ class TailscaleViewModel(private val browser: KubeBrowserRepository) : LoadingVi
 /**
  * Tailscale (os:admin): the operator, what it exposes on the tailnet (and reaches on it), its
  * connectors (subnet routers, exit nodes, app connectors), proxy groups, proxy classes and the
- * tailnet nameserver, problems first in each section. A tap opens the object's summary ([onObject]); nothing is changed here.
+ * tailnet nameserver, problems first in each section. A tap opens the object's summary
+ * ([onObject]); an exposed row opens its network map ([onNetwork]); nothing is changed here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TailscaleScreen(
     onBack: () -> Unit,
     onObject: (KubeObjectRef) -> Unit,
+    onNetwork: (TailscaleExposed) -> Unit,
     vm: TailscaleViewModel = viewModel(factory = factory { TailscaleViewModel(app.kubeBrowser) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -74,7 +77,7 @@ fun TailscaleScreen(
         when (val s = state) {
             is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, rest)
             is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                TailscaleList(s.data, onObject)
+                TailscaleList(s.data, onObject, onNetwork)
             }
             else -> LoadingBox(rest)
         }
@@ -82,7 +85,7 @@ fun TailscaleScreen(
 }
 
 @Composable
-private fun TailscaleList(ts: Tailscale, onObject: (KubeObjectRef) -> Unit) {
+private fun TailscaleList(ts: Tailscale, onObject: (KubeObjectRef) -> Unit, onNetwork: (TailscaleExposed) -> Unit) {
     LazyColumn(Modifier.fillMaxSize()) {
         item(key = "header") { TailscaleHeader(ts) }
         if (!ts.installed || ts.isEmpty) {
@@ -90,7 +93,7 @@ private fun TailscaleList(ts: Tailscale, onObject: (KubeObjectRef) -> Unit) {
             return@LazyColumn
         }
         section("exposed", R.string.tailscale_exposed, ts.exposed) { e ->
-            ExposedRow(e, onClick = { onObject(e.ref) })
+            ExposedRow(e, onClick = { onNetwork(e) })
         }
         section("connectors", R.string.tailscale_connectors, ts.connectors) { c ->
             ConnectorRow(c, onClick = { onObject(ts.ref(TailscaleKind.CONNECTOR, c.name)) })

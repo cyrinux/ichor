@@ -2920,6 +2920,10 @@
     <string name="argo_net_layer_services">Servicios</string>
     <string name="argo_net_layer_pods">Pods</string>
     <string name="argo_net_layer_nodes">Nodos</string>
+    <string name="argo_net_layer_external_names">Nombres externos</string>
+    <string name="argo_net_layer_proxy_groups">Grupos de proxies</string>
+    <string name="argo_net_layer_proxies">Proxies</string>
+    <string name="tailscale_net_empty">El operador ya no sirve este objeto.</string>
     <string name="argo_net_kind_host">Host</string>
     <string name="argo_net_more">+%1$d más</string>
     <string name="argo_net_less">Mostrar menos</string>

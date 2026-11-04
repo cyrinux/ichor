@@ -1,6 +1,48 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "External names" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Noms externes" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nombres externos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зовнішні імена" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Externe Namen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nomi esterni" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "外部名称" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "外部名前" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nomes externos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Внешние имена" } }
+      }
+    },
+    "Proxies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Proxies" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proxies" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Проксі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxys" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Proxy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "代理" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロキシ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Proxies" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Прокси" } }
+      }
+    },
+    "The operator does not serve this object." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'opérateur ne sert pas cet objet." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El operador no sirve este objeto." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оператор не обслуговує цей об'єкт." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Operator bedient dieses Objekt nicht." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'operatore non serve questo oggetto." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运营商未提供此对象。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オペレーターはこのオブジェクトを提供していません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O operador não atende este objeto." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Оператор не обслуживает этот объект." } }
+      }
+    },
     "Add an AWS account" : {
       "extractionState" : "manual",
       "localizations" : {

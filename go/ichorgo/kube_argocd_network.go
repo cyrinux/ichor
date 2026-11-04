@@ -61,6 +61,21 @@ type argoNetInput struct {
 	gatewayClasses []gatewayClassObject
 	traefik        traefikRouteSet
 	nodes          []netmap.NodeObject
+	// external are the Services' and Ingresses' external entries (a tailnet name), by
+	// externalKey.
+	external map[string][]externalEntry
+}
+
+// addExternal records the external entries of the Service or Ingress raw (kind) for the
+// matchers groups serves.
+func (in *argoNetInput) addExternal(kind, namespace, name string, raw json.RawMessage, groups map[string]string) {
+	if entries := externalEntries(kind, raw, groups); len(entries) > 0 {
+		if in.external == nil {
+			in.external = map[string][]externalEntry{}
+		}
+
+		in.external[externalKey(kind, namespace, name)] = entries
+	}
 }
 
 func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string) (netmap.Map, error) {
@@ -101,16 +116,23 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		base := "/api/v1/namespaces/" + url.PathEscape(ns)
 
 		tasks = append(tasks, func() {
-			var list kubeList[netmap.Service]
-			if err := getList(ctx, k, base+"/services", &list); err != nil {
+			raws, err := listObjects[json.RawMessage](ctx, k, base+"/services")
+			if err != nil {
 				fail(err)
 
 				return
 			}
 
 			mu.Lock()
-			in.services = append(in.services, list.Items...)
-			mu.Unlock()
+			defer mu.Unlock()
+
+			for _, raw := range raws {
+				var svc netmap.Service
+				if json.Unmarshal(raw, &svc) == nil {
+					in.services = append(in.services, svc)
+					in.addExternal(tsKindService, svc.Metadata.Namespace, svc.Metadata.Name, raw, groups)
+				}
+			}
 		})
 		tasks = append(tasks, func() {
 			pods, err := readNetPods(ctx, k, base+"/pods")
@@ -122,7 +144,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	}
 
 	var (
-		ingresses      kubeList[ingressObject]
+		ingresses      []json.RawMessage
 		gwRoutes       []gatewayRouteObject
 		gateways       kubeList[gatewayObject]
 		gatewayClasses kubeList[gatewayClassObject]
@@ -130,7 +152,11 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	)
 
 	tasks = append(tasks,
-		func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) },
+		func() {
+			var err error
+			ingresses, err = listObjects[json.RawMessage](ctx, k, "/apis/networking.k8s.io/v1/ingresses")
+			fail(err)
+		},
 		// The Gateway API is optional: without its CRDs, no routes. GRPCRoute came with v1.1;
 		// TLSRoute is the experimental channel (v1alpha2), absent on most clusters.
 		func() {
@@ -164,7 +190,15 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		return netmap.Map{}, errs[0]
 	}
 
-	in.ingresses, in.gatewayRoutes, in.gateways, in.nodes = ingresses.Items, gwRoutes, gateways.Items, nodes.Items
+	for _, raw := range ingresses {
+		var ing ingressObject
+		if json.Unmarshal(raw, &ing) == nil {
+			in.ingresses = append(in.ingresses, ing)
+			in.addExternal(tsKindIngress, ing.Metadata.Namespace, ing.Metadata.Name, raw, groups)
+		}
+	}
+
+	in.gatewayRoutes, in.gateways, in.nodes = gwRoutes, gateways.Items, nodes.Items
 	in.gatewayClasses = gatewayClasses.Items
 	if len(in.gatewayRoutes) > 0 {
 		in.gateways = withPublicPorts(ctx, k, in.gateways)
@@ -239,8 +273,16 @@ func buildArgoNetwork(in argoNetInput) netmap.Map {
 		sid := netmap.AddBackend(g, svc, in.pods)
 		g.Node(sid).Managed = true
 
+		// A load-balancer address an external entry stands for (a tailnet name) is drawn once,
+		// as that entry.
+		covered := argoNetExternal(g, in.external[externalKey(tsKindService, ns, name)], sid)
+
 		for _, lb := range svc.Status.LoadBalancer.Ingress {
 			addr := cmp.Or(lb.Hostname, lb.IP)
+			if covered[addr] {
+				continue
+			}
+
 			lid := g.Add(netmap.Node{ID: "lb/" + addr, Layer: argoLayerHost, Kind: "LoadBalancer", Name: addr, Detail: svc.Spec.Type})
 			g.Link(lid, sid)
 		}
@@ -257,9 +299,16 @@ func argoNetRoutes(g *netmap.Graph, in argoNetInput, services map[serviceRef]boo
 	for _, r := range ingressRoutes(in.ingresses, services) {
 		rid := g.Add(netmap.Node{ID: "ing/" + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: "Ingress", Namespace: r.Namespace, Name: r.Name,
 			Detail: ingressAddress(in.ingresses, r.Namespace, r.Name), Managed: managed["Ingress/"+r.Namespace+"/"+r.Name]})
+		g.Link(rid, netmap.ServiceID(r.Namespace, r.Service))
+
+		// An Ingress served on a tailnet: its name is the entry, not a host box of its own.
+		covered := argoNetExternal(g, in.external[externalKey(tsKindIngress, r.Namespace, r.Name)], rid)
+		if u, err := url.Parse(r.URL); err == nil && covered[u.Hostname()] {
+			continue
+		}
+
 		hid := g.Add(netmap.Node{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
 		g.Link(hid, rid)
-		g.Link(rid, netmap.ServiceID(r.Namespace, r.Service))
 	}
 
 	for _, r := range traefikRoutes(in.traefik, services) {
@@ -303,6 +352,27 @@ func argoNetGatewayRoutes(g *netmap.Graph, in argoNetInput, services map[service
 			g.Link(gid, rid)
 		}
 	}
+}
+
+// argoNetExternal adds a host-layer box for each ingress entry sending traffic to the box to
+// (an egress entry carries traffic out of the cluster, not to the app), and returns the
+// addresses those boxes stand for.
+func argoNetExternal(g *netmap.Graph, entries []externalEntry, to string) map[string]bool {
+	covered := map[string]bool{}
+
+	for _, e := range entries {
+		if e.Kind != externalIngress {
+			continue
+		}
+
+		g.Link(g.Add(externalNode(e, argoLayerHost)), to)
+
+		for _, a := range e.Addresses {
+			covered[a] = true
+		}
+	}
+
+	return covered
 }
 
 // gatewayRouteParents are the Gateways the route kind/namespace/name attaches to. The kind

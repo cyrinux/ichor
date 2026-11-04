@@ -45,7 +45,7 @@ func demoTailscale() tsReport {
 			{
 				Name: "ingress-proxies", Type: "ingress", Replicas: 2, ProxyClass: "prod", Tags: []string{"tag:k8s"},
 				HostnamePrefix: "ingress",
-				Devices:        []tsDevice{device("ingress-proxies-0", "100.64.0.31"), device("ingress-proxies-1", "100.64.0.32")},
+				Devices:        []tsDevice{device("ingress-0", "100.64.0.31"), device("ingress-1", "100.64.0.32")},
 				Available:      true, tsState: ok,
 			},
 			{
@@ -85,7 +85,7 @@ func demoTailscaleExposed(ok tsState) []tsExposed {
 			[]string{"storefront.example-tailnet.ts.net", "100.64.0.51"}, []string{"443", "80"}, ok),
 		row(tsKindService, "media", "player", tsDirectionIngress, "web-proxies",
 			[]string{"player.example-tailnet.ts.net"}, []string{"8096"}, ok),
-		row(tsKindService, "ops", "grafana", tsDirectionIngress, "", []string{"grafana"}, []string{"3000"}, ok),
+		row(tsKindService, "monitoring", "grafana", tsDirectionIngress, "", []string{"grafana"}, []string{"3000"}, ok),
 		row(tsKindIngress, "docs", "wiki", tsDirectionIngress, "", []string{"wiki.example-tailnet.ts.net"}, []string{"443"}, ok),
 		row(tsKindService, "payments", "ledger-db", tsDirectionEgress, "",
 			[]string{"ledger-db.example-tailnet.ts.net"}, []string{"5432"}, ok),

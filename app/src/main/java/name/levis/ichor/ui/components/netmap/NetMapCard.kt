@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.AltRoute
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Lan
@@ -157,6 +158,9 @@ fun columnTitle(kind: String): Int? = when (kind) {
     NetMapNode.SERVICE -> R.string.argo_net_layer_services
     NetMapNode.POD -> R.string.argo_net_layer_pods
     NetMapNode.NODE -> R.string.argo_net_layer_nodes
+    NetMapNode.EXTERNAL_NAME -> R.string.argo_net_layer_external_names
+    NetMapNode.PROXY_GROUP -> R.string.argo_net_layer_proxy_groups
+    NetMapNode.PROXY -> R.string.argo_net_layer_proxies
     else -> null
 }
 
@@ -168,6 +172,9 @@ val NetMapNode.kindIcon: ImageVector
         in NetMapNode.ROUTE_KINDS -> Icons.AutoMirrored.Outlined.AltRoute
         NetMapNode.SERVICE -> Icons.Outlined.Lan
         NetMapNode.POD -> Icons.Outlined.ViewInAr
+        NetMapNode.EXTERNAL_NAME -> Icons.Outlined.Cloud
+        NetMapNode.PROXY_GROUP -> Icons.Outlined.Hub
+        NetMapNode.PROXY -> Icons.Outlined.Router
         else -> Icons.Outlined.Computer
     }
 

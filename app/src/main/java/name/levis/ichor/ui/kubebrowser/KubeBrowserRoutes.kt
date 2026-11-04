@@ -26,6 +26,9 @@ object KubeBrowserRoutes {
     const val SERVICES = "kube-services"
     const val CROSSPLANE = "kube-crossplane"
     const val TAILSCALE = "kube-tailscale"
+
+    /** The network map of one address the Tailscale operator serves, opened by an exposed row. */
+    private const val TAILSCALE_NETWORK = "kube-tailscale-network?kind={kind}&ns={ns}&name={name}&title={title}"
     const val CLUSTER_LIFECYCLE = "kube-cluster-lifecycle"
     const val LOAD_BALANCING = "kube-load-balancing"
     const val JOBS = "kube-jobs"
@@ -51,6 +54,10 @@ object KubeBrowserRoutes {
     fun helmRelease(namespace: String, name: String) = "kube-helm-release?ns=${e(namespace)}&name=${e(name)}"
 
     fun forward(namespace: String, pod: String) = "kube-forward?ns=${e(namespace)}&pod=${e(pod)}"
+
+    /** The map of the [kind] [namespace]/[name] the Tailscale operator serves; [title] is the tailnet name. */
+    fun tailscaleNetwork(kind: String, namespace: String, name: String, title: String) =
+        "kube-tailscale-network?kind=${e(kind)}&ns=${e(namespace)}&name=${e(name)}&title=${e(title)}"
 
     private fun e(s: String): String = Uri.encode(s)
 
@@ -120,7 +127,30 @@ object KubeBrowserRoutes {
             name.levis.ichor.ui.crossplane.CrossplaneScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
         }
         composable(TAILSCALE) {
-            name.levis.ichor.ui.tailscale.TailscaleScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
+            name.levis.ichor.ui.tailscale.TailscaleScreen(
+                onBack = { nav.popBackStack() },
+                onObject = links.onObject,
+                onNetwork = { e ->
+                    nav.navigate(
+                        tailscaleNetwork(
+                            e.kind,
+                            e.namespace,
+                            e.name,
+                            e.tailnetNames.firstOrNull().takeIf { !e.isEgress } ?: "${e.namespace}/${e.name}",
+                        ),
+                    )
+                },
+            )
+        }
+        composable(TAILSCALE_NETWORK, arguments = strings("kind", "ns", "name", "title")) { entry ->
+            val a = entry.arguments
+            name.levis.ichor.ui.tailscale.TailscaleNetworkScreen(
+                kind = a.str("kind"),
+                namespace = a.str("ns"),
+                name = a.str("name"),
+                title = a.str("title"),
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(CLUSTER_LIFECYCLE) {
             name.levis.ichor.ui.lifecycle.ClusterLifecycleScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)

@@ -2825,6 +2825,10 @@
     <string name="argo_net_layer_services">サービス</string>
     <string name="argo_net_layer_pods">Pod</string>
     <string name="argo_net_layer_nodes">ノード</string>
+    <string name="argo_net_layer_external_names">外部名</string>
+    <string name="argo_net_layer_proxy_groups">プロキシグループ</string>
+    <string name="argo_net_layer_proxies">プロキシ</string>
+    <string name="tailscale_net_empty">このオブジェクトはオペレーターによって提供されていません。</string>
     <string name="argo_net_kind_host">ホスト</string>
     <string name="argo_net_more">他%1$d個</string>
     <string name="argo_net_less">表示を減らす</string>
