@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.HetznerCreateSpec
 import name.levis.ichor.model.AWSCreateSpec
+import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.JoinPhase
@@ -38,6 +39,8 @@ data class JoinRequest(
     val ovh: OVHCreateSpec? = null,
     /** An instance to create at AWS EC2 for the node, likewise. */
     val aws: AWSCreateSpec? = null,
+    /** A VM to create at Azure for the node, likewise. */
+    val azure: AzureCreateSpec? = null,
     /** The cloud machine joins Omni, not the cluster directly. */
     val omni: Boolean = false,
     /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
@@ -57,7 +60,7 @@ data class JoinRequest(
 
     /** A machine to create at a cloud provider. */
     val cloud: Boolean
-        get() = hetzner != null || ovh != null || aws != null
+        get() = hetzner != null || ovh != null || aws != null || azure != null
 }
 
 /** The node join the app follows: at most one at a time. */
@@ -115,6 +118,7 @@ class JoinManager(
                     ?: request.hetzner?.let { lifecycle.hetznerCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.ovh?.let { lifecycle.ovhCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.aws?.let { lifecycle.awsCreate(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.azure?.let { lifecycle.azureCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                 events
                     .collect { event ->

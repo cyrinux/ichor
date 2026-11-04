@@ -300,6 +300,10 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     fun awsCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAWSCreate(yaml, context, credentialJson, specJson, listener) }
 
+    /** Creates an Azure VM and follows it (StartAzureCreate). As for [hetznerCreate], only [stop] cancels: it deletes the VM. */
+    fun azureCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAzureCreate(yaml, context, credentialJson, specJson, listener) }
+
     /**
      * Makes a Talos snapshot with a throwaway server (StartHetznerSnapshot). Done's address is the
      * result JSON. As for [hetznerCreate], only [stop] cancels: it deletes what the run created.

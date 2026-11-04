@@ -9,6 +9,8 @@ enum CloudProviderStore {
     static let ovh = "ovh"
     /// Keyed by the account id AWSTest names; the value is the keys' credential JSON, region included.
     static let aws = "aws"
+    /// Keyed by the subscription id AzureTest names; the value is the principal's credential JSON.
+    static let azure = "azure"
 
     /// The projects with a token, sorted.
     static func projects(provider: String) -> [String] {

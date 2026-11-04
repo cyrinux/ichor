@@ -1,0 +1,354 @@
+import Foundation
+
+// Mirrors go/ichorgo/cloud_azure.go, cloud_azure_options.go and cloud_azure_create.go.
+
+/// A service principal (az ad sp create-for-rbac's output plus the subscription), sealed on the
+/// device; what the core gets per call. `resourceGroup` scopes Test's permission check and
+/// `location` the options listed; both follow the person's picks.
+public struct AzureCredential: Codable, Equatable, Sendable {
+    public let tenantId: String
+    public let clientId: String
+    public let clientSecret: String
+    public let subscriptionId: String
+    /// "" or AzurePublicCloud, AzureChinaCloud, AzureUSGovernmentCloud.
+    public let environment: String
+    public let resourceGroup: String
+    public let location: String
+
+    public init(
+        tenantId: String, clientId: String, clientSecret: String, subscriptionId: String, environment: String = "",
+        resourceGroup: String = "", location: String = ""
+    ) {
+        self.tenantId = tenantId
+        self.clientId = clientId
+        self.clientSecret = clientSecret
+        self.subscriptionId = subscriptionId
+        self.environment = environment
+        self.resourceGroup = resourceGroup
+        self.location = location
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case tenantId, clientId, clientSecret, subscriptionId, environment, resourceGroup, location
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        tenantId = try c.field(.tenantId, "")
+        clientId = try c.field(.clientId, "")
+        clientSecret = try c.field(.clientSecret, "")
+        subscriptionId = try c.field(.subscriptionId, "")
+        environment = try c.field(.environment, "")
+        resourceGroup = try c.field(.resourceGroup, "")
+        location = try c.field(.location, "")
+    }
+
+    /// The same principal for another resource group and location.
+    public func with(resourceGroup: String? = nil, location: String) -> AzureCredential {
+        AzureCredential(
+            tenantId: tenantId, clientId: clientId, clientSecret: clientSecret, subscriptionId: subscriptionId,
+            environment: environment, resourceGroup: resourceGroup ?? self.resourceGroup, location: location)
+    }
+}
+
+/// Whose principal this is and whether it may create VMs; `checked` is false when that could not be told.
+public struct AzureCheck: Decodable, Equatable, Sendable {
+    public let tenant: String
+    public let subscription: String
+    public let subscriptionName: String
+    public let canCreate: Bool
+    public let checked: Bool
+
+    private enum CodingKeys: String, CodingKey { case tenant, subscription, subscriptionName, canCreate, checked }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        tenant = try c.field(.tenant, "")
+        subscription = try c.field(.subscription, "")
+        subscriptionName = try c.field(.subscriptionName, "")
+        canCreate = try c.field(.canCreate, false)
+        checked = try c.field(.checked, false)
+    }
+}
+
+/// What a VM can be created from in `location`; `warnings` are the core's, shown as they are.
+public struct AzureOptions: Decodable, Equatable, Sendable {
+    public let subscription: String
+    public let location: String
+    public let subscriptions: [AzureSubscription]
+    public let locations: [AzureLocation]
+    public let resourceGroups: [AzureResourceGroup]
+    public let sizes: [AzureSize]
+    public let networks: [AzureNetwork]
+    public let securityGroups: [AzureSecurityGroup]
+    public let images: [AzureImage]
+    public let warnings: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case subscription, location, subscriptions, locations, resourceGroups, sizes, networks, securityGroups, images
+        case warnings
+    }
+
+    // Go encodes empty (nil) slices as null.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        subscription = try c.field(.subscription, "")
+        location = try c.field(.location, "")
+        subscriptions = try c.field(.subscriptions, [])
+        locations = try c.field(.locations, [])
+        resourceGroups = try c.field(.resourceGroups, [])
+        sizes = try c.field(.sizes, [])
+        networks = try c.field(.networks, [])
+        securityGroups = try c.field(.securityGroups, [])
+        images = try c.field(.images, [])
+        warnings = try c.field(.warnings, [])
+    }
+
+    /// The VM sizes that boot `image` (its architecture and Hyper-V generation), in the core's order.
+    public func sizes(for image: AzureImage) -> [AzureSize] {
+        sizes.filter { $0.arch == image.arch && $0.generations.contains(image.generation) }
+    }
+
+    /// The subnets of the virtual network `network`; empty for an unknown one.
+    public func subnets(in network: String) -> [AzureSubnet] {
+        networks.first { $0.id == network }?.subnets ?? []
+    }
+
+    /// The resource group's location, or the listed one when the group is unknown.
+    public func location(of resourceGroup: String) -> String {
+        resourceGroups.first { $0.name == resourceGroup }?.location.lowercased() ?? location
+    }
+
+    /// The display name of `name` ("West Europe"), or the name itself.
+    public func locationLabel(_ name: String) -> String {
+        guard let display = locations.first(where: { $0.name == name })?.displayName, !display.isEmpty else {
+            return name
+        }
+        return display
+    }
+}
+
+public struct AzureSubscription: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let id: String
+    public let name: String
+
+    private enum CodingKeys: String, CodingKey { case id, name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        name = try c.field(.name, "")
+    }
+}
+
+public struct AzureLocation: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let name: String
+    public let displayName: String
+    public var id: String { name }
+
+    private enum CodingKeys: String, CodingKey { case name, displayName }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        displayName = try c.field(.displayName, "")
+    }
+}
+
+public struct AzureResourceGroup: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let name: String
+    public let location: String
+    public var id: String { name }
+
+    private enum CodingKeys: String, CodingKey { case name, location }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        location = try c.field(.location, "")
+    }
+}
+
+public struct AzureSize: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let name: String
+    public let vcpus: Int
+    public let memoryGB: Double
+    /// amd64 or arm64.
+    public let arch: String
+    /// The Hyper-V generations it boots: V1, V2.
+    public let generations: [String]
+    public var id: String { name }
+
+    private enum CodingKeys: String, CodingKey { case name, vcpus, memoryGB, arch, generations }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        vcpus = try c.field(.vcpus, 0)
+        memoryGB = try c.field(.memoryGB, 0)
+        arch = try c.field(.arch, "")
+        generations = try c.field(.generations, [])
+    }
+
+    /// "Standard_B2s · 2 CPU · 4 GB".
+    public var label: String {
+        let memory = memoryGB.rounded() == memoryGB ? String(Int(memoryGB)) : String(memoryGB)
+        return "\(name) · \(vcpus) CPU · \(memory) GB"
+    }
+}
+
+public struct AzureNetwork: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let id: String
+    public let name: String
+    public let resourceGroup: String
+    public let location: String
+    public let subnets: [AzureSubnet]
+
+    private enum CodingKeys: String, CodingKey { case id, name, resourceGroup, location, subnets }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        name = try c.field(.name, "")
+        resourceGroup = try c.field(.resourceGroup, "")
+        location = try c.field(.location, "")
+        subnets = try c.field(.subnets, [])
+    }
+}
+
+public struct AzureSubnet: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let id: String
+    public let name: String
+    public let cidr: String
+    /// The subnet's own security group, empty when it has none.
+    public let nsgId: String
+    /// It reaches the Internet without a public IP on the VM.
+    public let natGateway: Bool
+
+    private enum CodingKeys: String, CodingKey { case id, name, cidr, nsgId, natGateway }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        name = try c.field(.name, "")
+        cidr = try c.field(.cidr, "")
+        nsgId = try c.field(.nsgId, "")
+        natGateway = try c.field(.natGateway, false)
+    }
+}
+
+public struct AzureSecurityGroup: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let id: String
+    public let name: String
+    public let resourceGroup: String
+    /// The Internet reaches port 50000 (the Talos API).
+    public let wideOpen: Bool
+
+    private enum CodingKeys: String, CodingKey { case id, name, resourceGroup, wideOpen }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        name = try c.field(.name, "")
+        resourceGroup = try c.field(.resourceGroup, "")
+        wideOpen = try c.field(.wideOpen, false)
+    }
+}
+
+public struct AzureImage: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let id: String
+    public let name: String
+    public let resourceGroup: String
+    /// managed (an image) or gallery (a gallery image version).
+    public let source: String
+    public let arch: String
+    /// V1 or V2.
+    public let generation: String
+    public let talosVersion: String
+    public let schematic: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, resourceGroup, source, arch, generation, talosVersion, schematic
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        name = try c.field(.name, "")
+        resourceGroup = try c.field(.resourceGroup, "")
+        source = try c.field(.source, "")
+        arch = try c.field(.arch, "")
+        generation = try c.field(.generation, "")
+        talosVersion = try c.field(.talosVersion, "")
+        schematic = try c.field(.schematic, "")
+    }
+}
+
+/// The pay-as-you-go hourly price before tax; `hourly` is empty when the Retail Prices API does not answer.
+public struct AzurePrice: Decodable, Equatable, Sendable {
+    public let hourly: String
+    public let currency: String
+
+    public init(hourly: String = "", currency: String = "") {
+        self.hourly = hourly
+        self.currency = currency
+    }
+
+    private enum CodingKeys: String, CodingKey { case hourly, currency }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        hourly = try c.field(.hourly, "")
+        currency = try c.field(.currency, "")
+    }
+}
+
+/// StartAzureCreate's specJSON. Never holds the principal.
+public struct AzureCreateSpec: Encodable, Equatable, Sendable {
+    public let resourceGroup: String
+    public let location: String
+    public let size: String
+    public let imageId: String
+    public let subnetId: String
+    public let securityGroupId: String
+    public let associatePublicIp: Bool
+    public let osDiskGB: Int
+    public let hostname: String
+    public let role: String
+    public let templateNode: String
+    public let installDisk: String
+
+    public init(
+        resourceGroup: String, location: String, size: String, imageId: String, subnetId: String,
+        securityGroupId: String = "", associatePublicIp: Bool = false, osDiskGB: Int = 0, hostname: String,
+        role: String = "", templateNode: String = "", installDisk: String = ""
+    ) {
+        self.resourceGroup = resourceGroup
+        self.location = location
+        self.size = size
+        self.imageId = imageId
+        self.subnetId = subnetId
+        self.securityGroupId = securityGroupId
+        self.associatePublicIp = associatePublicIp
+        self.osDiskGB = osDiskGB
+        self.hostname = hostname
+        self.role = role
+        self.templateNode = templateNode
+        self.installDisk = installDisk
+    }
+}
+
+/// The OS disk sizes: the default, the smallest a Talos image fits in, and Azure's largest.
+public enum AzureDisk {
+    public static let defaultGB = 20
+    public static let minGB = 10
+    public static let maxGB = 4095
+
+    /// A typed OS disk size in GB, or nil when it is not a size Azure takes.
+    public static func gigabytes(_ text: String) -> Int? {
+        guard let value = Int(text.trimmingCharacters(in: .whitespaces)), (minGB...maxGB).contains(value) else {
+            return nil
+        }
+        return value
+    }
+}

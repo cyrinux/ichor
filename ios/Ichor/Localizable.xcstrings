@@ -1225,6 +1225,473 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将在 AWS 上终止,计费随之停止。已响应的控制平面会保留:必须先移除其 etcd 成员。" } }
       }
     },
+    "Create the VM at Azure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die VM bei Azure erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la VM en Azure" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer la VM chez Azure" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare la VM su Azure" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Azure で VM を作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a VM na Azure" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать ВМ в Azure" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити ВМ в Azure" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Azure 创建虚拟机" } }
+      }
+    },
+    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add a service principal that has the role Ichor prints on the resource group.\n3. Upload the Talos image to the subscription once, from a computer (making it from the phone comes next).\n4. Pick a resource group, the image, a VM size, a subnet and a network security group, then create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the VM." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Wähle ein Mitglied als Vorlage, dann Hostnamen und Installationsdisk des neuen Nodes.\n2. Füge einen Service Principal hinzu, der die von Ichor ausgegebene Rolle auf der Ressourcengruppe hat.\n3. Lade das Talos-Image einmal von einem Computer in das Abonnement hoch (es vom Telefon aus zu erstellen kommt als Nächstes).\n4. Wähle eine Ressourcengruppe, das Image, eine VM-Größe, ein Subnetz und eine Netzwerksicherheitsgruppe und erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis der Node beitritt. Das Telefon muss Port 50000 der VM erreichen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Elige un miembro que copiar y luego el nombre de host y el disco de instalación del nuevo nodo.\n2. Añade una entidad de servicio que tenga en el grupo de recursos el rol que imprime Ichor.\n3. Sube la imagen de Talos a la suscripción una vez, desde un ordenador (crearla desde el teléfono llegará después).\n4. Elige un grupo de recursos, la imagen, un tamaño de VM, una subred y un grupo de seguridad de red, y créala: Ichor muestra primero el precio y la sigue hasta que el nodo se une. El teléfono debe alcanzar el puerto 50000 de la VM." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Choisissez un membre à copier, puis le nom d'hôte et le disque d'installation du nouveau nœud.\n2. Ajoutez un principal de service qui a, sur le groupe de ressources, le rôle qu'Ichor affiche.\n3. Téléversez une fois l'image Talos dans l'abonnement, depuis un ordinateur (la créer depuis le téléphone arrive ensuite).\n4. Choisissez un groupe de ressources, l'image, une taille de VM, un sous-réseau et un groupe de sécurité réseau, puis créez-la : Ichor affiche d'abord le prix et la suit jusqu'à ce que le nœud rejoigne. Le téléphone doit atteindre le port 50000 de la VM." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi un'entità servizio che abbia sul gruppo di risorse il ruolo che Ichor stampa.\n3. Carica una volta l'immagine Talos nella sottoscrizione, da un computer (crearla dal telefono arriverà dopo).\n4. Scegli un gruppo di risorse, l'immagine, una dimensione di VM, una subnet e un gruppo di sicurezza di rete, poi creala: Ichor mostra prima il prezzo e la segue finché il nodo non si unisce. Il telefono deve raggiungere la porta 50000 della VM." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを選びます。\n2. Ichor が表示するロールをリソースグループに持つサービスプリンシパルを追加します。\n3. Talos イメージをコンピューターからサブスクリプションに一度アップロードします(電話からの作成は次の段階で対応します)。\n4. リソースグループ、イメージ、VM サイズ、サブネット、ネットワークセキュリティグループを選んで作成します。Ichor は先に価格を表示し、ノードが参加するまで追跡します。電話から VM のポート 50000 に到達できる必要があります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Escolha um membro para copiar e depois o nome de host e o disco de instalação do novo nó.\n2. Adicione uma entidade de serviço que tenha no grupo de recursos a função que o Ichor imprime.\n3. Envie a imagem do Talos para a assinatura uma vez, de um computador (criá-la pelo telefone vem depois).\n4. Escolha um grupo de recursos, a imagem, um tamanho de VM, uma sub-rede e um grupo de segurança de rede e crie-a: o Ichor mostra primeiro o preço e a acompanha até o nó entrar. O telefone precisa alcançar a porta 50000 da VM." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Выберите участника для копирования, затем имя хоста и диск установки нового узла.\n2. Добавьте субъект-службу с ролью, которую выводит Ichor, на группе ресурсов.\n3. Один раз загрузите образ Talos в подписку с компьютера (создание с телефона появится следующим шагом).\n4. Выберите группу ресурсов, образ, размер ВМ, подсеть и группу безопасности сети и создайте её: Ichor сначала показывает цену и следит за ней, пока узел не присоединится. Телефон должен достигать порта 50000 ВМ." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Виберіть учасника для копіювання, потім ім'я хоста та диск встановлення нового вузла.\n2. Додайте субʼєкт-службу з роллю, яку виводить Ichor, на групі ресурсів.\n3. Один раз завантажте образ Talos у підписку з компʼютера (створення з телефона буде наступним кроком).\n4. Виберіть групу ресурсів, образ, розмір ВМ, підмережу та групу безпеки мережі й створіть її: Ichor спершу показує ціну та стежить за нею, доки вузол не приєднається. Телефон має досягати порту 50000 ВМ." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 选择要复制的成员,然后选择新节点的主机名和安装磁盘。\n2. 添加一个在资源组上拥有 Ichor 所显示角色的服务主体。\n3. 从电脑将 Talos 镜像上传到订阅一次(从手机制作将在下一步提供)。\n4. 选择资源组、镜像、VM 大小、子网和网络安全组,然后创建:Ichor 会先显示价格,并跟踪到节点加入。手机必须能访问该 VM 的 50000 端口。" } }
+      }
+    },
+    "1. Add a service principal that has the role Ichor prints on the resource group.\n2. Upload the Talos image for Omni to the subscription once, from a computer (making it from the phone comes next).\n3. Name the VM, then pick a resource group, the image, a VM size, a subnet and a network security group.\n4. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Füge einen Service Principal hinzu, der die von Ichor ausgegebene Rolle auf der Ressourcengruppe hat.\n2. Lade das Talos-Image für Omni einmal von einem Computer in das Abonnement hoch (es vom Telefon aus zu erstellen kommt als Nächstes).\n3. Benenne die VM, dann wähle eine Ressourcengruppe, das Image, eine VM-Größe, ein Subnetz und eine Netzwerksicherheitsgruppe.\n4. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie dann, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Añade una entidad de servicio que tenga en el grupo de recursos el rol que imprime Ichor.\n2. Sube la imagen de Talos para Omni a la suscripción una vez, desde un ordenador (crearla desde el teléfono llegará después).\n3. Pon nombre a la VM y elige un grupo de recursos, la imagen, un tamaño de VM, una subred y un grupo de seguridad de red.\n4. Créala: Ichor muestra primero el precio y luego la sigue hasta que la máquina aparece en Omni. Asígnala al clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Ajoutez un principal de service qui a, sur le groupe de ressources, le rôle qu'Ichor affiche.\n2. Téléversez une fois l'image Talos pour Omni dans l'abonnement, depuis un ordinateur (la créer depuis le téléphone arrive ensuite).\n3. Nommez la VM, puis choisissez un groupe de ressources, l'image, une taille de VM, un sous-réseau et un groupe de sécurité réseau.\n4. Créez-la : Ichor affiche d'abord le prix, puis la suit jusqu'à ce que la machine apparaisse dans Omni. Allouez-la au cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Aggiungi un'entità servizio che abbia sul gruppo di risorse il ruolo che Ichor stampa.\n2. Carica una volta l'immagine Talos per Omni nella sottoscrizione, da un computer (crearla dal telefono arriverà dopo).\n3. Dai un nome alla VM, poi scegli un gruppo di risorse, l'immagine, una dimensione di VM, una subnet e un gruppo di sicurezza di rete.\n4. Creala: Ichor mostra prima il prezzo, poi la segue finché la macchina non compare in Omni. Assegnala al cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. Ichor が表示するロールをリソースグループに持つサービスプリンシパルを追加します。\n2. Omni 用の Talos イメージをコンピューターからサブスクリプションに一度アップロードします(電話からの作成は次の段階で対応します)。\n3. VM に名前を付け、リソースグループ、イメージ、VM サイズ、サブネット、ネットワークセキュリティグループを選びます。\n4. 作成します。Ichor は先に価格を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Adicione uma entidade de serviço que tenha no grupo de recursos a função que o Ichor imprime.\n2. Envie a imagem do Talos para Omni para a assinatura uma vez, de um computador (criá-la pelo telefone vem depois).\n3. Dê um nome à VM e escolha um grupo de recursos, a imagem, um tamanho de VM, uma sub-rede e um grupo de segurança de rede.\n4. Crie-a: o Ichor mostra primeiro o preço e depois a acompanha até a máquina aparecer no Omni. Aloque-a ao cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Добавьте субъект-службу с ролью, которую выводит Ichor, на группе ресурсов.\n2. Один раз загрузите образ Talos для Omni в подписку с компьютера (создание с телефона появится следующим шагом).\n3. Назовите ВМ, затем выберите группу ресурсов, образ, размер ВМ, подсеть и группу безопасности сети.\n4. Создайте её: Ichor сначала показывает цену, затем следит за ней, пока машина не появится в Omni. Выделите её кластеру." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Додайте субʼєкт-службу з роллю, яку виводить Ichor, на групі ресурсів.\n2. Один раз завантажте образ Talos для Omni у підписку з компʼютера (створення з телефона буде наступним кроком).\n3. Назвіть ВМ, потім виберіть групу ресурсів, образ, розмір ВМ, підмережу та групу безпеки мережі.\n4. Створіть її: Ichor спершу показує ціну, потім стежить за нею, доки машина не зʼявиться в Omni. Виділіть її кластеру." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 添加一个在资源组上拥有 Ichor 所显示角色的服务主体。\n2. 从电脑将用于 Omni 的 Talos 镜像上传到订阅一次(从手机制作将在下一步提供)。\n3. 为 VM 命名,然后选择资源组、镜像、VM 大小、子网和网络安全组。\n4. 创建:Ichor 会先显示价格,然后跟踪到机器出现在 Omni 中。将其分配给集群。" } }
+      }
+    },
+    "Add an Azure service principal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Azure-Service-Principal hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una entidad de servicio de Azure" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un principal de service Azure" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un'entità servizio di Azure" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Azure サービスプリンシパルを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma entidade de serviço da Azure" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить субъект-службу Azure" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати субʼєкт-службу Azure" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 Azure 服务主体" } }
+      }
+    },
+    "Remove this principal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diesen Principal entfernen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar esta entidad" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer ce principal" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi questa entità" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプリンシパルを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover esta entidade" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить этот субъект" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалити цей субʼєкт" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除此主体" } }
+      }
+    },
+    "A client secret expires on the date set when it was made and can do what its role allows. It stays sealed on this device and is not in backups." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Client-Geheimnis läuft an dem bei seiner Erstellung gesetzten Datum ab und kann, was seine Rolle erlaubt. Es bleibt versiegelt auf diesem Gerät und ist nicht in Backups." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Un secreto de cliente caduca en la fecha fijada al crearlo y puede hacer lo que su rol permite. Queda sellado en este dispositivo y no está en las copias de seguridad." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un secret client expire à la date fixée à sa création et peut faire ce que son rôle permet. Il reste scellé sur cet appareil et n'est pas dans les sauvegardes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Un segreto client scade alla data impostata alla sua creazione e può fare ciò che il suo ruolo consente. Resta sigillato su questo dispositivo e non è nei backup." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアントシークレットは作成時に設定した日付に期限切れになり、ロールが許すことを実行できます。このデバイスに封印され、バックアップには含まれません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Um segredo do cliente expira na data definida ao criá-lo e pode fazer o que sua função permite. Ele fica selado neste dispositivo e não está nos backups." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Секрет клиента истекает в дату, заданную при его создании, и может делать то, что разрешает его роль. Он хранится запечатанным на этом устройстве и не попадает в резервные копии." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Секрет клієнта спливає в дату, задану під час його створення, і може робити те, що дозволяє його роль. Він зберігається запечатаним на цьому пристрої й не потрапляє до резервних копій." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "客户端密码会在创建时设定的日期过期,可以执行其角色允许的操作。它密封保存在此设备上,不包含在备份中。" } }
+      }
+    },
+    "Create this custom role (az role definition create) and assign it to the principal on the resource group: only the calls Ichor makes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erstelle diese benutzerdefinierte Rolle (az role definition create) und weise sie dem Principal auf der Ressourcengruppe zu: nur die Aufrufe, die Ichor macht." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crea este rol personalizado (az role definition create) y asígnalo a la entidad en el grupo de recursos: solo las llamadas que hace Ichor." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créez ce rôle personnalisé (az role definition create) et attribuez-le au principal sur le groupe de ressources : seulement les appels qu'Ichor fait." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea questo ruolo personalizzato (az role definition create) e assegnalo all'entità sul gruppo di risorse: solo le chiamate che Ichor fa." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このカスタムロールを作成し(az role definition create)、リソースグループでプリンシパルに割り当ててください。Ichor が行う呼び出しだけです。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Crie esta função personalizada (az role definition create) e atribua-a à entidade no grupo de recursos: apenas as chamadas que o Ichor faz." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создайте эту пользовательскую роль (az role definition create) и назначьте её субъекту на группе ресурсов: только вызовы, которые делает Ichor." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створіть цю користувацьку роль (az role definition create) і призначте її субʼєкту на групі ресурсів: лише виклики, які робить Ichor." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建此自定义角色(az role definition create),并在资源组上将其分配给该主体:仅包含 Ichor 发出的调用。" } }
+      }
+    },
+    "Copy the role definition" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollendefinition kopieren" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Copiar la definición del rol" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Copier la définition du rôle" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Copia la definizione del ruolo" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロール定義をコピー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Copiar a definição da função" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скопировать определение роли" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Скопіювати визначення ролі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制角色定义" } }
+      }
+    },
+    "Cloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Cloud" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nube" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cloud" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cloud" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラウド" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nuvem" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Облако" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Хмара" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "云" } }
+      }
+    },
+    "Client ID (appId)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Client-ID (appId)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "ID de cliente (appId)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ID client (appId)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "ID client (appId)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアント ID(appId)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "ID do cliente (appId)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ID приложения (appId)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ID застосунку (appId)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "客户端 ID(appId)" } }
+      }
+    },
+    "Client secret (password)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Client-Geheimnis (password)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Secreto de cliente (password)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Secret client (password)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Segreto client (password)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアントシークレット(password)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Segredo do cliente (password)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Секрет клиента (password)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Секрет клієнта (password)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "客户端密码(password)" } }
+      }
+    },
+    "Subscription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abonnement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Suscripción" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Abonnement" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sottoscrizione" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サブスクリプション" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Assinatura" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подписка" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підписка" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "订阅" } }
+      }
+    },
+    "Resource group" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ressourcengruppe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de recursos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupe de ressources" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppo di risorse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "リソースグループ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de recursos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группа ресурсов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Група ресурсів" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "资源组" } }
+      }
+    },
+    "The resource group the role is assigned on: Test checks the principal's rights there." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Ressourcengruppe, auf der die Rolle zugewiesen ist: Testen prüft dort die Rechte des Principals." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El grupo de recursos en el que se asigna el rol: Probar comprueba allí los permisos de la entidad." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le groupe de ressources sur lequel le rôle est attribué : Tester y vérifie les droits du principal." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il gruppo di risorse su cui è assegnato il ruolo: Prova verifica lì i permessi dell'entità." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロールを割り当てたリソースグループです。テストはそこでプリンシパルの権限を確認します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O grupo de recursos em que a função está atribuída: Testar verifica ali as permissões da entidade." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группа ресурсов, на которой назначена роль: проверка смотрит права субъекта там." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Група ресурсів, на якій призначено роль: перевірка дивиться права субʼєкта там." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分配角色的资源组:测试会在那里检查该主体的权限。" } }
+      }
+    },
+    "The principal of subscription %@ may create VMs in %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The principal of subscription %1$@ may create VMs in %2$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Principal des Abonnements %1$@ darf VMs in %2$@ erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La entidad de la suscripción %1$@ puede crear VM en %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le principal de l'abonnement %1$@ peut créer des VM dans %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'entità della sottoscrizione %1$@ può creare VM in %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サブスクリプション %1$@ のプリンシパルは %2$@ に VM を作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A entidade da assinatura %1$@ pode criar VMs em %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Субъект подписки %1$@ может создавать ВМ в %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Субʼєкт підписки %1$@ може створювати ВМ у %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "订阅 %1$@ 的主体可以在 %2$@ 中创建 VM。" } }
+      }
+    },
+    "The principal of subscription %@ may not create VMs in %@: assign it the role (Microsoft.Compute/virtualMachines/write)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The principal of subscription %1$@ may not create VMs in %2$@: assign it the role (Microsoft.Compute/virtualMachines/write)." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Principal des Abonnements %1$@ darf keine VMs in %2$@ erstellen: Weise ihm die Rolle zu (Microsoft.Compute/virtualMachines/write)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La entidad de la suscripción %1$@ no puede crear VM en %2$@: asígnale el rol (Microsoft.Compute/virtualMachines/write)." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le principal de l'abonnement %1$@ ne peut pas créer de VM dans %2$@ : attribuez-lui le rôle (Microsoft.Compute/virtualMachines/write)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'entità della sottoscrizione %1$@ non può creare VM in %2$@: assegnale il ruolo (Microsoft.Compute/virtualMachines/write)." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サブスクリプション %1$@ のプリンシパルは %2$@ に VM を作成できません。ロールを割り当ててください(Microsoft.Compute/virtualMachines/write)。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A entidade da assinatura %1$@ não pode criar VMs em %2$@: atribua a ela a função (Microsoft.Compute/virtualMachines/write)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Субъект подписки %1$@ не может создавать ВМ в %2$@: назначьте ему роль (Microsoft.Compute/virtualMachines/write)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Субʼєкт підписки %1$@ не може створювати ВМ у %2$@: призначте йому роль (Microsoft.Compute/virtualMachines/write)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "订阅 %1$@ 的主体不能在 %2$@ 中创建 VM:请为其分配该角色(Microsoft.Compute/virtualMachines/write)。" } }
+      }
+    },
+    "Principal of subscription %@. Whether it may create VMs in %@ shows when it tries." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Principal of subscription %1$@. Whether it may create VMs in %2$@ shows when it tries." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Principal des Abonnements %1$@. Ob er VMs in %2$@ erstellen darf, zeigt sich beim Versuch." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Entidad de la suscripción %1$@. Si puede crear VM en %2$@ se verá cuando lo intente." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Principal de l'abonnement %1$@. Son droit de créer des VM dans %2$@ se verra à l'essai." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Entità della sottoscrizione %1$@. Se può creare VM in %2$@ si vedrà al primo tentativo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サブスクリプション %1$@ のプリンシパルです。%2$@ に VM を作成できるかは実行時にわかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Entidade da assinatura %1$@. Se pode criar VMs em %2$@ aparece quando tentar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Субъект подписки %1$@. Может ли он создавать ВМ в %2$@, станет ясно при попытке." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Субʼєкт підписки %1$@. Чи може він створювати ВМ у %2$@, стане зрозуміло під час спроби." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "订阅 %1$@ 的主体。能否在 %2$@ 中创建 VM 会在尝试时显示。" } }
+      }
+    },
+    "No Talos image in this location: upload the Image Factory's VHD to the subscription once, or pick another location." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Talos-Image an diesem Standort: Lade die VHD der Image Factory einmal in das Abonnement hoch oder wähle einen anderen Standort." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay imagen de Talos en esta ubicación: sube una vez el VHD de Image Factory a la suscripción o elige otra ubicación." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune image Talos à cet emplacement : téléversez une fois le VHD de l'Image Factory dans l'abonnement, ou choisissez un autre emplacement." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna immagine Talos in quest'area: carica una volta il VHD dell'Image Factory nella sottoscrizione, o scegli un'altra area." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この場所に Talos イメージがありません。Image Factory の VHD をサブスクリプションに一度アップロードするか、別の場所を選んでください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma imagem do Talos nesta localização: envie uma vez o VHD da Image Factory para a assinatura, ou escolha outra localização." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этом расположении нет образа Talos: один раз загрузите VHD из Image Factory в подписку или выберите другое расположение." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цьому розташуванні немає образу Talos: один раз завантажте VHD з Image Factory у підписку або виберіть інше розташування." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此位置没有 Talos 镜像:请将 Image Factory 的 VHD 上传到订阅一次,或选择其他位置。" } }
+      }
+    },
+    "Make a Talos image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Talos-Image erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear una imagen de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer une image Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un'immagine Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos イメージを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar uma imagem do Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать образ Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити образ Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 Talos 镜像" } }
+      }
+    },
+    "Coming next: an image of the cluster's schematic, made from the phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Als Nächstes: ein Image mit dem Schematic des Clusters, vom Telefon aus erstellt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximamente: una imagen con el esquema del clúster, creada desde el teléfono." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À venir : une image du schematic du cluster, créée depuis le téléphone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In arrivo: un'immagine dello schematic del cluster, creata dal telefono." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次に対応予定:クラスターのスキーマティックのイメージを電話から作成します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Em breve: uma imagem do schematic do cluster, criada pelo telefone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скоро: образ со схемой кластера, созданный с телефона." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Незабаром: образ зі схемою кластера, створений з телефона." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即将推出:从手机制作集群 schematic 的镜像。" } }
+      }
+    },
+    "No VM size here boots this image (%@, generation %@)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No VM size here boots this image (%1$@, generation %2$@)." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine VM-Größe hier startet dieses Image (%1$@, Generation %2$@)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ningún tamaño de VM de aquí arranca esta imagen (%1$@, generación %2$@)." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune taille de VM ici ne démarre cette image (%1$@, génération %2$@)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna dimensione di VM qui avvia questa immagine (%1$@, generazione %2$@)." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ここにはこのイメージを起動できる VM サイズがありません(%1$@、第 %2$@ 世代)。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhum tamanho de VM aqui inicia esta imagem (%1$@, geração %2$@)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Здесь нет размера ВМ, который загружает этот образ (%1$@, поколение %2$@)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тут немає розміру ВМ, що завантажує цей образ (%1$@, покоління %2$@)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这里没有能启动此镜像的 VM 大小(%1$@,第 %2$@ 代)。" } }
+      }
+    },
+    "VM size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "VM-Größe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tamaño de VM" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Taille de VM" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dimensione VM" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "VM サイズ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tamanho da VM" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Размер ВМ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Розмір ВМ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "VM 大小" } }
+      }
+    },
+    "Virtual network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Virtuelles Netzwerk" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Red virtual" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réseau virtuel" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rete virtuale" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "仮想ネットワーク" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Rede virtual" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Виртуальная сеть" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Віртуальна мережа" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "虚拟网络" } }
+      }
+    },
+    "NAT gateway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "NAT-Gateway" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "puerta de enlace NAT" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "passerelle NAT" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "gateway NAT" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "NAT ゲートウェイ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "gateway NAT" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "NAT-шлюз" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "NAT-шлюз" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "NAT 网关" } }
+      }
+    },
+    "no NSG" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "keine NSG" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "sin NSG" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "sans NSG" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nessun NSG" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "NSG なし" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "sem NSG" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "без NSG" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "без NSG" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无 NSG" } }
+      }
+    },
+    "Network security group" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Netzwerksicherheitsgruppe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de seguridad de red" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupe de sécurité réseau" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppo di sicurezza di rete" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ネットワークセキュリティグループ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de segurança de rede" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группа безопасности сети" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Група безпеки мережі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络安全组" } }
+      }
+    },
+    "None picked: the subnet's group applies, if it has one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine gewählt: Es gilt die Gruppe des Subnetzes, falls es eine hat." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ninguno elegido: se aplica el grupo de la subred, si tiene uno." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun choisi : le groupe du sous-réseau s'applique, s'il en a un." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuno scelto: vale il gruppo della subnet, se ne ha uno." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未選択:サブネットにグループがあればそれが適用されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhum escolhido: vale o grupo da sub-rede, se ela tiver um." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не выбрана: действует группа подсети, если она есть." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вибрано: діє група підмережі, якщо вона є." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未选择:如果子网有安全组,则使用子网的安全组。" } }
+      }
+    },
+    "This group lets the Internet reach port 50000, the Talos API." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Gruppe lässt das Internet Port 50000 erreichen, die Talos-API." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este grupo deja que Internet alcance el puerto 50000, la API de Talos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce groupe laisse Internet atteindre le port 50000, l'API Talos." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo gruppo lascia raggiungere da Internet la porta 50000, l'API di Talos." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このグループはインターネットからポート 50000(Talos API)への到達を許可します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este grupo deixa a Internet alcançar a porta 50000, a API do Talos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Эта группа открывает из Интернета порт 50000 — API Talos." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ця група відкриває з Інтернету порт 50000 — API Talos." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此安全组允许互联网访问 50000 端口,即 Talos API。" } }
+      }
+    },
+    "OS disk (GB)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Betriebssystemdisk (GB)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Disco del sistema (GB)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Disque système (Go)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Disco del sistema (GB)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OS ディスク(GB)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Disco do sistema (GB)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Системный диск (ГБ)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Системний диск (ГБ)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "系统盘(GB)" } }
+      }
+    },
+    "Price unavailable: see Azure's VM pricing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Preis nicht verfügbar: siehe die VM-Preise von Azure." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Precio no disponible: consulta los precios de VM de Azure." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prix indisponible : voir la tarification des VM d'Azure." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prezzo non disponibile: vedi i prezzi delle VM di Azure." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "価格は取得できません。Azure の VM 料金を参照してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Preço indisponível: veja os preços de VM da Azure." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Цена недоступна: см. цены на ВМ Azure." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ціна недоступна: див. ціни на ВМ Azure." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "价格不可用:请参阅 Azure 的 VM 定价。" } }
+      }
+    },
+    "Create %@ at Azure?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bei Azure erstellen?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Crear %@ en Azure?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer %@ chez Azure ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare %@ su Azure?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Azure で %@ を作成しますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar %@ na Azure?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать %@ в Azure?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити %@ в Azure?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Azure 创建 %@?" } }
+      }
+    },
+    "This creates a billable VM (%@ in %@), billed with its disk until it is deleted. Its custom data goes to Azure with the cluster's secrets or Omni's join token. A failed run deletes the VM, its network interface and its public IP." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This creates a billable VM (%1$@ in %2$@), billed with its disk until it is deleted. Its custom data goes to Azure with the cluster's secrets or Omni's join token. A failed run deletes the VM, its network interface and its public IP." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das erstellt eine kostenpflichtige VM (%1$@ in %2$@), die mit ihrer Disk bis zum Löschen berechnet wird. Ihre benutzerdefinierten Daten gehen mit den Secrets des Clusters oder dem Join-Token von Omni an Azure. Ein fehlgeschlagener Lauf löscht die VM, ihre Netzwerkschnittstelle und ihre öffentliche IP." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto crea una VM de pago (%1$@ en %2$@), que se cobra con su disco hasta que se elimina. Sus datos personalizados van a Azure con los secretos del clúster o el token de unión de Omni. Una ejecución fallida elimina la VM, su interfaz de red y su IP pública." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela crée une VM facturée (%1$@ dans %2$@), avec son disque, jusqu'à sa suppression. Ses données personnalisées partent chez Azure avec les secrets du cluster ou le jeton d'adhésion d'Omni. Une exécution échouée supprime la VM, son interface réseau et son IP publique." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea una VM a pagamento (%1$@ in %2$@), addebitata con il suo disco finché non viene eliminata. I suoi dati personalizzati vanno ad Azure con i segreti del cluster o il token di adesione di Omni. Un'esecuzione fallita elimina la VM, la sua interfaccia di rete e il suo IP pubblico." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "課金される VM(%2$@ の %1$@)を作成します。削除するまでディスクとともに課金されます。カスタムデータはクラスターのシークレットまたは Omni の参加トークンとともに Azure に送られます。実行に失敗すると VM、そのネットワークインターフェイスとパブリック IP は削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isso cria uma VM paga (%1$@ em %2$@), cobrada com seu disco até ser excluída. Seus dados personalizados vão para a Azure com os segredos do cluster ou o token de entrada do Omni. Uma execução com falha exclui a VM, sua interface de rede e seu IP público." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Это создаёт платную ВМ (%1$@ в %2$@), которая оплачивается вместе с диском до её удаления. Её пользовательские данные передаются в Azure с секретами кластера или токеном присоединения Omni. При неудачном запуске ВМ, её сетевой интерфейс и публичный IP удаляются." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Це створює платну ВМ (%1$@ у %2$@), яка оплачується разом із диском до її видалення. Її користувацькі дані надходять до Azure із секретами кластера або токеном приєднання Omni. Невдалий запуск видаляє ВМ, її мережевий інтерфейс і публічну IP." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这将创建计费 VM(%2$@ 的 %1$@),在删除前连同其磁盘持续计费。其自定义数据会连同集群的密钥或 Omni 的加入令牌发送到 Azure。运行失败会删除该 VM、其网络接口和公网 IP。" } }
+      }
+    },
+    "%@ is deleted at Azure with its disk, network interface and public IP, which ends its billing. A control plane that already answered is kept: its etcd member must go first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ wird bei Azure mit Disk, Netzwerkschnittstelle und öffentlicher IP gelöscht, damit endet die Abrechnung. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ se elimina en Azure con su disco, su interfaz de red y su IP pública, lo que pone fin a su cobro. Un control plane que ya respondió se conserva: primero debe irse su miembro de etcd." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ est supprimée chez Azure avec son disque, son interface réseau et son IP publique, ce qui arrête sa facturation. Un control plane qui a déjà répondu est conservé : son membre etcd doit d'abord être retiré." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ viene eliminata su Azure con il suo disco, l'interfaccia di rete e l'IP pubblico, il che ne chiude l'addebito. Un control plane che ha già risposto viene mantenuto: prima va rimosso il suo membro etcd." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ はディスク、ネットワークインターフェイス、パブリック IP とともに Azure で削除され、課金も止まります。すでに応答したコントロールプレーンは保持されます。先に etcd メンバーを削除してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ é excluída na Azure com seu disco, sua interface de rede e seu IP público, o que encerra a cobrança. Um control plane que já respondeu é mantido: primeiro o membro etcd dele precisa sair." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ удаляется в Azure вместе с диском, сетевым интерфейсом и публичным IP, и оплата прекращается. Control plane, который уже ответил, сохраняется: сначала нужно убрать его участника etcd." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ видаляється в Azure разом із диском, мережевим інтерфейсом і публічною IP, і оплата припиняється. Control plane, що вже відповів, залишається: спершу треба прибрати його учасника etcd." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将连同其磁盘、网络接口和公网 IP 在 Azure 上删除,计费随之停止。已响应的控制平面会保留:必须先移除其 etcd 成员。" } }
+      }
+    },
     "A server at a cloud provider" : {
       "extractionState" : "manual",
       "localizations" : {

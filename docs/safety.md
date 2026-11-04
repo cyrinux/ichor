@@ -76,8 +76,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   and tag only on `RunInstances`. The one case that needs the AWS console is a terminate that
   fails: the message names the instance id and the region, and the instance stays billed until
   it is terminated there.
-- **Creating a VM at Azure (from the Go core and the probe for now):** billable, so the probe's
-  `azure create` runs only with `-yes`. The credential is a service principal; its token is asked
+- **Creating a VM at Azure (Add a node… → A server at a cloud provider → Azure):** billable, so
+  the hourly price shows first when the Retail Prices API answers, the host name is typed to
+  confirm, and Stop asks once more (the VM and its disk are billed until deleted); the probe's
+  `azure create` runs only with `-yes`. The service principal stays sealed on the device and out
+  of backups; its client secret expires on the date set when it was made and can do what its role
+  allows, so give it only the custom role the app prints, on one resource group. The credential is a service principal; its token is asked
   for Resource Manager's audience only and kept for the run. Before any write the run checks the
   image's Hyper-V generation and architecture against the VM size, the subnet's virtual network
   and the security group against the location, that no VM, NIC or public IP of the host's name is
