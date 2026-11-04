@@ -368,6 +368,29 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     stopped run terminates the instance it created, with the same control-plane exception as
     Hetzner; a create that gets no clear answer is looked up by its client token and terminated.
     The keys stay sealed on the device, under their account id, and are not in backups.
+  - **At Azure, from the phone (Add a node… → A server at a cloud provider → Azure):** add a
+    service principal (the tenant, client id and client secret `az ad sp create-for-rbac` prints,
+    the subscription id, the cloud, and the resource group it may work in); the app prints the
+    custom role to create (`az role definition create`) and assign to it on that resource group
+    (`az role assignment create --role "Ichor node creator" --scope /subscriptions/…/resourceGroups/…`),
+    only the calls it makes, and Test reads the principal's permissions there (Azure has no dry
+    run; nothing is created). Then pick the resource group (its location is listed; another
+    location can be picked), the Talos image the subscription holds (a managed image or a gallery
+    image version, tagged with the cluster's Talos version first; upload the Image Factory's VHD
+    once per the Talos guide: making it from the phone is the next step), a VM size that boots the
+    image's architecture and Hyper-V generation, a virtual network and subnet, an optional network
+    security group, whether the VM gets a public address (on by default unless the subnet has a NAT
+    gateway) and the OS disk size (20 GB by default). Only existing networks and groups are listed:
+    a group that allows the virtual network is enough for Omni, while a plain Talos node must be
+    reachable from the phone on port 50000 of the address the app follows, and a group that lets
+    the Internet reach that port is flagged. The custom data must fit Azure's 64 KB once encoded.
+    The hourly price in USD before tax comes from Azure's Retail Prices API (public cloud only), or
+    says "price unavailable". The app creates the public address, the network interface and the
+    VM, follows it until it runs, then follows the node until it joins, or until the machine
+    appears in Omni. A failed or stopped run deletes the VM with its disk, network interface and
+    address, with the same control-plane exception as Hetzner; a create that gets no clear answer
+    is looked up by name and its run tag. The principal stays sealed on the device, under its
+    subscription id, and is not in backups.
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

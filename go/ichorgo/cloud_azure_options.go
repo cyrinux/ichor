@@ -82,6 +82,8 @@ type azureSubnet struct {
 	Name  string `json:"name"`
 	CIDR  string `json:"cidr"`
 	NSGID string `json:"nsgId"`
+	// NATGateway: the subnet reaches the Internet without a public IP on the VM.
+	NATGateway bool `json:"natGateway"`
 }
 
 type azureSecurityGroup struct {
@@ -289,7 +291,7 @@ func azureResourceGroupOf(id string) string {
 // context answers with samples, without a credential. JSON: {"subscription","location",
 // "subscriptions":[{"id","name"}],"locations":[{"name","displayName"}],"resourceGroups":
 // [{"name","location"}],"sizes":[{"name","vcpus","memoryGB","arch","generations"}],"networks":
-// [{"id","name","resourceGroup","location","subnets":[{"id","name","cidr","nsgId"}]}],
+// [{"id","name","resourceGroup","location","subnets":[{"id","name","cidr","nsgId","natGateway"}]}],
 // "securityGroups":[{"id","name","resourceGroup","wideOpen"}],"images":[{"id","name",
 // "resourceGroup","source","arch","generation","talosVersion","schematic"}],"warnings"}.
 func AzureOptions(configYAML, contextName, credJSON string) (out string, err error) {
@@ -455,7 +457,7 @@ func (c *azureClient) networks(ctx context.Context, location string, warnings *[
 		network := azureNetwork{ID: n.ID, Name: n.Name, ResourceGroup: azureResourceGroupOf(n.ID), Location: n.Location, Subnets: []azureSubnet{}}
 
 		for _, s := range n.Properties.Subnets {
-			subnet := azureSubnet{ID: s.ID, Name: s.Name, CIDR: s.Properties.AddressPrefix}
+			subnet := azureSubnet{ID: s.ID, Name: s.Name, CIDR: s.Properties.AddressPrefix, NATGateway: s.Properties.NATGateway != nil}
 			if s.Properties.NetworkSecurityGroup != nil {
 				subnet.NSGID = s.Properties.NetworkSecurityGroup.ID
 			}

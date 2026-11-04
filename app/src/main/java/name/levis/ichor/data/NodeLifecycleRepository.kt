@@ -29,6 +29,10 @@ import name.levis.ichor.model.AWSCheck
 import name.levis.ichor.model.AWSCreateSpec
 import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
+import name.levis.ichor.model.AzureCheck
+import name.levis.ichor.model.AzureCreateSpec
+import name.levis.ichor.model.AzureOptions
+import name.levis.ichor.model.AzurePrice
 import name.levis.ichor.model.OVHCheck
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
@@ -423,6 +427,30 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.awsCreate]. */
     fun awsCreate(credentialJson: String, spec: AWSCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.awsCreate(credentialJson, TalosJson.encodeToString(AWSCreateSpec.serializer(), spec), stop)
+
+    /** Whose service principal this is and whether it may create VMs (its permissions, read only). Creates nothing. */
+    suspend fun azureTest(credentialJson: String): AzureCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureCheck.serializer(), Ichorgo.azureTest(credentialJson))
+    }
+
+    /** Resource groups, locations, sizes, networks, security groups and images ([credentialJson] may be empty on the demo). */
+    suspend fun azureOptions(credentialJson: String): AzureOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(AzureOptions.serializer(), Ichorgo.azureOptions(cfg, ctx, credentialJson))
+    }
+
+    /** The custom role to give the principal on [resourceGroup]: only the calls Ichor makes. */
+    suspend fun azureRole(subscriptionId: String, resourceGroup: String): String = withContext(Dispatchers.IO) {
+        Ichorgo.azureRoleDefinition(subscriptionId, resourceGroup)
+    }
+
+    /** The hourly price of [size] in [location]; an empty hourly when unknown. */
+    suspend fun azurePrice(credentialJson: String, location: String, size: String): AzurePrice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzurePrice.serializer(), Ichorgo.azurePrice(credentialJson, location, size))
+    }
+
+    /** See [TalosStreams.azureCreate]. */
+    fun azureCreate(credentialJson: String, spec: AzureCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.azureCreate(credentialJson, TalosJson.encodeToString(AzureCreateSpec.serializer(), spec), stop)
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

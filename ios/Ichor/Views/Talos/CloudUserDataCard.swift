@@ -59,6 +59,10 @@ struct CloudUserDataCard: View {
                 AWSCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
                     path: $path)
+            case .azure:
+                AzureCreateSection(
+                    omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
+                    path: $path)
             case .ovhcloud:
                 OVHCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,

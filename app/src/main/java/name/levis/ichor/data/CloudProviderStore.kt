@@ -53,5 +53,8 @@ class CloudProviderStore(private val file: SealedValue) {
 
         /** Keyed by the account id AWSTest names; the value is the keys' credential JSON, region included. */
         const val AWS = "aws"
+
+        /** Keyed by the subscription id AzureTest names; the value is the principal's credential JSON. */
+        const val AZURE = "azure"
     }
 }

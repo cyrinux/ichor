@@ -35,6 +35,7 @@ enum class AddNodePath(@StringRes val title: Int, @StringRes val body: Int) {
 /** A cloud provider, in alphabetical order; [platform] names its Talos image, null lists them all. */
 enum class CloudProvider(val label: String?, val platform: String?) {
     AWS("AWS", "aws"),
+    AZURE("Azure", "azure"),
     HETZNER("Hetzner", "hcloud"),
     OVHCLOUD("OVHcloud", "openstack"),
     SCALEWAY("Scaleway", "scaleway"),

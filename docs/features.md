@@ -14,7 +14,7 @@ Part of the [Ichor documentation](../README.md#documentation).
   talosconfig is replaced on the way. Every talosconfig issued before stops working at the end,
   so it is the way to cut off a lost phone or a leaked config. See [Safety](safety.md).
 - **Add a node at a cloud provider:** create the server for a new Talos or Omni node at Hetzner
-  Cloud, OVHcloud or AWS EC2 from the phone, with the price shown first and the host name typed to
+  Cloud, OVHcloud, AWS EC2 or Azure from the phone, with the price shown first and the host name typed to
   confirm, then follow it until it joins (or appears in Omni). See
   [Kubernetes](kubernetes.md) and [Safety](safety.md).
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and

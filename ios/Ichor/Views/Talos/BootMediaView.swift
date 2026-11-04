@@ -9,12 +9,13 @@ enum AddNodePath: String, CaseIterable, Identifiable, Hashable {
 
 /// A cloud provider, in alphabetical order; `platform` names its Talos image, nil lists them all.
 enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
-    case aws, hetzner, ovhcloud, scaleway, other
+    case aws, azure, hetzner, ovhcloud, scaleway, other
     var id: String { rawValue }
 
     var platform: String? {
         switch self {
         case .aws: "aws"
+        case .azure: "azure"
         case .hetzner: "hcloud"
         case .ovhcloud: "openstack"
         case .scaleway: "scaleway"
@@ -25,6 +26,7 @@ enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
     @ViewBuilder var label: some View {
         switch self {
         case .aws: Text(verbatim: "AWS")
+        case .azure: Text(verbatim: "Azure")
         case .hetzner: Text(verbatim: "Hetzner")
         case .ovhcloud: Text(verbatim: "OVHcloud")
         case .scaleway: Text(verbatim: "Scaleway")
@@ -134,6 +136,7 @@ struct BootMediaView: View {
         case nil: EmptyView()
         // Ichor can call these providers' APIs: it creates the machine itself.
         case .aws: awsSections
+        case .azure: azureSections
         case .hetzner: hetznerSections
         case .ovhcloud: ovhSections
         // A server at a cloud provider boots its own image and reads the config as user data.
@@ -172,6 +175,21 @@ struct BootMediaView: View {
             }
         }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .aws, imagePlatform: nil, path: $path)
+    }
+
+    @ViewBuilder private var azureSections: some View {
+        Section {
+            if omni {
+                Text(
+                    "1. Add a service principal that has the role Ichor prints on the resource group.\n2. Upload the Talos image for Omni to the subscription once, from a computer (making it from the phone comes next).\n3. Name the VM, then pick a resource group, the image, a VM size, a subnet and a network security group.\n4. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster."
+                )
+            } else {
+                Text(
+                    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add a service principal that has the role Ichor prints on the resource group.\n3. Upload the Talos image to the subscription once, from a computer (making it from the phone comes next).\n4. Pick a resource group, the image, a VM size, a subnet and a network security group, then create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the VM."
+                )
+            }
+        }
+        CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .azure, imagePlatform: nil, path: $path)
     }
 
     @ViewBuilder private var ovhSections: some View {

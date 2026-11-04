@@ -205,7 +205,7 @@ func TestAzureOptions(t *testing.T) {
 				t.Errorf("warnings = %q, want %q", o.Warnings, c.wantWarnings)
 			}
 
-			for _, key := range []string{`"memoryGB":4,`, `"generations":["V1","V2"]`, `"wideOpen":true`, `"nsgId":"`, `"source":"gallery"`} {
+			for _, key := range []string{`"memoryGB":4,`, `"generations":["V1","V2"]`, `"wideOpen":true`, `"nsgId":"`, `"natGateway":false`, `"source":"gallery"`} {
 				if !strings.Contains(out, key) {
 					t.Errorf("%s not in %s", key, out)
 				}

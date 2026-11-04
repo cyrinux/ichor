@@ -43,6 +43,18 @@ class CloudProviderStoreTest {
     }
 
     @Test
+    fun azurePrincipalsAreKeptPerSubscriptionApartFromTheOtherProviders() {
+        val store = CloudProviderStore(MemoryValue())
+        val principal = """{"tenantId":"t","clientId":"c","clientSecret":"secret","subscriptionId":"00000000-0000-0000-0000-000000000000"}"""
+        store.save(CloudProviderStore.AZURE, "00000000-0000-0000-0000-000000000000", principal)
+        store.save(CloudProviderStore.AWS, "000000000000", "{}")
+
+        assertEquals(listOf("00000000-0000-0000-0000-000000000000"), store.projects(CloudProviderStore.AZURE))
+        assertEquals(principal, store.token(CloudProviderStore.AZURE, "00000000-0000-0000-0000-000000000000"))
+        assertEquals(listOf("000000000000"), store.projects(CloudProviderStore.AWS))
+    }
+
+    @Test
     fun aBlankTokenRemovesTheProjectAndTheLastOneTheFile() {
         val file = MemoryValue()
         val store = CloudProviderStore(file)

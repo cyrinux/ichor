@@ -127,6 +127,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let ovh: OVHCreateSpec?
     /// An instance to create at AWS EC2 for the node, likewise.
     public let aws: AWSCreateSpec?
+    /// A VM to create at Azure for the node, likewise.
+    public let azure: AzureCreateSpec?
     /// The cloud machine joins Omni, not the cluster directly.
     public let omni: Bool
     /// No node at all: a throwaway server becomes a Talos snapshot (`hostname` only labels the run).
@@ -137,7 +139,7 @@ public struct JoinRequest: Equatable, Sendable {
     public init(
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
         replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil,
-        aws: AWSCreateSpec? = nil, omni: Bool = false,
+        aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil, omni: Bool = false,
         snapshot: HetznerSnapshotSpec? = nil, omniAllocate: OmniAllocateSpec? = nil
     ) {
         self.omniAllocate = omniAllocate
@@ -152,6 +154,7 @@ public struct JoinRequest: Equatable, Sendable {
         self.hetzner = hetzner
         self.ovh = ovh
         self.aws = aws
+        self.azure = azure
         self.omni = omni
     }
 
@@ -164,14 +167,14 @@ public struct JoinRequest: Equatable, Sendable {
     }
 
     /// A machine to create at a cloud provider.
-    public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil }
+    public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil || azure != nil }
 
     /// The same request, replacing (or not) the member already named `hostname`.
     public func withReplacing(_ on: Bool) -> JoinRequest {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
-            staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, omni: omni,
-            snapshot: snapshot, omniAllocate: omniAllocate)
+            staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure,
+            omni: omni, snapshot: snapshot, omniAllocate: omniAllocate)
     }
 }
 
