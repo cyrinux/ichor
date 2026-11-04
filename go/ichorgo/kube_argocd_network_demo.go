@@ -45,6 +45,10 @@ func demoArgoNetwork(app string) netmap.Map {
 	case "grafana":
 		svc("monitoring", "grafana", "ClusterIP", "10.96.80.3", "grafana", `{"name":"http","port":80,"targetPort":3000}`, "")
 		pod("monitoring", "grafana-6d8b-9fz2t", "grafana", "demo-worker-2", "Running", 1, 0)
+		// Also on the tailnet, through a proxy of its own (the demo Tailscale screen's row).
+		in.addExternal(tsKindService, "monitoring", "grafana", json.RawMessage(`{"metadata":{"name":"grafana","namespace":"monitoring",
+		  "annotations":{"tailscale.com/expose":"true","tailscale.com/hostname":"grafana"}},"spec":{"type":"ClusterIP","ports":[{"port":80}]},
+		  "status":{"conditions":[{"type":"TailscaleProxyReady","status":"True"}]}}`), map[string]string{groupTailscale: "v1alpha1"})
 		resources = append(resources, argoResourceStatus{Group: "gateway.networking.k8s.io", Kind: "HTTPRoute", Namespace: "monitoring", Name: "grafana"})
 		httpRoute := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
 		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik"}],"hostnames":["grafana.homelab.lan"],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)
