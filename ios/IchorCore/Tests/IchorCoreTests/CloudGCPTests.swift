@@ -134,7 +134,9 @@ final class CloudGCPTests: XCTestCase {
     }
 
     func testTheActivationLinkIsFoundInTheCoresMessage() {
-        let link = "https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=example-project"
+        let link =
+            "https://console.developers.google.com/apis/api/compute.googleapis.com/overview"
+            + "?project=example-project"
         let message = "the Compute Engine API is not enabled in project example-project: enable it at " + link
         XCTAssertEqual(GCPNames.activationLink(in: message)?.absoluteString, link)
         XCTAssertNil(GCPNames.activationLink(in: "Google Cloud refused compute.instances.create"))
