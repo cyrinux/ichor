@@ -23,6 +23,10 @@ class CloudCreateLabelsTest {
                 AzureCreateSpec.serializer(),
                 AzureCreateSpec("rg", "westeurope", "Standard_B2s", "img", "subnet", hostname = "node-c", labelsJson = labels),
             ),
+            TalosJson.encodeToString(
+                GCPCreateSpec.serializer(),
+                GCPCreateSpec("example-project", "europe-west1-b", "e2-medium", "image", "subnet", true, 20, "node-c", labelsJson = labels),
+            ),
         )
         specs.forEach { json ->
             assertEquals(json, labels, field(json)?.jsonPrimitive?.content)

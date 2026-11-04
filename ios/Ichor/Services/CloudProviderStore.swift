@@ -11,6 +11,8 @@ enum CloudProviderStore {
     static let aws = "aws"
     /// Keyed by the subscription id AzureTest names; the value is the principal's credential JSON.
     static let azure = "azure"
+    /// Keyed by the service account key's project id; the value is the credential JSON (key, project, zone).
+    static let gcp = "gcp"
 
     /// The projects with a token, sorted.
     static func projects(provider: String) -> [String] {

@@ -14,11 +14,11 @@ Part of the [Ichor documentation](../README.md#documentation).
   talosconfig is replaced on the way. Every talosconfig issued before stops working at the end,
   so it is the way to cut off a lost phone or a leaked config. See [Safety](safety.md).
 - **Add a node at a cloud provider:** create the server for a new Talos or Omni node at Hetzner
-  Cloud, OVHcloud, AWS EC2 or Azure from the phone, with the price shown first and the host name typed to
-  confirm, then follow it until it joins (or appears in Omni). The Talos image comes from the
-  phone too: a Hetzner snapshot, an AWS AMI or an Azure managed image of the cluster's own image,
-  made by a throwaway server that is deleted afterwards, with its cost shown first. See
-  [Kubernetes](kubernetes.md) and [Safety](safety.md).
+  Cloud, OVHcloud, AWS EC2, Azure or Google Cloud Compute Engine from the phone, with the price
+  shown first and the host name typed to confirm, then follow it until it joins (or appears in
+  Omni). The Talos image comes from the phone too: a Hetzner snapshot, an AWS AMI or an Azure
+  managed image of the cluster's own image, made by a throwaway server that is deleted afterwards,
+  with its cost shown first. See [Kubernetes](kubernetes.md) and [Safety](safety.md).
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`), then follow it live with its
   old and new pods (`kubectl rollout status`); list pods with their

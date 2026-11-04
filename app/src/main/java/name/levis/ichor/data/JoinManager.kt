@@ -19,6 +19,7 @@ import name.levis.ichor.model.AWSImageSpec
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureImageResult
 import name.levis.ichor.model.AzureImageSpec
+import name.levis.ichor.model.GCPCreateSpec
 import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.ImageRunKind
@@ -47,6 +48,8 @@ data class JoinRequest(
     val aws: AWSCreateSpec? = null,
     /** A VM to create at Azure for the node, likewise. */
     val azure: AzureCreateSpec? = null,
+    /** A Compute Engine VM to create at Google Cloud for the node, likewise. */
+    val gcp: GCPCreateSpec? = null,
     /** The cloud machine joins Omni, not the cluster directly. */
     val omni: Boolean = false,
     /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
@@ -71,7 +74,7 @@ data class JoinRequest(
 
     /** A machine to create at a cloud provider. */
     val cloud: Boolean
-        get() = hetzner != null || ovh != null || aws != null || azure != null
+        get() = hetzner != null || ovh != null || aws != null || azure != null || gcp != null
 
     /** What the run makes when it makes a Talos image instead of a node; null for a node. */
     val imageKind: ImageRunKind?
@@ -147,6 +150,7 @@ class JoinManager(
                     ?: request.ovh?.let { lifecycle.ovhCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.aws?.let { lifecycle.awsCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.azure?.let { lifecycle.azureCreate(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.gcp?.let { lifecycle.gcpCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                 events
                     .collect { event ->

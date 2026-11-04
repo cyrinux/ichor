@@ -146,8 +146,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   unfinished image. A finished image stays, billed as a managed disk of its size per month until
   you delete it. The one case that needs the Azure portal is a delete that fails: the message
   names each resource left (its id without the subscription) and the resource group.
-- **Creating a VM at Google Cloud (from the Go core and the probe for now):** billable, so the
-  probe's `gcp create` runs only with `-yes`. The credential is a service account key; the token
+- **Creating a VM at Google Cloud (Add a node… → A server at a cloud provider → Google Cloud):**
+  billable, so the hourly price shows first when the Billing Catalog answers, the host name is
+  typed to confirm, and Stop asks once more (the VM and its disk are billed until deleted); the
+  probe's `gcp create` runs only with `-yes`. The service account key stays sealed on the device
+  and out of backups, and the sheet shows only its email and project; it does not expire and can
+  do what its roles allow, so give it only the role the app prints. The token
   it mints (the cloud-platform scope) is kept for the run only, and the key, the token, the key's
   email and id and the project number never appear in a message or the activity log. A key that
   signs in to GKE may still be refused by Compute Engine, so before any write the run checks the

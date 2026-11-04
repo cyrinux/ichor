@@ -300,6 +300,10 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     fun awsCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAWSCreate(yaml, context, credentialJson, specJson, listener) }
 
+    /** Creates a Compute Engine VM and follows it (StartGCPCreate). As for [hetznerCreate], only [stop] cancels: it deletes the instance. */
+    fun gcpCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startGCPCreate(yaml, context, credentialJson, specJson, listener) }
+
     /**
      * Makes a Talos AMI with a throwaway instance (StartAWSImage). Done's address is the result
      * JSON. As for [hetznerCreate], only [stop] cancels: it terminates the helper and deletes an

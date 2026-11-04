@@ -1466,6 +1466,104 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将在 AWS 上终止,计费随之停止。已响应的控制平面会保留:必须先移除其 etcd 成员。" } }
       }
     },
+    "Create the VM at Google Cloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die VM bei Google Cloud erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la VM en Google Cloud" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer la VM chez Google Cloud" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea la VM su Google Cloud" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Google Cloud で VM を作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a VM no Google Cloud" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать ВМ в Google Cloud" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити ВМ у Google Cloud" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Google Cloud 创建虚拟机" } }
+      }
+    },
+    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add a service account key that has the role Ichor prints, with the Compute Engine API enabled in its project.\n3. Pick a zone, a machine type, the Talos image the project holds (register one as the Talos guide says until Ichor makes it), a network and its subnet.\n4. Create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the VM." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Wähle ein Mitglied als Vorlage, dann Hostname und Installationsdatenträger des neuen Knotens.\n2. Füge einen Dienstkontoschlüssel mit der Rolle hinzu, die Ichor ausgibt, mit aktivierter Compute Engine API in seinem Projekt.\n3. Wähle eine Zone, einen Maschinentyp, das Talos-Image des Projekts (registriere eines wie im Talos-Leitfaden, bis Ichor es erstellt), ein Netzwerk und sein Subnetz.\n4. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis der Knoten beitritt. Das Telefon muss Port 50000 der VM erreichen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Elige un miembro para copiar y luego el nombre de host y el disco de instalación del nuevo nodo.\n2. Añade una clave de cuenta de servicio con el rol que muestra Ichor y la API de Compute Engine habilitada en su proyecto.\n3. Elige una zona, un tipo de máquina, la imagen de Talos del proyecto (registra una como indica la guía de Talos hasta que Ichor la cree), una red y su subred.\n4. Créala: Ichor muestra primero el precio y la sigue hasta que el nodo se une. El teléfono debe llegar al puerto 50000 de la VM." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Choisissez un membre à copier, puis le nom d'hôte et le disque d'installation du nouveau nœud.\n2. Ajoutez une clé de compte de service qui a le rôle qu'Ichor affiche, avec l'API Compute Engine activée dans son projet.\n3. Choisissez une zone, un type de machine, l'image Talos du projet (enregistrez-en une comme le dit le guide Talos, en attendant qu'Ichor la crée), un réseau et son sous-réseau.\n4. Créez-la : Ichor affiche d'abord le prix et la suit jusqu'à ce que le nœud rejoigne. Le téléphone doit joindre le port 50000 de la VM." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi una chiave di account di servizio con il ruolo che Ichor mostra e l'API Compute Engine abilitata nel suo progetto.\n3. Scegli una zona, un tipo di macchina, l'immagine Talos del progetto (registrane una come dice la guida di Talos finché Ichor non la crea), una rete e la sua subnet.\n4. Creala: Ichor mostra prima il prezzo e la segue finché il nodo si unisce. Il telefono deve raggiungere la porta 50000 della VM." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを選びます。\n2. Ichor が表示するロールを持つサービスアカウントキーを追加します。そのプロジェクトで Compute Engine API を有効にしてください。\n3. ゾーン、マシンタイプ、プロジェクトの Talos イメージ(Ichor が作成できるようになるまでは Talos ガイドに従って登録)、ネットワークとそのサブネットを選びます。\n4. 作成します。Ichor は先に料金を表示し、ノードが参加するまで追跡します。スマートフォンから VM のポート 50000 に到達できる必要があります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Escolha um membro para copiar e depois o nome de host e o disco de instalação do novo nó.\n2. Adicione uma chave de conta de serviço com o papel que o Ichor mostra e a API do Compute Engine ativada no projeto dela.\n3. Escolha uma zona, um tipo de máquina, a imagem do Talos do projeto (registre uma como diz o guia do Talos até o Ichor criá-la), uma rede e sua sub-rede.\n4. Crie-a: o Ichor mostra o preço primeiro e a acompanha até o nó entrar. O telefone precisa alcançar a porta 50000 da VM." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Выберите участника для копирования, затем имя хоста и установочный диск нового узла.\n2. Добавьте ключ сервисного аккаунта с ролью, которую показывает Ichor, и включённым Compute Engine API в его проекте.\n3. Выберите зону, тип машины, образ Talos из проекта (зарегистрируйте его по руководству Talos, пока Ichor не умеет его создавать), сеть и её подсеть.\n4. Создайте её: Ichor сначала покажет цену и будет следить, пока узел не присоединится. Телефон должен достучаться до порта 50000 ВМ." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Виберіть учасника для копіювання, потім ім'я хоста та інсталяційний диск нового вузла.\n2. Додайте ключ сервісного облікового запису з роллю, яку показує Ichor, і ввімкненим Compute Engine API в його проєкті.\n3. Виберіть зону, тип машини, образ Talos із проєкту (зареєструйте його за посібником Talos, доки Ichor не вміє його створювати), мережу та її підмережу.\n4. Створіть її: Ichor спершу покаже ціну й стежитиме, доки вузол не приєднається. Телефон має досягати порту 50000 ВМ." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 选择要复制的成员,然后选择新节点的主机名和安装磁盘。\n2. 添加服务账号密钥,该账号需拥有 Ichor 显示的角色,并在其项目中启用 Compute Engine API。\n3. 选择可用区、机器类型、项目中的 Talos 镜像(在 Ichor 能创建之前,请按 Talos 指南注册一个)、网络及其子网。\n4. 创建:Ichor 先显示价格,然后跟踪直到节点加入。手机必须能访问虚拟机的 50000 端口。" } }
+      }
+    },
+    "1. Add a service account key that has the role Ichor prints, with the Compute Engine API enabled in its project.\n2. Name the VM, then pick a zone, a machine type, the Talos image the project holds, a network and its subnet.\n3. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "1. Füge einen Dienstkontoschlüssel mit der Rolle hinzu, die Ichor ausgibt, mit aktivierter Compute Engine API in seinem Projekt.\n2. Benenne die VM, dann wähle eine Zone, einen Maschinentyp, das Talos-Image des Projekts, ein Netzwerk und sein Subnetz.\n3. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "1. Añade una clave de cuenta de servicio con el rol que muestra Ichor y la API de Compute Engine habilitada en su proyecto.\n2. Nombra la VM y luego elige una zona, un tipo de máquina, la imagen de Talos del proyecto, una red y su subred.\n3. Créala: Ichor muestra primero el precio y la sigue hasta que la máquina aparece en Omni. Asígnala al clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1. Ajoutez une clé de compte de service qui a le rôle qu'Ichor affiche, avec l'API Compute Engine activée dans son projet.\n2. Nommez la VM, puis choisissez une zone, un type de machine, l'image Talos du projet, un réseau et son sous-réseau.\n3. Créez-la : Ichor affiche d'abord le prix, puis la suit jusqu'à ce que la machine apparaisse dans Omni. Allouez-la au cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1. Aggiungi una chiave di account di servizio con il ruolo che Ichor mostra e l'API Compute Engine abilitata nel suo progetto.\n2. Dai un nome alla VM, poi scegli una zona, un tipo di macchina, l'immagine Talos del progetto, una rete e la sua subnet.\n3. Creala: Ichor mostra prima il prezzo, poi la segue finché la macchina compare in Omni. Assegnala al cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1. Ichor が表示するロールを持つサービスアカウントキーを追加します。そのプロジェクトで Compute Engine API を有効にしてください。\n2. VM に名前を付け、ゾーン、マシンタイプ、プロジェクトの Talos イメージ、ネットワークとそのサブネットを選びます。\n3. 作成します。Ichor は先に料金を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "1. Adicione uma chave de conta de serviço com o papel que o Ichor mostra e a API do Compute Engine ativada no projeto dela.\n2. Dê um nome à VM e escolha uma zona, um tipo de máquina, a imagem do Talos do projeto, uma rede e sua sub-rede.\n3. Crie-a: o Ichor mostra o preço primeiro e a acompanha até a máquina aparecer no Omni. Aloque-a ao cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Добавьте ключ сервисного аккаунта с ролью, которую показывает Ichor, и включённым Compute Engine API в его проекте.\n2. Назовите ВМ, затем выберите зону, тип машины, образ Talos из проекта, сеть и её подсеть.\n3. Создайте её: Ichor сначала покажет цену, затем будет следить, пока машина не появится в Omni. Выделите её кластеру." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Додайте ключ сервісного облікового запису з роллю, яку показує Ichor, і ввімкненим Compute Engine API в його проєкті.\n2. Назвіть ВМ, потім виберіть зону, тип машини, образ Talos із проєкту, мережу та її підмережу.\n3. Створіть її: Ichor спершу покаже ціну, потім стежитиме, доки машина не з'явиться в Omni. Виділіть її кластеру." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 添加服务账号密钥,该账号需拥有 Ichor 显示的角色,并在其项目中启用 Compute Engine API。\n2. 为虚拟机命名,然后选择可用区、机器类型、项目中的 Talos 镜像、网络及其子网。\n3. 创建:Ichor 先显示价格,然后跟踪直到机器出现在 Omni 中。将其分配给集群。" } }
+      }
+    },
+    "Add a service account key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dienstkontoschlüssel hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una clave de cuenta de servicio" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter une clé de compte de service" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi una chiave di account di servizio" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サービスアカウントキーを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma chave de conta de serviço" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить ключ сервисного аккаунта" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати ключ сервісного облікового запису" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加服务账号密钥" } }
+      }
+    },
+    "Remove this key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diesen Schlüssel entfernen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar esta clave" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer cette clé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi questa chiave" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このキーを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover esta chave" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить этот ключ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вилучити цей ключ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除此密钥" } }
+      }
+    },
+    "A service account key does not expire and can do what its roles allow. It stays sealed on this device and is not in backups: prefer a key with only the role Ichor prints." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Dienstkontoschlüssel läuft nicht ab und darf, was seine Rollen erlauben. Er bleibt versiegelt auf diesem Gerät und ist nicht in Backups: Nimm lieber einen Schlüssel nur mit der Rolle, die Ichor ausgibt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Una clave de cuenta de servicio no caduca y puede hacer lo que sus roles permitan. Queda sellada en este dispositivo y no está en las copias de seguridad: mejor una clave con solo el rol que muestra Ichor." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Une clé de compte de service n'expire pas et peut faire ce que ses rôles permettent. Elle reste scellée sur cet appareil et n'est pas dans les sauvegardes : préférez une clé qui n'a que le rôle qu'Ichor affiche." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Una chiave di account di servizio non scade e può fare ciò che i suoi ruoli consentono. Resta sigillata su questo dispositivo e non è nei backup: preferisci una chiave con solo il ruolo che Ichor mostra." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サービスアカウントキーは失効せず、ロールで許可された操作ができます。この端末に封印して保存され、バックアップには含まれません。Ichor が表示するロールだけを持つキーをおすすめします。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Uma chave de conta de serviço não expira e pode fazer o que seus papéis permitem. Ela fica selada neste dispositivo e não entra nos backups: prefira uma chave só com o papel que o Ichor mostra." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключ сервисного аккаунта не истекает и может делать то, что разрешают его роли. Он хранится запечатанным на этом устройстве и не попадает в резервные копии: лучше ключ только с ролью, которую показывает Ichor." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ключ сервісного облікового запису не спливає і може робити те, що дозволяють його ролі. Він зберігається запечатаним на цьому пристрої й не потрапляє в резервні копії: краще ключ лише з роллю, яку показує Ichor." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务账号密钥不会过期,并可执行其角色允许的操作。它密封保存在本设备上,不会进入备份:建议使用仅拥有 Ichor 显示的角色的密钥。" } }
+      }
+    },
+    "Create this custom role in the project and grant it to the service account: only the calls Ichor makes. Enable the Compute Engine API; Cloud Resource Manager lets Test check the role, and Cloud Billing shows the price." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erstelle diese benutzerdefinierte Rolle im Projekt und weise sie dem Dienstkonto zu: nur die Aufrufe, die Ichor macht. Aktiviere die Compute Engine API; mit Cloud Resource Manager prüft Test die Rolle, Cloud Billing zeigt den Preis." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crea este rol personalizado en el proyecto y asígnalo a la cuenta de servicio: solo las llamadas que hace Ichor. Habilita la API de Compute Engine; Cloud Resource Manager permite que Probar compruebe el rol y Cloud Billing muestra el precio." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créez ce rôle personnalisé dans le projet et attribuez-le au compte de service : seulement les appels qu'Ichor fait. Activez l'API Compute Engine ; Cloud Resource Manager permet à Tester de vérifier le rôle, et Cloud Billing affiche le prix." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea questo ruolo personalizzato nel progetto e assegnalo all'account di servizio: solo le chiamate che Ichor fa. Abilita l'API Compute Engine; Cloud Resource Manager permette a Prova di verificare il ruolo e Cloud Billing mostra il prezzo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このカスタムロールをプロジェクトに作成し、サービスアカウントに付与してください。Ichor が行う呼び出しだけです。Compute Engine API を有効にしてください。Cloud Resource Manager があればテストでロールを確認でき、Cloud Billing があれば料金が表示されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Crie este papel personalizado no projeto e conceda-o à conta de serviço: só as chamadas que o Ichor faz. Ative a API do Compute Engine; o Cloud Resource Manager permite que Testar verifique o papel, e o Cloud Billing mostra o preço." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создайте эту пользовательскую роль в проекте и выдайте её сервисному аккаунту: только вызовы, которые делает Ichor. Включите Compute Engine API; с Cloud Resource Manager проверка покажет роль, а Cloud Billing — цену." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створіть цю власну роль у проєкті та надайте її сервісному обліковому запису: лише виклики, які робить Ichor. Увімкніть Compute Engine API; з Cloud Resource Manager перевірка покаже роль, а Cloud Billing — ціну." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在项目中创建此自定义角色并授予服务账号:仅包含 Ichor 发出的调用。启用 Compute Engine API;启用 Cloud Resource Manager 后测试可检查角色,启用 Cloud Billing 后会显示价格。" } }
+      }
+    },
     "Create the VM at Azure" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1576,6 +1674,136 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скопировать определение роли" } },
         "uk" : { "stringUnit" : { "state" : "translated", "value" : "Скопіювати визначення ролі" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制角色定义" } }
+      }
+    },
+    "Key of %@, project %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Key of %1$@, project %2$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schlüssel von %1$@, Projekt %2$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clave de %1$@, proyecto %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clé de %1$@, projet %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Chiave di %1$@, progetto %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ のキー、プロジェクト %2$@。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Chave de %1$@, projeto %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключ %1$@, проект %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ключ %1$@, проєкт %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ 的密钥,项目 %2$@。" } }
+      }
+    },
+    "This is not a service account key (a JSON file of type service_account)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das ist kein Dienstkontoschlüssel (eine JSON-Datei vom Typ service_account)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No es una clave de cuenta de servicio (un archivo JSON de tipo service_account)." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce n'est pas une clé de compte de service (un fichier JSON de type service_account)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non è una chiave di account di servizio (un file JSON di tipo service_account)." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サービスアカウントキーではありません(type が service_account の JSON ファイル)。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isto não é uma chave de conta de serviço (um arquivo JSON do tipo service_account)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Это не ключ сервисного аккаунта (JSON-файл типа service_account)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Це не ключ сервісного облікового запису (JSON-файл типу service_account)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这不是服务账号密钥(类型为 service_account 的 JSON 文件)。" } }
+      }
+    },
+    "%@ may create VMs in %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ may create VMs in %2$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ darf VMs in %2$@ erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ puede crear VM en %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ peut créer des VM dans %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ può creare VM in %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ は %2$@ に VM を作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ pode criar VMs em %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ может создавать ВМ в %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ може створювати ВМ у %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ 可以在 %2$@ 中创建虚拟机。" } }
+      }
+    },
+    "%@ may not create VMs in %@. Grant it the role; missing: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ may not create VMs in %2$@. Grant it the role; missing: %3$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ darf keine VMs in %2$@ erstellen. Weise ihm die Rolle zu; es fehlt: %3$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ no puede crear VM en %2$@. Asígnale el rol; falta: %3$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ ne peut pas créer de VM dans %2$@. Attribuez-lui le rôle ; il manque : %3$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ non può creare VM in %2$@. Assegnagli il ruolo; manca: %3$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ は %2$@ に VM を作成できません。ロールを付与してください。不足: %3$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ não pode criar VMs em %2$@. Conceda o papel; falta: %3$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ не может создавать ВМ в %2$@. Выдайте ему роль; не хватает: %3$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ не може створювати ВМ у %2$@. Надайте йому роль; бракує: %3$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ 不能在 %2$@ 中创建虚拟机。请授予该角色;缺少:%3$@" } }
+      }
+    },
+    "Not granted yet, used by the rest of the role: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch nicht gewährt, vom Rest der Rolle genutzt: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no concedido, lo usa el resto del rol: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore accordé, utilisé par le reste du rôle : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non ancora concesso, usato dal resto del ruolo: %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "まだ付与されていません(ロールの残りで使用): %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não concedido, usado pelo resto do papel: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ещё не выдано, используется остальной ролью: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ще не надано, використовується рештою ролі: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未授予,角色的其余部分会用到:%@" } }
+      }
+    },
+    "%@ in %@. Whether it may create VMs shows when it tries: enable Cloud Resource Manager to check now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ in %2$@. Whether it may create VMs shows when it tries: enable Cloud Resource Manager to check now." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ in %2$@. Ob es VMs erstellen darf, zeigt sich beim Versuch: Aktiviere Cloud Resource Manager, um es jetzt zu prüfen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ en %2$@. Si puede crear VM se verá al intentarlo: habilita Cloud Resource Manager para comprobarlo ahora." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ dans %2$@. Son droit de créer des VM se verra à l'essai : activez Cloud Resource Manager pour le vérifier maintenant." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ in %2$@. Se può creare VM si vedrà al tentativo: abilita Cloud Resource Manager per verificarlo ora." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@。VM を作成できるかは試すとわかります。今すぐ確認するには Cloud Resource Manager を有効にしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ em %2$@. Se pode criar VMs aparece na tentativa: ative o Cloud Resource Manager para verificar agora." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ в %2$@. Может ли он создавать ВМ, станет видно при попытке: включите Cloud Resource Manager, чтобы проверить сейчас." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ у %2$@. Чи може він створювати ВМ, буде видно під час спроби: увімкніть Cloud Resource Manager, щоб перевірити зараз." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 中的 %1$@。能否创建虚拟机要在尝试时才知道:启用 Cloud Resource Manager 即可立即检查。" } }
+      }
+    },
+    "Open the page to enable it" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Seite zum Aktivieren öffnen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir la página para habilitarla" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir la page pour l'activer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apri la pagina per abilitarla" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "有効化のページを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir a página para ativá-la" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть страницу включения" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відкрити сторінку ввімкнення" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开启用页面" } }
+      }
+    },
+    "Machine type" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Maschinentyp" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tipo de máquina" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Type de machine" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tipo di macchina" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マシンタイプ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tipo de máquina" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тип машины" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тип машини" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "机器类型" } }
+      }
+    },
+    "No Talos image for %@ in this project: register one as the Talos guide says, or pick another architecture." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Talos-Image für %@ in diesem Projekt: Registriere eines wie im Talos-Leitfaden oder wähle eine andere Architektur." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay imagen de Talos para %@ en este proyecto: registra una como indica la guía de Talos o elige otra arquitectura." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune image Talos pour %@ dans ce projet : enregistrez-en une comme le dit le guide Talos, ou choisissez une autre architecture." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna immagine Talos per %@ in questo progetto: registrane una come dice la guida di Talos, o scegli un'altra architettura." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロジェクトには %@ 用の Talos イメージがありません。Talos ガイドに従って登録するか、別のアーキテクチャを選んでください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma imagem do Talos para %@ neste projeto: registre uma como diz o guia do Talos ou escolha outra arquitetura." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этом проекте нет образа Talos для %@: зарегистрируйте его по руководству Talos или выберите другую архитектуру." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цьому проєкті немає образу Talos для %@: зареєструйте його за посібником Talos або виберіть іншу архітектуру." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此项目中没有适用于 %@ 的 Talos 镜像:请按 Talos 指南注册一个,或选择其他架构。" } }
       }
     },
     "Cloud" : {
@@ -1733,6 +1961,161 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать образ Talos" } },
         "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити образ Talos" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 Talos 镜像" } }
+      }
+    },
+    "Coming next: an image of the cluster's schematic, made from the phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demnächst: ein Image des Schematics des Clusters, vom Telefon aus erstellt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximamente: una imagen del schematic del clúster, creada desde el teléfono." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bientôt : une image du schematic du cluster, créée depuis le téléphone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prossimamente: un'immagine dello schematic del cluster, creata dal telefono." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "近日対応: クラスターのスキーマティックのイメージをスマートフォンから作成。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Em breve: uma imagem do schematic do cluster, criada pelo telefone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скоро: образ схемы кластера, созданный с телефона." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Незабаром: образ схеми кластера, створений з телефона." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即将推出:从手机制作集群 schematic 的镜像。" } }
+      }
+    },
+    "No network has a subnet in %@: pick another zone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Netzwerk hat ein Subnetz in %@: Wähle eine andere Zone." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ninguna red tiene una subred en %@: elige otra zona." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun réseau n'a de sous-réseau dans %@ : choisissez une autre zone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna rete ha una subnet in %@: scegli un'altra zona." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ にサブネットを持つネットワークがありません。別のゾーンを選んでください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma rede tem sub-rede em %@: escolha outra zona." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ни у одной сети нет подсети в %@: выберите другую зону." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Жодна мережа не має підмережі в %@: виберіть іншу зону." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有网络在 %@ 中有子网:请选择其他可用区。" } }
+      }
+    },
+    "Give it a public address" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ihr eine öffentliche Adresse geben" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Darle una dirección pública" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lui donner une adresse publique" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dalle un indirizzo pubblico" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "パブリックアドレスを付与" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Dar a ela um endereço público" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Дать ей публичный адрес" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Надати їй публічну адресу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为其分配公网地址" } }
+      }
+    },
+    "Boot disk (GB)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Startdatenträger (GB)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Disco de arranque (GB)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Disque de démarrage (Go)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Disco di avvio (GB)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ブートディスク(GB)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Disco de inicialização (GB)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузочный диск (ГБ)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажувальний диск (ГБ)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启动磁盘(GB)" } }
+      }
+    },
+    "From 10 to 65536 GB; 20 is enough for Talos." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "10 bis 65536 GB; 20 reichen für Talos." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "De 10 a 65536 GB; 20 bastan para Talos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "De 10 à 65536 Go ; 20 suffisent pour Talos." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Da 10 a 65536 GB; 20 bastano per Talos." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "10〜65536 GB。Talos には 20 で十分です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "De 10 a 65536 GB; 20 bastam para o Talos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "От 10 до 65536 ГБ; для Talos хватит 20." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Від 10 до 65536 ГБ; для Talos вистачить 20." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "10 到 65536 GB;Talos 用 20 就够了。" } }
+      }
+    },
+    "The VM is named after the host name: lowercase letters, digits and hyphens, starting with a letter, at most 63." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die VM wird nach dem Hostnamen benannt: Kleinbuchstaben, Ziffern und Bindestriche, mit einem Buchstaben am Anfang, höchstens 63." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La VM toma el nombre de host: minúsculas, dígitos y guiones, empezando por una letra, 63 como máximo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La VM porte le nom d'hôte : minuscules, chiffres et tirets, commençant par une lettre, 63 au plus." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La VM prende il nome host: minuscole, cifre e trattini, iniziando con una lettera, al massimo 63." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "VM の名前はホスト名になります。小文字、数字、ハイフンのみ、先頭は文字、最大 63 文字です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A VM recebe o nome de host: minúsculas, dígitos e hifens, começando por uma letra, no máximo 63." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ВМ получает имя хоста: строчные буквы, цифры и дефисы, начинается с буквы, не более 63." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ВМ отримує ім'я хоста: малі літери, цифри й дефіси, починається з літери, не більше 63." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "虚拟机以主机名命名:仅小写字母、数字和连字符,以字母开头,最多 63 个字符。" } }
+      }
+    },
+    "Price unavailable: see Google Cloud's Compute Engine pricing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Preis nicht verfügbar: siehe die Compute-Engine-Preise von Google Cloud." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Precio no disponible: consulta los precios de Compute Engine de Google Cloud." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prix indisponible : voir les tarifs Compute Engine de Google Cloud." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prezzo non disponibile: vedi i prezzi di Compute Engine di Google Cloud." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "料金を取得できません。Google Cloud の Compute Engine の料金を参照してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Preço indisponível: veja os preços do Compute Engine do Google Cloud." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Цена недоступна: см. цены Compute Engine в Google Cloud." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ціна недоступна: див. ціни Compute Engine у Google Cloud." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "价格不可用:请参阅 Google Cloud 的 Compute Engine 价格。" } }
+      }
+    },
+    "Create %@ at Google Cloud?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bei Google Cloud erstellen?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Crear %@ en Google Cloud?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer %@ chez Google Cloud ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare %@ su Google Cloud?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Google Cloud で %@ を作成しますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar %@ no Google Cloud?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать %@ в Google Cloud?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити %@ у Google Cloud?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Google Cloud 创建 %@?" } }
+      }
+    },
+    "This creates a billable VM (%@ in %@) with its boot disk, billed until it is deleted. Its user data goes to Google Cloud with the cluster's secrets or Omni's join token. A failed run deletes the VM." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This creates a billable VM (%1$@ in %2$@) with its boot disk, billed until it is deleted. Its user data goes to Google Cloud with the cluster's secrets or Omni's join token. A failed run deletes the VM." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dies erstellt eine kostenpflichtige VM (%1$@ in %2$@) mit ihrem Startdatenträger, berechnet bis zur Löschung. Ihre Benutzerdaten gehen mit den Secrets des Clusters oder dem Beitrittstoken von Omni an Google Cloud. Ein fehlgeschlagener Lauf löscht die VM." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto crea una VM facturable (%1$@ en %2$@) con su disco de arranque, facturada hasta que se elimine. Sus datos de usuario van a Google Cloud con los secretos del clúster o el token de unión de Omni. Una ejecución fallida elimina la VM." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela crée une VM facturée (%1$@ dans %2$@) avec son disque de démarrage, jusqu'à sa suppression. Ses données utilisateur partent chez Google Cloud avec les secrets du cluster ou le jeton d'adhésion d'Omni. Une exécution échouée supprime la VM." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea una VM a pagamento (%1$@ in %2$@) con il suo disco di avvio, fatturata finché non viene eliminata. I suoi dati utente vanno a Google Cloud con i segreti del cluster o il token di adesione di Omni. Un'esecuzione fallita elimina la VM." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "課金対象の VM(%2$@ の %1$@)をブートディスクとともに作成し、削除されるまで課金されます。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに Google Cloud に送られます。失敗した実行は VM を削除します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isto cria uma VM cobrada (%1$@ em %2$@) com seu disco de inicialização, cobrada até ser excluída. Os dados de usuário vão ao Google Cloud com os segredos do cluster ou o token de entrada do Omni. Uma execução com falha exclui a VM." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Будет создана платная ВМ (%1$@ в %2$@) с загрузочным диском, оплачиваемая до удаления. Её пользовательские данные уходят в Google Cloud вместе с секретами кластера или токеном присоединения Omni. Неудачный запуск удаляет ВМ." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Буде створено платну ВМ (%1$@ у %2$@) із завантажувальним диском, що оплачується до видалення. Її дані користувача йдуть у Google Cloud разом із секретами кластера або токеном приєднання Omni. Невдалий запуск видаляє ВМ." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这将创建一台计费的虚拟机(%2$@ 中的 %1$@)及其启动磁盘,计费直到删除。其用户数据会连同集群的密钥或 Omni 的加入令牌发送到 Google Cloud。运行失败会删除该虚拟机。" } }
+      }
+    },
+    "%@ is deleted at Google Cloud with its boot disk, which ends its billing. A control plane that already answered is kept: its etcd member must go first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ wird bei Google Cloud mit seinem Startdatenträger gelöscht, was die Abrechnung beendet. Eine Control Plane, die schon geantwortet hat, bleibt: Ihr etcd-Mitglied muss zuerst weg." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ se elimina en Google Cloud con su disco de arranque, lo que termina su facturación. Un plano de control que ya respondió se conserva: primero hay que quitar su miembro de etcd." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ est supprimé chez Google Cloud avec son disque de démarrage, ce qui arrête sa facturation. Un control plane qui a déjà répondu est conservé : son membre etcd doit d'abord être retiré." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ viene eliminato su Google Cloud con il suo disco di avvio, il che ne termina la fatturazione. Un control plane che ha già risposto viene mantenuto: prima va rimosso il suo membro etcd." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ はブートディスクとともに Google Cloud で削除され、課金が止まります。すでに応答したコントロールプレーンは残ります。先にその etcd メンバーを削除する必要があります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ é excluído no Google Cloud com seu disco de inicialização, o que encerra a cobrança. Um control plane que já respondeu é mantido: seu membro etcd precisa sair primeiro." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ удаляется в Google Cloud вместе с загрузочным диском, что прекращает оплату. Control plane, который уже ответил, сохраняется: сначала нужно удалить его участника etcd." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ видаляється в Google Cloud разом із завантажувальним диском, що припиняє оплату. Control plane, який уже відповів, зберігається: спершу треба вилучити його учасника etcd." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 将在 Google Cloud 连同其启动磁盘一起删除,计费随之停止。已响应的控制平面会保留:必须先移除其 etcd 成员。" } }
+      }
+    },
+    "Paste the key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schlüssel einfügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pegar la clave" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Coller la clé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Incolla la chiave" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーを貼り付け" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Colar a chave" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вставить ключ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вставити ключ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "粘贴密钥" } }
       }
     },
     "No Talos image in %@ yet: Ichor can make one of this cluster's image." : {
