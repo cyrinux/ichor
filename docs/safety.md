@@ -115,6 +115,25 @@ Part of the [Ichor documentation](../README.md#documentation).
   so this is enforced in the app, not by the role. The one case that needs the Azure portal is a
   delete that fails: the message names the resource (its id without the subscription) and the
   resource group, and the VM stays billed until it is deleted there.
+- **Making a Talos image at Azure (from the Go core and the probe for now):** billable, so the
+  estimate gives the helper's hourly price and a note on the image's storage first, and the
+  probe's `azure image` runs only with `-yes`. Nothing of the cluster is touched: the schematic
+  comes from the template's machine config, and a template whose config cannot be read is refused.
+  Before any write the run checks the VM size's architecture, the subnet and the security group
+  against the location, that the resource group holds no image of that name (nor, without a
+  name, one the app made for this Talos version and schematic), then reads the principal's
+  permissions on the resource group, as for a VM. It creates one throwaway Ubuntu VM
+  `ichor-image-<run>` with its OS disk, a NIC and a public IP (Standard SKU, to reach the Image
+  Factory), and an empty 8 GiB data disk, all tagged `ichor-run`; the VM, through Run Command (no
+  SSH, no storage account), downloads the Image Factory's image itself (the phone moves no image
+  bytes) and writes it to the data disk. The run makes no image without the script's success
+  marker. It then deallocates the VM and makes a managed image from the data disk, tagged
+  `os=talos`, `ichor-talos-version`, `ichor-arch` and `ichor-schematic`. On every path it
+  force-deletes the VM (its OS disk, NIC and address carry `deleteOption: Delete`), then deletes
+  the data disk (`Detach`, so that the image can be made from it), and on a failure or Stop an
+  unfinished image. A finished image stays, billed as a managed disk of its size per month until
+  you delete it. The one case that needs the Azure portal is a delete that fails: the message
+  names each resource left (its id without the subscription) and the resource group.
 - **Creating a VM at Google Cloud (from the Go core and the probe for now):** billable, so the
   probe's `gcp create` runs only with `-yes`. The credential is a service account key; the token
   it mints (the cloud-platform scope) is kept for the run only, and the key, the token, the key's
