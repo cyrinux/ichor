@@ -19,8 +19,8 @@ final class JoinJob {
         case appearedInOmni
         /// The finished snapshot of a request with `snapshot`.
         case snapshotMade(HetznerSnapshotResult)
-        /// The finished AMI of a request with `awsImage`.
-        case amiMade(AWSImageResult)
+        /// The finished AMI or Azure image of a request with `awsImage` or `azureImage`.
+        case imageMade(MadeImage)
         case failed(String)
     }
 
@@ -40,7 +40,7 @@ final class JoinJob {
     var timeline: [JoinStep] {
         let phases = request?.phases ?? JoinPhase.maintenanceRun
         return switch outcome {
-        case .joined?, .appearedInOmni?, .snapshotMade?, .amiMade?:
+        case .joined?, .appearedInOmni?, .snapshotMade?, .imageMade?:
             joinTimeline(events, finished: true, phases: phases)
         case .failed(let message)?:
             // An image run's failure stays on the step that failed, not on the cleanup that followed.
@@ -68,15 +68,7 @@ final class JoinJob {
         }
         // For the reminder posted when the app leaves the screen.
         Task { _ = await BackgroundMonitor.requestPermission() }
-        let run =
-            request.omniAllocate.map { client.startOmniAllocate($0) }
-            ?? request.snapshot.map { client.startHetznerSnapshot($0, token: providerToken) }
-            ?? request.awsImage.map { client.startAWSImage($0, credential: providerToken) }
-            ?? request.hetzner.map { client.startHetznerCreate($0, token: providerToken) }
-            ?? request.ovh.map { client.startOVHCreate($0, credential: providerToken) }
-            ?? request.aws.map { client.startAWSCreate($0, credential: providerToken) }
-            ?? request.azure.map { client.startAzureCreate($0, credential: providerToken) }
-            ?? client.startNodeJoin(request)
+        let run = Self.startRun(client: client, request: request, providerToken: providerToken)
         stop = run.stop
         task = Task {
             var result = Outcome.failed(String(localized: "The join ended without a result."))
@@ -92,7 +84,10 @@ final class JoinJob {
                         if let made { result = .snapshotMade(made) }
                     } else if request.awsImage != nil {
                         let made = try? JSONDecoder().decode(AWSImageResult.self, from: Data(address.utf8))
-                        if let made { result = .amiMade(made) }
+                        if let made { result = .imageMade(made.made) }
+                    } else if request.azureImage != nil {
+                        let made = try? JSONDecoder().decode(AzureImageResult.self, from: Data(address.utf8))
+                        if let made { result = .imageMade(made.made) }
                     } else if !address.isEmpty {
                         result = .joined(address)
                     } else if request.omni {
@@ -121,6 +116,22 @@ final class JoinJob {
             ])
             UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
         }
+    }
+
+    /// The Go run of `request`: an Omni allocation, an image run, a cloud create or a plain join.
+    /// One `if` per kind: a single chain of `??` is too slow for the type checker.
+    private static func startRun(
+        client: TalosClient, request: JoinRequest, providerToken: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        if let spec = request.omniAllocate { return client.startOmniAllocate(spec) }
+        if let spec = request.snapshot { return client.startHetznerSnapshot(spec, token: providerToken) }
+        if let spec = request.awsImage { return client.startAWSImage(spec, credential: providerToken) }
+        if let spec = request.azureImage { return client.startAzureImage(spec, credential: providerToken) }
+        if let spec = request.hetzner { return client.startHetznerCreate(spec, token: providerToken) }
+        if let spec = request.ovh { return client.startOVHCreate(spec, credential: providerToken) }
+        if let spec = request.aws { return client.startAWSCreate(spec, credential: providerToken) }
+        if let spec = request.azure { return client.startAzureCreate(spec, credential: providerToken) }
+        return client.startNodeJoin(request)
     }
 
     /// The scene went to the background: reminds the user to come back while the run needs the

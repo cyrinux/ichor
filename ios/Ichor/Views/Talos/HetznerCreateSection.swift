@@ -211,7 +211,7 @@ struct HetznerCreateSection: View {
                     path.append(.omniAllocate)
                 }
                 Button("Close") { job.clear() }
-            case .snapshotMade?, .amiMade?:
+            case .snapshotMade?, .imageMade?:
                 // Not this section's run: a snapshot run has its own (HetznerSnapshotRunSections).
                 Button("Close") { job.clear() }
             case .failed(let error)?:

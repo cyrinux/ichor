@@ -55,7 +55,7 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
     SectionTitle(stringResource(R.string.join_node_step_apply))
     val current = run
     when {
-        current?.request?.imageRun == true -> SnapshotRunView(current, onStop = app.joinManager::stop, onClose = app.joinManager::dismiss)
+        current?.request?.imageRun == true -> ImageRunView(current, onStop = app.joinManager::stop, onClose = app.joinManager::dismiss)
         current != null -> JoinRunView(
             run = current,
             onStop = app.joinManager::stop,

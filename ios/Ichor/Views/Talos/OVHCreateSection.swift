@@ -197,7 +197,7 @@ struct OVHCreateSection: View {
                     path.append(.omniAllocate)
                 }
                 Button("Close") { job.clear() }
-            case .snapshotMade?, .amiMade?:
+            case .snapshotMade?, .imageMade?:
                 Button("Close") { job.clear() }
             case .failed(let error)?:
                 Text(verbatim: error).foregroundStyle(.statusBad)

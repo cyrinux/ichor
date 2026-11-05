@@ -142,4 +142,78 @@ final class CloudAzureTests: XCTestCase {
         XCTAssertEqual(omni.phases, JoinPhase.cloudOmniRun)
         XCTAssertEqual(omni.withReplacing(true).azure, spec)
     }
+
+    func testTheImageSpecUsesTheCoresNames() throws {
+        let spec = AzureImageSpec(
+            templateNode: "10.0.0.2", arch: "arm64", resourceGroup: "talos", location: "westeurope",
+            subnetId: "vnet-a/subnets/nodes", securityGroupId: "nsg-a")
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(spec)) as? [String: Any])
+        XCTAssertEqual(object["templateNode"] as? String, "10.0.0.2")
+        XCTAssertEqual(object["arch"] as? String, "arm64")
+        XCTAssertEqual(object["resourceGroup"] as? String, "talos")
+        XCTAssertEqual(object["location"] as? String, "westeurope")
+        XCTAssertEqual(object["subnetId"] as? String, "vnet-a/subnets/nodes")
+        XCTAssertEqual(object["securityGroupId"] as? String, "nsg-a")
+        XCTAssertEqual(object["size"] as? String, "")
+        XCTAssertEqual(object["name"] as? String, "")
+    }
+
+    func testTheImageResultAndItsEstimateDecode() throws {
+        let json = #"""
+            {"imageId":"image-new","name":"talos-v1.12.0-azure-amd64-0123456789ab","arch":"amd64",
+             "talosVersion":"v1.12.0","schematic":"0123","generation":"V1","sizeGB":8}
+            """#
+        let result = try JSONDecoder().decode(AzureImageResult.self, from: Data(json.utf8))
+        XCTAssertEqual(result.imageId, "image-new")
+        XCTAssertEqual(result.generation, "V1")
+        XCTAssertEqual(result.sizeGB, 8)
+        XCTAssertEqual(result.made, MadeImage(id: "image-new", name: "talos-v1.12.0-azure-amd64-0123456789ab"))
+
+        let estimate = try JSONDecoder().decode(
+            AzureImageEstimate.self,
+            from: Data(
+                #"{"size":"Standard_B2s","hourly":"0.0416","currency":"USD","imageNote":"n","minutes":10}"#.utf8))
+        XCTAssertEqual(estimate.size, "Standard_B2s")
+        XCTAssertEqual(estimate.hourly, "0.0416")
+        XCTAssertEqual(estimate.minutes, 10)
+        let unpriced = try JSONDecoder().decode(
+            AzureImageEstimate.self, from: Data(#"{"size":"Standard_B2pls_v2","minutes":10}"#.utf8))
+        XCTAssertEqual(unpriced.hourly, "")
+    }
+
+    func testAnImageRunHasItsOwnSteps() {
+        let spec = AzureImageSpec(arch: "amd64", resourceGroup: "talos", location: "westeurope", subnetId: "s")
+        let request = JoinRequest(
+            address: "", template: "", role: "", hostname: "Talos amd64", disk: "", staticAddress: "",
+            azureImage: spec)
+        XCTAssertEqual(request.imageKind, .azureImage)
+        XCTAssertEqual(request.phases, JoinPhase.imageRun)
+        XCTAssertTrue(request.imageRun)
+        XCTAssertFalse(request.cloud)
+        XCTAssertEqual(request.withReplacing(true).azureImage, spec)
+
+        let steps = joinTimeline(
+            [JoinProgress(phase: "creating"), JoinProgress(phase: "snapshot")], phases: JoinPhase.imageRun)
+        XCTAssertEqual(steps.map(\.phase), [.creating, .writing, .snapshot, .cleanup, .done])
+        XCTAssertEqual(steps[1].state, .done)
+        XCTAssertEqual(steps[2].state, .current)
+        XCTAssertEqual(steps[3].state, .pending)
+    }
+
+    func testEachImageRunKnowsItsKind() {
+        let plain = JoinRequest(address: "", template: "", role: "", hostname: "n", disk: "", staticAddress: "")
+        XCTAssertNil(plain.imageKind)
+        XCTAssertFalse(plain.imageRun)
+        let snapshot = JoinRequest(
+            address: "", template: "", role: "", hostname: "n", disk: "", staticAddress: "",
+            snapshot: HetznerSnapshotSpec(arch: "amd64", location: "fsn1"))
+        XCTAssertEqual(snapshot.imageKind, .hetznerSnapshot)
+        XCTAssertEqual(snapshot.phases, JoinPhase.snapshotRun)
+        let ami = JoinRequest(
+            address: "", template: "", role: "", hostname: "n", disk: "", staticAddress: "",
+            awsImage: AWSImageSpec(arch: "amd64", region: "eu-west-1", subnetId: "s"))
+        XCTAssertEqual(ami.imageKind, .awsAMI)
+        XCTAssertEqual(ami.phases, JoinPhase.awsImageRun)
+    }
 }

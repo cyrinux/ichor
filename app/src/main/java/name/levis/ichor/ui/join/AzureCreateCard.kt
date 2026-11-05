@@ -57,6 +57,7 @@ import name.levis.ichor.model.AZURE_DEFAULT_DISK_GB
 import name.levis.ichor.model.AzureCheck
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureCredential
+import name.levis.ichor.model.AzureImageEstimate
 import name.levis.ichor.model.AzureOptions
 import name.levis.ichor.model.AzurePrice
 import name.levis.ichor.model.AzureSize
@@ -142,6 +143,20 @@ class AzureCreateViewModel(private val lifecycle: NodeLifecycleRepository, priva
             _options.value = uiStateOf { lifecycle.azureOptions(if (subscription.isBlank()) "" else credential(subscription)) }
         }
     }
+
+    /** Lists the options again, keeping the shown form (and what is picked in it) meanwhile. */
+    fun refresh() {
+        val subscription = _subscription.value
+        if (subscription.isBlank()) return
+        viewModelScope.launch {
+            val state = uiStateOf { lifecycle.azureOptions(credential(subscription)) }
+            if (state is UiState.Loaded) _options.value = state
+        }
+    }
+
+    /** The cost line of an image run. Creates nothing. */
+    suspend fun estimate(arch: String, location: String): AzureImageEstimate =
+        lifecycle.azureImageEstimate(credential(_subscription.value), arch, location)
 
     /** Asks the Retail Prices API for [size] in [location]; a failure is "price unavailable". */
     fun loadPrice(location: String, size: String) {
@@ -237,6 +252,8 @@ fun AzureCreateCard(
     val price by vm.price.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
+    var imageFor by remember { mutableStateOf<AzureImageAsk?>(null) }
+    var madeImage by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(demo) { vm.load(demo) }
 
     SectionCard(stringResource(R.string.azure_title)) {
@@ -244,6 +261,13 @@ fun AzureCreateCard(
         if (current?.request?.azure != null) {
             JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss, onAllocate = onAllocate)
         } else {
+            if (current?.request?.azureImage != null) {
+                ImageRunView(current, onStop = app.joinManager::stop) {
+                    madeImage = current.madeImage?.imageId ?: madeImage
+                    app.joinManager.dismiss()
+                    vm.refresh()
+                }
+            }
             if (demo) {
                 InfoNotice(stringResource(R.string.hetzner_demo))
             } else {
@@ -269,6 +293,9 @@ fun AzureCreateCard(
                     onGroup = { name -> vm.chooseGroup(name, state.data.locationOf(name), state.data.location) },
                     onLocation = if (demo) null else vm::switchLocation,
                     onSize = { size -> vm.loadPrice(state.data.location, size) },
+                    canMakeImage = !demo && subscription.isNotBlank(),
+                    madeImage = madeImage,
+                    onMakeImage = { imageFor = it },
                 ) { request ->
                     // The principal is read only now, and goes to the run alone.
                     scope.launch { app.joinManager.start(request, if (subscription.isBlank()) "" else vm.credential(subscription)) }
@@ -277,6 +304,23 @@ fun AzureCreateCard(
         }
     }
     if (adding) PrincipalDialog(vm) { adding = false }
+    imageFor?.let { ask ->
+        AzureImageSheet(
+            ask = ask,
+            template = form?.template.orEmpty(),
+            estimate = vm::estimate,
+            onStart = { spec ->
+                imageFor = null
+                val request = JoinRequest(
+                    address = "", template = spec.templateNode, role = "", hostname = "Talos ${spec.arch}", disk = "",
+                    staticAddress = "", azureImage = spec,
+                )
+                // The principal is read only now, and goes to the run alone.
+                scope.launch { app.joinManager.start(request, vm.credential(subscription)) }
+            },
+            onDismiss = { imageFor = null },
+        )
+    }
 }
 
 /** "Standard_B2s · 2 CPU · 4 GB". */
@@ -287,7 +331,7 @@ private fun sizeLabel(s: AzureSize): String {
 
 /** "nodes · 10.0.0.0/24", then "NAT gateway" or "no NSG" when they apply. */
 @Composable
-private fun subnetLabel(s: AzureSubnet): String {
+internal fun subnetLabel(s: AzureSubnet): String {
     val parts = listOfNotNull(
         s.name.ifBlank { s.id },
         s.cidr.ifBlank { null },
@@ -314,6 +358,10 @@ private fun VMForm(
     onGroup: (String) -> Unit,
     onLocation: ((String) -> Unit)?,
     onSize: (String) -> Unit,
+    canMakeImage: Boolean,
+    /** The image the last run made: picked once it is listed. */
+    madeImage: String,
+    onMakeImage: (AzureImageAsk) -> Unit,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -339,6 +387,12 @@ private fun VMForm(
     val diskGB = azureDiskGB(disk)
     val hostname = form?.hostname?.trim() ?: omniName.trim()
     LaunchedEffect(sizeName) { onSize(sizeName) }
+    LaunchedEffect(madeImage, options) {
+        // Another architecture or generation than the picked size's: the size is picked again.
+        val made = options.images.firstOrNull { it.id == madeImage } ?: return@LaunchedEffect
+        if (options.sizesFor(made).none { it.name == sizeName }) sizeName = ""
+        imageId = made.id
+    }
 
     if (form == null) {
         OutlinedTextField(
@@ -369,10 +423,19 @@ private fun VMForm(
     options.warnings.forEach { InfoNotice(it) }
 
     Text(stringResource(R.string.azure_image), style = MaterialTheme.typography.labelLarge)
-    if (options.images.isEmpty()) {
-        InfoNotice(stringResource(R.string.azure_no_image))
-        IchorOutlinedButton(onClick = {}, enabled = false) { Text(stringResource(R.string.azure_make_image)) }
-        MutedText(stringResource(R.string.azure_make_image_soon))
+    if (options.images.isEmpty() && !canMakeImage) InfoNotice(stringResource(R.string.azure_no_image))
+    if (canMakeImage) {
+        if (options.images.isEmpty()) InfoNotice(stringResource(R.string.azure_image_missing, options.locationLabel(options.location)))
+        IchorOutlinedButton(
+            onClick = {
+                if (resourceGroup != null) {
+                    onMakeImage(AzureImageAsk(options, resourceGroup.name, size?.arch ?: image?.arch.orEmpty(), networkId, subnetId, nsgId))
+                }
+            },
+            enabled = !busy && resourceGroup != null,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(stringResource(if (options.images.isEmpty()) R.string.azure_make_image else R.string.azure_image_make_another)) }
+        if (resourceGroup == null) MutedText(stringResource(R.string.azure_image_need_group))
     }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.images.forEach { i ->

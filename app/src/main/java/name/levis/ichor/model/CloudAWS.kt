@@ -118,14 +118,14 @@ data class AWSImageSpec(
 /** What a finished AMI run reports. */
 @Serializable
 data class AWSImageResult(
-    val imageId: String = "",
+    override val imageId: String = "",
     val snapshotId: String = "",
-    val name: String = "",
+    override val name: String = "",
     val arch: String = "",
     val talosVersion: String = "",
     val schematic: String = "",
     val sizeGB: Int = 0,
-)
+) : MadeImage
 
 /** The cost line of an AMI run; prices before tax, in [currency], "" when the Price List does not give them. */
 @Serializable

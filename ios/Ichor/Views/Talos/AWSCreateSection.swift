@@ -79,7 +79,7 @@ struct AWSCreateSection: View {
             }
             if job.request?.awsImage != nil {
                 ImageRunSections { outcome in
-                    guard case .amiMade(let made)? = outcome else { return }
+                    guard case .imageMade(let made)? = outcome else { return }
                     Task { await amiClosed(made) }
                 }
             }
@@ -332,7 +332,7 @@ struct AWSCreateSection: View {
                     path.append(.omniAllocate)
                 }
                 Button("Close") { job.clear() }
-            case .snapshotMade?, .amiMade?:
+            case .snapshotMade?, .imageMade?:
                 Button("Close") { job.clear() }
             case .failed(let error)?:
                 Text(verbatim: error).foregroundStyle(.statusBad)
@@ -432,12 +432,12 @@ struct AWSCreateSection: View {
     }
 
     /// The region's AMIs again, with the new one picked.
-    private func amiClosed(_ made: AWSImageResult) async {
+    private func amiClosed(_ made: MadeImage) async {
         await loadOptions()
-        guard case .loaded(let value, _, _) = options, value.images.contains(where: { $0.id == made.imageId }) else {
+        guard case .loaded(let value, _, _) = options, value.images.contains(where: { $0.id == made.id }) else {
             return
         }
-        imageId = made.imageId
+        imageId = made.id
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.

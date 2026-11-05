@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -20,28 +18,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
-import name.levis.ichor.data.JoinRunState
 import name.levis.ichor.model.HetznerOptions
 import name.levis.ichor.model.HetznerSnapshotCost
 import name.levis.ichor.model.HetznerSnapshotSpec
-import name.levis.ichor.model.JoinPhase
-import name.levis.ichor.model.joinTimeline
 import name.levis.ichor.model.locationsFor
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
-import name.levis.ichor.ui.design.IchorCard
 import name.levis.ichor.ui.design.IchorFilterChip
-import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorTextButton
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
-import name.levis.ichor.ui.upgrade.TimelineRow
 
 private val snapshotArchitectures = listOf("amd64", "arm64")
 
@@ -122,73 +112,3 @@ fun HetznerSnapshotSheet(
         dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
-
-/**
- * The followed image run (a Hetzner snapshot or an AWS AMI): its steps with the command's last
- * line, Stop, then the result.
- */
-@Composable
-internal fun SnapshotRunView(run: JoinRunState, onStop: () -> Unit, onClose: () -> Unit) {
-    val colors = LocalStatusColors.current
-    val aws = run.request.awsImage != null
-    var confirmStop by remember { mutableStateOf(false) }
-    // A failure stays on the step that failed, not on the cleanup that followed: the message says what was deleted.
-    val steps = remember(run.events, run.finished, run.error) {
-        val events = if (run.error != null) run.events.filterNot { it.phase == JoinPhase.CLEANUP.wire } else run.events
-        joinTimeline(events, run.finished, run.error != null, run.request.phases)
-    }
-    if (run.running) KeepScreenOn()
-
-    IchorCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            steps.forEach { TimelineRow(stringResource(if (aws) it.phase.awsImageLabel else it.phase.label), it.status, it.at, it.message) }
-        }
-    }
-    when {
-        run.running -> {
-            MutedText(stringResource(if (aws) R.string.aws_image_stop_hint else R.string.hetzner_snapshot_stop_hint))
-            IchorOutlinedButton(onClick = { confirmStop = true }, enabled = !run.stopping, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.hetzner_snapshot_stop))
-            }
-        }
-        else -> {
-            if (run.error != null) {
-                Text(run.error, color = colors.bad)
-            } else {
-                Text(
-                    if (aws) {
-                        stringResource(R.string.aws_image_done, run.awsImageResult?.name.orEmpty())
-                    } else {
-                        stringResource(R.string.hetzner_snapshot_done, run.snapshotResult?.description.orEmpty())
-                    },
-                    color = colors.ok,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
-        }
-    }
-
-    if (confirmStop) {
-        ConfirmDialog(
-            title = stringResource(R.string.hetzner_snapshot_stop),
-            text = stringResource(if (aws) R.string.aws_image_stop_body else R.string.hetzner_snapshot_stop_body),
-            confirm = stringResource(R.string.hetzner_snapshot_stop),
-            onConfirm = {
-                confirmStop = false
-                onStop()
-            },
-            onDismiss = { confirmStop = false },
-            destructive = true,
-        )
-    }
-}
-
-/** The AMI run's labels: a helper instance, not a server with a key. */
-private val JoinPhase.awsImageLabel: Int
-    get() = when (this) {
-        JoinPhase.CREATING -> R.string.aws_phase_helper
-        JoinPhase.REGISTER -> R.string.aws_phase_register
-        JoinPhase.CLEANUP -> R.string.aws_phase_cleanup
-        else -> label
-    }

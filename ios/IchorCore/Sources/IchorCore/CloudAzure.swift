@@ -341,6 +341,84 @@ public struct AzureCreateSpec: Encodable, Equatable, Sendable {
     }
 }
 
+/// StartAzureImage's specJSON. The image's URL comes from the template, never from here.
+public struct AzureImageSpec: Encodable, Equatable, Sendable {
+    public let templateNode: String
+    public let arch: String
+    public let resourceGroup: String
+    public let location: String
+    public let subnetId: String
+    /// "" for none: the subnet's own group applies, if it has one.
+    public let securityGroupId: String
+    /// "" for the core's default (Standard_B2s or Standard_B2pls_v2).
+    public let size: String
+    /// "" for talos-<version>-azure-<arch>-<schematic12>.
+    public let name: String
+
+    public init(
+        templateNode: String = "", arch: String, resourceGroup: String, location: String, subnetId: String,
+        securityGroupId: String = "", size: String = "", name: String = ""
+    ) {
+        self.templateNode = templateNode
+        self.arch = arch
+        self.resourceGroup = resourceGroup
+        self.location = location
+        self.subnetId = subnetId
+        self.securityGroupId = securityGroupId
+        self.size = size
+        self.name = name
+    }
+}
+
+/// What a finished image run reports.
+public struct AzureImageResult: Decodable, Equatable, Sendable {
+    public let imageId: String
+    public let name: String
+    public let arch: String
+    public let talosVersion: String
+    public let schematic: String
+    /// V1 (amd64) or V2 (arm64).
+    public let generation: String
+    public let sizeGB: Int
+
+    /// Its id to pick it and its name to say so.
+    public var made: MadeImage { MadeImage(id: imageId, name: name) }
+
+    private enum CodingKeys: String, CodingKey { case imageId, name, arch, talosVersion, schematic, generation, sizeGB }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        imageId = try c.field(.imageId, "")
+        name = try c.field(.name, "")
+        arch = try c.field(.arch, "")
+        talosVersion = try c.field(.talosVersion, "")
+        schematic = try c.field(.schematic, "")
+        generation = try c.field(.generation, "")
+        sizeGB = try c.field(.sizeGB, 0)
+    }
+}
+
+/// The cost line of an image run: the helper's `size` and its `hourly` price before tax in
+/// `currency` ("" when the Retail Prices API does not give it), for about `minutes`.
+public struct AzureImageEstimate: Decodable, Equatable, Sendable {
+    public let size: String
+    public let hourly: String
+    public let currency: String
+    public let imageNote: String
+    public let minutes: Int
+
+    private enum CodingKeys: String, CodingKey { case size, hourly, currency, imageNote, minutes }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        size = try c.field(.size, "")
+        hourly = try c.field(.hourly, "")
+        currency = try c.field(.currency, "")
+        imageNote = try c.field(.imageNote, "")
+        minutes = try c.field(.minutes, 0)
+    }
+}
+
 /// The OS disk sizes: the default, the smallest a Talos image fits in, and Azure's largest.
 public enum AzureDisk {
     public static let defaultGB = 20

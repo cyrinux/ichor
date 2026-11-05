@@ -115,4 +115,66 @@ class CloudAzureTest {
         assertEquals(JoinPhase.cloudRun, plain.phases)
         assertEquals(JoinPhase.cloudOmniRun, plain.copy(omni = true).phases)
     }
+
+    @Test
+    fun theImageSpecUsesTheCoresNames() {
+        val spec = AzureImageSpec(
+            templateNode = "10.0.0.2", arch = "arm64", resourceGroup = "talos", location = "westeurope",
+            subnetId = "vnet-a/subnets/nodes", securityGroupId = "nsg-a",
+        )
+        val json = TalosJson.encodeToString(AzureImageSpec.serializer(), spec)
+        listOf(
+            "\"templateNode\":\"10.0.0.2\"", "\"arch\":\"arm64\"", "\"resourceGroup\":\"talos\"", "\"location\":\"westeurope\"",
+            "\"subnetId\":\"vnet-a/subnets/nodes\"", "\"securityGroupId\":\"nsg-a\"",
+        ).forEach { assertTrue(json, json.contains(it)) }
+    }
+
+    @Test
+    fun theImageResultAndItsEstimateDecode() {
+        val result = TalosJson.decodeFromString(
+            AzureImageResult.serializer(),
+            """{"imageId":"image-new","name":"talos-v1.12.0-azure-amd64-0123456789ab","arch":"amd64","talosVersion":"v1.12.0",
+               "schematic":"0123","generation":"V1","sizeGB":8}""",
+        )
+        assertEquals("image-new", result.imageId)
+        assertEquals("V1", result.generation)
+        assertEquals(8, result.sizeGB)
+        val made: MadeImage = result
+        assertEquals("talos-v1.12.0-azure-amd64-0123456789ab", made.name)
+        val estimate = TalosJson.decodeFromString(
+            AzureImageEstimate.serializer(),
+            """{"size":"Standard_B2s","hourly":"0.0416","currency":"USD","imageNote":"billed per month","minutes":10}""",
+        )
+        assertEquals("Standard_B2s", estimate.size)
+        assertEquals("0.0416", estimate.hourly)
+        assertEquals(10, estimate.minutes)
+        val unpriced = TalosJson.decodeFromString(AzureImageEstimate.serializer(), """{"size":"Standard_B2pls_v2","minutes":10}""")
+        assertEquals("", unpriced.hourly)
+    }
+
+    @Test
+    fun anImageRunHasItsOwnSteps() {
+        val spec = AzureImageSpec(arch = "amd64", resourceGroup = "talos", location = "westeurope", subnetId = "s")
+        val request = JoinRequest(address = "", template = "", role = "", hostname = "Talos amd64", disk = "", staticAddress = "", azureImage = spec)
+        assertEquals(ImageRunKind.AZURE_IMAGE, request.imageKind)
+        assertEquals(JoinPhase.imageRun, request.phases)
+        assertTrue(request.imageRun)
+        assertFalse(request.cloud)
+        val steps = joinTimeline(listOf(JoinProgress(phase = "creating"), JoinProgress(phase = "snapshot")), finished = false, failed = false, phases = request.phases)
+        assertEquals(listOf(JoinPhase.CREATING, JoinPhase.WRITING, JoinPhase.SNAPSHOT, JoinPhase.CLEANUP, JoinPhase.DONE), steps.map { it.phase })
+        assertEquals(StepStatus.DONE, steps[1].status)
+        assertEquals(StepStatus.CURRENT, steps[2].status)
+        assertEquals(StepStatus.PENDING, steps[3].status)
+    }
+
+    @Test
+    fun eachImageRunKnowsItsKind() {
+        val plain = JoinRequest(address = "", template = "", role = "", hostname = "n", disk = "", staticAddress = "")
+        assertNull(plain.imageKind)
+        assertFalse(plain.imageRun)
+        assertEquals(ImageRunKind.HETZNER_SNAPSHOT, plain.copy(snapshot = HetznerSnapshotSpec(arch = "amd64", location = "fsn1")).imageKind)
+        assertEquals(ImageRunKind.AWS_AMI, plain.copy(awsImage = AWSImageSpec(arch = "amd64", region = "eu-west-1", subnetId = "s")).imageKind)
+        assertEquals(JoinPhase.snapshotRun, ImageRunKind.HETZNER_SNAPSHOT.phases)
+        assertEquals(JoinPhase.awsImageRun, ImageRunKind.AWS_AMI.phases)
+    }
 }

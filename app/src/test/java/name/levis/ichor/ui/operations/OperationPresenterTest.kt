@@ -14,6 +14,8 @@ import name.levis.ichor.data.ImageScanSession
 import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.JoinRunState
 import name.levis.ichor.model.AWSImageSpec
+import name.levis.ichor.model.AzureImageResult
+import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.data.K8sUpgradeRunState
 import name.levis.ichor.data.MaintenanceRunState
@@ -188,6 +190,18 @@ class OperationPresenterTest {
         assertEquals(res(R.string.aws_phase_helper), JoinPresenter.progress(run).text)
         assertEquals(res(R.string.aws_image_notification_failed), JoinPresenter.failedTitle(run))
         assertEquals(res(R.string.aws_image_notification_done), JoinPresenter.done(run.copy(finished = true)).title)
+    }
+
+    @Test
+    fun anAzureImageRunIsNotNamedLikeANode() {
+        val spec = AzureImageSpec(arch = "amd64", resourceGroup = "talos", location = "westeurope", subnetId = "s")
+        val run = JoinRunState(JoinRequest("", "", "", "Talos amd64", "", "", azureImage = spec), "lab")
+        assertEquals(res(R.string.azure_image_notification_title), JoinPresenter.progress(run).title)
+        assertEquals(res(R.string.azure_phase_helper), JoinPresenter.progress(run).text)
+        assertEquals(res(R.string.azure_image_notification_failed), JoinPresenter.failedTitle(run))
+        val made = run.copy(finished = true, madeImage = AzureImageResult(imageId = "image-new", name = "talos-v1.12.0-azure-amd64"))
+        assertEquals(res(R.string.azure_image_notification_done), JoinPresenter.done(made).title)
+        assertEquals(res(R.string.azure_image_done, "talos-v1.12.0-azure-amd64"), JoinPresenter.done(made).text)
     }
 
     @Test

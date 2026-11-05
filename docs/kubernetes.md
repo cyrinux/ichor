@@ -385,8 +385,7 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     only the calls it makes, and Test reads the principal's permissions there (Azure has no dry
     run; nothing is created). Then pick the resource group (its location is listed; another
     location can be picked), the Talos image the subscription holds (a managed image or a gallery
-    image version, tagged with the cluster's Talos version first; upload the Image Factory's VHD
-    once per the Talos guide: making it from the phone is the next step), a VM size that boots the
+    image version, tagged with the cluster's Talos version first), a VM size that boots the
     image's architecture and Hyper-V generation, a virtual network and subnet, an optional network
     security group, whether the VM gets a public address (on by default unless the subnet has a NAT
     gateway) and the OS disk size (20 GB by default). Only existing networks and groups are listed:
@@ -399,7 +398,16 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     appears in Omni. A failed or stopped run deletes the VM with its disk, network interface and
     address, with the same control-plane exception as Hetzner; a create that gets no clear answer
     is looked up by name and its run tag. The principal stays sealed on the device, under its
-    subscription id, and is not in backups.
+    subscription id, and is not in backups. Azure has no official Talos image, so **Make a Talos
+    image** makes one of the cluster's own image, with no laptop and no storage account: a
+    throwaway Ubuntu VM runs for about ten minutes in the picked resource group and location, with
+    a public IP to reach the Image Factory, and writes the Factory's VHD for your Talos version and
+    schematic to an empty data disk through Run Command; the app makes a managed image from that
+    disk (tagged with the version, the architecture and the schematic), then deletes the VM, its
+    disk, network interface and IP, and the data disk, and the new image is picked for the node.
+    The cost line comes first (the helper's hourly price, then the image's storage, billed as a
+    managed disk per GB-month until you delete it at Azure). Stop deletes the helper, its data
+    disk and an unfinished image; see [safety](safety.md).
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

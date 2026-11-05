@@ -33,6 +33,7 @@ struct AzureCreateSection: View {
     @State private var omniName = ""
     @State private var confirming = false
     @State private var adding = false
+    @State private var makingImage = false
     @State private var confirmStop = false
     @State private var authError: String?
     private var job: JoinJob { .shared }
@@ -81,6 +82,12 @@ struct AzureCreateSection: View {
                 AzurePrincipalSheet { added in
                     reloadSubscriptions()
                     pick(added)
+                }
+            }
+            if job.request?.azureImage != nil {
+                ImageRunSections { outcome in
+                    guard case .imageMade(let made)? = outcome else { return }
+                    Task { await imageClosed(made) }
                 }
             }
             if let options { optionsSections(options) }
@@ -151,15 +158,17 @@ struct AzureCreateSection: View {
     @ViewBuilder
     private func machineSection(_ value: AzureOptions) -> some View {
         let image = value.images.first { $0.id == imageId }
+        let size = image.flatMap { picked in value.sizes(for: picked).first { $0.name == sizeName } }
+        let canMake = !demo && !subscription.isEmpty
         Section {
-            if value.images.isEmpty {
+            if value.images.isEmpty, !canMake {
                 Text(
                     "No Talos image in this location: upload the Image Factory's VHD to the subscription once, or pick another location."
                 )
                 .font(.footnote).foregroundStyle(.orange)
-                Button("Make a Talos image") {}
-                    .disabled(true)
-                Text("Coming next: an image of the cluster's schematic, made from the phone.")
+            } else if value.images.isEmpty {
+                let location = value.locationLabel(value.location)
+                Text("No Talos image in \(location) yet: Ichor can make one of this cluster's image.")
                     .font(.footnote).foregroundStyle(.secondary)
             } else {
                 Picker("Talos image", selection: $imageId) {
@@ -187,8 +196,34 @@ struct AzureCreateSection: View {
                     }
                 }
             }
+            if canMake { makeImageRows(value) }
         }
         .task(id: sizeName) { await loadPrice(location: value.location) }
+        .sheet(isPresented: $makingImage) {
+            AzureImageSheet(
+                options: value, resourceGroup: group, arch: size?.arch ?? image?.arch ?? "", networkId: networkId,
+                subnetId: subnetId, nsgId: nsgId, template: omni ? "" : template, credential: credential
+            ) { spec in
+                startImage(spec)
+            }
+        }
+    }
+
+    /// Azure has no official Talos image: offer one of the cluster's own, in the picked resource group.
+    @ViewBuilder
+    private func makeImageRows(_ value: AzureOptions) -> some View {
+        let grouped = value.resourceGroups.contains { $0.name == group }
+        if value.images.isEmpty {
+            Button("Make a Talos image") { makingImage = true }
+                .disabled(job.isActive || !grouped)
+        } else {
+            Button("Make another Talos image") { makingImage = true }
+                .disabled(job.isActive || !grouped)
+        }
+        if !grouped {
+            Text("Pick a resource group first: the image goes in it.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
     }
 
     /// The virtual network, its subnet, the security group, the public address and the disk.
@@ -206,7 +241,7 @@ struct AzureCreateSection: View {
             if !networkId.isEmpty {
                 Picker("Subnet", selection: $subnetId) {
                     Text(verbatim: "—").tag("")
-                    ForEach(value.subnets(in: networkId)) { Text(verbatim: subnetLabel($0)).tag($0.id) }
+                    ForEach(value.subnets(in: networkId)) { Text(verbatim: $0.pickerLabel).tag($0.id) }
                 }
                 .onChange(of: subnetId) { _, new in
                     // A NAT gateway already reaches the Internet: no address needed.
@@ -292,15 +327,6 @@ struct AzureCreateSection: View {
         }
     }
 
-    /// "nodes · 10.0.0.0/24", then "NAT gateway" or "no NSG" when they apply.
-    private func subnetLabel(_ subnet: AzureSubnet) -> String {
-        var parts = [subnet.name.isEmpty ? subnet.id : subnet.name]
-        if !subnet.cidr.isEmpty { parts.append(subnet.cidr) }
-        if subnet.natGateway { parts.append(String(localized: "NAT gateway")) }
-        if subnet.nsgId.isEmpty { parts.append(String(localized: "no NSG")) }
-        return parts.joined(separator: " · ")
-    }
-
     @ViewBuilder private var runSections: some View {
         Section {
             ForEach(job.timeline) { step in
@@ -321,7 +347,7 @@ struct AzureCreateSection: View {
                     path.append(.omniAllocate)
                 }
                 Button("Close") { job.clear() }
-            case .snapshotMade?, .amiMade?:
+            case .snapshotMade?, .imageMade?:
                 Button("Close") { job.clear() }
             case .failed(let error)?:
                 Text(verbatim: error).foregroundStyle(.statusBad)
@@ -433,6 +459,24 @@ struct AzureCreateSection: View {
         let answer =
             (try? await TalosClient.azurePrice(credential: credential, location: location, size: size)) ?? AzurePrice()
         if !Task.isCancelled { price = answer }
+    }
+
+    /// The helper VM's run: followed like a join, with no node to add at its end.
+    private func startImage(_ spec: AzureImageSpec) {
+        guard let client = model.client else { return }
+        let request = JoinRequest(
+            address: "", template: spec.templateNode, role: "", hostname: "Talos \(spec.arch)", disk: "",
+            staticAddress: "", azureImage: spec)
+        job.start(client: client, request: request, providerToken: credential) { _ in }
+    }
+
+    /// The location's images again, with the new one picked (and a size that boots it).
+    private func imageClosed(_ made: MadeImage) async {
+        await loadOptions()
+        guard case .loaded(let value, _, _) = options, let picked = value.images.first(where: { $0.id == made.id })
+        else { return }
+        if !value.sizes(for: picked).contains(where: { $0.name == sizeName }) { sizeName = "" }
+        imageId = made.id
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.
