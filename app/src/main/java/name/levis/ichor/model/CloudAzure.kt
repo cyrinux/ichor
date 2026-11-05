@@ -132,6 +132,48 @@ data class AzureCreateSpec(
     val labelsJson: String = "",
 )
 
+/** StartAzureImage's specJSON. The image's URL comes from the template, never from here. */
+@Serializable
+data class AzureImageSpec(
+    val templateNode: String = "",
+    val arch: String,
+    val resourceGroup: String,
+    val location: String,
+    val subnetId: String,
+    /** "" for none: the subnet's own group applies, if it has one. */
+    val securityGroupId: String = "",
+    /** "" for the core's default (Standard_B2s or Standard_B2pls_v2). */
+    val size: String = "",
+    /** "" for talos-<version>-azure-<arch>-<schematic12>. */
+    val name: String = "",
+)
+
+/** What a finished image run reports. */
+@Serializable
+data class AzureImageResult(
+    override val imageId: String = "",
+    override val name: String = "",
+    val arch: String = "",
+    val talosVersion: String = "",
+    val schematic: String = "",
+    /** V1 (amd64) or V2 (arm64). */
+    val generation: String = "",
+    val sizeGB: Int = 0,
+) : MadeImage
+
+/**
+ * The cost line of an image run: the helper's [size] and its [hourly] price before tax in
+ * [currency] ("" when the Retail Prices API does not give it), for about [minutes].
+ */
+@Serializable
+data class AzureImageEstimate(
+    val size: String = "",
+    val hourly: String = "",
+    val currency: String = "",
+    val imageNote: String = "",
+    val minutes: Int = 0,
+)
+
 /** The VM sizes that boot [image] (its architecture and Hyper-V generation), in the core's order. */
 fun AzureOptions.sizesFor(image: AzureImage): List<AzureSize> =
     sizes.filter { it.arch == image.arch && image.generation in it.generations }

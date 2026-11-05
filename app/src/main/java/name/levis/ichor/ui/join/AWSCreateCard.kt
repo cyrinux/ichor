@@ -215,8 +215,8 @@ fun AWSCreateCard(
             JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss, onAllocate = onAllocate)
         } else {
             if (current?.request?.awsImage != null) {
-                SnapshotRunView(current, onStop = app.joinManager::stop) {
-                    madeImage = current.awsImageResult?.imageId ?: madeImage
+                ImageRunView(current, onStop = app.joinManager::stop) {
+                    madeImage = current.madeImage?.imageId ?: madeImage
                     app.joinManager.dismiss()
                     vm.refresh()
                 }

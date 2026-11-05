@@ -32,6 +32,8 @@ import name.levis.ichor.model.AWSImageSpec
 import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
 import name.levis.ichor.model.AzureCheck
+import name.levis.ichor.model.AzureImageEstimate
+import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureOptions
 import name.levis.ichor.model.AzurePrice
@@ -462,6 +464,15 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.azureCreate]. */
     fun azureCreate(credentialJson: String, spec: AzureCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.azureCreate(credentialJson, TalosJson.encodeToString(AzureCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of an Azure image run. Creates nothing. */
+    suspend fun azureImageEstimate(credentialJson: String, arch: String, location: String): AzureImageEstimate = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureImageEstimate.serializer(), Ichorgo.azureImageEstimate(credentialJson, arch, location))
+    }
+
+    /** See [TalosStreams.azureImage]. */
+    fun azureImage(credentialJson: String, spec: AzureImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.azureImage(credentialJson, TalosJson.encodeToString(AzureImageSpec.serializer(), spec), stop)
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

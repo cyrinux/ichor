@@ -17,10 +17,14 @@ import name.levis.ichor.model.AWSCreateSpec
 import name.levis.ichor.model.AWSImageResult
 import name.levis.ichor.model.AWSImageSpec
 import name.levis.ichor.model.AzureCreateSpec
+import name.levis.ichor.model.AzureImageResult
+import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
+import name.levis.ichor.model.ImageRunKind
 import name.levis.ichor.model.JoinPhase
 import name.levis.ichor.model.JoinProgress
+import name.levis.ichor.model.MadeImage
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OmniAllocateSpec
 import name.levis.ichor.ui.FollowedRun
@@ -49,6 +53,8 @@ data class JoinRequest(
     val snapshot: HetznerSnapshotSpec? = null,
     /** No node either: a throwaway AWS instance becomes a Talos AMI ([hostname] only labels the run). */
     val awsImage: AWSImageSpec? = null,
+    /** No node either: a throwaway Azure VM's data disk becomes a Talos managed image. */
+    val azureImage: AzureImageSpec? = null,
     /** A machine of Omni to put in the cluster ([hostname] and [role] are the machine's and the set's). */
     val omniAllocate: OmniAllocateSpec? = null,
 ) {
@@ -56,20 +62,29 @@ data class JoinRequest(
     val phases: List<JoinPhase>
         get() = when {
             omniAllocate != null -> JoinPhase.omniAllocateRun
-            snapshot != null -> JoinPhase.snapshotRun
-            awsImage != null -> JoinPhase.awsImageRun
-            !cloud -> JoinPhase.maintenanceRun
-            omni -> JoinPhase.cloudOmniRun
-            else -> JoinPhase.cloudRun
+            else -> imageKind?.phases ?: when {
+                !cloud -> JoinPhase.maintenanceRun
+                omni -> JoinPhase.cloudOmniRun
+                else -> JoinPhase.cloudRun
+            }
         }
 
     /** A machine to create at a cloud provider. */
     val cloud: Boolean
         get() = hetzner != null || ovh != null || aws != null || azure != null
 
-    /** No node at all: the run makes a Talos image (a Hetzner snapshot or an AWS AMI). */
+    /** What the run makes when it makes a Talos image instead of a node; null for a node. */
+    val imageKind: ImageRunKind?
+        get() = when {
+            snapshot != null -> ImageRunKind.HETZNER_SNAPSHOT
+            awsImage != null -> ImageRunKind.AWS_AMI
+            azureImage != null -> ImageRunKind.AZURE_IMAGE
+            else -> null
+        }
+
+    /** No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure image). */
     val imageRun: Boolean
-        get() = snapshot != null || awsImage != null
+        get() = imageKind != null
 }
 
 /** The node join the app follows: at most one at a time. */
@@ -86,8 +101,8 @@ data class JoinRunState(
     val stopping: Boolean = false,
     /** The finished snapshot of a [JoinRequest.snapshot] run. */
     val snapshotResult: HetznerSnapshotResult? = null,
-    /** The finished AMI of a [JoinRequest.awsImage] run. */
-    val awsImageResult: AWSImageResult? = null,
+    /** The finished AMI or Azure image of a [JoinRequest.awsImage] or [JoinRequest.azureImage] run. */
+    val madeImage: MadeImage? = null,
 ) : FollowedRun {
     override val hostname: String get() = request.hostname
 }
@@ -127,6 +142,7 @@ class JoinManager(
                 val events = request.omniAllocate?.let { lifecycle.omniAllocate(it, stopped.filter { s -> s }) }
                     ?: request.snapshot?.let { lifecycle.hetznerSnapshot(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.awsImage?.let { lifecycle.awsImage(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.azureImage?.let { lifecycle.azureImage(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.hetzner?.let { lifecycle.hetznerCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.ovh?.let { lifecycle.ovhCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.aws?.let { lifecycle.awsCreate(providerToken, it, stopped.filter { s -> s }) }
@@ -156,9 +172,17 @@ class JoinManager(
             _current.update { it?.copy(finished = true, error = done.error, snapshotResult = result) }
             return
         }
-        if (_current.value?.request?.awsImage != null) {
-            val result = runCatching { TalosJson.decodeFromString(AWSImageResult.serializer(), done.address) }.getOrNull()
-            _current.update { it?.copy(finished = true, error = done.error, awsImageResult = result) }
+        val kind = _current.value?.request?.imageKind
+        if (kind != null) {
+            val result = runCatching<MadeImage?> {
+                when (kind) {
+                    ImageRunKind.AWS_AMI -> TalosJson.decodeFromString(AWSImageResult.serializer(), done.address)
+                    ImageRunKind.AZURE_IMAGE -> TalosJson.decodeFromString(AzureImageResult.serializer(), done.address)
+                    // Handled above: its result is a snapshot, not an image.
+                    ImageRunKind.HETZNER_SNAPSHOT -> null
+                }
+            }.getOrNull()
+            _current.update { it?.copy(finished = true, error = done.error, madeImage = result) }
             return
         }
         // Omni keeps its own list of machines: no address to add.

@@ -135,6 +135,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let snapshot: HetznerSnapshotSpec?
     /// No node either: a throwaway AWS instance becomes a Talos AMI (`hostname` only labels the run).
     public let awsImage: AWSImageSpec?
+    /// No node either: a throwaway Azure VM's data disk becomes a Talos managed image.
+    public let azureImage: AzureImageSpec?
     /// A machine of Omni to put in the cluster (`hostname` and `role` are the machine's and the set's).
     public let omniAllocate: OmniAllocateSpec?
 
@@ -142,10 +144,12 @@ public struct JoinRequest: Equatable, Sendable {
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
         replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil,
         aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil, omni: Bool = false,
-        snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil
+        snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, azureImage: AzureImageSpec? = nil,
+        omniAllocate: OmniAllocateSpec? = nil
     ) {
         self.omniAllocate = omniAllocate
         self.awsImage = awsImage
+        self.azureImage = azureImage
         self.snapshot = snapshot
         self.address = address
         self.template = template
@@ -164,8 +168,7 @@ public struct JoinRequest: Equatable, Sendable {
     /// The steps of this run's timeline.
     public var phases: [JoinPhase] {
         if omniAllocate != nil { return JoinPhase.omniAllocateRun }
-        if snapshot != nil { return JoinPhase.snapshotRun }
-        if awsImage != nil { return JoinPhase.awsImageRun }
+        if let imageKind { return imageKind.phases }
         guard cloud else { return JoinPhase.maintenanceRun }
         return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
     }
@@ -173,15 +176,47 @@ public struct JoinRequest: Equatable, Sendable {
     /// A machine to create at a cloud provider.
     public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil || azure != nil }
 
-    /// No node at all: the run makes a Talos image (a Hetzner snapshot or an AWS AMI).
-    public var imageRun: Bool { snapshot != nil || awsImage != nil }
+    /// What the run makes when it makes a Talos image instead of a node; nil for a node.
+    public var imageKind: ImageRunKind? {
+        if snapshot != nil { return .hetznerSnapshot }
+        if awsImage != nil { return .awsAMI }
+        if azureImage != nil { return .azureImage }
+        return nil
+    }
+
+    /// No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure image).
+    public var imageRun: Bool { imageKind != nil }
 
     /// The same request, replacing (or not) the member already named `hostname`.
     public func withReplacing(_ on: Bool) -> JoinRequest {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
             staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure,
-            omni: omni, snapshot: snapshot, awsImage: awsImage, omniAllocate: omniAllocate)
+            omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage, omniAllocate: omniAllocate)
+    }
+}
+
+/// What a run with no node makes: a Talos image at a cloud provider, with that run's steps.
+public enum ImageRunKind: Sendable {
+    case hetznerSnapshot, awsAMI, azureImage
+
+    public var phases: [JoinPhase] {
+        switch self {
+        case .hetznerSnapshot: JoinPhase.snapshotRun
+        case .awsAMI: JoinPhase.awsImageRun
+        case .azureImage: JoinPhase.imageRun
+        }
+    }
+}
+
+/// An image an image run made (an AMI or an Azure managed image): its id to pick it, its name to say so.
+public struct MadeImage: Equatable, Sendable {
+    public let id: String
+    public let name: String
+
+    public init(id: String, name: String) {
+        self.id = id
+        self.name = name
     }
 }
 
@@ -229,6 +264,8 @@ public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
     public static let snapshotRun: [JoinPhase] = [.key, .creating, .rescue, .writing, .snapshot, .cleanup, .done]
     /// A throwaway AWS instance whose volume becomes a Talos AMI.
     public static let awsImageRun: [JoinPhase] = [.creating, .writing, .snapshot, .register, .cleanup, .done]
+    /// A throwaway helper VM whose data disk becomes a Talos image (Azure's managed image).
+    public static let imageRun: [JoinPhase] = [.creating, .writing, .snapshot, .cleanup, .done]
     /// A machine put in a cluster through Omni.
     public static let omniAllocateRun: [JoinPhase] = [.allocated, .installing, .booting, .done]
 

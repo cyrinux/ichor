@@ -38,4 +38,23 @@ extension TalosClient {
             IchorgoStartAzureCreate(config, context, credential, specJSON, bridge)
         }
     }
+
+    /// The cost line of an image run. Creates nothing.
+    static func azureImageEstimate(credential: String, arch: String, location: String) async throws
+        -> AzureImageEstimate
+    {
+        try await json { IchorgoAzureImageEstimate(credential, arch, location, $0) }
+    }
+
+    /// Makes a Talos managed image with a throwaway VM (StartAzureImage): `done`'s address is the
+    /// result JSON. `stop` deletes the helper, its data disk and an unfinished image, and so only
+    /// `stop` stops it, as above.
+    func startAzureImage(
+        _ spec: AzureImageSpec, credential: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return hetznerRun { [config, context] bridge in
+            IchorgoStartAzureImage(config, context, credential, specJSON, bridge)
+        }
+    }
 }

@@ -1721,18 +1721,231 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 Talos 镜像" } }
       }
     },
-    "Coming next: an image of the cluster's schematic, made from the phone." : {
+    "No Talos image in %@ yet: Ichor can make one of this cluster's image." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Als Nächstes: ein Image mit dem Schematic des Clusters, vom Telefon aus erstellt." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximamente: una imagen con el esquema del clúster, creada desde el teléfono." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À venir : une image du schematic du cluster, créée depuis le téléphone." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "In arrivo: un'immagine dello schematic del cluster, creata dal telefono." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次に対応予定:クラスターのスキーマティックのイメージを電話から作成します。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Em breve: uma imagem do schematic do cluster, criada pelo telefone." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скоро: образ со схемой кластера, созданный с телефона." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Незабаром: образ зі схемою кластера, створений з телефона." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即将推出:从手机制作集群 schematic 的镜像。" } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch kein Talos-Image in %@: Ichor kann eines aus dem Image dieses Clusters erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no hay una imagen de Talos en %@: Ichor puede crear una con la imagen de este clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'image Talos dans %@ : Ichor peut en créer une de l'image de ce cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ancora nessuna immagine Talos in %@: Ichor può crearne una dall'immagine di questo cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ にはまだ Talos イメージがありません。Ichor でこのクラスターのイメージから作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não há imagem do Talos em %@: o Ichor pode criar uma com a imagem deste cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В %@ ещё нет образа Talos: Ichor может создать его из образа этого кластера." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У %@ ще немає образу Talos: Ichor може створити його з образу цього кластера." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 中还没有 Talos 镜像:Ichor 可以用此集群的镜像制作一个。" } }
+      }
+    },
+    "Make another Talos image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein weiteres Talos-Image erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear otra imagen de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer une autre image Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un'altra immagine Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "別の Talos イメージを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar outra imagem do Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать ещё один образ Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити ще один образ Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "再制作一个 Talos 镜像" } }
+      }
+    },
+    "Ichor starts a throwaway Ubuntu VM that writes this cluster's Talos image to an empty data disk, makes a managed image from the disk, then deletes the VM and the disk. Nothing of the cluster is touched. It takes about ten minutes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor startet eine Wegwerf-VM mit Ubuntu, die das Talos-Image dieses Clusters auf einen leeren Datenträger schreibt, erstellt daraus ein verwaltetes Image und löscht dann die VM und den Datenträger. Am Cluster wird nichts verändert. Es dauert etwa zehn Minuten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor inicia una VM desechable de Ubuntu que escribe la imagen de Talos de este clúster en un disco de datos vacío, crea una imagen administrada a partir del disco y luego borra la VM y el disco. No se toca nada del clúster. Tarda unos diez minutos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor démarre une VM Ubuntu jetable qui écrit l'image Talos de ce cluster sur un disque de données vide, crée une image managée à partir du disque, puis supprime la VM et le disque. Rien du cluster n'est touché. Cela prend une dizaine de minutes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor avvia una VM Ubuntu usa e getta che scrive l'immagine Talos di questo cluster su un disco dati vuoto, crea un'immagine gestita dal disco, poi elimina la VM e il disco. Il cluster non viene toccato. Ci vogliono circa dieci minuti." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor は使い捨ての Ubuntu VM を起動し、このクラスターの Talos イメージを空のデータディスクに書き込み、そのディスクからマネージドイメージを作成してから、VM とディスクを削除します。クラスターには一切触れません。約 10 分かかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor inicia uma VM descartável do Ubuntu que grava a imagem do Talos deste cluster em um disco de dados vazio, cria uma imagem gerenciada a partir do disco e depois exclui a VM e o disco. Nada do cluster é alterado. Leva cerca de dez minutos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускает одноразовую ВМ Ubuntu, которая записывает образ Talos этого кластера на пустой диск данных, создаёт из диска управляемый образ, затем удаляет ВМ и диск. Кластер не затрагивается. Это занимает около десяти минут." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускає одноразову ВМ Ubuntu, яка записує образ Talos цього кластера на порожній диск даних, створює з диска керований образ, потім видаляє ВМ і диск. Кластер не зачіпається. Це триває близько десяти хвилин." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 会启动一台一次性的 Ubuntu VM，把此集群的 Talos 镜像写入一个空的数据磁盘，用该磁盘制作托管镜像，然后删除 VM 和磁盘。不会触碰集群的任何部分。大约需要十分钟。" } }
+      }
+    },
+    "The helper VM gets a public IP for a few minutes, to download the image from the Image Factory." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Hilfs-VM erhält für einige Minuten eine öffentliche IP, um das Image von der Image Factory herunterzuladen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La VM auxiliar recibe una IP pública durante unos minutos para descargar la imagen de la Image Factory." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La VM auxiliaire reçoit une IP publique pendant quelques minutes, pour télécharger l'image depuis l'Image Factory." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La VM ausiliaria riceve un IP pubblico per qualche minuto, per scaricare l'immagine dalla Image Factory." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "補助 VM は Image Factory からイメージをダウンロードするため、数分間パブリック IP を持ちます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A VM auxiliar recebe um IP público por alguns minutos, para baixar a imagem da Image Factory." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вспомогательная ВМ получает публичный IP на несколько минут, чтобы скачать образ из Image Factory." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Допоміжна ВМ отримує публічну IP на кілька хвилин, щоб завантажити образ з Image Factory." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "辅助 VM 会获得几分钟的公网 IP,用于从 Image Factory 下载镜像。" } }
+      }
+    },
+    "The image goes in resource group %@, in %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The image goes in resource group %1$@, in %2$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Image kommt in die Ressourcengruppe %1$@, in %2$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La imagen va al grupo de recursos %1$@, en %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'image va dans le groupe de ressources %1$@, dans %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'immagine va nel gruppo di risorse %1$@, in %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イメージはリソースグループ %1$@(%2$@)に作成されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A imagem vai para o grupo de recursos %1$@, em %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Образ создаётся в группе ресурсов %1$@, в %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Образ створюється в групі ресурсів %1$@, у %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "镜像放在资源组 %1$@ 中，位于 %2$@。" } }
+      }
+    },
+    "About %lld minutes of %@ (%@/h), then the image's storage per GB per month, billed as a managed disk until you delete it at Azure, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@ (%3$@/h), then the image's storage per GB per month, billed as a managed disk until you delete it at Azure, before tax" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@ (%3$@/h), danach der Speicher des Images pro GB und Monat, berechnet wie ein verwalteter Datenträger, bis du es bei Azure löschst, vor Steuern" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@ (%3$@/h), y luego el almacenamiento de la imagen por GB al mes, facturado como un disco administrado hasta que la borres en Azure, sin impuestos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@ (%3$@/h), puis le stockage de l'image par Go par mois, facturé comme un disque managé jusqu'à ce que vous la supprimiez chez Azure, hors taxes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@ (%3$@/h), poi lo spazio dell'immagine per GB al mese, fatturato come un disco gestito finché non la elimini su Azure, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分 (%3$@/h)、その後 Azure で削除するまでイメージの保存料がマネージドディスクとして 1 GB あたり月額で課金されます (税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@ (%3$@/h), depois o armazenamento da imagem por GB por mês, cobrado como um disco gerenciado até você excluí-la no Azure, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@ (%3$@/ч), затем хранение образа за ГБ в месяц по цене управляемого диска, пока вы не удалите его в Azure, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@ (%3$@/год), потім зберігання образу за ГБ на місяць за ціною керованого диска, доки ви не видалите його в Azure, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟的 %2$@(%3$@/小时),之后镜像存储按托管磁盘每 GB 每月计费，直到你在 Azure 删除它(税前)" } }
+      }
+    },
+    "About %lld minutes of %@, then the image's storage per GB per month, billed as a managed disk until you delete it at Azure. Price unavailable: see Azure's VM and managed disk pricing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@, then the image's storage per GB per month, billed as a managed disk until you delete it at Azure. Price unavailable: see Azure's VM and managed disk pricing." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@, danach der Speicher des Images pro GB und Monat, berechnet wie ein verwalteter Datenträger, bis du es bei Azure löschst. Preis nicht verfügbar: siehe die VM- und Datenträgerpreise von Azure." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@, y luego el almacenamiento de la imagen por GB al mes, facturado como un disco administrado hasta que la borres en Azure. Precio no disponible: consulta los precios de VM y de discos administrados de Azure." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@, puis le stockage de l'image par Go par mois, facturé comme un disque managé jusqu'à ce que vous la supprimiez chez Azure. Prix indisponible : voir les tarifs des VM et des disques managés d'Azure." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@, poi lo spazio dell'immagine per GB al mese, fatturato come un disco gestito finché non la elimini su Azure. Prezzo non disponibile: vedi i prezzi di VM e dischi gestiti di Azure." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分、その後 Azure で削除するまでイメージの保存料がマネージドディスクとして 1 GB あたり月額で課金されます。価格は取得できません。Azure の VM とマネージドディスクの料金をご覧ください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@, depois o armazenamento da imagem por GB por mês, cobrado como um disco gerenciado até você excluí-la no Azure. Preço indisponível: veja os preços de VM e de discos gerenciados do Azure." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@, затем хранение образа за ГБ в месяц по цене управляемого диска, пока вы не удалите его в Azure. Цена недоступна: см. цены Azure на ВМ и управляемые диски." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@, потім зберігання образу за ГБ на місяць за ціною керованого диска, доки ви не видалите його в Azure. Ціна недоступна: див. ціни Azure на ВМ і керовані диски." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟的 %2$@,之后镜像存储按托管磁盘每 GB 每月计费，直到你在 Azure 删除它。价格不可用：请参阅 Azure 的 VM 和托管磁盘定价。" } }
+      }
+    },
+    "Make the image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Image erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la imagen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'image" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea l'immagine" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イメージを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a imagem" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать образ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити образ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作镜像" } }
+      }
+    },
+    "Start the helper VM" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hilfs-VM starten" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar la VM auxiliar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer la VM auxiliaire" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia la VM ausiliaria" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "補助 VM を起動" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar a VM auxiliar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить вспомогательную ВМ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запустити допоміжну ВМ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启动辅助 VM" } }
+      }
+    },
+    "Make the managed image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verwaltetes Image erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la imagen administrada" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'image managée" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea l'immagine gestita" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マネージドイメージを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a imagem gerenciada" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать управляемый образ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити керований образ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作托管镜像" } }
+      }
+    },
+    "Delete the helper VM and its data disk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hilfs-VM und ihren Datenträger löschen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Borrar la VM auxiliar y su disco de datos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer la VM auxiliaire et son disque de données" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elimina la VM ausiliaria e il suo disco dati" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "補助 VM とそのデータディスクを削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Excluir a VM auxiliar e seu disco de dados" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить вспомогательную ВМ и её диск данных" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалити допоміжну ВМ і її диск даних" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除辅助 VM 及其数据磁盘" } }
+      }
+    },
+    "Stopping deletes the helper VM and its data disk." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beim Stoppen werden die Hilfs-VM und ihr Datenträger gelöscht." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener borra la VM auxiliar y su disco de datos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'arrêt supprime la VM auxiliaire et son disque de données." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermare elimina la VM ausiliaria e il suo disco dati." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止すると補助 VM とそのデータディスクが削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar exclui a VM auxiliar e seu disco de dados." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановка удаляет вспомогательную ВМ и её диск данных." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинка видаляє допоміжну ВМ і її диск даних." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止会删除辅助 VM 及其数据磁盘。" } }
+      }
+    },
+    "The run stops. The helper VM, billed until it is deleted, is deleted with its data disk, and an unfinished image too." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Lauf stoppt. Die Hilfs-VM, die bis zu ihrer Löschung berechnet wird, wird mit ihrem Datenträger gelöscht, ebenso ein unfertiges Image." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La ejecución se detiene. La VM auxiliar, facturada hasta que se borra, se borra con su disco de datos, y también una imagen sin terminar." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'exécution s'arrête. La VM auxiliaire, facturée jusqu'à sa suppression, est supprimée avec son disque de données, ainsi qu'une image inachevée." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'esecuzione si ferma. La VM ausiliaria, fatturata finché non viene eliminata, viene eliminata con il suo disco dati, e anche un'immagine incompleta." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "実行を停止します。削除されるまで課金される補助 VM はデータディスクとともに削除され、未完成のイメージも削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A execução para. A VM auxiliar, cobrada até ser excluída, é excluída com seu disco de dados, assim como uma imagem inacabada." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запуск останавливается. Вспомогательная ВМ, которая оплачивается до удаления, удаляется вместе с диском данных, как и незавершённый образ." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запуск зупиняється. Допоміжна ВМ, яка оплачується до видалення, видаляється разом із диском даних, як і незавершений образ." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行会停止。辅助 VM 在删除前一直计费，会连同其数据磁盘一起删除，未完成的镜像也会被删除。" } }
+      }
+    },
+    "Image %@ is ready: it is picked for the new node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Image %@ ist bereit: Es ist für den neuen Node ausgewählt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La imagen %@ está lista: está elegida para el nuevo nodo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'image %@ est prête : elle est choisie pour le nouveau nœud." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'immagine %@ è pronta: è scelta per il nuovo nodo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イメージ %@ の準備ができました。新しいノードに選択されています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A imagem %@ está pronta: ela foi escolhida para o novo nó." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Образ %@ готов: он выбран для нового узла." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Образ %@ готовий: його вибрано для нового вузла." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "镜像 %@ 已就绪:已为新节点选中。" } }
+      }
+    },
+    "Making a Talos image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-Image wird erstellt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Creando una imagen de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Création d'une image Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creazione di un'immagine Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos イメージを作成中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criando uma imagem do Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создание образа Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створення образу Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在制作 Talos 镜像" } }
+      }
+    },
+    "Pick a resource group first: the image goes in it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle zuerst eine Ressourcengruppe: Das Image kommt dort hinein." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige primero un grupo de recursos: la imagen va en él." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez d'abord un groupe de ressources : l'image y est créée." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli prima un gruppo di risorse: l'immagine va lì." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "先にリソースグループを選んでください。イメージはそこに作成されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolha primeiro um grupo de recursos: a imagem vai nele." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сначала выберите группу ресурсов: образ создаётся в ней." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Спершу виберіть групу ресурсів: образ створюється в ній." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请先选择资源组：镜像会放在其中。" } }
       }
     },
     "No VM size here boots this image (%@, generation %@)." : {

@@ -116,9 +116,25 @@ enum class JoinPhase(val wire: String) {
         /** A throwaway AWS instance whose volume becomes a Talos AMI. */
         val awsImageRun = listOf(CREATING, WRITING, SNAPSHOT, REGISTER, CLEANUP, DONE)
 
+        /** A throwaway helper VM whose data disk becomes a Talos image (Azure's managed image). */
+        val imageRun = listOf(CREATING, WRITING, SNAPSHOT, CLEANUP, DONE)
+
         /** A machine put in a cluster through Omni. */
         val omniAllocateRun = listOf(ALLOCATED, INSTALLING, OMNI_BOOTING, DONE)
     }
+}
+
+/** What a run with no node makes: a Talos image at a cloud provider, with that run's steps. */
+enum class ImageRunKind(val phases: List<JoinPhase>) {
+    HETZNER_SNAPSHOT(JoinPhase.snapshotRun),
+    AWS_AMI(JoinPhase.awsImageRun),
+    AZURE_IMAGE(JoinPhase.imageRun),
+}
+
+/** An image an image run made (an AMI or an Azure managed image): its id to pick it, its name to say so. */
+interface MadeImage {
+    val imageId: String
+    val name: String
 }
 
 data class JoinStep(val phase: JoinPhase, val status: StepStatus, val at: Long = 0, val message: String = "")

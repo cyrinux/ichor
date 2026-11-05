@@ -190,7 +190,7 @@ fun HetznerCreateCard(
                 }
             }
             if (current?.request?.snapshot != null) {
-                SnapshotRunView(current, onStop = app.joinManager::stop) {
+                ImageRunView(current, onStop = app.joinManager::stop) {
                     madeSnapshot = current.snapshotResult?.imageId ?: madeSnapshot
                     app.joinManager.dismiss()
                     vm.refresh()

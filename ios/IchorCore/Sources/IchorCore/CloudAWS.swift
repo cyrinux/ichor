@@ -247,6 +247,9 @@ public struct AWSImageResult: Decodable, Equatable, Sendable {
     public let schematic: String
     public let sizeGB: Int
 
+    /// Its id to pick it and its name to say so.
+    public var made: MadeImage { MadeImage(id: imageId, name: name) }
+
     private enum CodingKeys: String, CodingKey { case imageId, snapshotId, name, arch, talosVersion, schematic, sizeGB }
 
     public init(from decoder: Decoder) throws {

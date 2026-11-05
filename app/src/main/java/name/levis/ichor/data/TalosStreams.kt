@@ -313,6 +313,14 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAzureCreate(yaml, context, credentialJson, specJson, listener) }
 
     /**
+     * Makes a Talos managed image with a throwaway Azure VM (StartAzureImage). Done's address is
+     * the result JSON. As for [hetznerCreate], only [stop] cancels: it deletes the helper, its data
+     * disk and an unfinished image.
+     */
+    fun azureImage(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAzureImage(yaml, context, credentialJson, specJson, listener) }
+
+    /**
      * Makes a Talos snapshot with a throwaway server (StartHetznerSnapshot). Done's address is the
      * result JSON. As for [hetznerCreate], only [stop] cancels: it deletes what the run created.
      */
