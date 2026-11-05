@@ -31,6 +31,8 @@ final class SearchStore {
     private(set) var refreshing = false
     /// What a refresh could not fetch, nil when it all came.
     private(set) var refreshError: String?
+    /// The last refresh read the active cluster: said once it lands, as a failure is.
+    private(set) var refreshed = false
     /// Nothing is known about any cluster (no blob at all).
     private(set) var nothingKnown = false
 
@@ -110,6 +112,7 @@ final class SearchStore {
         guard let client = model.client, let context = model.activeSummary, !context.demo else { return }
         refreshing = true
         refreshError = nil
+        refreshed = false
         let cluster = searchCluster(of: context)
         var domains: [LastKnownDomain] = model.activeIsKube ? [] : [.overview]
         if model.allows(.workloads) { domains += [.pods, .workloads, .cronJobs] }
@@ -128,6 +131,7 @@ final class SearchStore {
             _ = try? await FluxStore.shared.load(with: client, key: model.fluxKey)
         }
         refreshing = false
+        refreshed = refreshError == nil
         await build(model: model)
     }
 

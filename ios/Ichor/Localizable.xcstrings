@@ -54085,6 +54085,48 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Пока ничего не известно: откройте кластер хотя бы раз" } }
       }
     },
+    "Active cluster refreshed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cluster actif actualisé" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clúster activo actualizado" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Активний кластер оновлено" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktiver Cluster aktualisiert" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cluster attivo aggiornato" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已刷新当前集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アクティブなクラスターを更新しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cluster ativo atualizado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Активный кластер обновлён" } }
+      }
+    },
+    "Refresh, top right, reads the active cluster again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Actualiser, en haut à droite, relit le cluster actif." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar, arriba a la derecha, vuelve a leer el clúster activo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "«Оновити» вгорі праворуч знову читає активний кластер." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisieren oben rechts liest den aktiven Cluster erneut." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiorna, in alto a destra, rilegge il cluster attivo." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "右上角的“刷新”会重新读取当前集群。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "右上の「更新」でアクティブなクラスターを読み直します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizar, no canto superior direito, lê o cluster ativo de novo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "«Обновить» справа вверху заново читает активный кластер." } }
+      }
+    },
+    "Type to find the nodes, pods, workloads, CronJobs and GitOps apps your clusters last showed. Typing never calls a cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tapez pour trouver les nœuds, pods, workloads, CronJobs et applications GitOps que vos clusters ont affichés en dernier. La saisie n’appelle jamais un cluster." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escribe para encontrar los nodos, pods, workloads, CronJobs y apps de GitOps que tus clústeres mostraron por última vez. Escribir nunca llama a un clúster." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Почніть вводити, щоб знайти вузли, поди, робочі навантаження, CronJob і застосунки GitOps, які ваші кластери показували востаннє. Введення ніколи не звертається до кластера." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tippe, um die Nodes, Pods, Workloads, CronJobs und GitOps-Apps zu finden, die deine Cluster zuletzt gezeigt haben. Das Tippen ruft nie einen Cluster auf." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Digita per trovare i nodi, i pod, i workload, i CronJob e le app GitOps che i tuoi cluster hanno mostrato per ultimi. La digitazione non chiama mai un cluster." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输入即可查找你的集群上次显示的节点、Pod、工作负载、CronJob 和 GitOps 应用。输入时不会调用任何集群。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "入力すると、クラスターが最後に表示したノード、Pod、ワークロード、CronJob、GitOps アプリを検索できます。入力中にクラスターを呼び出すことはありません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Digite para encontrar os nós, pods, workloads, CronJobs e apps GitOps que seus clusters mostraram por último. Digitar nunca chama um cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Начните вводить, чтобы найти узлы, поды, рабочие нагрузки, CronJob и приложения GitOps, которые ваши кластеры показывали последними. Ввод никогда не обращается к кластеру." } }
+      }
+    },
     "Refresh active cluster" : {
       "extractionState" : "manual",
       "localizations" : {
