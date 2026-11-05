@@ -88,6 +88,7 @@ type fakeGCE struct {
 	nat             bool   // the default network has a Cloud NAT
 	slowDelete      bool   // an accepted delete never finishes, and the instance stays
 	onRunning       func()
+	image           *fakeGCEImage // the image run's helper, data disk and images (cloud_gcp_image_test.go)
 
 	tokens        int
 	badScope      int
@@ -184,6 +185,9 @@ func (f *fakeGCE) handle(w http.ResponseWriter, r *http.Request) {
 		f.projects(w)
 	case path == "/v1/services/"+gcpComputeService+"/skus":
 		f.skus(w, r)
+	case strings.HasPrefix(path, "/compute/v1/projects/debian-cloud/") && f.image != nil:
+		f.calls = append(f.calls, r.Method+" "+path)
+		f.image.debian(w, strings.TrimPrefix(path, "/compute/v1/projects/debian-cloud/global/images/family/"))
 	case strings.HasPrefix(path, gcpTestBase):
 		f.calls = append(f.calls, r.Method+" "+path)
 
@@ -243,7 +247,8 @@ func (f *fakeGCE) permissions(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&body)
 
 	granted := slices.DeleteFunc(body.Permissions, func(p string) bool {
-		return f.noCreateRight && (p == "compute.instances.create" || p == "compute.disks.create")
+		return (f.noCreateRight && (p == "compute.instances.create" || p == "compute.disks.create")) ||
+			(f.image != nil && f.image.noImageRight && p == "compute.images.create")
 	})
 
 	gceJSON(w, http.StatusOK, map[string]any{"permissions": granted})
@@ -272,6 +277,14 @@ func gceSKU(description, region string, units string, nanos int64, usage string)
 	}
 }
 
+// gceStorageSKU is a storage SKU priced per GiB-month.
+func gceStorageSKU(description, region string, nanos int64) map[string]any {
+	s := gceSKU(description, region, "0", nanos, "OnDemand")
+	s["category"] = map[string]string{"resourceFamily": "Storage", "usageType": "OnDemand"}
+
+	return s
+}
+
 func (f *fakeGCE) skus(w http.ResponseWriter, r *http.Request) {
 	if f.billingDisabled {
 		gceDisabled(w, "cloudbilling.googleapis.com", "Cloud Billing")
@@ -285,6 +298,9 @@ func (f *fakeGCE) skus(w http.ResponseWriter, r *http.Request) {
 			gceSKU("E2 Instance Core running in Americas", "us-central1", "0", 21000000, "OnDemand"),
 			gceSKU("N2D Instance Core running in Belgium", gcpTestRegion, "0", 30000000, "OnDemand"),
 			gceSKU("E2 Instance Core running in Belgium", gcpTestRegion, "0", 22000000, "OnDemand"),
+			gceStorageSKU("Balanced PD Capacity in Americas", "us-central1", 100000000),
+			gceStorageSKU("Balanced PD Capacity in Belgium", gcpTestRegion, 110000000),
+			gceStorageSKU("Storage Image", "global", 50000000),
 		}, "nextPageToken": "2"})
 
 		return
@@ -365,6 +381,8 @@ func (f *fakeGCE) static(r *http.Request, rest string) (any, bool) {
 		"/global/images/talos-v1-14-2-arm64":               labelled,
 		zone + "/machineTypes/e2-medium":                   gceMachineType("e2-medium", 2, 4096, "X86_64", ""),
 		zone + "/machineTypes/t2a-standard-2":              gceMachineType("t2a-standard-2", 2, 8192, "ARM64", ""),
+		zone + "/machineTypes/e2-small":                    gceMachineType("e2-small", 2, 2048, "X86_64", ""),
+		zone + "/machineTypes/t2a-standard-1":              gceMachineType("t2a-standard-1", 1, 4096, "ARM64", ""),
 	}
 
 	if rest == zone+"/machineTypes" {
@@ -383,6 +401,10 @@ func (f *fakeGCE) static(r *http.Request, rest string) (any, bool) {
 
 func (f *fakeGCE) compute(w http.ResponseWriter, r *http.Request, rest string) {
 	instances := "/zones/" + gcpTestZone + "/instances"
+
+	if f.image != nil && f.image.handle(f, w, r, rest) {
+		return
+	}
 
 	switch {
 	case r.Method == http.MethodPost && rest == instances:

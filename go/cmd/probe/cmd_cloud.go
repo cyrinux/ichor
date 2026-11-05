@@ -124,7 +124,8 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create …")
 	}},
-	{name: "gcp", args: "test|options|role|price ZONE TYPE|create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes", run: func(e env) (string, error) {
+	{name: "gcp", args: "test|options|role|price ZONE TYPE|estimate ARCH ZONE|image TEMPLATE ARCH ZONE SUBNET -yes|" +
+		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes", run: func(e env) (string, error) {
 		if flag.Arg(1) == "role" {
 			return ichorgo.GCPRoleDefinition(os.Getenv("GCP_PROJECT")), nil
 		}
@@ -141,11 +142,15 @@ var cloudCommands = []command{
 			return ichorgo.GCPOptions(e.cfg, e.context, credJSON)
 		case "price":
 			return ichorgo.GCPPrice(credJSON, flag.Arg(2), flag.Arg(3))
+		case "estimate":
+			return ichorgo.GCPImageEstimate(credJSON, flag.Arg(2), flag.Arg(3))
+		case "image":
+			return gcpImage(e, credJSON)
 		case "create":
 			return gcpCreate(e, credJSON)
 		}
 
-		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|create …")
+		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|estimate|image|create …")
 	}},
 }
 
@@ -190,6 +195,26 @@ func gcpCreate(e env, credJSON string) (string, error) {
 
 	j := joinProbe{done: make(chan string, 1)}
 	ichorgo.StartGCPCreate(e.cfg, e.context, credJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
+}
+
+// gcpImage makes a billable image with a throwaway helper VM (with a public address): scratch
+// projects only, and only with -yes.
+func gcpImage(e env, credJSON string) (string, error) {
+	if flag.NArg() != 7 || flag.Arg(6) != "-yes" {
+		return "", errors.New("usage: gcp image TEMPLATE ARCH ZONE SUBNET -yes (runs a billable VM and keeps an image)")
+	}
+
+	spec, err := json.Marshal(map[string]any{
+		"templateNode": flag.Arg(2), "arch": flag.Arg(3), "zone": flag.Arg(4), "subnetwork": flag.Arg(5), "associatePublicIp": true,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartGCPImage(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
 }

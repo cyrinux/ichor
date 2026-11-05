@@ -54,19 +54,13 @@ func (h *gcpCreate) checkSpec() error {
 		h.imageName = m[2]
 	}
 
-	h.subnetProject, h.subnetRegion, h.subnetName = s.Project, gcpRegionOf(s.Zone), s.Subnetwork
-	if m := gcpSubnetPathPattern.FindStringSubmatch(s.Subnetwork); m != nil {
-		h.subnetProject, h.subnetRegion, h.subnetName = cmp.Or(m[1], s.Project), m[2], m[3]
+	if !gcpNamePattern.MatchString(h.imageName) {
+		return fmt.Errorf("%q is not a Compute Engine name", h.imageName)
 	}
 
-	for _, name := range []string{h.imageName, h.subnetName} {
-		if !gcpNamePattern.MatchString(name) {
-			return fmt.Errorf("%q is not a Compute Engine name", name)
-		}
-	}
-
-	if !gcpProjectPattern.MatchString(h.subnetProject) {
-		return fmt.Errorf("%q is not a project ID", h.subnetProject)
+	var err error
+	if h.subnetProject, h.subnetRegion, h.subnetName, err = gcpParseSubnet(s.Subnetwork, s.Project, s.Zone); err != nil {
+		return err
 	}
 
 	if s.DiskGB == 0 {
@@ -74,6 +68,24 @@ func (h *gcpCreate) checkSpec() error {
 	}
 
 	return nil
+}
+
+// gcpParseSubnet reads a subnet's project, region and name out of its link, or of its name in the
+// zone's region of project.
+func gcpParseSubnet(subnetwork, project, zone string) (subnetProject, region, name string, err error) {
+	subnetProject, region, name = project, gcpRegionOf(zone), subnetwork
+	if m := gcpSubnetPathPattern.FindStringSubmatch(subnetwork); m != nil {
+		subnetProject, region, name = cmp.Or(m[1], project), m[2], m[3]
+	}
+
+	switch {
+	case !gcpNamePattern.MatchString(name):
+		return "", "", "", fmt.Errorf("%q is not a Compute Engine name", name)
+	case !gcpProjectPattern.MatchString(subnetProject):
+		return "", "", "", fmt.Errorf("%q is not a project ID", subnetProject)
+	}
+
+	return subnetProject, region, name, nil
 }
 
 // gcpNotFound: Google answered 404.
@@ -142,59 +154,69 @@ func (h *gcpCreate) checkChoice(ctx context.Context) error {
 // checkNetwork refuses a subnet of another region than the zone's, and notes a subnet with no
 // route out (no public address asked, no Cloud NAT on its network there).
 func (h *gcpCreate) checkNetwork(ctx context.Context) error {
-	c, region := h.client, gcpRegionOf(h.spec.Zone)
+	noRoute, err := gcpCheckSubnet(ctx, h.client, h.subnetProject, h.subnetRegion, h.subnetName, h.spec.Zone, h.spec.AssociatePublicIP)
+	h.noRoute = noRoute
 
+	return err
+}
+
+// gcpCheckSubnet refuses a subnet that cannot be read or is of another region than zone's;
+// noRoute: no public address asked and no Cloud NAT on its network there (a router list refused
+// is no refusal).
+func gcpCheckSubnet(ctx context.Context, c *gcpClient, project, region, name, zone string, publicIP bool) (noRoute bool, err error) {
 	var subnet gcpAPISubnet
 
-	u := c.compute(h.subnetProject, "/regions/"+url.PathEscape(h.subnetRegion)+"/subnetworks/"+url.PathEscape(h.subnetName))
+	u := c.compute(project, "/regions/"+url.PathEscape(region)+"/subnetworks/"+url.PathEscape(name))
 	if err := c.get(ctx, u, &subnet); err != nil {
 		if gcpNotFound(err) {
-			return fmt.Errorf("subnet %s cannot be found in %s: pick another", h.subnetName, h.subnetRegion)
+			return false, fmt.Errorf("subnet %s cannot be found in %s: pick another", name, region)
 		}
 
-		return err
+		return false, err
 	}
 
-	if got := lastSegment(cmp.Or(subnet.Region, h.subnetRegion)); got != region {
-		return fmt.Errorf("subnet %s is in %s, the zone %s in %s: pick a subnet of %s", h.subnetName, got, h.spec.Zone, region, region)
+	zoneRegion := gcpRegionOf(zone)
+	if got := lastSegment(cmp.Or(subnet.Region, region)); got != zoneRegion {
+		return false, fmt.Errorf("subnet %s is in %s, the zone %s in %s: pick a subnet of %s", name, got, zone, zoneRegion, zoneRegion)
 	}
 
-	if h.spec.AssociatePublicIP {
-		return nil
+	if publicIP {
+		return false, nil
 	}
 
-	// Optional: a router list refused is no refusal.
-	routers, err := gcpList[gcpAPIRouter](ctx, c, c.compute(h.subnetProject, "/regions/"+url.PathEscape(region)+"/routers"), "items")
-	h.noRoute = err == nil && !gcpHasNAT(routers, lastSegment(subnet.Network))
+	routers, err := gcpList[gcpAPIRouter](ctx, c, c.compute(project, "/regions/"+url.PathEscape(zoneRegion)+"/routers"), "items")
 
-	return nil
+	return err == nil && !gcpHasNAT(routers, lastSegment(subnet.Network)), nil
 }
 
 // checkPermissions refuses a key that may not make or delete what the run makes: Google has no
 // dry run, so testIamPermissions on the project is the check before any write. A check that
 // cannot be made refuses too.
 func (h *gcpCreate) checkPermissions(ctx context.Context) error {
-	wanted := gcpCreatePermissions(h.spec.AssociatePublicIP)
+	return gcpCheckRun(ctx, h.client, h.spec.Project, h.subnetProject, gcpCreatePermissions(h.spec.AssociatePublicIP), h.spec.AssociatePublicIP)
+}
 
-	if err := h.checkGranted(ctx, h.spec.Project, wanted); err != nil {
+// gcpCheckRun checks wanted in project, and the subnet's use in its host project when it is a
+// shared VPC's.
+func gcpCheckRun(ctx context.Context, c *gcpClient, project, subnetProject string, wanted []string, publicIP bool) error {
+	if err := gcpCheckGranted(ctx, c, project, wanted); err != nil {
 		return err
 	}
 
-	if h.subnetProject == h.spec.Project {
+	if subnetProject == project {
 		return nil
 	}
 
-	// A shared VPC's subnet is used in its host project.
 	use := []string{"compute.subnetworks.use", "compute.subnetworks.get"}
-	if h.spec.AssociatePublicIP {
+	if publicIP {
 		use = append(use, "compute.subnetworks.useExternalIp")
 	}
 
-	return h.checkGranted(ctx, h.subnetProject, use)
+	return gcpCheckGranted(ctx, c, subnetProject, use)
 }
 
-func (h *gcpCreate) checkGranted(ctx context.Context, project string, wanted []string) error {
-	granted, err := h.client.testPermissions(ctx, project, wanted)
+func gcpCheckGranted(ctx context.Context, c *gcpClient, project string, wanted []string) error {
+	granted, err := c.testPermissions(ctx, project, wanted)
 	if err != nil {
 		return fmt.Errorf("the service account's permissions in project %s cannot be checked, so nothing is created: %w", project, err)
 	}
