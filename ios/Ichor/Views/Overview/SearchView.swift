@@ -43,9 +43,18 @@ struct SearchView: View {
                     }
                 }
             }
+            if store.refreshed, !store.refreshing {
+                Section {
+                    Text("Active cluster refreshed").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
             if text.trimmingCharacters(in: .whitespaces).isEmpty {
-                openedSection
-                recentSection
+                if !store.building, blankBody == .firstUse {
+                    SearchFirstUseSection(catalog: catalog, canRefresh: canRefresh, openRoute: openRoute)
+                } else {
+                    openedSection
+                    recentSection
+                }
             } else {
                 screensSection
                 resultSections
@@ -66,6 +75,15 @@ struct SearchView: View {
         }
         .onChange(of: store.nodes) { store.setCatalog(catalog.map(\.entry)) }
         .onSubmit(of: .search) { store.remember(text) }
+        // Said by VoiceOver when it lands, without moving the focus off the search field.
+        .onChange(of: store.refreshed) { _, refreshed in
+            if refreshed { announce(String(localized: "Active cluster refreshed")) }
+        }
+        .onChange(of: store.refreshError) { _, error in
+            if error != nil {
+                announce(String(localized: "Could not refresh the active cluster: showing what it last showed"))
+            }
+        }
         .toolbar {
             if canRefresh {
                 ToolbarItem(placement: .primaryAction) {
@@ -94,13 +112,24 @@ struct SearchView: View {
         return !model.activeIsKube || model.allows(.workloads)
     }
 
+    /// What shows before anything is typed: recents win even over an empty cache.
+    private var blankBody: SearchBlankBody {
+        searchBlankBody(
+            snapshotEmpty: store.nothingKnown, recentQueries: store.recent.count, openedTargets: openedTargets.count)
+    }
+
+    /// The objects opened lately, newest first; a removed cluster's are left out.
+    private var openedTargets: [RecentTarget] {
+        let contexts = model.summary?.contexts ?? []
+        return RecentTargetStore.shared.list.known(clusterIDs: Set(contexts.map(\.clusterID).filter { !$0.isEmpty }))
+    }
+
     /// The objects opened lately, newest first, with their cluster when it is not the active
-    /// one; a removed cluster's are left out. A tap opens one again like a share link.
+    /// one. A tap opens one again like a share link.
     @ViewBuilder
     private var openedSection: some View {
         let contexts = model.summary?.contexts ?? []
-        let opened = RecentTargetStore.shared.list.known(
-            clusterIDs: Set(contexts.map(\.clusterID).filter { !$0.isEmpty }))
+        let opened = openedTargets
         if !opened.isEmpty {
             Section("Recently opened") {
                 ForEach(opened) { recent in
